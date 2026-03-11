@@ -1,0 +1,18 @@
+## Build artifacts
+/ConversorPDF/bin/
+/ConversorPDF/obj/
+
+## Distribution binaries (mantén los scripts .bat)
+/Dist/*.dll
+/Dist/*.pdb
+/Dist/*.tlb
+
+## Visual Studio / VS Code
+.vs/
+*.user
+*.suo
+
+## OS files
+Thumbs.db
+*.DS_Store
+
