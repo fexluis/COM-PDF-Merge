@@ -1,6 +1,7 @@
 ## Build artifacts
 /ConversorPDF/bin/
 /ConversorPDF/obj/
+/ConversorPDF/bas/
 
 ## Distribution binaries (mantén los scripts .bat)
 /Dist/*.dll
