@@ -92,5 +92,64 @@ namespace ConversorPDF
                 throw new COMException("Error al combinar PDFs: " + ex.Message);
             }
         }
+
+        public string GetOneDriveLocalPath(string path)
+        {
+            return OneDriveHelper.GetOneDriveLocalPath(path);
+        }
+
+        public string GetCurrentOfficeUser()
+        {
+            return OneDriveHelper.GetCurrentOfficeUser();
+        }
+
+        public string GetFirmaBase64(string nombreFirma)
+        {
+            if (string.Equals(nombreFirma, "MONTANO", StringComparison.OrdinalIgnoreCase))
+                return FirmasHelper.FirmaMontano;
+            else if (string.Equals(nombreFirma, "VILLEGAS", StringComparison.OrdinalIgnoreCase))
+                return FirmasHelper.FirmaVillegas;
+            else
+                return FirmasHelper.FirmaLuis;
+        }
+
+        public string Base64ToTempFile(string base64String, string nombreBase = "Imagen")
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(base64String) || base64String.Length < 100)
+                    return "";
+
+                byte[] bytes = Convert.FromBase64String(base64String);
+
+                string tempFolder = Path.GetTempPath();
+                string cleanName = string.Join("_", nombreBase.Split(Path.GetInvalidFileNameChars()));
+                string fileName = $"{cleanName}_{DateTime.Now:yyyyMMdd_HHmmss}_{new Random().Next(10000)}.png";
+                string fullPath = Path.Combine(tempFolder, fileName);
+
+                File.WriteAllBytes(fullPath, bytes);
+
+                if (File.Exists(fullPath))
+                    return fullPath;
+
+                return "";
+            }
+            catch (Exception ex)
+            {
+                // In COM, returning empty or throwing depends on contract, returning empty for safety as VBA does
+                return "";
+            }
+        }
+
+        public string FirmaToTempFile(string nombreFirma)
+        {
+            string firma = GetFirmaBase64(nombreFirma);
+            return Base64ToTempFile(firma, "frmx");
+        }
+
+        public string GenerarFirmaBase64Txt()
+        {
+            return GeneradorFirmasHelper.GenerarStringBase64DesdeImagen();
+        }
     }
 }

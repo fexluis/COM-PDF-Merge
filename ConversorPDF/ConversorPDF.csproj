@@ -39,10 +39,16 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="PresentationCore" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IMiUtilidades.cs" />
     <Compile Include="MiUtilidades.cs" />
+    <Compile Include="FirmasHelper.cs" />
+    <Compile Include="GeneradorFirmasHelper.cs" />
+    <Compile Include="OneDriveHelper.cs" />
     <Compile Include="IPdfUtilidades.cs" />
     <Compile Include="PdfUtilidades.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

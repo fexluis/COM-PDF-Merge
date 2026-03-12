@@ -15,5 +15,23 @@ namespace ConversorPDF
 
         [DispId(3)]
         void CombinarArchivos(object entradas, string salida);
+
+        [DispId(4)]
+        string GetOneDriveLocalPath(string path);
+
+        [DispId(5)]
+        string GetCurrentOfficeUser();
+
+        [DispId(6)]
+        string GetFirmaBase64(string nombreFirma);
+
+        [DispId(7)]
+        string Base64ToTempFile(string base64String, string nombreBase);
+
+        [DispId(8)]
+        string FirmaToTempFile(string nombreFirma);
+
+        [DispId(9)]
+        string GenerarFirmaBase64Txt();
     }
 }
