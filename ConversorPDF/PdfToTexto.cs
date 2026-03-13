@@ -14,8 +14,8 @@ namespace ConversorPDF
     [ComVisible(true)]
     [ClassInterface(ClassInterfaceType.None)]
     [Guid("F1E2D3C4-B5A6-9E8D-7C6B-5A4B3C2D1E0F")]
-    [ProgId("ConversorPDF.PdfUtilidades")]
-    public class PdfUtilidades : IPdfUtilidades
+    [ProgId("ConversorPDF.PdfToTexto")]
+    public class PdfToTexto : IPdfToTexto
     {
         public string ExtraerTodoTexto(string rutaPdf)
         {

@@ -5,7 +5,7 @@ namespace ConversorPDF
     [ComVisible(true)]
     [Guid("A5C7E123-4B6C-4F1D-8A7E-1234567890AB")]
     [InterfaceType(ComInterfaceType.InterfaceIsDual)]
-    public interface IMiUtilidades
+    public interface IApp
     {
         [DispId(1)]
         string Saludar(string nombre);

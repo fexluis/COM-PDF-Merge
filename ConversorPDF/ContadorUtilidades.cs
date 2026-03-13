@@ -10,7 +10,7 @@ namespace ConversorPDF
         private const string APP_NAME = "ESAP - Contador - v1.4";
         private const string PATH_OBLIGACIONES = @"\Obligaciones\";
 
-        public static int ConvertirObligacionContador(dynamic activeWorkbook, string userFirma, MiUtilidades util)
+        public static int ConvertirObligacionContador(dynamic activeWorkbook, string userFirma, App util)
         {
             if (activeWorkbook == null) return 0;
 
@@ -99,7 +99,7 @@ namespace ConversorPDF
             return filesCount;
         }
 
-        public static int UnificarObligacionContador(dynamic activeWorkbook, string docType, MiUtilidades util)
+        public static int UnificarObligacionContador(dynamic activeWorkbook, string docType, App util)
         {
             if (activeWorkbook == null) return 0;
 
@@ -119,7 +119,12 @@ namespace ConversorPDF
             
             if (!Directory.Exists(pathSoportes) || Directory.GetFiles(pathSoportes, "*.pdf").Length == 0)
             {
-                throw new Exception("No hay archivos en la carpeta de Soportes!");
+                System.Windows.MessageBox.Show(
+                    "No hay archivos PDF en la carpeta de Soportes.\nVerifica que la carpeta exista y contenga archivos.",
+                    "Advertencia - Sin Soportes",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Warning);
+                return 0;
             }
 
             CrearCarpetaSiNoExiste(pathSoportes);
@@ -203,7 +208,7 @@ namespace ConversorPDF
             return "XXX";
         }
 
-        private static string ObtenerRutaLocal(dynamic activeWorkbook, MiUtilidades util)
+        private static string ObtenerRutaLocal(dynamic activeWorkbook, App util)
         {
             try
             {
