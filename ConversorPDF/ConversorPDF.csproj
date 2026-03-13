@@ -42,8 +42,10 @@
     <Reference Include="PresentationFramework" />
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
+    <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ContadorUtilidades.cs" />
     <Compile Include="IMiUtilidades.cs" />
     <Compile Include="MiUtilidades.cs" />
     <Compile Include="FirmasHelper.cs" />

@@ -143,8 +143,21 @@ namespace ConversorPDF
 
         public string FirmaToTempFile(string nombreFirma)
         {
-            string firma = GetFirmaBase64(nombreFirma);
-            return Base64ToTempFile(firma, "frmx");
+            string base64Str = GetFirmaBase64(nombreFirma);
+            if (string.IsNullOrEmpty(base64Str)) return string.Empty;
+
+            string nombreBase = "Firma_" + nombreFirma;
+            return Base64ToTempFile(base64Str, nombreBase);
+        }
+
+        public int ConvertirObligacionContador(object activeWorkbook, string userFirma)
+        {
+            return ContadorUtilidades.ConvertirObligacionContador(activeWorkbook, userFirma, this);
+        }
+
+        public int UnificarObligacionContador(object activeWorkbook, string docType)
+        {
+            return ContadorUtilidades.UnificarObligacionContador(activeWorkbook, docType, this);
         }
 
         public string GenerarFirmaBase64Txt()
