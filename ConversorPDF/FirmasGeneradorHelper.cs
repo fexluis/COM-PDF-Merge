@@ -5,7 +5,7 @@ using Microsoft.Win32;
 
 namespace ConversorPDF
 {
-    public static class GeneradorFirmasHelper
+    public static class FirmasGeneradorHelper
     {
         public static string GenerarStringBase64DesdeImagen()
         {

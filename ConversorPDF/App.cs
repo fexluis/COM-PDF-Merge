@@ -8,9 +8,9 @@ namespace ConversorPDF
 {
     [ComVisible(true)]
     [Guid("4F97F332-3B6C-4B6E-8B7C-5AF9F4EEA4C9")]
-    [ProgId("ConversorPDF.MiUtilidades")]
+    [ProgId("ConversorPDF.App")]
     [ClassInterface(ClassInterfaceType.None)]
-    public class MiUtilidades : IMiUtilidades
+    public class App : IApp
     {
         public string Saludar(string nombre)
         {
@@ -134,7 +134,7 @@ namespace ConversorPDF
 
                 return "";
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // In COM, returning empty or throwing depends on contract, returning empty for safety as VBA does
                 return "";
@@ -162,7 +162,7 @@ namespace ConversorPDF
 
         public string GenerarFirmaBase64Txt()
         {
-            return GeneradorFirmasHelper.GenerarStringBase64DesdeImagen();
+            return FirmasGeneradorHelper.GenerarStringBase64DesdeImagen();
         }
     }
 }
