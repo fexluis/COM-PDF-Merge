@@ -33,5 +33,11 @@ namespace ConversorPDF
 
         [DispId(9)]
         string GenerarFirmaBase64Txt();
+
+        [DispId(10)]
+        int ConvertirObligacionContador(object activeWorkbook, string userFirma);
+
+        [DispId(11)]
+        int UnificarObligacionContador(object activeWorkbook, string docType);
     }
 }
