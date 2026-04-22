@@ -1,0 +1,10 @@
+<Project Sdk="WixToolset.Sdk/4.0.0">
+  <PropertyGroup>
+    <OutputName>UnregisterXLL</OutputName>
+    <OutputType>Package</OutputType>
+    <EnableDefaultItems>false</EnableDefaultItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="UnregisterXLL.wxs" />
+  </ItemGroup>
+</Project>

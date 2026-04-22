@@ -1,0 +1,113 @@
+using Xunit;
+using FluentAssertions;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Data.SQLite;
+using Dapper;
+using ConversorPDF.XLL.Core.Repositories;
+using ConversorPDF.XLL.Core.Models.Academic;
+
+namespace ConversorPDF.Tests.Integration
+{
+    public class AcademicRepositoryTests : IDisposable
+    {
+        private readonly SQLiteConnection _conn;
+        private readonly AcademicRepository _repo;
+
+        public AcademicRepositoryTests()
+        {
+            _conn = new SQLiteConnection("Data Source=:memory:;Version=3;New=True;");
+            _conn.Open();
+            CrearEsquema();
+            _repo = new AcademicRepository(_conn);
+        }
+
+        private void CrearEsquema()
+        {
+            _conn.Execute(@"
+                CREATE TABLE terceros (id INTEGER PRIMARY KEY, nombre TEXT);
+                CREATE TABLE vinculaciones (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    idtercero INTEGER, idsede INTEGER, idprograma INTEGER,
+                    semestre TEXT, idasignatura INTEGER,
+                    total_horas INTEGER, dia_horas_semanales TEXT,
+                    fecha_inicio TEXT, fecha_fin TEXT
+                );
+                CREATE TABLE sesiones (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    idvinculacion INTEGER, idtercero INTEGER,
+                    fechasesionInicial TEXT, fechasesionFinal TEXT,
+                    horas REAL, duracion REAL, viatica INTEGER
+                );
+                INSERT INTO terceros VALUES (1, 'Docente Test');
+            ");
+        }
+
+        [Fact]
+        public void DeleteSesionesByVinculacion_3SesionesExistentes_Elimina3YDejaTablaVacia()
+        {
+            _conn.Execute("INSERT INTO sesiones (idvinculacion, idtercero, horas) " +
+                "VALUES (1,1,8), (1,1,8), (1,1,8), (2,1,4)");
+
+            var result = _repo.DeleteSesionesByVinculacion(1);
+            int restantes = _conn.ExecuteScalar<int>(
+                "SELECT COUNT(*) FROM sesiones WHERE idvinculacion = 1");
+
+            result.IsSuccess.Should().BeTrue();
+            result.Value.Should().Be(3);
+            restantes.Should().Be(0);
+        }
+
+        [Fact]
+        public void InsertSesiones_6Sesiones_Inserta6YRetornaConteo()
+        {
+            _conn.Execute("INSERT INTO vinculaciones (id, idtercero) VALUES (1, 1)");
+            var sesiones = new List<Sesion>();
+            for (int i = 0; i < 6; i++)
+            {
+                sesiones.Add(new Sesion
+                {
+                    IdVinculacion = 1, IdTercero = 1,
+                    fechasesionInicial = new DateTime(2026, 4, 23).AddDays(i * 7),
+                    fechasesionFinal = new DateTime(2026, 4, 23).AddDays(i * 7),
+                    Horas = 8, Duracion = 8, Viatica = false
+                });
+            }
+
+            var result = _repo.InsertSesiones(sesiones);
+            int conteo = _conn.ExecuteScalar<int>(
+                "SELECT COUNT(*) FROM sesiones WHERE idvinculacion = 1");
+
+            result.IsSuccess.Should().BeTrue();
+            result.Value.Should().Be(6);
+            conteo.Should().Be(6);
+        }
+
+        [Fact]
+        public void UpsertFlow_DejaExactamenteNNuevasSesiones()
+        {
+            _conn.Execute("INSERT INTO vinculaciones (id, idtercero) VALUES (1, 1)");
+            for (int i = 0; i < 5; i++)
+                _conn.Execute("INSERT INTO sesiones (idvinculacion, idtercero, horas) VALUES (1, 1, 8)");
+
+            var nuevasSesiones = new List<Sesion>
+            {
+                new Sesion { IdVinculacion=1, IdTercero=1, Horas=8, fechasesionInicial=DateTime.Now, fechasesionFinal=DateTime.Now },
+                new Sesion { IdVinculacion=1, IdTercero=1, Horas=4, fechasesionInicial=DateTime.Now, fechasesionFinal=DateTime.Now }
+            };
+
+            _repo.DeleteSesionesByVinculacion(1);
+            _repo.InsertSesiones(nuevasSesiones);
+
+            int conteoFinal = _conn.ExecuteScalar<int>("SELECT COUNT(*) FROM sesiones WHERE idvinculacion = 1");
+            conteoFinal.Should().Be(2);
+        }
+
+        public void Dispose()
+        {
+            _conn?.Close();
+            _conn?.Dispose();
+        }
+    }
+}

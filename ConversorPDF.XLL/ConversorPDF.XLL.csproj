@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
+    <ProjectGuid>{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>ConversorPDF.XLL</RootNamespace>
+    <AssemblyName>ConversorPDF.XLL</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+    <!-- Excel-DNA: empaquetar todo en un solo .xll -->
+    <ExcelDnaAllowPackaging>true</ExcelDnaAllowPackaging>
+    <ExcelDnaPackBitness>x64</ExcelDnaPackBitness>
+    <ExcelDnaCreate32BitAddIn>false</ExcelDnaCreate32BitAddIn>
+    <ExcelDnaCreate64BitAddIn>true</ExcelDnaCreate64BitAddIn>
+    <!-- Excluir dependencias que no existen en .NET 4.8 y no deben empaquetarse -->
+    <ExcelDnaExcludedDependencies>Microsoft.Bcl.HashCode.dll</ExcelDnaExcludedDependencies>
+    <Version>1.2.45.19</Version>
+    <AssemblyVersion>1.2.45.19</AssemblyVersion>
+    <FileVersion>1.2.45.19</FileVersion>
+    <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
+  </PropertyGroup>
+  <Import Project="obj\ConversorPDF.XLL.csproj.nuget.g.props" Condition="Exists('obj\ConversorPDF.XLL.csproj.nuget.g.props')" />
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x64</PlatformTarget>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="ExcelDna.Integration">
+      <HintPath>$(UserProfile)\.nuget\packages\exceldna.integration\1.8.0\lib\net452\ExcelDna.Integration.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="PdfSharp">
+      <HintPath>$(UserProfile)\.nuget\packages\pdfsharp\1.50.5147\lib\net20\PdfSharp.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="PdfSharp.Charting">
+      <HintPath>$(UserProfile)\.nuget\packages\pdfsharp\1.50.5147\lib\net20\PdfSharp.Charting.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="UglyToad.PdfPig">
+      <HintPath>$(UserProfile)\.nuget\packages\pdfpig\0.1.9\lib\netstandard2.0\UglyToad.PdfPig.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="UglyToad.PdfPig.Core">
+      <HintPath>$(UserProfile)\.nuget\packages\pdfpig\0.1.9\lib\netstandard2.0\UglyToad.PdfPig.Core.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="UglyToad.PdfPig.DocumentLayoutAnalysis">
+      <HintPath>$(UserProfile)\.nuget\packages\pdfpig\0.1.9\lib\netstandard2.0\UglyToad.PdfPig.DocumentLayoutAnalysis.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="UglyToad.PdfPig.Fonts">
+      <HintPath>$(UserProfile)\.nuget\packages\pdfpig\0.1.9\lib\netstandard2.0\UglyToad.PdfPig.Fonts.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="UglyToad.PdfPig.Tokenization">
+      <HintPath>$(UserProfile)\.nuget\packages\pdfpig\0.1.9\lib\netstandard2.0\UglyToad.PdfPig.Tokenization.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="UglyToad.PdfPig.Tokens">
+      <HintPath>$(UserProfile)\.nuget\packages\pdfpig\0.1.9\lib\netstandard2.0\UglyToad.PdfPig.Tokens.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="UglyToad.PdfPig.Package">
+      <HintPath>$(UserProfile)\.nuget\packages\pdfpig\0.1.9\lib\netstandard2.0\UglyToad.PdfPig.Package.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="Dapper">
+      <HintPath>$(UserProfile)\.nuget\packages\dapper\2.1.35\lib\net461\Dapper.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="System.Data.SQLite">
+      <HintPath>$(UserProfile)\.nuget\packages\stub.system.data.sqlite.core.netframework\1.0.119\lib\net46\System.Data.SQLite.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <!-- CÃƒÂ³digo fuente -->
+    <Compile Include="ExcelAddIn.cs" />
+    <Compile Include="Ribbon\RibbonController.cs" />
+    <Compile Include="Functions\PdfFunctions.cs" />
+    <Compile Include="Functions\OneDriveFunctions.cs" />
+    <Compile Include="Functions\Office365Functions.cs" />
+    <Compile Include="UI\ProgressForm.cs" />
+    <Compile Include="UI\ProgressManager.cs" />
+    <Compile Include="UI\DayHoursDropdown.cs" />
+    <Compile Include="UI\ProgressDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Recursos embebidos -->
+    <EmbeddedResource Include="Ribbon\Ribbon.xml" />
+    <EmbeddedResource Include="img\esap.bmp" />
+    <EmbeddedResource Include="img\hero.png" />
+    <EmbeddedResource Include="Properties\Signatures.resx" />
+    <EmbeddedResource Include="Core\Data\AcademicSchema.sql" />
+    <EmbeddedResource Include="Core\Data\AcademicSeedData.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="Core\Helpers\LoggerHelper.cs" />
+    <Compile Include="Core\Helpers\App.cs" />
+    <Compile Include="Core\Models\Empleado.cs" />
+    <Compile Include="Core\Models\Viaje.cs" />
+    <Compile Include="Core\Models\ViaticosConfig.cs" />
+    <Compile Include="Core\Models\ViaticoRow.cs" />
+    <Compile Include="Core\Models\ViaticosFormatException.cs" />
+    <Compile Include="Core\Models\ExtraerDatos.cs" />
+    <Compile Include="Core\Interfaces\IExcelRepository.cs" />
+    <Compile Include="Core\Repositories\ExcelRepository.cs" />
+    <Compile Include="Core\Interfaces\IViaticosRepository.cs" />
+    <Compile Include="Core\Repositories\ViaticosRepository.cs" />
+    <Compile Include="Core\Interfaces\IUserService.cs" />
+    <Compile Include="Core\Services\UserService.cs" />
+    <Compile Include="Core\Interfaces\IPdfService.cs" />
+    <Compile Include="Core\Services\PdfService.cs" />
+    <Compile Include="Core\Interfaces\IPdfMetadataService.cs" />
+    <Compile Include="Core\Services\PdfMetadataService.cs" />
+    <Compile Include="Core\Interfaces\IViaticosService.cs" />
+    <Compile Include="Core\Services\ViaticosService.cs" />
+    <Compile Include="Core\Interfaces\IViaticosIndividualProcessor.cs" />
+    <Compile Include="Core\Processors\ViaticosIndividualProcessor.cs" />
+    <Compile Include="Core\Interfaces\IViaticosMasivoProcessor.cs" />
+    <Compile Include="Core\Processors\ViaticosMasivoProcessor.cs" />
+    <Compile Include="Core\Interfaces\IViaticosCumplidosProcessor.cs" />
+    <Compile Include="Core\Processors\ViaticosCumplidosProcessor.cs" />
+    <Compile Include="Core\Interfaces\IViaticosGestionProcessor.cs" />
+    <Compile Include="Core\Processors\ViaticosGestionProcessor.cs" />
+    <Compile Include="Core\Interfaces\IFirmaExtractService.cs" />
+    <Compile Include="Core\Interfaces\IContadorService.cs" />
+    <Compile Include="Core\Services\FirmaExtractService.cs" />
+    <Compile Include="Core\Services\ContadorService.cs" />
+    <Compile Include="Core\Interfaces\IAcademicRepository.cs" />
+    <Compile Include="Core\Repositories\AcademicRepository.cs" />
+    <Compile Include="Core\Services\Academic\GeneradorSesionesRecurrentes.cs" />
+    <Compile Include="Core\Services\Academic\AcademicDateSyncService.cs" />
+    <Compile Include="Core\Interfaces\IAcademicDateSyncService.cs" />
+    <Compile Include="Core\Helpers\ViaticosHelper.cs" />
+    <Compile Include="Core\Helpers\ExcelOptimizeHelper.cs" />
+    <Compile Include="Core\Helpers\ExcelAppStateHelper.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Core\Helpers\FirmaUnificarObHelper.cs" />
+    <Compile Include="Core\Helpers\FirmasGeneradorHelper.cs" />
+    <Compile Include="Core\Helpers\FirmaPDFsHelper.cs" />
+    <Compile Include="Core\Helpers\SqliteHelper.cs" />
+    <Compile Include="Core\Helpers\ConstantsHelper.cs" />
+    <Compile Include="Core\Helpers\DatabaseEncryptionEngine.cs" />
+    <Compile Include="Core\Helpers\NativeLibraryPreloader.cs" />
+    <Compile Include="Core\Data\AcademicUnitOfWork.cs" />
+    <Compile Include="Core\Helpers\CatalogCacheService.cs" />
+    <Compile Include="Core\Helpers\GridRowDto.cs" />
+    <Compile Include="Core\Helpers\GridToSesionMapper.cs" />
+    <Compile Include="Core\Helpers\DayPatternParser.cs" />
+    <Compile Include="Core\Data\EncryptedSQLiteContext.cs" />
+    <Compile Include="Core\Data\SQLiteEngineBootstrap.cs" />
+    <Compile Include="Core\Models\SqliteResults.cs" />
+    <Compile Include="Core\Helpers\PdfMetadataHelper.cs" />
+    <Compile Include="Core\Enums\TipoFormato.cs" />
+    <Compile Include="Core\Enums\TipoFormMode.cs" />
+    <Compile Include="Core\Enums\TipoMetadata.cs" />
+    <Compile Include="Core\Models\Metadata.cs" />
+    <Compile Include="Core\Models\UserIdentification.cs" />
+    <Compile Include="Core\Models\Academic\Asignatura.cs" />
+    <Compile Include="Core\Models\Academic\ConfiguracionDia.cs" />
+    <Compile Include="Core\Models\Academic\Contenido.cs" />
+    <Compile Include="Core\Models\Academic\Microcurriculo.cs" />
+    <Compile Include="Core\Models\Academic\Programa.cs" />
+    <Compile Include="Core\Models\Academic\Sede.cs" />
+    <Compile Include="Core\Models\Academic\Sesion.cs" />
+    <Compile Include="Core\Models\Academic\Tercero.cs" />
+    <Compile Include="Core\Models\Academic\Vinculacion.cs" />
+    <Compile Include="Core\Models\Academic\AcademicDateAdjustment.cs" />
+    <Compile Include="Core\Interfaces\IApp.cs" />
+    <Compile Include="Core\Interfaces\IPdfToTexto.cs" />
+    <Compile Include="Core\Helpers\OneDriveHelper.cs" />
+    <Compile Include="Core\Helpers\PdfToTextoHelper.cs" />
+    <Compile Include="FormProgramador\FormProgramador.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormProgramador\FormProgramador.Designer.cs">
+      <DependentUpon>FormProgramador.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormProgramador\FormConfig.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormProgramador\FormConfig.Designer.cs">
+      <DependentUpon>FormConfig.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormProgramador\FormGestionDocumental.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormProgramador\FormGestionDocumental.Designer.cs">
+      <DependentUpon>FormGestionDocumental.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormProgramador\FormTableEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormProgramador\FormTableEditor.Designer.cs">
+      <DependentUpon>FormTableEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormProgramador\FormInfo.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormProgramador\FormInfo.Designer.cs">
+      <DependentUpon>FormInfo.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormAcademic\FormSesionesAcademicas.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormAcademic\FormSesionesAcademicas.Designer.cs">
+      <DependentUpon>FormSesionesAcademicas.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="ExcelDna.AddIn" Version="1.8.0" />
+    <PackageReference Include="ExcelDna.Integration" Version="1.8.0" />
+    <PackageReference Include="System.Reflection.Metadata" Version="6.0.0" />
+    <PackageReference Include="PDFsharp" Version="1.50.5147" />
+    <PackageReference Include="PdfPig" Version="0.1.9" />
+    <PackageReference Include="Dapper" Version="2.1.35" />
+    <PackageReference Include="Stub.System.Data.SQLite.Core.NetFramework" Version="1.0.119.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ConversorPDF.XLL-AddIn64.dna" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="obj\ConversorPDF.XLL.csproj.nuget.g.targets" Condition="Exists('obj\ConversorPDF.XLL.csproj.nuget.g.targets')" />
+  <Import Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\NuGet\Microsoft.NuGet.targets"
+          Condition="Exists('$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\NuGet\Microsoft.NuGet.targets')" />
+  <Import Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v17.0\NuGet\Microsoft.NuGet.targets"
+          Condition="Exists('$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v17.0\NuGet\Microsoft.NuGet.targets')" />
+  <Import Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v16.0\NuGet\Microsoft.NuGet.targets"
+          Condition="Exists('$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v16.0\NuGet\Microsoft.NuGet.targets')" />
+</Project>
+
+
+
+

@@ -1,0 +1,12 @@
+﻿# ============================================================
+# AUDITORÃA DE DOCUMENTACIÃ“N
+# ============================================================
+# VersiÃ³n de la aplicaciÃ³n : 1.2.51.0
+# Archivo original          : C:\Users\luis.bechara\.gemini\antigravity\brain\fa7748ff-b376-4aaa-a91b-ec719d5bf96d\task.md
+# Fecha de copia            : 2026-04-22 08:35:20
+# ============================================================
+- [x] Fix formula calculation in `ViaticosIndividualProcessor`
+- [x] Fix formula calculation in `ViaticosMasivoProcessor`
+- [x] Fix formula calculation in `ViaticosCumplidosProcessor`
+- [x] Verify build and tests
+

@@ -1,0 +1,28 @@
+<DnaLibrary Name="ConversorPDF.XLL Add-In" RuntimeVersion="v4.0" CreateAndShowLog="true" xmlns="http://schemas.excel-dna.net/addin/2020/07/dnalibrary">
+  <ExternalLibrary Path="ConversorPDF.XLL.dll" ExplicitExports="false" LoadFromBytes="true" Pack="true" ComServer="true" />
+  
+  <!-- Dependencias del proyecto COM consolidadas -->
+  
+  <!-- Librerías de PDF (PdfSharp y PdfPig con sus dependencias) -->
+  <Reference Path="PdfSharp.dll" Pack="true" />
+  <Reference Path="PdfSharp.Charting.dll" Pack="true" />
+  <Reference Path="UglyToad.PdfPig.dll" Pack="true" />
+  <Reference Path="UglyToad.PdfPig.Core.dll" Pack="true" />
+  <Reference Path="UglyToad.PdfPig.DocumentLayoutAnalysis.dll" Pack="true" />
+  <Reference Path="UglyToad.PdfPig.Fonts.dll" Pack="true" />
+  <Reference Path="UglyToad.PdfPig.Package.dll" Pack="true" />
+  <Reference Path="UglyToad.PdfPig.Tokenization.dll" Pack="true" />
+  <Reference Path="UglyToad.PdfPig.Tokens.dll" Pack="true" />
+  
+  <!-- Dependencias de sistema / infraestructura -->
+  <Reference Path="System.Buffers.dll" Pack="true" />
+  <Reference Path="System.Memory.dll" Pack="true" />
+  <Reference Path="System.Numerics.Vectors.dll" Pack="true" />
+  <Reference Path="System.Runtime.CompilerServices.Unsafe.dll" Pack="true" />
+  <Reference Path="System.Reflection.Metadata.dll" Pack="true" />
+  
+  <!-- Dependencias para Sesiones Académicas (SQLite + Dapper) -->
+  <Reference Path="Dapper.dll" Pack="true" LoadFromBytes="false" />
+  <Reference Path="System.Data.SQLite.dll" Pack="true" LoadFromBytes="false" />
+
+</DnaLibrary>

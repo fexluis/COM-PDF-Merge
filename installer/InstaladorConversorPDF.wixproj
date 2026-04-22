@@ -1,0 +1,6 @@
+<Project Sdk="WixToolset.Sdk/4.0.0">
+  <PropertyGroup>
+    <OutputName>InstaladorConversorPDF</OutputName>
+    <OutputType>Package</OutputType>
+  </PropertyGroup>
+</Project>

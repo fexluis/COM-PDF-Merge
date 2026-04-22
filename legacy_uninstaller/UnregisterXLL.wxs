@@ -1,0 +1,49 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package 
+    Name="ConversorPDF Unregister Utility" 
+    Language="1034" 
+    Version="1.0.0.0" 
+    Manufacturer="ESAP" 
+    UpgradeCode="c2b1a3e4-d5f6-7890-abcd-ef1234567891"
+    Scope="perUser">
+
+    <SummaryInformation Description="Desvincula el Add-in ConversorPDF de Excel" />
+
+    <Property Id="ALLUSERS" Value="2" />
+    <Property Id="MSIINSTALLPERUSER" Value="1" />
+
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- Binary del script VBS -->
+    <Binary Id="UnregisterScript" SourceFile="UnregisterXLL.vbs" />
+
+    <!-- Custom Action que ejecuta el script -->
+    <CustomAction 
+      Id="RunUnregister" 
+      BinaryRef="UnregisterScript" 
+      VBScriptCall="" 
+      Execute="immediate" 
+      Return="check" />
+
+    <!-- Secuencia de ejecución -->
+    <InstallExecuteSequence>
+      <!-- Ejecutamos la limpieza justo después de iniciar la instalación -->
+      <Custom Action="RunUnregister" Before="InstallFinalize" Condition="NOT Installed" />
+    </InstallExecuteSequence>
+
+    <!-- Componente mínimo necesario para generar el MSI -->
+    <StandardDirectory Id="AppDataFolder">
+        <Directory Id="ESAPFolder" Name="ESAP">
+            <Component Id="cmpDummy" Guid="a1b2c3d4-e5f6-7890-abcd-ef1234567892">
+                <RegistryValue Root="HKCU" Key="Software\ESAP\UnregisterUtility" Name="executed" Type="integer" Value="1" KeyPath="yes" />
+                <RemoveFolder Id="RemoveESAPFolder" On="uninstall" />
+            </Component>
+        </Directory>
+    </StandardDirectory>
+
+    <Feature Id="MainFeature" Title="Unregister Utility" Level="1">
+        <ComponentRef Id="cmpDummy" />
+    </Feature>
+
+  </Package>
+</Wix>

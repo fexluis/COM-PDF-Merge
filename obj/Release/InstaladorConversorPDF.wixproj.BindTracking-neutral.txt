@@ -1,0 +1,5 @@
+BuiltPdbOutput	c:\Users\usuario\Documents\trae_projects\COM-PDF-Merge\obj\Release\InstaladorConversorPDF.wixpdb
+BuiltTargetOutput	c:\Users\usuario\Documents\trae_projects\COM-PDF-Merge\obj\Release\InstaladorConversorPDF.msi
+Input	ConversorPDF.XLL-AddIn64-packed.xll
+Input	RegisterXLL.vbs
+Intermediate	c:\Users\usuario\Documents\trae_projects\COM-PDF-Merge\obj\Release\#cab1.cab

@@ -1,0 +1,73 @@
+﻿# ============================================================
+# AUDITORÍA DE DOCUMENTACIÓN
+# ============================================================
+# Versión de la aplicación : 1.2.51
+# Archivo original          : C:\Users\luis.bechara\.gemini\antigravity\brain\32800ad9-8e77-4f3a-a4ff-1708c9353697\implementation_plan_v1.2.51.md
+# Fecha de copia            : 2026-04-20 16:08:13
+# ============================================================
+# Implementation Plan - Remediation & Unit Testing Suite (v1.2.51)
+
+This plan implements the consensus reached across multiple audits (ChatGPT, DeepSeek, GLM-5, Kimi) to stabilize the `FormSesionesAcademicas` module. The core strategy is to decouple business logic from the UI to enable high-speed unit testing and to implement a robust verification suite.
+
+## User Review Required
+
+> [!IMPORTANT]
+> This plan involves a minor refactoring of `FormSesionesAcademicas.cs` to extract logic into `GridToSesionMapper.cs`. This is a low-risk change that significantly improves testability.
+
+> [!WARNING]
+> The UI Integration tests (Capa 3) require an STA (Single Threaded Apartment) environment. They are configured to run via `Thread.SetApartmentState(ApartmentState.STA)` to ensure compatibility with standard CI/CD runners.
+
+## Proposed Changes
+
+### 1. Logic Extraction & Refactoring
+
+#### [NEW] [GridToSesionMapper.cs](file:///c:/Users/luis.bechara/OneDrive%20-%20Escuela%20Superior%20de%20Administraci%C3%B3n%20Publica/Antigravity/ConversorPDFv1.2.46.01/ConversorPDF.XLL/Core/Helpers/GridToSesionMapper.cs)
+- Implement `GridToSesionMapper` class to handle the conversion from `GridRowDto` to `Sesion` models.
+- Implement `GridRowDto` to represent grid data without a hard dependency on `DataGridView`.
+- Integrate the improved integrity check (Visual Count vs Extracted Count) to detect desynchronization during save.
+
+#### [NEW] [DayPatternParser.cs](file:///c:/Users/luis.bechara/OneDrive%20-%20Escuela%20Superior%20de%20Administraci%C3%B3n%20Publica/Antigravity/ConversorPDFv1.2.46.01/ConversorPDF.XLL/Core/Helpers/DayPatternParser.cs)
+- Move `TranslateDay` and `ParsearSelectedDays` logic here.
+- Add support for accented Spanish days (MIÃ‰RCOLES, SÃBADO).
+
+#### [MODIFY] [FormSesionesAcademicas.cs](file:///c:/Users/luis.bechara/OneDrive%20-%20Escuela%20Superior%20de%20Administraci%C3%B3n%20Publica/Antigravity/ConversorPDFv1.2.46.01/ConversorPDF.XLL/FormAcademic/FormSesionesAcademicas.cs)
+- Update `PrepararSesionesDesdeGrid` to map `dgvSesiones` rows to `GridRowDto` and call `GridToSesionMapper.Extract`.
+- Delegate day parsing to `DayPatternParser`.
+- Ensure `dgvSesiones.CurrentCell = null` is called before extraction to flush pending edits.
+
+---
+
+### 2. Unit Testing Suite
+
+#### [NEW] [ConversorPDF.Tests.csproj](file:///c:/Users/luis.bechara/OneDrive%20-%20Escuela%20Superior%20de%20Administraci%C3%B3n%20Publica/Antigravity/ConversorPDFv1.2.46.01/ConversorPDF.Tests/ConversorPDF.Tests.csproj)
+- Create a new project targeting `net48`.
+- Dependencies: `xunit`, `FluentAssertions`, `MSTest.TestFramework`, `Dapper`, `System.Data.SQLite`.
+
+#### [NEW] [Layer 0: Pure Logic Tests](file:///c:/Users/luis.bechara/OneDrive%20-%20Escuela%20Superior%20de%20Administraci%C3%B3n%20Publica/Antigravity/ConversorPDFv1.2.46.01/ConversorPDF.Tests/Unit/)
+- `GridToSesionMapperTests.cs`: Test extraction logic, IsNewRow handling, and integrity guards.
+- `EstadoParametrosTests.cs`: Test the critical state hash logic (including FIX-1.4 normalization).
+- `DayPatternParserTests.cs`: Test Spanish-to-English day translation.
+
+#### [NEW] [Layer 1: Repository Tests](file:///c:/Users/luis.bechara/OneDrive%20-%20Escuela%20Superior%20de%20Administraci%C3%B3n%20Publica/Antigravity/ConversorPDFv1.2.46.01/ConversorPDF.Tests/Integration/AcademicRepositoryTests.cs)
+- Use SQLite in-memory to test `DeleteSesionesByVinculacion` and `InsertSesiones` (Batch).
+- Verify that the result count matches precisely (no orphans).
+
+#### [NEW] [Layer 2: Vault/Persistence Tests](file:///c:/Users/luis.bechara/OneDrive%20-%20Escuela%20Superior%20de%20Administraci%C3%B3n%20Publica/Antigravity/ConversorPDFv1.2.46.01/ConversorPDF.Tests/Integration/EncryptedSQLiteContextTests.cs)
+- Test `ReEncryptAndPersistStatic` concurrency and atomic replacement.
+- Verify `LeerBytesConRetrySync` stability.
+
+#### [NEW] [Layer 3: UI Integration Tests](file:///c:/Users/luis.bechara/OneDrive%20-%20Escuela%20Superior%20de%20Administraci%C3%B3n%20Publica/Antigravity/ConversorPDFv1.2.46.01/ConversorPDF.Tests/UI/FormSesionesAcademicasTests.cs)
+- Implementation of reflection-based tests (DeepSeek style) to verify `FormSesionesAcademicas` internal state and DataGridView interactions in STA thread.
+
+---
+
+## Verification Plan
+
+### Automated Tests
+- Run `dotnet test ConversorPDF.Tests` for Capa 0, 1, and 2.
+- Execute Capa 3 tests separately to ensure STA compatibility.
+
+### Manual Verification
+- Verify that the `Save` process still works correctly in the Excel Add-in environment.
+- Confirm that the `Audit logs` reflect the new `GridToSesionMapper` activity.
+

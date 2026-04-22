@@ -1,0 +1,61 @@
+﻿# ============================================================
+# AUDITORÍA DE CAMBIO
+# ============================================================
+# Versión de la aplicación : 1.2.51
+# Archivo original          : C:\Users\luis.bechara\OneDrive - Escuela Superior de Administración Publica\Antigravity\ConversorPDFv1.2.46.01\ConversorPDF.XLL\Core\Helpers\DayPatternParser.cs
+# Fecha de copia            : 2026-04-20 16:08:13
+# ------------------------------------------------------------
+# DIAGNÓSTICO (problema identificado antes del cambio)
+# Desacoplamiento de lógica de UI para habilitar tests unitarios.
+#
+# IMPLEMENTADO (solución aplicada en esta versión)
+# Creación de GridToSesionMapper, DayPatternParser y suite de tests.
+# ============================================================
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace ConversorPDF.XLL.Core.Helpers
+{
+    /// <summary>
+    /// Utilidad para el parseo y traducciÃ³n de patrones de dÃ­as seleccionados (EspaÃ±ol -> InglÃ©s).
+    /// </summary>
+    public static class DayPatternParser
+    {
+        public static Dictionary<DayOfWeek, double> Parse(Dictionary<string, int> input)
+        {
+            var result = new Dictionary<DayOfWeek, double>();
+            if (input == null || !input.Any()) return result;
+
+            foreach (var kvp in input)
+            {
+                string diaNombreStr = TranslateDay(kvp.Key.Trim());
+                if (Enum.TryParse<DayOfWeek>(diaNombreStr, true, out var day))
+                {
+                    result[day] = kvp.Value;
+                }
+            }
+            return result;
+        }
+
+        public static string TranslateDay(string day)
+        {
+            if (string.IsNullOrWhiteSpace(day)) return string.Empty;
+
+            switch (day.ToUpper().Trim())
+            {
+                case "LUNES": return "Monday";
+                case "MARTES": return "Tuesday";
+                case "MIERCOLES":
+                case "MIÃ‰RCOLES": return "Wednesday";
+                case "JUEVES": return "Thursday";
+                case "VIERNES": return "Friday";
+                case "SABADO":
+                case "SÃBADO": return "Saturday";
+                case "DOMINGO": return "Sunday";
+                default: return day;
+            }
+        }
+    }
+}
+

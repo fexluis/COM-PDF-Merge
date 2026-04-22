@@ -1,0 +1,679 @@
+## 🔐 Arquitectura de Seguridad y Estabilización (Vault Pattern)
+
+A diferencia de un SQLite tradicional, este proyecto utiliza un patrón de "Bóveda Encriptada" (Vault) para proteger los datos en reposo y garantizar la estabilidad en entornos Excel-DNA.
+
+### 1. Ciclo de Vida del Vault
+La base de datos se comporta como un archivo encriptado opaco en disco (`AcademicData.db.enc`).
+- **Apertura**: Se desencripta a un archivo temporal aleatorio (`esap_acad_tmp_*.db`).
+- **Operación**: Se utiliza `System.Data.SQLite` sobre el archivo temporal.
+- **Cierre**: Si hubo cambios, se re-encripta el archivo temporal sobre el original. El temporal es borrado mediante `SecureWipe`.
+
+### 2. Estabilización de Proceso (Nivel 1)
+Para evitar los problemas de carga de assemblies y AppDomains múltiples de Excel, se utiliza `SQLiteEngineBootstrap`:
+- **Idempotencia Global**: Detecta si `sqlite.interop.dll` ya está en memoria antes de intentar cargarla.
+- **Mutex de Sesión**: Sincroniza la inicialización entre todos los complementos que compartan el proceso de Excel.
+- **Workaround de Configuración**: Crea automáticamente `System.Data.SQLite.dll.config` para prevenir el bug de `path1 null`.
+
+### 3. Unidad de Trabajo (Nivel 2)
+Cada formulario (`FormSesionesAcademicas`) actúa como una **Unit of Work**:
+- Abre el contexto al iniciar.
+- Mantiene la conexión abierta durante su vida.
+- Cierra y re-encripta al finalizar.
+- Esto reduce el overhead de decrypt/encrypt de ~8s a <200ms por interacción.
+
+---
+
+## 📊 Diccionario de Datos (Academicas)
+
+-- Base de datos SQLite
+-- 1. CREACIÓN DE LAS TABLAS
+
+CREATE TABLE programas (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombreprograma TEXT,
+    abreviatura TEXT,
+    tipo TEXT
+);
+
+CREATE TABLE asignaturas (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    idprograma INTEGER,
+    semestre TEXT,
+    código TEXT,
+    abreviatura TEXT,
+    área TEXT,
+    nombreasignatura TEXT,
+    creditos INTEGER,
+    tipoasignatura TEXT,
+    tipocredito TEXT,
+    prerequisito TEXT,
+    FOREIGN KEY(idprograma) REFERENCES programas(id)
+);
+
+CREATE TABLE microcurriculo (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    idasignatura INTEGER,
+    area TEXT,
+    objetivogeneral TEXT,
+    competencias TEXT,
+    FOREIGN KEY(idasignatura) REFERENCES asignaturas(id)
+);
+
+CREATE TABLE contenidos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    idmicrocurriculo INTEGER,
+    unidad TEXT,
+    contenido TEXT,
+    FOREIGN KEY(idmicrocurriculo) REFERENCES microcurriculo(id)
+);
+
+CREATE TABLE IF NOT EXISTS terceros (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT,
+    cedula TEXT,
+    tipo TEXT,
+    salario REAL,
+    rol TEXT,
+    entidad_bancaria TEXT,
+    cuenta_bancaria TEXT,
+    telefono TEXT,
+    correo TEXT,
+    fecha_nacimiento TEXT,
+    contrato TEXT
+);
+
+CREATE TABLE IF NOT EXISTS sedes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT,
+    categoria TEXT,
+    transporte REAL
+);
+
+CREATE TABLE IF NOT EXISTS vinculaciones (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    idsede INTEGER,
+    idprograma INTEGER,
+    semestre TEXT,
+    idasignatura INTEGER,
+    total_horas INTEGER,
+    dia_horas_semanales TEXT,
+    fecha_inicio TEXT,
+    fecha_fin TEXT,
+    FOREIGN KEY(idsede) REFERENCES sedes(id),
+    FOREIGN KEY(idprograma) REFERENCES programas(id),
+    FOREIGN KEY(idasignatura) REFERENCES asignaturas(id)
+);
+
+CREATE TABLE IF NOT EXISTS sesiones (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    idvinculacion INTEGER,
+    idtercero INTEGER,
+    fechasesionInicial TEXT,
+    fechasesionFinal TEXT,
+    duracion REAL,
+    horas REAL,
+    viatica INTEGER,
+    FOREIGN KEY(idvinculacion) REFERENCES vinculaciones(id),
+    FOREIGN KEY(idtercero) REFERENCES terceros(id)
+);
+
+
+-- 2. INSERCIÓN DE DATOS: PROGRAMA
+
+INSERT INTO programas (id, nombreprograma, abreviatura, tipo) 
+VALUES (1, 'ADMINISTRACION PUBLICA TERRITORIAL', 'APT', 'PREGRADO');
+
+
+-- 3. INSERCIÓN DE DATOS: ASIGNATURAS (Con abreviatura única de 5 letras)
+
+INSERT INTO asignaturas (id, idprograma, semestre, código, abreviatura, área, nombreasignatura, creditos, tipoasignatura, tipocredito, prerequisito) VALUES
+(1, 1, 'I', 'APT01-CRD', 'FDEPU', 'E P', 'Fundamentos de economía pública', 3, 'FUNDAMENTACIÓN', 'Teórico', 'N. A.'),
+(2, 1, 'I', 'APT02-CRD', 'FDEYP', 'E G y S', 'Fundamentos del Estado y el poder', 3, 'FUNDAMENTACIÓN', 'Teórico', 'N. A.'),
+(3, 1, 'I', 'APT03-CRD', 'FUSOC', 'E G y S', 'Fundamentos Sociológicos', 2, 'FUNDAMENTACIÓN', 'Teórico', 'N. A.'),
+(4, 1, 'I', 'APT04-CRD', 'GEFYA', 'G T', 'Geografía física y ambiental', 2, 'FUNDAMENTACIÓN', 'Teórico', 'N. A.'),
+(5, 1, 'I', 'APT05-CRD', 'HDLAP', 'O P y G', 'Historia de la administración pública', 3, 'FUNDAMENTACIÓN', 'Teórico', 'N. A.'),
+(6, 1, 'I', 'APT06-CRD', 'MATUN', 'C', 'Matemáticas I', 3, 'FUNDAMENTACIÓN', 'Teórico - Práctico', 'N. A.'),
+(7, 1, 'II', 'APT07-CRD', 'GEYSO', 'G T', 'Geografía económica y social', 2, 'FUNDAMENTACIÓN', 'Teórico', 'N. A.'),
+(8, 1, 'II', 'APT08-CRD', 'MATDO', 'C', 'Matemáticas II', 3, 'FUNDAMENTACIÓN', 'Teórico -Práctico', 'Matemáticas I'),
+(9, 1, 'II', 'APT09-CRD', 'MIYMA', 'E P', 'Micro y macroeconomía', 3, 'FUNDAMENTACIÓN', 'Teórico', 'Fundamentos de economía pública'),
+(10, 1, 'II', 'APT10-CRD', 'PYTDA', 'O P y G', 'Pensamientos y teorías de la administración pública', 3, 'FUNDAMENTACIÓN', 'Teórico', 'N. A.'),
+(11, 1, 'II', 'APT11-CRD', 'RYSPO', 'E G y S', 'Regímenes y sistemas políticos', 2, 'FUNDAMENTACIÓN', 'Teórico', 'N. A.'),
+(12, 1, 'II', 'APT12-CRD', 'SOYCU', 'E G y S', 'Socialización y cultura', 2, 'FUNDAMENTACIÓN', 'Teórico', 'N. A.');
+
+
+-- 4. INSERCIÓN DE DATOS: MICROCURRÍCULOS
+
+INSERT INTO microcurriculo (id, idasignatura, area, objetivogeneral, competencias) VALUES
+(1, 1, 'ECONOMÍA PUBLICA', 'Dotar al estudiante de conceptos más importantes derivados de la teoría microeconómica, la intervención del estado y la elección pública y social.', 'Construye argumentos sólidos, con premisas y conclusiones que se construyen en forma lógica. Identifica relaciones económicas causales y deduce conclusiones lógicas. Elabora a partir de distintos elementos de información económica una lectura coherente de una situación Toma decisiones acertadas respecto a los procesos de producción, distribución y consumo.'),
+(2, 2, 'ESTADO, GOBIERNO Y SOCIEDAD', 'Conocer el origen y transformación histórica del Estado, las teorías que se han desarrollado en su configuración, los temas, problemas y relaciones existentes entre el Estado y el poder, visto desde las diversas corrientes del pensamiento contemporáneo.', 'Identifica el origen del Estado moderno y las principales teorías que se han desarrollado históricamente sobre el Estado. Define y señala los tipos de Estado que se han formado en la historia moderna hasta nuestros días. Caracteriza los temas, problemas y relaciones existentes entre el Estado y el Régimen a partir de corrientes del pensamiento contemporáneo.'),
+(3, 3, 'ESTADO, GOBIERNO Y SOCIEDAD', 'Incorporar los conceptos fundamentales de la sociología, pertinentes a la administración pública, en la formación profesional de Administrador Público.', 'Explica los fundamentos sociológicos básicos y los adapta a la enseñanza de la Administración Pública. Relaciona los conceptos y escuelas sociológicas, dando una aproximación histórica y epistemológica de la Sociología como disciplina que incide en su ejercicio profesional como Administrador Público. Identifica las características de los fenómenos sociales y de las organizaciones modernas que emergen en la realidad social.'),
+(4, 4, 'GESTION TERRITORIAL', 'Observar las interrelaciones entre los elementos físicos y humanos en el territorio para contribuir a la sostenibilidad ambiental a través de la planificación territorial, el análisis del medio físico y de los impactos de la gestión pública ambiental.', 'Observa las dimensiones físicas y ambientales del territorio. Construye y aporta propuestas para contribuir a la sostenibilidad ambiental a partir del análisis de la gestión pública ambiental en Colombia.'),
+(5, 5, 'ORGANIZACIONES PÚBLICAS Y GESTION', 'A partir del análisis documental, se pretende propiciar un espacio para la reflexión individual y colectiva sobre las causas políticas económicas y socioculturales que fueron determinantes para la puesta en marcha y consolidación de diversas formas de organización político-administrativas a lo largo del siglo XIX...', 'Capacidad de entender la constitución y transformación de la administración pública en Colombia, evidenciando, distintos procesos históricos y pensadores que han contribuido ha dicho propósito. Comprende la estructuración de la administración pública como un campo de fenómenos y de saber interdependientes...'),
+(6, 6, 'COMPLEMENTARIA', 'Comprender las herramientas y técnicas cuantitativas del cálculo diferencial para su aplicación en situaciones económico -administrativas que involucren: procesos de optimización de una cantidad variable, análisis gráfico, razones de cambio, oferta, demanda...', 'Define una proposición como un objeto matemático y comprende los conectores lógicos como operadores que permiten realizar la combinación de proposiciones. Analiza las relaciones entre variables de un fenómeno o proceso económico natural o social para determinar o estimar su comportamiento...'),
+(7, 7, 'GESTION TERRITORIAL', 'Determinar las desigualdades territoriales desde una perspectiva global y temática, así como el papel que desempeñan en la organización socio espacial. A partir de la introducción de la geografía económica y social de Colombia...', 'Representa la relación de la geografía con los sistemas de organización socioeconómica en el territorio. Utiliza un vocabulario geográfico, social y económico de carácter básico.'),
+(8, 8, 'COMPLEMENTARIA', 'Comprender las herramientas y técnicas cuantitativas del cálculo integral para su aplicación en situaciones económico -administrativas que involucren procesos variacionales que conlleven a la construcción de modelos mediante integrales, matrices y sistemas de ecuaciones...', 'Resuelve problemas aplicando procedimientos aritméticos, algebraicos y de la integral indefinida en el campo de la economía y la administración, apoyado en el uso de un software de matemática. Representa e Interpreta tablas, gráficas, mapas, diagramas y textos con símbolos matemáticos...'),
+(9, 9, 'ECONOMÍA PUBLICA', 'Desarrollar en los estudiantes las habilidades y destrezas del análisis micro y macroeconómico y la comprensión del entorno junto con la posición crítica frente a lo que ocurre en la economía colombiana.', 'Desarrolla las habilidades y conocimientos para la adecuada interpretación de los fenómenos económicos. Maneja los modelos desde la perspectiva racional interpretativa aplicándolos a la realidad. Identifica e internaliza el papel del Estado y su responsabilidad social en el manejo de los elementos que le conciernen al Administrador Público.'),
+(10, 10, 'ORGANIZACIONES PÚBLICAS Y GESTION', 'Conocer, comprender, analizar, aplicar y evaluar los orígenes y fundamentos de los conceptos, enfoques, modelos y teorías respecto al fenómeno de lo público y la Administración Pública desde una perspectiva histórica, disciplinar y crítica...', 'Habilita el conocimiento de enfoques, modelos, estilos y tradiciones de administración pública de diferentes países desde dos perspectivas, la histórica y la actual. Incentiva la habilidad y actitud del estudiante de hacer miradas comparadas en el análisis y proyección de problemáticas...'),
+(11, 11, 'ESTADO, GOBIERNO Y SOCIEDAD', 'Analizar los diferentes tipos de sistemas y de regímenes políticos existentes en el mundo político actual, identificando sus procesos históricos más significativos sobre los cuales se estructura el poder político en Europa, Norteamérica, Asia y América Latina.', 'Construye una visión general sobre los distintos tipos de sistemas y de regímenes políticos existentes en el mundo. Comprende el fundamento y estructura de los sistemas y regímenes desarrollados en Europa, Norteamérica, Asia y América Latina. Contrasta los sistemas y regímenes políticos...'),
+(12, 12, 'ESTADO, GOBIERNO Y SOCIEDAD', 'Examinar el campo relativo a lo cultural: formas de interacción entre el ser humano y su entorno, lo identitario y lo atinente a la alteridad. Enmarcado ello en la diversidad cultural y espacial, verbi gracia, territorial...', 'Comprende los conceptos y fundamentos teóricos relacionados con la identidad y diversidad cultural. Valora las otras formas de conocer-ser-hacer-interactuar con el mundo. Desarrolla sensibilidad para percibir la dimensión cultural del desarrollo desde la administración pública.');
+
+
+-- 5. INSERCIÓN DE DATOS: CONTENIDOS SEPARADOS POR UNIDAD
+
+INSERT INTO contenidos (idmicrocurriculo, unidad, contenido) VALUES
+-- Contenidos Microcurrículo 1: Fundamentos de economía pública
+(1, 'Unidad 1', 'Concepto de economía, doctrinas y teorías económicas'),
+(1, 'Unidad 2', 'El mercado, la eficiencia y la producción'),
+(1, 'Unidad 3', 'Fallas del mercado, intervención del Estado y los bienes públicos'),
+(1, 'Unidad 4', 'Gasto Publico, tributación y el problema distributivo'),
+(1, 'Unidad 5', 'Intervención, regulación y financiamiento del Estado'),
+(1, 'Unidad 6', 'Enfoques de la Economía Pública y Globalización'),
+
+-- Contenidos Microcurrículo 2: Fundamentos del Estado y el poder
+(2, 'Unidad 1', 'Transformaciones históricas del Estado'),
+(2, 'Unidad 2', 'Escuelas de pensamiento filosófico en torno al Estado'),
+(2, 'Unidad 3', 'Transformaciones históricas del poder'),
+(2, 'Unidad 4', 'Escuelas del pensamiento filosóficas en torno al poder'),
+(2, 'Unidad 5', 'Problemas contemporáneos del Estado y del Poder'),
+
+-- Contenidos Microcurrículo 3: Fundamentos Sociológicos
+(3, 'Unidad 1', 'Contextualización histórica epistemológica de la sociología. Sus articulaciones con la Administración Pública.'),
+(3, 'Unidad 2', 'La sociología positiva'),
+(3, 'Unidad 3', 'La sociología comprensiva'),
+(3, 'Unidad 4', 'El Estructural Funcionalismo'),
+(3, 'Unidad 5', 'La Sociología marxista'),
+(3, 'Unidad 6', 'La investigación Acción Participativa'),
+
+-- Contenidos Microcurrículo 4: Geografía física y ambiental
+(4, 'Unidad 1', 'Geografía, ambiente y ordenación del territorio'),
+(4, 'Unidad 2', 'Los problemas ambientales: Una comprensión de la atmósfera, hidrósfera, criósfera, biosfera y ambiente.'),
+(4, 'Unidad 3', 'Análisis geográfico, social y cultural del espacio y el territorio.'),
+(4, 'Unidad 4', 'Riesgos naturales, territorio y ambiente'),
+(4, 'Unidad 5', 'La gestión ambiental en Colombia'),
+
+-- Contenidos Microcurrículo 5: Historia de la administración pública
+(5, 'Unidad 1', 'La colonia y su legado'),
+(5, 'Unidad 2', 'La independencia y el proyecto republicano'),
+(5, 'Unidad 3', 'Regeneración y decadencia de la hegemonía conservadora'),
+(5, 'Unidad 4', 'Las reformas liberales y el intervencionismo Estatal'),
+(5, 'Unidad 5', 'El período de la violencia y la crisis institucional'),
+
+-- Contenidos Microcurrículo 6: Matemáticas I
+(6, 'Unidad 1', 'Funciones'),
+(6, 'Unidad 2', 'Límites y continuidad'),
+(6, 'Unidad 3', 'Derivadas'),
+(6, 'Unidad 4', 'Aplicaciones de las Derivadas'),
+
+-- Contenidos Microcurrículo 7: Geografía económica y social
+(7, 'Unidad 1', 'Introducción a la geografía económica y social'),
+(7, 'Unidad 2', 'Teorías de la localización'),
+(7, 'Unidad 3', 'Teorías del desarrollo'),
+(7, 'Unidad 4', 'Organización espacial de las actividades económicas'),
+(7, 'Unidad 5', 'El proceso reciente de urbanización y los modelos de ciudad'),
+(7, 'Unidad 6', 'La economía contemporánea'),
+
+-- Contenidos Microcurrículo 8: Matemáticas II
+(8, 'Unidad 1', 'Cálculo Integral'),
+(8, 'Unidad 2', 'Matrices y aplicaciones'),
+(8, 'Unidad 3', 'Programación Lineal'),
+
+-- Contenidos Microcurrículo 9: Micro y macroeconomía
+(9, 'Unidad 1', 'Introducción a la microeconomía'),
+(9, 'Unidad 2', 'Introducción a la macroeconomía'),
+(9, 'Unidad 3', 'El sector público y privado en la economía'),
+(9, 'Unidad 4', 'La política económica en Colombia: fiscal, cambiaria, monetaria y social'),
+(9, 'Unidad 5', 'El desarrollo y los desafíos de la economía en Colombia en siglo XXI'),
+
+-- Contenidos Microcurrículo 10: Pensamientos y teorías de la administración pública
+(10, 'Unidad 1', 'Antecedentes Históricos: Ciencias de la Policía y el Cameralismo.'),
+(10, 'Unidad 2', 'Fundación de la Administración Pública como disciplina: casos'),
+(10, 'Unidad 3', 'Enfoques tempranos del siglo XX: paradigma burocrático, científico y humanista'),
+(10, 'Unidad 4', 'Enfoques contemporáneos del siglo XX y XXI: la administración como institución, organización, acción y tecnología.'),
+(10, 'Unidad 5', 'Enfoques colombianos: Nueva Gestión, contemporáneos por resultados'),
+
+-- Contenidos Microcurrículo 11: Regímenes y sistemas políticos
+(11, 'Unidad 1', 'Tipos de sistemas y de regímenes políticos'),
+(11, 'Unidad 2', 'Sistemas y regímenes en Europa y Norteamérica'),
+(11, 'Unidad 3', 'Sistemas y regímenes en Asia'),
+(11, 'Unidad 4', 'Sistemas y regímenes en América Latina'),
+
+-- Contenidos Microcurrículo 12: Socialización y cultura
+(12, 'Unidad 1', 'El concepto de Cultura'),
+(12, 'Unidad 2', 'Enfoques entorno a los conceptos de Cuerpo cultural-Identidad e identidades'),
+(12, 'Unidad 3', 'Cultura, globalización y economía del conocimiento'),
+(12, 'Unidad 4', 'Sector Cultural en la Administración y en la gestión Pública');
+
+-- 1. INSERCIÓN DE DATOS: ASIGNATURAS (Semestres III y IV)
+
+INSERT INTO asignaturas (id, idprograma, semestre, código, abreviatura, área, nombreasignatura, creditos, tipoasignatura, tipocredito, prerequisito) VALUES
+(13, 1, 'III', 'APT13-CRD', 'ACSDI', 'E G y S', 'Actores sociales y diferencia identitaria', 2, 'FUNDAMENTACIÓN', 'Teórico', 'N. A.'),
+(14, 1, 'III', 'APT14-CRD', 'DERCO', 'E G y S', 'Derecho constitucional', 3, 'FUNDAMENTACIÓN', 'Teórico', 'N. A.'),
+(15, 1, 'III', 'APT15-CRD', 'ESTUN', 'C', 'Estadística I', 3, 'FUNDAMENTACIÓN', 'Teórico – Práctica', 'Matemáticas II'),
+(16, 1, 'III', 'APT16-CRD', 'FYAFP', 'E P', 'Finanzas y análisis financiero público', 3, 'DISCIPLINAR/PROFESIONALIZANTE', 'Teórico – Práctica', 'Fundamentos de economía pública'),
+(17, 1, 'III', 'APT17-CRD', 'METIN', 'C', 'Metodología de investigación', 2, 'FUNDAMENTACIÓN', 'Práctica', 'N. A.'),
+(18, 1, 'III', 'APT18-CRD', 'TDLOP', 'O P y G', 'Teorías de las organizaciones públicas', 3, 'DISCIPLINAR/PROFESIONALIZANTE', 'Teórico – Práctica', 'N. A.'),
+(19, 1, 'IV', 'APT19-CRD', 'DEMOG', 'E G y S', 'Demografía', 2, 'FUNDAMENTACIÓN', 'Teórico', 'Estadística I'),
+(20, 1, 'IV', 'APT20-CRD', 'CYPCI', 'E G y S', 'Convivencia y participación ciudadana', 3, 'DISCIPLINAR/PROFESIONALIZANTE', 'Teórico-práctico', 'N. A.'),
+(21, 1, 'IV', 'APT21-CRD', 'DERAD', 'E G y S', 'Derecho administrativo', 3, 'DISCIPLINAR/PROFESIONALIZANTE', 'Teórico', 'N. A.'),
+(22, 1, 'IV', 'APT22-CRD', 'ESTDO', 'C', 'Estadística II', 3, 'FUNDAMENTACIÓN', 'Práctico', 'Estadística I'),
+(23, 1, 'IV', 'APT23-CRD', 'PYAOR', 'O P y G', 'Planeación y análisis organizacional', 3, 'DISCIPLINAR/PROFESIONALIZANTE', 'Teórico-práctico', 'Teorías de las organizaciones públicas'),
+(24, 1, 'IV', 'APT24-CRD', 'PREPU', 'E P', 'Presupuesto público', 3, 'DISCIPLINAR/PROFESIONALIZANTE', 'Teórico - Práctico', 'N. A.');
+
+
+-- 2. INSERCIÓN DE DATOS: MICROCURRÍCULOS (Semestres III y IV)
+
+INSERT INTO microcurriculo (id, idasignatura, area, objetivogeneral, competencias) VALUES
+(13, 13, 'ESTADO, GOBIERNO Y SOCIEDAD', 'Comprender la diversidad étnica y cultural de los actores y movimientos sociales que habitan en Colombia y que interactúan en la acción política, sus formas de autogestión y administración étnica...', 'Reconoce la diversidad étnica y cultural de la nación colombiana y su proceso histórico. Describe el autogobierno indígena en la administración de sus territorios. Reconoce los desafíos de la administración pública para desarrollar procesos de gestión intercultural.'),
+(14, 14, 'ESTADO, GOBIERNO Y SOCIEDAD', 'Comprender el significado y la función de la constitución en los sistemas jurídicos y políticos contemporáneos y específicamente, conocer y comprender la Constitución Política Colombiana...', 'Comprende de conceptos jurídicos indispensables para interpretar el texto constitucional. Resuelve casos relativos a la administración pública desde una perspectiva constitucional. Relaciona los idearios constitucionales a situaciones concretas de la vida social...'),
+(15, 15, 'COMPLEMENTARIA', 'Comprender las metodologías y herramientas de la estadística descriptiva para su aplicación investigativa en situaciones económico - administrativas que involucren obtener y procesar volúmenes de datos...', 'Interpreta tablas y gráficas de un conjunto de datos dados en una situación particular. Comprende y aplica diferentes tipos de razonamiento, haciendo inferencias y validando argumentos útiles para la toma de decisiones...'),
+(16, 16, 'ECONOMÍA PUBLICA', 'Proporcionar las competencias teóricas, analíticas y prácticas suficientes sobre las finanzas públicas y su estructuración, que permita sentar las bases para un ejercicio profesional idóneo...', 'Fundamenta la teoría y la técnica de análisis financiero de la hacienda pública colombiana. Entiende de los indicadores financieros públicos. Analiza e interpreta la información contable y financiera de las entidades públicas...'),
+(17, 17, 'COMPLEMENTARIA', 'Apropiar la investigación como un trabajo científico- profesional- artesanal que requiere apropiar modelos, habilidades, practicas, técnicas y valores que permitan realizarlas bajos cánones de validez.', 'Reconoce la importancia y naturaleza de la investigación y la consultoría en la administración pública. Apropia críticamente criterios, modelos, técnicas e instrumentos de investigación básica y aplicada...'),
+(18, 18, 'ORGANIZACIONES PÚBLICAS Y GESTION', 'Conocer, comprender, analizar y evaluar los conceptos, concepciones, teorías, tendencias, metodologías, historia, contexto, implicaciones e instrumentos de intervención en torno a las organizaciones humanas...', 'Adquiere habilidades conceptuales y hermenéuticas para la comprensión de los eventos organizacionales de la administración pública. Argumenta en torno al fenómeno organizacional público. Fortalece rasgos comportamentales propositivos e investigativos...'),
+(19, 19, 'ESTADO, GOBIERNO Y SOCIEDAD', 'Brindar herramientas conceptuales para la comprensión del territorio desde las poblaciones, su evolución y estructura.', 'Observa el territorio con enfoque demográfico. Emplea razonamiento analítico y sintético a partir de las variables e indicadores demográficos. Sistematiza e interpreta información demográfica...'),
+(20, 20, 'ESTADO, GOBIERNO Y SOCIEDAD', 'Comprender la relación existente entre los conceptos de ciudadanía y convivencia con la finalidad de formar ciudadanos participativos en la vida social y política del país...', 'Comprende los elementos centrales de la convivencia ciudadana, como: la democracia, la representación política y la participación ciudadana. Reconoce la diversidad social y política del país y comprende las complejidades de la convivencia...'),
+(21, 21, 'ESTADO, GOBIERNO Y SOCIEDAD', 'Comprender el concepto de Derecho y Derecho Administrativo, las formas jurídicas en que actúa el Estado, sus límites legales y relación existente entre Estado, administración pública y derecho administrativo...', 'Comprende el objeto y fines del derecho administrativo en Colombia. Explica los diferentes conceptos del derecho administrativo y las fases del procedimiento administrativo. Identifica las principales manifestaciones de la administración pública...'),
+(22, 22, 'COMPLEMENTARIA', 'Comprender las metodologías y herramientas de la estadística inferencial para su aplicación investigativa que involucre inferir parámetros poblacionales a partir de una muestra...', 'Describe los estimadores de los parámetros poblaciones tomando como partida las estadísticas muestrales. Argumenta las características de las diferentes técnicas de muestreo. Identifica y aplica las técnicas y los conceptos para realizar pruebas de hipótesis...'),
+(23, 23, 'ORGANIZACIONES PÚBLICAS Y GESTION', 'Conocer, comprender, analizar, aplicar y evaluar los fundamentos teóricos y técnicos de la planeación organizacional y administrativa que permita el diseño de alternativas e instrumentos que lleven al mejoramiento...', 'Conoce, comprende y analiza los fundamentos teóricos de la Planeación y el Análisis organizacional. Aplica y evalúa técnicas e instrumentos para la planeación administrativa. Realiza diseños organizacionales...'),
+(24, 24, 'ECONOMÍA PUBLICA', 'Brindar a los estudiantes las herramientas, conceptos, procedimientos y prácticas que constituyen las Finanzas Públicas nacionales y territoriales y el presupuesto público como eje central de su financiamiento...', 'Conoce los enfoques básicos del presupuesto público y la normatividad asociada. Entiende y aplica herramientas e instrumentos de análisis y ejecución. Analiza los actores que intervienen en los procesos políticos de decisión presupuestal.');
+
+
+-- 3. INSERCIÓN DE DATOS: CONTENIDOS SEPARADOS POR UNIDAD (Semestres III y IV)
+
+INSERT INTO contenidos (idmicrocurriculo, unidad, contenido) VALUES
+-- Contenidos Microcurrículo 13: Actores sociales y diferencia identitaria
+(13, 'Unidad 1', 'Diversidad étnica cultural e identitaria'),
+(13, 'Unidad 2', 'Alteridad, diferencia y territorio, Complejidad social'),
+(13, 'Unidad 3', 'Gobiernos y Entidades Territoriales Indígenas y raizales'),
+(13, 'Unidad 4', 'Gestión de la interculturalidad. Los nuevos retos para una administración pública'),
+
+-- Contenidos Microcurrículo 14: Derecho constitucional
+(14, 'Unidad 1', 'Introducción al Derecho Constitucional (Noción, Fuentes, Sistemas y Ramas)'),
+(14, 'Unidad 2', 'Derecho Constitucional General'),
+(14, 'Unidad 3', 'Parte Dogmática: Derechos fundamentales, mecanismo de protección, de participación y garantías'),
+(14, 'Unidad 4', 'Los habitantes, el territorio y la participación democrática'),
+(14, 'Unidad 5', 'Parte Orgánica de la Constitución de 1991'),
+(14, 'Unidad 6', 'Constitución y Administración Pública (Jurisprudencia y casos)'),
+
+-- Contenidos Microcurrículo 15: Estadística I
+(15, 'Unidad 1', 'Conceptos básicos'),
+(15, 'Unidad 2', 'Distribución de Frecuencias'),
+(15, 'Unidad 3', 'Medidas de Tendencia central'),
+(15, 'Unidad 4', 'Variación y Forma'),
+(15, 'Unidad 5', 'Números Índice'),
+
+-- Contenidos Microcurrículo 16: Finanzas y análisis financiero público
+(16, 'Unidad 1', 'Finanzas Públicas y economía'),
+(16, 'Unidad 2', 'Metodología y análisis de los indicadores financieros públicos colombianos'),
+(16, 'Unidad 3', 'Estados financieros y balance fiscal del Sector Público Consolidado colombiano'),
+(16, 'Unidad 4', 'Finanzas Públicas Departamentales y Municipales'),
+
+-- Contenidos Microcurrículo 17: Metodología de investigación
+(17, 'Unidad 1', 'Ciencia, Investigación y Administración Pública: enfoques filosóficos y teóricos.'),
+(17, 'Unidad 2', 'La escritura, lectura y la observación como base de la investigación y las competencias investigativas.'),
+(17, 'Unidad 3', 'Metodologías Cuantitativas, Cualitativas y mixtas y las herramientas Informáticas'),
+(17, 'Unidad 4', 'La formulación de un diseño y protocolo de investigación'),
+(17, 'Unidad 5', 'Investigaciones en Administración Pública a Nivel Nacional e Internacional'),
+
+-- Contenidos Microcurrículo 18: Teorías de las organizaciones públicas
+(18, 'Unidad 1', 'El concepto complejo de organización'),
+(18, 'Unidad 2', 'Concepciones de la administración y de la organización'),
+(18, 'Unidad 3', 'Aproximaciones sistémicas y ecosistémicas de la organización.'),
+(18, 'Unidad 4', 'Enfoque de la toma de decisiones y la racionalidad limitada.'),
+(18, 'Unidad 5', 'Teorías hermenéuticas, críticas y del conflicto organizacional'),
+(18, 'Unidad 6', 'El enfoque público y privado de la organización'),
+(18, 'Unidad 7', 'Clima, cambio y cultura organizacional'),
+(18, 'Unidad 8', 'Tipologías organizacionales'),
+(18, 'Unidad 9', 'Tendencias recientes de la teoría de la organización'),
+
+-- Contenidos Microcurrículo 19: Demografía
+(19, 'Unidad 1', 'Introducción a la Demografía: Principales conceptos e indicadores'),
+(19, 'Unidad 2', 'Teorías de la población'),
+(19, 'Unidad 3', 'Estructura de la población: Natalidad, mortalidad, emigración e inmigración'),
+(19, 'Unidad 4', 'Distribución Espacial de la Población'),
+(19, 'Unidad 5', 'Usos y aplicación de variables para la interpretación demográfica territorial: variables de mortalidad, fecundidad y migración'),
+
+-- Contenidos Microcurrículo 20: Convivencia y participación ciudadana
+(20, 'Unidad 1', 'Concepciones acerca de la democracia, la ciudadanía y la convivencia'),
+(20, 'Unidad 2', 'Representación política'),
+(20, 'Unidad 3', 'Participación ciudadana'),
+(20, 'Unidad 4', 'Diversidad, diferencia y convivencia'),
+(20, 'Unidad 5', 'Democratización de la Administración Pública'),
+
+-- Contenidos Microcurrículo 21: Derecho administrativo
+(21, 'Unidad 1', 'Introducción y fuentes del Derecho Administrativo La administración pública en Colombia: antecedentes y reformas del proceso administrativo y contencioso administrativo'),
+(21, 'Unidad 2', 'Teoría del Acto administrativo'),
+(21, 'Unidad 3', 'Principios, actuaciones y deberes administrativos'),
+(21, 'Unidad 4', 'Procedimientos administrativos y medios de control judicial'),
+(21, 'Unidad 5', 'El derecho de petición y reglas de transparencia'),
+
+-- Contenidos Microcurrículo 22: Estadística II
+(22, 'Unidad 1', 'Muestreo y Distribuciones muéstrales'),
+(22, 'Unidad 2', 'Estimación por Intervalo'),
+(22, 'Unidad 3', 'Pruebas de Hipótesis'),
+(22, 'Unidad 4', 'Inferencia estadística'),
+(22, 'Unidad 5', 'Regresión y correlaciones simples'),
+
+-- Contenidos Microcurrículo 23: Planeación y análisis organizacional
+(23, 'Unidad 1', 'Planeación y prospectiva para la administración publica'),
+(23, 'Unidad 2', 'Elaboración de planes administrativos'),
+(23, 'Unidad 3', 'Análisis y diseño de estructuras organizacionales'),
+(23, 'Unidad 4', 'Análisis de procesos de gestión'),
+(23, 'Unidad 5', 'Análisis de cadena de resultados'),
+
+-- Contenidos Microcurrículo 24: Presupuesto público
+(24, 'Unidad 1', 'Principios presupuestales'),
+(24, 'Unidad 2', 'Base constitucional y legal del presupuesto público'),
+(24, 'Unidad 3', 'Marco fiscal de mediano plazo y otros instrumentos de planeación y gestión financiera'),
+(24, 'Unidad 4', 'Presupuesto de ingresos y de gastos'),
+(24, 'Unidad 5', 'Programación aprobación y ejecución del presupuesto'),
+(24, 'Unidad 6', 'Ejecución presupuestal');
+
+-- 1. INSERCIÓN DE DATOS: ASIGNATURAS (Semestres V y VI)
+
+INSERT INTO asignaturas (id, idprograma, semestre, código, abreviatura, área, nombreasignatura, creditos, tipoasignatura, tipocredito, prerequisito) VALUES
+(25, 1, 'V', 'APT25-CRD', 'ADGTT', 'E P', 'Administración y gestión tributaria territorial', 3, 'DISCIPLINAR/ PROFESIONALIZANTE', 'Teórico-práctico', 'Presupuesto público'),
+(26, 1, 'V', 'APT26-CRD', 'GOBPP', 'E G y S', 'Gobierno y políticas públicas', 2, 'DISCIPLINAR/ PROFESIONALIZANTE', 'Teórico-práctico', 'N. A.'),
+(27, 1, 'V', 'APT27-CRD', 'ORGES', 'O P y G', 'Organización estatal colombiana', 2, 'DISCIPLINAR/ PROFESIONALIZANTE', 'Teórico', 'N. A.'),
+(28, 1, 'V', 'APT28-CRD', 'PYGAC', 'G T', 'Políticas y gestión ambiental en Colombia', 3, 'DISCIPLINAR/ PROFESIONALIZANTE', 'Teórico', 'N. A.'),
+(29, 1, 'V', 'APT29-CRD', 'SINFT', 'G T', 'Sistemas de información territorial', 3, 'DISCIPLINAR/ PROFESIONALIZANTE', 'Práctico', 'N. A.'),
+(30, 1, 'V', 'APT30-CRD', 'TDDSP', 'O P y G', 'Toma de decisiones en el sector público', 3, 'DISCIPLINAR/ PROFESIONALIZANTE', 'Teórico-práctico', 'N. A.'),
+(31, 1, 'VI', 'APT31-CRD', 'CONGU', 'E P', 'Contabilidad Gubernamental', 2, 'DISCIPLINAR/ PROFESIONALIZANTE', 'Práctico', 'N. A.'),
+(32, 1, 'VI', 'APT 32-CRD', 'CONES', 'E G y S', 'Contratación estatal', 3, 'DISCIPLINAR/ PROFESIONALIZANTE', 'Práctico', 'Derecho administrativo'),
+(33, 1, 'VI', 'APT33-CRD', 'DESCO', 'G T', 'Descentralización en Colombia', 3, 'DISCIPLINAR/ PROFESIONALIZANTE', 'Teórico-práctico', 'Organización estatal colombiana'),
+(34, 1, 'VI', 'APT34-CRD', 'GREFI', 'O P y G', 'Gestión de recursos físicos', 3, 'DISCIPLINAR/ PROFESIONALIZANTE', 'Teórico-práctico', 'N. A.'),
+(35, 1, 'VI', 'APT35-CRD', 'IEPPU', 'E G y S', 'Implementación y evaluación de políticas públicas', 3, 'DISCIPLINAR/ PROFESIONALIZANTE', 'Teórico-práctico', 'Gobierno y políticas públicas'),
+(36, 1, 'VI', 'APT36-CRD', 'IAYBD', 'C', 'Inteligencia artificial y Big data', 2, 'DISCIPLINAR/ PROFESIONALIZANTE', 'Práctico', 'Estadística II');
+
+
+-- 2. INSERCIÓN DE DATOS: MICROCURRÍCULOS (Semestres V y VI)
+
+INSERT INTO microcurriculo (id, idasignatura, area, objetivogeneral, competencias) VALUES
+(25, 25, 'ECONOMÍA PUBLICA', 'Dar a conocer las herramientas teóricas y prácticas que le permitan al estudiante comprender el sistema tributario en Colombia en los niveles nacional, departamental y municipal en los frentes de la economía y la gestión fiscal.', 'Aprende de la normatividad tributaria. Innova mecanismos que permitan crear cultura de gestión tributaria. Diseña políticas orientadas a la planeación tributaria y su impacto en la Administración Pública. Elabora estrategias fiscales que permitan optimizar los recursos y solucionar la situación fiscal de los diferentes niveles de gobierno.'),
+(26, 26, 'ESTADO, GOBIERNO Y SOCIEDAD', 'Proporcionar conocimiento teórico práctico respecto de los fundamentos y teorías sobre Gobierno y las perspectivas e instrumentos de las Políticas Públicas como campo de estudio y dispositivo de acción gubernamental.', 'Da cuenta de los fundamentos y teorías sobre Gobierno, así como de la relación entre Estado, Gobierno y A. P. Comprende las perspectivas de estudio de Políticas públicas... Apropia y aplica las características propias de la identificación de problemas públicos... Comprende los elementos constitutivos y analiza con suficiencia el proceso secuencial... Establece relaciones comprensivas y analíticas entre enfoques teóricos y el abordaje de condiciones propias de la realidad colombiana...'),
+(27, 27, 'ORGANIZACIONES PÚBLICAS Y GESTIÓN', 'Estudiar, identificar y comprender la organización estatal colombiana, como un sistema estructurado en el que se desarrollan y se toman decisiones funcionales y de política pública.', 'Comprende la estructura organizativa del Estado colombiano de acuerdo con la constitución y las normas más relevantes. Identifica las competencias, órganos, funciones y dinámicas organizacionales del sector público colombiano. Identificara los referentes normativos y los principales problemas en torno a al régimen nacional, departamental y municipal.'),
+(28, 28, 'GESTION TERRITORIAL', 'Estudiar y analizar el proceso de gobernabilidad ambiental dado en el país, a partir de los avances y retrocesos de la implementación de políticas ambientales y de la Gestión Ambiental, mediante el cumulo de instrumentos ambientales de sustentabilidad del territorio nacional...', 'Comprende los impactos ambientales de la utilización de los recursos naturales que ameritan un marco de gestión institucional. Comprende las teorías y conceptos ambientales y gana sensibilidades y cultura ambiental. Innova y lidera la formulación de propuestas para la gestión ambiental. Conoce y evalúa las políticas públicas ambientales implementadas en el país.'),
+(29, 29, 'GESTION TERRITORIAL', 'Relacionar los diversos elementos de los sistemas de información territorial: SIG, personas, procedimientos, datos y recursos tecnológicos para resolver problemas complejos de planificación y gestión.', 'Analiza y gestiona con eficiencia y eficacia problemas complejos de planificación y gestión con los sistemas de información territorial. Emplea razonamiento analítico y sintético. Innova y lidera la formulación de propuestas para la gestión territorial.'),
+(30, 30, 'ORGANIZACIONES PÚBLICAS Y GESTION', 'Abordar el proceso de toma de decisiones y el liderazgo en el sector público desde una perspectiva científica y epistemológica y de los instrumentos para entender el fenómeno decisional en la esfera pública y política.', 'Conoce y aplica el proceso para tomar decisiones estratégicas. Comprende la importancia de la toma de decisiones en selección de alternativas y ejecución de intervenciones en el sector público. Reconoce la perspectiva del liderazgo y la relación con la cultura organizacional y los procesos de desarrollo.'),
+(31, 31, 'ECONOMÍA PUBLICA', 'Apropiar los elementos generales de la teoría contable para la interpretación, análisis, aplicación y evaluación de los estados e informes de la contabilidad pública a través de la cual Administrador Público toma decisiones en las organizaciones públicas.', 'Diferencia los elementos afines y no afines entre la contabilidad general y la gubernamental. Conoce y aplica las normas de la Contabilidad Pública. Está en capacidad de realizar el manejo contable. Entiende y aplica el ejercicio del control fiscal.'),
+(32, 32, 'ESTADO, GOBIERNO Y SOCIEDAD', 'Analizar la contratación pública en Colombia, sus fundamentos, principios y reglas que orientan las diferentes etapas de la actividad contractual que realizan las entidades del Estado e identificar las problemáticas que se sucintan en el proceso.', 'Identifica las características de la Contratación Pública en Colombia. Comprende los diferentes procesos y modalidades de Selección de contratación. Proyecta una contratación pública de acuerdo con el régimen establecido.'),
+(33, 33, 'GESTION TERRITORIAL', 'Conocer, analizar y discutir las decisiones públicas relacionadas con la distribución de las funciones y las responsabilidades del Estado entre el nivel nacional y las entidades territoriales que definen y caracterizan el proceso de descentralización colombiano...', 'Comprende los debates sobre el proceso de descentralización colombiano y las discusiones sobre autonomía territorial. Reconoce los diferentes niveles de gobiernos, las entidades territoriales, sus competencias y obligaciones. Comprende y actúa en el marco de los procesos de descentralización y las formas de gobierno que se dan entre los distintos niveles para gestionar los asuntos públicos.'),
+(34, 34, 'ORGANIZACIONES PÚBLICAS Y GESTION', 'Analizar los elementos que caracterizan la gestión de los recursos físicos en las organizaciones públicas colombianas, profundizando en el estudio de herramientas de la administración, útiles para mejorar la gestión de estos.', 'Identifica los elementos que componen un sistema de la gerencia de recursos físicos. Identifica, clasifica y valora la importancia de los recursos físicos en la producción de bienes y prestación de servicios en organizaciones públicas. Gestiona el sistema de recursos físicos. Aplica los instrumentos de control y herramientas legales en el proceso de gestión de recursos públicos para realizar un manejo transparente...'),
+(35, 35, 'ESTADO, GOBIERNO Y SOCIEDAD', 'Generar conocimiento y capacidad de análisis sobre los procesos de implementación de Políticas Públicas y proporcionar los conocimientos y habilidades suficientes respecto de los tipos e instrumentos de evaluación de Políticas Públicas.', 'Comprende los fundamentos teórico práctico del proceso de implementación de Políticas Públicas. Desarrolla habilidades de análisis de los distintos componentes que hacen parte del proceso de implementación... Apropia y aplica consistentemente los distintos instrumentos de tipo cualitativo y cuantitativo para el análisis y evaluación... Comprende los diferentes enfoques y métodos de evaluación... Comprende y aplica sistemáticamente los instrumentos y herramientas de manejo de datos...'),
+(36, 36, 'COMPLEMENTARIA', 'Desarrollar habilidades y destrezas para de procesar datos cuantitativos en administración pública y gobierno a partir del desarrollo de algoritmos del aprendizaje automatizado, mediante la ayuda del software estadístico R.', 'Elabora, construye y evalúa modelos supervisados en Administración Pública o áreas afines, por medio del uso del paquete CARET del software R. Reúne y procesa datos con el R de áreas de estudio... Adquiriere la capacidad para sintetizar datos cuantitativos mediante modelos no supervisados, métodos de clasificación y agrupación de individuos o categorías de aprendizaje.');
+
+
+-- 3. INSERCIÓN DE DATOS: CONTENIDOS SEPARADOS POR UNIDAD (Semestres V y VI)
+
+INSERT INTO contenidos (idmicrocurriculo, unidad, contenido) VALUES
+-- Contenidos Microcurrículo 25: Administración y gestión tributaria territorial
+(25, 'Unidad 1', 'Tipos de impuestos'),
+(25, 'Unidad 2', 'Tarifa y cobros de impuestos'),
+(25, 'Unidad 3', 'Estructura y gestión de impuestos en departamentos, municipios y la nación'),
+(25, 'Unidad 4', 'Tasas, contribuciones, tarifas y recaudos'),
+(25, 'Unidad 5', 'Catastro multipropósito'),
+(25, 'Unidad 6', 'Tributación y ciudadanía'),
+
+-- Contenidos Microcurrículo 26: Gobierno y políticas públicas
+(26, 'Unidad 1', 'Nociones de Gobierno y políticas públicas'),
+(26, 'Unidad 2', 'Las Políticas Públicas como campo de estudio, enfoques y modelos del estudio de las políticas públicas.'),
+(26, 'Unidad 3', 'Tipos de políticas públicas y su descripción para Colombia y sus entidades territoriales.'),
+(26, 'Unidad 4', 'El ciclo de la política'),
+(26, 'Unidad 5', 'Gobierno y Políticas Públicas en Colombia'),
+
+-- Contenidos Microcurrículo 27: Organización estatal colombiana
+(27, 'Unidad 1', 'Órganos, funciones, dinámicas y contextos del Estado Colombiano'),
+(27, 'Unidad 2', 'Rama legislativa'),
+(27, 'Unidad 3', 'Rama ejecutiva. Características organizacionales y comparativas de los sectores públicos'),
+(27, 'Unidad 4', 'La Rama judicial'),
+(27, 'Unidad 5', 'Organismos de control'),
+(27, 'Unidad 6', 'La Organización electoral y los Órganos autónomos e independientes'),
+
+-- Contenidos Microcurrículo 28: Políticas y gestión ambiental en Colombia
+(28, 'Unidad 1', 'Fundamentos Ambientales y Principios Ecológicos'),
+(28, 'Unidad 2', 'Políticas y Gestión Ambiental en Colombia'),
+(28, 'Unidad 3', 'Gestión Ambiental Territorial'),
+(28, 'Unidad 4', 'Instrumentos de Gestión Ambiental'),
+
+-- Contenidos Microcurrículo 29: Sistemas de información territorial
+(29, 'Unidad 1', 'Definiciones de sistemas de información geográfica y territorial'),
+(29, 'Unidad 2', 'Software y procedimientos para gestionar la información geográfica y territorial'),
+(29, 'Unidad 3', 'Herramientas específicas de edición y análisis territorial'),
+(29, 'Unidad 4', 'Bases de datos para la gestión y análisis de información territorial'),
+(29, 'Unidad 5', 'Políticas de información y gestión de datos'),
+
+-- Contenidos Microcurrículo 30: Toma de decisiones en el sector público
+(30, 'Unidad 1', 'Teoría de la Decisión'),
+(30, 'Unidad 2', 'Modelos de toma de decisiones'),
+(30, 'Unidad 3', 'El proceso de Toma de Decisiones'),
+(30, 'Unidad 4', 'Liderazgo, ética y toma de decisiones'),
+(30, 'Unidad 5', 'Toma de decisiones en administración y políticas públicas'),
+
+-- Contenidos Microcurrículo 31: Contabilidad Gubernamental
+(31, 'Unidad 1', 'Conceptos de la Contabilidad General'),
+(31, 'Unidad 2', 'Las normas de la Contabilidad Pública'),
+(31, 'Unidad 3', 'El manejo contable en las organizaciones públicas'),
+(31, 'Unidad 4', 'La auditoría sobre la Hacienda Pública'),
+(31, 'Unidad 5', 'El Control Fiscal'),
+(31, 'Unidad 6', 'La Contabilidad Nacional'),
+
+-- Contenidos Microcurrículo 32: Contratación estatal
+(32, 'Unidad 1', 'Régimen de Contratos de la Administración'),
+(32, 'Unidad 2', 'Ley 80 de 1993'),
+(32, 'Unidad 3', 'Las partes del contrato administrativo'),
+(32, 'Unidad 4', 'Los requisitos del contrato administrativo'),
+(32, 'Unidad 5', 'La selección del contratista'),
+
+-- Contenidos Microcurrículo 33: Descentralización en Colombia
+(33, 'Unidad 1', 'Conceptos de descentralización, desconcentración y delegación. Diferencias entre autonomía administrativa y territorial.'),
+(33, 'Unidad 2', 'Antecedentes de la descentralización en Colombia'),
+(33, 'Unidad 3', 'La descentralización municipal (política, administrativa y fiscal)'),
+(33, 'Unidad 4', 'Competencias y recursos de las entidades territoriales'),
+(33, 'Unidad 5', 'Descentralización sectorial (educación, salud, agua potable)'),
+
+-- Contenidos Microcurrículo 34: Gestión de recursos físicos
+(34, 'Unidad 1', 'Concepto, principios e importancia de la gestión de recursos físicos.'),
+(34, 'Unidad 2', 'Naturaleza de los recursos en el sector público'),
+(34, 'Unidad 3', 'Modelos y técnicas para la gerencia y administración de recursos'),
+(34, 'Unidad 4', 'La planeación, adquisición, manejo, administración, auditoria y seguimiento en el manejo de los recursos'),
+(34, 'Unidad 5', 'Las compras y la ejecución presupuestal. Clasificación de los bienes'),
+(34, 'Unidad 6', 'Administración de inventarios y de almacenes'),
+(34, 'Unidad 7', 'Herramientas y estrategias anticorrupción'),
+
+-- Contenidos Microcurrículo 35: Implementación y evaluación de políticas públicas
+(35, 'Unidad 1', 'La implementación de las políticas públicas'),
+(35, 'Unidad 2', 'La importancia de la evaluación y sus impactos'),
+(35, 'Unidad 3', 'Los tipos de evaluación: Normativa- Legal Grandes cambios generales'),
+(35, 'Unidad 4', 'Enfoques y Métodos de Evaluación'),
+(35, 'Unidad 5', 'Instrumentos e indicadores cualitativos y cuantitativos'),
+(35, 'Unidad 6', 'Herramientas Informáticas y sistemas de información'),
+(35, 'Unidad 7', 'Institucionalidad y evaluación de las políticas públicas en Colombia y en el mundo'),
+
+-- Contenidos Microcurrículo 36: Inteligencia artificial y Big data
+(36, 'Unidad 1', 'Aprendizaje automático y Big Data'),
+(36, 'Unidad 2', 'Conceptos básicos de Inteligencia Artificial'),
+(36, 'Unidad 3', 'Modelos Lineales Generalizados en R'),
+(36, 'Unidad 4', 'Aprendizaje Supervisado en R: Regresión'),
+(36, 'Unidad 5', 'Aprendizaje no supervisado en R');
+
+-- 1. INSERCIÓN DE DATOS: ASIGNATURAS (Semestres VII y VIII)
+
+INSERT INTO asignaturas (id, idprograma, semestre, código, abreviatura, área, nombreasignatura, creditos, tipoasignatura, tipocredito, prerequisito) VALUES
+(37, 1, 'VII', 'APT37-CRD', 'CSIGG', 'G T', 'Catastro y sistemas de información georreferenciada', 3, 'DISCIPLINAR/ PROFESIONALIZANTE', 'Práctico', 'Sistemas de información territorial'),
+(38, 1, 'VII', 'APT38-CRD', 'GFURI', 'E G y S', 'Gestión fronteriza y relaciones internacionales', 3, 'DISCIPLINAR/ PROFESIONALIZANTE', 'Teórico-práctico', 'N. A.'),
+(39, 1, 'VII', 'APT39-CRD', 'MMDDC', 'C', 'Métodos y modelos de gestión de datos cualitativos', 2, 'DISCIPLINAR/ PROFESIONALIZANTE', 'Teórico -Práctico', 'N. A.'),
+(40, 1, 'VII', 'APT40-CRD', 'RETCO', 'G T', 'Régimen territorial colombiano', 3, 'DISCIPLINAR/ PROFESIONALIZANTE', 'Teórico-práctico', 'Organización estatal colombiana'),
+(41, 1, 'VII', 'APT41-CRD', 'SISCO', 'O P y G', 'Sistemas de control', 3, 'DISCIPLINAR/ PROFESIONALIZANTE', 'Práctico', 'N. A.'),
+(42, 1, 'VII', 'APT42-CRD', 'GETAH', 'O P y G', 'Gestión del talento humano', 3, 'DISCIPLINAR/ PROFESIONALIZANTE', 'Teórico-práctico', 'N. A.'),
+(43, 1, 'VIII', 'APT43-CRD', 'FYEDP', 'E P', 'Formulación y evaluación de proyectos', 3, 'DISCIPLINAR/ PROFESIONALIZANTE', 'Teórico-práctico', 'N. A.'),
+(44, 1, 'VIII', 'APT44-CRD', 'GESPD', 'E P', 'Gestión de servicios públicos domiciliarios', 3, 'DISCIPLINAR/ PROFESIONALIZANTE', 'Teórico -Práctico', 'Planeación y análisis organizacional'),
+(45, 1, 'VIII', 'APT45-CRD', 'FUNPU', 'O P y G', 'Función pública', 3, 'DISCIPLINAR/ PROFESIONALIZANTE', 'Práctico', 'Gestión del talento humano'),
+(46, 1, 'VIII', 'APT46-CRD', 'GESTE', 'G T', 'Gestión territorial', 2, 'DISCIPLINAR/ PROFESIONALIZANTE', 'Teórico-práctico', 'Régimen territorial colombiano'),
+(47, 1, 'VIII', 'APT47-CRD', 'ORTER', 'G T', 'Ordenamiento territorial', 2, 'DISCIPLINAR/ PROFESIONALIZANTE', 'Teórico-práctico', 'Descentralización en Colombia'),
+(48, 1, 'VIII', 'APT48-CRD', 'RDDCA', 'E G y S', 'Régimen disciplinario y delitos contra la administración pública', 2, 'DISCIPLINAR/ PROFESIONALIZANTE', 'Teórico-práctico', 'N. A.');
+
+
+-- 2. INSERCIÓN DE DATOS: MICROCURRÍCULOS (Semestres VII y VIII)
+
+INSERT INTO microcurriculo (id, idasignatura, area, objetivogeneral, competencias) VALUES
+(37, 37, 'GESTION TERRITORIAL', 'Conocer el funcionamiento del catastro y las innovaciones para la gestión, planeación y ordenación del territorio utilizando los sistemas de información para la georreferenciación del territorio.', 'Conoce el funcionamiento del catastro y emplea innovaciones para la gestión, planeación y ordenación del territorio Innova y lidera en la formulación de propuestas para la gestión, planeación y ordenación del territorio Reconoce los sistemas de información catastral y de georreferenciación.'),
+(38, 38, 'ESTADO, GOBIERNO Y SOCIEDAD', 'Entender las dinámicas fronterizas como escenarios internacionales en donde los Estados se integran cooperativamente para desarrollar acuerdos económicos, políticas sociales, resolver problemáticas comunes y afianzar los lazos interestatales para gestionar multilateralmente la vida regional fronteriza.', 'Comprende las teorías de frontera y de las relaciones internacionales Relaciona la economía nacional con la economía internacional en relación con la integración multinacional Identifica los problemas fronterizos que tiene Colombia con los países vecinos y plantea posibles soluciones Reconoce el derecho internacional como mecanismo para dirimir las diferencias entre los Estados'),
+(39, 39, 'COMPLEMENTARIA', 'Ofrecer a los estudiantes una introducción a los conceptos básicos, los métodos y las técnicas de la investigación cualitativa, como complemento de la investigación cuantitativa, para la interpretación de los comportamientos de las personas en ambientes cotidianos y su relación con el éxito de las decisiones en la administración pública.', 'Comprende la importancia de los métodos cualitativos en la investigación social Aplica las técnicas de gestión de datos cualitativos en el ámbito de la administración pública y la toma de decisiones Interpreta datos obtenidos mediante técnicas cualitativas.'),
+(40, 40, 'GESTION TERRITORIAL', 'Brindar herramientas e instrumentos desde lo legal y lo legítimo para entender la organización territorial del Estado colombiano y las problemáticas relacionadas con el territorio, la territorialización, así como las dinámicas en la construcción y deconstrucción del territorio.', 'Comprende la organización territorial político administrativa del Estado colombiano y las problemáticas relacionadas Comprende los mecanismos y formas de asociación de las entidades territoriales para solucionar problemas comunes Aporta en la formulación de propuestas para transformar las problemáticas relacionadas con la organización territorial.'),
+(41, 41, 'ORGANIZACIONES PÚBLICAS Y GESTION', 'Identificar, describir, analizar, interpretar y evaluar el estado actual del control de la gestión a partir de las experiencias exitosas y problemáticas de las entidades del Estado para proponer recomendaciones para su fortalecimiento.', 'Comprende los objetivos y limitaciones del control de gestión abordado desde el paradigma de la simplicidad en la Administración Pública en Colombia. Identifica los tipos y modelos de controle establecidos en la CP 1991 y el marco normativo, así como su aporte al cumplimiento de los objetivos en las entidades del Estado. Caracteriza los entes de control en Colombia, sus funciones y aportes para el cumplimiento de los fines del Estado. Diseña, desarrolla e interpreta un sistema integral de medición de la gestión a partir de indicadores propuestos para monitorear la gestión en una entidad.'),
+(42, 42, 'ORGANIZACIONES PÚBLICAS Y GESTION', 'Conocer, comprender, analizar, aplicar y evaluar los fundamentos teóricos, las técnicas, los instrumentos y las técnicas, así como desarrollar las competencias indispensables para el éxito en la gerencia de recursos humanos en el ámbito de la administración pública', 'Interpreta, conoce, reflexiona el marco normativo y de praxis del talento humano público Direcciona, planifica y desarrolla el capital humano. Conoce las formas de ingreso, permanencia, desarrollo y retiro de la función administrativa. Valora los sistemas de concurso, las normas de transparencia, capacitación, evaluación y del clima laboral en la organización pública.'),
+(43, 43, 'ECONOMÍA PUBLICA', 'Comprender y aplicar los mecanismos, técnicas y procedimientos para la identificación, formulación y auditoria de proyectos de desarrollo, como medio para la efectiva aplicación de recursos públicos apropiados para la satisfacción de necesidades colectivas.', 'Conoce el proceso de formulación y evaluación de proyectos de desarrollo. Establece la pertinencia, impactos y beneficios de la puesta en acción de los proyectos de desarrollo Maneja y domina de manera teórico-práctica las metodologías y técnicas de la formulación y evaluación de proyectos de desarrollo.'),
+(44, 44, 'ECONOMÍA PÚBLICA', 'Formar a los estudiantes para que distingan la correlación entre derechos y servicios, así como en los conceptos de estudios tarifarios, subsidios y contribuciones de solidaridad social, con el ánimo de que a través de los diferentes roles administrativos contribuyan en la modernización del Estado y de sus instituciones en el marco de la consolidación de los procesos de descentralización por servicios.', 'Comprende la teoría económica y jurídica del servicio público Conoce y aplica los enfoques y conceptos de la gestión de los servicios públicos (planeación, organización, seguimiento, evaluación y control. Es capaz de establecer estrategias de mejora organizativa y aseguramiento de la calidad de los servicios públicos territoriales. Genera procesos de creación, fusión y escisión de organizaciones proveedoras de servicios públicos para adecuarlas a los momentos políticos, sociales y económicos del Estado'),
+(45, 45, 'ORGANIZACIONES PÚBLICAS Y GESTIÓN', 'Conocer, comprender, analizar y evaluar el marco conceptual y normativo que rige el funcionamiento de la función pública, el régimen jurídico del Servidor Público y la acción de los servidores públicos y la realidad de la administración del personal al servicio del Estado en Colombia y su expresión más desarrollada como es la carrera administrativa.', 'Entiende y aplica el régimen público asociado con el servicio y la función pública Comprende el régimen penal y de derecho administrativo laboral Promueve con conocimientos y actitudes los sistemas de control y programas de moralización en el sector público'),
+(46, 46, 'GESTION TERRITORIAL', 'Conocer los conceptos y las problemáticas que conduzcan a la comprensión de la construcción territorial desde su integralidad en los procesos de toma de decisión para la gestión pública', 'Comprende integralmente la construcción territorial y los instrumentos para gestionar con eficiencia y eficacia los recursos de las entidades territoriales Analiza e implementa políticas con una lectura holística del territorio, para una gestión efectiva de los gobiernos locales'),
+(47, 47, 'GESTION TERRITORIAL', 'Identificar los principales conceptos y las herramientas vinculadas al ordenamiento territorial que permiten aplicar los objetivos definidos en los planes y políticas de ordenamiento territorial.', 'Maneja los principales conceptos y las herramientas vinculadas a los planes y políticas de ordenamiento territorial Conoce el marco legal e institucional de la gestión pública colombiana en el ámbito nacional y territorial para la toma de decisiones Reconoce la importancia del ordenamiento territorial en los procesos de desarrollo territorial'),
+(48, 48, 'ESTADO, GOBIERNO Y SOCIEDAD', 'Dilucidar los aspectos fundamentales y procedimentales de la práctica disciplinaria dentro del ejercicio de la administración pública, para comprender las formas, aplicación y ejecución de la normatividad disciplinaria y se prevenga o castigue los delitos en contra de la función pública y la administración pública.', 'Explica los fundamentos y teorías del régimen disciplinario en Colombia Sintetiza la estructura del proceso disciplinario en Colombia Identifica claramente las faltas o delitos contra la administración pública Determina los pasos procedimentales que se efectúan en una investigación disciplinar hasta su cierre.');
+
+
+-- 3. INSERCIÓN DE DATOS: CONTENIDOS SEPARADOS POR UNIDAD (Semestres VII y VIII)
+
+INSERT INTO contenidos (idmicrocurriculo, unidad, contenido) VALUES
+-- Contenidos Microcurrículo 37: Catastro y sistemas de información georreferenciada
+(37, 'Unidad 1', 'Introducción: Conceptos básicos'),
+(37, 'Unidad 2', 'Problemas relacionados con la planificación territorial y el catastro'),
+(37, 'Unidad 3', 'Datos espaciales, información alfanumérica y operaciones de geoprocesamiento en capas vectoriales.'),
+(37, 'Unidad 4', 'Catastro, información y gestión local'),
+(37, 'Unidad 5', 'Catastro, planeación y ordenamiento territorial'),
+(37, 'Unidad 6', 'Catastro multipropósito'),
+(37, 'Unidad 7', 'Los sistemas de información para la georreferenciación'),
+
+-- Contenidos Microcurrículo 38: Gestión fronteriza y relaciones internacionales
+(38, 'Unidad 1', 'Lo social, lo político y lo económico en la frontera'),
+(38, 'Unidad 2', 'Economía Internacional y procesos de integración multinacional'),
+(38, 'Unidad 3', 'Cooperación y negociación internacional'),
+(38, 'Unidad 4', 'Desarrollo regional fronterizo'),
+(38, 'Unidad 5', 'El derecho de las relaciones internacionales'),
+(38, 'Unidad 6', 'Problemática fronteriza colombiana'),
+
+-- Contenidos Microcurrículo 39: Métodos y modelos de gestión de datos cualitativos
+(39, 'Unidad 1', 'Conceptos básicos de investigación cualitativa'),
+(39, 'Unidad 2', 'Métodos y técnicas de investigación cualitativa'),
+(39, 'Unidad 3', 'Discusión sobre la ética de la investigación cualitativa'),
+(39, 'Unidad 4', 'Taller de análisis de datos cualitativos (NVIVO, AtlasTI)'),
+
+-- Contenidos Microcurrículo 40: Régimen territorial colombiano
+(40, 'Unidad 1', 'Formas territoriales de Estado, elementos Introductorios'),
+(40, 'Unidad 2', 'Sobre el Departamento'),
+(40, 'Unidad 3', 'Sobre el Municipio'),
+(40, 'Unidad 4', 'Otras formas de organización territorial del Estado'),
+(40, 'Unidad 5', 'Problemas de la organización del territorio'),
+
+-- Contenidos Microcurrículo 41: Sistemas de control
+(41, 'Unidad 1', 'Marco conceptual, constitucional y legal de los sistemas de control'),
+(41, 'Unidad 2', 'Modelos de Control Interno'),
+(41, 'Unidad 3', 'Responsabilidad fiscal'),
+(41, 'Unidad 4', 'Estructura de los sistemas de control de gestión'),
+(41, 'Unidad 5', 'Indicadores de Gestión'),
+(41, 'Unidad 6', 'Análisis de cadena de resultados'),
+
+-- Contenidos Microcurrículo 42: Gestión del talento humano
+(42, 'Unidad 1', 'Modelos o sistemas de gestión del recurso humano en las organizaciones públicas'),
+(42, 'Unidad 2', 'Planeación del personal y recursos humanos'),
+(42, 'Unidad 3', 'Análisis y descripción de cargos y cargas de trabajo'),
+(42, 'Unidad 4', 'Vinculación a los empleos de carrera'),
+(42, 'Unidad 5', 'Administración de salarios y compensaciones'),
+(42, 'Unidad 6', 'Capacitación y entrenamiento'),
+(42, 'Unidad 7', 'Bienestar social, beneficios y servicios sociales'),
+(42, 'Unidad 8', 'Evaluación del desempeño'),
+(42, 'Unidad 9', 'El retiro del servicio'),
+
+-- Contenidos Microcurrículo 43: Formulación y evaluación de proyectos
+(43, 'Unidad 1', 'Definición, ciclo y alcance del proyecto'),
+(43, 'Unidad 2', 'Identificación del problema y alternativas de solución.'),
+(43, 'Unidad 3', 'Formulación del Proyecto'),
+(43, 'Unidad 4', 'Estudios que soportan el proyecto: de mercado, técnico, organizacional, financiero y legal'),
+(43, 'Unidad 5', 'Evaluación del proyecto, metodologías, medición, evaluación financiera, social y ambiental'),
+
+-- Contenidos Microcurrículo 44: Gestión de servicios públicos domiciliarios
+(44, 'Unidad 1', 'Marco conceptual y teoría General de Servicios Públicos'),
+(44, 'Unidad 2', 'Los servicios públicos como actividad industrial y comercial'),
+(44, 'Unidad 3', 'Los servicios públicos domiciliarios: del estado bienestar al estado neoliberal'),
+(44, 'Unidad 4', 'Competencias institucionales y organizacionales en la prestación de los servicios públicos'),
+(44, 'Unidad 5', 'Parámetros organizacionales y funcionales en los servicios públicos domiciliarios'),
+
+-- Contenidos Microcurrículo 45: Función pública
+(45, 'Unidad 1', 'Precisiones conceptuales'),
+(45, 'Unidad 2', 'Aspectos constitucionales, laborales y de la administración del personal al servicio del Estado'),
+(45, 'Unidad 3', 'Formas de Vinculación a la Administración Pública'),
+(45, 'Unidad 4', 'Sistema nacional de carrera administrativa y de la función pública'),
+(45, 'Unidad 5', 'Evolución de la carrera administrativa en Colombia'),
+(45, 'Unidad 6', 'Situaciones administrativas de los empleados públicos'),
+(45, 'Unidad 7', 'Causales de retiro de la función pública'),
+(45, 'Unidad 8', 'Régimen actual de carrera administrativa, empleo público y gerencia administrativa'),
+
+-- Contenidos Microcurrículo 46: Gestión territorial
+(46, 'Unidad 1', 'Evolución y perspectivas de los enfoques sobre territorio'),
+(46, 'Unidad 2', 'Dimensión geográfica, económica y ambiental'),
+(46, 'Unidad 3', 'Dimensión político-administrativa'),
+(46, 'Unidad 4', 'Los elementos de la gestión del desarrollo territorial'),
+(46, 'Unidad 5', 'Estudios de caso'),
+
+-- Contenidos Microcurrículo 47: Ordenamiento territorial
+(47, 'Unidad 1', 'Introducción al ordenamiento territorial'),
+(47, 'Unidad 2', 'Ordenamiento territorial y Estado'),
+(47, 'Unidad 3', 'La normatividad del ordenamiento territorial'),
+(47, 'Unidad 4', 'Ordenamiento territorial, participación y desarrollo'),
+(47, 'Unidad 5', 'Prospectiva del ordenamiento territorial'),
+
+-- Contenidos Microcurrículo 48: Régimen disciplinario y delitos contra la administración pública
+(48, 'Unidad 1', 'Fundamentos del régimen disciplinario en Colombia'),
+(48, 'Unidad 2', 'La estructura del proceso disciplinario'),
+(48, 'Unidad 3', 'Tipicidad disciplinaria'),
+(48, 'Unidad 4', 'Procedimiento disciplinario ordinario'),
+(48, 'Unidad 5', 'La investigación disciplinaria'),
+(48, 'Unidad 6', 'Terminación de la investigación disciplinar'),
+(48, 'Unidad 7', 'delitos contra la administración pública');
+
+-- 1. INSERCIÓN DE DATOS: ASIGNATURAS (Semestres IX y X)
+
+INSERT INTO asignaturas (id, idprograma, semestre, código, abreviatura, área, nombreasignatura, creditos, tipoasignatura, tipocredito, prerequisito) VALUES
+(49, 1, 'IX', 'APT49-CRD', 'ADAPT', 'C', 'Analítica de datos aplicado a la administración pública territorial', 2, 'DISCIPLINAR/ PROFESIONALIZANTE', 'Práctico', 'N. A.'),
+(50, 1, 'IX', 'APT50-CRD', 'ELEUN', 'L.E', 'Electiva I', 2, 'LIBRE ELECCIÓN', 'Teórico-práctico', 'N. A.'),
+(51, 1, 'IX', 'APT51-CRD', 'PLTDE', 'G T', 'Planeación territorial del desarrollo', 3, 'DISCIPLINAR/ PROFESIONALIZANTE', 'Práctico', 'Ordenamiento territorial'),
+(52, 1, 'IX', 'APT52-CRD', 'PRADM', 'LE', 'Prácticas administrativas', 6, 'PROFUNDIZACIÓN', 'Práctico', 'Haber cursado y aprobado el 75% de los créditos del programa'),
+(53, 1, 'X', 'APT53-CRD', 'ELEDO', 'LE', 'Electiva II', 2, 'LIBRE ELECCIÓN', 'Teórico-práctico', 'N. A.'),
+(54, 1, 'X', 'APT54-CRD', 'EMRAP', 'O P y G', 'Enfoques y modelos recientes de la administración pública', 2, 'DISCIPLINAR/ PROFESIONALIZANTE', 'Teórico-práctico', 'N. A.'),
+(55, 1, 'X', 'APT55-CRD', 'LAELE', 'LE', 'Laboratorio electivo', 4, 'LIBRE ELECCIÓN', 'Práctico', 'N. A.'),
+(56, 1, 'X', 'APT56-CRD', 'OPGRA', 'LE', 'Opción de Grado', 7, 'PROFUNDIZACIÓN', 'Teórico - Práctico', 'Haber cursado y aprobado el 85% de los créditos');
+
+
+-- 2. INSERCIÓN DE DATOS: MICROCURRÍCULOS (Semestres IX y X)
+-- Nota: Solo se insertan los microcurrículos detallados en el documento base para las materias teóricas/prácticas específicas.
+
+INSERT INTO microcurriculo (id, idasignatura, area, objetivogeneral, competencias) VALUES
+(49, 49, 'COMPLEMENTARIA', 'Desarrollar habilidades y destrezas para procesamiento y visualización de datos cuantitativos para pequeñas y grandes bases de datos en administración pública.', 'Elabora y construye visualizaciones en Administración Pública o áreas afines, por medio del uso de herramientas de Excel, el software R o Python Reúne y procesa datos de datos con el R, para emitir juicios que incluyan una reflexión sobre temas relevantes de índole social, económico y científico en AP, desde la visualización de datos Visualiza datos cuantitativos mediante las herramientas vistas en el curso y otras que el estudiante encuentre Interpreta resultados del análisis de datos e información abierta para llegar a tomar decisiones correctas.'),
+(51, 51, 'GESTION TERRITORIAL', 'Conocer los antecedentes, el marco legal y metodológico para la planeación del desarrollo territorial en Colombia', 'Comprende los antecedentes, marco legal y metodológico para la planeación del desarrollo territorial en Colombia Innova y lidera en la formulación de propuestas, planes, programas y proyectos para mejorar la toma de decisiones para el cumplimiento de los fines del Estado en el ámbito territorial.'),
+(54, 54, 'ORGANIZACIONES PÚBLICAS Y GESTION', 'Aproximar a los estudiantes al conocimiento de los marcos conceptuales, las técnicas y herramientas propuestas por las ciencias de la gestión, para el mejoramiento de la capacidad institucional de las organizaciones públicas con el fin de que sirvan de marco referencial para verificar y comparar su existencia, aplicación y desarrollo en las entidades y organismos del Estado Colombiano.', 'Comprende las características, técnicas y herramientas de los nuevos enfoques y modelos de la Administración Pública Gestiona las entidades públicas locales, territoriales, nacionales o sociales, aplicando herramientas de calidad, servicios, trámites, atención al usuario y sistemas de administración contemporánea. Entiende, aplica y promueve esquemas de transparencia y lucha anticorrupción, a partir de la aplicación de nuevos conceptos y herramientas de gerencia pública.');
+
+
+-- 3. INSERCIÓN DE DATOS: CONTENIDOS SEPARADOS POR UNIDAD (Semestres IX y X)
+
+INSERT INTO contenidos (idmicrocurriculo, unidad, contenido) VALUES
+-- Contenidos Microcurrículo 49: Analítica de datos aplicado a la administración pública territorial
+(49, 'Unidad 1', 'Fundamentos de análisis de datos'),
+(49, 'Unidad 2', 'Introducción y fundamentos de Visualización'),
+(49, 'Unidad 3', 'Almacenamiento y datos relacionales'),
+(49, 'Unidad 4', 'Herramientas de Ciencia de Datos con Python o R'),
+(49, 'Unidad 5', 'Aplicaciones de la visualización en temas de administración pública (AP)'),
+
+-- Contenidos Microcurrículo 51: Planeación territorial del desarrollo
+(51, 'Unidad 1', 'Antecedentes históricos de la planeación en Colombia.'),
+(51, 'Unidad 2', 'Marco legal e institucional sobre planeación en Colombia'),
+(51, 'Unidad 3', 'Teorías y enfoques de la planeación del desarrollo territorial'),
+(51, 'Unidad 4', 'Formulación y ejecución de los planes de desarrollo'),
+(51, 'Unidad 5', 'Seguimiento, control y evaluación de los planes de Desarrollo.'),
+
+-- Contenidos Microcurrículo 54: Enfoques y modelos recientes de la administración pública
+(54, 'Unidad 1', 'Tránsito de la administración pública tradicional a nuevos enfoques y modelos'),
+(54, 'Unidad 2', 'Aspectos contextuales en los que surgen los nuevos enfoques diversos intentos por sustituir a la administración'),
+(54, 'Unidad 3', 'Enfoques contemporáneos diversos intentos por sustituir a la administración'),
+(54, 'Unidad 4', 'La administración pública colombiana y los enfoques y modelos contemporáneos'),
+(54, 'Unidad 5', 'Modelos gerenciales privados aplicados a la administración pública'),
+(54, 'Unidad 6', 'Instrumentos y herramientas de los nuevos enfoques incorporados en la administración pública'),
+(54, 'Unidad 7', 'Competencias gerenciales'),
+(54, 'Unidad 8', 'Transparencia y lucha contra la corrupción'),
+(54, 'Unidad 9', 'Democratización de la administración pública');

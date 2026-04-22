@@ -1,0 +1,41 @@
+﻿# ============================================================
+# AUDITORÍA DE DOCUMENTACIÓN
+# ============================================================
+# Versión de la aplicación : 1.2.51
+# Archivo original          : C:\Users\luis.bechara\.gemini\antigravity\brain\32800ad9-8e77-4f3a-a4ff-1708c9353697\walkthrough_v1_2_51.md
+# Fecha de copia            : 2026-04-20 16:08:13
+# ============================================================
+# Walkthrough - EstabilizacioÌn v1.2.51 (Testing Suite)
+
+Esta versiÃ³n marca la transiciÃ³n de un estado de "hotfix de emergencia" a una **arquitectura estable y verificada**. Se ha desacoplado la lÃ³gica de negocio de la interfaz de WinForms y se ha implementado una suite integral de 23 pruebas unitarias que cubren desde el parseo de dÃ­as hasta la persistencia en el Vault.
+
+## Cambios Principales
+
+### 1. RefactorizaciÃ³n para Testeabilidad
+*   **GridToSesionMapper**: Se extrajo la lÃ³gica de extracciÃ³n de sesiones de `FormSesionesAcademicas.cs` a una clase estÃ¡tica pura. Esto permite validar el algoritmo de guardado en microsegundos sin necesidad de instanciar un `DataGridView` real.
+*   **DayPatternParser**: CentralizaciÃ³n de la lÃ³gica de traducciÃ³n de dÃ­as (EspaÃ±ol -> InglÃ©s) y parseo de patrones. Se aÃ±adiÃ³ soporte robusto para tildes (MIÃ‰RCOLES/SÃBADO).
+*   **GridRowDto**: ImplementaciÃ³n de una capa de abstracciÃ³n de datos para el grid, eliminando la dependencia dura de WinForms en la lÃ³gica de negocio.
+
+### 2. Suite de Pruebas Unitarias (23 PASSED)
+La suite se organiza en 4 capas de verificaciÃ³n:
+*   **Capa 0 (LÃ³gica)**: 12 tests para el mapper, hash de parÃ¡metros y traducciÃ³n de dÃ­as. Se incluyÃ³ un test especÃ­fico para la "tautologÃ­a del validador", asegurando que el nuevo sistema detecta desfases reales.
+*   **Capa 1 (Repositorio)**: Tests con **SQLite in-memory** que verifican el flujo Upsert (Delete + Insert) transaccional sin dejar sesiones huÃ©rfanas.
+*   **Capa 2 (Persistencia)**: VerificaciÃ³n de la integridad del Vault (Header SQLite 'SQLi' post-desencriptaciÃ³n) y estabilidad de lectura con reintentos.
+*   **Capa 3 (UI Integration)**: Tests en **STAThread** que validan el comportamiento del Form real y su interacciÃ³n con el mapper vÃ­a reflexiÃ³n.
+
+## Resultados de VerificaciÃ³n
+```text
+Serie de pruebas para ConversorPDF.Tests.dll (.NETFramework,Version=v4.8)
+Correctas! - Con error: 0, Superado: 23, Omitido: 0, Total: 23
+```
+
+## Impacto en la Estabilidad
+*   **DetecciÃ³n Inmediata de Bugs**: Cualquier cambio futuro que rompa el algoritmo de generaciÃ³n o guardado serÃ¡ detectado por la suite de tests en < 3 segundos.
+*   **Integridad de Datos**: El validador de integridad ahora es independiente del proceso de extracciÃ³n, lo que garantiza que el botÃ³n [Guardar] solo proceda si los datos visuales coinciden exactamente con los modelos extraÃ­dos.
+
+> [!TIP]
+> Para ejecutar la suite de pruebas localmente: `dotnet test ConversorPDF.Tests\ConversorPDF.Tests.csproj`
+
+> [!IMPORTANT]
+> Se ha incrementado la versiÃ³n a **v1.2.51**. Se recomienda ejecutar el workflow `/contexto-previo` tras esta implementaciÃ³n.
+

@@ -1,0 +1,159 @@
+{
+  "format": 1,
+  "restore": {
+    "C:\\Users\\luis.bechara\\OneDrive - Escuela Superior de Administración Publica\\Antigravity\\_OK\\ConversorPDFv1.2.51.0\\ConversorPDF.Tests\\ConversorPDF.Tests.csproj": {}
+  },
+  "projects": {
+    "C:\\Users\\luis.bechara\\OneDrive - Escuela Superior de Administración Publica\\Antigravity\\_OK\\ConversorPDFv1.2.51.0\\ConversorPDF.Tests\\ConversorPDF.Tests.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\luis.bechara\\OneDrive - Escuela Superior de Administración Publica\\Antigravity\\_OK\\ConversorPDFv1.2.51.0\\ConversorPDF.Tests\\ConversorPDF.Tests.csproj",
+        "projectName": "ConversorPDF.Tests",
+        "projectPath": "C:\\Users\\luis.bechara\\OneDrive - Escuela Superior de Administración Publica\\Antigravity\\_OK\\ConversorPDFv1.2.51.0\\ConversorPDF.Tests\\ConversorPDF.Tests.csproj",
+        "packagesPath": "C:\\Users\\luis.bechara\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\luis.bechara\\OneDrive - Escuela Superior de Administración Publica\\Antigravity\\_OK\\ConversorPDFv1.2.51.0\\ConversorPDF.Tests\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\luis.bechara\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net48"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net48": {
+            "targetAlias": "net48",
+            "projectReferences": {
+              "C:\\Users\\luis.bechara\\OneDrive - Escuela Superior de Administración Publica\\Antigravity\\_OK\\ConversorPDFv1.2.51.0\\ConversorPDF.XLL\\ConversorPDF.XLL.csproj": {
+                "projectPath": "C:\\Users\\luis.bechara\\OneDrive - Escuela Superior de Administración Publica\\Antigravity\\_OK\\ConversorPDFv1.2.51.0\\ConversorPDF.XLL\\ConversorPDF.XLL.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.200"
+      },
+      "frameworks": {
+        "net48": {
+          "targetAlias": "net48",
+          "dependencies": {
+            "Dapper": {
+              "target": "Package",
+              "version": "[2.1.35, )"
+            },
+            "FluentAssertions": {
+              "target": "Package",
+              "version": "[6.12.0, )"
+            },
+            "MSTest.TestAdapter": {
+              "target": "Package",
+              "version": "[3.3.1, )"
+            },
+            "MSTest.TestFramework": {
+              "target": "Package",
+              "version": "[3.3.1, )"
+            },
+            "Moq": {
+              "target": "Package",
+              "version": "[4.20.70, )"
+            },
+            "System.Data.SQLite": {
+              "target": "Package",
+              "version": "[1.0.119, )"
+            },
+            "xunit": {
+              "target": "Package",
+              "version": "[2.7.0, )"
+            },
+            "xunit.runner.visualstudio": {
+              "target": "Package",
+              "version": "[2.5.7, )"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.201\\RuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "C:\\Users\\luis.bechara\\OneDrive - Escuela Superior de Administración Publica\\Antigravity\\_OK\\ConversorPDFv1.2.51.0\\ConversorPDF.XLL\\ConversorPDF.XLL.csproj": {
+      "version": "1.2.45.19",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\luis.bechara\\OneDrive - Escuela Superior de Administración Publica\\Antigravity\\_OK\\ConversorPDFv1.2.51.0\\ConversorPDF.XLL\\ConversorPDF.XLL.csproj",
+        "projectName": "ConversorPDF.XLL",
+        "projectPath": "C:\\Users\\luis.bechara\\OneDrive - Escuela Superior de Administración Publica\\Antigravity\\_OK\\ConversorPDFv1.2.51.0\\ConversorPDF.XLL\\ConversorPDF.XLL.csproj",
+        "packagesPath": "C:\\Users\\luis.bechara\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\luis.bechara\\OneDrive - Escuela Superior de Administración Publica\\Antigravity\\_OK\\ConversorPDFv1.2.51.0\\ConversorPDF.XLL\\obj\\",
+        "projectStyle": "PackageReference",
+        "skipContentFileWrite": true,
+        "UsingMicrosoftNETSdk": false,
+        "configFilePaths": [
+          "C:\\Users\\luis.bechara\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net48"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net48": {
+            "projectReferences": {}
+          }
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net48": {
+          "dependencies": {
+            "Dapper": {
+              "target": "Package",
+              "version": "[2.1.35, )"
+            },
+            "ExcelDna.AddIn": {
+              "target": "Package",
+              "version": "[1.8.0, )"
+            },
+            "ExcelDna.Integration": {
+              "target": "Package",
+              "version": "[1.8.0, )"
+            },
+            "PDFsharp": {
+              "target": "Package",
+              "version": "[1.50.5147, )"
+            },
+            "PdfPig": {
+              "target": "Package",
+              "version": "[0.1.9, )"
+            },
+            "Stub.System.Data.SQLite.Core.NetFramework": {
+              "target": "Package",
+              "version": "[1.0.119, )"
+            },
+            "System.Reflection.Metadata": {
+              "target": "Package",
+              "version": "[6.0.0, )"
+            }
+          }
+        }
+      }
+    }
+  }
+}

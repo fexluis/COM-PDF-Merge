@@ -1,0 +1,75 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package 
+    Name="ConversorPDF XLL Add-in" 
+    Language="1034" 
+    Version="1.2.45.17" 
+    Manufacturer="ESAP" 
+    UpgradeCode="80babf47-af47-4518-a228-9258c54f8726"
+    Scope="perUser">
+
+    <SummaryInformation Description="Instalador del Add-in ConversorPDF para Excel" />
+
+    <Property Id="ALLUSERS" Value="2" />
+    <Property Id="MSIINSTALLPERUSER" Value="1" />
+
+    <MajorUpgrade 
+      AllowSameVersionUpgrades="yes"
+      DowngradeErrorMessage="Ya hay una versiÃ³n mÃ¡s nueva instalada." 
+      Schedule="afterInstallInitialize" />
+
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- Directorios -->
+    <StandardDirectory Id="AppDataFolder">
+      <Directory Id="MicrosoftFolder" Name="Microsoft">
+        <Directory Id="AddInsFolder" Name="AddIns">
+          <Directory Id="dir_x64" Name="x64" />
+        </Directory>
+      </Directory>
+    </StandardDirectory>
+
+    <!-- Componente que copia el .xll -->
+    <ComponentGroup Id="MainComponents" Directory="AddInsFolder">
+      <Component Id="cmpXllFile" Guid="F6F2E07C-D3A3-4C10-9E11-2B2D3C4E5F60">
+        <RegistryValue Root="HKCU" Key="Software\ESAP\ConversorPDF" Name="installed" Type="integer" Value="1" KeyPath="yes" />
+        <File Id="filXll" Name="ConversorPDF.xll" Source="..\ConversorPDF.XLL\bin\x64\Release\ConversorPDF.XLL-AddIn64-packed.xll" />
+        <RemoveFile Id="PurgeOldXll" Name="ConversorPDF.XLL-AddIn64-packed.xll" On="install" />
+        <RemoveFile Id="PurgeXll" Name="ConversorPDF.xll" On="uninstall" />
+        <RemoveFolder Id="RemoveAddInsFolder" Directory="AddInsFolder" On="uninstall" />
+        <RemoveFolder Id="RemoveMicrosoftFolder" Directory="MicrosoftFolder" On="uninstall" />
+      </Component>
+
+      <Component Id="cmpSQLiteInterop" Guid="A2B3C4D5-E6F7-4890-ABCD-EF1234567891" Directory="dir_x64">
+        <RegistryValue Root="HKCU" Key="Software\ESAP\ConversorPDF" Name="interop_installed" Type="integer" Value="1" KeyPath="yes" />
+        <File Id="filSQLiteInterop" Name="SQLite.Interop.dll" Source="..\ConversorPDF.XLL\bin\x64\Release\x64\SQLite.Interop.dll" />
+        <RemoveFolder Id="RemoveX64Folder" Directory="dir_x64" On="uninstall" />
+      </Component>
+    </ComponentGroup>
+
+    <!-- Binary del script VBS (Custom Action) -->
+    <Binary Id="RegisterScript" SourceFile="RegisterXLL.vbs" />
+
+    <!-- Custom Action que registra el XLL -->
+    <CustomAction 
+      Id="RegisterExcelXLL" 
+      BinaryRef="RegisterScript" 
+      VBScriptCall="" 
+      Execute="immediate" 
+      Return="check" />
+
+    <!-- Feature principal -->
+    <Feature Id="MainFeature" Title="ConversorPDF Add-in" Level="1">
+      <ComponentGroupRef Id="MainComponents" />
+    </Feature>
+
+    <!-- Secuencia -->
+    <InstallExecuteSequence>
+      <Custom Action="RegisterExcelXLL" After="InstallFiles" Condition="NOT REMOVE" />
+    </InstallExecuteSequence>
+
+  </Package>
+</Wix>
+
+
+
+

@@ -1,0 +1,31 @@
+<customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui"
+          onLoad="Ribbon_Load"
+          loadImage="GetImage">
+    <ribbon> 
+        <tabs> 
+        <tab idMso="TabHome">
+            <group id="customGroup" label="ESAP" insertAfterMso="GroupNumber">
+                <splitButton id="MySplitButton" size="large">
+                    <button id="Bt0" image="esap" label="PDF" onAction="ConvertirPDF" />                    
+                    <menu id="MyMenu">
+                        <button id="Bt1" imageMso="ExportSharePointList" label="Convertir Obligación" onAction="OnConvertirObligacionContador" getVisible="GetButtonVisible" />
+                        <button id="Bt2" imageMso="ExportXmlFile" label="Unificar OB" onAction="UnificarObligacionContador" getVisible="GetButtonVisible" />
+                        <button id="Bt3" imageMso="PublishToPdfOrEdoc" label="Unificar OP" onAction="UnificarOrdenPago" getVisible="GetButtonVisible" />
+                        <button id="Bt4" imageMso="ExportTextFile" label="Unificar Viaticos" onAction="ViaticosUnificarSoportes" getVisible="GetButtonVisible" />
+                        <button id="Bt5" imageMso="BehindText" label="Masivo Viaticos" onAction="ProcesarViaticosMasivo" getVisible="GetButtonVisible" />
+                        <button id="Bt6" imageMso="FileSaveAsExcelXlsb" label="Generar Cumplidos" onAction="ProcesarCumplidos" getVisible="GetButtonVisible" />
+                        <button id="Bt7" imageMso="ObjectsAlignTop" label="Generar Fila Seleccionada" onAction="GenerarFilaSeleccionada" getVisible="GetButtonVisible" />
+                        <button id="Bt8" imageMso="DatabaseRelationships" label="Gestion Documental" onAction="GestionDocumentalViaticos" getVisible="GetButtonVisible" />
+                        <button id="Bt9" imageMso="WindowNew" label="Buscar Informes" onAction="BuscarInformes" getVisible="GetButtonVisible" />
+                        <button id="Bt10" imageMso="TableIndexes" label="Procesar Firma" onAction="GenerarFirmaBase64" getVisible="GetButtonVisible" />
+                        <button id="Bt11" imageMso="TableIndexes" label="Sesiones Académicas" onAction="SesionesAcademicas" getVisible="GetButtonVisible" />
+                        <button id="Bt12" imageMso="TableIndexes" label="Metadatos" onAction="LeerMetadatos" getVisible="GetButtonVisible" />
+                        <button id="Btx" imageMso="AccessTableContacts" label="Usuario" onAction="Office365UserManager" />
+                    </menu>
+                </splitButton>         		
+		</group> 
+      </tab>
+	</tabs>
+    </ribbon>
+</customUI>
+<!-- https://bert-toolkit.com/imagemso-list.html -->

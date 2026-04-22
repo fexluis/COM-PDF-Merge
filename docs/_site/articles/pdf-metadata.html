@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Gesti&#243;n de Metadatos PDF | ESAP - ConversorPDF </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Gesti&#243;n de Metadatos PDF | ESAP - ConversorPDF ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/fexluis/COM-PDF-Merge/blob/main-1/docs/articles/pdf-metadata.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="gestión-de-metadatos-pdf">Gestión de Metadatos PDF</h1>
+
+<p>El servicio de metadatos permite adjuntar información estructurada a los archivos PDF generados por ConversorPDF. Esta información es crucial para la integración con sistemas de gestión documental y para la trazabilidad de los documentos (CDP, Autor, Fechas, etc.).</p>
+<h2 id="ipdfmetadataservice">IPdfMetadataService</h2>
+<p>La interfaz <code>IPdfMetadataService</code> define tres operaciones principales:</p>
+<ul>
+<li><code>GuardarMetadatos</code>: Persiste un objeto <code>Metadata</code> en el archivo PDF.</li>
+<li><code>LeerMetadatos</code>: Recupera la información estructurada de un PDF existente.</li>
+<li><code>ObtenerResumenMetadatos</code>: Genera un reporte legible en texto plano.</li>
+<li><code>ActualizarMetadato</code>: Permite modificar un campo específico (ej: &quot;estado&quot;) sin cargar todo el modelo.</li>
+</ul>
+<h3 id="ejemplo-de-uso">Ejemplo de Uso</h3>
+<p>Para guardar metadatos en un procesador, primero inyecta la interfaz en el constructor:</p>
+<pre><code class="lang-csharp">private readonly IPdfMetadataService _metadataService;
+
+public MyProcessor(IPdfMetadataService metadataService)
+{
+    _metadataService = metadataService;
+}
+</code></pre>
+<p>Luego, construye el objeto y guárdalo:</p>
+<pre><code class="lang-csharp">var info = new Metadata
+{
+    Titulo = &quot;Solicitud de Viático&quot;,
+    CDP = &quot;12345&quot;,
+    MetaDocumento = TipoMetadata.VIA_SOLICITUD
+};
+
+_metadataService.GuardarMetadatos(rutaArchivo, info);
+</code></pre>
+<h2 id="modelo-de-datos-metadata">Modelo de Datos (Metadata)</h2>
+<p>El modelo <code>Metadata</code> contiene tanto campos estándar del PDF como diccionarios personalizados:</p>
+<ul>
+<li><strong>Estandar</strong>: Título, Autor, Asunto, Palabras Clave.</li>
+<li><strong>Personalizados</strong>: CDP, RP, OB, OP, Tipo, Comisión, Fecha y MetaDocumento.</li>
+</ul>
+<div class="IMPORTANT">
+<h5>Important</h5>
+<p>Los campos personalizados se guardan internamente en el diccionario <code>/MetadataCustom</code> dentro del catálogo del PDF para evitar colisiones con metadatos de otras herramientas.</p>
+</div>
+<h2 id="rendimiento">Rendimiento</h2>
+<p>El servicio utiliza <code>PdfSharp</code> para un acceso directo a los objetos internos del PDF. La operación de inyección de metadatos añade aproximadamente <strong>10-20ms</strong> de procesamiento por archivo, lo cual es despreciable en flujos individuales y masivos.</p>
+<h2 id="herramienta-de-usuario-ribbon">Herramienta de Usuario (Ribbon)</h2>
+<p>Desde la versión <strong>1.2.46.01</strong>, se incluye una herramienta visual para que los usuarios finales puedan auditar los metadatos de sus PDFs.</p>
+<h3 id="cómo-usarla">Cómo usarla:</h3>
+<ol>
+<li>Navega a la pestaña <strong>ESAP</strong>.</li>
+<li>Despliega el menú del botón principal <strong>PDF</strong>.</li>
+<li>Selecciona la opción <strong>Metadatos</strong>.</li>
+<li>Selecciona uno o varios archivos PDF.</li>
+<li>El sistema procesará los archivos y generará un reporte detallado en el log de la aplicación.</li>
+</ol>
+<div class="TIP">
+<h5>Tip</h5>
+<p>Esta herramienta es ideal para verificar que los campos <code>metaFecha</code>, <code>metaCDP</code> y <code>metaTipo</code> se hayan grabado correctamente antes de radicar documentos en sistemas externos.</p>
+</div>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/fexluis/COM-PDF-Merge/blob/main-1/docs/articles/pdf-metadata.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          ESAP - ConversorPDF Doc
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

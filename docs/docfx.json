@@ -1,0 +1,61 @@
+{
+  "metadata": [
+    {
+      "src": [
+        {
+          "files": [
+            "ConversorPDF.XLL/ConversorPDF.XLL.csproj"
+          ],
+          "exclude": [
+            "**/bin/**",
+            "**/obj/**"
+          ],
+          "src": ".."
+        }
+      ],
+      "dest": "api",
+      "properties": {
+        "TargetFramework": "net48"
+      }
+    }
+  ],
+  "build": {
+    "content": [
+      {
+        "files": [
+          "api/**.yml",
+          "api/index.md"
+        ]
+      },
+      {
+        "files": [
+          "articles/**.md",
+          "articles/**/toc.yml",
+          "toc.yml",
+          "index.md"
+        ]
+      }
+    ],
+    "resource": [
+      {
+        "files": [
+          "images/**"
+        ]
+      }
+    ],
+    "dest": "_site",
+    "globalMetadata": {
+      "_appTitle": "ESAP - ConversorPDF",
+      "_appFooter": "ESAP - ConversorPDF Doc",
+      "_enableSearch": true,
+      "_appLogoPath": "images/logo.png",
+      "_language": "es"
+    },
+    "template": [
+      "default",
+      "modern"
+    ],
+    "postProcessors": [],
+    "noDefaultExcludes": false
+  }
+}
