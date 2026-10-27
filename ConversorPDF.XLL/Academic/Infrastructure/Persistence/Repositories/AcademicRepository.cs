@@ -1394,6 +1394,7 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                             ROW_NUMBER() OVER (
                                 PARTITION BY LOWER(TRIM(nombreusuario)) 
                                 ORDER BY 
+                                    CASE WHEN substr(id, 1, 4) = 'usr_' THEN 0 ELSE 1 END ASC,
                                     CASE WHEN firma IS NOT NULL AND TRIM(firma) != '' THEN 1 ELSE 0 END DESC,
                                     CASE WHEN perfil IS NOT NULL AND perfil != 'Academica' THEN 1 ELSE 0 END DESC,
                                     updated_at DESC,
@@ -1473,7 +1474,8 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
             {
                 LoggerHelper.Info($"[AcademicRepository] UpdateUsuario START - Id={usuario.Id}, NombreUsuario={usuario.NombreUsuario}, FirmaLength={usuario.Firma?.Length ?? 0}");
                 string sql = @"UPDATE usuarios SET 
-                    nombre = @Nombre, nombreusuario = @NombreUsuario, subunidad = @Subunidad, activo = @Activo, perfil = @Perfil, firma = @Firma 
+                    nombre = @Nombre, nombreusuario = @NombreUsuario, subunidad = @Subunidad, activo = @Activo, perfil = @Perfil, firma = @Firma,
+                    updated_at = datetime('now')
                     WHERE id = @Id";
                 int filas = _connection.Execute(sql, usuario, transaction: _transaction);
                 LoggerHelper.Info($"[AcademicRepository] UpdateUsuario Execute Result: Filas={filas}");

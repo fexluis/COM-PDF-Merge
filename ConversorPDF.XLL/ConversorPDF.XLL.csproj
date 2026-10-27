@@ -122,6 +122,7 @@
     <Compile Include="ExcelAddIn.cs" />
     <Compile Include="Core\Sync\SyncInitializer.cs" />
     <Compile Include="Core\Sync\SyncState.cs" />
+    <Compile Include="Core\Sync\UsuarioVaultProvisioner.cs" />
     <Compile Include="Ribbon\CookiePermisosHelper.cs" />
     <Compile Include="Ribbon\RibbonController.cs" />
     <Compile Include="Functions\PdfFunctions.cs" />

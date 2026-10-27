@@ -909,6 +909,7 @@ namespace ConversorPDF.XLL.Core.Sync
                                    ROW_NUMBER() OVER (
                                        PARTITION BY LOWER(TRIM(nombreusuario)) 
                                        ORDER BY 
+                                           CASE WHEN substr(id, 1, 4) = 'usr_' THEN 0 ELSE 1 END ASC,
                                            CASE WHEN firma IS NOT NULL AND firma != '' THEN 1 ELSE 0 END DESC,
                                            CASE WHEN perfil IS NOT NULL AND perfil != 'Academica' THEN 1 ELSE 0 END DESC,
                                            updated_at DESC,

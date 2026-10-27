@@ -447,16 +447,22 @@ namespace ConversorPDF.XLL.Core.Sync
                         var controlRepo = new SyncControlRepository();
                         controlRepo.EnsureTablesExist(newConn);
                         
-                        const string insertSql = @"
-                            INSERT OR IGNORE INTO usuarios (nombre, nombreusuario, subunidad, activo)
-                            VALUES (@Nombre, @NombreUsuario, @Subunidad, 1);";
-                        
-                        newConn.Execute(insertSql, new
-                        {
-                            Nombre = nombre,
-                            NombreUsuario = windowsUser.ToLowerInvariant(),
-                            Subunidad = subunidad.ToUpperInvariant()
-                        });
+                    }
+
+                    // H1/H4 (auditoria 2026-10-27): provisionar SIEMPRE (alta nueva o cambio de subunidad).
+                    // Antes solo se insertaba en el registro y con id aleatorio, dejando el vault
+                    // destino sin la fila del usuario o con la subunidad semilla.
+                    try
+                    {
+                        UsuarioVaultProvisioner.EnsureUsuarioEnVault(
+                            newConn,
+                            windowsUser ?? Environment.UserName,
+                            nombre,
+                            subunidad);
+                    }
+                    catch (Exception ex)
+                    {
+                        LoggerHelper.Warning($"[SyncContext] No se pudo provisionar el usuario en el vault destino: {ex.Message}");
                     }
                     
                     // CRITICO: Asegurar que la configuración global refleje la subunidad actual

@@ -1,6 +1,6 @@
 # Plan: Usuarios duplicados y cambio de subunidad que no persiste
 
-**Generado**: 2026-10-27 · **Autor**: Cline/Swarm-Planner · **Estado**: draft
+**Generado**: 2026-10-27 · **Autor**: Cline/Swarm-Planner · **Estado**: closed — ejecutado (T1–T9) + T-fix de auditoría (T10–T13)
 **Workspace verificado**: `C:\dev\ConversorPDF` (clon fiel de `d32115e`, 452/138 `.cs`, baseline `TOTAL: 939`)
 
 ## Execution envelope
@@ -194,6 +194,7 @@ T9 (gate final + review)                                   [deps: T1..T8]
 - **evidence**: Ruling R-20261027-T6-01
 - **status**: completed
 - **log**: [Ruling R-20261027-T6-01] Descarte formal de mutación multi-vault en caliente. La evidencia de T2 (UsuariosPersistenciaTests) y T3 demostró que persistir el vault actual con Persist() y actualizar atómicamente config.subunidad (id=1) es 100% suficiente para que la nueva subunidad sobreviva al reinicio de Excel. Durante el arranque, SyncContext.ResolveSubunidadWithDialog inspecciona el vault persistido, detecta la nueva subunidad vía SubunidadResolver, conmutando de forma segura (vaultChanged=true) a AcademicData_<DESTINO>.db.enc sin incurrir en riesgos de contención de locks en hilos STA ni dobles aperturas de vaults temporales en FormUsuarios. MoverUsuarioSubunidadService implementado como no-op seguro documentando este Ruling.
+- **ruling_vigente**: `R-20261027-T6-02` (ver §12). `R-20261027-T6-01` queda **supersedido** por la auditoría independiente: la evidencia de T2 solo probaba reabrir el **mismo** vault, no el arranque con conmutación de vault.
 - **files edited/created**:
   - `ConversorPDF.XLL/Academic/Application/Services/MoverUsuarioSubunidadService.cs`
 
@@ -308,3 +309,25 @@ Solapes evitados: `AcademicRepository.cs` solo en T4; `FormUsuarios.cs` en T1/T3
 | 12 | Riesgos con mitigación | ✅ §8, incluida la operación CRDT destructiva |
 
 **Correcciones aplicadas tras la autoevaluación:** (a) se fusionó el antiguo "wiring en RibbonController" dentro de T1 para no tocar L0 dos veces; (b) se separó `GetUsuarios`/`InsertUsuario`/seeds en una sola tarea (T4) porque comparten archivo; (c) se hizo T6 condicional con `Ruling` para no construir un mecanismo que T2 podría no justificar; (d) se añadió backup + `integrity_check` a T7 por ser operación destructiva sobre CRDT.
+
+---
+
+## 12. T-fix posterior a la auditoría independiente (2026-10-27)
+
+La re-verificación encontró que el síntoma "cambiar subunidad y no persiste" **seguía vivo al conmutar de vault**:
+`SyncContext.ResolveSubunidadWithDialog` cambia de `.db.enc` al arrancar y **no** provisionaba la fila del usuario en el
+destino; si el vault destino ya existía, su fila semilla mantenía la subunidad vieja y el arranque volvía al vault anterior.
+
+**Ruling vigente `R-20261027-T6-02`**: *sí* debe provisionarse la fila del usuario en el vault destino al conmutar.
+Motivo: el resolver lee `usuarios` del vault activo; sin la fila (o con la semilla vieja) el cambio no sobrevive al
+reinicio. Coste si es erróneo: una escritura idempotente por arranque con cambio de vault (bajo).
+
+| ID | Tarea | Evidencia |
+|---|---|---|
+| T10 | Tests de regresión RED: `UsuarioVaultProvisionerTests` (4 casos: semilla vieja, id legacy, alta nueva, idempotencia) + `UsuariosRegresionTests` (H2 `updated_at`, H3 preferencia `usr_`) | 6 fallos iniciales |
+| T11 | `UsuarioVaultProvisioner.EnsureUsuarioEnVault` (elimina duplicados legacy + upsert con `usr_` y subunidad) e invocación desde `SyncContext` en **ambos** caminos (`newlyRegistered` y `vaultChanged`) | `FullyQualifiedName~Usuarios` → 13/13 PASS |
+| T12 | `UpdateUsuario` sella `updated_at = datetime('now')`; `GetUsuarios` y `SyncInitializer.DeduplicateUsuarios` prefieren `substr(id,1,4) = 'usr_'` | tests H2/H3 en verde |
+| T13 | Limpieza del directorio basura `MigrationV79_…cs,ConversorPDF.XLL`; doc de cambios corregido; `Full` sobre el árbol final | ver `_evidence/<timestamp>/summary.md` |
+
+**Cobertura declarada**: el *provisioner* está cubierto por tests; la invocación desde `SyncContext` (método modal que
+abre `FormRegistroSubunidad`) se valida por revisión de código, no por test E2E automatizado.
