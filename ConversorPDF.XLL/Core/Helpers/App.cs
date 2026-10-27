@@ -69,7 +69,7 @@ namespace ConversorPDF.XLL.Core.Helpers
         public IViaticosService Viaticos => _viaticosService;
 
 
-        public const string APP_VERSION = "1.6.3.79";
+        public const string APP_VERSION = "1.6.3.80";
         public const string APP_VIGENCIA = "2026";
         public const string APP_NAME = "ESAP - Conversor PDF v" + APP_VERSION;
         private static string _defaultUserCache;
