@@ -120,10 +120,13 @@ T9 (gate final + review)                                   [deps: T1..T8]
   - xUnit + FluentAssertions 6.12; nombres `{Accion}_When_{Condicion}_Should_{Resultado}`.
 - **validation**: compilan y fallan por la razón esperada (`NotImplementedException` o aserción), nunca por error de compilación.
 - **verification**: `powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "FullyQualifiedName~UsuariosPersistenciaTests|FullyQualifiedName~UsuariosDuplicadosTests|FullyQualifiedName~SubunidadResolverTests"`
-- **evidence**:
-- **status**: pending
-- **log**:
+- **evidence**: `_evidence/20261027-125730`
+- **status**: Completed
+- **log**: Fase RED certificada. 3 archivos de prueba creados. Los 4 tests compilaron correctamente y fallaron exactamente por las razones previstas: NotImplementedException en Persist(), HaveCount(1) falló con 2 filas por falta de deduplicación, result.Value falló al esperar id determinista 'usr_pedroperez' recibiendo GUID aleatorio, y SubunidadResolver retornó ANTIOQUIA en vez de VALLE por ausencia de ORDER BY.
 - **files edited/created**:
+  - `ConversorPDF.Tests/Integration/Usuarios/UsuariosPersistenciaTests.cs`
+  - `ConversorPDF.Tests/Integration/Usuarios/UsuariosDuplicadosTests.cs`
+  - `ConversorPDF.Tests/Unit/Usuarios/SubunidadResolverTests.cs`
 
 ### T3: Persistir el vault y eliminar el SQL directo del formulario (implementer)
 - **depends_on**: [T2]
