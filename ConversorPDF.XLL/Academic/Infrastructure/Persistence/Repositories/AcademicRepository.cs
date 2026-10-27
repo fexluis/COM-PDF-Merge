@@ -1380,7 +1380,31 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
         {
             try
             {
-                var result = _connection.Query<Usuario>("SELECT id as Id, nombre as Nombre, nombreusuario as NombreUsuario, subunidad as Subunidad, activo as Activo, perfil as Perfil, firma as Firma FROM usuarios", transaction: _transaction).ToList();
+                const string sql = @"
+                    SELECT Id, Nombre, NombreUsuario, Subunidad, Activo, Perfil, Firma
+                    FROM (
+                        SELECT 
+                            id as Id, 
+                            nombre as Nombre, 
+                            nombreusuario as NombreUsuario, 
+                            subunidad as Subunidad, 
+                            activo as Activo, 
+                            perfil as Perfil, 
+                            firma as Firma,
+                            ROW_NUMBER() OVER (
+                                PARTITION BY LOWER(TRIM(nombreusuario)) 
+                                ORDER BY 
+                                    CASE WHEN firma IS NOT NULL AND TRIM(firma) != '' THEN 1 ELSE 0 END DESC,
+                                    CASE WHEN perfil IS NOT NULL AND perfil != 'Academica' THEN 1 ELSE 0 END DESC,
+                                    updated_at DESC,
+                                    id ASC
+                            ) as rn
+                        FROM usuarios
+                    ) sub
+                    WHERE rn = 1
+                    ORDER BY NombreUsuario COLLATE NOCASE ASC;";
+
+                var result = _connection.Query<Usuario>(sql, transaction: _transaction).ToList();
                 return SqliteResult<IEnumerable<Usuario>>.Success(result);
             }
             catch (Exception ex)
@@ -1409,15 +1433,26 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
             EnsureCrSqliteEnabled();
             try
             {
+                if (usuario == null)
+                {
+                    return SqliteResult<string>.Failure("Usuario no puede ser nulo.");
+                }
+
+                string normalizedUser = (usuario.NombreUsuario ?? string.Empty).Trim().ToLowerInvariant();
+                if (string.IsNullOrEmpty(normalizedUser))
+                {
+                    return SqliteResult<string>.Failure("El nombre de usuario no puede estar vacío.");
+                }
+
                 // Validación: Verificar que el usuario no exista previamente para evitar duplicidad o fallas de restricción
-                string checkSql = "SELECT COUNT(1) FROM usuarios WHERE nombreusuario = @NombreUsuario COLLATE NOCASE";
-                int count = _connection.ExecuteScalar<int>(checkSql, new { NombreUsuario = usuario.NombreUsuario }, transaction: _transaction);
+                string checkSql = "SELECT COUNT(1) FROM usuarios WHERE LOWER(TRIM(nombreusuario)) = @NombreUsuario";
+                int count = _connection.ExecuteScalar<int>(checkSql, new { NombreUsuario = normalizedUser }, transaction: _transaction);
                 if (count > 0)
                 {
                     return SqliteResult<string>.Failure($"El usuario '{usuario.NombreUsuario}' ya se encuentra registrado.");
                 }
 
-                usuario.Id = Guid.NewGuid().ToString("N").ToLowerInvariant();
+                usuario.Id = "usr_" + normalizedUser;
                 string sql = @"INSERT INTO usuarios (id, nombre, nombreusuario, subunidad, activo, perfil, firma) 
                                VALUES (@Id, @Nombre, @NombreUsuario, @Subunidad, @Activo, @Perfil, @Firma);";
                 _connection.Execute(sql, usuario, transaction: _transaction);

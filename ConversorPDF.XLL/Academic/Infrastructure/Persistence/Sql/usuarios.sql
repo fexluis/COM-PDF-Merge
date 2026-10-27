@@ -11,44 +11,44 @@
 -- ============================================================
 
 -- Usuario por defecto para la subunidad VALLE
-INSERT INTO usuarios (nombre, nombreusuario, subunidad, perfil, activo)
-SELECT 'Usuario Predeterminado', 'Usuario', 'VALLE', 'Admin', 1
+INSERT INTO usuarios (id, nombre, nombreusuario, subunidad, perfil, activo)
+SELECT 'usr_usuario', 'Usuario Predeterminado', 'Usuario', 'VALLE', 'Admin', 1
 WHERE NOT EXISTS (SELECT 1 FROM usuarios WHERE nombreusuario = 'Usuario');
 
-INSERT INTO usuarios (nombre, nombreusuario, subunidad, perfil, activo)
-SELECT 'Luis', 'luis.bechara', 'VALLE', 'Admin', 1
+INSERT INTO usuarios (id, nombre, nombreusuario, subunidad, perfil, activo)
+SELECT 'usr_luis.bechara', 'Luis', 'luis.bechara', 'VALLE', 'Admin', 1
 WHERE NOT EXISTS (SELECT 1 FROM usuarios WHERE nombreusuario = 'luis.bechara');
 
-INSERT INTO usuarios (nombre, nombreusuario, subunidad, perfil, activo)
-SELECT 'Montano', 'alexander.montano', 'VALLE', 'Contador', 1
+INSERT INTO usuarios (id, nombre, nombreusuario, subunidad, perfil, activo)
+SELECT 'usr_alexander.montano', 'Montano', 'alexander.montano', 'VALLE', 'Contador', 1
 WHERE NOT EXISTS (SELECT 1 FROM usuarios WHERE nombreusuario = 'alexander.montano');
 
-INSERT INTO usuarios (nombre, nombreusuario, subunidad, perfil, activo)
-SELECT 'carmen', 'carmroja', 'VALLE', 'Academica', 1
+INSERT INTO usuarios (id, nombre, nombreusuario, subunidad, perfil, activo)
+SELECT 'usr_carmroja', 'carmen', 'carmroja', 'VALLE', 'Academica', 1
 WHERE NOT EXISTS (SELECT 1 FROM usuarios WHERE nombreusuario = 'carmroja');
 
-INSERT INTO usuarios (nombre, nombreusuario, subunidad, perfil, activo)
-SELECT 'Eduin', 'eduin.palacios', 'VALLE', 'Admin', 1
+INSERT INTO usuarios (id, nombre, nombreusuario, subunidad, perfil, activo)
+SELECT 'usr_eduin.palacios', 'Eduin', 'eduin.palacios', 'VALLE', 'Admin', 1
 WHERE NOT EXISTS (SELECT 1 FROM usuarios WHERE nombreusuario = 'eduin.palacios');
 
-INSERT INTO usuarios (nombre, nombreusuario, subunidad, perfil, activo)
-SELECT 'Isadora', 'isadora.chavez', 'VALLE', 'Academica', 1
+INSERT INTO usuarios (id, nombre, nombreusuario, subunidad, perfil, activo)
+SELECT 'usr_isadora.chavez', 'Isadora', 'isadora.chavez', 'VALLE', 'Academica', 1
 WHERE NOT EXISTS (SELECT 1 FROM usuarios WHERE nombreusuario = 'isadora.chavez');
 
-INSERT INTO usuarios (nombre, nombreusuario, subunidad, perfil, activo)
-SELECT 'Elizabeth', 'elizabeth.cordobao', 'VALLE', 'Pagador', 1
+INSERT INTO usuarios (id, nombre, nombreusuario, subunidad, perfil, activo)
+SELECT 'usr_elizabeth.cordobao', 'Elizabeth', 'elizabeth.cordobao', 'VALLE', 'Pagador', 1
 WHERE NOT EXISTS (SELECT 1 FROM usuarios WHERE nombreusuario = 'elizabeth.cordobao');
 
-INSERT INTO usuarios (nombre, nombreusuario, subunidad, perfil, activo)
-SELECT 'AdminPC', 'adminpc', 'VALLE', 'Admin', 1
+INSERT INTO usuarios (id, nombre, nombreusuario, subunidad, perfil, activo)
+SELECT 'usr_adminpc', 'AdminPC', 'adminpc', 'VALLE', 'Admin', 1
 WHERE NOT EXISTS (SELECT 1 FROM usuarios WHERE nombreusuario = 'adminpc');
 
-INSERT INTO usuarios (nombre, nombreusuario, subunidad, perfil, activo)
-SELECT 'Claudia Ruiz Quiñones', 'claudiap.ruiz', 'CAUCA', 'Pagador', 1
+INSERT INTO usuarios (id, nombre, nombreusuario, subunidad, perfil, activo)
+SELECT 'usr_claudiap.ruiz', 'Claudia Ruiz Quiñones', 'claudiap.ruiz', 'CAUCA', 'Pagador', 1
 WHERE NOT EXISTS (SELECT 1 FROM usuarios WHERE nombreusuario = 'claudiap.ruiz');
 
-INSERT INTO usuarios (nombre, nombreusuario, subunidad, perfil, activo)
-SELECT 'Maria Fernanda Sánchez', 'maria.sanchez', 'VALLE', 'Presupuesto', 1
+INSERT INTO usuarios (id, nombre, nombreusuario, subunidad, perfil, activo)
+SELECT 'usr_maria.sanchez', 'Maria Fernanda Sánchez', 'maria.sanchez', 'VALLE', 'Presupuesto', 1
 WHERE NOT EXISTS (SELECT 1 FROM usuarios WHERE nombreusuario = 'maria.sanchez');
 
 

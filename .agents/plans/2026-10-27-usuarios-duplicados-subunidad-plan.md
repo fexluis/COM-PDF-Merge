@@ -157,10 +157,12 @@ T9 (gate final + review)                                   [deps: T1..T8]
   - Sin tocar `Consorcio`/permisos ni cambios de esquema.
 - **validation**: `UsuariosDuplicadosTests` GREEN y `Full` sin regresiones.
 - **verification**: `powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "FullyQualifiedName~UsuariosDuplicadosTests"`
-- **evidence**:
-- **status**: pending
-- **log**:
+- **evidence**: `_evidence/20261027-130022`
+- **status**: Completed
+- **log**: Implementada lectura de usuarios con ROW_NUMBER deduplicando por nombreusuario con prioridad por firma/perfil no genérico/updated_at. Implementado InsertUsuario determinista con id='usr_' + lower(trim(nombreusuario)). Actualizados los 10 registros de semillas en usuarios.sql con sus respectivos IDs deterministas. UsuariosDuplicadosTests en VERDE (2 pasados, 0 fallos).
 - **files edited/created**:
+  - `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AcademicRepository.cs`
+  - `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Sql/usuarios.sql`
 
 ### T5: Resolver de subunidad determinista (integrator, L0 Core/Sync)
 - **depends_on**: [T2]
