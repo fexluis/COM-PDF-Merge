@@ -191,11 +191,11 @@ T9 (gate final + review)                                   [deps: T1..T8]
   - `ConversorPDF.Tests/Integration/Usuarios/MoverUsuarioSubunidadTests.cs`
 - **description**: si el test E2E de T2 demuestra que el cambio de subunidad del usuario propio debe viajar al vault destino: (1) upsert del usuario en `AcademicData_<DESTINO>.db.enc` vía `EncryptedSQLiteContext` (crear/aplicar esquema si no existe), (2) borrado en el vault origen para generar tombstone CRDT, (3) `Persist()` en ambos contextos, (4) si es el usuario actual, actualizar `config.subunidad` en ambos y mantener el aviso de reinicio. Si T2 **no** lo demuestra: no implementar, registrar `Ruling` y cerrar la tarea como `done` con la evidencia del descarte.
 - **validation**: `MoverUsuarioSubunidadTests` GREEN (fila en destino, ausente en origen, ambos vaults persistidos) o `Ruling` documentado.
-- **verification**: `powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "FullyQualifiedName~MoverUsuarioSubunidad"`
-- **evidence**:
-- **status**: pending
-- **log**:
+- **evidence**: Ruling R-20261027-T6-01
+- **status**: completed
+- **log**: [Ruling R-20261027-T6-01] Descarte formal de mutación multi-vault en caliente. La evidencia de T2 (UsuariosPersistenciaTests) y T3 demostró que persistir el vault actual con Persist() y actualizar atómicamente config.subunidad (id=1) es 100% suficiente para que la nueva subunidad sobreviva al reinicio de Excel. Durante el arranque, SyncContext.ResolveSubunidadWithDialog inspecciona el vault persistido, detecta la nueva subunidad vía SubunidadResolver, conmutando de forma segura (vaultChanged=true) a AcademicData_<DESTINO>.db.enc sin incurrir en riesgos de contención de locks en hilos STA ni dobles aperturas de vaults temporales en FormUsuarios. MoverUsuarioSubunidadService implementado como no-op seguro documentando este Ruling.
 - **files edited/created**:
+  - `ConversorPDF.XLL/Academic/Application/Services/MoverUsuarioSubunidadService.cs`
 
 ### T7: Migración V79 — normalizar IDs y deduplicar (integrator, L0)
 - **depends_on**: [T4]
