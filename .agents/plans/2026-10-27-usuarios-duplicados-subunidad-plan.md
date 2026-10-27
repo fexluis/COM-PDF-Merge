@@ -93,10 +93,18 @@ T9 (gate final + review)                                   [deps: T1..T8]
 - **description**: (a) `AcademicDbSession.Persist()` que lance `NotImplementedException`; (b) `IConfigRepository.UpdateSubunidad(string)` + stub en `ConfigRepository`; (c) `IMoverUsuarioSubunidadService.Mover(string usuarioId, string subunidadDestino)` + clase stub; (d) cambiar `FormUsuarios` para recibir `AcademicDbSession` en vez de `Func<IDbConnection>` y actualizar el único call-site `RibbonController.cs:1256`; (e) registrar los 2 archivos nuevos en el `.csproj` sin duplicar (evitar CS2002). Un tipo por archivo.
 - **validation**: `verify.ps1 -Mode Build` exit 0.
 - **verification**: `powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Build`
-- **evidence**:
-- **status**: pending
-- **log**:
+- **evidence**: `_evidence/20261027-125347`
+- **status**: Completed
+- **log**: Integrator-first completado. Creados IMoverUsuarioSubunidadService y MoverUsuarioSubunidadService. Agregado Persist() stub a AcademicDbSession y UpdateSubunidad a IConfigRepository/ConfigRepository. Actualizado constructor de FormUsuarios y call-site en RibbonController. Registrados tipos en csproj. Build OK (0 errores).
 - **files edited/created**:
+  - `ConversorPDF.XLL/ConversorPDF.XLL.csproj`
+  - `ConversorPDF.XLL/Ribbon/RibbonController.cs`
+  - `ConversorPDF.XLL/Academic/UI/Forms/FormUsuarios.cs`
+  - `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Context/AcademicDbSession.cs`
+  - `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/ConfigRepository.cs`
+  - `ConversorPDF.XLL/Academic/Domain/Interfaces/IConfigRepository.cs`
+  - `ConversorPDF.XLL/Academic/Application/Interfaces/IMoverUsuarioSubunidadService.cs`
+  - `ConversorPDF.XLL/Academic/Application/Services/MoverUsuarioSubunidadService.cs`
 
 ### T2: RED — persistencia, duplicados y resolver (tdd-red-writer)
 - **depends_on**: [T1]

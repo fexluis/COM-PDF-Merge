@@ -83,5 +83,10 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                 return Result.Failure($"Error al actualizar la configuración: {ex.Message}");
             }
         }
+
+        public Result UpdateSubunidad(string subunidad)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

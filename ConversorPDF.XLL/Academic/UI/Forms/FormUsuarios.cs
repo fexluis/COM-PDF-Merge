@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using ConversorPDF.XLL.Academic.Domain.Models;
+using ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context;
 using ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories;
 using ConversorPDF.XLL.Core.Helpers;
 using Dapper;
@@ -14,6 +15,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
 {
     public partial class FormUsuarios : Form
     {
+        private readonly AcademicDbSession _session;
         private readonly Func<IDbConnection> _connectionFactory;
         private BindingSource _bs = new BindingSource();
         private Usuario _currentUsuario;
@@ -41,10 +43,11 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
         /// <summary>
         /// Constructor del formulario de usuarios.
         /// </summary>
-        /// <param name="connectionFactory">Fábrica de conexiones a la base de datos.</param>
-        public FormUsuarios(Func<IDbConnection> connectionFactory)
+        /// <param name="session">Sesión de base de datos compartida.</param>
+        public FormUsuarios(AcademicDbSession session)
         {
-            _connectionFactory = connectionFactory;
+            _session = session ?? throw new ArgumentNullException(nameof(session));
+            _connectionFactory = () => session.Connection;
             InitializeComponent();
             
             cmbActivo.Items.Add(new ActivoOption { Text = "Inactivo", Value = 0 });

@@ -8,5 +8,6 @@ namespace ConversorPDF.XLL.Academic.Domain.Interfaces
     {
         Result<Config> GetConfig();
         Result UpdateConfig(Config config);
+        Result UpdateSubunidad(string subunidad);
     }
 }

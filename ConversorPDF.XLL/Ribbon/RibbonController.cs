@@ -1253,7 +1253,7 @@ namespace ConversorPDF.XLL
                 }
                 using (var session = new AcademicDbSession())
                 {
-                    using (var form = new FormUsuarios(() => session.Connection))
+                    using (var form = new FormUsuarios(session))
                     {
                         form.ShowDialog();
                     }

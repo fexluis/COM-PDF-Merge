@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context;
 using System.Data.Common;
 using ConversorPDF.XLL.Core.Helpers;
+using CSharpFunctionalExtensions;
 
 namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context
 {
@@ -68,6 +69,14 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context
 
         public void MarkAsReadOnly() => _ctx?.MarkAsReadOnly();
         public void MarkChangesPersisted() => _ctx?.MarkChangesPersisted();
+
+        /// <summary>
+        /// Persiste y re-encripta el vault activo en disco.
+        /// </summary>
+        public Result Persist()
+        {
+            throw new NotImplementedException();
+        }
 
         /// <summary>
         /// Este método debe llamarse DESPUÉS de que la transacción SQL haya hecho Commit.
