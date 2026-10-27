@@ -1,17 +1,17 @@
 # Plan: Extraer la penalizacion F2 de AgEvaluadorAptitud a un calculador inyectable
 
-**Generado**: 2026-10-27 · **Autor**: Cline/Swarm-Planner · **Estado**: draft
-**Prerrequisito bloqueante**: R1 (workspace con el arbol real) y R3 (baseline medido). Sin ellos este plan NO se ejecuta.
+**Generado**: 2026-10-27 · **Autor**: Cline/Swarm-Planner · **Estado**: approved
+**Workspace verificado**: `C:\dev\ConversorPDF` = clon fiel de `6ae4995` (452/138 `.cs`, slice `Academic` presente, preflight `0`).
 
 ## Execution envelope
 - branch: refactor/academic-modularization
-- workspace: <R1: copia del ARBOL REAL, fuera de OneDrive. El clon `C:\dev\ConversorPDF` actual es un snapshot pre-Academic y esta prohibido>
+- workspace: C:\dev\ConversorPDF
 - preflight: powershell -ExecutionPolicy Bypass -File scripts/preflight.ps1 -Workspace <workspace> -Plan .agents/plans/2026-10-27-ag-penalizaciones-plan.md
 - workspace_guard:
   - min_xll_cs: 300
   - min_tests_cs: 100
   - required_slice: Academic
-- baseline: tests/baseline/test_baseline.txt (TOTAL: pendiente R3 — medido, nunca estimado)
+- baseline: tests/baseline/test_baseline.txt (TOTAL: 939 · medido 2026-10-27 sobre HEAD 6ae4995)
 - verify: powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Full
 - build_gate: serializado (un unico build-verifier a la vez)
 - max_parallel_writers: 2

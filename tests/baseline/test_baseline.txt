@@ -1,6 +1,7 @@
-TOTAL: 51
-PASSED: 50
-FAILED: 1
+# Baseline medido 2026-10-27 en C:\dev\ConversorPDF (HEAD 6ae4995) con scripts/verify.ps1 -Mode Full
+# dotnet test (Debug/x64): 939 total, 939 passed, 0 failed, 0 skipped (~58 s)
+# Un clon de HEAD anterior a 6ae4995 devolvia 51 pruebas: baseline invalido (auditoria 2026-10-27).
+TOTAL: 939
+PASSED: 939
+FAILED: 0
 SKIPPED: 0
-
-FAILED ConversorPDF.Tests.UnitTest1.GetUserName_WhenServiceReturnsNull_ShouldReturnFallback
