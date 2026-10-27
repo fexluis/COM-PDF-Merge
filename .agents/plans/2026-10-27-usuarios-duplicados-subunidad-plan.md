@@ -138,10 +138,13 @@ T9 (gate final + review)                                   [deps: T1..T8]
 - **description**: implementar `Persist()` = `PRAGMA wal_checkpoint(TRUNCATE)` (si aplica) + leer `TempDbPath` + `_ctx.ReEncryptAndPersist(bytes)` + `MarkChangesPersisted()`, con manejo de error sin excepción hacia la UI (`Result`). Implementar `ConfigRepository.UpdateSubunidad` con `WHERE id = 1`. En `FormUsuarios`: sustituir `db.Execute("UPDATE config ...")` por el repo y llamar `session.Persist()` tras `InsertUsuario`/`UpdateUsuario`/`DeleteUsuario`, mostrando error si la persistencia falla. Sin SQL en el code-behind.
 - **validation**: `UsuariosPersistenciaTests` en GREEN y `Full` sin regresiones.
 - **verification**: `powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "FullyQualifiedName~UsuariosPersistenciaTests"`
-- **evidence**:
-- **status**: pending
-- **log**:
+- **evidence**: `_evidence/20261027-130512`
+- **status**: Completed
+- **log**: Implementado AcademicDbSession.Persist() con checkpoint WAL, lectura de bytes desencriptados y ReEncryptAndPersist retornando Result. Implementado ConfigRepository.UpdateSubunidad con soporte a IDbConnection y EncryptedSQLiteContext. Eliminado SQL directo en FormUsuarios.cs sustituyéndolo por ConfigRepository.UpdateSubunidad y llamadas a _session.Persist() tras guardado y eliminación. UsuariosPersistenciaTests en VERDE (1 pasado, 0 fallos).
 - **files edited/created**:
+  - `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Context/AcademicDbSession.cs`
+  - `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/ConfigRepository.cs`
+  - `ConversorPDF.XLL/Academic/UI/Forms/FormUsuarios.cs`
 
 ### T4: Identidad determinista y lectura sin duplicados (implementer)
 - **depends_on**: [T1]

@@ -1,4 +1,5 @@
 using System;
+using System.Data;
 using ConversorPDF.XLL.Academic.Domain.Interfaces;
 using ConversorPDF.XLL.Academic.Domain.Models;
 using ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context;
@@ -10,21 +11,31 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
     public class ConfigRepository : IConfigRepository
     {
         private readonly EncryptedSQLiteContext _context;
+        private readonly IDbConnection _connection;
 
         /// <summary>
         /// Inicializa el repositorio con el contexto encriptado de SQLite.
-        /// Cambio (Fase 7): Uso de EncryptedSQLiteContext en lugar de Func de IDbConnection para asegurar persistencia en Vault.
         /// </summary>
         public ConfigRepository(EncryptedSQLiteContext context)
         {
             _context = context;
         }
 
+        /// <summary>
+        /// Inicializa el repositorio con una conexión existente.
+        /// </summary>
+        public ConfigRepository(IDbConnection connection)
+        {
+            _connection = connection;
+        }
+
+        private IDbConnection GetConnection() => _connection ?? _context.Open();
+
         public Result<Config> GetConfig()
         {
             try
             {
-                var db = _context.Open();
+                var db = GetConnection();
                 const string sql = @"SELECT id as Id, subunidad as Subunidad, id_territorial as IdTerritorial,
                     id_periodo as IdPeriodo, fecha_inicio as FechaInicio, fecha_fin as FechaFin, cdp as Cdp,
                     salario_decreto_613_2025 as SalarioDecreto6132025,
@@ -54,7 +65,7 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
         {
             try
             {
-                var db = _context.Open();
+                var db = GetConnection();
                 const string sql = @"UPDATE config SET 
                     subunidad = @Subunidad, id_territorial = @IdTerritorial, id_periodo = @IdPeriodo,
                     fecha_inicio = @FechaInicio, fecha_fin = @FechaFin, cdp = @Cdp,
@@ -75,7 +86,7 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                     return Result.Failure("No se pudo actualizar la configuración.");
                 
                 // Cambio (Fase 7): Notificar cambios al Vault para encriptación al cerrar
-                _context.MarkChangesPersisted();
+                _context?.MarkChangesPersisted();
                 return Result.Success();
             }
             catch (Exception ex)
@@ -86,7 +97,21 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
 
         public Result UpdateSubunidad(string subunidad)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var db = GetConnection();
+                const string sql = "UPDATE config SET subunidad = @Subunidad, updated_at = CURRENT_TIMESTAMP WHERE id = 1";
+                int rows = db.Execute(sql, new { Subunidad = (subunidad ?? string.Empty).Trim().ToUpperInvariant() });
+                if (rows == 0)
+                    return Result.Failure("No se pudo actualizar la subunidad en la configuración.");
+
+                _context?.MarkChangesPersisted();
+                return Result.Success();
+            }
+            catch (Exception ex)
+            {
+                return Result.Failure($"Error al actualizar la subunidad: {ex.Message}");
+            }
         }
     }
 }

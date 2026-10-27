@@ -459,12 +459,25 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
                 }
                 
                 // Fase 6 y Fase 4: Actualizar config y requerir reinicio si el usuario actual cambió su subunidad
+                bool subunidadCambiada = !string.Equals(subunidadAnterior, u.Subunidad, StringComparison.OrdinalIgnoreCase);
+
                 if (string.Equals(u.NombreUsuario, Environment.UserName, StringComparison.OrdinalIgnoreCase)
                     || string.Equals(nombreAnterior, Environment.UserName, StringComparison.OrdinalIgnoreCase))
                 {
-                    db.Execute("UPDATE config SET subunidad = @Subunidad", new { Subunidad = u.Subunidad });
+                    var configRepo = new ConfigRepository(db);
+                    var configResult = configRepo.UpdateSubunidad(u.Subunidad);
+                    if (configResult.IsFailure)
+                    {
+                        MessageBox.Show($"Error al actualizar la configuración: {configResult.Error}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
                     
-                    bool subunidadCambiada = !string.Equals(subunidadAnterior, u.Subunidad, StringComparison.OrdinalIgnoreCase);
+                    var persistResult = _session.Persist();
+                    if (persistResult.IsFailure)
+                    {
+                        MessageBox.Show($"Error al persistir la base de datos: {persistResult.Error}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
                                              
                     if (nombreModificado || subunidadCambiada)
                     {
@@ -474,6 +487,15 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
                             "Reinicio Requerido", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         this.DialogResult = DialogResult.Abort;
                         this.Close();
+                        return;
+                    }
+                }
+                else
+                {
+                    var persistResult = _session.Persist();
+                    if (persistResult.IsFailure)
+                    {
+                        MessageBox.Show($"Error al persistir la base de datos: {persistResult.Error}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         return;
                     }
                 }
@@ -501,6 +523,13 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
                     var repo = new AcademicRepository(db);
                     var result = repo.DeleteUsuario(_currentUsuario.Id);
                     if (result.IsFailure) { MessageBox.Show($"Error al eliminar: {result.Error}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); return; }
+
+                    var persistResult = _session.Persist();
+                    if (persistResult.IsFailure)
+                    {
+                        MessageBox.Show($"Error al persistir la base de datos: {persistResult.Error}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
 
                     CargarUsuarios();
                     LimpiarCampos();

@@ -75,7 +75,56 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context
         /// </summary>
         public Result Persist()
         {
-            throw new NotImplementedException();
+            if (_disposed) return Result.Failure("La sesión de base de datos ya ha sido liberada.");
+
+            _syncLock.Wait();
+            try
+            {
+                if (_ctx == null)
+                {
+                    return Result.Failure("El contexto de base de datos no está disponible.");
+                }
+
+                // 1. Checkpoint WAL para vaciar transacciones al archivo principal .db
+                try
+                {
+                    if (_conn != null && _conn.State == ConnectionState.Open)
+                    {
+                        using (var cmd = _conn.CreateCommand())
+                        {
+                            cmd.CommandText = "PRAGMA wal_checkpoint(TRUNCATE);";
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                }
+                catch (Exception exWal)
+                {
+                    LoggerHelper.Warning($"[AcademicDbSession] Advertencia ejecutando wal_checkpoint: {exWal.Message}");
+                }
+
+                // 2. Leer bytes desencriptados del archivo temporal
+                byte[] plainBytes = EncryptedSQLiteContext.LeerBytesConRetrySync(_ctx.TempDbPath);
+                if (plainBytes == null || plainBytes.Length == 0)
+                {
+                    return Result.Failure("No se pudieron leer los datos del archivo temporal de la base de datos.");
+                }
+
+                // 3. Re-encriptar y persistir en el archivo .db.enc
+                _ctx.ReEncryptAndPersist(plainBytes);
+                _ctx.MarkChangesPersisted();
+
+                LoggerHelper.Info("[AcademicDbSession] Vault persistido y re-encriptado exitosamente.");
+                return Result.Success();
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error("[AcademicDbSession] Error al persistir el vault", ex);
+                return Result.Failure($"Error al persistir el vault: {ex.Message}");
+            }
+            finally
+            {
+                _syncLock.Release();
+            }
         }
 
         /// <summary>
