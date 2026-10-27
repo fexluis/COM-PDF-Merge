@@ -111,6 +111,31 @@ namespace ConversorPDF.Tests.Integration.Usuarios
             rows[0].Firma.Should().Be("base64firmadata...");
         }
 
+        [Fact]
+        public void DeduplicateUsuarios_WhenPullReintroducesDuplicate_ShouldRetainRichestRow()
+        {
+            // Arrange: Simula un pull de OneDrive que insertó una fila duplicada para un usuario ya existente
+            _connection.Execute(@"
+                INSERT INTO usuarios (id, nombre, nombreusuario, subunidad, perfil, activo, firma, updated_at)
+                VALUES ('usr_existente', 'Carlos Gomez', 'cgomez', 'VALLE', 'Admin', 1, 'firmavalida...', '2026-02-01 10:00:00');
+            ");
+            _connection.Execute(@"
+                INSERT INTO usuarios (id, nombre, nombreusuario, subunidad, perfil, activo, firma, updated_at)
+                VALUES ('guid_pull_remoto', 'Carlos Gomez', 'cgomez', 'VALLE', 'Academica', 1, NULL, '2026-01-15 08:00:00');
+            ");
+
+            // Act: Invocamos la deduplicación idempotente post-merge
+            int eliminados = ConversorPDF.XLL.Core.Sync.SyncInitializer.DeduplicateUsuarios(_connection);
+
+            // Assert
+            eliminados.Should().Be(1, "el pull reintrodujo un duplicado que debe ser purgado inmediatamente");
+            var rows = _connection.Query<Usuario>("SELECT * FROM usuarios WHERE LOWER(nombreusuario) = 'cgomez';").ToList();
+            rows.Should().HaveCount(1);
+            rows[0].Id.Should().Be("usr_existente");
+            rows[0].Perfil.Should().Be("Admin");
+            rows[0].Firma.Should().Be("firmavalida...");
+        }
+
         public void Dispose()
         {
             _connection?.Dispose();

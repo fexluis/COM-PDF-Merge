@@ -221,11 +221,12 @@ T9 (gate final + review)                                   [deps: T1..T8]
   - `ConversorPDF.XLL/Core/Sync/SyncInitializer.cs`
 - **description**: extraer la deduplicación de `MigrationV41` a un método privado idempotente y ejecutarlo **después** de aplicar merges/pulls y **antes** de la autosanación de triggers, para que un pull de otro equipo no reintroduzca duplicados hasta el siguiente arranque. Log con `filas eliminadas`. No cambiar el orden del resto del pipeline de sync.
 - **validation**: `UsuariosDuplicadosTests` (caso "pull reintroduce duplicado") verde + `Full` sin regresiones.
-- **verification**: `powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Full`
-- **evidence**:
-- **status**: pending
-- **log**:
+- **evidence**: `_evidence/20261027-131740`
+- **status**: completed
+- **log**: Extraída lógica de deduplicación idempotente a DeduplicateUsuarios(IDbConnection) en SyncInitializer. Invocada en EnableAllCrdts tras la detección de migraciones y antes de procesar y autosanar triggers CRDT en CrdtTables, registrando filas eliminadas en el log y marcando anyChanges=true si hubo deduplicaciones. Agregado caso de prueba DeduplicateUsuarios_WhenPullReintroducesDuplicate_ShouldRetainRichestRow en UsuariosDuplicadosTests (4 pasados, 0 fallos).
 - **files edited/created**:
+  - `ConversorPDF.XLL/Core/Sync/SyncInitializer.cs`
+  - `ConversorPDF.Tests/Integration/Usuarios/UsuariosDuplicadosTests.cs`
 
 ### T9: Gate final, revisión y documentación (build-verifier + task-reviewer)
 - **depends_on**: [T1..T8]

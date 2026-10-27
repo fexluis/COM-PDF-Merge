@@ -160,6 +160,10 @@ namespace ConversorPDF.XLL.Core.Sync
                         LoggerHelper.Debug($"[SyncInitializer] Esquema sin migración pendiente para '{vaultPath}'. Se procesarán tablas CRDT faltantes.");
                     }
 
+                    // Deduplicación idempotente post-merge antes de evaluar y autosanar triggers CRDT
+                    int eliminadosUsuarios = DeduplicateUsuarios(connection);
+                    if (eliminadosUsuarios > 0) anyChanges = true;
+
                     var failedTables = GetFailedCrdtTables(targetVaultPath);
                     var enabledTables = GetCrdtEnabledTables(targetVaultPath);
 
@@ -881,6 +885,51 @@ namespace ConversorPDF.XLL.Core.Sync
                 {
                     LoggerHelper.Warning($"[SyncInitializer] Error limpiando '{clockTable}': {ex.Message}");
                 }
+            }
+        }
+
+        /// <summary>
+        /// Deduplicación idempotente de usuarios conservando el registro con datos más ricos.
+        /// Se ejecuta tras merges/pulls y antes de la autosanación de triggers CRDT.
+        /// </summary>
+        internal static int DeduplicateUsuarios(IDbConnection connection)
+        {
+            try
+            {
+                if (!TableExists(connection, "usuarios"))
+                {
+                    return 0;
+                }
+
+                string sqlDeleteDuplicates = @"
+                    DELETE FROM usuarios 
+                    WHERE id NOT IN (
+                        SELECT id FROM (
+                            SELECT id,
+                                   ROW_NUMBER() OVER (
+                                       PARTITION BY LOWER(TRIM(nombreusuario)) 
+                                       ORDER BY 
+                                           CASE WHEN firma IS NOT NULL AND firma != '' THEN 1 ELSE 0 END DESC,
+                                           CASE WHEN perfil IS NOT NULL AND perfil != 'Academica' THEN 1 ELSE 0 END DESC,
+                                           updated_at DESC,
+                                           id ASC
+                                   ) as rn
+                            FROM usuarios
+                        )
+                        WHERE rn = 1
+                    );";
+
+                int rowsDeleted = connection.Execute(sqlDeleteDuplicates);
+                if (rowsDeleted > 0)
+                {
+                    LoggerHelper.Info($"[SyncInitializer] Deduplicación post-merge completada: {rowsDeleted} filas eliminadas en usuarios.");
+                }
+                return rowsDeleted;
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Warning($"[SyncInitializer] Error ejecutando deduplicación post-merge de usuarios: {ex.Message}");
+                return 0;
             }
         }
     }
