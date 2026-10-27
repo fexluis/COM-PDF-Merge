@@ -1,6 +1,6 @@
 # Context Pack: Academic / Genetica
 
-- Generado: 2026-10-27 11:36
+- Generado: 2026-10-27 12:13
 - Cabecera obligatoria: ver `references/plan-contract.md` (Execution envelope).
 - Presupuesto: <= 400 lineas.
 

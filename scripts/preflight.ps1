@@ -27,7 +27,7 @@ function Count-Source([string]$root, [string]$sub) {
     $path = Join-Path $root $sub
     if (-not (Test-Path $path)) { return -1 }
     $items = @(Get-ChildItem -Path $path -Recurse -File -Filter '*.cs' |
-        Where-Object { $_.FullName -notmatch '\\\\(bin|obj|TestResults)\\\\' })
+        Where-Object { $_.FullName -notmatch '\\(bin|obj|TestResults)\\' })
     return $items.Count
 }
 

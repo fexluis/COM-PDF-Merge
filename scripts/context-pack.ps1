@@ -28,7 +28,7 @@ $sliceRx = [regex]::Escape($Slice)
 
 # --- 1. Archivos de produccion ---------------------------------------------
 $allCs = @(Get-ChildItem -Path $academic -Recurse -File -Filter '*.cs' |
-    Where-Object { $_.FullName -notmatch '\\\\(bin|obj)\\\\' })
+    Where-Object { $_.FullName -notmatch '\\(bin|obj)\\' })
 
 $byPath = @($allCs | Where-Object { $_.FullName -match ('\\' + $sliceRx + '\\') })
 
@@ -46,7 +46,7 @@ $prodFiles = @(@($byPath) + @($byNamespace) | Sort-Object FullName -Unique)
 
 # --- 2. Tests ---------------------------------------------------------------
 $allTests = @(Get-ChildItem -Path $testsRoot -Recurse -File -Filter '*.cs' -ErrorAction SilentlyContinue |
-    Where-Object { $_.FullName -notmatch '\\\\(bin|obj|TestResults)\\\\' })
+    Where-Object { $_.FullName -notmatch '\\(bin|obj|TestResults)\\' })
 $testFiles = @($allTests | Where-Object {
     $_.FullName -match ('\\' + $sliceRx + '\\') -or $_.BaseName -match $sliceRx
 } | Sort-Object FullName)
