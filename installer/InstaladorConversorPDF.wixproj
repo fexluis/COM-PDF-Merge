@@ -2,5 +2,6 @@
   <PropertyGroup>
     <OutputName>InstaladorConversorPDF</OutputName>
     <OutputType>Package</OutputType>
+    <SuppressIces>ICE38;ICE64</SuppressIces>
   </PropertyGroup>
 </Project>

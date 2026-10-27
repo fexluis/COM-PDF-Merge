@@ -1,0 +1,485 @@
+### YamlMime:TableOfContent
+items:
+- uid: ConversorPDF.XLL
+  name: ConversorPDF.XLL
+  type: Namespace
+  items:
+  - uid: ConversorPDF.XLL.ExcelAddIn
+    name: ExcelAddIn
+    type: Class
+  - uid: ConversorPDF.XLL.OneDriveFunctions
+    name: OneDriveFunctions
+    type: Class
+  - uid: ConversorPDF.XLL.PdfFunctions
+    name: PdfFunctions
+    type: Class
+  - uid: ConversorPDF.XLL.RibbonController
+    name: RibbonController
+    type: Class
+- uid: ConversorPDF.XLL.Academic.Application.DTOs
+  name: ConversorPDF.XLL.Academic.Application.DTOs
+  type: Namespace
+  items:
+  - uid: ConversorPDF.XLL.Academic.Application.DTOs.GridRowDto
+    name: GridRowDto
+    type: Class
+  - uid: ConversorPDF.XLL.Academic.Application.DTOs.VinculacionFilterDto
+    name: VinculacionFilterDto
+    type: Class
+- uid: ConversorPDF.XLL.Academic.Application.Interfaces
+  name: ConversorPDF.XLL.Academic.Application.Interfaces
+  type: Namespace
+  items:
+  - uid: ConversorPDF.XLL.Academic.Application.Interfaces.IAcademicDateSyncService
+    name: IAcademicDateSyncService
+    type: Interface
+  - uid: ConversorPDF.XLL.Academic.Application.Interfaces.IVinculacionListService
+    name: IVinculacionListService
+    type: Interface
+- uid: ConversorPDF.XLL.Academic.Application.Mappers
+  name: ConversorPDF.XLL.Academic.Application.Mappers
+  type: Namespace
+  items:
+  - uid: ConversorPDF.XLL.Academic.Application.Mappers.GridToSesionMapper
+    name: GridToSesionMapper
+    type: Class
+- uid: ConversorPDF.XLL.Academic.Application.Services
+  name: ConversorPDF.XLL.Academic.Application.Services
+  type: Namespace
+  items:
+  - uid: ConversorPDF.XLL.Academic.Application.Services.AcademicDateSyncService
+    name: AcademicDateSyncService
+    type: Class
+  - uid: ConversorPDF.XLL.Academic.Application.Services.GeneradorSesionesRecurrentes
+    name: GeneradorSesionesRecurrentes
+    type: Class
+  - uid: ConversorPDF.XLL.Academic.Application.Services.VinculacionListService
+    name: VinculacionListService
+    type: Class
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces
+  name: ConversorPDF.XLL.Academic.Domain.Interfaces
+  type: Namespace
+  items:
+  - uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository
+    name: IAcademicRepository
+    type: Interface
+  - uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IPeriodoLookupRepository
+    name: IPeriodoLookupRepository
+    type: Interface
+  - uid: ConversorPDF.XLL.Academic.Domain.Interfaces.ISedeLookupRepository
+    name: ISedeLookupRepository
+    type: Interface
+  - uid: ConversorPDF.XLL.Academic.Domain.Interfaces.ITerceroLookupRepository
+    name: ITerceroLookupRepository
+    type: Interface
+  - uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IVinculacionQueryRepository
+    name: IVinculacionQueryRepository
+    type: Interface
+- uid: ConversorPDF.XLL.Academic.Domain.Models
+  name: ConversorPDF.XLL.Academic.Domain.Models
+  type: Namespace
+  items:
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.AcademicDateAdjustment
+    name: AcademicDateAdjustment
+    type: Class
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Asignatura
+    name: Asignatura
+    type: Class
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.ConfiguracionDia
+    name: ConfiguracionDia
+    type: Class
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Contenido
+    name: Contenido
+    type: Class
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.LookupItem
+    name: LookupItem
+    type: Class
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Microcurriculo
+    name: Microcurriculo
+    type: Class
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Periodo
+    name: Periodo
+    type: Class
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Programa
+    name: Programa
+    type: Class
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Sede
+    name: Sede
+    type: Class
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Sesion
+    name: Sesion
+    type: Class
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem
+    name: SesionListItem
+    type: Class
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Tercero
+    name: Tercero
+    type: Class
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque
+    name: ViaticoBloque
+    type: Class
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Vinculacion
+    name: Vinculacion
+    type: Class
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.VinculacionListItem
+    name: VinculacionListItem
+    type: Class
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence
+  name: ConversorPDF.XLL.Academic.Infrastructure.Persistence
+  type: Namespace
+  items:
+  - uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.AcademicUnitOfWork
+    name: AcademicUnitOfWork
+    type: Class
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context
+  name: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context
+  type: Namespace
+  items:
+  - uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.AcademicDbSession
+    name: AcademicDbSession
+    type: Class
+  - uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext
+    name: EncryptedSQLiteContext
+    type: Class
+  - uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.SQLiteEngineBootstrap
+    name: SQLiteEngineBootstrap
+    type: Class
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations
+  name: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations
+  type: Namespace
+  items:
+  - uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger
+    name: ILogger
+    type: Interface
+  - uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.IMigration
+    name: IMigration
+    type: Interface
+  - uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ISchemaMigrator
+    name: ISchemaMigrator
+    type: Interface
+  - uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.IVaultPersister
+    name: IVaultPersister
+    type: Interface
+  - uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV2_VistasAcademicas
+    name: MigrationV2_VistasAcademicas
+    type: Class
+  - uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV3_Periodos
+    name: MigrationV3_Periodos
+    type: Class
+  - uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV4_VistaSesiones
+    name: MigrationV4_VistaSesiones
+    type: Class
+  - uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV5_SemestreSesiones
+    name: MigrationV5_SemestreSesiones
+    type: Class
+  - uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV6_CedulaTercero
+    name: MigrationV6_CedulaTercero
+    type: Class
+  - uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura
+    name: MigrationV7_AsignaturaAbreviatura
+    type: Class
+  - uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.SchemaMigrator
+    name: SchemaMigrator
+    type: Class
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
+  name: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
+  type: Namespace
+  items:
+  - uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.AcademicRepository
+    name: AcademicRepository
+    type: Class
+  - uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.PeriodoLookupRepository
+    name: PeriodoLookupRepository
+    type: Class
+  - uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.SedeLookupRepository
+    name: SedeLookupRepository
+    type: Class
+  - uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.TerceroLookupRepository
+    name: TerceroLookupRepository
+    type: Class
+  - uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.VinculacionQueryRepository
+    name: VinculacionQueryRepository
+    type: Class
+- uid: ConversorPDF.XLL.Academic.UI.Forms
+  name: ConversorPDF.XLL.Academic.UI.Forms
+  type: Namespace
+  items:
+  - uid: ConversorPDF.XLL.Academic.UI.Forms.FormSedes
+    name: FormSedes
+    type: Class
+  - uid: ConversorPDF.XLL.Academic.UI.Forms.FormSesionesAcademicas
+    name: FormSesionesAcademicas
+    type: Class
+  - uid: ConversorPDF.XLL.Academic.UI.Forms.FormTerceros
+    name: FormTerceros
+    type: Class
+  - uid: ConversorPDF.XLL.Academic.UI.Forms.FormViaticos
+    name: FormViaticos
+    type: Class
+  - uid: ConversorPDF.XLL.Academic.UI.Forms.FormVinculaciones
+    name: FormVinculaciones
+    type: Class
+- uid: ConversorPDF.XLL.Core.Enums
+  name: ConversorPDF.XLL.Core.Enums
+  type: Namespace
+  items:
+  - uid: ConversorPDF.XLL.Core.Enums.TipoFormMode
+    name: TipoFormMode
+    type: Enum
+  - uid: ConversorPDF.XLL.Core.Enums.TipoFormato
+    name: TipoFormato
+    type: Enum
+  - uid: ConversorPDF.XLL.Core.Enums.TipoMetadata
+    name: TipoMetadata
+    type: Enum
+- uid: ConversorPDF.XLL.Core.Helpers
+  name: ConversorPDF.XLL.Core.Helpers
+  type: Namespace
+  items:
+  - uid: ConversorPDF.XLL.Core.Helpers.App
+    name: App
+    type: Class
+  - uid: ConversorPDF.XLL.Core.Helpers.App.FolderNames
+    name: App.FolderNames
+    type: Class
+  - uid: ConversorPDF.XLL.Core.Helpers.CatalogCacheService
+    name: CatalogCacheService
+    type: Class
+  - uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+    name: ConstantsHelper
+    type: Class
+  - uid: ConversorPDF.XLL.Core.Helpers.DatabaseEncryptionEngine
+    name: DatabaseEncryptionEngine
+    type: Class
+  - uid: ConversorPDF.XLL.Core.Helpers.DayPatternParser
+    name: DayPatternParser
+    type: Class
+  - uid: ConversorPDF.XLL.Core.Helpers.ExcelAppStateHelper
+    name: ExcelAppStateHelper
+    type: Class
+  - uid: ConversorPDF.XLL.Core.Helpers.ExcelOptimizeHelper
+    name: ExcelOptimizeHelper
+    type: Class
+  - uid: ConversorPDF.XLL.Core.Helpers.FirmaPDFsHelper
+    name: FirmaPDFsHelper
+    type: Class
+  - uid: ConversorPDF.XLL.Core.Helpers.FirmaUnificarObHelper
+    name: FirmaUnificarObHelper
+    type: Class
+  - uid: ConversorPDF.XLL.Core.Helpers.FirmasGeneradorHelper
+    name: FirmasGeneradorHelper
+    type: Class
+  - uid: ConversorPDF.XLL.Core.Helpers.LoggerHelper
+    name: LoggerHelper
+    type: Class
+  - uid: ConversorPDF.XLL.Core.Helpers.NativeLibraryPreloader
+    name: NativeLibraryPreloader
+    type: Class
+  - uid: ConversorPDF.XLL.Core.Helpers.OneDriveHelper
+    name: OneDriveHelper
+    type: Class
+  - uid: ConversorPDF.XLL.Core.Helpers.PdfMetadataHelper
+    name: PdfMetadataHelper
+    type: Class
+  - uid: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper
+    name: PdfToTextoHelper
+    type: Class
+  - uid: ConversorPDF.XLL.Core.Helpers.SqliteHelper
+    name: SqliteHelper
+    type: Class
+  - uid: ConversorPDF.XLL.Core.Helpers.ViaticosHelper
+    name: ViaticosHelper
+    type: Class
+- uid: ConversorPDF.XLL.Core.Interfaces
+  name: ConversorPDF.XLL.Core.Interfaces
+  type: Namespace
+  items:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IApp
+    name: IApp
+    type: Interface
+  - uid: ConversorPDF.XLL.Core.Interfaces.IContadorService
+    name: IContadorService
+    type: Interface
+  - uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository
+    name: IExcelRepository
+    type: Interface
+  - uid: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService
+    name: IFirmaExtractService
+    type: Interface
+  - uid: ConversorPDF.XLL.Core.Interfaces.IPdfMetadataService
+    name: IPdfMetadataService
+    type: Interface
+  - uid: ConversorPDF.XLL.Core.Interfaces.IPdfService
+    name: IPdfService
+    type: Interface
+  - uid: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto
+    name: IPdfToTexto
+    type: Interface
+  - uid: ConversorPDF.XLL.Core.Interfaces.IUserService
+    name: IUserService
+    type: Interface
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosCumplidosProcessor
+    name: IViaticosCumplidosProcessor
+    type: Interface
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor
+    name: IViaticosGestionProcessor
+    type: Interface
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor
+    name: IViaticosIndividualProcessor
+    type: Interface
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosMasivoProcessor
+    name: IViaticosMasivoProcessor
+    type: Interface
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository
+    name: IViaticosRepository
+    type: Interface
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService
+    name: IViaticosService
+    type: Interface
+- uid: ConversorPDF.XLL.Core.Models
+  name: ConversorPDF.XLL.Core.Models
+  type: Namespace
+  items:
+  - uid: ConversorPDF.XLL.Core.Models.Empleado
+    name: Empleado
+    type: Class
+  - uid: ConversorPDF.XLL.Core.Models.ExtraerDatos
+    name: ExtraerDatos
+    type: Class
+  - uid: ConversorPDF.XLL.Core.Models.Metadata
+    name: Metadata
+    type: Class
+  - uid: ConversorPDF.XLL.Core.Models.SqliteResult
+    name: SqliteResult
+    type: Class
+  - uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+    name: SqliteResult<T>
+    type: Class
+  - uid: ConversorPDF.XLL.Core.Models.UserIdentification
+    name: UserIdentification
+    type: Class
+  - uid: ConversorPDF.XLL.Core.Models.Viaje
+    name: Viaje
+    type: Class
+  - uid: ConversorPDF.XLL.Core.Models.ViaticoRow
+    name: ViaticoRow
+    type: Class
+  - uid: ConversorPDF.XLL.Core.Models.ViaticosConfig
+    name: ViaticosConfig
+    type: Class
+  - uid: ConversorPDF.XLL.Core.Models.ViaticosFormatException
+    name: ViaticosFormatException
+    type: Class
+- uid: ConversorPDF.XLL.Core.Repositories
+  name: ConversorPDF.XLL.Core.Repositories
+  type: Namespace
+  items:
+  - uid: ConversorPDF.XLL.Core.Repositories.ExcelRepository
+    name: ExcelRepository
+    type: Class
+  - uid: ConversorPDF.XLL.Core.Repositories.ViaticosRepository
+    name: ViaticosRepository
+    type: Class
+- uid: ConversorPDF.XLL.Core.Services
+  name: ConversorPDF.XLL.Core.Services
+  type: Namespace
+  items:
+  - uid: ConversorPDF.XLL.Core.Services.ContadorService
+    name: ContadorService
+    type: Class
+  - uid: ConversorPDF.XLL.Core.Services.FirmaExtractService
+    name: FirmaExtractService
+    type: Class
+  - uid: ConversorPDF.XLL.Core.Services.PdfMetadataService
+    name: PdfMetadataService
+    type: Class
+  - uid: ConversorPDF.XLL.Core.Services.PdfService
+    name: PdfService
+    type: Class
+  - uid: ConversorPDF.XLL.Core.Services.UserService
+    name: UserService
+    type: Class
+  - uid: ConversorPDF.XLL.Core.Services.ViaticosService
+    name: ViaticosService
+    type: Class
+- uid: ConversorPDF.XLL.FormProgramador
+  name: ConversorPDF.XLL.FormProgramador
+  type: Namespace
+  items:
+  - uid: ConversorPDF.XLL.FormProgramador.FormConfig
+    name: FormConfig
+    type: Class
+  - uid: ConversorPDF.XLL.FormProgramador.FormGestionDocumental
+    name: FormGestionDocumental
+    type: Class
+  - uid: ConversorPDF.XLL.FormProgramador.FormInfo
+    name: FormInfo
+    type: Class
+  - uid: ConversorPDF.XLL.FormProgramador.FormProgramador
+    name: FormProgramador
+    type: Class
+  - uid: ConversorPDF.XLL.FormProgramador.FormTableEditor
+    name: FormTableEditor
+    type: Class
+- uid: ConversorPDF.XLL.Functions
+  name: ConversorPDF.XLL.Functions
+  type: Namespace
+  items:
+  - uid: ConversorPDF.XLL.Functions.WindowsUserFunctions
+    name: WindowsUserFunctions
+    type: Class
+- uid: ConversorPDF.XLL.UI
+  name: ConversorPDF.XLL.UI
+  type: Namespace
+  items:
+  - uid: ConversorPDF.XLL.UI.DayHoursDropdown
+    name: DayHoursDropdown
+    type: Class
+  - uid: ConversorPDF.XLL.UI.ProgressDialog
+    name: ProgressDialog
+    type: Class
+  - uid: ConversorPDF.XLL.UI.ProgressForm
+    name: ProgressForm
+    type: Class
+  - uid: ConversorPDF.XLL.UI.ProgressManager
+    name: ProgressManager
+    type: Class
+- uid: ConversorPDF.XLL.VisTimeline.Application.Services
+  name: ConversorPDF.XLL.VisTimeline.Application.Services
+  type: Namespace
+  items:
+  - uid: ConversorPDF.XLL.VisTimeline.Application.Services.ViaticoTimelineMapper
+    name: ViaticoTimelineMapper
+    type: Class
+- uid: ConversorPDF.XLL.VisTimeline.Domain.Models
+  name: ConversorPDF.XLL.VisTimeline.Domain.Models
+  type: Namespace
+  items:
+  - uid: ConversorPDF.XLL.VisTimeline.Domain.Models.TimelineGroup
+    name: TimelineGroup
+    type: Class
+  - uid: ConversorPDF.XLL.VisTimeline.Domain.Models.TimelineItem
+    name: TimelineItem
+    type: Class
+- uid: ConversorPDF.XLL.VisTimeline.Infrastructure.Helpers
+  name: ConversorPDF.XLL.VisTimeline.Infrastructure.Helpers
+  type: Namespace
+  items:
+  - uid: ConversorPDF.XLL.VisTimeline.Infrastructure.Helpers.ResourceExtractor
+    name: ResourceExtractor
+    type: Class
+- uid: ConversorPDF.XLL.VisTimeline.Infrastructure.Services
+  name: ConversorPDF.XLL.VisTimeline.Infrastructure.Services
+  type: Namespace
+  items:
+  - uid: ConversorPDF.XLL.VisTimeline.Infrastructure.Services.TimelineHtmlGenerator
+    name: TimelineHtmlGenerator
+    type: Class
+- uid: ConversorPDF.XLL.VisTimeline.UI
+  name: ConversorPDF.XLL.VisTimeline.UI
+  type: Namespace
+  items:
+  - uid: ConversorPDF.XLL.VisTimeline.UI.TimelineViewer
+    name: TimelineViewer
+    type: Class
+memberLayout: SamePage

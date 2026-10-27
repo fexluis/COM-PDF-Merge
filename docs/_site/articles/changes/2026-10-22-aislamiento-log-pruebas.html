@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Aislamiento del Log de Pruebas y Descarte del Falso Positivo V66 | ESAP - ConversorPDF </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Aislamiento del Log de Pruebas y Descarte del Falso Positivo V66 | ESAP - ConversorPDF ">
+      
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="../../toc.html">
+      <meta name="docfx:tocrel" content="../toc.html">
+      
+      <meta name="docfx:rel" content="../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/fexluis/COM-PDF-Merge/blob/refactor/academic-modularization/docs/articles/changes/2026-10-22-aislamiento-log-pruebas.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="aislamiento-del-log-de-pruebas-y-descarte-del-falso-positivo-v66">Aislamiento del Log de Pruebas y Descarte del Falso Positivo V66</h1>
+
+<p><strong>Fecha:</strong> 2026-10-22<br>
+<strong>Módulo:</strong> Core / Infraestructura / Pruebas (<code>ConversorPDF.XLL.Core</code>, <code>ConversorPDF.Tests</code>)<br>
+<strong>Ronda:</strong> 207 (Fases 1066 a 1070)</p>
+<h2 id="propósito">Propósito</h2>
+<p>Aislar la salida de registro de eventos (<code>LoggerHelper</code>) durante la ejecución de pruebas automatizadas y documentar el descarte del falso positivo observado en auditorías de logs asociado a la migración <code>MigrationV66_RenombrarModalidadTutoria</code>:</p>
+<ol>
+<li>El error registrado <code>[V66] Bloque vinculaciones falló.</code> acompañado de <code>[TEST-V66] fallo intencional</code> proviene exclusivamente de la prueba unitaria <code>MigrationV66Tests.Up_WhenBlockFails_ShouldRollbackAndThrow()</code>.</li>
+<li>Dicha prueba inyecta un trigger SQLite intencional con <code>RAISE(FAIL, '[TEST-V66] fallo intencional')</code> para asegurar el comportamiento de rollback transaccional ante excepciones.</li>
+<li>Debido a que <code>LoggerHelper</code> compartía la misma ruta de archivo estática en <code>%LOCALAPPDATA%\ConversorPDF\log\log_yyyyMMdd.txt</code>, las ejecuciones de la suite de pruebas contaminaban el log que se audita en entornos de producción.</li>
+</ol>
+<h2 id="diagnóstico-y-causa-raíz">Diagnóstico y Causa Raíz</h2>
+<ol>
+<li><strong>Evidencia en Log:</strong> En <code>log_20261022.txt</code> se detectó un bloque de error generado desde <code>...\ConversorPDF.Tests\bin\Release\net48</code>.</li>
+<li><strong>Inexistencia de Constraint:</strong> La tabla <code>vinculaciones</code> en producción (<code>AcademicSchema.sql</code>) no posee <code>CHECK</code> ni <code>UNIQUE</code> sobre <code>modalidadVinculacion</code>. En bases de datos reales de producción, <code>MigrationV66</code> ejecutó exitosamente 4 veces consecutivas el mismo día sin huecos de versión.</li>
+<li><strong>Causa Raíz:</strong> El campo <code>_logDirectory</code> en <code>LoggerHelper</code> era <code>private static readonly string</code>, fijado irrevocablemente en el constructor estático a la carpeta local de la aplicación. No existía mecanismo de redirección para entornos de testing.</li>
+</ol>
+<h2 id="cambios-realizados">Cambios Realizados</h2>
+<ol>
+<li><strong>Redirección configurable de la salida de log (<code>LoggerHelper.cs</code>, Fase 1066):</strong>
+<ul>
+<li>Campo <code>_logDirectory</code> modificado a <code>private static string</code>.</li>
+<li>Expuesta propiedad <code>internal static string DirectorioLog { get; set; }</code> para reasignar la carpeta destino de los logs. Si el directorio no existe, se crea dinámicamente. Al recalcularse la ruta en cada iteración de la cola asíncrona, el cambio toma efecto inmediatamente sin reiniciar tareas de fondo.</li>
+</ul>
+</li>
+<li><strong>Shim de <code>ModuleInitializerAttribute</code> para .NET Framework 4.8 (<code>ModuleInitializerAttribute.cs</code>, Fase 1067):</strong>
+<ul>
+<li>Declarado atributo <code>[AttributeUsage(AttributeTargets.Method, Inherited = false)]</code> bajo el namespace <code>System.Runtime.CompilerServices</code> protegido por <code>#if !NET5_0_OR_GREATER</code>.</li>
+<li>Permite al compilador C# emitir inicializadores de módulo (<code>.cctor</code>) en el ensamblado de pruebas <code>net48</code>.</li>
+</ul>
+</li>
+<li><strong>Bootstrap de pruebas con redirección a <code>%TEMP%</code> (<code>TestLogBootstrap.cs</code>, Fase 1068):</strong>
+<ul>
+<li>Clase interna con método anotado <code>[ModuleInitializer]</code> que asigna <code>LoggerHelper.DirectorioLog = Path.Combine(Path.GetTempPath(), &quot;ConversorPDF.Tests&quot;, &quot;log&quot;)</code>.</li>
+<li>Se ejecuta automáticamente al cargar el ensamblado de pruebas antes del primer test, garantizando que ninguna prueba escriba en el directorio de log de producción.</li>
+</ul>
+</li>
+<li><strong>Prueba de no regresión de la redirección (<code>LoggerHelperRedirectionTests.cs</code>, Fase 1069):</strong>
+<ul>
+<li>Suite unitaria que valida la redirección temporal a una carpeta aislada, la emisión efectiva del log y la posterior restauración sin efectos colaterales.</li>
+</ul>
+</li>
+<li><strong>Trazabilidad y clarificación en código de prueba (<code>MigrationV66Tests.cs</code>, Fase 1070):</strong>
+<ul>
+<li>Documentado en el cuerpo del test <code>Up_WhenBlockFails_ShouldRollbackAndThrow</code> que el error es intencional y que su salida se canaliza a <code>%TEMP%</code>.</li>
+</ul>
+</li>
+</ol>
+<h2 id="conclusión-operativa">Conclusión Operativa</h2>
+<p>El mensaje de fallo en V66 <strong>no representa un error en el código de producción ni en la base de datos</strong>. Las Fases 1066 a 1070 garantizan la total separación de auditoría entre ejecuciones de pruebas y actividad productiva.</p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/fexluis/COM-PDF-Merge/blob/refactor/academic-modularization/docs/articles/changes/2026-10-22-aislamiento-log-pruebas.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          ESAP - ConversorPDF Doc
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

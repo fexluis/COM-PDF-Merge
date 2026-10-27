@@ -1,0 +1,48 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL
+  commentId: N:ConversorPDF.XLL
+  id: ConversorPDF.XLL
+  children:
+  - ConversorPDF.XLL.ExcelAddIn
+  - ConversorPDF.XLL.OneDriveFunctions
+  - ConversorPDF.XLL.PdfFunctions
+  - ConversorPDF.XLL.RibbonController
+  langs:
+  - csharp
+  - vb
+  name: ConversorPDF.XLL
+  nameWithType: ConversorPDF.XLL
+  fullName: ConversorPDF.XLL
+  type: Namespace
+  assemblies:
+  - ConversorPDF.XLL
+references:
+- uid: ConversorPDF.XLL.ExcelAddIn
+  commentId: T:ConversorPDF.XLL.ExcelAddIn
+  isExternal: true
+  href: ConversorPDF.XLL.ExcelAddIn.html
+  name: ExcelAddIn
+  nameWithType: ExcelAddIn
+  fullName: ConversorPDF.XLL.ExcelAddIn
+- uid: ConversorPDF.XLL.RibbonController
+  commentId: T:ConversorPDF.XLL.RibbonController
+  isExternal: true
+  href: ConversorPDF.XLL.RibbonController.html
+  name: RibbonController
+  nameWithType: RibbonController
+  fullName: ConversorPDF.XLL.RibbonController
+- uid: ConversorPDF.XLL.PdfFunctions
+  commentId: T:ConversorPDF.XLL.PdfFunctions
+  isExternal: true
+  href: ConversorPDF.XLL.PdfFunctions.html
+  name: PdfFunctions
+  nameWithType: PdfFunctions
+  fullName: ConversorPDF.XLL.PdfFunctions
+- uid: ConversorPDF.XLL.OneDriveFunctions
+  commentId: T:ConversorPDF.XLL.OneDriveFunctions
+  isExternal: true
+  href: ConversorPDF.XLL.OneDriveFunctions.html
+  name: OneDriveFunctions
+  nameWithType: OneDriveFunctions
+  fullName: ConversorPDF.XLL.OneDriveFunctions

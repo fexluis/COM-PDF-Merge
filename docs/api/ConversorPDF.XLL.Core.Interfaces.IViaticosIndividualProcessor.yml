@@ -1,0 +1,309 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor
+  commentId: T:ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor
+  id: IViaticosIndividualProcessor
+  parent: ConversorPDF.XLL.Core.Interfaces
+  children:
+  - ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor.Procesar(System.Action{System.Int32,System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String)
+  - ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor.ProcesarFilaSeleccionada(System.Action{System.Int32,System.Int32})
+  langs:
+  - csharp
+  - vb
+  name: IViaticosIndividualProcessor
+  nameWithType: IViaticosIndividualProcessor
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor
+  type: Interface
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Procesador para la generación de viáticos de forma individual o específica.
+  example: []
+  syntax:
+    content: public interface IViaticosIndividualProcessor
+    content.vb: Public Interface IViaticosIndividualProcessor
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor.Procesar(System.Action{System.Int32,System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor.Procesar(System.Action{System.Int32,System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String)
+  id: Procesar(System.Action{System.Int32,System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String)
+  parent: ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor
+  langs:
+  - csharp
+  - vb
+  name: Procesar(Action<int, int>, DateTime?, DateTime?, string)
+  nameWithType: IViaticosIndividualProcessor.Procesar(Action<int, int>, DateTime?, DateTime?, string)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor.Procesar(System.Action<int, int>, System.DateTime?, System.DateTime?, string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Ejecuta el proceso de generación de PDF para los viáticos configurados.
+  example: []
+  syntax:
+    content: int Procesar(Action<int, int> progressCallback = null, DateTime? overrideInicio = null, DateTime? overrideFin = null, string overrideCdp = null)
+    parameters:
+    - id: progressCallback
+      type: System.Action{System.Int32,System.Int32}
+    - id: overrideInicio
+      type: System.Nullable{System.DateTime}
+    - id: overrideFin
+      type: System.Nullable{System.DateTime}
+    - id: overrideCdp
+      type: System.String
+    return:
+      type: System.Int32
+    content.vb: Function Procesar(progressCallback As Action(Of Integer, Integer) = Nothing, overrideInicio As Date? = Nothing, overrideFin As Date? = Nothing, overrideCdp As String = Nothing) As Integer
+  overload: ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor.Procesar*
+  nameWithType.vb: IViaticosIndividualProcessor.Procesar(Action(Of Integer, Integer), Date?, Date?, String)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor.Procesar(System.Action(Of Integer, Integer), Date?, Date?, String)
+  name.vb: Procesar(Action(Of Integer, Integer), Date?, Date?, String)
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor.ProcesarFilaSeleccionada(System.Action{System.Int32,System.Int32})
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor.ProcesarFilaSeleccionada(System.Action{System.Int32,System.Int32})
+  id: ProcesarFilaSeleccionada(System.Action{System.Int32,System.Int32})
+  parent: ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor
+  langs:
+  - csharp
+  - vb
+  name: ProcesarFilaSeleccionada(Action<int, int>)
+  nameWithType: IViaticosIndividualProcessor.ProcesarFilaSeleccionada(Action<int, int>)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor.ProcesarFilaSeleccionada(System.Action<int, int>)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Ejecuta el proceso de generación únicamente para la fila seleccionada por el usuario.
+  example: []
+  syntax:
+    content: int ProcesarFilaSeleccionada(Action<int, int> progressCallback = null)
+    parameters:
+    - id: progressCallback
+      type: System.Action{System.Int32,System.Int32}
+    return:
+      type: System.Int32
+    content.vb: Function ProcesarFilaSeleccionada(progressCallback As Action(Of Integer, Integer) = Nothing) As Integer
+  overload: ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor.ProcesarFilaSeleccionada*
+  nameWithType.vb: IViaticosIndividualProcessor.ProcesarFilaSeleccionada(Action(Of Integer, Integer))
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor.ProcesarFilaSeleccionada(System.Action(Of Integer, Integer))
+  name.vb: ProcesarFilaSeleccionada(Action(Of Integer, Integer))
+references:
+- uid: ConversorPDF.XLL.Core.Interfaces
+  commentId: N:ConversorPDF.XLL.Core.Interfaces
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Core.Interfaces
+  nameWithType: ConversorPDF.XLL.Core.Interfaces
+  fullName: ConversorPDF.XLL.Core.Interfaces
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Interfaces
+    name: Interfaces
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Interfaces
+    name: Interfaces
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.html
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor.Procesar*
+  commentId: Overload:ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor.Procesar
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor.html#ConversorPDF_XLL_Core_Interfaces_IViaticosIndividualProcessor_Procesar_System_Action_System_Int32_System_Int32__System_Nullable_System_DateTime__System_Nullable_System_DateTime__System_String_
+  name: Procesar
+  nameWithType: IViaticosIndividualProcessor.Procesar
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor.Procesar
+- uid: System.Action{System.Int32,System.Int32}
+  commentId: T:System.Action{System.Int32,System.Int32}
+  parent: System
+  definition: System.Action`2
+  href: https://learn.microsoft.com/dotnet/api/system.action-2
+  name: Action<int, int>
+  nameWithType: Action<int, int>
+  fullName: System.Action<int, int>
+  nameWithType.vb: Action(Of Integer, Integer)
+  fullName.vb: System.Action(Of Integer, Integer)
+  name.vb: Action(Of Integer, Integer)
+  spec.csharp:
+  - uid: System.Action`2
+    name: Action
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.action-2
+  - name: <
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '>'
+  spec.vb:
+  - uid: System.Action`2
+    name: Action
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.action-2
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: )
+- uid: System.Nullable{System.DateTime}
+  commentId: T:System.Nullable{System.DateTime}
+  parent: System
+  definition: System.Nullable`1
+  href: https://learn.microsoft.com/dotnet/api/system.datetime
+  name: DateTime?
+  nameWithType: DateTime?
+  fullName: System.DateTime?
+  nameWithType.vb: Date?
+  fullName.vb: Date?
+  name.vb: Date?
+  spec.csharp:
+  - uid: System.DateTime
+    name: DateTime
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.datetime
+  - name: '?'
+  spec.vb:
+  - uid: System.DateTime
+    name: Date
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.datetime
+  - name: '?'
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: System.Int32
+  commentId: T:System.Int32
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int
+  nameWithType: int
+  fullName: int
+  nameWithType.vb: Integer
+  fullName.vb: Integer
+  name.vb: Integer
+- uid: System.Action`2
+  commentId: T:System.Action`2
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.action-2
+  name: Action<T1, T2>
+  nameWithType: Action<T1, T2>
+  fullName: System.Action<T1, T2>
+  nameWithType.vb: Action(Of T1, T2)
+  fullName.vb: System.Action(Of T1, T2)
+  name.vb: Action(Of T1, T2)
+  spec.csharp:
+  - uid: System.Action`2
+    name: Action
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.action-2
+  - name: <
+  - name: T1
+  - name: ','
+  - name: " "
+  - name: T2
+  - name: '>'
+  spec.vb:
+  - uid: System.Action`2
+    name: Action
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.action-2
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T1
+  - name: ','
+  - name: " "
+  - name: T2
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: System.Nullable`1
+  commentId: T:System.Nullable`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  name: Nullable<T>
+  nameWithType: Nullable<T>
+  fullName: System.Nullable<T>
+  nameWithType.vb: Nullable(Of T)
+  fullName.vb: System.Nullable(Of T)
+  name.vb: Nullable(Of T)
+  spec.csharp:
+  - uid: System.Nullable`1
+    name: Nullable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.Nullable`1
+    name: Nullable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor.ProcesarFilaSeleccionada*
+  commentId: Overload:ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor.ProcesarFilaSeleccionada
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor.html#ConversorPDF_XLL_Core_Interfaces_IViaticosIndividualProcessor_ProcesarFilaSeleccionada_System_Action_System_Int32_System_Int32__
+  name: ProcesarFilaSeleccionada
+  nameWithType: IViaticosIndividualProcessor.ProcesarFilaSeleccionada
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor.ProcesarFilaSeleccionada

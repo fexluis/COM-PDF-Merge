@@ -1,0 +1,91 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Academic.Application.Interfaces
+  commentId: N:ConversorPDF.XLL.Academic.Application.Interfaces
+  id: ConversorPDF.XLL.Academic.Application.Interfaces
+  children:
+  - ConversorPDF.XLL.Academic.Application.Interfaces.IAcademicDateSyncService
+  - ConversorPDF.XLL.Academic.Application.Interfaces.IVinculacionListService
+  langs:
+  - csharp
+  - vb
+  name: ConversorPDF.XLL.Academic.Application.Interfaces
+  nameWithType: ConversorPDF.XLL.Academic.Application.Interfaces
+  fullName: ConversorPDF.XLL.Academic.Application.Interfaces
+  type: Namespace
+  assemblies:
+  - ConversorPDF.XLL
+references:
+- uid: ConversorPDF.XLL.Academic.Application.Interfaces.IAcademicDateSyncService
+  commentId: T:ConversorPDF.XLL.Academic.Application.Interfaces.IAcademicDateSyncService
+  parent: ConversorPDF.XLL.Academic.Application.Interfaces
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Application.Interfaces.IAcademicDateSyncService.html
+  name: IAcademicDateSyncService
+  nameWithType: IAcademicDateSyncService
+  fullName: ConversorPDF.XLL.Academic.Application.Interfaces.IAcademicDateSyncService
+- uid: ConversorPDF.XLL.Academic.Application.Interfaces.IVinculacionListService
+  commentId: T:ConversorPDF.XLL.Academic.Application.Interfaces.IVinculacionListService
+  parent: ConversorPDF.XLL.Academic.Application.Interfaces
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Application.Interfaces.IVinculacionListService.html
+  name: IVinculacionListService
+  nameWithType: IVinculacionListService
+  fullName: ConversorPDF.XLL.Academic.Application.Interfaces.IVinculacionListService
+- uid: ConversorPDF.XLL.Academic.Application.Interfaces
+  commentId: N:ConversorPDF.XLL.Academic.Application.Interfaces
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Academic.Application.Interfaces
+  nameWithType: ConversorPDF.XLL.Academic.Application.Interfaces
+  fullName: ConversorPDF.XLL.Academic.Application.Interfaces
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic
+    name: Academic
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Application
+    name: Application
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Application.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Application.Interfaces
+    name: Interfaces
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Application.Interfaces.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic
+    name: Academic
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Application
+    name: Application
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Application.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Application.Interfaces
+    name: Interfaces
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Application.Interfaces.html

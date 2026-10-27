@@ -1,0 +1,407 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IVinculacionQueryRepository
+  commentId: T:ConversorPDF.XLL.Academic.Domain.Interfaces.IVinculacionQueryRepository
+  id: IVinculacionQueryRepository
+  parent: ConversorPDF.XLL.Academic.Domain.Interfaces
+  children:
+  - ConversorPDF.XLL.Academic.Domain.Interfaces.IVinculacionQueryRepository.GetSesionesAsync(System.Nullable{System.Int32},System.Nullable{System.Int32},System.Nullable{System.Int32},System.Boolean,System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.Int32,System.Int32,System.Threading.CancellationToken)
+  langs:
+  - csharp
+  - vb
+  name: IVinculacionQueryRepository
+  nameWithType: IVinculacionQueryRepository
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IVinculacionQueryRepository
+  type: Interface
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Interfaces
+  summary: Interfaz para consultas especializadas de vinculaciones.
+  example: []
+  syntax:
+    content: public interface IVinculacionQueryRepository
+    content.vb: Public Interface IVinculacionQueryRepository
+  derivedClasses:
+  - ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.VinculacionQueryRepository
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IVinculacionQueryRepository.GetSesionesAsync(System.Nullable{System.Int32},System.Nullable{System.Int32},System.Nullable{System.Int32},System.Boolean,System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.Int32,System.Int32,System.Threading.CancellationToken)
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Interfaces.IVinculacionQueryRepository.GetSesionesAsync(System.Nullable{System.Int32},System.Nullable{System.Int32},System.Nullable{System.Int32},System.Boolean,System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.Int32,System.Int32,System.Threading.CancellationToken)
+  id: GetSesionesAsync(System.Nullable{System.Int32},System.Nullable{System.Int32},System.Nullable{System.Int32},System.Boolean,System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.Int32,System.Int32,System.Threading.CancellationToken)
+  parent: ConversorPDF.XLL.Academic.Domain.Interfaces.IVinculacionQueryRepository
+  langs:
+  - csharp
+  - vb
+  name: GetSesionesAsync(int?, int?, int?, bool, DateTime?, DateTime?, int, int, CancellationToken)
+  nameWithType: IVinculacionQueryRepository.GetSesionesAsync(int?, int?, int?, bool, DateTime?, DateTime?, int, int, CancellationToken)
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IVinculacionQueryRepository.GetSesionesAsync(int?, int?, int?, bool, System.DateTime?, System.DateTime?, int, int, System.Threading.CancellationToken)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Interfaces
+  summary: Obtiene una lista detallada de sesiones filtrada por sede, tercero, período, viática y rango de fechas.
+  example: []
+  syntax:
+    content: Task<Result<IReadOnlyCollection<SesionListItem>>> GetSesionesAsync(int? idSede, int? idTercero, int? idPeriodo, bool soloViaticas, DateTime? fechaDesde, DateTime? fechaHasta, int limit, int offset, CancellationToken ct)
+    parameters:
+    - id: idSede
+      type: System.Nullable{System.Int32}
+      description: Identificador opcional de la sede.
+    - id: idTercero
+      type: System.Nullable{System.Int32}
+      description: Identificador opcional del tercero (docente).
+    - id: idPeriodo
+      type: System.Nullable{System.Int32}
+      description: Identificador opcional del período académico.
+    - id: soloViaticas
+      type: System.Boolean
+      description: Si es true, solo retorna sesiones marcadas con viática.
+    - id: fechaDesde
+      type: System.Nullable{System.DateTime}
+      description: Fecha inicial opcional del rango de búsqueda (inclusive).
+    - id: fechaHasta
+      type: System.Nullable{System.DateTime}
+      description: Fecha final opcional del rango de búsqueda (inclusive).
+    - id: limit
+      type: System.Int32
+      description: Número máximo de registros a retornar.
+    - id: offset
+      type: System.Int32
+      description: Número de registros a omitir (paginación).
+    - id: ct
+      type: System.Threading.CancellationToken
+      description: Token de cancelación.
+    return:
+      type: System.Threading.Tasks.Task{CSharpFunctionalExtensions.Result{System.Collections.Generic.IReadOnlyCollection{ConversorPDF.XLL.Academic.Domain.Models.SesionListItem}}}
+    content.vb: Function GetSesionesAsync(idSede As Integer?, idTercero As Integer?, idPeriodo As Integer?, soloViaticas As Boolean, fechaDesde As Date?, fechaHasta As Date?, limit As Integer, offset As Integer, ct As CancellationToken) As Task(Of Result(Of IReadOnlyCollection(Of SesionListItem)))
+  overload: ConversorPDF.XLL.Academic.Domain.Interfaces.IVinculacionQueryRepository.GetSesionesAsync*
+  nameWithType.vb: IVinculacionQueryRepository.GetSesionesAsync(Integer?, Integer?, Integer?, Boolean, Date?, Date?, Integer, Integer, CancellationToken)
+  fullName.vb: ConversorPDF.XLL.Academic.Domain.Interfaces.IVinculacionQueryRepository.GetSesionesAsync(Integer?, Integer?, Integer?, Boolean, Date?, Date?, Integer, Integer, System.Threading.CancellationToken)
+  name.vb: GetSesionesAsync(Integer?, Integer?, Integer?, Boolean, Date?, Date?, Integer, Integer, CancellationToken)
+references:
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces
+  commentId: N:ConversorPDF.XLL.Academic.Domain.Interfaces
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Academic.Domain.Interfaces
+  nameWithType: ConversorPDF.XLL.Academic.Domain.Interfaces
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic
+    name: Academic
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Domain
+    name: Domain
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Domain.Interfaces
+    name: Interfaces
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Interfaces.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic
+    name: Academic
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Domain
+    name: Domain
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Domain.Interfaces
+    name: Interfaces
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Interfaces.html
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IVinculacionQueryRepository.GetSesionesAsync*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Interfaces.IVinculacionQueryRepository.GetSesionesAsync
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Interfaces.IVinculacionQueryRepository.html#ConversorPDF_XLL_Academic_Domain_Interfaces_IVinculacionQueryRepository_GetSesionesAsync_System_Nullable_System_Int32__System_Nullable_System_Int32__System_Nullable_System_Int32__System_Boolean_System_Nullable_System_DateTime__System_Nullable_System_DateTime__System_Int32_System_Int32_System_Threading_CancellationToken_
+  name: GetSesionesAsync
+  nameWithType: IVinculacionQueryRepository.GetSesionesAsync
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IVinculacionQueryRepository.GetSesionesAsync
+- uid: System.Nullable{System.Int32}
+  commentId: T:System.Nullable{System.Int32}
+  parent: System
+  definition: System.Nullable`1
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int?
+  nameWithType: int?
+  fullName: int?
+  nameWithType.vb: Integer?
+  fullName.vb: Integer?
+  name.vb: Integer?
+  spec.csharp:
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '?'
+  spec.vb:
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '?'
+- uid: System.Boolean
+  commentId: T:System.Boolean
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.boolean
+  name: bool
+  nameWithType: bool
+  fullName: bool
+  nameWithType.vb: Boolean
+  fullName.vb: Boolean
+  name.vb: Boolean
+- uid: System.Nullable{System.DateTime}
+  commentId: T:System.Nullable{System.DateTime}
+  parent: System
+  definition: System.Nullable`1
+  href: https://learn.microsoft.com/dotnet/api/system.datetime
+  name: DateTime?
+  nameWithType: DateTime?
+  fullName: System.DateTime?
+  nameWithType.vb: Date?
+  fullName.vb: Date?
+  name.vb: Date?
+  spec.csharp:
+  - uid: System.DateTime
+    name: DateTime
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.datetime
+  - name: '?'
+  spec.vb:
+  - uid: System.DateTime
+    name: Date
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.datetime
+  - name: '?'
+- uid: System.Int32
+  commentId: T:System.Int32
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int
+  nameWithType: int
+  fullName: int
+  nameWithType.vb: Integer
+  fullName.vb: Integer
+  name.vb: Integer
+- uid: System.Threading.CancellationToken
+  commentId: T:System.Threading.CancellationToken
+  parent: System.Threading
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken
+  name: CancellationToken
+  nameWithType: CancellationToken
+  fullName: System.Threading.CancellationToken
+- uid: System.Threading.Tasks.Task{CSharpFunctionalExtensions.Result{System.Collections.Generic.IReadOnlyCollection{ConversorPDF.XLL.Academic.Domain.Models.SesionListItem}}}
+  commentId: T:System.Threading.Tasks.Task{CSharpFunctionalExtensions.Result{System.Collections.Generic.IReadOnlyCollection{ConversorPDF.XLL.Academic.Domain.Models.SesionListItem}}}
+  parent: System.Threading.Tasks
+  definition: System.Threading.Tasks.Task`1
+  href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  name: Task<Result<IReadOnlyCollection<SesionListItem>>>
+  nameWithType: Task<Result<IReadOnlyCollection<SesionListItem>>>
+  fullName: System.Threading.Tasks.Task<CSharpFunctionalExtensions.Result<System.Collections.Generic.IReadOnlyCollection<ConversorPDF.XLL.Academic.Domain.Models.SesionListItem>>>
+  nameWithType.vb: Task(Of Result(Of IReadOnlyCollection(Of SesionListItem)))
+  fullName.vb: System.Threading.Tasks.Task(Of CSharpFunctionalExtensions.Result(Of System.Collections.Generic.IReadOnlyCollection(Of ConversorPDF.XLL.Academic.Domain.Models.SesionListItem)))
+  name.vb: Task(Of Result(Of IReadOnlyCollection(Of SesionListItem)))
+  spec.csharp:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: <
+  - uid: CSharpFunctionalExtensions.Result`1
+    name: Result
+    isExternal: true
+  - name: <
+  - uid: System.Collections.Generic.IReadOnlyCollection`1
+    name: IReadOnlyCollection
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlycollection-1
+  - name: <
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem
+    name: SesionListItem
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.html
+  - name: '>'
+  - name: '>'
+  - name: '>'
+  spec.vb:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: CSharpFunctionalExtensions.Result`1
+    name: Result
+    isExternal: true
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Collections.Generic.IReadOnlyCollection`1
+    name: IReadOnlyCollection
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlycollection-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem
+    name: SesionListItem
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.html
+  - name: )
+  - name: )
+  - name: )
+- uid: System.Nullable`1
+  commentId: T:System.Nullable`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  name: Nullable<T>
+  nameWithType: Nullable<T>
+  fullName: System.Nullable<T>
+  nameWithType.vb: Nullable(Of T)
+  fullName.vb: System.Nullable(Of T)
+  name.vb: Nullable(Of T)
+  spec.csharp:
+  - uid: System.Nullable`1
+    name: Nullable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.Nullable`1
+    name: Nullable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: System.Threading
+  commentId: N:System.Threading
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System.Threading
+  nameWithType: System.Threading
+  fullName: System.Threading
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Threading
+    name: Threading
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Threading
+    name: Threading
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading
+- uid: System.Threading.Tasks.Task`1
+  commentId: T:System.Threading.Tasks.Task`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  name: Task<TResult>
+  nameWithType: Task<TResult>
+  fullName: System.Threading.Tasks.Task<TResult>
+  nameWithType.vb: Task(Of TResult)
+  fullName.vb: System.Threading.Tasks.Task(Of TResult)
+  name.vb: Task(Of TResult)
+  spec.csharp:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: <
+  - name: TResult
+  - name: '>'
+  spec.vb:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: TResult
+  - name: )
+- uid: System.Threading.Tasks
+  commentId: N:System.Threading.Tasks
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System.Threading.Tasks
+  nameWithType: System.Threading.Tasks
+  fullName: System.Threading.Tasks
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Threading
+    name: Threading
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading
+  - name: .
+  - uid: System.Threading.Tasks
+    name: Tasks
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Threading
+    name: Threading
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading
+  - name: .
+  - uid: System.Threading.Tasks
+    name: Tasks
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks

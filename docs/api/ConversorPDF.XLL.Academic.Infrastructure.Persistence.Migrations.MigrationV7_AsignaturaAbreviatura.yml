@@ -1,0 +1,598 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura
+  commentId: T:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura
+  id: MigrationV7_AsignaturaAbreviatura
+  parent: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations
+  children:
+  - ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.#ctor
+  - ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.Name
+  - ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.Up(System.Data.IDbConnection,System.Data.IDbTransaction)
+  - ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.Version
+  langs:
+  - csharp
+  - vb
+  name: MigrationV7_AsignaturaAbreviatura
+  nameWithType: MigrationV7_AsignaturaAbreviatura
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura
+  type: Class
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations
+  syntax:
+    content: 'public class MigrationV7_AsignaturaAbreviatura : IMigration'
+    content.vb: Public Class MigrationV7_AsignaturaAbreviatura Implements IMigration
+  inheritance:
+  - System.Object
+  implements:
+  - ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.IMigration
+  inheritedMembers:
+  - System.Object.ToString
+  - System.Object.Equals(System.Object)
+  - System.Object.Equals(System.Object,System.Object)
+  - System.Object.ReferenceEquals(System.Object,System.Object)
+  - System.Object.GetHashCode
+  - System.Object.GetType
+  - System.Object.MemberwiseClone
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.Up(System.Data.IDbConnection,System.Data.IDbTransaction)
+  commentId: M:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.Up(System.Data.IDbConnection,System.Data.IDbTransaction)
+  id: Up(System.Data.IDbConnection,System.Data.IDbTransaction)
+  parent: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura
+  langs:
+  - csharp
+  - vb
+  name: Up(IDbConnection, IDbTransaction)
+  nameWithType: MigrationV7_AsignaturaAbreviatura.Up(IDbConnection, IDbTransaction)
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.Up(System.Data.IDbConnection, System.Data.IDbTransaction)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations
+  example: []
+  syntax:
+    content: public void Up(IDbConnection connection, IDbTransaction transaction)
+    parameters:
+    - id: connection
+      type: System.Data.IDbConnection
+    - id: transaction
+      type: System.Data.IDbTransaction
+    content.vb: Public Sub Up(connection As IDbConnection, transaction As IDbTransaction)
+  overload: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.Up*
+  implements:
+  - ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.IMigration.Up(System.Data.IDbConnection,System.Data.IDbTransaction)
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.#ctor
+  commentId: M:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.#ctor
+  id: '#ctor'
+  parent: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura
+  langs:
+  - csharp
+  - vb
+  name: MigrationV7_AsignaturaAbreviatura()
+  nameWithType: MigrationV7_AsignaturaAbreviatura.MigrationV7_AsignaturaAbreviatura()
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.MigrationV7_AsignaturaAbreviatura()
+  type: Constructor
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations
+  syntax:
+    content: public MigrationV7_AsignaturaAbreviatura()
+    content.vb: Public Sub New()
+  overload: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.#ctor*
+  nameWithType.vb: MigrationV7_AsignaturaAbreviatura.New()
+  fullName.vb: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.New()
+  name.vb: New()
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.Version
+  commentId: P:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.Version
+  id: Version
+  parent: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura
+  langs:
+  - csharp
+  - vb
+  name: Version
+  nameWithType: MigrationV7_AsignaturaAbreviatura.Version
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.Version
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations
+  example: []
+  syntax:
+    content: public int Version { get; }
+    parameters: []
+    return:
+      type: System.Int32
+    content.vb: Public ReadOnly Property Version As Integer
+  overload: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.Version*
+  implements:
+  - ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.IMigration.Version
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.Name
+  commentId: P:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.Name
+  id: Name
+  parent: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura
+  langs:
+  - csharp
+  - vb
+  name: Name
+  nameWithType: MigrationV7_AsignaturaAbreviatura.Name
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.Name
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations
+  example: []
+  syntax:
+    content: public string Name { get; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public ReadOnly Property Name As String
+  overload: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.Name*
+  implements:
+  - ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.IMigration.Name
+references:
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations
+  commentId: N:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations
+  nameWithType: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic
+    name: Academic
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Infrastructure
+    name: Infrastructure
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Infrastructure.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence
+    name: Persistence
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations
+    name: Migrations
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic
+    name: Academic
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Infrastructure
+    name: Infrastructure
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Infrastructure.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence
+    name: Persistence
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations
+    name: Migrations
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.html
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+  nameWithType: object
+  fullName: object
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.IMigration
+  commentId: T:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.IMigration
+  parent: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.IMigration.html
+  name: IMigration
+  nameWithType: IMigration
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.IMigration
+- uid: System.Object.ToString
+  commentId: M:System.Object.ToString
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  name: ToString()
+  nameWithType: object.ToString()
+  fullName: object.ToString()
+  nameWithType.vb: Object.ToString()
+  fullName.vb: Object.ToString()
+  spec.csharp:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+- uid: System.Object.Equals(System.Object)
+  commentId: M:System.Object.Equals(System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  name: Equals(object)
+  nameWithType: object.Equals(object)
+  fullName: object.Equals(object)
+  nameWithType.vb: Object.Equals(Object)
+  fullName.vb: Object.Equals(Object)
+  name.vb: Equals(Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.Equals(System.Object,System.Object)
+  commentId: M:System.Object.Equals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  name: Equals(object, object)
+  nameWithType: object.Equals(object, object)
+  fullName: object.Equals(object, object)
+  nameWithType.vb: Object.Equals(Object, Object)
+  fullName.vb: Object.Equals(Object, Object)
+  name.vb: Equals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.ReferenceEquals(System.Object,System.Object)
+  commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  name: ReferenceEquals(object, object)
+  nameWithType: object.ReferenceEquals(object, object)
+  fullName: object.ReferenceEquals(object, object)
+  nameWithType.vb: Object.ReferenceEquals(Object, Object)
+  fullName.vb: Object.ReferenceEquals(Object, Object)
+  name.vb: ReferenceEquals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.GetHashCode
+  commentId: M:System.Object.GetHashCode
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  name: GetHashCode()
+  nameWithType: object.GetHashCode()
+  fullName: object.GetHashCode()
+  nameWithType.vb: Object.GetHashCode()
+  fullName.vb: Object.GetHashCode()
+  spec.csharp:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+- uid: System.Object.GetType
+  commentId: M:System.Object.GetType
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  name: GetType()
+  nameWithType: object.GetType()
+  fullName: object.GetType()
+  nameWithType.vb: Object.GetType()
+  fullName.vb: Object.GetType()
+  spec.csharp:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+- uid: System.Object.MemberwiseClone
+  commentId: M:System.Object.MemberwiseClone
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  name: MemberwiseClone()
+  nameWithType: object.MemberwiseClone()
+  fullName: object.MemberwiseClone()
+  nameWithType.vb: Object.MemberwiseClone()
+  fullName.vb: Object.MemberwiseClone()
+  spec.csharp:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.Up*
+  commentId: Overload:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.Up
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.html#ConversorPDF_XLL_Academic_Infrastructure_Persistence_Migrations_MigrationV7_AsignaturaAbreviatura_Up_System_Data_IDbConnection_System_Data_IDbTransaction_
+  name: Up
+  nameWithType: MigrationV7_AsignaturaAbreviatura.Up
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.Up
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.IMigration.Up(System.Data.IDbConnection,System.Data.IDbTransaction)
+  commentId: M:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.IMigration.Up(System.Data.IDbConnection,System.Data.IDbTransaction)
+  parent: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.IMigration
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.IMigration.html#ConversorPDF_XLL_Academic_Infrastructure_Persistence_Migrations_IMigration_Up_System_Data_IDbConnection_System_Data_IDbTransaction_
+  name: Up(IDbConnection, IDbTransaction)
+  nameWithType: IMigration.Up(IDbConnection, IDbTransaction)
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.IMigration.Up(System.Data.IDbConnection, System.Data.IDbTransaction)
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.IMigration.Up(System.Data.IDbConnection,System.Data.IDbTransaction)
+    name: Up
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.IMigration.html#ConversorPDF_XLL_Academic_Infrastructure_Persistence_Migrations_IMigration_Up_System_Data_IDbConnection_System_Data_IDbTransaction_
+  - name: (
+  - uid: System.Data.IDbConnection
+    name: IDbConnection
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.data.idbconnection
+  - name: ','
+  - name: " "
+  - uid: System.Data.IDbTransaction
+    name: IDbTransaction
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.data.idbtransaction
+  - name: )
+  spec.vb:
+  - uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.IMigration.Up(System.Data.IDbConnection,System.Data.IDbTransaction)
+    name: Up
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.IMigration.html#ConversorPDF_XLL_Academic_Infrastructure_Persistence_Migrations_IMigration_Up_System_Data_IDbConnection_System_Data_IDbTransaction_
+  - name: (
+  - uid: System.Data.IDbConnection
+    name: IDbConnection
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.data.idbconnection
+  - name: ','
+  - name: " "
+  - uid: System.Data.IDbTransaction
+    name: IDbTransaction
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.data.idbtransaction
+  - name: )
+- uid: System.Data.IDbConnection
+  commentId: T:System.Data.IDbConnection
+  parent: System.Data
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.data.idbconnection
+  name: IDbConnection
+  nameWithType: IDbConnection
+  fullName: System.Data.IDbConnection
+- uid: System.Data.IDbTransaction
+  commentId: T:System.Data.IDbTransaction
+  parent: System.Data
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.data.idbtransaction
+  name: IDbTransaction
+  nameWithType: IDbTransaction
+  fullName: System.Data.IDbTransaction
+- uid: System.Data
+  commentId: N:System.Data
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System.Data
+  nameWithType: System.Data
+  fullName: System.Data
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Data
+    name: Data
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.data
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Data
+    name: Data
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.data
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.#ctor*
+  commentId: Overload:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.#ctor
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.html#ConversorPDF_XLL_Academic_Infrastructure_Persistence_Migrations_MigrationV7_AsignaturaAbreviatura__ctor
+  name: MigrationV7_AsignaturaAbreviatura
+  nameWithType: MigrationV7_AsignaturaAbreviatura.MigrationV7_AsignaturaAbreviatura
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.MigrationV7_AsignaturaAbreviatura
+  nameWithType.vb: MigrationV7_AsignaturaAbreviatura.New
+  fullName.vb: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.New
+  name.vb: New
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.Version*
+  commentId: Overload:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.Version
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.html#ConversorPDF_XLL_Academic_Infrastructure_Persistence_Migrations_MigrationV7_AsignaturaAbreviatura_Version
+  name: Version
+  nameWithType: MigrationV7_AsignaturaAbreviatura.Version
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.Version
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.IMigration.Version
+  commentId: P:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.IMigration.Version
+  parent: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.IMigration
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.IMigration.html#ConversorPDF_XLL_Academic_Infrastructure_Persistence_Migrations_IMigration_Version
+  name: Version
+  nameWithType: IMigration.Version
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.IMigration.Version
+- uid: System.Int32
+  commentId: T:System.Int32
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int
+  nameWithType: int
+  fullName: int
+  nameWithType.vb: Integer
+  fullName.vb: Integer
+  name.vb: Integer
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.Name*
+  commentId: Overload:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.Name
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.html#ConversorPDF_XLL_Academic_Infrastructure_Persistence_Migrations_MigrationV7_AsignaturaAbreviatura_Name
+  name: Name
+  nameWithType: MigrationV7_AsignaturaAbreviatura.Name
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.Name
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.IMigration.Name
+  commentId: P:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.IMigration.Name
+  parent: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.IMigration
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.IMigration.html#ConversorPDF_XLL_Academic_Infrastructure_Persistence_Migrations_IMigration_Name
+  name: Name
+  nameWithType: IMigration.Name
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.IMigration.Name
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String

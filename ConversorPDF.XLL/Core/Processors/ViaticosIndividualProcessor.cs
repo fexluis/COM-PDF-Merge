@@ -65,11 +65,16 @@ namespace ConversorPDF.XLL.Core.Processors
 
             var config = _viaticosRepository.GetConfig(overrideInicio, overrideFin, overrideCdp);
             if (config == null) return 0;
+            if (string.IsNullOrWhiteSpace(config.Cdp))
+            {
+                MessageBox.Show("No hay CDP configurado. Regístrelo en 'Gestión de CDP Dependencias' antes de generar documentos.", App.APP_NAME, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return 0;
+            }
 
             if (config.FechaInicio > config.FechaFin)
             {
-                LoggerHelper.Error("La fecha de inicio no puede ser mayor que la fecha final.");
-                throw new Exception("La fecha de inicio no puede ser mayor que la fecha final.");
+                LoggerHelper.Warning("La fecha de inicio no puede ser mayor que la fecha final.");
+                return 0;
             }
 
             dynamic wsProg = _excelRepository.GetWorksheet(ConstantsHelper.SHEET_PROG);
@@ -130,6 +135,7 @@ namespace ConversorPDF.XLL.Core.Processors
             }
 
             var config = _viaticosRepository.GetConfig();
+            if (config == null) return 0;
             dynamic wsProg = _excelRepository.GetWorksheet(ConstantsHelper.SHEET_PROG);
             object[,] data = _excelRepository.GetRangeValues(wsProg, rowIdx, 1, rowIdx, ConstantsHelper.PROG_COL_MAX);
 
@@ -148,6 +154,7 @@ namespace ConversorPDF.XLL.Core.Processors
         /// <summary>
         /// Realiza el procesamiento atómico de un único registro de viáticos.
         /// Cubre validación de fechas, dependencias, carga de modelo y generación de documentos.
+        /// Fase 15.2: Verificación de nulo tras reasignación de cfg en isUno para evitar NullReferenceException.
         /// </summary>
         /// <param name="wb">Instancia del libro Excel activo.</param>
         /// <param name="data">Matriz completa de datos de la hoja de programación.</param>
@@ -162,10 +169,21 @@ namespace ConversorPDF.XLL.Core.Processors
             error = "";
             try
             {
-                string dep = data[r, ConstantsHelper.PROG_DEPENDENCIA]?.ToString() ?? "";
-                if (!dep.Equals(cfg.CortaDependencia, StringComparison.OrdinalIgnoreCase))
+                string dep = data[r, ConstantsHelper.PROG_DEPENDENCIA]?.ToString()?.Trim() ?? "";
+                if (!dep.Equals(cfg.CortaDependencia?.Trim(), StringComparison.OrdinalIgnoreCase))
                 {
-                    if (isUno) cfg = _viaticosRepository.GetConfig(null, null, _viaticosRepository.GetDependenciaCDP(dep));
+                    if (isUno)
+                    {
+                        string cdpDep = _viaticosRepository.GetDependenciaCDP(dep);
+                        if (string.IsNullOrWhiteSpace(cdpDep))
+                        {
+                            error = $"Dependencia '{dep}' sin CDP asociado en cdpDependencias";
+                            return false;
+                        }
+
+                        cfg = _viaticosRepository.GetConfig(null, null, cdpDep);
+                        if (cfg == null) { error = $"No se pudo cargar configuración CDP para dependencia '{dep}'"; return false; }
+                    }
                     else { error = $"Dependencia '{dep}' no coincide con '{cfg.CortaDependencia}'"; return false; }
                 }
 
@@ -303,28 +321,35 @@ namespace ConversorPDF.XLL.Core.Processors
             ws.Range["H14"].Value = v.Itinerario?.ToUpperInvariant();
 
             // ── Cadenas reutilizables ──
-            string cdpFull = $"El pago de la presente comisión de servicios / autorización de desplazamiento, se hará con cargo a {cfg.FullDependencia}, del Rubro {cfg.Rubro}, según Certificado de Disponibilidad Presupuestal No. {cfg.Cdp} del {cfg.Fcdp}.";
-            string elaboro = "Elaboró: " + cfg.Elaboro;
-            string reviso = "Revisó: " + cfg.Reviso;
+            string depLarga = string.IsNullOrWhiteSpace(cfg.FullDependencia) ? cfg.CortaDependencia : cfg.FullDependencia;
+            string cdpFull = $"El pago de la presente comisión de servicios / autorización de desplazamiento, se hará con cargo a {depLarga}, del Rubro {cfg.Rubro}, según Certificado de Disponibilidad Presupuestal No. {cfg.Cdp} del {cfg.Fcdp}.";
+            string cdpResponsable = cfg.ResponsableCDP ?? "";
+            string cdpCargo = cfg.CargoResponsableCDP ?? "";
+            string elaboro = string.IsNullOrWhiteSpace(cfg.Elaboro) ? "" : "Elaboró: " + cfg.Elaboro;
+            string reviso = string.IsNullOrWhiteSpace(cfg.Reviso) ? "" : "Revisó: " + cfg.Reviso;
 
-            string gerente = cfg.Gerente ?? "";
-            string cargo = cfg.Cargo ?? "";
-            if (emp.Cedula == cfg.CedulaGerente)
-            {
-                gerente = cfg.GerenteSustituto ?? "";
-                cargo = cfg.CargoSustituto ?? "";
-            }
+            string gerente;
+            string cargo;
+            ViaticosHelper.ResolverAprobador(cfg, emp.Cedula, emp.NombreCompleto, "Processor", out gerente, out cargo);
+            string aprobo = string.IsNullOrWhiteSpace(gerente) ? "" : "Aprobó: " + gerente + (string.IsNullOrWhiteSpace(cargo) ? "" : ", " + cargo);
 
-            string aprobo = "Aprobó: " + gerente + ", " + cargo;
+            // ── Cálculo canónico de transporte aéreo (soporta tanto ruta BD como ruta Excel Programador) ──
+            bool esAereoExcel = ViaticosHelper.EsTerminalAerea(v.terminal);
 
-            // ── Cálculo de terminal / aeropuerto ──
-            string terminal = App.CapitalizarPalabras(v.terminal ?? "Terrestre");
-            string aeropuertoDestino = (terminal == "Terrestre")
-                ? "Terrestre"
-                : string.Equals(v.CiudadDestino, cfg.CiudadBase, StringComparison.OrdinalIgnoreCase)
-                    ? cfg.AeropuertoBase
-                    : "Otros";
-            string tiquetesAereos = (terminal == "Terrestre") ? "NO" : "SI";
+            int isTerminalAereo = (v.IsTerminalAereo == 1 || esAereoExcel) ? 1 : 0;
+            string terminalNombre = !string.IsNullOrWhiteSpace(v.TerminalAereaNombre)
+                ? v.TerminalAereaNombre
+                : (esAereoExcel ? App.CapitalizarPalabras(v.terminal) : v.terminal);
+
+            var (aereoHoraIda, aereoHoraRegreso, aereoRequiereTiquete, aeroTerminal) = 
+                ViaticosHelper.ResolverAereo(isTerminalAereo, terminalNombre, docente: t == TipoFormato.DocenteCatedra);
+
+            // Fase 246: Resolver valor canónico de transporte aéreo para el formato
+            decimal valorTransporteAereo = isTerminalAereo == 1
+                ? (v.TransporteAereo > 0 ? v.TransporteAereo : v.GastoTerminalAerea)
+                : 0;
+
+            LoggerHelper.Debug($"[Processor] [Formato] Cedula='{emp.Cedula}', Nombre='{emp.NombreCompleto}' | aeroTerminal='{aeroTerminal}', valorTransporteAereo={valorTransporteAereo:N0}, Transporte={v.Transporte:N0} | Formato={t}");
 
             // ── Datos específicos por tipo de formato ──
             switch (t)
@@ -334,12 +359,19 @@ namespace ConversorPDF.XLL.Core.Processors
                     ws.Range["F9"].Value = emp.Correo;
                     ws.Range["C10"].Value = emp.EntidadBancaria?.ToUpperInvariant();
                     ws.Range["C11"].Value = emp.Salario?.ToString();
+                    ws.Range["G13"].Value = aereoHoraIda;
+                    ws.Range["G14"].Value = aereoHoraRegreso;
                     ws.Range["C15"].Value = v.Objeto?.ToUpperInvariant();
                     ws.Range["H16"].Value = v.CiudadOrigen?.ToUpperInvariant();
-                    ws.Range["H17"].Value = aeropuertoDestino;
-                    ws.Range["E26"].Value = v.TransporteAereo;
+                    ws.Range["H17"].Value = aeroTerminal;
+                    ws.Range["E26"].Value = valorTransporteAereo;
                     ws.Range["E27"].Value = v.Transporte;
                     ws.Range["B31"].Value = cdpFull;
+                    // Contratista: C36 = Responsable CDP, B37 = Cargo del responsable del CDP
+                    ws.Range["C36"].Value = cdpResponsable;
+                    ws.Range["B37"].Value = cdpCargo;
+                    ws.Range["G36"].Value = gerente;
+                    ws.Range["F37"].Value = cargo;
                     ws.Range["B38"].Value = elaboro;
                     ws.Range["B39"].Value = reviso;
                     ws.Range["B40"].Value = aprobo;
@@ -350,12 +382,17 @@ namespace ConversorPDF.XLL.Core.Processors
                     ws.Range["F9"].Value = emp.Correo;
                     ws.Range["C10"].Value = emp.EntidadBancaria?.ToUpperInvariant();
                     ws.Range["C11"].Value = emp.Salario?.ToString();
+                    ws.Range["G13"].Value = aereoHoraIda;
+                    ws.Range["G14"].Value = aereoHoraRegreso;
                     ws.Range["C15"].Value = v.Objeto?.ToUpperInvariant();
                     ws.Range["H16"].Value = v.CiudadOrigen?.ToUpperInvariant();
-                    ws.Range["H17"].Value = aeropuertoDestino;
-                    ws.Range["E26"].Value = v.TransporteAereo;
+                    ws.Range["H17"].Value = aeroTerminal;
+                    ws.Range["E26"].Value = valorTransporteAereo;
                     ws.Range["E27"].Value = v.Transporte;
                     ws.Range["B31"].Value = cdpFull;
+                    // Servidor: C36 = Responsable CDP, B37 = Cargo del responsable del CDP
+                    ws.Range["C36"].Value = cdpResponsable;
+                    ws.Range["B37"].Value = cdpCargo;
                     ws.Range["G36"].Value = gerente;
                     ws.Range["F37"].Value = cargo;
                     ws.Range["B38"].Value = elaboro;
@@ -366,15 +403,21 @@ namespace ConversorPDF.XLL.Core.Processors
                 case TipoFormato.DocenteCatedra:
                     ws.Range["F8"].Value = emp.Correo;
                     ws.Range["F9"].Value = emp.EntidadBancaria?.ToUpperInvariant();
-                    //ws.Range["C10"].Value = emp.Rol;
                     ws.Range["C11"].Value = emp.Categoria?.ToUpperInvariant();
+                    ws.Range["G13"].Value = aereoHoraIda;
+                    ws.Range["G14"].Value = aereoHoraRegreso;
+                    ws.Range["H15"].Value = aereoRequiereTiquete;
+                    ws.Range["H16"].Value = aeroTerminal;
                     ws.Range["C16"].Value = v.CiudadDestino?.ToUpperInvariant();
                     ws.Range["C17"].Value = v.Objeto?.ToUpperInvariant();
-                    ws.Range["H15"].Value = tiquetesAereos;
-                    ws.Range["H16"].Value = aeropuertoDestino;
-                    ws.Range["E25"].Value = v.TransporteAereo;
+                    ws.Range["E25"].Value = valorTransporteAereo;
                     ws.Range["E26"].Value = v.Transporte;
                     ws.Range["B29"].Value = cdpFull;
+                    // DocenteCatedra: G34 = Gerente, F35 = Cargo Gerente; C34 = Responsable CDP, B35 = Cargo del responsable del CDP (B36 = Elaboró, B37 = Revisó, B38 = Aprobó)
+                    ws.Range["G34"].Value = gerente;
+                    ws.Range["F35"].Value = cargo;
+                    ws.Range["C34"].Value = cdpResponsable;
+                    ws.Range["B35"].Value = cdpCargo;
                     ws.Range["B36"].Value = elaboro;
                     ws.Range["B37"].Value = reviso;
                     ws.Range["B38"].Value = aprobo;
@@ -386,6 +429,7 @@ namespace ConversorPDF.XLL.Core.Processors
 
         /// <summary>
         /// Crea una copia del formato lleno en un nuevo libro XLSX independiente y lo exporta a PDF.
+        /// Fase 19: Garantiza el cierre de wbPdf en bloque finally para evitar fugas de objetos COM si falla la exportación PDF.
         /// </summary>
         /// <param name="app">Instancia de la aplicación Excel.</param>
         /// <param name="ws">Hoja con los datos llenos.</param>
@@ -404,6 +448,7 @@ namespace ConversorPDF.XLL.Core.Processors
             try { wsNueva.Unprotect(ConstantsHelper.FORMATO_PASSWORD); } catch { }
             wsNueva.UsedRange.Value = wsNueva.UsedRange.Value;
 
+            dynamic wbPdf = null;
             app.DisplayAlerts = false;
             try
             {
@@ -419,16 +464,21 @@ namespace ConversorPDF.XLL.Core.Processors
 
                 // Reabrir para exportar PDF  (fiel al original: GuardarPDFIndividual)
                 string savedPath = xlsPath;
-                dynamic wbPdf = app.Workbooks.Open(savedPath);
+                wbPdf = app.Workbooks.Open(savedPath);
                 dynamic wsPdf = wbPdf.Worksheets[1];
                 App.ConfigurarPagina(wsPdf, true);
                 wsPdf.ExportAsFixedFormat(0 /*xlTypePDF*/, pdfPath);
-                wbPdf.Close(true);
             }
             finally
             {
                 app.DisplayAlerts = true;
+                if (wbPdf != null)
+                {
+                    try { wbPdf.Close(false); } catch { }
+                }
                 try { wbNuevo.Close(false); } catch { }
+                // Fase 13.3: Eliminar archivo Excel temporal para evitar residuos .xlsx en la carpeta de salida
+                try { if (File.Exists(xlsPath)) File.Delete(xlsPath); } catch { }
             }
         }
 

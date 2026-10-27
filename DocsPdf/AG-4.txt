@@ -1,0 +1,204 @@
+# Consolidación del plan — Nivel GRUPO, `periodos` con fechas y tupla S
+
+
+# PARTE B — Verificación 2: nuevo nivel **GRUPO** (antes de MODALIDAD)
+
+## B.1 Árbol de 6 niveles (consolidado)
+
+```
+PERIODO (activo)
+ └── SEDE (activa)
+      └── PROGRAMA (activo)
+           └── SEMESTRE (I … X)
+                └── GRUPO (A | B | C | D)        ← NUEVO
+                     └── MODALIDAD (Presencial | Virtual | Semipresencial)
+```
+
+```javascript
+CONTEXTO ACADÉMICO · árbol de selección múltiple (6 niveles)
+│  concepto: cada camino marcado de raíz a hoja se convierte en UNA tupla S;
+│  por lo tanto, el número de hojas marcadas = número de aulas a generar.
+│
+├── PERIODO ───────────── "el calendario manda"
+│   │  porque de él salen periodo_inicio/periodo_fin (ventana α);
+│   │  de modo que sólo se ofrecen períodos con fechas resueltas.
+│   └── SEDE ──────────── "dónde"
+│        │  porque cada sede aporta sus propias aulas;
+│        │  y como no hay FK sede→programa, se combinan libremente.
+│        └── PROGRAMA ─── "qué pensum"
+│             │  porque acota las asignaturas (C) dependientes;
+│             │  de ahí que sólo se listen programas activos.
+│             └── SEMESTRE ── "qué nivel (I..X)"
+│                  │  porque los C dependen de programa+semestre;
+│                  │  por eso son diez nodos fijos.
+│                  └── GRUPO ── "qué cohorte (A|B|C|D)"   ← NUEVO
+│                       │  porque separa grupos de estudiantes del mismo nivel;
+│                       │  y por ello multiplica por 4 las ramas.
+│                       └── MODALIDAD ── "Presencial|Virtual|Semipresencial"
+│                            │  porque define la viática y el uso de rangos PRESENCIAL;
+│                            │  y siendo hoja cierra la combinación.
+│                            └── (emite) AgContextoSeleccionDto
+│                                   ⇒ se calcula AulaRef = idperiodo|idsede|idprograma|semestre|grupo|modalidad
+│                                   ⇒ se inserta una fila en ag_aula  →  devuelve IdAula
+│                                   ⇒ IdAula pasa a ser la referencia de S en AgGen
+│                                   ⇒ se valida contra VentanaSemestre (α)
+│                                   ⇒ resultado: N aulas listas para el Módulo R
+└── VENTANA TEMPORAL (α)
+    └── periodo_inicio … periodo_fin ── que provienen de `periodos` (prioridad 1);
+          ⇒ y si se marca "Ajustar manual", se recorta con clamp al semestre.
+```
+
+
+## B.2 Correcciones al plan
+
+| # | Antes | Ahora |
+|---|---|---|
+| 1 | `cmbGrupo` externo (decisión abierta #2) | **Eliminado**; el grupo se elige en el árbol |
+| 2 | `AgContextoSeleccionDto` = `{IdPeriodo, IdSede, IdPrograma, Semestre, Modalidad, Grupo}` (grupo global) | `{IdPeriodo, IdSede, IdPrograma, Semestre, **Grupo**, Modalidad}` — grupo **por rama** |
+| 3 | 3 combos → 5 niveles | **6 niveles** |
+| 4 | Hojas = Modalidad | Hojas = Modalidad; el nº de ramas se multiplica por **4** |
+| 5 | `AgAulaFactory` tomaba `Grupo` del combo | lo toma del DTO de la rama |
+| 6 | Cap de combinaciones no previsto | **Cap + advertencia** (N ≤ 500) y generación por lotes |
+| 7 | Decisiones abiertas: Grupo (resuelta) | queda abierta: “Ninguno/`''`” |
+
+**Nodos por programa y sede:** `10 semestres × 4 grupos × 3 modalidades = 120` hojas ⇒ el árbol debe construirse en **lazy load** (Semestre al marcar Programa; Grupo al marcar Semestre; Modalidad al marcar Grupo).
+
+**Nota de dominio:** `ValoresGrupo { Ninguno=0, A=1..D=4 }`; el árbol ofrece **sólo A|B|C|D** (según lo pedido). Si se requiere “sin grupo”, añadir un nodo `Ninguno` (⇒ `grupo = ''`).
+
+---
+
+# PARTE C — Impacto en la tupla **S** y respuesta a la pregunta
+
+## C.1 Respuesta directa
+
+> **¿Cada rama seleccionada origina tupla S, y el `IdAula` identifica cada tupla?**
+
+**Sí, con una precisión importante:**
+
+| Afirmación | Verdad | Matiz |
+|---|---|---|
+| Cada **rama hoja** marcada origina **una tupla S** | ✅ | Se materializa como **una fila en `ag_aula`** |
+| El **`IdAula`** (PK de `ag_aula`) identifica esa S | ✅ | Es la **clave subrogada**; la **clave natural** es `AulaRef` |
+| `AulaRef` = {IdPeriodo, IdSede, IdPrograma, Semestre, Grupo} | ⚠️ **Incompleto** | Debe **incluir Modalidad** (si no, dos ramas distintas colisionan en la misma S) |
+
+**Colisión crítica detectada:** si `Modalidad` no entra en la clave natural, las ramas *(…, GRUPO=A, Presencial)* y *(…, GRUPO=A, Virtual)* producen el **mismo** `AulaRef` ⇒ **una sola fila `ag_aula`** ⇒ `AgExpansorSesiones` leería **una** modalidad y la otra se perdería silenciosamente (viática incorrecta).
+
+**Corrección adoptada:**
+```
+AulaRef (clave natural)  = "idperiodo|idsede|idprograma|semestre|grupo|modalidad"
+IdAula   (clave subrogada) = PK autoincremental de ag_aula
+```
+⇒ `IdAula` **sí** identifica de forma unívoca cada tupla S.
+
+## C.2 Tupla S final
+
+```
+Antes:  S = { IdPeriodo, IdPrograma, IdSede, Semestre, Grupo, IdAula }              (Modalidad fuera)
+Ahora:  S = { IdPeriodo, IdPrograma, IdSede, Semestre, Grupo, IdAula },
+        con AulaRef = { IdPeriodo, IdSede, IdPrograma, Semestre, Grupo, Modalidad }
+        y   ModalidadVinculacion como atributo de S (no de la tupla AgGen)
+```
+
+**Tabla de correspondencia (nivel del árbol → campo S):**
+
+| Nivel del árbol | Campo en S | Columna `ag_aula` | Parte de `AulaRef` | Parte de `AgGen` |
+|---|---|---|---|---|
+| PERIODO | `IdPeriodo` | `idperiodo` | ✅ | ✅ |
+| SEDE | `IdSede` | `idsede` | ✅ | ✅ |
+| PROGRAMA | `IdPrograma` | `idprograma` | ✅ | ✅ |
+| SEMESTRE | `Semestre` | `semestre` | ✅ | ✅ |
+| **GRUPO** | **`Grupo`** | **`grupo`** | ✅ | ✅ |
+| MODALIDAD | `ModalidadVinculacion` | `modalidadVinculacion` | ✅ | ❌ (se lee de `AgAula`) |
+| — | `IdAula` | `id` (PK) | ❌ (es la clave subrogada) | ✅ (FK) |
+
+## C.3 Redundancia advertida (existente)
+
+`AgGen` **duplica** `IdPeriodo, IdPrograma, IdSede, Semestre, Grupo` **además** de `IdAula`. Es redundancia funcional (consultas rápidas del validador) pero **fuente potencial de desincronización**.
+**Recomendación (simplificación):** en `AgGen` conservar **sólo `IdAula`** y resolver los 5 atributos por índice O(1) desde `AgContexto.AulasPorId`; o, si se conservan, fijarlos **únicamente** al asignar el aula (`gen.AsignarAula(aula)` como invariante único, análogo a `AsignarBloque`).
+
+## C.4 Cardinalidad
+
+```
+N_k   = nº de nodos marcados en el nivel k
+N_aulas = N_periodo × N_sede × N_programa × N_semestre × N_grupo × N_modalidad
+```
+Ejemplo: 1 período × 3 sedes × 2 programas × 3 semestres × 2 grupos × 2 modalidades = **72 aulas**.
+⇒ Requiere **confirmación explícita** y generación por lotes (Fase 160).
+
+---
+
+# PARTE D — Estructura jerárquica en texto (árbol de 6 niveles)
+
+```
+CONTEXTO ACADÉMICO · árbol de selección múltiple (6 niveles)
+│  concepto: cada camino marcado de raíz a hoja se convierte en UNA tupla S;
+│  por lo tanto, el número de hojas marcadas = número de aulas a generar.
+│
+├── PERIODO ───────────── "el calendario manda"
+│   │  porque de él salen periodo_inicio/periodo_fin (ventana α);
+│   │  de modo que sólo se ofrecen períodos con fechas resueltas.
+│   └── SEDE ──────────── "dónde"
+│        │  porque cada sede aporta sus propias aulas;
+│        │  y como no hay FK sede→programa, se combinan libremente.
+│        └── PROGRAMA ─── "qué pensum"
+│             │  porque acota las asignaturas (C) dependientes;
+│             │  de ahí que sólo se listen programas activos.
+│             └── SEMESTRE ── "qué nivel (I..X)"
+│                  │  porque los C dependen de programa+semestre;
+│                  │  por eso son diez nodos fijos.
+│                  └── GRUPO ── "qué cohorte (A|B|C|D)"   ← NUEVO
+│                       │  porque separa grupos de estudiantes del mismo nivel;
+│                       │  y por ello multiplica por 4 las ramas.
+│                       └── MODALIDAD ── "Presencial|Virtual|Semipresencial"
+│                            │  porque define la viática y el uso de rangos PRESENCIAL;
+│                            │  y siendo hoja cierra la combinación.
+│                            └── (emite) AgContextoSeleccionDto
+│                                   ⇒ se calcula AulaRef = idperiodo|idsede|idprograma|semestre|grupo|modalidad
+│                                   ⇒ se inserta una fila en ag_aula  →  devuelve IdAula
+│                                   ⇒ IdAula pasa a ser la referencia de S en AgGen
+│                                   ⇒ se valida contra VentanaSemestre (α)
+│                                   ⇒ resultado: N aulas listas para el Módulo R
+└── VENTANA TEMPORAL (α)
+    └── periodo_inicio … periodo_fin ── que provienen de `periodos` (prioridad 1);
+          ⇒ y si se marca "Ajustar manual", se recorta con clamp al semestre.
+```
+
+---
+
+# PARTE E — Plan consolidado (Fases 151-164)
+
+| Fase | Entregable | Verificación |
+|---|---|---|
+| **151** | Corrección `no such column: nombre` en `AgFormGeneradorHorarios` L116-117 y `FormTerceroAsignaturas` L61 (alias `COALESCE(abreviatura,nombreprograma)`, `ciudad/subsede`, filtros `activo=1`) | Form abre sin excepción; combos poblados |
+| **152** | `Periodo` + `PeriodoInicio/PeriodoFin` + `TryObtenerVentana`; `AgOrigenVentana.Periodos` | `PeriodoTests` |
+| **153** | **`MigrationV50_AddPeriodoVentana`**: ALTER + **UPDATE de backfill de fechas** + registro tras V49 | `SchemaMigrationTests` extendido (vault existente con filas sin fechas) |
+| **154** | `AgResolutorVentanaSemestre`: prioridad **PERIODOS** primero | `AgResolutorVentanaSemestreTests` (PERIODOS/FESTIVOS/CONFIG/MANUAL) |
+| **155** | `Periodo.Create` valida `fin ≥ inicio`; `InsertPeriodo/UpdatePeriodo` con fechas | `PeriodoTests` |
+| **156** | `AgContextoSeleccionDto` (con **Grupo**), `AgNodoArbolKey`, `ITreeViewCheckService`, `AgSeleccionAulaExpandidor` (puros) | `AgSeleccionAulaExpandidorTests`, `AgTreeViewCheckServiceTests` |
+| **157** | Control `CheckedTreeView` (OwnerDraw + StateImageList, tri-estado, lazy load por nivel) | prueba manual UI |
+| **158** | Pestaña 1: árbol de **6 niveles** + resumen `"N combinaciones"` + botonera (Expandir/Contraer/Limpiar/Invertir) + retiro de `cmbGrupo` | verificación UI |
+| **159** | `AgAulaFactory` (DTO→`AgAula`, con **Modalidad en `AulaRef`**) + `gen.AsignarAula(aula)` en `AgGen` | `AgAulaFactoryTests` |
+| **160** | "Generar encabezados (N)": transaccional, por lotes, con **cap/aviso** y detección de `AulaRef` duplicado | inserción de N aulas + no duplicados |
+| **161** | Ventana: precarga desde `periodos` + clamp + `lblOrigenVentana` con origen `PERIODOS` | manual + test |
+| **162** | Simplificación `AgGen`: conservar `IdAula` y derivar S por índice (o fijar por `AsignarAula`) | `AgGenTests` |
+| **163** | Revisar `[WARN] Contexto descartado sin persistir` al abrir/cerrar el form | log limpio sin cambios |
+| **164** | Aviso UI cuando el período no tiene `periodo_inicio/fin` | manual |
+
+---
+
+# PARTE F — Decisiones abiertas
+
+| # | Decisión | Recomendación |
+|---|---|---|
+| 1 | **Modalidad en `AulaRef`** | **Sí incluirla** (evita colisión de S) — cambio adoptado en Fase 159 |
+| 2 | **“Ninguno” en GRUPO** | Opcional; hoy sólo A\|B\|C\|D ⇒ `grupo = ''` queda fuera del árbol |
+| 3 | **Cap de combinaciones** | Aviso y bloqueo por encima de 500 aulas |
+| 4 | **Backfill de fechas** | V50 con `UPDATE` (el seed `INSERT OR IGNORE` no basta) |
+| 5 | **Redundancia S en `AgGen`** | Conservar sólo `IdAula` (Fase 162) |
+| 6 | **Sede ↔ Programa** | Combinación libre (no hay FK) vs filtrar por histórico |
+
+---
+
+**Consolidado:** se añade el nivel **GRUPO** (6 niveles), se elimina `cmbGrupo`, se corrige el hallazgo de **`INSERT OR IGNORE` + fechas** (requiere `UPDATE` en V50), se adopta **Modalidad dentro de `AulaRef`** y se aclara que **cada rama = una tupla S y `IdAula` es su identificador**.
+
+Aprobación pendiente para iniciar por la **Fase 151**.

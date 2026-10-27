@@ -63,6 +63,20 @@ Test-Path "ConversorPDF.XLL\bin\x64\Release\NombreAssembly.dll"
 ```
 Si devuelve `False`, **no agregar** esa referencia al `.dna`.
 
+### ⚠️ Lección Aprendida 2 — Plantillas `ExcelTemplates` (contenido, no código)
+
+**Invariante de secuencia obligatoria:**
+1. Guardar `.xlsx` en `ConversorPDF.XLL\ExcelTemplates\`.
+2. Ejecutar `scripts\build_installer.ps1` (nunca empaquetar un MSI anterior a la fecha de la plantilla).
+3. Verificar en la tabla `File` del MSI: `FV-FO-033.xlsx = 777082` y `GF-FO-023.xlsx = 2938592`.
+
+**Blindaje de Reemplazo en el Instalador WiX (Fase 722):**
+Los archivos `.xlsx` son archivos de datos sin versión PE. Si un usuario o Excel abre o modifica la plantilla en destino, Windows Installer (`CostFinalize`) asigna `FA_NoOverwrite` y omite copiarlos incluso si `RemoveFile` los borra durante la instalación. Para garantizar 100% el reemplazo incondicional:
+- **`File/@Id` constante:** Conservar `filTemplate1` y `filTemplate2` idénticos entre versiones para mantener linaje y trazabilidad en la tabla `File`.
+- **`DefaultVersion="!(bind.FileVersion.filXllDll)"`:** Asigna versión sintética ligada al assembly. En `CostFinalize`, un archivo con versión siempre sobreescribe archivos sin versión existentes en disco.
+- **`RegistryValue KeyPath="yes"` en HKCU:** Garantiza que el componente sea evaluado como activo para instalación en el ámbito per-user.
+- **`RemoveFile On="install"`:** Purga cualquier archivo residual en la fase `RemoveFiles` (3500) antes de `InstallFiles` (4000).
+
 ### 6. Verificación del artefacto
 
 Confirmar que se generó:

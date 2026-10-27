@@ -14,6 +14,33 @@ namespace ConversorPDF.XLL.Core.Helpers
 {
     public static class FirmasGeneradorHelper
     {
+        public static string SeleccionarYConvertirFirmaBase64()
+        {
+            try
+            {
+                OpenFileDialog openFileDialog = new OpenFileDialog
+                {
+                    Title = "Selecciona la imagen de la firma",
+                    Filter = "Archivos PNG (*.png)|*.png|Todos los archivos (*.*)|*.*"
+                };
+
+                if (openFileDialog.ShowDialog() == true)
+                {
+                    string filePath = openFileDialog.FileName;
+                    if (!File.Exists(filePath)) return "";
+
+                    byte[] imageBytes = File.ReadAllBytes(filePath);
+                    return Convert.ToBase64String(imageBytes);
+                }
+                return "";
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error("Error en SeleccionarYConvertirFirmaBase64", ex);
+                return "ERROR: " + ex.Message;
+            }
+        }
+
         public static string GenerarStringBase64DesdeImagen()
         {
             try
@@ -46,7 +73,7 @@ $@"// ==========================================================================
 // Archivo origen: {fileName}.png
 // Fecha generación: {DateTime.Now:dd/MM/yyyy HH:mm:ss}
 // Longitud Base64: {base64String.Length} caracteres
-// Instrucciones: Pegue el valor Base64 dentro del valor (value) de la entrada '{safeName}' en Signatures.resx
+// Instrucciones: Pegue el valor Base64 en la columna 'firma' de la tabla 'usuarios' (SQLite).
 // ============================================================================
 
 Base64:

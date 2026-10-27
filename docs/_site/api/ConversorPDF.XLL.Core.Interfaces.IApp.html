@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Interface IApp | ESAP - ConversorPDF </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Interface IApp | ESAP - ConversorPDF ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="ManagedReference">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="ConversorPDF.XLL.Core.Interfaces.IApp">
+
+
+
+  <h1 id="ConversorPDF_XLL_Core_Interfaces_IApp" data-uid="ConversorPDF.XLL.Core.Interfaces.IApp" class="text-break">
+Interface IApp  
+  </h1>
+
+  <div class="facts text-secondary">
+    <dl><dt>Namespace</dt><dd><a class="xref" href="ConversorPDF.html">ConversorPDF</a>.<a class="xref" href="ConversorPDF.XLL.html">XLL</a>.<a class="xref" href="ConversorPDF.XLL.Core.html">Core</a>.<a class="xref" href="ConversorPDF.XLL.Core.Interfaces.html">Interfaces</a></dd></dl>
+  <dl><dt>Assembly</dt><dd>ConversorPDF.XLL.dll</dd></dl>
+  </div>
+
+  <div class="markdown summary"></div>
+  <div class="markdown conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">[ComVisible(true)]
+[Guid(&quot;A5C7E123-4B6C-4F1D-8A7E-1234567890AB&quot;)]
+[InterfaceType(ComInterfaceType.InterfaceIsDual)]
+public interface IApp</code></pre>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <h2 class="section" id="methods">Methods
+</h2>
+
+
+  <a id="ConversorPDF_XLL_Core_Interfaces_IApp_CombinarArchivos_" data-uid="ConversorPDF.XLL.Core.Interfaces.IApp.CombinarArchivos*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Interfaces_IApp_CombinarArchivos_System_Object_System_String_" data-uid="ConversorPDF.XLL.Core.Interfaces.IApp.CombinarArchivos(System.Object,System.String)">
+  CombinarArchivos(object, string)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Combina una lista de archivos PDF en uno solo.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">void CombinarArchivos(object entradas, string salida)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>entradas</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></dt>
+    <dd></dd>
+    <dt><code>salida</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Interfaces_IApp_ConvertirObligacionContador_" data-uid="ConversorPDF.XLL.Core.Interfaces.IApp.ConvertirObligacionContador*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Interfaces_IApp_ConvertirObligacionContador_System_Object_" data-uid="ConversorPDF.XLL.Core.Interfaces.IApp.ConvertirObligacionContador(System.Object)">
+  ConvertirObligacionContador(object)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Procesa la conversión de obligaciones presupuestales del contador a PDF.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">int ConvertirObligacionContador(object activeWorkbook)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>activeWorkbook</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Interfaces_IApp_CrearArchivoBase64Temporal_" data-uid="ConversorPDF.XLL.Core.Interfaces.IApp.CrearArchivoBase64Temporal*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Interfaces_IApp_CrearArchivoBase64Temporal_System_String_System_String_" data-uid="ConversorPDF.XLL.Core.Interfaces.IApp.CrearArchivoBase64Temporal(System.String,System.String)">
+  CrearArchivoBase64Temporal(string, string)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Crea un archivo temporal a partir de una cadena Base64.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">string CrearArchivoBase64Temporal(string base64String, string nombreBase)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>base64String</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+    <dt><code>nombreBase</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Interfaces_IApp_GenerarFirmaBase64Txt_" data-uid="ConversorPDF.XLL.Core.Interfaces.IApp.GenerarFirmaBase64Txt*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Interfaces_IApp_GenerarFirmaBase64Txt" data-uid="ConversorPDF.XLL.Core.Interfaces.IApp.GenerarFirmaBase64Txt">
+  GenerarFirmaBase64Txt()
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Genera un archivo de texto con la firma en Base64 para depuración.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">string GenerarFirmaBase64Txt()</code></pre>
+  </div>
+
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Interfaces_IApp_GetCurrentOfficeUser_" data-uid="ConversorPDF.XLL.Core.Interfaces.IApp.GetCurrentOfficeUser*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Interfaces_IApp_GetCurrentOfficeUser" data-uid="ConversorPDF.XLL.Core.Interfaces.IApp.GetCurrentOfficeUser">
+  GetCurrentOfficeUser()
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Obtiene el nombre del usuario actual de Office.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">string GetCurrentOfficeUser()</code></pre>
+  </div>
+
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Interfaces_IApp_GetFirmaHelperUsuario_" data-uid="ConversorPDF.XLL.Core.Interfaces.IApp.GetFirmaHelperUsuario*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Interfaces_IApp_GetFirmaHelperUsuario" data-uid="ConversorPDF.XLL.Core.Interfaces.IApp.GetFirmaHelperUsuario">
+  GetFirmaHelperUsuario()
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Obtiene la firma del usuario desde la base de datos de firmas.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">string GetFirmaHelperUsuario()</code></pre>
+  </div>
+
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Interfaces_IApp_GetFirmaUsuarioActual_" data-uid="ConversorPDF.XLL.Core.Interfaces.IApp.GetFirmaUsuarioActual*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Interfaces_IApp_GetFirmaUsuarioActual" data-uid="ConversorPDF.XLL.Core.Interfaces.IApp.GetFirmaUsuarioActual">
+  GetFirmaUsuarioActual()
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Obtiene la firma (Base64) del usuario de Windows actual.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">string GetFirmaUsuarioActual()</code></pre>
+  </div>
+
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Interfaces_IApp_GetIdentification_" data-uid="ConversorPDF.XLL.Core.Interfaces.IApp.GetIdentification*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Interfaces_IApp_GetIdentification_System_String_" data-uid="ConversorPDF.XLL.Core.Interfaces.IApp.GetIdentification(System.String)">
+  GetIdentification(string)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Obtiene los datos de identificación vinculados al usuario.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">UserIdentification GetIdentification(string username)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>username</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.UserIdentification.html">UserIdentification</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Interfaces_IApp_GetOneDriveLocalPath_" data-uid="ConversorPDF.XLL.Core.Interfaces.IApp.GetOneDriveLocalPath*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Interfaces_IApp_GetOneDriveLocalPath_System_String_" data-uid="ConversorPDF.XLL.Core.Interfaces.IApp.GetOneDriveLocalPath(System.String)">
+  GetOneDriveLocalPath(string)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Resuelve la ruta local de OneDrive para una ruta de servidor.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">string GetOneDriveLocalPath(string path)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>path</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Interfaces_IApp_UnificarObligacionContador_" data-uid="ConversorPDF.XLL.Core.Interfaces.IApp.UnificarObligacionContador*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Interfaces_IApp_UnificarObligacionContador_System_Object_System_String_" data-uid="ConversorPDF.XLL.Core.Interfaces.IApp.UnificarObligacionContador(System.Object,System.String)">
+  UnificarObligacionContador(object, string)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Unifica los documentos de obligación con sus soportes PDF.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">int UnificarObligacionContador(object activeWorkbook, string docType)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>activeWorkbook</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></dt>
+    <dd></dd>
+    <dt><code>docType</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          ESAP - ConversorPDF Doc
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

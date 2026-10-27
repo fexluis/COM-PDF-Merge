@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Class CatalogCacheService | ESAP - ConversorPDF </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Class CatalogCacheService | ESAP - ConversorPDF ">
+      
+      <meta name="description" content="Cach&#233; in-memory para los cat&#225;logos acad&#233;micos inmutables o de rar&#237;simo cambio. Reduce significativamente los tiempos de I/O de la DB SQLite Encriptada al reabrir el Add-In de forma reiterada.">
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="ManagedReference">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="ConversorPDF.XLL.Core.Helpers.CatalogCacheService">
+
+
+
+  <h1 id="ConversorPDF_XLL_Core_Helpers_CatalogCacheService" data-uid="ConversorPDF.XLL.Core.Helpers.CatalogCacheService" class="text-break">
+Class CatalogCacheService  
+  </h1>
+
+  <div class="facts text-secondary">
+    <dl><dt>Namespace</dt><dd><a class="xref" href="ConversorPDF.html">ConversorPDF</a>.<a class="xref" href="ConversorPDF.XLL.html">XLL</a>.<a class="xref" href="ConversorPDF.XLL.Core.html">Core</a>.<a class="xref" href="ConversorPDF.XLL.Core.Helpers.html">Helpers</a></dd></dl>
+  <dl><dt>Assembly</dt><dd>ConversorPDF.XLL.dll</dd></dl>
+  </div>
+
+  <div class="markdown summary"><p>Caché in-memory para los catálogos académicos inmutables o de rarísimo cambio.
+Reduce significativamente los tiempos de I/O de la DB SQLite Encriptada
+al reabrir el Add-In de forma reiterada.</p>
+</div>
+  <div class="markdown conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static class CatalogCacheService</code></pre>
+  </div>
+
+
+
+
+  <dl class="typelist inheritance">
+    <dt>Inheritance</dt>
+    <dd>
+      <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></div>
+      <div><span class="xref">CatalogCacheService</span></div>
+    </dd>
+  </dl>
+
+
+
+  <dl class="typelist inheritedMembers">
+    <dt>Inherited Members</dt>
+    <dd>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.tostring">object.ToString()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)">object.Equals(object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)">object.Equals(object, object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.referenceequals">object.ReferenceEquals(object, object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.gethashcode">object.GetHashCode()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.gettype">object.GetType()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone">object.MemberwiseClone()</a>
+    </div>
+  </dd></dl>
+
+
+
+
+
+
+  <h2 class="section" id="properties">Properties
+</h2>
+
+
+  <a id="ConversorPDF_XLL_Core_Helpers_CatalogCacheService_Asignaturas_" data-uid="ConversorPDF.XLL.Core.Helpers.CatalogCacheService.Asignaturas*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Helpers_CatalogCacheService_Asignaturas" data-uid="ConversorPDF.XLL.Core.Helpers.CatalogCacheService.Asignaturas">
+  Asignaturas
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static List&lt;Asignatura&gt; Asignaturas { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1">List</a>&lt;<a class="xref" href="ConversorPDF.XLL.Academic.Domain.Models.Asignatura.html">Asignatura</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Helpers_CatalogCacheService_Periodos_" data-uid="ConversorPDF.XLL.Core.Helpers.CatalogCacheService.Periodos*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Helpers_CatalogCacheService_Periodos" data-uid="ConversorPDF.XLL.Core.Helpers.CatalogCacheService.Periodos">
+  Periodos
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static List&lt;Periodo&gt; Periodos { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1">List</a>&lt;<a class="xref" href="ConversorPDF.XLL.Academic.Domain.Models.Periodo.html">Periodo</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Helpers_CatalogCacheService_Programas_" data-uid="ConversorPDF.XLL.Core.Helpers.CatalogCacheService.Programas*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Helpers_CatalogCacheService_Programas" data-uid="ConversorPDF.XLL.Core.Helpers.CatalogCacheService.Programas">
+  Programas
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static List&lt;Programa&gt; Programas { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1">List</a>&lt;<a class="xref" href="ConversorPDF.XLL.Academic.Domain.Models.Programa.html">Programa</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Helpers_CatalogCacheService_Sedes_" data-uid="ConversorPDF.XLL.Core.Helpers.CatalogCacheService.Sedes*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Helpers_CatalogCacheService_Sedes" data-uid="ConversorPDF.XLL.Core.Helpers.CatalogCacheService.Sedes">
+  Sedes
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static List&lt;Sede&gt; Sedes { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1">List</a>&lt;<a class="xref" href="ConversorPDF.XLL.Academic.Domain.Models.Sede.html">Sede</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Helpers_CatalogCacheService_Terceros_" data-uid="ConversorPDF.XLL.Core.Helpers.CatalogCacheService.Terceros*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Helpers_CatalogCacheService_Terceros" data-uid="ConversorPDF.XLL.Core.Helpers.CatalogCacheService.Terceros">
+  Terceros
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static List&lt;Tercero&gt; Terceros { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1">List</a>&lt;<a class="xref" href="ConversorPDF.XLL.Academic.Domain.Models.Tercero.html">Tercero</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <h2 class="section" id="methods">Methods
+</h2>
+
+
+  <a id="ConversorPDF_XLL_Core_Helpers_CatalogCacheService_EnsureLoaded_" data-uid="ConversorPDF.XLL.Core.Helpers.CatalogCacheService.EnsureLoaded*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Helpers_CatalogCacheService_EnsureLoaded_System_Data_IDbConnection_" data-uid="ConversorPDF.XLL.Core.Helpers.CatalogCacheService.EnsureLoaded(System.Data.IDbConnection)">
+  EnsureLoaded(IDbConnection)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Asegura que los catálogos estén cargados en memoria usando una conexión externa.
+Útil para optimizar I/O cuando el llamador ya tiene un contexto abierto.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void EnsureLoaded(IDbConnection db)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>db</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.data.idbconnection">IDbConnection</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Helpers_CatalogCacheService_Invalidate_" data-uid="ConversorPDF.XLL.Core.Helpers.CatalogCacheService.Invalidate*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Helpers_CatalogCacheService_Invalidate" data-uid="ConversorPDF.XLL.Core.Helpers.CatalogCacheService.Invalidate">
+  Invalidate()
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void Invalidate()</code></pre>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          ESAP - ConversorPDF Doc
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

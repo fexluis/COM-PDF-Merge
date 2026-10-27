@@ -10,16 +10,16 @@
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
-    <!-- Excel-DNA: empaquetar todo en un solo .xll -->
-    <ExcelDnaAllowPackaging>true</ExcelDnaAllowPackaging>
-    <ExcelDnaPackBitness>x64</ExcelDnaPackBitness>
+    <!-- Excel-DNA: desempaquetar el add-in (FortiEDR Fix) -->
+    <RunExcelDnaPack>false</RunExcelDnaPack>
+    <ExcelDnaUnpack>true</ExcelDnaUnpack>
     <ExcelDnaCreate32BitAddIn>false</ExcelDnaCreate32BitAddIn>
     <ExcelDnaCreate64BitAddIn>true</ExcelDnaCreate64BitAddIn>
     <!-- Excluir dependencias que no existen en .NET 4.8 y no deben empaquetarse -->
     <ExcelDnaExcludedDependencies>Microsoft.Bcl.HashCode.dll</ExcelDnaExcludedDependencies>
-    <Version>1.2.45.19</Version>
-    <AssemblyVersion>1.2.45.19</AssemblyVersion>
-    <FileVersion>1.2.45.19</FileVersion>
+    <Version>1.6.3.79</Version>
+    <AssemblyVersion>1.6.3.79</AssemblyVersion>
+    <FileVersion>1.6.3.79</FileVersion>
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <Import Project="obj\ConversorPDF.XLL.csproj.nuget.g.props" Condition="Exists('obj\ConversorPDF.XLL.csproj.nuget.g.props')" />
@@ -42,20 +42,27 @@
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>x64</PlatformTarget>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <DocumentationFile>bin\x64\Release\ConversorPDF.XLL.xml</DocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.Runtime.CompilerServices.Unsafe">
+      <HintPath>$(UserProfile)\.nuget\packages\system.runtime.compilerservices.unsafe\6.0.0\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="PresentationCore" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="PresentationFramework" />
-    <Reference Include="PresentationCore" />
     <Reference Include="WindowsBase" />
     <Reference Include="ExcelDna.Integration">
       <HintPath>$(UserProfile)\.nuget\packages\exceldna.integration\1.8.0\lib\net452\ExcelDna.Integration.dll</HintPath>
@@ -105,10 +112,17 @@
       <HintPath>$(UserProfile)\.nuget\packages\stub.system.data.sqlite.core.netframework\1.0.119\lib\net46\System.Data.SQLite.dll</HintPath>
       <Private>true</Private>
     </Reference>
+    <Reference Include="CSharpFunctionalExtensions">
+      <HintPath>$(UserProfile)\.nuget\packages\csharpfunctionalextensions\2.40.3\lib\net461\CSharpFunctionalExtensions.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <!-- CÃƒÂ³digo fuente -->
+    <!-- Código fuente -->
     <Compile Include="ExcelAddIn.cs" />
+    <Compile Include="Core\Sync\SyncInitializer.cs" />
+    <Compile Include="Core\Sync\SyncState.cs" />
+    <Compile Include="Ribbon\CookiePermisosHelper.cs" />
     <Compile Include="Ribbon\RibbonController.cs" />
     <Compile Include="Functions\PdfFunctions.cs" />
     <Compile Include="Functions\OneDriveFunctions.cs" />
@@ -116,8 +130,65 @@
     <Compile Include="UI\ProgressForm.cs" />
     <Compile Include="UI\ProgressManager.cs" />
     <Compile Include="UI\DayHoursDropdown.cs" />
+    <Compile Include="UI\DaySessionInfo.cs" />
     <Compile Include="UI\ProgressDialog.cs">
       <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Academic\Domain\Models\Permiso.cs" />
+    <Compile Include="Academic\Domain\Models\Usuario.cs" />
+    <Compile Include="Academic\UI\Forms\FormUsuarios.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Academic\UI\Forms\FormUsuarios.Designer.cs">
+      <DependentUpon>FormUsuarios.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Academic\UI\Forms\FormPermisos.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Academic\UI\Forms\FormPermisos.Designer.cs">
+      <DependentUpon>FormPermisos.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Academic\UI\Forms\FormConfig.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Academic\UI\Forms\FormConfig.Designer.cs">
+      <DependentUpon>FormConfig.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Academic\UI\Forms\FormTerminales.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Academic\UI\Forms\FormTerminales.Designer.cs">
+      <DependentUpon>FormTerminales.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Academic\Domain\Models\CdpDependencia.cs" />
+    <Compile Include="Academic\Domain\Models\Dependencias.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Repositories\CdpDependenciaRepository.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV28_AddCdpDependencias.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV33_UpdateSesionesDetalleForTerminales.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV34_AddSubunidadToCdpDependencias.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV35_SeedPermisosDefault.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV37_RecreatePermisos.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV38_AddGestionUsuariosPermiso.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV39_AddFirmaToUsuarios.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV40_RegenerateUsuariosTriggers.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV41_DeduplicateUsuarios.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV42_DivipolaRepair.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV43_FixBaseGastosTerrestreSubunidad.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV44_AddDependenciaToCdpDependencias.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV45_AddIdTerritorialToConfig.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV46_AddDependenciaFullToCdpDependencias.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV47_SeedTerminalesCanonicos.cs" />
+    <Compile Include="Academic\UI\Forms\FormCdp.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Academic\UI\Forms\FormCdp.Designer.cs">
+      <DependentUpon>FormCdp.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Academic\UI\Forms\FormCdpToPDF.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Academic\UI\Forms\FormCdpToPDF.Designer.cs">
+      <DependentUpon>FormCdpToPDF.cs</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
@@ -125,16 +196,20 @@
     <EmbeddedResource Include="Ribbon\Ribbon.xml" />
     <EmbeddedResource Include="img\esap.bmp" />
     <EmbeddedResource Include="img\hero.png" />
-    <EmbeddedResource Include="Properties\Signatures.resx" />
-    <EmbeddedResource Include="Core\Data\AcademicSchema.sql" />
-    <EmbeddedResource Include="Core\Data\AcademicSeedData.sql" />
+    <EmbeddedResource Include="Academic\Infrastructure\Persistence\Sql\AcademicSchema.sql" />
+    <EmbeddedResource Include="Academic\Infrastructure\Persistence\Sql\AcademicSeedData.sql" />
+    <EmbeddedResource Include="Academic\Infrastructure\Persistence\Sql\Academic_migracion_vinculaciones_sesiones.sql" />
+    <EmbeddedResource Include="Academic\Infrastructure\Persistence\Sql\Academic_divipola.sql" />
+    <EmbeddedResource Include="Academic\Infrastructure\Persistence\Sql\usuarios.sql" />
+    <!-- CR-SQLite: extensión nativa x64 embebida en el ensamblado -->
+    <EmbeddedResource Include="Core\Sync\Native\crsqlite.dll" />
   </ItemGroup>
-
   <ItemGroup>
     <Compile Include="Core\Helpers\LoggerHelper.cs" />
     <Compile Include="Core\Helpers\App.cs" />
     <Compile Include="Core\Models\Empleado.cs" />
     <Compile Include="Core\Models\Viaje.cs" />
+    <Compile Include="Core\Models\TerminalCatalogoItem.cs" />
     <Compile Include="Core\Models\ViaticosConfig.cs" />
     <Compile Include="Core\Models\ViaticoRow.cs" />
     <Compile Include="Core\Models\ViaticosFormatException.cs" />
@@ -163,49 +238,159 @@
     <Compile Include="Core\Interfaces\IContadorService.cs" />
     <Compile Include="Core\Services\FirmaExtractService.cs" />
     <Compile Include="Core\Services\ContadorService.cs" />
-    <Compile Include="Core\Interfaces\IAcademicRepository.cs" />
-    <Compile Include="Core\Repositories\AcademicRepository.cs" />
-    <Compile Include="Core\Services\Academic\GeneradorSesionesRecurrentes.cs" />
-    <Compile Include="Core\Services\Academic\AcademicDateSyncService.cs" />
-    <Compile Include="Core\Interfaces\IAcademicDateSyncService.cs" />
+    <Compile Include="Academic\Domain\Interfaces\IAcademicRepository.cs" />
+    <Compile Include="Academic\Domain\Interfaces\IVinculacionQueryRepository.cs" />
+    <Compile Include="Academic\Domain\Interfaces\ISedeLookupRepository.cs" />
+    <Compile Include="Academic\Domain\Interfaces\ITerceroLookupRepository.cs" />
+    <Compile Include="Academic\Domain\Interfaces\IPeriodoLookupRepository.cs" />
+    <Compile Include="Academic\Domain\Interfaces\IProgramaLookupRepository.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Repositories\AcademicRepository.cs" />
+    <Compile Include="Academic\Application\Services\GeneradorSesionesRecurrentes.cs" />
+    <Compile Include="Academic\Application\Services\VinculacionListService.cs" />
+    <Compile Include="Academic\Application\Services\AcademicDateSyncService.cs" />
+    <Compile Include="Academic\Application\Interfaces\IAcademicDateSyncService.cs" />
     <Compile Include="Core\Helpers\ViaticosHelper.cs" />
     <Compile Include="Core\Helpers\ExcelOptimizeHelper.cs" />
     <Compile Include="Core\Helpers\ExcelAppStateHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Core\Helpers\FirmaUnificarObHelper.cs" />
+    <Compile Include="Core\Helpers\OrdenPagoNombreSoportePdf.cs" />
+    <Compile Include="Core\Helpers\OrdenPagoNombreSoportePdfParser.cs" />
+    <Compile Include="Core\Helpers\OrdenPagoDatosHoja.cs" />
+    <Compile Include="Core\Helpers\OrdenPagoSheetReader.cs" />
+    <Compile Include="Core\Helpers\UnificarOrdenPagoHelper.cs" />
     <Compile Include="Core\Helpers\FirmasGeneradorHelper.cs" />
     <Compile Include="Core\Helpers\FirmaPDFsHelper.cs" />
     <Compile Include="Core\Helpers\SqliteHelper.cs" />
+    <Compile Include="Core\Helpers\DatabaseBootstrapper.cs" />
     <Compile Include="Core\Helpers\ConstantsHelper.cs" />
     <Compile Include="Core\Helpers\DatabaseEncryptionEngine.cs" />
     <Compile Include="Core\Helpers\NativeLibraryPreloader.cs" />
-    <Compile Include="Core\Data\AcademicUnitOfWork.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\AcademicUnitOfWork.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\IMigration.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\ISchemaMigrator.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\IVaultPersister.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\ILogger.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\LoggerAdapter.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\VaultPersister.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\SchemaMigrator.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV2_VistasAcademicas.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV3_Periodos.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV4_VistaSesiones.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV5_SemestreSesiones.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV6_CedulaTercero.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV7_AsignaturaAbreviatura.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV8_SemestreGrupo.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV9_NewSchemaColumns.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV10_FixVinculacionData.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV11_AddProgramaToViews.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV12_ExpandSesionesView.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV13_AddFestivosTable.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV14_UpdateSesionesSchema.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV15_AddModalidadVinculacion.cs" />
     <Compile Include="Core\Helpers\CatalogCacheService.cs" />
-    <Compile Include="Core\Helpers\GridRowDto.cs" />
-    <Compile Include="Core\Helpers\GridToSesionMapper.cs" />
+    <Compile Include="Academic\Application\Interfaces\IVinculacionListService.cs" />
+    <Compile Include="Academic\Application\DTOs\GridRowDto.cs" />
+    <Compile Include="Academic\Application\DTOs\VinculacionFilterDto.cs" />
+    <Compile Include="Academic\Application\Mappers\GridCellValueParser.cs" />
+    <Compile Include="Academic\Application\Mappers\GridToSesionMapper.cs" />
     <Compile Include="Core\Helpers\DayPatternParser.cs" />
-    <Compile Include="Core\Data\EncryptedSQLiteContext.cs" />
-    <Compile Include="Core\Data\SQLiteEngineBootstrap.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Context\AcademicDbSession.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Context\NonDisposableDbConnection.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Context\EncryptedSQLiteContext.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Context\SQLiteEngineBootstrap.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Repositories\VinculacionQueryRepository.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Repositories\SedeLookupRepository.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Repositories\TerceroLookupRepository.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Repositories\PeriodoLookupRepository.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Repositories\ProgramaLookupRepository.cs" />
     <Compile Include="Core\Models\SqliteResults.cs" />
     <Compile Include="Core\Helpers\PdfMetadataHelper.cs" />
     <Compile Include="Core\Enums\TipoFormato.cs" />
     <Compile Include="Core\Enums\TipoFormMode.cs" />
     <Compile Include="Core\Enums\TipoMetadata.cs" />
+    <Compile Include="Core\Enums\RibbonButtonId.cs" />
+    <Compile Include="Core\Enums\NivelLog.cs" />
     <Compile Include="Core\Models\Metadata.cs" />
     <Compile Include="Core\Models\UserIdentification.cs" />
-    <Compile Include="Core\Models\Academic\Asignatura.cs" />
-    <Compile Include="Core\Models\Academic\ConfiguracionDia.cs" />
-    <Compile Include="Core\Models\Academic\Contenido.cs" />
-    <Compile Include="Core\Models\Academic\Microcurriculo.cs" />
-    <Compile Include="Core\Models\Academic\Programa.cs" />
-    <Compile Include="Core\Models\Academic\Sede.cs" />
-    <Compile Include="Core\Models\Academic\Sesion.cs" />
-    <Compile Include="Core\Models\Academic\Tercero.cs" />
-    <Compile Include="Core\Models\Academic\Vinculacion.cs" />
-    <Compile Include="Core\Models\Academic\AcademicDateAdjustment.cs" />
+    <Compile Include="Academic\Domain\Models\Config.cs" />
+    <Compile Include="Academic\Domain\Models\Terminal.cs" />
+    <Compile Include="Academic\Domain\Models\Asignatura.cs" />
+    <Compile Include="Academic\Domain\Models\ConfiguracionDia.cs" />
+    <Compile Include="Academic\Domain\Models\Contenido.cs" />
+    <Compile Include="Academic\Domain\Models\Microcurriculo.cs" />
+    <Compile Include="Academic\Domain\Models\Programa.cs" />
+    <Compile Include="Academic\Domain\Models\Sede.cs" />
+    <Compile Include="Academic\Domain\Models\Sesion.cs" />
+    <Compile Include="Academic\Domain\Models\Tercero.cs" />
+    <Compile Include="Academic\Domain\Models\TerceroAsignatura.cs" />
+    <Compile Include="Academic\Domain\Models\TerceroAsignaturaKey.cs" />
+    <Compile Include="Academic\Domain\Models\Periodo.cs" />
+    <Compile Include="Academic\Domain\Models\SesionListItem.cs" />
+    <Compile Include="Academic\Domain\Models\Vinculacion.cs" />
+    <Compile Include="Academic\Domain\Models\VinculacionListItem.cs" />
+    <Compile Include="Academic\Domain\Models\LookupItem.cs" />
+    <Compile Include="Academic\Domain\Models\Divipola.cs" />
+    <Compile Include="Academic\Domain\Models\Festivo.cs" />
+    <Compile Include="Academic\Domain\Models\AcademicDateAdjustment.cs" />
+    <Compile Include="Academic\Domain\Models\AcademicDateAdjustmentBuilder.cs" />
+    <Compile Include="Academic\Domain\Enums\EstadoConflicto.cs" />
+    <Compile Include="Academic\Domain\Models\SalvedadConflicto.cs" />
+    <Compile Include="Academic\Domain\Models\FranjaHoraria.cs" />
+    <Compile Include="Academic\Application\Interfaces\ISalvedadConflictoRepository.cs" />
+    <Compile Include="Academic\Application\Services\DiaSemanaNormalizador.cs" />
+    <Compile Include="Academic\Application\Services\HorarioSesionParser.cs" />
+    <Compile Include="Academic\Application\Services\SesionConflictAnalyzer.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV16_AddSalvedadesConflictos.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV17_AddTransporteSedeView.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Repositories\SalvedadConflictoRepository.cs" />
+    <Compile Include="Academic\Application\Services\ViaticoConflictAnalyzer.cs" />
+    <Compile Include="Academic\Application\Interfaces\ITrayectoEncoderService.cs" />
+    <Compile Include="Academic\Application\Services\TrayectoEncoderService.cs" />
+    <Compile Include="Academic\Application\Interfaces\IGastosTerrestresService.cs" />
+    <Compile Include="Academic\Application\Services\GastosTerrestresService.cs" />
+    <Compile Include="Academic\Domain\Interfaces\IGastosTerrestresRepository.cs" />
+    <Compile Include="Academic\Domain\Interfaces\IConfigRepository.cs" />
+    <Compile Include="Academic\Domain\Interfaces\ITerminalRepository.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Repositories\GastosTerrestresRepository.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Repositories\ConfigRepository.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Repositories\TerminalRepository.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV18_AddBaseGastosTerrestre.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV19_AddNivelToViews.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV20_AddTipoFestivo.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV21_AddDivipolaTable.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV22_AddActivoToSedes.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV23_AddResidenciaDivipola.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV24_AddSubunidadSync.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV25_AddSubsedeToSesionesView.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV26_AddTerritoriales.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV27_AddSiifToSedes.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV29_FixUsuariosPerfil.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV30_AddTerminalAereo.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV31_AddIdPeriodoToConfig.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV32_RegenerateCrdtTriggers.cs" />
+    <!-- Módulo de sincronización CR-SQLite -->
+    <Compile Include="Core\Sync\CrSqliteLoader.cs" />
+    <Compile Include="Core\Sync\ChunkedChangeSet.cs" />
+    <Compile Include="Core\Sync\SyncPathResolver.cs" />
+    <Compile Include="Core\Sync\SubunidadResolver.cs" />
+    <Compile Include="Core\Sync\CrSyncFileWriter.cs" />
+    <Compile Include="Core\Sync\SyncClock.cs" />
+    <Compile Include="Core\Sync\SyncControlRepository.cs" />
+    <Compile Include="Core\Sync\SubunidadSyncService.cs" />
+    <Compile Include="Core\Sync\SyncCompletedEventArgs.cs" />
+    <Compile Include="Core\Sync\SyncScheduler.cs" />
+    <Compile Include="Core\Sync\SyncFileWatcher.cs" />
+    <Compile Include="Core\Sync\FormRegistroSubunidad.cs" />
+    <Compile Include="Core\Sync\SyncContext.cs" />
+
+    <Compile Include="Academic\Infrastructure\Excel\ViaticosIndividualExporter.cs" />
+    <Compile Include="Academic\Infrastructure\Excel\AsignaturasExcelExporter.cs" />
+    <Compile Include="Academic\Infrastructure\Excel\SemestresExcelExporter.cs" />
     <Compile Include="Core\Interfaces\IApp.cs" />
     <Compile Include="Core\Interfaces\IPdfToTexto.cs" />
     <Compile Include="Core\Helpers\OneDriveHelper.cs" />
+    <Compile Include="Core\Helpers\SemestreParser.cs" />
     <Compile Include="Core\Helpers\PdfToTextoHelper.cs" />
     <Compile Include="FormProgramador\FormProgramador.cs">
       <SubType>Form</SubType>
@@ -237,11 +422,270 @@
     <Compile Include="FormProgramador\FormInfo.Designer.cs">
       <DependentUpon>FormInfo.cs</DependentUpon>
     </Compile>
-    <Compile Include="FormAcademic\FormSesionesAcademicas.cs">
+    <Compile Include="Academic\Domain\Models\ViaticoBloque.cs" />
+    <Compile Include="Academic\UI\Forms\FormSesionesAcademicas.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FormAcademic\FormSesionesAcademicas.Designer.cs">
+    <Compile Include="Academic\UI\Forms\FormSesionesAcademicas.Designer.cs">
       <DependentUpon>FormSesionesAcademicas.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Academic\UI\Forms\FormVinculaciones.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Academic\UI\Forms\FormVinculaciones.Designer.cs">
+      <DependentUpon>FormVinculaciones.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Academic\UI\Forms\FormFestivos.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Academic\UI\Forms\FormFestivos.Designer.cs">
+      <DependentUpon>FormFestivos.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Academic\UI\Forms\FormTerceros.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Academic\UI\Forms\FormTerceros.Designer.cs">
+      <DependentUpon>FormTerceros.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Academic\UI\Forms\FormTerceroAsignaturas.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Academic\UI\Forms\FormTerceroAsignaturas.Designer.cs">
+      <DependentUpon>FormTerceroAsignaturas.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Academic\Domain\Interfaces\ITerceroAsignaturaRepository.cs" />
+    <Compile Include="Academic\Application\DTOs\TerceroAsignaturaDto.cs" />
+    <Compile Include="Academic\Application\DTOs\FiltroPoolDto.cs" />
+    <Compile Include="Academic\Application\Mappers\TerceroAsignaturaMapper.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Repositories\TerceroAsignaturaRepository.cs" />
+    <Compile Include="Academic\Application\Interfaces\ITerceroAsignaturaSyncService.cs" />
+    <Compile Include="Academic\Application\Services\TerceroAsignaturaSyncService.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV48_AddTercerosAsignaturas.cs" />
+    <Compile Include="Academic\UI\Forms\FormSedes.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Academic\UI\Forms\FormSedes.Designer.cs">
+      <DependentUpon>FormSedes.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Academic\UI\Forms\FormDivipolaBuscador.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Academic\UI\Forms\FormDivipolaBuscador.Designer.cs">
+      <DependentUpon>FormDivipolaBuscador.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Academic\Domain\Models\GastoTerrestreEntity.cs" />
+    <Compile Include="Academic\Application\DTOs\GastoTerrestreGridDto.cs" />
+    <Compile Include="Academic\Application\Mappers\GastoTerrestreMapper.cs" />
+    <Compile Include="Academic\UI\Forms\FormGastosTerrestres.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Academic\UI\Forms\FormGastosTerrestres.Designer.cs">
+      <DependentUpon>FormGastosTerrestres.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Academic\UI\Forms\FormDivipolaCRUD.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Academic\UI\Forms\FormDivipolaCRUD.Designer.cs">
+      <DependentUpon>FormDivipolaCRUD.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Academic\UI\Forms\VistaVinculaciones.cs" />
+    <Compile Include="Academic\UI\Enums\ExcelColumnas.cs" />
+    <Compile Include="Academic\UI\Enums\ValoresGrupo.cs" />
+    <Compile Include="Academic\UI\Forms\FormVerVinculaciones.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Academic\UI\Forms\FormVerVinculaciones.Designer.cs">
+      <DependentUpon>FormVerVinculaciones.cs</DependentUpon>
+    </Compile>
+    <Compile Include="VisTimeline\Domain\Models\TimelineItem.cs" />
+    <Compile Include="VisTimeline\Domain\Models\TimelineGroup.cs" />
+    <Compile Include="VisTimeline\Application\Services\ViaticoTimelineMapper.cs" />
+    <Compile Include="VisTimeline\Infrastructure\Services\TimelineHtmlGenerator.cs" />
+    <Compile Include="VisTimeline\Infrastructure\Helpers\ResourceExtractor.cs" />
+    <Compile Include="VisTimeline\UI\TimelineViewer.cs" />
+    <Compile Include="Academic\Domain\Enums\AgOrigenVentana.cs" />
+    <Compile Include="Academic\Domain\Enums\AgEstadoAula.cs" />
+    <Compile Include="Academic\Domain\Enums\AgEstadoCorrida.cs" />
+    <Compile Include="Academic\Domain\Enums\AgEstadoIndividuo.cs" />
+    <Compile Include="Academic\Domain\Enums\AgEstadoGen.cs" />
+    <Compile Include="Academic\Domain\Enums\AgEstadoVinculacion.cs" />
+    <Compile Include="Academic\Domain\Enums\AgReglaViolacion.cs" />
+    <Compile Include="Academic\Domain\Enums\AgMotivoVacante.cs" />
+    <Compile Include="Academic\Domain\Enums\AgMotivoVacanteExtensions.cs" />
+    <Compile Include="Academic\Domain\Enums\AgCausaFallo.cs" />
+    <Compile Include="Academic\Domain\Models\AgModoDatos.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\VentanaSemestre.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\AgAula.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\AgAulaAsignatura.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\AgBloqueHorario.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\AgCorrida.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\AgIndividuo.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\AgGen.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\AgVinculacion.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\AgSesion.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\AgViolacion.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\AgPromocion.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\AgBitacora.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\AgSalvedad.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\AgContexto.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\AgPesosFitness.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\AgResultadoCorrida.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\InformeFactibilidad.cs" />
+    <Compile Include="Academic\Domain\Interfaces\IAgResolutorVentanaSemestre.cs" />
+    <Compile Include="Academic\Domain\Interfaces\IAgScheduleRepository.cs" />
+    <Compile Include="Academic\Domain\Interfaces\IAgSalvedadRepository.cs" />
+    <Compile Include="Academic\Domain\Interfaces\IAgValidadorReglas.cs" />
+    <Compile Include="Academic\Domain\Interfaces\IAgValidadorVentana.cs" />
+    <Compile Include="Academic\Domain\Interfaces\IAgEvaluadorAptitud.cs" />
+    <Compile Include="Academic\Domain\Interfaces\IAgExpansorSesiones.cs" />
+    <Compile Include="Academic\Domain\Interfaces\IAgGeneradorHorarios.cs" />
+    <Compile Include="Academic\Domain\Interfaces\IAgMaterializadorSesiones.cs" />
+    <Compile Include="Academic\Domain\Interfaces\IAgPromotorVinculaciones.cs" />
+    <Compile Include="Academic\Application\Services\CalculadoraViaticaSesion.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgResolutorVentanaSemestre.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgValidadorReglas.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgValidadorVentana.cs" />
+     <Compile Include="Academic\Domain\Models\Genetica\AgPreferenciaDocente.cs" />
+    <Compile Include="Academic\Application\Mappers\AgGenToAgVinculacionMapper.cs" />
+    <Compile Include="Academic\Application\Mappers\AgAulaToAgVinculacionMapper.cs" />
+    <Compile Include="Academic\Application\Mappers\AgVinculacionToVinculacionMapper.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgMetricas.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgAsignadorTercero.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgSincronizadorCorrecciones.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgEncabezadoVinculacionFactory.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgEvaluadorAptitud.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgFabricaIndividuos.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgOperadorCruce.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgOperadorMutacion.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgOperadorSeleccion.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgPlanificadorTemporal.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgExpansorSesiones.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgGeneradorHorarios.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgMaterializadorSesiones.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgPromotorVinculaciones.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgDiagnosticoTraza.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgEsquemaDiagnostico.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgFormatoAsignatura.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgPatronSemanal.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgPlanificadorPatronSemanal.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV49_AddAgHorariosTables.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV50_AddPeriodoVentana.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV51_PeriodoVentanaRepair.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV52_IsolateDemoAulas.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV53_AddAgArbolTables.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV54_AddVacanteColumns.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV55_AddAgGenPatronSemanal.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV56_AjustarInicioPeriodo2026_02.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV57_RepairSalvedadesConflictos.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV58_EnsureTerceroVacante.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV59_RecreateAgViews.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV60_AddAgStagingIndices.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV61_AddFechaCreacionSalvedades.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV62_AddAgAulaVentanasYBloquesSemilla.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV63_UnificarHorariosMilitar.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV64_AddPernoctaUltimoDia.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\CrdtTriggerRepair.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\PeriodoVentanaCrdtRepair.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV65_PeriodoVentanaCrdtRepair.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV66_RenombrarModalidadTutoria.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV67_RecrearVistasAgCanonicas.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV68_NormalizarFechasAgSesiones.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV69_RevalidarVistasAg.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV70_AddAgCorridaVacantes.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV71_AuditarHorariosMeridiano.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV72_LimpiarBloquesDomingoYDuplicados.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV73_LimpiarDiasPatronMultidia.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV74_SembrarBloques4hFaltantes.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgSemanaIso.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgBloqueSolape.cs" />
+    <Compile Include="Academic\Domain\Enums\AgNivelAcademico.cs" />
+    <Compile Include="Academic\Domain\Models\AgNivelAcademicoCatalogo.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgUnidadesSemanales.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\AgClaveCohorte.cs" />
+    <Compile Include="Academic\Application\Services\DiasHorasSemanaFormatter.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgCoherenciaGrupo.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgSeleccionBloque.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\AgArbol.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\AgArbolNodo.cs" />
+    <Compile Include="Academic\Domain\Interfaces\IAgArbolRepository.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Repositories\AgArbolRepository.cs" />
+    <Compile Include="Academic\Application\Mappers\AgArbolMapper.cs" />
+    <Compile Include="Academic\Application\Interfaces\IAgArbolService.cs" />
+    <Compile Include="Academic\Application\Services\AgArbolService.cs" />
+    <Compile Include="Academic\UI\Forms\FormNombreArbol.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\IMigrationTolerante.cs" />
+    <Compile Include="Academic\Application\DTOs\AgContextoSeleccionDto.cs" />
+    <Compile Include="Academic\Application\DTOs\AgVacanteGridDto.cs" />
+    <Compile Include="Academic\Application\DTOs\AgNodoArbolKey.cs" />
+    <Compile Include="Academic\Application\Interfaces\ITreeViewCheckService.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgTreeViewCheckService.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgSeleccionAulaExpandidor.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgAulaFactory.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Repositories\AgScheduleRepository.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Repositories\AgSalvedadRepository.cs" />
+    <Compile Include="Academic\UI\Forms\AgFormGeneradorHorarios.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Academic\UI\Forms\AgFormGeneradorHorarios.Designer.cs">
+      <DependentUpon>AgFormGeneradorHorarios.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Academic\Application\DTOs\PeriodoGridDto.cs" />
+    <Compile Include="Academic\Application\Mappers\PeriodoGridMapper.cs" />
+    <Compile Include="Academic\Application\Interfaces\IPeriodoCrudService.cs" />
+    <Compile Include="Academic\Application\Services\PeriodoCrudService.cs" />
+    <Compile Include="Academic\UI\Forms\FormPeriodos.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Academic\UI\Forms\FormPeriodos.Designer.cs">
+      <DependentUpon>FormPeriodos.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Academic\Domain\Models\Genetica\FranjaJornada.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\AgFranjaJornada.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\AgDiasVentana.cs" />
+    <Compile Include="Academic\Domain\Models\ModalidadTutoriaCatalog.cs" />
+    <Compile Include="Academic\Application\Services\HorarioMilitarizador.cs" />
+    <Compile Include="Academic\Application\Services\ViaticoBloqueFormatter.cs" />
+    <Compile Include="Academic\Application\Services\AsignaturaViaticoFila.cs" />
+    <Compile Include="Academic\Application\Services\AsignaturaViaticoAllocator.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\AgCarriles.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\AgBandasDias.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\AgEscaleraVentanas.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Repositories\AgEscaladorVentanaAula.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\AgPlanOleada.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\AgPlanOleadasResultado.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgPlanificadorOleadas.cs" />
+    <Compile Include="Academic\Application\Mappers\AgSeleccionMapper.cs" />
+    <Compile Include="Academic\Application\Mappers\AgNodoArbolKeyMapper.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\AgRanura.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\AgRanuras.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV75_SembrarBloquesDomingo.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgMensajeDimensionesAula.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Repositories\AgAulaDimensionesSync.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV76_SanearDimensionesAgAula.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\AgAulaDimensionesCandidato.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV77_AddPernoctaAgVinculaciones.cs" />
+    <Compile Include="Academic\Domain\Models\AgTipoProgramaCatalog.cs" />
+    <Compile Include="Academic\Domain\Models\AgFiltrosSeleccion.cs" />
+    <Compile Include="Academic\Domain\Models\AgFiltroTipo.cs" />
+    <Compile Include="Academic\Domain\Interfaces\IAgFiltroSeleccionRepository.cs" />
+    <Compile Include="Academic\Application\DTOs\AgDimensionesSeleccion.cs" />
+    <Compile Include="Academic\Application\DTOs\AgTerceroSeleccionDto.cs" />
+    <Compile Include="Academic\Application\Services\AgFiltroArbolResolver.cs" />
+    <Compile Include="Academic\Application\Services\AgProgramaCatalogoSql.cs" />
+    <Compile Include="Academic\Application\Services\AgResumenFiltros.cs" />
+    <Compile Include="Academic\Application\Services\AgTerritorialCatalog.cs" />
+    <Compile Include="Academic\Application\Services\AgTerceroFiltro.cs" />
+    <Compile Include="Academic\Application\Services\AgTerceroSeleccion.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV78_AddAgFiltroSeleccion.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Repositories\AgFiltroSeleccionRepository.cs" />
+    <Compile Include="Academic\UI\Controls\CheckedComboBox.cs" />
+    <Compile Include="Academic\UI\Forms\AgFormTerceros.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Academic\UI\Forms\AgFormTerceros.Designer.cs">
+      <DependentUpon>AgFormTerceros.cs</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
@@ -252,20 +696,25 @@
     <PackageReference Include="PdfPig" Version="0.1.9" />
     <PackageReference Include="Dapper" Version="2.1.35" />
     <PackageReference Include="Stub.System.Data.SQLite.Core.NetFramework" Version="1.0.119.0" />
+    <PackageReference Include="CSharpFunctionalExtensions" Version="2.40.3" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ConversorPDF.XLL-AddIn64.dna" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="VisTimeline\Resources\vis-data.min.js" />
+    <EmbeddedResource Include="VisTimeline\Resources\vis-timeline-graph2d.min.js" />
+    <EmbeddedResource Include="VisTimeline\Resources\vis-timeline-graph2d.min.css" />
+    <EmbeddedResource Include="VisTimeline\Resources\lucide.min.js" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ExcelTemplates\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="obj\ConversorPDF.XLL.csproj.nuget.g.targets" Condition="Exists('obj\ConversorPDF.XLL.csproj.nuget.g.targets')" />
-  <Import Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\NuGet\Microsoft.NuGet.targets"
-          Condition="Exists('$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\NuGet\Microsoft.NuGet.targets')" />
-  <Import Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v17.0\NuGet\Microsoft.NuGet.targets"
-          Condition="Exists('$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v17.0\NuGet\Microsoft.NuGet.targets')" />
-  <Import Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v16.0\NuGet\Microsoft.NuGet.targets"
-          Condition="Exists('$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v16.0\NuGet\Microsoft.NuGet.targets')" />
+  <Import Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\NuGet\Microsoft.NuGet.targets" Condition="Exists('$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\NuGet\Microsoft.NuGet.targets')" />
+  <Import Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v17.0\NuGet\Microsoft.NuGet.targets" Condition="Exists('$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v17.0\NuGet\Microsoft.NuGet.targets')" />
+  <Import Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v16.0\NuGet\Microsoft.NuGet.targets" Condition="Exists('$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v16.0\NuGet\Microsoft.NuGet.targets')" />
 </Project>
-
-
-
-

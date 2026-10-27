@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Interface IViaticosRepository | ESAP - ConversorPDF </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Interface IViaticosRepository | ESAP - ConversorPDF ">
+      
+      <meta name="description" content="Interfaz para el acceso a datos de configuraci&#243;n, empleados y viajes desde Excel.">
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="ManagedReference">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="ConversorPDF.XLL.Core.Interfaces.IViaticosRepository">
+
+
+
+  <h1 id="ConversorPDF_XLL_Core_Interfaces_IViaticosRepository" data-uid="ConversorPDF.XLL.Core.Interfaces.IViaticosRepository" class="text-break">
+Interface IViaticosRepository  
+  </h1>
+
+  <div class="facts text-secondary">
+    <dl><dt>Namespace</dt><dd><a class="xref" href="ConversorPDF.html">ConversorPDF</a>.<a class="xref" href="ConversorPDF.XLL.html">XLL</a>.<a class="xref" href="ConversorPDF.XLL.Core.html">Core</a>.<a class="xref" href="ConversorPDF.XLL.Core.Interfaces.html">Interfaces</a></dd></dl>
+  <dl><dt>Assembly</dt><dd>ConversorPDF.XLL.dll</dd></dl>
+  </div>
+
+  <div class="markdown summary"><p>Interfaz para el acceso a datos de configuración, empleados y viajes desde Excel.</p>
+</div>
+  <div class="markdown conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public interface IViaticosRepository</code></pre>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <h2 class="section" id="methods">Methods
+</h2>
+
+
+  <a id="ConversorPDF_XLL_Core_Interfaces_IViaticosRepository_GetCdpList_" data-uid="ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetCdpList*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Interfaces_IViaticosRepository_GetCdpList" data-uid="ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetCdpList">
+  GetCdpList()
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Obtiene la lista de CDPs disponibles desde la tabla Dependencias.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">List&lt;string&gt; GetCdpList()</code></pre>
+  </div>
+
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1">List</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Interfaces_IViaticosRepository_GetConfig_" data-uid="ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetConfig*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Interfaces_IViaticosRepository_GetConfig_System_Nullable_System_DateTime__System_Nullable_System_DateTime__System_String_" data-uid="ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetConfig(System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String)">
+  GetConfig(DateTime?, DateTime?, string)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Obtiene el objeto de configuración cargado desde la hoja 'Config'.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">ViaticosConfig GetConfig(DateTime? start = null, DateTime? end = null, string cdpOverride = null)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>start</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.datetime">DateTime</a>?</dt>
+    <dd></dd>
+    <dt><code>end</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.datetime">DateTime</a>?</dt>
+    <dd></dd>
+    <dt><code>cdpOverride</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.ViaticosConfig.html">ViaticosConfig</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Interfaces_IViaticosRepository_GetDependenciaCDP_" data-uid="ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetDependenciaCDP*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Interfaces_IViaticosRepository_GetDependenciaCDP_System_String_" data-uid="ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetDependenciaCDP(System.String)">
+  GetDependenciaCDP(string)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Obtiene el nombre de la dependencia asociada a un CDP/Código.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">string GetDependenciaCDP(string dep)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>dep</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Interfaces_IViaticosRepository_GetEmpleado_" data-uid="ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetEmpleado*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Interfaces_IViaticosRepository_GetEmpleado_System_String_" data-uid="ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetEmpleado(System.String)">
+  GetEmpleado(string)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Busca y obtiene la información de un empleado por su cédula.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Empleado GetEmpleado(string cc)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>cc</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.Empleado.html">Empleado</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Interfaces_IViaticosRepository_GetGlobalVariable_" data-uid="ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetGlobalVariable*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Interfaces_IViaticosRepository_GetGlobalVariable_System_String_" data-uid="ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetGlobalVariable(System.String)">
+  GetGlobalVariable(string)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Obtiene el valor de una variable global de Excel.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">string GetGlobalVariable(string varName)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>varName</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Interfaces_IViaticosRepository_GetViajeFromRow_" data-uid="ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetViajeFromRow*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Interfaces_IViaticosRepository_GetViajeFromRow_System_Object_0__0___System_Int32_" data-uid="ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetViajeFromRow(System.Object[0:,0:],System.Int32)">
+  GetViajeFromRow(object[,], int)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Extrae la información de un viaje desde una fila de datos de Excel.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Viaje GetViajeFromRow(object[,] data, int r)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>data</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a>[,]</dt>
+    <dd></dd>
+    <dt><code>r</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.Viaje.html">Viaje</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Interfaces_IViaticosRepository_NormalizarCiudad_" data-uid="ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.NormalizarCiudad*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Interfaces_IViaticosRepository_NormalizarCiudad_System_String_" data-uid="ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.NormalizarCiudad(System.String)">
+  NormalizarCiudad(string)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Normaliza el nombre de una ciudad (limpieza de tildes y espacios).</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">string NormalizarCiudad(string ciudad)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>ciudad</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Interfaces_IViaticosRepository_ObtenerDepartamento_" data-uid="ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.ObtenerDepartamento*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Interfaces_IViaticosRepository_ObtenerDepartamento_System_String_" data-uid="ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.ObtenerDepartamento(System.String)">
+  ObtenerDepartamento(string)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Busca el departamento correspondiente a una ciudad dada en la tabla de destinos.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">string ObtenerDepartamento(string ciudad)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>ciudad</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Interfaces_IViaticosRepository_ValidarFormatoComisionado_" data-uid="ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.ValidarFormatoComisionado*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Interfaces_IViaticosRepository_ValidarFormatoComisionado_System_Object_" data-uid="ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.ValidarFormatoComisionado(System.Object)">
+  ValidarFormatoComisionado(dynamic)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Valida si la hoja activa cumple con el formato requerido por la entidad.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">bool ValidarFormatoComisionado(dynamic sheet)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>sheet</code> <span class="xref">dynamic</span></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          ESAP - ConversorPDF Doc
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

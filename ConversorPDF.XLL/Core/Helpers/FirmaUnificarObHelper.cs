@@ -9,6 +9,7 @@ using ConversorPDF.XLL.Core.Enums;
 using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.CSharp.RuntimeBinder;
+using System.Text.RegularExpressions;
 namespace ConversorPDF.XLL.Core.Helpers
 {
     public static class FirmaUnificarObHelper
@@ -34,7 +35,7 @@ namespace ConversorPDF.XLL.Core.Helpers
             string pathUnificados = Path.Combine(localPath, App.FolderNames.UNIFICADOS);
 
 
-            if (!Directory.Exists(pathSoportes) || Directory.GetFiles(pathSoportes, "*.pdf").Length == 0)
+            if (!Directory.Exists(pathSoportes) || !ContienePdfsSeguro(pathSoportes))
             {
                 System.Windows.MessageBox.Show(
                     "No hay archivos PDF en la carpeta de Soportes.\nVerifica que la carpeta exista y contenga archivos.",
@@ -64,7 +65,7 @@ namespace ConversorPDF.XLL.Core.Helpers
                 {
                     searchOrder = ws.Range["C15"].Value?.ToString() ?? "";
                     string categoria = FirmaPDFsHelper.GetCategoria(ws.Range["C38"].Value?.ToString());
-                    unifiedFileName = $"OB-{searchOrder}-{categoria}-{ws.Range["I22"].Value}";
+                    unifiedFileName = $"OB-{searchOrder}-{categoria}-{FirmaPDFsHelper.SanitizarNombre(ws.Range["I22"].Value?.ToString())}";
                 }
                 else
                 {
@@ -73,11 +74,11 @@ namespace ConversorPDF.XLL.Core.Helpers
                     if (rngObjeto != null)
                     {
                         string categoria = FirmaPDFsHelper.GetCategoria(ws.Range["D" + rngObjeto.Row].Value?.ToString());
-                        unifiedFileName = $"OB-{searchOrder}-{categoria}-{ws.Range["K22"].Value}";
+                        unifiedFileName = $"OB-{searchOrder}-{categoria}-{FirmaPDFsHelper.SanitizarNombre(ws.Range["K22"].Value?.ToString())}";
                     }
                     else
                     {
-                        unifiedFileName = $"OB-{searchOrder}-XXX-{ws.Range["K22"].Value}";
+                        unifiedFileName = $"OB-{searchOrder}-XXX-{FirmaPDFsHelper.SanitizarNombre(ws.Range["K22"].Value?.ToString())}";
                     }
                 }
 
@@ -105,13 +106,58 @@ namespace ConversorPDF.XLL.Core.Helpers
                         listaArchivos[idx++] = sop;
                     }
 
-                    util.CombinarArchivos(listaArchivos, outputPdfPath);
-                    filesCount++;
+                    try
+                    {
+                        util.CombinarArchivos(listaArchivos, outputPdfPath);
+                        filesCount++;
+                    }
+                    catch (Exception ex)
+                    {
+                        LoggerHelper.Error($"Error unificando PDF: {outputPdfPath}", ex);
+                    }
                 }
             }
             return filesCount;
         }
 
+        /// <summary>
+        /// Comprueba de forma segura y recursiva si existe al menos un archivo PDF en la carpeta o sus subcarpetas.
+        /// Ignora carpetas sin permisos para evitar interrupciones.
+        /// </summary>
+        /// <param name="pathFolder">Ruta a evaluar.</param>
+        /// <returns>Verdadero si encuentra al menos un PDF.</returns>
+        private static bool ContienePdfsSeguro(string pathFolder)
+        {
+            var stack = new System.Collections.Generic.Stack<string>();
+            stack.Push(pathFolder);
+
+            while (stack.Count > 0)
+            {
+                string dir = stack.Pop();
+                try
+                {
+                    if (Directory.GetFiles(dir, "*.pdf").Length > 0)
+                        return true;
+
+                    foreach (var subDir in Directory.GetDirectories(dir))
+                    {
+                        stack.Push(subDir);
+                    }
+                }
+                catch (UnauthorizedAccessException) { /* Omitir carpeta sin permisos */ }
+                catch (PathTooLongException) { /* Omitir carpeta inaccesible */ }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Busca de forma segura y recursiva archivos PDF de soporte que coincidan con el número de orden.
+        /// Utiliza recorrido por pila para evitar excepciones de acceso en subcarpetas.
+        /// </summary>
+        /// <param name="pathFolder">Ruta raíz de la carpeta de soportes.</param>
+        /// <param name="searchOrder">Número de obligación a buscar (coincidencia exacta aislada de otros dígitos).</param>
+        /// <returns>Arreglo de rutas de archivos PDF que coinciden, ordenados alfabéticamente.</returns>
         private static string[] BuscarArchivosPDF(string pathFolder, string searchOrder)
         {
             if (!Directory.Exists(pathFolder) || string.IsNullOrEmpty(searchOrder))
@@ -121,17 +167,42 @@ namespace ConversorPDF.XLL.Core.Helpers
 
             try
             {
-                var allPdfs = Directory.GetFiles(pathFolder, "*.pdf", SearchOption.TopDirectoryOnly);
                 var matched = new System.Collections.Generic.List<string>();
+                
+                // Expresión regular mejorada para buscar el número aislado de otros dígitos numéricos.
+                // Usar lookbehinds y lookaheads (?<!\d) y (?!\d) permite que coincida si está rodeado
+                // de letras o guiones bajos (ej. Soporte_15_pago.pdf sí coincidirá con 15).
+                string pattern = $@"(?<!\d){Regex.Escape(searchOrder)}(?!\d)";
 
-                foreach (var pdf in allPdfs)
+                var stack = new System.Collections.Generic.Stack<string>();
+                stack.Push(pathFolder);
+
+                while (stack.Count > 0)
                 {
-                    if (Path.GetFileName(pdf).IndexOf(searchOrder, StringComparison.OrdinalIgnoreCase) >= 0)
+                    string dir = stack.Pop();
+                    try
                     {
-                        matched.Add(pdf);
+                        foreach (var f in Directory.GetFiles(dir, "*.pdf"))
+                        {
+                            string fileName = Path.GetFileNameWithoutExtension(f);
+                            
+                            if (Regex.IsMatch(fileName, pattern, RegexOptions.IgnoreCase))
+                            {
+                                matched.Add(f);
+                            }
+                        }
+
+                        foreach (var d in Directory.GetDirectories(dir))
+                        {
+                            stack.Push(d);
+                        }
                     }
+                    catch (UnauthorizedAccessException) { /* Omitir carpeta sin permisos */ }
+                    catch (PathTooLongException) { /* Omitir carpeta inaccesible */ }
                 }
 
+                // Retornar los archivos ordenados para garantizar un orden consistente al unificar
+                matched.Sort();
                 return matched.ToArray();
             }
             catch (Exception ex)

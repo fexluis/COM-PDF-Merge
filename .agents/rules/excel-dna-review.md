@@ -9,7 +9,8 @@ Before approving any PR or code generation, verify these points:
 ## 1. Architecture & Boundaries
 - [ ] Are there any Office Interop types (`Range`, `Worksheet`) in `ConversorPDF.Application`? (Strictly Forbidden).
 - [ ] Are there any WinForms types (`DataGridView`, `Form`) in `ConversorPDF.Application`? (Strictly Forbidden).
-- [ ] Did they put SQLite/Dapper logic in `Application`? (Should be in `XLL/Infrastructure`).
+- [ ] Did they put SQLite/Dapper logic in `Application`? (Should be in `XLL/Infrastructure` or inside the slice's `Infrastructure` folder).
+- [ ] Does a Vertical Slice leak internal DTOs/Entities to another slice or to the global `RibbonController`? (Should only expose the UI Form or a single Facade/Processor).
 
 ## 2. Testability & DI
 - [ ] Does the new Service/Processor depend on concretions instead of interfaces?

@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ConversorPDF.XLL.Core.Models.Academic;
-using ConversorPDF.XLL.Core.Services.Academic;
+using ConversorPDF.XLL.Academic.Domain.Models;
+using ConversorPDF.XLL.Academic.Application.Services;
 using FluentAssertions;
 using Xunit;
 
-namespace ConversorPDF.Tests.Core.Services.Academic
+namespace ConversorPDF.Tests.Academic.Application.Services
 {
     public class GeneradorSesionesRecurrentesTests
     {
@@ -18,7 +18,7 @@ namespace ConversorPDF.Tests.Core.Services.Academic
         }
 
         [Fact]
-        public void Generar_WhenViernesSabadoConsecutive_ShouldReturnFourSessionsOfSixHours()
+        public void Generar_WhenViernesSabadoConsecutive_ShouldReturnEightSessionsOfSixHoursEach()
         {
             // Arrange
             var diasConfig = new List<ConfiguracionDia>
@@ -35,18 +35,23 @@ namespace ConversorPDF.Tests.Core.Services.Academic
             var result = _sut.Generar(1, 100, fechaInicioGlobal, fechaFinGlobal, diasConfig, horasTotales, true);
 
             // Assert
-            result.Should().HaveCount(4);
-            result.Sum(s => s.Horas).Should().Be(24);
-            
-            // First session check
-            result[0].fechasesionInicial.Should().Be(new DateTime(2026, 4, 17)); // First Friday
-            result[0].fechasesionFinal.Should().Be(new DateTime(2026, 4, 18)); // Next Saturday
-            result[0].Duracion.Should().Be(1.5);
-            result[0].Horas.Should().Be(6);
+            result.IsSuccess.Should().BeTrue();
+            // 4 semanas × 2 días por semana = 8 sesiones individuales
+            result.Value.Should().HaveCount(8);
+            result.Value.Sum(s => s.Horas).Should().Be(24);
 
-            // Last session check
-            result[3].fechasesionInicial.Should().Be(new DateTime(2026, 5, 8));
-            result[3].fechasesionFinal.Should().Be(new DateTime(2026, 5, 9));
+            // Primera sesión: Viernes 17/04/2026
+            result.Value[0].FechaSesion.Should().Be(new DateTime(2026, 4, 17));
+            result.Value[0].HorarioSesion.Should().Be("VIERNES|4");
+            result.Value[0].Horas.Should().Be(4);
+
+            // Segunda sesión: Sábado 18/04/2026
+            result.Value[1].FechaSesion.Should().Be(new DateTime(2026, 4, 18));
+            result.Value[1].HorarioSesion.Should().Be("SABADO|2");
+            result.Value[1].Horas.Should().Be(2);
+
+            // Última sesión: Sábado 09/05/2026
+            result.Value[7].FechaSesion.Should().Be(new DateTime(2026, 5, 9));
         }
 
         [Fact]
@@ -66,11 +71,12 @@ namespace ConversorPDF.Tests.Core.Services.Academic
             var result = _sut.Generar(1, 100, fechaInicioGlobal, fechaFinGlobal, diasConfig, horasTotales, true);
 
             // Assert
-            result.Should().HaveCount(3); // 4 + 4 + 2
-            result[0].Horas.Should().Be(4);
-            result[1].Horas.Should().Be(4);
-            result[2].Horas.Should().Be(2); // Adjusted
-            result.Sum(s => s.Horas).Should().Be(10);
+            result.IsSuccess.Should().BeTrue();
+            result.Value.Should().HaveCount(3); // 4 + 4 + 2
+            result.Value[0].Horas.Should().Be(4);
+            result.Value[1].Horas.Should().Be(4);
+            result.Value[2].Horas.Should().Be(2); // Adjusted
+            result.Value.Sum(s => s.Horas).Should().Be(10);
         }
 
         [Fact]
@@ -86,11 +92,12 @@ namespace ConversorPDF.Tests.Core.Services.Academic
             var result = _sut.Generar(1, 100, DateTime.Today, DateTime.Today.AddDays(10), diasConfig, 0, true);
 
             // Assert
-            result.Should().BeEmpty();
+            result.IsSuccess.Should().BeTrue();
+            result.Value.Should().BeEmpty();
         }
 
         [Fact]
-        public void Generar_WhenDaysAreNotConsecutive_ShouldThrowArgumentException()
+        public void Generar_WhenDaysAreNotConsecutive_ShouldReturnFailureResult()
         {
             // Arrange
             var diasConfig = new List<ConfiguracionDia>
@@ -100,11 +107,11 @@ namespace ConversorPDF.Tests.Core.Services.Academic
             };
 
             // Act
-            Action act = () => _sut.Generar(1, 100, DateTime.Today, DateTime.Today.AddDays(30), diasConfig, 20, true);
+            var result = _sut.Generar(1, 100, DateTime.Today, DateTime.Today.AddDays(30), diasConfig, 20, true);
 
             // Assert
-            act.Should().Throw<ArgumentException>()
-                .WithMessage("Los días configurados deben ser consecutivos para unir la sesión en una sola fila.");
+            result.IsFailure.Should().BeTrue();
+            result.Error.Should().Be("Los días configurados deben ser consecutivos para unir la sesión en una sola fila.");
         }
 
         [Fact]
@@ -124,7 +131,8 @@ namespace ConversorPDF.Tests.Core.Services.Academic
             var result = _sut.Generar(1, 100, inicio, fin, diasConfig, 10, true);
 
             // Assert
-            result.Should().BeEmpty();
+            result.IsSuccess.Should().BeTrue();
+            result.Value.Should().BeEmpty();
         }
 
         [Fact]
@@ -140,7 +148,8 @@ namespace ConversorPDF.Tests.Core.Services.Academic
             var result = _sut.Generar(1, 100, DateTime.Today.AddDays(10), DateTime.Today, diasConfig, 10, true);
 
             // Assert
-            result.Should().BeEmpty();
+            result.IsSuccess.Should().BeTrue();
+            result.Value.Should().BeEmpty();
         }
     }
 }

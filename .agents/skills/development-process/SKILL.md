@@ -9,16 +9,65 @@
 
 ---
 
+## Project Structure Context
+
+The solution follows a **Modular Monolith** with **Vertical Slices** for self-contained business modules.
+
+```
+ConversorPDF.XLL/
+├── Academic/                        ← Vertical Slice (fully self-contained)
+│   ├── Domain/
+│   │   ├── Models/                  (Sesion, Vinculacion, etc.)
+│   │   └── Interfaces/              (IAcademicRepository, IAcademicDateSyncService)
+│   ├── Application/
+│   │   ├── Interfaces/
+│   │   ├── Services/                (AcademicDateSyncService, GeneradorSesionesRecurrentes)
+│   │   ├── Mappers/                 (GridToSesionMapper)
+│   │   └── DTOs/                    (GridRowDto)
+│   ├── Infrastructure/
+│   │   ├── Persistence/             (AcademicRepository, AcademicUnitOfWork)
+│   │   ├── Context/                 (EncryptedSQLiteContext, SQLiteEngineBootstrap)
+│   │   └── Sql/                     (AcademicSchema.sql, AcademicSeedData.sql)
+│   └── UI/
+│       └── Forms/                   (FormSesionesAcademicas)
+├── Core/                            ← Legacy shared logic (stable, not being migrated)
+│   ├── Models/                      (Viaticos, Terceros, etc.)
+│   ├── Processors/
+│   ├── Repositories/
+│   └── Helpers/                     (ExcelOptimizeHelper, LoggerHelper)
+├── UI/                              ← Shared WinForms controls
+│   └── (ProgressDialog, FormInfo, DayHoursDropdown, etc.)
+└── Ribbon/
+    ├── Ribbon.xml
+    └── RibbonController.cs          ← Single entry point for all slices
+```
+
+Tests must mirror the slice structure:
+
+```
+ConversorPDF.Tests/
+├── Academic/
+│   ├── Application/
+│   └── Domain/
+├── Core/
+├── Integration/
+├── UI/
+└── Unit/
+```
+
+---
+
 ## Development Loop (repeat for every sub-task)
 
 ### 1. Analyze & Plan
 - Identify the exact piece of logic to implement.
-- Verify the target layer: Is this a Domain entity? An Application Service/Processor/Mapper? 
+- Verify the target layer: Is this a Domain entity? An Application Service/Processor/Mapper?
+- If modifying a **Vertical Slice** (e.g., `Academic`), ensure the change stays inside the slice boundaries.
 - Write down the **expected behavior**, **edge cases**, and **error paths** *before* writing any code.
 - Confirm which existing tests could be affected by this change.
 
 ### 2. Test Creation (TDD)
-- Create or update unit tests in `tests/ConversorPDF.Application.Tests/` or `tests/ConversorPDF.Domain.Tests/` following `.agents/rules/test-convention.txt`.
+- Create or update unit tests in `ConversorPDF.Tests/` under the corresponding slice/folder following `test-convention.md`.
 - Required coverage per sub-task:
   - ✅ Happy path(s)
   - ✅ Edge cases identified in Step 1
@@ -28,21 +77,23 @@
 ### 3. Implementation
 - Write the **minimum** code required to satisfy the failing tests — no speculative features.
 - **Boundary Check**: If you are writing code in `Application`, ensure you are injecting interfaces (e.g., `IPdfGenerator`) and not concrete infrastructure classes (e.g., `PdfSharpGenerator`).
+- **Vertical Slice Check**: If adding to `Academic`, place files in `Academic\{Layer}\{Folder}`. Do not create new shared folders in `Core`.
 - Include XML comments (`///`) on all new public classes, properties, and methods to automatically generate API documentation with DocFX.
 - Follow conventions in:
-  - `.agents/rules/desktop-code.txt`
-  - `.agents/rules/architecture-rules.txt`
-  - `.agents/rules/excel-dna-review.txt`
+  - `desktop-code.md`
+  - `architecture-rules.md`
+  - `excel-dna-review.md`
 
 ### 4. Execution & Verification
-- Run the **full** test suite from the **Visual Studio Test Explorer** (Do not use CLI `dotnet test` commands for .NET Framework 4.8 Excel-DNA projects to avoid loader context issues).
-- Alternatively, ensure the solution builds cleanly with **"Treat warnings as errors"** enabled in VS Build properties.
-- All tests must be **green** before proceeding.
+- Ejecutar `powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "FullyQualifiedName~<Clase>"` durante el ciclo de implementación.
+- Ejecutar `-Mode Full` al cerrar cada sub-tarea. La evidencia generada (`test.trx` + `summary.md`) se vincula directamente al plan.
+- Visual Studio Test Explorer queda disponible únicamente como verificación humana opcional.
+- No se toleran regresiones respecto al baseline (`tests/baseline/test_baseline.txt`).
 
 ### 5. Self-Healing Loop
 
 | Outcome | Decision rule | Action |
-|---|---|---|
+|---------|---------------|--------|
 | Test fails & the assertion is wrong | The test was written incorrectly | Fix the test, document why, re-run Step 4 |
 | Test fails & the code is wrong | Implementation bug | Fix the code, re-run Step 4 |
 | Build/Warnings fail | Formatting/convention violation | Fix the warning, re-run Step 4 |
@@ -57,7 +108,7 @@
 
 Once **all** sub-tasks are complete:
 
-1. **Final regression run** — execute all tests from Test Explorer one last time and confirm 100% pass rate.
+1. **Final regression run** — execute `powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Full` one last time and confirm 0 regressions.
 2. **Write a change summary document** at `docs/articles/changes/<YYYY-MM-DD>-<short-description>.md` with the following sections:
    - **Purpose** — what problem this solves.
    - **Changes** — which files were modified in `Domain` or `Application` (and corresponding `XLL` implementations if interfaces changed).
@@ -70,11 +121,12 @@ Once **all** sub-tasks are complete:
 ## Quick Reference Checklist
 
 - [ ] Sub-task is clearly scoped and targets `Domain` or `Application`
+- [ ] If modifying a Vertical Slice, changes remain inside the slice boundary
 - [ ] Expected behavior & edge cases documented before coding
 - [ ] Code follows Desktop and Architecture Boundary rules
 - [ ] XML comments (`///`) added or updated for public members
 - [ ] Unit tests cover happy path, edge cases, and error paths
 - [ ] Tests run successfully without Excel or SQLite running
-- [ ] Visual Studio Test Explorer passes with **zero** failures
+- [ ] `scripts/verify.ps1 -Mode Full` passes with 0 regressions vs baseline
 - [ ] No regression in existing tests
 - [ ] Change summary document written

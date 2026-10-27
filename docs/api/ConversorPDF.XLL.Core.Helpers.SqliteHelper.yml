@@ -1,0 +1,680 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Core.Helpers.SqliteHelper
+  commentId: T:ConversorPDF.XLL.Core.Helpers.SqliteHelper
+  id: SqliteHelper
+  parent: ConversorPDF.XLL.Core.Helpers
+  children:
+  - ConversorPDF.XLL.Core.Helpers.SqliteHelper.DbPathEnc
+  - ConversorPDF.XLL.Core.Helpers.SqliteHelper.GetContext
+  - ConversorPDF.XLL.Core.Helpers.SqliteHelper.GetVaultPath
+  - ConversorPDF.XLL.Core.Helpers.SqliteHelper.ResetState
+  - ConversorPDF.XLL.Core.Helpers.SqliteHelper.SetTestVaultPath(System.String)
+  - ConversorPDF.XLL.Core.Helpers.SqliteHelper.UpdateVaultDirectly(System.Byte[],System.String,System.IProgress{System.String})
+  langs:
+  - csharp
+  - vb
+  name: SqliteHelper
+  nameWithType: SqliteHelper
+  fullName: ConversorPDF.XLL.Core.Helpers.SqliteHelper
+  type: Class
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  summary: Ayudante para la gestión de la base de datos SQLite con encriptación Vault (App-Level).
+  example: []
+  syntax:
+    content: public static class SqliteHelper
+    content.vb: Public Module SqliteHelper
+  inheritance:
+  - System.Object
+  inheritedMembers:
+  - System.Object.ToString
+  - System.Object.Equals(System.Object)
+  - System.Object.Equals(System.Object,System.Object)
+  - System.Object.ReferenceEquals(System.Object,System.Object)
+  - System.Object.GetHashCode
+  - System.Object.GetType
+  - System.Object.MemberwiseClone
+- uid: ConversorPDF.XLL.Core.Helpers.SqliteHelper.SetTestVaultPath(System.String)
+  commentId: M:ConversorPDF.XLL.Core.Helpers.SqliteHelper.SetTestVaultPath(System.String)
+  id: SetTestVaultPath(System.String)
+  parent: ConversorPDF.XLL.Core.Helpers.SqliteHelper
+  langs:
+  - csharp
+  - vb
+  name: SetTestVaultPath(string)
+  nameWithType: SqliteHelper.SetTestVaultPath(string)
+  fullName: ConversorPDF.XLL.Core.Helpers.SqliteHelper.SetTestVaultPath(string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public static void SetTestVaultPath(string path)
+    parameters:
+    - id: path
+      type: System.String
+    content.vb: Public Shared Sub SetTestVaultPath(path As String)
+  overload: ConversorPDF.XLL.Core.Helpers.SqliteHelper.SetTestVaultPath*
+  nameWithType.vb: SqliteHelper.SetTestVaultPath(String)
+  fullName.vb: ConversorPDF.XLL.Core.Helpers.SqliteHelper.SetTestVaultPath(String)
+  name.vb: SetTestVaultPath(String)
+- uid: ConversorPDF.XLL.Core.Helpers.SqliteHelper.ResetState
+  commentId: M:ConversorPDF.XLL.Core.Helpers.SqliteHelper.ResetState
+  id: ResetState
+  parent: ConversorPDF.XLL.Core.Helpers.SqliteHelper
+  langs:
+  - csharp
+  - vb
+  name: ResetState()
+  nameWithType: SqliteHelper.ResetState()
+  fullName: ConversorPDF.XLL.Core.Helpers.SqliteHelper.ResetState()
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public static void ResetState()
+    content.vb: Public Shared Sub ResetState()
+  overload: ConversorPDF.XLL.Core.Helpers.SqliteHelper.ResetState*
+- uid: ConversorPDF.XLL.Core.Helpers.SqliteHelper.GetVaultPath
+  commentId: M:ConversorPDF.XLL.Core.Helpers.SqliteHelper.GetVaultPath
+  id: GetVaultPath
+  parent: ConversorPDF.XLL.Core.Helpers.SqliteHelper
+  langs:
+  - csharp
+  - vb
+  name: GetVaultPath()
+  nameWithType: SqliteHelper.GetVaultPath()
+  fullName: ConversorPDF.XLL.Core.Helpers.SqliteHelper.GetVaultPath()
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  summary: Retorna la ruta física del archivo Vault persistente.
+  example: []
+  syntax:
+    content: public static string GetVaultPath()
+    return:
+      type: System.String
+    content.vb: Public Shared Function GetVaultPath() As String
+  overload: ConversorPDF.XLL.Core.Helpers.SqliteHelper.GetVaultPath*
+- uid: ConversorPDF.XLL.Core.Helpers.SqliteHelper.GetContext
+  commentId: M:ConversorPDF.XLL.Core.Helpers.SqliteHelper.GetContext
+  id: GetContext
+  parent: ConversorPDF.XLL.Core.Helpers.SqliteHelper
+  langs:
+  - csharp
+  - vb
+  name: GetContext()
+  nameWithType: SqliteHelper.GetContext()
+  fullName: ConversorPDF.XLL.Core.Helpers.SqliteHelper.GetContext()
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  summary: >-
+    Obtiene un contexto encriptado seguro (Unit of Work).
+
+    Cada llamada retorna una nueva instancia para aislamiento transaccional.
+  example: []
+  syntax:
+    content: public static EncryptedSQLiteContext GetContext()
+    return:
+      type: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext
+    content.vb: Public Shared Function GetContext() As EncryptedSQLiteContext
+  overload: ConversorPDF.XLL.Core.Helpers.SqliteHelper.GetContext*
+- uid: ConversorPDF.XLL.Core.Helpers.SqliteHelper.UpdateVaultDirectly(System.Byte[],System.String,System.IProgress{System.String})
+  commentId: M:ConversorPDF.XLL.Core.Helpers.SqliteHelper.UpdateVaultDirectly(System.Byte[],System.String,System.IProgress{System.String})
+  id: UpdateVaultDirectly(System.Byte[],System.String,System.IProgress{System.String})
+  parent: ConversorPDF.XLL.Core.Helpers.SqliteHelper
+  langs:
+  - csharp
+  - vb
+  name: UpdateVaultDirectly(byte[], string, IProgress<string>)
+  nameWithType: SqliteHelper.UpdateVaultDirectly(byte[], string, IProgress<string>)
+  fullName: ConversorPDF.XLL.Core.Helpers.SqliteHelper.UpdateVaultDirectly(byte[], string, System.IProgress<string>)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  summary: >-
+    Método utilitario para actualizar el Vault directamente desde bytes estáticos,
+
+    sin necesidad de inicializar un DbContext ligero dummy para la tarea.
+  example: []
+  syntax:
+    content: public static void UpdateVaultDirectly(byte[] plainData, string customPath = null, IProgress<string> progress = null)
+    parameters:
+    - id: plainData
+      type: System.Byte[]
+    - id: customPath
+      type: System.String
+    - id: progress
+      type: System.IProgress{System.String}
+    content.vb: Public Shared Sub UpdateVaultDirectly(plainData As Byte(), customPath As String = Nothing, progress As IProgress(Of String) = Nothing)
+  overload: ConversorPDF.XLL.Core.Helpers.SqliteHelper.UpdateVaultDirectly*
+  nameWithType.vb: SqliteHelper.UpdateVaultDirectly(Byte(), String, IProgress(Of String))
+  fullName.vb: ConversorPDF.XLL.Core.Helpers.SqliteHelper.UpdateVaultDirectly(Byte(), String, System.IProgress(Of String))
+  name.vb: UpdateVaultDirectly(Byte(), String, IProgress(Of String))
+- uid: ConversorPDF.XLL.Core.Helpers.SqliteHelper.DbPathEnc
+  commentId: P:ConversorPDF.XLL.Core.Helpers.SqliteHelper.DbPathEnc
+  id: DbPathEnc
+  parent: ConversorPDF.XLL.Core.Helpers.SqliteHelper
+  langs:
+  - csharp
+  - vb
+  name: DbPathEnc
+  nameWithType: SqliteHelper.DbPathEnc
+  fullName: ConversorPDF.XLL.Core.Helpers.SqliteHelper.DbPathEnc
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public static string DbPathEnc { get; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Shared ReadOnly Property DbPathEnc As String
+  overload: ConversorPDF.XLL.Core.Helpers.SqliteHelper.DbPathEnc*
+references:
+- uid: ConversorPDF.XLL.Core.Helpers
+  commentId: N:ConversorPDF.XLL.Core.Helpers
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Core.Helpers
+  nameWithType: ConversorPDF.XLL.Core.Helpers
+  fullName: ConversorPDF.XLL.Core.Helpers
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Helpers
+    name: Helpers
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Helpers.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Helpers
+    name: Helpers
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Helpers.html
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+  nameWithType: object
+  fullName: object
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: System.Object.ToString
+  commentId: M:System.Object.ToString
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  name: ToString()
+  nameWithType: object.ToString()
+  fullName: object.ToString()
+  nameWithType.vb: Object.ToString()
+  fullName.vb: Object.ToString()
+  spec.csharp:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+- uid: System.Object.Equals(System.Object)
+  commentId: M:System.Object.Equals(System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  name: Equals(object)
+  nameWithType: object.Equals(object)
+  fullName: object.Equals(object)
+  nameWithType.vb: Object.Equals(Object)
+  fullName.vb: Object.Equals(Object)
+  name.vb: Equals(Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.Equals(System.Object,System.Object)
+  commentId: M:System.Object.Equals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  name: Equals(object, object)
+  nameWithType: object.Equals(object, object)
+  fullName: object.Equals(object, object)
+  nameWithType.vb: Object.Equals(Object, Object)
+  fullName.vb: Object.Equals(Object, Object)
+  name.vb: Equals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.ReferenceEquals(System.Object,System.Object)
+  commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  name: ReferenceEquals(object, object)
+  nameWithType: object.ReferenceEquals(object, object)
+  fullName: object.ReferenceEquals(object, object)
+  nameWithType.vb: Object.ReferenceEquals(Object, Object)
+  fullName.vb: Object.ReferenceEquals(Object, Object)
+  name.vb: ReferenceEquals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.GetHashCode
+  commentId: M:System.Object.GetHashCode
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  name: GetHashCode()
+  nameWithType: object.GetHashCode()
+  fullName: object.GetHashCode()
+  nameWithType.vb: Object.GetHashCode()
+  fullName.vb: Object.GetHashCode()
+  spec.csharp:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+- uid: System.Object.GetType
+  commentId: M:System.Object.GetType
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  name: GetType()
+  nameWithType: object.GetType()
+  fullName: object.GetType()
+  nameWithType.vb: Object.GetType()
+  fullName.vb: Object.GetType()
+  spec.csharp:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+- uid: System.Object.MemberwiseClone
+  commentId: M:System.Object.MemberwiseClone
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  name: MemberwiseClone()
+  nameWithType: object.MemberwiseClone()
+  fullName: object.MemberwiseClone()
+  nameWithType.vb: Object.MemberwiseClone()
+  fullName.vb: Object.MemberwiseClone()
+  spec.csharp:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: ConversorPDF.XLL.Core.Helpers.SqliteHelper.SetTestVaultPath*
+  commentId: Overload:ConversorPDF.XLL.Core.Helpers.SqliteHelper.SetTestVaultPath
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.SqliteHelper.html#ConversorPDF_XLL_Core_Helpers_SqliteHelper_SetTestVaultPath_System_String_
+  name: SetTestVaultPath
+  nameWithType: SqliteHelper.SetTestVaultPath
+  fullName: ConversorPDF.XLL.Core.Helpers.SqliteHelper.SetTestVaultPath
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: ConversorPDF.XLL.Core.Helpers.SqliteHelper.ResetState*
+  commentId: Overload:ConversorPDF.XLL.Core.Helpers.SqliteHelper.ResetState
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.SqliteHelper.html#ConversorPDF_XLL_Core_Helpers_SqliteHelper_ResetState
+  name: ResetState
+  nameWithType: SqliteHelper.ResetState
+  fullName: ConversorPDF.XLL.Core.Helpers.SqliteHelper.ResetState
+- uid: ConversorPDF.XLL.Core.Helpers.SqliteHelper.GetVaultPath*
+  commentId: Overload:ConversorPDF.XLL.Core.Helpers.SqliteHelper.GetVaultPath
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.SqliteHelper.html#ConversorPDF_XLL_Core_Helpers_SqliteHelper_GetVaultPath
+  name: GetVaultPath
+  nameWithType: SqliteHelper.GetVaultPath
+  fullName: ConversorPDF.XLL.Core.Helpers.SqliteHelper.GetVaultPath
+- uid: ConversorPDF.XLL.Core.Helpers.SqliteHelper.GetContext*
+  commentId: Overload:ConversorPDF.XLL.Core.Helpers.SqliteHelper.GetContext
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.SqliteHelper.html#ConversorPDF_XLL_Core_Helpers_SqliteHelper_GetContext
+  name: GetContext
+  nameWithType: SqliteHelper.GetContext
+  fullName: ConversorPDF.XLL.Core.Helpers.SqliteHelper.GetContext
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext
+  commentId: T:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext
+  parent: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.html
+  name: EncryptedSQLiteContext
+  nameWithType: EncryptedSQLiteContext
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context
+  commentId: N:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context
+  nameWithType: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic
+    name: Academic
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Infrastructure
+    name: Infrastructure
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Infrastructure.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence
+    name: Persistence
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context
+    name: Context
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic
+    name: Academic
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Infrastructure
+    name: Infrastructure
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Infrastructure.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence
+    name: Persistence
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context
+    name: Context
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.html
+- uid: ConversorPDF.XLL.Core.Helpers.SqliteHelper.UpdateVaultDirectly*
+  commentId: Overload:ConversorPDF.XLL.Core.Helpers.SqliteHelper.UpdateVaultDirectly
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.SqliteHelper.html#ConversorPDF_XLL_Core_Helpers_SqliteHelper_UpdateVaultDirectly_System_Byte___System_String_System_IProgress_System_String__
+  name: UpdateVaultDirectly
+  nameWithType: SqliteHelper.UpdateVaultDirectly
+  fullName: ConversorPDF.XLL.Core.Helpers.SqliteHelper.UpdateVaultDirectly
+- uid: System.Byte[]
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.byte
+  name: byte[]
+  nameWithType: byte[]
+  fullName: byte[]
+  nameWithType.vb: Byte()
+  fullName.vb: Byte()
+  name.vb: Byte()
+  spec.csharp:
+  - uid: System.Byte
+    name: byte
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.byte
+  - name: '['
+  - name: ']'
+  spec.vb:
+  - uid: System.Byte
+    name: Byte
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.byte
+  - name: (
+  - name: )
+- uid: System.IProgress{System.String}
+  commentId: T:System.IProgress{System.String}
+  parent: System
+  definition: System.IProgress`1
+  href: https://learn.microsoft.com/dotnet/api/system.iprogress-1
+  name: IProgress<string>
+  nameWithType: IProgress<string>
+  fullName: System.IProgress<string>
+  nameWithType.vb: IProgress(Of String)
+  fullName.vb: System.IProgress(Of String)
+  name.vb: IProgress(Of String)
+  spec.csharp:
+  - uid: System.IProgress`1
+    name: IProgress
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iprogress-1
+  - name: <
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: '>'
+  spec.vb:
+  - uid: System.IProgress`1
+    name: IProgress
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iprogress-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+- uid: System.IProgress`1
+  commentId: T:System.IProgress`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.iprogress-1
+  name: IProgress<T>
+  nameWithType: IProgress<T>
+  fullName: System.IProgress<T>
+  nameWithType.vb: IProgress(Of T)
+  fullName.vb: System.IProgress(Of T)
+  name.vb: IProgress(Of T)
+  spec.csharp:
+  - uid: System.IProgress`1
+    name: IProgress
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iprogress-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.IProgress`1
+    name: IProgress
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iprogress-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: ConversorPDF.XLL.Core.Helpers.SqliteHelper.DbPathEnc*
+  commentId: Overload:ConversorPDF.XLL.Core.Helpers.SqliteHelper.DbPathEnc
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.SqliteHelper.html#ConversorPDF_XLL_Core_Helpers_SqliteHelper_DbPathEnc
+  name: DbPathEnc
+  nameWithType: SqliteHelper.DbPathEnc
+  fullName: ConversorPDF.XLL.Core.Helpers.SqliteHelper.DbPathEnc

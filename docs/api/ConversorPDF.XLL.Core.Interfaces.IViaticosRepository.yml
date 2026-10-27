@@ -1,0 +1,692 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository
+  commentId: T:ConversorPDF.XLL.Core.Interfaces.IViaticosRepository
+  id: IViaticosRepository
+  parent: ConversorPDF.XLL.Core.Interfaces
+  children:
+  - ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetCdpList
+  - ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetConfig(System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String)
+  - ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetDependenciaCDP(System.String)
+  - ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetEmpleado(System.String)
+  - ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetGlobalVariable(System.String)
+  - ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetViajeFromRow(System.Object[0:,0:],System.Int32)
+  - ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.NormalizarCiudad(System.String)
+  - ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.ObtenerDepartamento(System.String)
+  - ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.ValidarFormatoComisionado(System.Object)
+  langs:
+  - csharp
+  - vb
+  name: IViaticosRepository
+  nameWithType: IViaticosRepository
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository
+  type: Interface
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Interfaz para el acceso a datos de configuración, empleados y viajes desde Excel.
+  example: []
+  syntax:
+    content: public interface IViaticosRepository
+    content.vb: Public Interface IViaticosRepository
+  derivedClasses:
+  - ConversorPDF.XLL.Core.Repositories.ViaticosRepository
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetConfig(System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetConfig(System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String)
+  id: GetConfig(System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String)
+  parent: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository
+  langs:
+  - csharp
+  - vb
+  name: GetConfig(DateTime?, DateTime?, string)
+  nameWithType: IViaticosRepository.GetConfig(DateTime?, DateTime?, string)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetConfig(System.DateTime?, System.DateTime?, string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Obtiene el objeto de configuración cargado desde la hoja 'Config'.
+  example: []
+  syntax:
+    content: ViaticosConfig GetConfig(DateTime? start = null, DateTime? end = null, string cdpOverride = null)
+    parameters:
+    - id: start
+      type: System.Nullable{System.DateTime}
+    - id: end
+      type: System.Nullable{System.DateTime}
+    - id: cdpOverride
+      type: System.String
+    return:
+      type: ConversorPDF.XLL.Core.Models.ViaticosConfig
+    content.vb: Function GetConfig(start As Date? = Nothing, [end] As Date? = Nothing, cdpOverride As String = Nothing) As ViaticosConfig
+  overload: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetConfig*
+  nameWithType.vb: IViaticosRepository.GetConfig(Date?, Date?, String)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetConfig(Date?, Date?, String)
+  name.vb: GetConfig(Date?, Date?, String)
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetEmpleado(System.String)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetEmpleado(System.String)
+  id: GetEmpleado(System.String)
+  parent: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository
+  langs:
+  - csharp
+  - vb
+  name: GetEmpleado(string)
+  nameWithType: IViaticosRepository.GetEmpleado(string)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetEmpleado(string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Busca y obtiene la información de un empleado por su cédula.
+  example: []
+  syntax:
+    content: Empleado GetEmpleado(string cc)
+    parameters:
+    - id: cc
+      type: System.String
+    return:
+      type: ConversorPDF.XLL.Core.Models.Empleado
+    content.vb: Function GetEmpleado(cc As String) As Empleado
+  overload: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetEmpleado*
+  nameWithType.vb: IViaticosRepository.GetEmpleado(String)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetEmpleado(String)
+  name.vb: GetEmpleado(String)
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetViajeFromRow(System.Object[0:,0:],System.Int32)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetViajeFromRow(System.Object[0:,0:],System.Int32)
+  id: GetViajeFromRow(System.Object[0:,0:],System.Int32)
+  parent: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository
+  langs:
+  - csharp
+  - vb
+  name: GetViajeFromRow(object[,], int)
+  nameWithType: IViaticosRepository.GetViajeFromRow(object[,], int)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetViajeFromRow(object[,], int)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Extrae la información de un viaje desde una fila de datos de Excel.
+  example: []
+  syntax:
+    content: Viaje GetViajeFromRow(object[,] data, int r)
+    parameters:
+    - id: data
+      type: System.Object[,]
+    - id: r
+      type: System.Int32
+    return:
+      type: ConversorPDF.XLL.Core.Models.Viaje
+    content.vb: Function GetViajeFromRow(data As Object(,), r As Integer) As Viaje
+  overload: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetViajeFromRow*
+  nameWithType.vb: IViaticosRepository.GetViajeFromRow(Object(,), Integer)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetViajeFromRow(Object(,), Integer)
+  name.vb: GetViajeFromRow(Object(,), Integer)
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.ObtenerDepartamento(System.String)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.ObtenerDepartamento(System.String)
+  id: ObtenerDepartamento(System.String)
+  parent: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository
+  langs:
+  - csharp
+  - vb
+  name: ObtenerDepartamento(string)
+  nameWithType: IViaticosRepository.ObtenerDepartamento(string)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.ObtenerDepartamento(string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Busca el departamento correspondiente a una ciudad dada en la tabla de destinos.
+  example: []
+  syntax:
+    content: string ObtenerDepartamento(string ciudad)
+    parameters:
+    - id: ciudad
+      type: System.String
+    return:
+      type: System.String
+    content.vb: Function ObtenerDepartamento(ciudad As String) As String
+  overload: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.ObtenerDepartamento*
+  nameWithType.vb: IViaticosRepository.ObtenerDepartamento(String)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.ObtenerDepartamento(String)
+  name.vb: ObtenerDepartamento(String)
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.NormalizarCiudad(System.String)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.NormalizarCiudad(System.String)
+  id: NormalizarCiudad(System.String)
+  parent: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository
+  langs:
+  - csharp
+  - vb
+  name: NormalizarCiudad(string)
+  nameWithType: IViaticosRepository.NormalizarCiudad(string)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.NormalizarCiudad(string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Normaliza el nombre de una ciudad (limpieza de tildes y espacios).
+  example: []
+  syntax:
+    content: string NormalizarCiudad(string ciudad)
+    parameters:
+    - id: ciudad
+      type: System.String
+    return:
+      type: System.String
+    content.vb: Function NormalizarCiudad(ciudad As String) As String
+  overload: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.NormalizarCiudad*
+  nameWithType.vb: IViaticosRepository.NormalizarCiudad(String)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.NormalizarCiudad(String)
+  name.vb: NormalizarCiudad(String)
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.ValidarFormatoComisionado(System.Object)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.ValidarFormatoComisionado(System.Object)
+  id: ValidarFormatoComisionado(System.Object)
+  parent: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository
+  langs:
+  - csharp
+  - vb
+  name: ValidarFormatoComisionado(dynamic)
+  nameWithType: IViaticosRepository.ValidarFormatoComisionado(dynamic)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.ValidarFormatoComisionado(dynamic)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Valida si la hoja activa cumple con el formato requerido por la entidad.
+  example: []
+  syntax:
+    content: bool ValidarFormatoComisionado(dynamic sheet)
+    parameters:
+    - id: sheet
+      type: dynamic
+    return:
+      type: System.Boolean
+    content.vb: Function ValidarFormatoComisionado(sheet As Object) As Boolean
+  overload: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.ValidarFormatoComisionado*
+  nameWithType.vb: IViaticosRepository.ValidarFormatoComisionado(Object)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.ValidarFormatoComisionado(Object)
+  name.vb: ValidarFormatoComisionado(Object)
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetCdpList
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetCdpList
+  id: GetCdpList
+  parent: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository
+  langs:
+  - csharp
+  - vb
+  name: GetCdpList()
+  nameWithType: IViaticosRepository.GetCdpList()
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetCdpList()
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Obtiene la lista de CDPs disponibles desde la tabla Dependencias.
+  example: []
+  syntax:
+    content: List<string> GetCdpList()
+    return:
+      type: System.Collections.Generic.List{System.String}
+    content.vb: Function GetCdpList() As List(Of String)
+  overload: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetCdpList*
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetDependenciaCDP(System.String)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetDependenciaCDP(System.String)
+  id: GetDependenciaCDP(System.String)
+  parent: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository
+  langs:
+  - csharp
+  - vb
+  name: GetDependenciaCDP(string)
+  nameWithType: IViaticosRepository.GetDependenciaCDP(string)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetDependenciaCDP(string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Obtiene el nombre de la dependencia asociada a un CDP/Código.
+  example: []
+  syntax:
+    content: string GetDependenciaCDP(string dep)
+    parameters:
+    - id: dep
+      type: System.String
+    return:
+      type: System.String
+    content.vb: Function GetDependenciaCDP(dep As String) As String
+  overload: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetDependenciaCDP*
+  nameWithType.vb: IViaticosRepository.GetDependenciaCDP(String)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetDependenciaCDP(String)
+  name.vb: GetDependenciaCDP(String)
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetGlobalVariable(System.String)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetGlobalVariable(System.String)
+  id: GetGlobalVariable(System.String)
+  parent: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository
+  langs:
+  - csharp
+  - vb
+  name: GetGlobalVariable(string)
+  nameWithType: IViaticosRepository.GetGlobalVariable(string)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetGlobalVariable(string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Obtiene el valor de una variable global de Excel.
+  example: []
+  syntax:
+    content: string GetGlobalVariable(string varName)
+    parameters:
+    - id: varName
+      type: System.String
+    return:
+      type: System.String
+    content.vb: Function GetGlobalVariable(varName As String) As String
+  overload: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetGlobalVariable*
+  nameWithType.vb: IViaticosRepository.GetGlobalVariable(String)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetGlobalVariable(String)
+  name.vb: GetGlobalVariable(String)
+references:
+- uid: ConversorPDF.XLL.Core.Interfaces
+  commentId: N:ConversorPDF.XLL.Core.Interfaces
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Core.Interfaces
+  nameWithType: ConversorPDF.XLL.Core.Interfaces
+  fullName: ConversorPDF.XLL.Core.Interfaces
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Interfaces
+    name: Interfaces
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Interfaces
+    name: Interfaces
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.html
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetConfig*
+  commentId: Overload:ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetConfig
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.html#ConversorPDF_XLL_Core_Interfaces_IViaticosRepository_GetConfig_System_Nullable_System_DateTime__System_Nullable_System_DateTime__System_String_
+  name: GetConfig
+  nameWithType: IViaticosRepository.GetConfig
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetConfig
+- uid: System.Nullable{System.DateTime}
+  commentId: T:System.Nullable{System.DateTime}
+  parent: System
+  definition: System.Nullable`1
+  href: https://learn.microsoft.com/dotnet/api/system.datetime
+  name: DateTime?
+  nameWithType: DateTime?
+  fullName: System.DateTime?
+  nameWithType.vb: Date?
+  fullName.vb: Date?
+  name.vb: Date?
+  spec.csharp:
+  - uid: System.DateTime
+    name: DateTime
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.datetime
+  - name: '?'
+  spec.vb:
+  - uid: System.DateTime
+    name: Date
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.datetime
+  - name: '?'
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: ConversorPDF.XLL.Core.Models.ViaticosConfig
+  commentId: T:ConversorPDF.XLL.Core.Models.ViaticosConfig
+  parent: ConversorPDF.XLL.Core.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ViaticosConfig.html
+  name: ViaticosConfig
+  nameWithType: ViaticosConfig
+  fullName: ConversorPDF.XLL.Core.Models.ViaticosConfig
+- uid: System.Nullable`1
+  commentId: T:System.Nullable`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  name: Nullable<T>
+  nameWithType: Nullable<T>
+  fullName: System.Nullable<T>
+  nameWithType.vb: Nullable(Of T)
+  fullName.vb: System.Nullable(Of T)
+  name.vb: Nullable(Of T)
+  spec.csharp:
+  - uid: System.Nullable`1
+    name: Nullable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.Nullable`1
+    name: Nullable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: ConversorPDF.XLL.Core.Models
+  commentId: N:ConversorPDF.XLL.Core.Models
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Core.Models
+  nameWithType: ConversorPDF.XLL.Core.Models
+  fullName: ConversorPDF.XLL.Core.Models
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Models
+    name: Models
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Models
+    name: Models
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.html
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetEmpleado*
+  commentId: Overload:ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetEmpleado
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.html#ConversorPDF_XLL_Core_Interfaces_IViaticosRepository_GetEmpleado_System_String_
+  name: GetEmpleado
+  nameWithType: IViaticosRepository.GetEmpleado
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetEmpleado
+- uid: ConversorPDF.XLL.Core.Models.Empleado
+  commentId: T:ConversorPDF.XLL.Core.Models.Empleado
+  parent: ConversorPDF.XLL.Core.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.Empleado.html
+  name: Empleado
+  nameWithType: Empleado
+  fullName: ConversorPDF.XLL.Core.Models.Empleado
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetViajeFromRow*
+  commentId: Overload:ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetViajeFromRow
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.html#ConversorPDF_XLL_Core_Interfaces_IViaticosRepository_GetViajeFromRow_System_Object_0
+  name: GetViajeFromRow
+  nameWithType: IViaticosRepository.GetViajeFromRow
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetViajeFromRow
+- uid: System.Object[,]
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object[,]
+  nameWithType: object[,]
+  fullName: object[,]
+  nameWithType.vb: Object(,)
+  fullName.vb: Object(,)
+  name.vb: Object(,)
+  spec.csharp:
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: '['
+  - name: ','
+  - name: ']'
+  spec.vb:
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: (
+  - name: ','
+  - name: )
+- uid: System.Int32
+  commentId: T:System.Int32
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int
+  nameWithType: int
+  fullName: int
+  nameWithType.vb: Integer
+  fullName.vb: Integer
+  name.vb: Integer
+- uid: ConversorPDF.XLL.Core.Models.Viaje
+  commentId: T:ConversorPDF.XLL.Core.Models.Viaje
+  parent: ConversorPDF.XLL.Core.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.Viaje.html
+  name: Viaje
+  nameWithType: Viaje
+  fullName: ConversorPDF.XLL.Core.Models.Viaje
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.ObtenerDepartamento*
+  commentId: Overload:ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.ObtenerDepartamento
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.html#ConversorPDF_XLL_Core_Interfaces_IViaticosRepository_ObtenerDepartamento_System_String_
+  name: ObtenerDepartamento
+  nameWithType: IViaticosRepository.ObtenerDepartamento
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.ObtenerDepartamento
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.NormalizarCiudad*
+  commentId: Overload:ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.NormalizarCiudad
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.html#ConversorPDF_XLL_Core_Interfaces_IViaticosRepository_NormalizarCiudad_System_String_
+  name: NormalizarCiudad
+  nameWithType: IViaticosRepository.NormalizarCiudad
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.NormalizarCiudad
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.ValidarFormatoComisionado*
+  commentId: Overload:ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.ValidarFormatoComisionado
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.html#ConversorPDF_XLL_Core_Interfaces_IViaticosRepository_ValidarFormatoComisionado_System_Object_
+  name: ValidarFormatoComisionado
+  nameWithType: IViaticosRepository.ValidarFormatoComisionado
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.ValidarFormatoComisionado
+- uid: dynamic
+  commentId: T:System.Object
+  isExternal: true
+  name: dynamic
+  nameWithType: dynamic
+  fullName: dynamic
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: System.Boolean
+  commentId: T:System.Boolean
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.boolean
+  name: bool
+  nameWithType: bool
+  fullName: bool
+  nameWithType.vb: Boolean
+  fullName.vb: Boolean
+  name.vb: Boolean
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetCdpList*
+  commentId: Overload:ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetCdpList
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.html#ConversorPDF_XLL_Core_Interfaces_IViaticosRepository_GetCdpList
+  name: GetCdpList
+  nameWithType: IViaticosRepository.GetCdpList
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetCdpList
+- uid: System.Collections.Generic.List{System.String}
+  commentId: T:System.Collections.Generic.List{System.String}
+  parent: System.Collections.Generic
+  definition: System.Collections.Generic.List`1
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  name: List<string>
+  nameWithType: List<string>
+  fullName: System.Collections.Generic.List<string>
+  nameWithType.vb: List(Of String)
+  fullName.vb: System.Collections.Generic.List(Of String)
+  name.vb: List(Of String)
+  spec.csharp:
+  - uid: System.Collections.Generic.List`1
+    name: List
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  - name: <
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.List`1
+    name: List
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+- uid: System.Collections.Generic.List`1
+  commentId: T:System.Collections.Generic.List`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  name: List<T>
+  nameWithType: List<T>
+  fullName: System.Collections.Generic.List<T>
+  nameWithType.vb: List(Of T)
+  fullName.vb: System.Collections.Generic.List(Of T)
+  name.vb: List(Of T)
+  spec.csharp:
+  - uid: System.Collections.Generic.List`1
+    name: List
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.List`1
+    name: List
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: System.Collections.Generic
+  commentId: N:System.Collections.Generic
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System.Collections.Generic
+  nameWithType: System.Collections.Generic
+  fullName: System.Collections.Generic
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Collections
+    name: Collections
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections
+  - name: .
+  - uid: System.Collections.Generic
+    name: Generic
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Collections
+    name: Collections
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections
+  - name: .
+  - uid: System.Collections.Generic
+    name: Generic
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetDependenciaCDP*
+  commentId: Overload:ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetDependenciaCDP
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.html#ConversorPDF_XLL_Core_Interfaces_IViaticosRepository_GetDependenciaCDP_System_String_
+  name: GetDependenciaCDP
+  nameWithType: IViaticosRepository.GetDependenciaCDP
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetDependenciaCDP
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetGlobalVariable*
+  commentId: Overload:ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetGlobalVariable
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.html#ConversorPDF_XLL_Core_Interfaces_IViaticosRepository_GetGlobalVariable_System_String_
+  name: GetGlobalVariable
+  nameWithType: IViaticosRepository.GetGlobalVariable
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.GetGlobalVariable

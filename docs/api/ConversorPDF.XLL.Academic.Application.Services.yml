@@ -1,0 +1,40 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Academic.Application.Services
+  commentId: N:ConversorPDF.XLL.Academic.Application.Services
+  id: ConversorPDF.XLL.Academic.Application.Services
+  children:
+  - ConversorPDF.XLL.Academic.Application.Services.AcademicDateSyncService
+  - ConversorPDF.XLL.Academic.Application.Services.GeneradorSesionesRecurrentes
+  - ConversorPDF.XLL.Academic.Application.Services.VinculacionListService
+  langs:
+  - csharp
+  - vb
+  name: ConversorPDF.XLL.Academic.Application.Services
+  nameWithType: ConversorPDF.XLL.Academic.Application.Services
+  fullName: ConversorPDF.XLL.Academic.Application.Services
+  type: Namespace
+  assemblies:
+  - ConversorPDF.XLL
+references:
+- uid: ConversorPDF.XLL.Academic.Application.Services.GeneradorSesionesRecurrentes
+  commentId: T:ConversorPDF.XLL.Academic.Application.Services.GeneradorSesionesRecurrentes
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Application.Services.GeneradorSesionesRecurrentes.html
+  name: GeneradorSesionesRecurrentes
+  nameWithType: GeneradorSesionesRecurrentes
+  fullName: ConversorPDF.XLL.Academic.Application.Services.GeneradorSesionesRecurrentes
+- uid: ConversorPDF.XLL.Academic.Application.Services.VinculacionListService
+  commentId: T:ConversorPDF.XLL.Academic.Application.Services.VinculacionListService
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Application.Services.VinculacionListService.html
+  name: VinculacionListService
+  nameWithType: VinculacionListService
+  fullName: ConversorPDF.XLL.Academic.Application.Services.VinculacionListService
+- uid: ConversorPDF.XLL.Academic.Application.Services.AcademicDateSyncService
+  commentId: T:ConversorPDF.XLL.Academic.Application.Services.AcademicDateSyncService
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Application.Services.AcademicDateSyncService.html
+  name: AcademicDateSyncService
+  nameWithType: AcademicDateSyncService
+  fullName: ConversorPDF.XLL.Academic.Application.Services.AcademicDateSyncService

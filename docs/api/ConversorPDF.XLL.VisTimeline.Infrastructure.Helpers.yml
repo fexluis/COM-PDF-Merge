@@ -1,0 +1,24 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.VisTimeline.Infrastructure.Helpers
+  commentId: N:ConversorPDF.XLL.VisTimeline.Infrastructure.Helpers
+  id: ConversorPDF.XLL.VisTimeline.Infrastructure.Helpers
+  children:
+  - ConversorPDF.XLL.VisTimeline.Infrastructure.Helpers.ResourceExtractor
+  langs:
+  - csharp
+  - vb
+  name: ConversorPDF.XLL.VisTimeline.Infrastructure.Helpers
+  nameWithType: ConversorPDF.XLL.VisTimeline.Infrastructure.Helpers
+  fullName: ConversorPDF.XLL.VisTimeline.Infrastructure.Helpers
+  type: Namespace
+  assemblies:
+  - ConversorPDF.XLL
+references:
+- uid: ConversorPDF.XLL.VisTimeline.Infrastructure.Helpers.ResourceExtractor
+  commentId: T:ConversorPDF.XLL.VisTimeline.Infrastructure.Helpers.ResourceExtractor
+  isExternal: true
+  href: ConversorPDF.XLL.VisTimeline.Infrastructure.Helpers.ResourceExtractor.html
+  name: ResourceExtractor
+  nameWithType: ResourceExtractor
+  fullName: ConversorPDF.XLL.VisTimeline.Infrastructure.Helpers.ResourceExtractor

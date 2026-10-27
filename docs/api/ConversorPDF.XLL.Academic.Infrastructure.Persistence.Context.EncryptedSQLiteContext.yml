@@ -1,0 +1,1068 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext
+  commentId: T:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext
+  id: EncryptedSQLiteContext
+  parent: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context
+  children:
+  - ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.#ctor(System.String,System.Security.SecureString)
+  - ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.CloseConnectionResiliently(System.Boolean)
+  - ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.Dispose
+  - ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.EncryptedFilePath
+  - ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.LeerBytesConRetryStatic(System.String,System.IProgress{System.String},System.Threading.CancellationToken)
+  - ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.LeerBytesConRetrySync(System.String,System.IProgress{System.String})
+  - ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.MarkAsReadOnly
+  - ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.MarkChangesPersisted
+  - ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.Open
+  - ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.ReEncryptAndPersist(System.Byte[],System.IProgress{System.String})
+  - ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.ReEncryptAndPersistStatic(System.Byte[],System.String,System.Security.SecureString,System.IProgress{System.String})
+  - ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.TempDbPath
+  langs:
+  - csharp
+  - vb
+  name: EncryptedSQLiteContext
+  nameWithType: EncryptedSQLiteContext
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext
+  type: Class
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context
+  summary: 'NIVEL 2: Contexto de ciclo de vida para la base de datos SQLite encriptada (Vault Pattern).'
+  example: []
+  syntax:
+    content: 'public sealed class EncryptedSQLiteContext : IDisposable'
+    content.vb: Public NotInheritable Class EncryptedSQLiteContext Implements IDisposable
+  inheritance:
+  - System.Object
+  implements:
+  - System.IDisposable
+  inheritedMembers:
+  - System.Object.ToString
+  - System.Object.Equals(System.Object)
+  - System.Object.Equals(System.Object,System.Object)
+  - System.Object.ReferenceEquals(System.Object,System.Object)
+  - System.Object.GetHashCode
+  - System.Object.GetType
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.#ctor(System.String,System.Security.SecureString)
+  commentId: M:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.#ctor(System.String,System.Security.SecureString)
+  id: '#ctor(System.String,System.Security.SecureString)'
+  parent: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext
+  langs:
+  - csharp
+  - vb
+  name: EncryptedSQLiteContext(string, SecureString)
+  nameWithType: EncryptedSQLiteContext.EncryptedSQLiteContext(string, SecureString)
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.EncryptedSQLiteContext(string, System.Security.SecureString)
+  type: Constructor
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context
+  syntax:
+    content: public EncryptedSQLiteContext(string encPath, SecureString password)
+    parameters:
+    - id: encPath
+      type: System.String
+    - id: password
+      type: System.Security.SecureString
+    content.vb: Public Sub New(encPath As String, password As SecureString)
+  overload: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.#ctor*
+  nameWithType.vb: EncryptedSQLiteContext.New(String, SecureString)
+  fullName.vb: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.New(String, System.Security.SecureString)
+  name.vb: New(String, SecureString)
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.Open
+  commentId: M:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.Open
+  id: Open
+  parent: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext
+  langs:
+  - csharp
+  - vb
+  name: Open()
+  nameWithType: EncryptedSQLiteContext.Open()
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.Open()
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context
+  summary: Desencripta la base de datos y retorna una conexión SQLite abierta.
+  example: []
+  syntax:
+    content: public SQLiteConnection Open()
+    return:
+      type: System.Data.SQLite.SQLiteConnection
+    content.vb: Public Function Open() As SQLiteConnection
+  overload: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.Open*
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.MarkChangesPersisted
+  commentId: M:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.MarkChangesPersisted
+  id: MarkChangesPersisted
+  parent: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext
+  langs:
+  - csharp
+  - vb
+  name: MarkChangesPersisted()
+  nameWithType: EncryptedSQLiteContext.MarkChangesPersisted()
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.MarkChangesPersisted()
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context
+  summary: >-
+    Marca el contexto como persistido exitosamente en el Vault maestro.
+
+    Evita la advertencia de prdida de datos durante el Dispose.
+  example: []
+  syntax:
+    content: public void MarkChangesPersisted()
+    content.vb: Public Sub MarkChangesPersisted()
+  overload: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.MarkChangesPersisted*
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.MarkAsReadOnly
+  commentId: M:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.MarkAsReadOnly
+  id: MarkAsReadOnly
+  parent: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext
+  langs:
+  - csharp
+  - vb
+  name: MarkAsReadOnly()
+  nameWithType: EncryptedSQLiteContext.MarkAsReadOnly()
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.MarkAsReadOnly()
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context
+  summary: Marca el contexto como de solo lectura, suprimiendo la advertencia de pérdida de datos.
+  example: []
+  syntax:
+    content: public void MarkAsReadOnly()
+    content.vb: Public Sub MarkAsReadOnly()
+  overload: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.MarkAsReadOnly*
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.Dispose
+  commentId: M:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.Dispose
+  id: Dispose
+  parent: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext
+  langs:
+  - csharp
+  - vb
+  name: Dispose()
+  nameWithType: EncryptedSQLiteContext.Dispose()
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.Dispose()
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context
+  example: []
+  syntax:
+    content: public void Dispose()
+    content.vb: Public Sub Dispose()
+  overload: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.Dispose*
+  implements:
+  - System.IDisposable.Dispose
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.CloseConnectionResiliently(System.Boolean)
+  commentId: M:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.CloseConnectionResiliently(System.Boolean)
+  id: CloseConnectionResiliently(System.Boolean)
+  parent: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext
+  langs:
+  - csharp
+  - vb
+  name: CloseConnectionResiliently(bool)
+  nameWithType: EncryptedSQLiteContext.CloseConnectionResiliently(bool)
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.CloseConnectionResiliently(bool)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context
+  syntax:
+    content: public void CloseConnectionResiliently(bool isFinalShutdown = false)
+    parameters:
+    - id: isFinalShutdown
+      type: System.Boolean
+    content.vb: Public Sub CloseConnectionResiliently(isFinalShutdown As Boolean = False)
+  overload: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.CloseConnectionResiliently*
+  nameWithType.vb: EncryptedSQLiteContext.CloseConnectionResiliently(Boolean)
+  fullName.vb: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.CloseConnectionResiliently(Boolean)
+  name.vb: CloseConnectionResiliently(Boolean)
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.ReEncryptAndPersist(System.Byte[],System.IProgress{System.String})
+  commentId: M:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.ReEncryptAndPersist(System.Byte[],System.IProgress{System.String})
+  id: ReEncryptAndPersist(System.Byte[],System.IProgress{System.String})
+  parent: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext
+  langs:
+  - csharp
+  - vb
+  name: ReEncryptAndPersist(byte[], IProgress<string>)
+  nameWithType: EncryptedSQLiteContext.ReEncryptAndPersist(byte[], IProgress<string>)
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.ReEncryptAndPersist(byte[], System.IProgress<string>)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context
+  summary: >-
+    Sobrecarga que recibe los bytes desencriptados en memoria RAM. Evita leer del disco para 
+
+    omitir race conditions, guardando directamente al Vault maestro.
+  example: []
+  syntax:
+    content: public void ReEncryptAndPersist(byte[] plainDatabaseBytes, IProgress<string> progress = null)
+    parameters:
+    - id: plainDatabaseBytes
+      type: System.Byte[]
+    - id: progress
+      type: System.IProgress{System.String}
+    content.vb: Public Sub ReEncryptAndPersist(plainDatabaseBytes As Byte(), progress As IProgress(Of String) = Nothing)
+  overload: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.ReEncryptAndPersist*
+  nameWithType.vb: EncryptedSQLiteContext.ReEncryptAndPersist(Byte(), IProgress(Of String))
+  fullName.vb: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.ReEncryptAndPersist(Byte(), System.IProgress(Of String))
+  name.vb: ReEncryptAndPersist(Byte(), IProgress(Of String))
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.ReEncryptAndPersistStatic(System.Byte[],System.String,System.Security.SecureString,System.IProgress{System.String})
+  commentId: M:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.ReEncryptAndPersistStatic(System.Byte[],System.String,System.Security.SecureString,System.IProgress{System.String})
+  id: ReEncryptAndPersistStatic(System.Byte[],System.String,System.Security.SecureString,System.IProgress{System.String})
+  parent: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext
+  langs:
+  - csharp
+  - vb
+  name: ReEncryptAndPersistStatic(byte[], string, SecureString, IProgress<string>)
+  nameWithType: EncryptedSQLiteContext.ReEncryptAndPersistStatic(byte[], string, SecureString, IProgress<string>)
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.ReEncryptAndPersistStatic(byte[], string, System.Security.SecureString, System.IProgress<string>)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context
+  summary: Versión estática para re-encriptar sin necesidad de instanciar un contexto Dummy.
+  example: []
+  syntax:
+    content: public static void ReEncryptAndPersistStatic(byte[] plainDatabaseBytes, string vaultPath, SecureString password, IProgress<string> progress = null)
+    parameters:
+    - id: plainDatabaseBytes
+      type: System.Byte[]
+    - id: vaultPath
+      type: System.String
+    - id: password
+      type: System.Security.SecureString
+    - id: progress
+      type: System.IProgress{System.String}
+    content.vb: Public Shared Sub ReEncryptAndPersistStatic(plainDatabaseBytes As Byte(), vaultPath As String, password As SecureString, progress As IProgress(Of String) = Nothing)
+  overload: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.ReEncryptAndPersistStatic*
+  nameWithType.vb: EncryptedSQLiteContext.ReEncryptAndPersistStatic(Byte(), String, SecureString, IProgress(Of String))
+  fullName.vb: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.ReEncryptAndPersistStatic(Byte(), String, System.Security.SecureString, System.IProgress(Of String))
+  name.vb: ReEncryptAndPersistStatic(Byte(), String, SecureString, IProgress(Of String))
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.LeerBytesConRetryStatic(System.String,System.IProgress{System.String},System.Threading.CancellationToken)
+  commentId: M:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.LeerBytesConRetryStatic(System.String,System.IProgress{System.String},System.Threading.CancellationToken)
+  id: LeerBytesConRetryStatic(System.String,System.IProgress{System.String},System.Threading.CancellationToken)
+  parent: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext
+  langs:
+  - csharp
+  - vb
+  name: LeerBytesConRetryStatic(string, IProgress<string>, CancellationToken)
+  nameWithType: EncryptedSQLiteContext.LeerBytesConRetryStatic(string, IProgress<string>, CancellationToken)
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.LeerBytesConRetryStatic(string, System.IProgress<string>, System.Threading.CancellationToken)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context
+  summary: >-
+    Lee los bytes de un archivo temporal con esquema de reintento exponencial (Backoff).
+
+    Útil en entornos background donde antivirus o indexadores pueden bloquear transitoriamente el archivo.
+  example: []
+  syntax:
+    content: public static Task<byte[]> LeerBytesConRetryStatic(string tempPath, IProgress<string> progress = null, CancellationToken ct = default)
+    parameters:
+    - id: tempPath
+      type: System.String
+    - id: progress
+      type: System.IProgress{System.String}
+    - id: ct
+      type: System.Threading.CancellationToken
+    return:
+      type: System.Threading.Tasks.Task{System.Byte[]}
+    content.vb: Public Shared Function LeerBytesConRetryStatic(tempPath As String, progress As IProgress(Of String) = Nothing, ct As CancellationToken = Nothing) As Task(Of Byte())
+  overload: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.LeerBytesConRetryStatic*
+  nameWithType.vb: EncryptedSQLiteContext.LeerBytesConRetryStatic(String, IProgress(Of String), CancellationToken)
+  fullName.vb: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.LeerBytesConRetryStatic(String, System.IProgress(Of String), System.Threading.CancellationToken)
+  name.vb: LeerBytesConRetryStatic(String, IProgress(Of String), CancellationToken)
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.LeerBytesConRetrySync(System.String,System.IProgress{System.String})
+  commentId: M:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.LeerBytesConRetrySync(System.String,System.IProgress{System.String})
+  id: LeerBytesConRetrySync(System.String,System.IProgress{System.String})
+  parent: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext
+  langs:
+  - csharp
+  - vb
+  name: LeerBytesConRetrySync(string, IProgress<string>)
+  nameWithType: EncryptedSQLiteContext.LeerBytesConRetrySync(string, IProgress<string>)
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.LeerBytesConRetrySync(string, System.IProgress<string>)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context
+  summary: Versión síncrona de LeerBytesConRetry para contextos donde el async/await no es viable (legacy initialization).
+  example: []
+  syntax:
+    content: public static byte[] LeerBytesConRetrySync(string tempPath, IProgress<string> progress = null)
+    parameters:
+    - id: tempPath
+      type: System.String
+    - id: progress
+      type: System.IProgress{System.String}
+    return:
+      type: System.Byte[]
+    content.vb: Public Shared Function LeerBytesConRetrySync(tempPath As String, progress As IProgress(Of String) = Nothing) As Byte()
+  overload: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.LeerBytesConRetrySync*
+  nameWithType.vb: EncryptedSQLiteContext.LeerBytesConRetrySync(String, IProgress(Of String))
+  fullName.vb: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.LeerBytesConRetrySync(String, System.IProgress(Of String))
+  name.vb: LeerBytesConRetrySync(String, IProgress(Of String))
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.TempDbPath
+  commentId: P:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.TempDbPath
+  id: TempDbPath
+  parent: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext
+  langs:
+  - csharp
+  - vb
+  name: TempDbPath
+  nameWithType: EncryptedSQLiteContext.TempDbPath
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.TempDbPath
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context
+  syntax:
+    content: public string TempDbPath { get; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public ReadOnly Property TempDbPath As String
+  overload: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.TempDbPath*
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.EncryptedFilePath
+  commentId: P:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.EncryptedFilePath
+  id: EncryptedFilePath
+  parent: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext
+  langs:
+  - csharp
+  - vb
+  name: EncryptedFilePath
+  nameWithType: EncryptedSQLiteContext.EncryptedFilePath
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.EncryptedFilePath
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context
+  syntax:
+    content: public string EncryptedFilePath { get; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public ReadOnly Property EncryptedFilePath As String
+  overload: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.EncryptedFilePath*
+references:
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context
+  commentId: N:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context
+  nameWithType: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic
+    name: Academic
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Infrastructure
+    name: Infrastructure
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Infrastructure.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence
+    name: Persistence
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context
+    name: Context
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic
+    name: Academic
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Infrastructure
+    name: Infrastructure
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Infrastructure.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence
+    name: Persistence
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context
+    name: Context
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.html
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+  nameWithType: object
+  fullName: object
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: System.IDisposable
+  commentId: T:System.IDisposable
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.idisposable
+  name: IDisposable
+  nameWithType: IDisposable
+  fullName: System.IDisposable
+- uid: System.Object.ToString
+  commentId: M:System.Object.ToString
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  name: ToString()
+  nameWithType: object.ToString()
+  fullName: object.ToString()
+  nameWithType.vb: Object.ToString()
+  fullName.vb: Object.ToString()
+  spec.csharp:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+- uid: System.Object.Equals(System.Object)
+  commentId: M:System.Object.Equals(System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  name: Equals(object)
+  nameWithType: object.Equals(object)
+  fullName: object.Equals(object)
+  nameWithType.vb: Object.Equals(Object)
+  fullName.vb: Object.Equals(Object)
+  name.vb: Equals(Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.Equals(System.Object,System.Object)
+  commentId: M:System.Object.Equals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  name: Equals(object, object)
+  nameWithType: object.Equals(object, object)
+  fullName: object.Equals(object, object)
+  nameWithType.vb: Object.Equals(Object, Object)
+  fullName.vb: Object.Equals(Object, Object)
+  name.vb: Equals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.ReferenceEquals(System.Object,System.Object)
+  commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  name: ReferenceEquals(object, object)
+  nameWithType: object.ReferenceEquals(object, object)
+  fullName: object.ReferenceEquals(object, object)
+  nameWithType.vb: Object.ReferenceEquals(Object, Object)
+  fullName.vb: Object.ReferenceEquals(Object, Object)
+  name.vb: ReferenceEquals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.GetHashCode
+  commentId: M:System.Object.GetHashCode
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  name: GetHashCode()
+  nameWithType: object.GetHashCode()
+  fullName: object.GetHashCode()
+  nameWithType.vb: Object.GetHashCode()
+  fullName.vb: Object.GetHashCode()
+  spec.csharp:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+- uid: System.Object.GetType
+  commentId: M:System.Object.GetType
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  name: GetType()
+  nameWithType: object.GetType()
+  fullName: object.GetType()
+  nameWithType.vb: Object.GetType()
+  fullName.vb: Object.GetType()
+  spec.csharp:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.#ctor*
+  commentId: Overload:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.#ctor
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.html#ConversorPDF_XLL_Academic_Infrastructure_Persistence_Context_EncryptedSQLiteContext__ctor_System_String_System_Security_SecureString_
+  name: EncryptedSQLiteContext
+  nameWithType: EncryptedSQLiteContext.EncryptedSQLiteContext
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.EncryptedSQLiteContext
+  nameWithType.vb: EncryptedSQLiteContext.New
+  fullName.vb: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.New
+  name.vb: New
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: System.Security.SecureString
+  commentId: T:System.Security.SecureString
+  parent: System.Security
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.security.securestring
+  name: SecureString
+  nameWithType: SecureString
+  fullName: System.Security.SecureString
+- uid: System.Security
+  commentId: N:System.Security
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System.Security
+  nameWithType: System.Security
+  fullName: System.Security
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Security
+    name: Security
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.security
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Security
+    name: Security
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.security
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.Open*
+  commentId: Overload:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.Open
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.html#ConversorPDF_XLL_Academic_Infrastructure_Persistence_Context_EncryptedSQLiteContext_Open
+  name: Open
+  nameWithType: EncryptedSQLiteContext.Open
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.Open
+- uid: System.Data.SQLite.SQLiteConnection
+  commentId: T:System.Data.SQLite.SQLiteConnection
+  parent: System.Data.SQLite
+  isExternal: true
+  name: SQLiteConnection
+  nameWithType: SQLiteConnection
+  fullName: System.Data.SQLite.SQLiteConnection
+- uid: System.Data.SQLite
+  commentId: N:System.Data.SQLite
+  isExternal: true
+  name: System.Data.SQLite
+  nameWithType: System.Data.SQLite
+  fullName: System.Data.SQLite
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+  - name: .
+  - uid: System.Data
+    name: Data
+    isExternal: true
+  - name: .
+  - uid: System.Data.SQLite
+    name: SQLite
+    isExternal: true
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+  - name: .
+  - uid: System.Data
+    name: Data
+    isExternal: true
+  - name: .
+  - uid: System.Data.SQLite
+    name: SQLite
+    isExternal: true
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.MarkChangesPersisted*
+  commentId: Overload:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.MarkChangesPersisted
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.html#ConversorPDF_XLL_Academic_Infrastructure_Persistence_Context_EncryptedSQLiteContext_MarkChangesPersisted
+  name: MarkChangesPersisted
+  nameWithType: EncryptedSQLiteContext.MarkChangesPersisted
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.MarkChangesPersisted
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.MarkAsReadOnly*
+  commentId: Overload:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.MarkAsReadOnly
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.html#ConversorPDF_XLL_Academic_Infrastructure_Persistence_Context_EncryptedSQLiteContext_MarkAsReadOnly
+  name: MarkAsReadOnly
+  nameWithType: EncryptedSQLiteContext.MarkAsReadOnly
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.MarkAsReadOnly
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.Dispose*
+  commentId: Overload:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.Dispose
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.html#ConversorPDF_XLL_Academic_Infrastructure_Persistence_Context_EncryptedSQLiteContext_Dispose
+  name: Dispose
+  nameWithType: EncryptedSQLiteContext.Dispose
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.Dispose
+- uid: System.IDisposable.Dispose
+  commentId: M:System.IDisposable.Dispose
+  parent: System.IDisposable
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.idisposable.dispose
+  name: Dispose()
+  nameWithType: IDisposable.Dispose()
+  fullName: System.IDisposable.Dispose()
+  spec.csharp:
+  - uid: System.IDisposable.Dispose
+    name: Dispose
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.idisposable.dispose
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.IDisposable.Dispose
+    name: Dispose
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.idisposable.dispose
+  - name: (
+  - name: )
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.CloseConnectionResiliently*
+  commentId: Overload:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.CloseConnectionResiliently
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.html#ConversorPDF_XLL_Academic_Infrastructure_Persistence_Context_EncryptedSQLiteContext_CloseConnectionResiliently_System_Boolean_
+  name: CloseConnectionResiliently
+  nameWithType: EncryptedSQLiteContext.CloseConnectionResiliently
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.CloseConnectionResiliently
+- uid: System.Boolean
+  commentId: T:System.Boolean
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.boolean
+  name: bool
+  nameWithType: bool
+  fullName: bool
+  nameWithType.vb: Boolean
+  fullName.vb: Boolean
+  name.vb: Boolean
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.ReEncryptAndPersist*
+  commentId: Overload:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.ReEncryptAndPersist
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.html#ConversorPDF_XLL_Academic_Infrastructure_Persistence_Context_EncryptedSQLiteContext_ReEncryptAndPersist_System_Byte___System_IProgress_System_String__
+  name: ReEncryptAndPersist
+  nameWithType: EncryptedSQLiteContext.ReEncryptAndPersist
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.ReEncryptAndPersist
+- uid: System.Byte[]
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.byte
+  name: byte[]
+  nameWithType: byte[]
+  fullName: byte[]
+  nameWithType.vb: Byte()
+  fullName.vb: Byte()
+  name.vb: Byte()
+  spec.csharp:
+  - uid: System.Byte
+    name: byte
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.byte
+  - name: '['
+  - name: ']'
+  spec.vb:
+  - uid: System.Byte
+    name: Byte
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.byte
+  - name: (
+  - name: )
+- uid: System.IProgress{System.String}
+  commentId: T:System.IProgress{System.String}
+  parent: System
+  definition: System.IProgress`1
+  href: https://learn.microsoft.com/dotnet/api/system.iprogress-1
+  name: IProgress<string>
+  nameWithType: IProgress<string>
+  fullName: System.IProgress<string>
+  nameWithType.vb: IProgress(Of String)
+  fullName.vb: System.IProgress(Of String)
+  name.vb: IProgress(Of String)
+  spec.csharp:
+  - uid: System.IProgress`1
+    name: IProgress
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iprogress-1
+  - name: <
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: '>'
+  spec.vb:
+  - uid: System.IProgress`1
+    name: IProgress
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iprogress-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+- uid: System.IProgress`1
+  commentId: T:System.IProgress`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.iprogress-1
+  name: IProgress<T>
+  nameWithType: IProgress<T>
+  fullName: System.IProgress<T>
+  nameWithType.vb: IProgress(Of T)
+  fullName.vb: System.IProgress(Of T)
+  name.vb: IProgress(Of T)
+  spec.csharp:
+  - uid: System.IProgress`1
+    name: IProgress
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iprogress-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.IProgress`1
+    name: IProgress
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iprogress-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.ReEncryptAndPersistStatic*
+  commentId: Overload:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.ReEncryptAndPersistStatic
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.html#ConversorPDF_XLL_Academic_Infrastructure_Persistence_Context_EncryptedSQLiteContext_ReEncryptAndPersistStatic_System_Byte___System_String_System_Security_SecureString_System_IProgress_System_String__
+  name: ReEncryptAndPersistStatic
+  nameWithType: EncryptedSQLiteContext.ReEncryptAndPersistStatic
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.ReEncryptAndPersistStatic
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.LeerBytesConRetryStatic*
+  commentId: Overload:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.LeerBytesConRetryStatic
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.html#ConversorPDF_XLL_Academic_Infrastructure_Persistence_Context_EncryptedSQLiteContext_LeerBytesConRetryStatic_System_String_System_IProgress_System_String__System_Threading_CancellationToken_
+  name: LeerBytesConRetryStatic
+  nameWithType: EncryptedSQLiteContext.LeerBytesConRetryStatic
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.LeerBytesConRetryStatic
+- uid: System.Threading.CancellationToken
+  commentId: T:System.Threading.CancellationToken
+  parent: System.Threading
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken
+  name: CancellationToken
+  nameWithType: CancellationToken
+  fullName: System.Threading.CancellationToken
+- uid: System.Threading.Tasks.Task{System.Byte[]}
+  commentId: T:System.Threading.Tasks.Task{System.Byte[]}
+  parent: System.Threading.Tasks
+  definition: System.Threading.Tasks.Task`1
+  href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  name: Task<byte[]>
+  nameWithType: Task<byte[]>
+  fullName: System.Threading.Tasks.Task<byte[]>
+  nameWithType.vb: Task(Of Byte())
+  fullName.vb: System.Threading.Tasks.Task(Of Byte())
+  name.vb: Task(Of Byte())
+  spec.csharp:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: <
+  - uid: System.Byte
+    name: byte
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.byte
+  - name: '['
+  - name: ']'
+  - name: '>'
+  spec.vb:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Byte
+    name: Byte
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.byte
+  - name: (
+  - name: )
+  - name: )
+- uid: System.Threading
+  commentId: N:System.Threading
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System.Threading
+  nameWithType: System.Threading
+  fullName: System.Threading
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Threading
+    name: Threading
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Threading
+    name: Threading
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading
+- uid: System.Threading.Tasks.Task`1
+  commentId: T:System.Threading.Tasks.Task`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  name: Task<TResult>
+  nameWithType: Task<TResult>
+  fullName: System.Threading.Tasks.Task<TResult>
+  nameWithType.vb: Task(Of TResult)
+  fullName.vb: System.Threading.Tasks.Task(Of TResult)
+  name.vb: Task(Of TResult)
+  spec.csharp:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: <
+  - name: TResult
+  - name: '>'
+  spec.vb:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: TResult
+  - name: )
+- uid: System.Threading.Tasks
+  commentId: N:System.Threading.Tasks
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System.Threading.Tasks
+  nameWithType: System.Threading.Tasks
+  fullName: System.Threading.Tasks
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Threading
+    name: Threading
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading
+  - name: .
+  - uid: System.Threading.Tasks
+    name: Tasks
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Threading
+    name: Threading
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading
+  - name: .
+  - uid: System.Threading.Tasks
+    name: Tasks
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.LeerBytesConRetrySync*
+  commentId: Overload:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.LeerBytesConRetrySync
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.html#ConversorPDF_XLL_Academic_Infrastructure_Persistence_Context_EncryptedSQLiteContext_LeerBytesConRetrySync_System_String_System_IProgress_System_String__
+  name: LeerBytesConRetrySync
+  nameWithType: EncryptedSQLiteContext.LeerBytesConRetrySync
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.LeerBytesConRetrySync
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.TempDbPath*
+  commentId: Overload:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.TempDbPath
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.html#ConversorPDF_XLL_Academic_Infrastructure_Persistence_Context_EncryptedSQLiteContext_TempDbPath
+  name: TempDbPath
+  nameWithType: EncryptedSQLiteContext.TempDbPath
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.TempDbPath
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.EncryptedFilePath*
+  commentId: Overload:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.EncryptedFilePath
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.html#ConversorPDF_XLL_Academic_Infrastructure_Persistence_Context_EncryptedSQLiteContext_EncryptedFilePath
+  name: EncryptedFilePath
+  nameWithType: EncryptedSQLiteContext.EncryptedFilePath
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.EncryptedFilePath

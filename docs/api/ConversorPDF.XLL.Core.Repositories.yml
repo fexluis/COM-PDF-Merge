@@ -1,0 +1,32 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Core.Repositories
+  commentId: N:ConversorPDF.XLL.Core.Repositories
+  id: ConversorPDF.XLL.Core.Repositories
+  children:
+  - ConversorPDF.XLL.Core.Repositories.ExcelRepository
+  - ConversorPDF.XLL.Core.Repositories.ViaticosRepository
+  langs:
+  - csharp
+  - vb
+  name: ConversorPDF.XLL.Core.Repositories
+  nameWithType: ConversorPDF.XLL.Core.Repositories
+  fullName: ConversorPDF.XLL.Core.Repositories
+  type: Namespace
+  assemblies:
+  - ConversorPDF.XLL
+references:
+- uid: ConversorPDF.XLL.Core.Repositories.ExcelRepository
+  commentId: T:ConversorPDF.XLL.Core.Repositories.ExcelRepository
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Repositories.ExcelRepository.html
+  name: ExcelRepository
+  nameWithType: ExcelRepository
+  fullName: ConversorPDF.XLL.Core.Repositories.ExcelRepository
+- uid: ConversorPDF.XLL.Core.Repositories.ViaticosRepository
+  commentId: T:ConversorPDF.XLL.Core.Repositories.ViaticosRepository
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Repositories.ViaticosRepository.html
+  name: ViaticosRepository
+  nameWithType: ViaticosRepository
+  fullName: ConversorPDF.XLL.Core.Repositories.ViaticosRepository

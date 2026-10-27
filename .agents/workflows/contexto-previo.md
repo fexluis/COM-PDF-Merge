@@ -76,7 +76,11 @@ foreach ($f in $sourceFiles) {
 # ============================================================
 
 "@
-        $header + (Get-Content $f.FullName -Raw) | Set-Content $destino -Encoding UTF8
+        $utf8 = New-Object System.Text.UTF8Encoding($true)
+        [System.IO.File]::WriteAllText(
+            $destino,
+            $header + [System.IO.File]::ReadAllText($f.FullName, [System.Text.Encoding]::UTF8),
+            $utf8)
         Write-Host "Sincronizado Fuente: $($f.Name) --> $destino"
     }
 }
@@ -112,7 +116,11 @@ if ($activeConv) {
 # ============================================================
 
 "@
-            $header + (Get-Content $fullPath -Raw) | Set-Content $destino -Encoding UTF8
+            $utf8 = New-Object System.Text.UTF8Encoding($true)
+            [System.IO.File]::WriteAllText(
+                $destino,
+                $header + [System.IO.File]::ReadAllText($fullPath, [System.Text.Encoding]::UTF8),
+                $utf8)
             Write-Host "Sincronizada Doc: $docName --> $destino"
         }
     }

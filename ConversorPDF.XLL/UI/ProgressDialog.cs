@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
+using System.Runtime.InteropServices;
 
 namespace ConversorPDF.XLL.UI
 {
@@ -14,6 +15,10 @@ namespace ConversorPDF.XLL.UI
         private Label lblMessage;
         private ProgressBar pgbProgress;
         private Panel pnlBackground;
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = false)]
+        private static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+        private const uint PBM_SETBARCOLOR = 0x0409;
 
         public IProgress<string> Progress { get; }
 
@@ -57,6 +62,10 @@ namespace ConversorPDF.XLL.UI
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.StartPosition = FormStartPosition.CenterParent;
             this.ShowInTaskbar = false;
+
+            // Forzar color azul en la barra (ESAP Blue: 0, 120, 212)
+            int blueColor = ColorTranslator.ToWin32(Color.FromArgb(0, 120, 212));
+            SendMessage(this.pgbProgress.Handle, PBM_SETBARCOLOR, IntPtr.Zero, (IntPtr)blueColor);
 
             this.Controls.Add(this.pnlBackground);
             this.pnlBackground.Controls.Add(this.pgbProgress);

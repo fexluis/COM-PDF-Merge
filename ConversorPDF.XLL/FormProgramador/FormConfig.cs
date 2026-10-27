@@ -64,21 +64,20 @@ namespace ConversorPDF.XLL.FormProgramador
             {
                 object[,] data = _viaticosService.GetAdvancedConfigRows();
                 if (data != null && data.GetLength(0) >= 13)
-
                 {
-                    txtSalario.Text = data[1, 1]?.ToString() ?? "";
-                    txtViaticoA.Text = data[2, 1]?.ToString() ?? "";
-                    txtViaticoB.Text = data[3, 1]?.ToString() ?? "";
-                    txtPorcA.Text = data[4, 1]?.ToString() ?? "";
-                    txtPorcB.Text = data[5, 1]?.ToString() ?? "";
-                    txtNombreDT.Text = data[6, 1]?.ToString() ?? "";
-                    txtCargoDT.Text = data[7, 1]?.ToString() ?? "";
-                    txtCedulaGerente.Text = data[8, 1]?.ToString() ?? "";
-                    txtGerenteSustituto.Text = data[9, 1]?.ToString() ?? "";
-                    txtCargoSustituto.Text = data[10, 1]?.ToString() ?? "";
-                    txtDeptoBase.Text = data[11, 1]?.ToString() ?? "";
-                    txtCiudadBase.Text = data[12, 1]?.ToString() ?? "";
-                    txtAeropuertoBase.Text = data[13, 1]?.ToString() ?? "";
+                    txtSalario.Text       = data[0, 0]?.ToString() ?? "";
+                    txtViaticoA.Text      = data[1, 0]?.ToString() ?? "";
+                    txtViaticoB.Text      = data[2, 0]?.ToString() ?? "";
+                    txtPorcA.Text         = data[3, 0]?.ToString() ?? "";
+                    txtPorcB.Text         = data[4, 0]?.ToString() ?? "";
+                    txtNombreDT.Text      = data[5, 0]?.ToString() ?? "";
+                    txtCargoDT.Text       = data[6, 0]?.ToString() ?? "";
+                    txtCedulaGerente.Text = data[7, 0]?.ToString() ?? "";
+                    txtGerenteSustituto.Text = data[8, 0]?.ToString() ?? "";
+                    txtCargoSustituto.Text   = data[9, 0]?.ToString() ?? "";
+                    txtDeptoBase.Text     = data[10, 0]?.ToString() ?? "";
+                    txtCiudadBase.Text    = data[11, 0]?.ToString() ?? "";
+                    txtAeropuertoBase.Text = data[12, 0]?.ToString() ?? "";
                 }
             }
             catch (Exception ex)

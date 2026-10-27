@@ -35,3 +35,19 @@ scratch/
 
 ## graphify (desinstalado - no versionar artefactos del grafo)
 /graphify-out/
+
+## Instaladores y salidas WiX (se regeneran con scripts/build_installer.ps1)
+installer/*.msi
+installer/*.wixpdb
+installer/*.cab
+installer/.cache/
+
+## Artefactos sueltos en la raiz (no son fuente)
+/*.dll
+/*.exe
+/*.xlsx
+/test_*.txt
+
+## Backups locales de trabajo
+backup_ronda267/
+.build-backup/

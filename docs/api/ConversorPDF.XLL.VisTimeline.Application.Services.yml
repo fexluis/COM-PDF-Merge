@@ -1,0 +1,24 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.VisTimeline.Application.Services
+  commentId: N:ConversorPDF.XLL.VisTimeline.Application.Services
+  id: ConversorPDF.XLL.VisTimeline.Application.Services
+  children:
+  - ConversorPDF.XLL.VisTimeline.Application.Services.ViaticoTimelineMapper
+  langs:
+  - csharp
+  - vb
+  name: ConversorPDF.XLL.VisTimeline.Application.Services
+  nameWithType: ConversorPDF.XLL.VisTimeline.Application.Services
+  fullName: ConversorPDF.XLL.VisTimeline.Application.Services
+  type: Namespace
+  assemblies:
+  - ConversorPDF.XLL
+references:
+- uid: ConversorPDF.XLL.VisTimeline.Application.Services.ViaticoTimelineMapper
+  commentId: T:ConversorPDF.XLL.VisTimeline.Application.Services.ViaticoTimelineMapper
+  isExternal: true
+  href: ConversorPDF.XLL.VisTimeline.Application.Services.ViaticoTimelineMapper.html
+  name: ViaticoTimelineMapper
+  nameWithType: ViaticoTimelineMapper
+  fullName: ConversorPDF.XLL.VisTimeline.Application.Services.ViaticoTimelineMapper

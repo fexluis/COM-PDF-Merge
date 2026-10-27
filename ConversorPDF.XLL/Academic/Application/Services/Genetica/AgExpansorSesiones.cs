@@ -1,0 +1,220 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using ConversorPDF.XLL.Academic.Domain.Interfaces;
+using ConversorPDF.XLL.Academic.Domain.Models;
+using ConversorPDF.XLL.Academic.Domain.Models.Genetica;
+using ConversorPDF.XLL.Core.Helpers;
+using CSharpFunctionalExtensions;
+
+namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
+{
+    /// <summary>
+    /// Implementación de la expansión de genes cromosómicos a sesiones cronológicas individuales.
+    /// Garantiza la exclusión de festivos, acotación en la ventana semestral y cálculo de viáticos.
+    /// </summary>
+    public class AgExpansorSesiones : IAgExpansorSesiones
+    {
+        private readonly AgPlanificadorTemporal _planificador;
+
+        public AgExpansorSesiones(AgPlanificadorTemporal planificador = null)
+        {
+            _planificador = planificador ?? new AgPlanificadorTemporal();
+        }
+
+        public Result<List<AgSesion>> Expandir(AgGen gen, int idVinculacion, AgContexto contexto)
+        {
+            if (gen == null) throw new ArgumentNullException(nameof(gen));
+            if (contexto == null) throw new ArgumentNullException(nameof(contexto));
+
+            // Fase 573 & 576: sin carga => 0 sesiones directamente, sin fallar por ventana/bloque
+            if (gen.HorasGen <= 0.0)
+            {
+                return Result.Success(new List<AgSesion>());
+            }
+
+            if (contexto.Ventana == null)
+            {
+                return Result.Failure<List<AgSesion>>("Ventana semestral no resuelta.");
+            }
+
+            if (!contexto.BloquesPorId.TryGetValue(gen.IdBloqueHorario, out var bloque))
+            {
+                return Result.Failure<List<AgSesion>>($"Bloque horario {gen.IdBloqueHorario} no encontrado.");
+            }
+
+            DateTime fInicio = gen.FechaInicioEstimada.HasValue
+                ? gen.FechaInicioEstimada.Value.Date
+                : contexto.Ventana.FechaInicio.Date;
+            DateTime fFin = gen.FechaFinEstimada.HasValue
+                ? gen.FechaFinEstimada.Value.Date
+                : contexto.Ventana.FechaFin.Date;
+
+            if (!contexto.Ventana.ContieneRango(fInicio, fFin))
+            {
+                return Result.Failure<List<AgSesion>>(
+                    $"Gen {gen.Id} fuera de ventana: {fInicio:yyyy-MM-dd}..{fFin:yyyy-MM-dd}.");
+            }
+
+            double horasObjetivoGen = gen.HorasGen;
+
+            // Fase 414: Usar FechasGen si fueron precalculadas por el planificador semanal
+            List<DateTime> fechas = (gen.FechasGen != null && gen.FechasGen.Count > 0)
+                ? gen.FechasGen
+                : _planificador.GenerarFechasValidas(
+                    bloque.DiaSemana,
+                    fInicio,
+                    fFin,
+                    bloque.DuracionHoras,
+                    horasObjetivoGen,
+                    contexto.EsFestivo);
+
+            // Obtener datos para el cálculo de viáticos (Fase 51: Modalidad tomada del aula)
+            contexto.AsignaturasPorId.TryGetValue(gen.IdAsignatura, out _);
+            contexto.AulasPorId.TryGetValue(gen.IdAula, out var aula);
+            contexto.DocentesPorId.TryGetValue(gen.IdTercero, out var docente);
+            contexto.SedesPorId.TryGetValue(gen.IdSede, out var sede);
+            // Fase 217 & 786: Si el aula es virtual (EsVirtual == 1), forzar modalidad Plataforma para que CalculadoraViaticaSesion anule viáticos.
+            string modalidad = (aula != null && aula.EsVirtual == 1)
+                ? ModalidadTutoriaCatalog.Plataforma
+                : ModalidadTutoriaCatalog.NormalizarTutoria(aula?.ModalidadVinculacion ?? ModalidadTutoriaCatalog.Presencial);
+            string ciudadSede = sede != null ? sede.Ciudad : string.Empty;
+            string residenciaDocente = docente != null ? docente.Residencia : string.Empty;
+
+            var sesiones = new List<AgSesion>();
+            double horasAcumuladas = 0.0;   // Fase 965: restaurar acumulador de horas de sesiones
+
+            // Fase 964: Cuantización estricta de sesiones (sin residuos fraccionarios Math.Min)
+            double unidad = bloque.DuracionHoras;
+            if (unidad <= 0)
+            {
+                return Result.Failure<List<AgSesion>>($"Gen {gen.Id}: bloque con duración inválida ({unidad} h).");
+            }
+
+            // Ronda 206 / Fase 1056 (D4/I6): Defensa en profundidad de duración esperada según nivel académico del aula/programa
+            if (aula != null)
+            {
+                int idProg = gen.IdPrograma > 0 ? gen.IdPrograma : (aula.IdPrograma > 0 ? aula.IdPrograma : contexto.IdPrograma);
+                var progGen = contexto.Programas?.FirstOrDefault(p => p.Id == idProg);
+                var nivel = AgNivelAcademicoCatalogo.Desde(progGen?.Modalidad);
+                double duracionEsperada = AgUnidadesSemanales.HorasSesionAula(aula, nivel);
+                if (Math.Abs(unidad - duracionEsperada) > 0.001)
+                {
+                    return Result.Failure<List<AgSesion>>(
+                        $"Gen {gen.Id}: bloque con duración ({unidad} h) no coincide con la esperada ({duracionEsperada} h) para nivel {nivel}.");
+                }
+            }
+
+            double sesionesExactas = horasObjetivoGen / unidad;
+            if (Math.Abs(sesionesExactas - Math.Round(sesionesExactas)) > 0.001)
+            {
+                return Result.Failure<List<AgSesion>>(
+                    $"Gen {gen.Id}: {horasObjetivoGen:0.#} h no es múltiplo de {unidad:0.#} h (unidad de sesión).");
+            }
+
+            foreach (var f in fechas)
+            {
+                if (horasAcumuladas + 0.001 >= horasObjetivoGen) break;
+
+                double horasSesion = unidad; // sin Math.Min
+
+                bool viatica = CalculadoraViaticaSesion.DeterminarViatica(
+                    f,
+                    modalidad,
+                    ciudadSede,
+                    residenciaDocente,
+                    contexto.Presenciales);
+
+                int idTerceroSesion = (gen.EsVacante == 1 && contexto.IdTerceroVacante > 0) ? contexto.IdTerceroVacante : gen.IdTercero;
+
+                var sesion = new AgSesion
+                {
+                    IdVinculacion = idVinculacion,
+                    IdTercero = idTerceroSesion,
+                    IdAula = gen.IdAula,
+                    FechaSesion = f,
+                    HorarioSesion = bloque.ObtenerHorarioTexto(),
+                    Horas = horasSesion,
+                    Viatica = viatica,
+                    Subunidad = contexto.Subunidad,
+                    IdIndividuo = gen.IdIndividuo,
+                    IdGen = gen.Id,
+                    EsVacante = gen.EsVacante,
+                    MotivoVacante = gen.MotivoVacante ?? string.Empty,
+                    CandidatosPool = gen.CandidatosPool
+                };
+
+                sesiones.Add(sesion);
+                horasAcumuladas += horasSesion;
+            }
+
+            const double Tolerancia = 0.001;
+            if (horasAcumuladas + Tolerancia < horasObjetivoGen)
+            {
+                return Result.Failure<List<AgSesion>>(
+                    $"Cobertura incompleta gen {gen.Id}: {horasAcumuladas}/{horasObjetivoGen} h.");
+            }
+
+            return Result.Success(sesiones);
+        }
+
+        public Result<List<AgSesion>> ExpandirIndividuo(AgIndividuo individuo, Dictionary<long, int> mapaVinculaciones, AgContexto contexto)
+        {
+            if (individuo == null) throw new ArgumentNullException(nameof(individuo));
+            if (contexto == null) throw new ArgumentNullException(nameof(contexto));
+
+            var todasSesiones = new List<AgSesion>();
+            var errores = new List<string>();
+            foreach (var gen in individuo.Genes)
+            {
+                int idVinc = (mapaVinculaciones != null && mapaVinculaciones.TryGetValue(gen.Id, out int mappedId)) ? mappedId : 0;
+
+                var expRes = Expandir(gen, idVinc, contexto);
+                if (expRes.IsFailure)
+                {
+                    errores.Add($"gen {gen.Id}: {expRes.Error}");
+                    continue;   // Fase 969: aislar el gen, no cancelar todo el individuo
+                }
+
+                todasSesiones.AddRange(expRes.Value);
+            }
+
+            if (todasSesiones.Count == 0 && errores.Count > 0)
+            {
+                return Result.Failure<List<AgSesion>>($"Sin sesiones expandibles ({errores.Count}): {string.Join(" | ", errores.Take(5))}");
+            }
+
+            // Fase 1296, Fase 1302 & Fase 1310: Diagnóstico explícito de colisión I7 sin descartar sesiones (evita déficit I2)
+            var mapaGrupos = (individuo.Genes ?? new List<AgGen>())
+                .GroupBy(g => g.Id)
+                .ToDictionary(g => g.Key, g => g.First().ClaveGrupo ?? string.Empty);
+
+            var sesionColision = todasSesiones
+                .Where(s => s.FechaSesion.HasValue && !string.IsNullOrEmpty(s.HorarioSesion))
+                .GroupBy(s => new
+                {
+                    ClaveGrupo = mapaGrupos.TryGetValue(s.IdGen, out var cg) ? cg : string.Empty,
+                    Fecha = s.FechaSesion.Value.Date,
+                    s.HorarioSesion
+                })
+                .FirstOrDefault(gr => gr.Count() > 1 && !string.IsNullOrEmpty(gr.Key.ClaveGrupo));
+
+            if (sesionColision != null)
+            {
+                var genesColision = sesionColision.Select(s => s.IdGen).Distinct().OrderBy(x => x).ToList();
+                LoggerHelper.WarningLimitado(
+                    $"I7Colision|{sesionColision.Key.ClaveGrupo}|{sesionColision.Key.Fecha:yyyy-MM-dd}|{sesionColision.Key.HorarioSesion}",
+                    $"[AgExpansorSesiones] I7: grupo '{sesionColision.Key.ClaveGrupo}' con {genesColision.Count} gen(es) " +
+                    $"[{string.Join(",", genesColision)}] en {sesionColision.Key.Fecha:yyyy-MM-dd} {sesionColision.Key.HorarioSesion}; " +
+                    "no se descartan sesiones (evita déficit de horas I2).");
+            }
+
+            if (errores.Count > 0)
+            {
+                LoggerHelper.Warning($"[AgExpansorSesiones] Individuo {individuo.Id}: {errores.Count} gen(es) omitidos: {string.Join(" | ", errores.Take(5))}");
+            }
+
+            return Result.Success(todasSesiones);
+        }
+    }
+}

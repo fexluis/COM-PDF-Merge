@@ -96,7 +96,7 @@ namespace ConversorPDF.XLL.Core.Services
                 string dep = activeSheet.Cells[row, ConstantsHelper.PROG_DEPENDENCIA].Value?.ToString();
                 string cdp = _viaticosRepository.GetDependenciaCDP(dep);
                 
-                FilaSeleccionadaSaveConfig(fecha, fecha, cdp);
+                FilaSeleccionadaSaveConfig(fecha, fecha, string.IsNullOrWhiteSpace(cdp) ? null : cdp);
                 
                 return _individualProcessor.ProcesarFilaSeleccionada(progressCallback);
             }
@@ -132,7 +132,7 @@ namespace ConversorPDF.XLL.Core.Services
             if (ws == null) return;
             if (inicio != null) _excelRepository.SetCellValue(ws, "B1", inicio);
             if (fin != null) _excelRepository.SetCellValue(ws, "B2", fin);
-            if (cdp != null) _excelRepository.SetCellValue(ws, "B3", cdp);
+            if (!string.IsNullOrWhiteSpace(cdp)) _excelRepository.SetCellValue(ws, "B3", cdp);
         }
 
         /// <inheritdoc/>

@@ -1,0 +1,318 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService
+  commentId: T:ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService
+  id: IFirmaExtractService
+  parent: ConversorPDF.XLL.Core.Interfaces
+  children:
+  - ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.CdpData(System.Object)
+  - ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.ObligacionData(System.Object)
+  - ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.OrdeDePagoData(System.Object)
+  - ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.RpData(System.Object)
+  - ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.VerificadosData(System.Object)
+  langs:
+  - csharp
+  - vb
+  name: IFirmaExtractService
+  nameWithType: IFirmaExtractService
+  fullName: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService
+  type: Interface
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Interfaz para el servicio de extracción de datos de documentos para firma.
+  example: []
+  syntax:
+    content: public interface IFirmaExtractService
+    content.vb: Public Interface IFirmaExtractService
+  derivedClasses:
+  - ConversorPDF.XLL.Core.Services.FirmaExtractService
+- uid: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.ObligacionData(System.Object)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.ObligacionData(System.Object)
+  id: ObligacionData(System.Object)
+  parent: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService
+  langs:
+  - csharp
+  - vb
+  name: ObligacionData(dynamic)
+  nameWithType: IFirmaExtractService.ObligacionData(dynamic)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.ObligacionData(dynamic)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Extrae la información de una obligación presupuestal desde una hoja de Excel.
+  example: []
+  syntax:
+    content: ExtraerDatos ObligacionData(dynamic ws)
+    parameters:
+    - id: ws
+      type: dynamic
+      description: Hoja de Excel (dynamic).
+    return:
+      type: ConversorPDF.XLL.Core.Models.ExtraerDatos
+      description: Modelo con los datos extraídos.
+    content.vb: Function ObligacionData(ws As Object) As ExtraerDatos
+  overload: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.ObligacionData*
+  nameWithType.vb: IFirmaExtractService.ObligacionData(Object)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.ObligacionData(Object)
+  name.vb: ObligacionData(Object)
+- uid: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.OrdeDePagoData(System.Object)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.OrdeDePagoData(System.Object)
+  id: OrdeDePagoData(System.Object)
+  parent: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService
+  langs:
+  - csharp
+  - vb
+  name: OrdeDePagoData(dynamic)
+  nameWithType: IFirmaExtractService.OrdeDePagoData(dynamic)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.OrdeDePagoData(dynamic)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Extrae datos de Orden de Pago (Boletines).
+  example: []
+  syntax:
+    content: ExtraerDatos OrdeDePagoData(dynamic ws)
+    parameters:
+    - id: ws
+      type: dynamic
+    return:
+      type: ConversorPDF.XLL.Core.Models.ExtraerDatos
+    content.vb: Function OrdeDePagoData(ws As Object) As ExtraerDatos
+  overload: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.OrdeDePagoData*
+  nameWithType.vb: IFirmaExtractService.OrdeDePagoData(Object)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.OrdeDePagoData(Object)
+  name.vb: OrdeDePagoData(Object)
+- uid: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.CdpData(System.Object)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.CdpData(System.Object)
+  id: CdpData(System.Object)
+  parent: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService
+  langs:
+  - csharp
+  - vb
+  name: CdpData(dynamic)
+  nameWithType: IFirmaExtractService.CdpData(dynamic)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.CdpData(dynamic)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Extrae datos de Certificado de Disponibilidad Presupuestal (CDP).
+  example: []
+  syntax:
+    content: ExtraerDatos CdpData(dynamic ws)
+    parameters:
+    - id: ws
+      type: dynamic
+    return:
+      type: ConversorPDF.XLL.Core.Models.ExtraerDatos
+    content.vb: Function CdpData(ws As Object) As ExtraerDatos
+  overload: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.CdpData*
+  nameWithType.vb: IFirmaExtractService.CdpData(Object)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.CdpData(Object)
+  name.vb: CdpData(Object)
+- uid: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.RpData(System.Object)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.RpData(System.Object)
+  id: RpData(System.Object)
+  parent: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService
+  langs:
+  - csharp
+  - vb
+  name: RpData(dynamic)
+  nameWithType: IFirmaExtractService.RpData(dynamic)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.RpData(dynamic)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Extrae datos de Registro Presupuestal (RP).
+  example: []
+  syntax:
+    content: ExtraerDatos RpData(dynamic ws)
+    parameters:
+    - id: ws
+      type: dynamic
+    return:
+      type: ConversorPDF.XLL.Core.Models.ExtraerDatos
+    content.vb: Function RpData(ws As Object) As ExtraerDatos
+  overload: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.RpData*
+  nameWithType.vb: IFirmaExtractService.RpData(Object)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.RpData(Object)
+  name.vb: RpData(Object)
+- uid: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.VerificadosData(System.Object)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.VerificadosData(System.Object)
+  id: VerificadosData(System.Object)
+  parent: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService
+  langs:
+  - csharp
+  - vb
+  name: VerificadosData(dynamic)
+  nameWithType: IFirmaExtractService.VerificadosData(dynamic)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.VerificadosData(dynamic)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Extrae datos de Verificado (Comisión Servicio).
+  example: []
+  syntax:
+    content: ExtraerDatos VerificadosData(dynamic ws)
+    parameters:
+    - id: ws
+      type: dynamic
+    return:
+      type: ConversorPDF.XLL.Core.Models.ExtraerDatos
+    content.vb: Function VerificadosData(ws As Object) As ExtraerDatos
+  overload: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.VerificadosData*
+  nameWithType.vb: IFirmaExtractService.VerificadosData(Object)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.VerificadosData(Object)
+  name.vb: VerificadosData(Object)
+references:
+- uid: ConversorPDF.XLL.Core.Interfaces
+  commentId: N:ConversorPDF.XLL.Core.Interfaces
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Core.Interfaces
+  nameWithType: ConversorPDF.XLL.Core.Interfaces
+  fullName: ConversorPDF.XLL.Core.Interfaces
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Interfaces
+    name: Interfaces
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Interfaces
+    name: Interfaces
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.html
+- uid: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.ObligacionData*
+  commentId: Overload:ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.ObligacionData
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.html#ConversorPDF_XLL_Core_Interfaces_IFirmaExtractService_ObligacionData_System_Object_
+  name: ObligacionData
+  nameWithType: IFirmaExtractService.ObligacionData
+  fullName: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.ObligacionData
+- uid: dynamic
+  commentId: T:System.Object
+  isExternal: true
+  name: dynamic
+  nameWithType: dynamic
+  fullName: dynamic
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: ConversorPDF.XLL.Core.Models.ExtraerDatos
+  commentId: T:ConversorPDF.XLL.Core.Models.ExtraerDatos
+  parent: ConversorPDF.XLL.Core.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ExtraerDatos.html
+  name: ExtraerDatos
+  nameWithType: ExtraerDatos
+  fullName: ConversorPDF.XLL.Core.Models.ExtraerDatos
+- uid: ConversorPDF.XLL.Core.Models
+  commentId: N:ConversorPDF.XLL.Core.Models
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Core.Models
+  nameWithType: ConversorPDF.XLL.Core.Models
+  fullName: ConversorPDF.XLL.Core.Models
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Models
+    name: Models
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Models
+    name: Models
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.html
+- uid: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.OrdeDePagoData*
+  commentId: Overload:ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.OrdeDePagoData
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.html#ConversorPDF_XLL_Core_Interfaces_IFirmaExtractService_OrdeDePagoData_System_Object_
+  name: OrdeDePagoData
+  nameWithType: IFirmaExtractService.OrdeDePagoData
+  fullName: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.OrdeDePagoData
+- uid: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.CdpData*
+  commentId: Overload:ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.CdpData
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.html#ConversorPDF_XLL_Core_Interfaces_IFirmaExtractService_CdpData_System_Object_
+  name: CdpData
+  nameWithType: IFirmaExtractService.CdpData
+  fullName: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.CdpData
+- uid: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.RpData*
+  commentId: Overload:ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.RpData
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.html#ConversorPDF_XLL_Core_Interfaces_IFirmaExtractService_RpData_System_Object_
+  name: RpData
+  nameWithType: IFirmaExtractService.RpData
+  fullName: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.RpData
+- uid: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.VerificadosData*
+  commentId: Overload:ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.VerificadosData
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.html#ConversorPDF_XLL_Core_Interfaces_IFirmaExtractService_VerificadosData_System_Object_
+  name: VerificadosData
+  nameWithType: IFirmaExtractService.VerificadosData
+  fullName: ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.VerificadosData

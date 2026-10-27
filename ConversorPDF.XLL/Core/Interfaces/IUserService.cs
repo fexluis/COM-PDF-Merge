@@ -20,5 +20,8 @@ namespace ConversorPDF.XLL.Core.Interfaces
 
         /// <summary> Obtiene los datos de identificación (iniciales y nombre completo) de un usuario. </summary>
         UserIdentification GetIdentification(string username);
+
+        /// <summary> Guarda o actualiza la firma en Base64 asociada a un usuario en la base de datos. </summary>
+        void SaveFirmaBase64(string username, string base64);
     }
 }

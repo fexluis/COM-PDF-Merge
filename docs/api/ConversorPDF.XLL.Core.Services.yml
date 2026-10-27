@@ -1,0 +1,64 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Core.Services
+  commentId: N:ConversorPDF.XLL.Core.Services
+  id: ConversorPDF.XLL.Core.Services
+  children:
+  - ConversorPDF.XLL.Core.Services.ContadorService
+  - ConversorPDF.XLL.Core.Services.FirmaExtractService
+  - ConversorPDF.XLL.Core.Services.PdfMetadataService
+  - ConversorPDF.XLL.Core.Services.PdfService
+  - ConversorPDF.XLL.Core.Services.UserService
+  - ConversorPDF.XLL.Core.Services.ViaticosService
+  langs:
+  - csharp
+  - vb
+  name: ConversorPDF.XLL.Core.Services
+  nameWithType: ConversorPDF.XLL.Core.Services
+  fullName: ConversorPDF.XLL.Core.Services
+  type: Namespace
+  assemblies:
+  - ConversorPDF.XLL
+references:
+- uid: ConversorPDF.XLL.Core.Services.UserService
+  commentId: T:ConversorPDF.XLL.Core.Services.UserService
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Services.UserService.html
+  name: UserService
+  nameWithType: UserService
+  fullName: ConversorPDF.XLL.Core.Services.UserService
+- uid: ConversorPDF.XLL.Core.Services.PdfService
+  commentId: T:ConversorPDF.XLL.Core.Services.PdfService
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Services.PdfService.html
+  name: PdfService
+  nameWithType: PdfService
+  fullName: ConversorPDF.XLL.Core.Services.PdfService
+- uid: ConversorPDF.XLL.Core.Services.PdfMetadataService
+  commentId: T:ConversorPDF.XLL.Core.Services.PdfMetadataService
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Services.PdfMetadataService.html
+  name: PdfMetadataService
+  nameWithType: PdfMetadataService
+  fullName: ConversorPDF.XLL.Core.Services.PdfMetadataService
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService
+  commentId: T:ConversorPDF.XLL.Core.Services.ViaticosService
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Services.ViaticosService.html
+  name: ViaticosService
+  nameWithType: ViaticosService
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService
+- uid: ConversorPDF.XLL.Core.Services.FirmaExtractService
+  commentId: T:ConversorPDF.XLL.Core.Services.FirmaExtractService
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Services.FirmaExtractService.html
+  name: FirmaExtractService
+  nameWithType: FirmaExtractService
+  fullName: ConversorPDF.XLL.Core.Services.FirmaExtractService
+- uid: ConversorPDF.XLL.Core.Services.ContadorService
+  commentId: T:ConversorPDF.XLL.Core.Services.ContadorService
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Services.ContadorService.html
+  name: ContadorService
+  nameWithType: ContadorService
+  fullName: ConversorPDF.XLL.Core.Services.ContadorService

@@ -1,0 +1,401 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.PdfFunctions
+  commentId: T:ConversorPDF.XLL.PdfFunctions
+  id: PdfFunctions
+  parent: ConversorPDF.XLL
+  children:
+  - ConversorPDF.XLL.PdfFunctions.ExtraerTexto(System.String)
+  - ConversorPDF.XLL.PdfFunctions.ExtraerTextoPagina(System.String,System.Int32)
+  langs:
+  - csharp
+  - vb
+  name: PdfFunctions
+  nameWithType: PdfFunctions
+  fullName: ConversorPDF.XLL.PdfFunctions
+  type: Class
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL
+  summary: >-
+    Funciones UDF para extracción de texto PDF, disponibles como fórmulas en celdas Excel.
+
+    Uso: =PDF.ExtraerTexto("C:\ruta\archivo.pdf")
+  example: []
+  syntax:
+    content: public static class PdfFunctions
+    content.vb: Public Module PdfFunctions
+  inheritance:
+  - System.Object
+  inheritedMembers:
+  - System.Object.ToString
+  - System.Object.Equals(System.Object)
+  - System.Object.Equals(System.Object,System.Object)
+  - System.Object.ReferenceEquals(System.Object,System.Object)
+  - System.Object.GetHashCode
+  - System.Object.GetType
+  - System.Object.MemberwiseClone
+- uid: ConversorPDF.XLL.PdfFunctions.ExtraerTexto(System.String)
+  commentId: M:ConversorPDF.XLL.PdfFunctions.ExtraerTexto(System.String)
+  id: ExtraerTexto(System.String)
+  parent: ConversorPDF.XLL.PdfFunctions
+  langs:
+  - csharp
+  - vb
+  name: ExtraerTexto(string)
+  nameWithType: PdfFunctions.ExtraerTexto(string)
+  fullName: ConversorPDF.XLL.PdfFunctions.ExtraerTexto(string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL
+  summary: Extrae todo el texto de un archivo PDF.
+  example: []
+  syntax:
+    content: public static string ExtraerTexto(string rutaPdf)
+    parameters:
+    - id: rutaPdf
+      type: System.String
+      description: Ruta completa al archivo PDF en el disco.
+    return:
+      type: System.String
+      description: Todo el texto extraído del documento.
+    content.vb: Public Shared Function ExtraerTexto(rutaPdf As String) As String
+  overload: ConversorPDF.XLL.PdfFunctions.ExtraerTexto*
+  nameWithType.vb: PdfFunctions.ExtraerTexto(String)
+  fullName.vb: ConversorPDF.XLL.PdfFunctions.ExtraerTexto(String)
+  name.vb: ExtraerTexto(String)
+- uid: ConversorPDF.XLL.PdfFunctions.ExtraerTextoPagina(System.String,System.Int32)
+  commentId: M:ConversorPDF.XLL.PdfFunctions.ExtraerTextoPagina(System.String,System.Int32)
+  id: ExtraerTextoPagina(System.String,System.Int32)
+  parent: ConversorPDF.XLL.PdfFunctions
+  langs:
+  - csharp
+  - vb
+  name: ExtraerTextoPagina(string, int)
+  nameWithType: PdfFunctions.ExtraerTextoPagina(string, int)
+  fullName: ConversorPDF.XLL.PdfFunctions.ExtraerTextoPagina(string, int)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL
+  summary: Extrae el texto de una página específica de un PDF.
+  example: []
+  syntax:
+    content: public static string ExtraerTextoPagina(string rutaPdf, int numeroPagina)
+    parameters:
+    - id: rutaPdf
+      type: System.String
+      description: Ruta completa al archivo PDF.
+    - id: numeroPagina
+      type: System.Int32
+      description: Número de la página (empezando desde 1).
+    return:
+      type: System.String
+      description: Texto contenido en la página especificada.
+    content.vb: Public Shared Function ExtraerTextoPagina(rutaPdf As String, numeroPagina As Integer) As String
+  overload: ConversorPDF.XLL.PdfFunctions.ExtraerTextoPagina*
+  nameWithType.vb: PdfFunctions.ExtraerTextoPagina(String, Integer)
+  fullName.vb: ConversorPDF.XLL.PdfFunctions.ExtraerTextoPagina(String, Integer)
+  name.vb: ExtraerTextoPagina(String, Integer)
+references:
+- uid: ConversorPDF.XLL
+  commentId: N:ConversorPDF.XLL
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL
+  nameWithType: ConversorPDF.XLL
+  fullName: ConversorPDF.XLL
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+  nameWithType: object
+  fullName: object
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: System.Object.ToString
+  commentId: M:System.Object.ToString
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  name: ToString()
+  nameWithType: object.ToString()
+  fullName: object.ToString()
+  nameWithType.vb: Object.ToString()
+  fullName.vb: Object.ToString()
+  spec.csharp:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+- uid: System.Object.Equals(System.Object)
+  commentId: M:System.Object.Equals(System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  name: Equals(object)
+  nameWithType: object.Equals(object)
+  fullName: object.Equals(object)
+  nameWithType.vb: Object.Equals(Object)
+  fullName.vb: Object.Equals(Object)
+  name.vb: Equals(Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.Equals(System.Object,System.Object)
+  commentId: M:System.Object.Equals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  name: Equals(object, object)
+  nameWithType: object.Equals(object, object)
+  fullName: object.Equals(object, object)
+  nameWithType.vb: Object.Equals(Object, Object)
+  fullName.vb: Object.Equals(Object, Object)
+  name.vb: Equals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.ReferenceEquals(System.Object,System.Object)
+  commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  name: ReferenceEquals(object, object)
+  nameWithType: object.ReferenceEquals(object, object)
+  fullName: object.ReferenceEquals(object, object)
+  nameWithType.vb: Object.ReferenceEquals(Object, Object)
+  fullName.vb: Object.ReferenceEquals(Object, Object)
+  name.vb: ReferenceEquals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.GetHashCode
+  commentId: M:System.Object.GetHashCode
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  name: GetHashCode()
+  nameWithType: object.GetHashCode()
+  fullName: object.GetHashCode()
+  nameWithType.vb: Object.GetHashCode()
+  fullName.vb: Object.GetHashCode()
+  spec.csharp:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+- uid: System.Object.GetType
+  commentId: M:System.Object.GetType
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  name: GetType()
+  nameWithType: object.GetType()
+  fullName: object.GetType()
+  nameWithType.vb: Object.GetType()
+  fullName.vb: Object.GetType()
+  spec.csharp:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+- uid: System.Object.MemberwiseClone
+  commentId: M:System.Object.MemberwiseClone
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  name: MemberwiseClone()
+  nameWithType: object.MemberwiseClone()
+  fullName: object.MemberwiseClone()
+  nameWithType.vb: Object.MemberwiseClone()
+  fullName.vb: Object.MemberwiseClone()
+  spec.csharp:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: ConversorPDF.XLL.PdfFunctions.ExtraerTexto*
+  commentId: Overload:ConversorPDF.XLL.PdfFunctions.ExtraerTexto
+  isExternal: true
+  href: ConversorPDF.XLL.PdfFunctions.html#ConversorPDF_XLL_PdfFunctions_ExtraerTexto_System_String_
+  name: ExtraerTexto
+  nameWithType: PdfFunctions.ExtraerTexto
+  fullName: ConversorPDF.XLL.PdfFunctions.ExtraerTexto
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: ConversorPDF.XLL.PdfFunctions.ExtraerTextoPagina*
+  commentId: Overload:ConversorPDF.XLL.PdfFunctions.ExtraerTextoPagina
+  isExternal: true
+  href: ConversorPDF.XLL.PdfFunctions.html#ConversorPDF_XLL_PdfFunctions_ExtraerTextoPagina_System_String_System_Int32_
+  name: ExtraerTextoPagina
+  nameWithType: PdfFunctions.ExtraerTextoPagina
+  fullName: ConversorPDF.XLL.PdfFunctions.ExtraerTextoPagina
+- uid: System.Int32
+  commentId: T:System.Int32
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int
+  nameWithType: int
+  fullName: int
+  nameWithType.vb: Integer
+  fullName.vb: Integer
+  name.vb: Integer

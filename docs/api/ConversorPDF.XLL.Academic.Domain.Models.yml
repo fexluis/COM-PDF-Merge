@@ -1,0 +1,204 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Academic.Domain.Models
+  commentId: N:ConversorPDF.XLL.Academic.Domain.Models
+  id: ConversorPDF.XLL.Academic.Domain.Models
+  children:
+  - ConversorPDF.XLL.Academic.Domain.Models.AcademicDateAdjustment
+  - ConversorPDF.XLL.Academic.Domain.Models.Asignatura
+  - ConversorPDF.XLL.Academic.Domain.Models.ConfiguracionDia
+  - ConversorPDF.XLL.Academic.Domain.Models.Contenido
+  - ConversorPDF.XLL.Academic.Domain.Models.LookupItem
+  - ConversorPDF.XLL.Academic.Domain.Models.Microcurriculo
+  - ConversorPDF.XLL.Academic.Domain.Models.Periodo
+  - ConversorPDF.XLL.Academic.Domain.Models.Programa
+  - ConversorPDF.XLL.Academic.Domain.Models.Sede
+  - ConversorPDF.XLL.Academic.Domain.Models.Sesion
+  - ConversorPDF.XLL.Academic.Domain.Models.SesionListItem
+  - ConversorPDF.XLL.Academic.Domain.Models.Tercero
+  - ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque
+  - ConversorPDF.XLL.Academic.Domain.Models.Vinculacion
+  - ConversorPDF.XLL.Academic.Domain.Models.VinculacionListItem
+  langs:
+  - csharp
+  - vb
+  name: ConversorPDF.XLL.Academic.Domain.Models
+  nameWithType: ConversorPDF.XLL.Academic.Domain.Models
+  fullName: ConversorPDF.XLL.Academic.Domain.Models
+  type: Namespace
+  assemblies:
+  - ConversorPDF.XLL
+references:
+- uid: ConversorPDF.XLL.Academic.Domain.Models.Asignatura
+  commentId: T:ConversorPDF.XLL.Academic.Domain.Models.Asignatura
+  parent: ConversorPDF.XLL.Academic.Domain.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.Asignatura.html
+  name: Asignatura
+  nameWithType: Asignatura
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.Asignatura
+- uid: ConversorPDF.XLL.Academic.Domain.Models.ConfiguracionDia
+  commentId: T:ConversorPDF.XLL.Academic.Domain.Models.ConfiguracionDia
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.ConfiguracionDia.html
+  name: ConfiguracionDia
+  nameWithType: ConfiguracionDia
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.ConfiguracionDia
+- uid: ConversorPDF.XLL.Academic.Domain.Models.Contenido
+  commentId: T:ConversorPDF.XLL.Academic.Domain.Models.Contenido
+  parent: ConversorPDF.XLL.Academic.Domain.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.Contenido.html
+  name: Contenido
+  nameWithType: Contenido
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.Contenido
+- uid: ConversorPDF.XLL.Academic.Domain.Models.Microcurriculo
+  commentId: T:ConversorPDF.XLL.Academic.Domain.Models.Microcurriculo
+  parent: ConversorPDF.XLL.Academic.Domain.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.Microcurriculo.html
+  name: Microcurriculo
+  nameWithType: Microcurriculo
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.Microcurriculo
+- uid: ConversorPDF.XLL.Academic.Domain.Models.Programa
+  commentId: T:ConversorPDF.XLL.Academic.Domain.Models.Programa
+  parent: ConversorPDF.XLL.Academic.Domain.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.Programa.html
+  name: Programa
+  nameWithType: Programa
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.Programa
+- uid: ConversorPDF.XLL.Academic.Domain.Models.Sede
+  commentId: T:ConversorPDF.XLL.Academic.Domain.Models.Sede
+  parent: ConversorPDF.XLL.Academic.Domain.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.Sede.html
+  name: Sede
+  nameWithType: Sede
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.Sede
+- uid: ConversorPDF.XLL.Academic.Domain.Models.Sesion
+  commentId: T:ConversorPDF.XLL.Academic.Domain.Models.Sesion
+  parent: ConversorPDF.XLL.Academic.Domain.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.Sesion.html
+  name: Sesion
+  nameWithType: Sesion
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.Sesion
+- uid: ConversorPDF.XLL.Academic.Domain.Models.Tercero
+  commentId: T:ConversorPDF.XLL.Academic.Domain.Models.Tercero
+  parent: ConversorPDF.XLL.Academic.Domain.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.Tercero.html
+  name: Tercero
+  nameWithType: Tercero
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.Tercero
+- uid: ConversorPDF.XLL.Academic.Domain.Models.Periodo
+  commentId: T:ConversorPDF.XLL.Academic.Domain.Models.Periodo
+  parent: ConversorPDF.XLL.Academic.Domain.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.Periodo.html
+  name: Periodo
+  nameWithType: Periodo
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.Periodo
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem
+  commentId: T:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem
+  parent: ConversorPDF.XLL.Academic.Domain.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.html
+  name: SesionListItem
+  nameWithType: SesionListItem
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem
+- uid: ConversorPDF.XLL.Academic.Domain.Models.Vinculacion
+  commentId: T:ConversorPDF.XLL.Academic.Domain.Models.Vinculacion
+  parent: ConversorPDF.XLL.Academic.Domain.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.Vinculacion.html
+  name: Vinculacion
+  nameWithType: Vinculacion
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.Vinculacion
+- uid: ConversorPDF.XLL.Academic.Domain.Models.VinculacionListItem
+  commentId: T:ConversorPDF.XLL.Academic.Domain.Models.VinculacionListItem
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.VinculacionListItem.html
+  name: VinculacionListItem
+  nameWithType: VinculacionListItem
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.VinculacionListItem
+- uid: ConversorPDF.XLL.Academic.Domain.Models.LookupItem
+  commentId: T:ConversorPDF.XLL.Academic.Domain.Models.LookupItem
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.LookupItem.html
+  name: LookupItem
+  nameWithType: LookupItem
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.LookupItem
+- uid: ConversorPDF.XLL.Academic.Domain.Models.AcademicDateAdjustment
+  commentId: T:ConversorPDF.XLL.Academic.Domain.Models.AcademicDateAdjustment
+  parent: ConversorPDF.XLL.Academic.Domain.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.AcademicDateAdjustment.html
+  name: AcademicDateAdjustment
+  nameWithType: AcademicDateAdjustment
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.AcademicDateAdjustment
+- uid: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque
+  commentId: T:ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.html
+  name: ViaticoBloque
+  nameWithType: ViaticoBloque
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque
+- uid: ConversorPDF.XLL.Academic.Domain.Models
+  commentId: N:ConversorPDF.XLL.Academic.Domain.Models
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Academic.Domain.Models
+  nameWithType: ConversorPDF.XLL.Academic.Domain.Models
+  fullName: ConversorPDF.XLL.Academic.Domain.Models
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic
+    name: Academic
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Domain
+    name: Domain
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Domain.Models
+    name: Models
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic
+    name: Academic
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Domain
+    name: Domain
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Domain.Models
+    name: Models
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.html

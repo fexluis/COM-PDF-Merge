@@ -51,5 +51,17 @@ namespace ConversorPDF.XLL.Core.Models
 
         /// <summary> Documento de identidad del comisionado. </summary>
         public string cedula { get; set; }
+
+        /// <summary> Indicador de transporte aéreo (0 = Terrestre, 1 = Aéreo). </summary>
+        public int IsTerminalAereo { get; set; }
+
+        /// <summary> ID de la terminal aérea seleccionada en tabla terminales (0 si no aplica). </summary>
+        public int IdTerminales { get; set; }
+
+        /// <summary> Nombre descriptivo de la terminal o aeropuerto de destino. </summary>
+        public string TerminalAereaNombre { get; set; }
+
+        /// <summary> Valor asignado por concepto de gasto de terminal aérea. </summary>
+        public decimal GastoTerminalAerea { get; set; }
     }
 }

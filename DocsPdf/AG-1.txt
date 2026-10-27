@@ -1,0 +1,377 @@
+
+# Plan de Diseño — Submódulo de Algoritmo Genético (AG) para Generación de Horarios Académicos
+
+## 0. Contexto verificado en el repositorio (base del diseño)
+
+Antes de proponer nada, esta es la realidad técnica confirmada leyendo el código:
+
+| Elemento | Hallazgo |
+|---|---|
+| Solución | `ConversorPDF.XLL.csproj` (.NET Framework 4.8, Excel-DNA, WinForms) + `ConversorPDF.Tests.csproj` |
+| Slice académico | `ConversorPDF.XLL\Academic\{Domain,Application,Infrastructure,UI}` — namespaces `ConversorPDF.XLL.Academic.{Layer}.{Folder}` |
+| Esquema | `Academic\Infrastructure\Persistence\Sql\AcademicSchema.sql`, base **v28**, con `INSERT OR IGNORE INTO __SchemaVersion (Version) VALUES (28)` |
+| Migraciones | `IMigration` (`Version`, `Name`, `Up`) en `Infrastructure\Persistence\Migrations\` (V2 … **V47**) |
+| Registro de migraciones | **Explicito** en `ConversorPDF.XLL\Core\Helpers\SqliteHelper.cs` → `BuildMigrator()` (líneas ~278–326). No hay auto-descubrimiento por DI |
+| Orquestador de esquema | `SchemaMigrator.EnsureSchemaUpToDate()` con `BASE_SCHEMA_VERSION = 28` y `BASE_TABLES[]` (21 tablas) |
+| Tabla `vinculaciones` | `id, idsede, idtercero, idprograma, idperiodo, grupo, semestre, idasignatura, total_horas, dia_horas_semanales, fecha_inicio, fecha_fin, modalidadVinculacion, subunidad, isTerminalAereo, idTerminales, gastoTerminalAerea` |
+| Tabla `sesiones` | `id, idvinculacion, idtercero, fechasesion, horariosesion, horas, viatica, subunidad` (FK a `vinculaciones.id` y `terceros.id`) |
+| Generador determinista actual | `Application\Services\GeneradorSesionesRecurrentes.Generar(idTercero, idVinculacion, fechaInicio, fechaFin, List<ConfiguracionDia>, horasTotales, viatica)` |
+| Ajuste de fechas | `Application\Services\AcademicDateSyncService.CalculateAdjustment(...)` |
+| Mapper UI→Modelo | `Application\Mappers\GridToSesionMapper.Extract(IReadOnlyList<GridRowDto>, idTerceroMaster, idVinculacion)` |
+| Guardado transaccional | `UI\Forms\FormSesionesAcademicas.GuardarAsync()` → `BeginTransaction` + `new AcademicRepository(conn, tx, suppressMarkDirty:true)` + `InsertVinculacion`/`UpdateVinculacion` + `DeleteSesionesByVinculacion` + `InsertSesiones` + `Commit` |
+| Repositorio de apoyo | Patrón de segundo repositorio ya existente: `ISalvedadConflictoRepository` (Application\Interfaces) + `SalvedadConflictoRepository` (Infrastructure) — **plantilla exacta** para el repositorio del AG |
+| Sincronización CRDT | `Core\Sync\SyncInitializer.CrdtTables[]` es una **lista explícita**. Las tablas que no estén en la lista **no** se replican como CRR |
+| Reglas del repo | `architecture-rules.md`, `desktop-code.md`, `grid-mapper-pattern.md`, `single-type-per-file.md`, `test-convention.md`, `sqlite-excel-dna-gotchas.md` + skill `development-process` (TDD, iteraciones atómicas) |
+| Convención de tests | `ConversorPDF.Tests\Unit\Academic\*` y `ConversorPDF.Tests\Core\Services\Academic\*` (xUnit + NSubstitute + FluentAssertions) |
+
+**No existe** en el código ninguna referencia previa a AG/`Genetico` (búsqueda confirmada: 0 resultados). Tampoco existe entidad física de "Aula/Salón": el "Aula" del enunciado es el bloque compuesto `{Sede, Programa, Semestre}`, que hoy vive embebido en `vinculaciones`.
+
+---
+
+## 1. Análisis de aplicabilidad del AG
+
+### 1.1 ¿Es el problema apto para AG?  Sí, y con una ventaja estructural
+
+### 1.2 La observación clave: el AG **no** debe reimplementar el calendario
+
+Hoy el flujo es:
+
+```
+(UI) parámetros → GeneradorSesionesRecurrentes.Generar(...)  → List<Sesion> (fechas)
+                                                              ↓
+      InsertVinculacion(Vinculacion)  +  InsertSesiones(List<Sesion>)   [1 transacción]
+```
+
+Es decir, **`vinculaciones` es la "cabeza" de la tupla** (Periodo, Sede, Programa, Semestre, Grupo, Asignatura, Tercero, Día/Horas) y **`sesiones` es la expansión semanal ya fechada** (cardinalidad 1:N, `sesiones.idvinculacion → vinculaciones.id`).
+
+Por tanto, el AG debe decidir **solo la cabeza + el patrón semanal (Día, Franja)**, y **reutilizar** `GeneradorSesionesRecurrentes` + `AcademicDateSyncService` para materializar las sesiones fechadas. Esto:
+- Evita duplicar la lógica de festivos/rangos PRESENCIAL/viáticas (hoy en `btnGenerar_Click`).
+- Garantiza que lo promovido sea **idéntico** a lo que el usuario genera hoy (compatibilidad total con viáticos, exportables y vistas).
+- Mantiene el nuevo esquema desacoplado y **sin tocar** `vinculaciones`/`sesiones`.
+
+### 1.3 Relación `vinculaciones` ↔ `sesiones` (lo que el AG debe generar)
+
+| Concepto enunciado | Tabla actual | Campo(s) |
+|---|---|---|
+| Periodo | `vinculaciones` | `idperiodo` |
+| Sede | `vinculaciones` | `idsede` |
+| Programa | `vinculaciones` | `idprograma` |
+| Semestre (I–X) | `vinculaciones` | `semestre` |
+| Grupo (A–Z.. "") | `vinculaciones` | `grupo` |
+| Asignatura (C = "Curso" "Materia") | `vinculaciones` | `idasignatura` |
+| Tercero (P = Docente) | `vinculaciones` | `idtercero` |
+| Aula/Salón (S = bloque fijo) | *(derivado)* | `idperiodo` + `idsede`+`idprograma`+`semestre` + `grupo` + `modalidadVinculacion` |
+| Cruzamiento (S + C + P) | `vinculaciones` |  idvinculacion, idasignatura,  idtercero |
+| Días Semana (β) + Horario (γ) | `vinculaciones` | `dia_horas_semanales` (ej. `"MARTES|4,MIERCOLES|4"`) |
+| Sesiones de clase ( α = fechas) | `sesiones` | `fechasesion`, `horariosesion`, `horas`, `viatica` |
+
+1. Módulo Aula/Salón (S): no se va generar sino que se crea como punto de partida como insumo para el AG, mediante una UI que va desplegando en cadena `idperiodo` + `idsede`+`idprograma`+`semestre` + `grupo` + `modalidadVinculacion` para hacer la selección y generar el encabezado de la vinculación (idvinculacion). De esta forma, el Aula/Salón define mediante `idprograma`+`semestre`= idasignatura dependientes que son los que se van a cruzar con los terceros
+
+2. Módulo Cruzamiento (R): Utiliza un operador de cruce para que a cada asignatura se le asigne un Tercero. Utiliza el AG para generar la tupla S+C+P (Aula/Salón+Asignatura+Tercero) y decidir **solo la cabeza + el patrón semanal (Día, Franja)**, y **reutilizar** `GeneradorSesionesRecurrentes` + `AcademicDateSyncService` teniendo en cuenta las fechas de cuándo inicia y termina cada vinculación, utilizando la fecha de inicio para calcular la fecha final de la sesión de clases (α). 
+
+Reglas de Validación Post-Cruce
+Después de cada operación de cruce, se aplican estas reglas de emparejamiento:
+Regla: Descripción
+Acción si se viola
+R1: Un docente no puede estar en dos lugares a la misma hora
+Se elimina la tupla conflictiva y se reasigna
+R2: Un aula no puede albergar dos cursos simultáneamente
+Se muta el aula de una de las tuplas
+R3: Las tuplas del mismo curso deben estar en días diferentes (si es diario)
+Se intercambian posiciones dentro del cromosoma
+R4: Un grupo no puede tener dos Asignaturas (C) en el mismo día excepto sábados, que puede haber 2 horarios de 4 horas o 1 horario de 8 horas.
+R5: Un grupo puede tener hasta dos Asignaturas (C) semanales (por ejemplo, Asignatura 1: MARTES, MIERCOLES; Asignatura 2: JUEVES, VIERNES
+R6: Un grupo debe finalizar las Asignaturas (C) asignadas en la primera asignación antes de iniciar 1 o hasta 2 nuevas asignaturas
+R7: Un Tercero (P) no puede estar en dos grupos a la misma fecha y hora.
+
+Actualiza el Diseño del algoritmo, las Restricciones y la variable es_imaginario cambia a es_vacante 
+
+Adapta FormAgGeneradorHorarios para Módulo Aula/Salón (S) y Módulo Cruzamiento (R)
+
+En los algoritmos genéticos para horarios, el operador de cruce es el que genera diversidad en la población.
+Cruce inteligente: No es aleatorio; considera las restricciones del problema.
+Reparación de soluciones: Si el cruce genera un hijo inviable, se aplican operadores de reparación (mutación dirigida) para hacerlo viable.
+Preservación de bloques: Las tuplas que funcionan bien juntas tienden a heredarse como bloques completos.
+
+__Opción A (mínimo riesgo, no invasiva):__
+
+1. Crear __una sola migración__ `MigrationV48_AddGeneticAlgorithmTables.cs` con todo el DDL `IF NOT EXISTS` (+ seeds de `ag_bloque_horario`).
+2. Registrarla explícitamente en `SqliteHelper.BuildMigrator()` (tras `MigrationV47_...`).
+3. __No__ modificar `AcademicSchema.sql`, __no__ tocar `BASE_SCHEMA_VERSION` (queda 28), __no__ añadir a `BASE_TABLES[]`.
+4. __No__ añadir las `ag_*` a `SyncInitializer.CrdtTables[]` → las tablas del AG quedan __locales/efímeras__ (no se replican por CR-SQLite). Es lo correcto: son datos derivados y voluminosos.
+
+
+-------------FormVinculaciones
+
+## 3. Tupla y equivalencias
+
+```
+Tupla = (Curso C, Docente P, Aula S, Día β, Hora γ)
+      = (idasignatura, idtercero, {idperiodo,idsede,idprograma,semestre,grupo,modalidad},
+         dia_semana, idbloque_horario)
+
+
+### Pipeline de materialización
+
+```javascript
+List<AgGen> → agrupar por (idasignatura, idtercero, idaula, ventana)   → cabezas
+            → AgPlanificadorTemporal (α, secuencia R6)
+            → GeneradorSesionesRecurrentes.Generar(...) por día
+            → AcademicDateSyncService.CalculateAdjustment(...)
+            → INSERT ag_vinculaciones + ag_sesiones   [estado_ag='BORRADOR_MATERIALIZADO']
+            → edición humana (3 Forms en Modo AG)
+            → AgSincronizadorCorrecciones (re-sincroniza genes + recalcula fitness)
+            → APROBACIÓN (estado_ag='APROBADO')
+            → (M2: upsert pool con origen='AG_APROBADO')
+            → PROMOCIÓN: copia con remapeo → vinculaciones + sesiones + ag_promocion
+```
+
+
+Algoritmo (consolidado)
+12.1 Representación
+AgIndividuo = List<AgGen> ordenado por posicion; AgGen = (C, P, S, β, γ, horas, α, es_vacante, motivo_vacante); azar determinista vía IAgRandomProvider + semilla.
+
+12.2 Restricciones
+Regla	Enunciado	Reparación	Peso	Tipo
+R1	Docente no en dos lugares a la misma hora	Elimina tupla conflictiva + reasigna (o Vacante)	100	Dura
+R2	Aula no alberga dos cursos simultáneos	Muta franja/día	80	Dura
+R3	Mismo curso en días diferentes (si es diario)	Intercambia posiciones	40	Dura
+R4	Grupo sin dos C el mismo día, salvo sábado (2×4 h o 1×8 h)	Mueve a otro día / admite pareja sábado	60	Dura
+R5	Máx. 2 Asignaturas semanales por grupo (ej. C1: MAR/MIÉ · C2: JUE/VIE)	Reagrupa por semanas	50	Dura
+R6	Debe finalizar las C de la 1.ª asignación antes de iniciar 1–2 nuevas	Reordena ventanas α por orden_curricular	70	Dura
+R7	Tercero no en dos grupos a la misma fecha y hora	Reasigna franja	100	Dura
+BETA/GAMMA	Día ∉ β / Bloque ∉ γ	Reasignar	200	Dura
+SOLAPE	Franjas solapadas en el mismo aula_ref (FranjaHoraria.SeSolapaCon)	Reasignar franja	90	Dura
+VACANTE	Tupla sin docente (es_vacante=1)	— (penaliza)	100	Blanda-fuerte
+COBERTURA	Asignatura requerida sin tupla	Inserta tupla	150	Dura
+12.3 Fitness F = F1 − F2 + 2·F3 + F4 + 2·F5
+Término	Definición
+F1	Cobertura de C requeridas
+F2	Suma ponderada de violaciones (se resta)
+F3	Escalonado + R5/R6 (×2)
+F4	Balance de carga + afinidad terceros_asignaturas (prioridad, veces_asignada) + residencia ↔ sede
+F5	Preservación de bloques (×2)
+
+
+---
+
+## 2. Arquitectura general (4 capas de datos)
+
+```javascript
+┌─ CAPA 0 — PRODUCCIÓN MAESTRA (CRDT, sincronizada) ──────────────────────────────┐
+│  terceros_asignaturas   ← POOL Docente↔Asignatura (evidencia histórica + manual)│
+│  (se alimenta de `vinculaciones` que son el histórico del negocio)              │
+└─────────────────────────────────────────────────────────────────────────────────┘
+                                     │  consulta (ITerceroAsignaturaRepository)
+                                     ▼
+┌─ CAPA 1 — ALGORITMO (memoria + auditoría, NO CRDT) ─────────────────────────────┐
+│  AgAula (S) ─1:N─► AgAulaAsignatura (C)                                          │
+│      └─1:N─► AgCorrida (R) ─1:N─► AgIndividuo ══► List<AgGen>                    │
+│                                        │              └─0:N─► AgViolacion        │
+│                                        └─N─► AgBitacora                          │
+│  Tablas: ag_aula, ag_aula_asignatura, ag_bloque_horario, ag_corrida,             │
+│          ag_individuo, ag_gen, ag_violacion, ag_bitacora                         │
+└─────────────────────────────────────────────────────────────────────────────────┘
+                                     │  materialización (agrupar + expandir α)
+                                     ▼
+┌─ CAPA 2 — STAGING EDITABLE (espejo, NO CRDT) ───────────────────────────────────┐
+│  ag_vinculaciones ─1:N─► ag_sesiones      ·  puente ag_vinculacion_gen            │
+│  paridad: ag_salvedades_conflictos        ·  vistas: vw_AgVinculacionesDetalle,   │
+│                                                      vw_AgSesionesDetalle        │
+└─────────────────────────────────────────────────────────────────────────────────┘
+                                     │  PROMOCIÓN (aprobación + copia con remapeo)
+                                     ▼
+┌─ CAPA 3 — PRODUCCIÓN (SIN CAMBIOS en tablas existentes) ────────────────────────┐
+│  vinculaciones ─1:N─► sesiones      +  ag_promocion (trazabilidad id↔id)         │
+│  + (M2) upsert automático del pool en terceros_asignaturas (origen AG_APROBADO)  │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+__Flujo funcional completo__
+
+```javascript
+Módulo Aula/Salón (S)  → ag_aula + ag_aula_asignatura            [insumo, no genera vinculaciones]
+Módulo Cruzamiento (R) → AgCorrida/AgIndividuo/List<AgGen>       [AG: cruza C con P del pool]
+                       → materializa ag_vinculaciones/ag_sesiones
+Edición humana         → los 3 Forms en Modo AG + Pestaña 2 (tuplas) + AgSincronizadorCorrecciones
+Aprobación             → estado_ag = APROBADO (gate duro)
+Promoción              → vinculaciones + sesiones + ag_promocion (+ upsert pool)
+```
+
+---
+
+## 3
+
+
+Efecto en es_vacante (verificación v4, se mantiene)
+
+Motivo	Causa	Acción sugerida en UI
+SIN_CANDIDATOS	No hay filas en el pool para (idasignatura, idprograma, semestre) con activo=1	"Cargar pool" → abre FormTerceroAsignaturas/pestaña 2
+SIN_DISPONIBILIDAD	Candidatos ocupados en (día,bloque) (R1) o (fecha,hora) (R7)	"Mover franja" / más generaciones
+NO_CUMPLE_REQUISITOS	Candidatos libres que no pasan el filtro duro	"Revisar requisitos"
+Fitness F4 = balance de carga + prioridad + veces_asignada + residencia ↔ sede.
+
+
+
+Modelo AG — 3 capas y relación `AgIndividuo` ↔ `List<AgGen>`
+
+- __`AgGen` (gen)__ = `(C, P, S, Día β, Hora γ)` + ventana α + `es_vacante` + `motivo_vacante` (granularidad __día/bloque__, como la literatura `Tupla = (Curso, Docente, Aula, Día, Hora)`).
+
+- __`AgIndividuo` (cromosoma)__ = __solución candidata completa__ del `AgAula`.
+
+- __Agrupación__: 2 genes `(MAT-101, P5, S, MARTES, γ1)` + `(MAT-101, P5, S, MIÉRCOLES, γ1)` → __1 `ag_vinculaciones`__ con `dia_horas_semanales = "MARTES|4|6:00 PM A 10:00 PM,MIERCOLES|4|6:00 PM A 10:00 PM"` → N `ag_sesiones`.
+
+
+__Módulo Cruzamiento (R)__ (detalle)
+
+__Ciclo de vida__
+
+```javascript
+ag_aula:          BORRADOR → LISTO → EN_AG → APROBADO → PROMOVIDO ↘ DESCARTADO
+ag_corrida:       BORRADOR → EJECUTANDO → COMPLETADA → APROBADA ↘ DESCARTADA
+ag_individuo:     EVALUADO → APTO → SELECCIONADO → MATERIALIZADO → MODIFICADO_MANUAL → APROBADO → PROMOVIDO ↘ DESCARTADO
+ag_vinculaciones: BORRADOR_MATERIALIZADO → MODIFICADO → APROBADO → PROMOVIDO ↘ DESCARTADO
+```
+
+---
+
+
+### B.3.1 Modelo de ventanas (3 niveles)
+
+```javascript
+[ VENTANA DEL SEMESTRE ]   semestre_inicio … semestre_fin        ← cota DURA, derivada del idperiodo
+      └── [ VENTANA DEL AULA ]   aula_inicio … aula_fin          ← PARÁMETRO DE ENTRADA del AG (V3)
+              └── [ VENTANA POR ASIGNATURA
+```
+
+Voy a analizar el log correlacionándolo con el código fuente. Plan:
+
+1. __Extraer firmas de error del log__ (conteos, mensajes únicos normalizados, pasos que fallan).
+2. __Leer los archivos del pipeline AG__ implicados (coherencia, expansor, materializador, mapper, herencia de cruce).
+3. __Explicar los errores__ con causa raíz, evidencia del log y relación con las rondas 89–91.
+
+
+ClaveGrupo (IdAsignatura|IdAula|Grupo).
+
+
+Actúa como un Ingeniero de Software Principal y Technical Writer experto. Tu objetivo es generar una documentación técnica de la implementación clara, exhaustiva y rigurosa del PLAN DE DISEÑO CONSOLIDADO del algoritmo genético. 
+
+Por favor, estructura la documentación utilizando formato Markdown profesional,  y genera un documento técnico fluido, evitando redundancias y asumiendo que el lector es un desarrollador o administrador de sistemas con experiencia técnica intermedia.
+
+Pernocta último día
+
+Ya tengo todo el contexto necesario. Confirmé que:
+
+- La columna `isPernoctaUltimoDia` ya existe en `AcademicSchema.sql` (línea 162), pero __el checkbox aún no existe en el código__ de `FormSesionesAcademicas` (búsqueda sin resultados) — hay que crearlo.
+- La duración del bloque se calcula centralizadamente en `ViaticoBloque.DuracionTotal = (FechaMaxima - FechaMinima).Days + 0.5` (vie 16 + sáb 17 → 1.5 días ✓).
+- La vista `vw_SesionesDetalle` propaga flags de `vinculaciones` a cada sesión (igual que `IsTerminalAereo`).
+- Las migraciones incrementales se registran explícitamente en `SqliteHelper.cs` (última: V63).
+
+---
+
+# 📋 Plan detallado: `isPernoctaUltimoDia` (+1 día en comisión de viáticos)
+
+## Comportamiento objetivo
+
+Bloque vie 16/10 + sáb 17/10 → normal: __16–17 oct, 1.5 días__. Con flag activo: __16–18 oct, 2.5 días__, aplicado a __todos__ los bloques que contengan sesiones de esa vinculación (recurrente, automático).
+
+---
+
+## FASE A — Persistencia (SQL + migración)
+
+__A1. `AcademicSchema.sql`__ (vista, líneas ~393-397) Agregar a `vw_SesionesDetalle`, junto a `IsTerminalAereo`:
+
+```sql
+v.isPernoctaUltimoDia AS IsPernoctaUltimoDia,
+```
+
+*(La columna en `vinculaciones` ya la agregaste ✓)*
+
+__A2. Nueva migración `MigrationV64_AddPernoctaUltimoDia.cs`__ (para bases de datos existentes)
+
+- `Version => 64`, siguiendo el patrón de `MigrationV33_UpdateSesionesDetalleForTerminales`.
+- `ALTER TABLE vinculaciones ADD COLUMN isPernoctaUltimoDia INTEGER DEFAULT 0;` (tolerante a "column already exists", patrón usado en el proyecto).
+- `DROP VIEW IF EXISTS vw_SesionesDetalle;` + `CREATE VIEW` actualizada con la nueva columna.
+- Registrarla en `SqliteHelper.BuildMigrator()` después de `new MigrationV63_UnificarHorariosMilitar()`.
+
+__A3. (Decisión pendiente — recomendado)__ Módulo AG: `ag_vinculaciones` espeja a `vinculaciones`. Si no se propaga, las vinculaciones promovidas desde el AG quedarían con `isPernoctaUltimoDia = 0`. Implica tocar: `ag_vinculaciones` (migración), `vw_AgSesionesDetalle`, `AgVinculacion.cs`, `AgVinculacionToVinculacionMapper.cs`. __Recomiendo incluirlo por consistencia.__
+
+---
+
+## FASE B — Modelos de dominio
+
+__B1. `Vinculacion.cs`__: agregar `public int IsPernoctaUltimoDia { get; set; }` (junto a `IsTerminalAereo`).
+
+__B2. `SesionListItem.cs`__: agregar `public int IsPernoctaUltimoDia { get; set; }` — Dapper lo mapea automáticamente desde la vista (el repositorio hace `SELECT *`).
+
+__B3. `ViaticoBloque.cs`__ — núcleo del cambio (sin tocar `FechaMaxima`, que alimenta `AgruparConsecutivos`):
+
+```csharp
+public bool TienePernoctaUltimoDia => Sesiones.Any(s => s.IsPernoctaUltimoDia == 1);
+
+/// Fecha de regreso real: FechaMaxima + 1 día si hay pernocta último día.
+public DateTime? FechaFinComision => FechaMaxima?.AddDays(TienePernoctaUltimoDia ? 1 : 0);
+```
+
+- `DuracionTotal` pasa a calcularse con `FechaFinComision`: `(FechaFinComision - FechaMinima).Days + 0.5` → 1.5 sin flag, __2.5 con flag__ ✓
+- `DisplayText` usa `FechaFinComision`.
+- ⚠️ __No extender `FechaMaxima`__: rompería la detección de días consecutivos en `AgruparConsecutivos`.
+
+---
+
+## FASE C — Repositorio (`AcademicRepository.cs`)
+
+- __C1.__ `GetVinculacion` (~L849/908): agregar `isPernoctaUltimoDia as IsPernoctaUltimoDia` al SELECT y al mapeo desde el diccionario.
+- __C2.__ `InsertVinculacion` (~L861): columna + parámetro `@IsPernoctaUltimoDia`.
+- __C3.__ `UpdateVinculacion` (~L963): `isPernoctaUltimoDia = @IsPernoctaUltimoDia` + parámetro.
+
+---
+
+## FASE D — `FormSesionesAcademicas` (UI)
+
+__D1. Designer.cs__: nuevo `CheckBox chkPernoctaUltimoDia`:
+
+- `Text = "Pernocta último día"`, `AutoSize`, ubicado a la derecha de `chkTerminalAereo` (éste está en `Point(290,143)`, ancho 60 → sugerido `Point(356,143)`), `TabIndex = 23`, `Controls.Add` + declaración de campo.
+- No requiere `CheckedChanged` (no tiene panel dependiente como el aéreo); opcional: `ToolTip` explicativo.
+
+__D2. FormSesionesAcademicas.cs__:
+
+- En `GuardarAsync`, al construir la `Vinculacion` (~L1447): `IsPernoctaUltimoDia = chkPernoctaUltimoDia.Checked ? 1 : 0`.
+- En la restauración al cargar vinculación existente (~L1880-1952, bloque donde se restaura `chkTerminalAereo`): `chkPernoctaUltimoDia.Checked = vinc.IsPernoctaUltimoDia == 1;`.
+- Verificar el reseteo del formulario (nuevo/limpiar) para desmarcar el check.
+- __El check NO afecta `btnGenerar`__ (la generación de sesiones/grilla no cambia; solo se persiste con la vinculación).
+
+---
+
+## FASE E — Consumidores de viáticos
+
+__E1. `FormVerVinculaciones.ConstruirArbolViaticos`__ (~L888-893): `fechaFinStr` pasa a usar `bloque.FechaFinComision` → el árbol muestra `📅 16/10/2026 - 18/10/2026 | 2,5 días`. Como los bloques se reconstruyen desde la vista en cada carga, __la recurrencia en todas las sesiones/bloques del docente es automática__.
+
+__E2. `ViaticosIndividualExporter.MapearViaje`__ (~L433-438, 487-489):
+
+- `fFin = b.FechaFinComision ?? ...` → objeto: *"DEL 16/10/2026 AL 18/10/2026"*.
+- ⚠️ __Detalle crítico__: `dur = (int)Math.Round(b.DuracionTotal)` usa redondeo bancario (`ToEven`): `Round(1.5)=2` pero __`Round(2.5)=2`__ — el día extra se perdería. Cambiar a `MidpointRounding.AwayFromZero`: mantiene `1.5→2` (igual que hoy) y logra `2.5→3`.
+- `Viaje.FechaFin = fFin`.
+
+__E3. `ViaticoTimelineMapper`__ (~L168) y __`ViaticoConflictAnalyzer`__: actualizar el rango mostrado para usar `FechaFinComision` (coherencia visual con el árbol y el PDF).
+
+__E4.__ Revisión final con búsqueda de todos los consumidores de `FechaMaxima`/`DuracionTotal` en código real (excluyendo `docs/` y `_FIXES/`) para no dejar ninguno desactualizado.
+
+---
+
+## FASE F — Pruebas y validación
+
+- __F1.__ `MigrationV64Tests`: columna creada en BD antigua, idempotencia, vista expone `IsPernoctaUltimoDia`, filas existentes quedan en 0.
+- __F2.__ Tests de `ViaticoBloque`: vie 16/10 + sáb 17/10 → 1.5 días / fin 17 sin flag; 2.5 días / `FechaFinComision` 18/10 con flag; docente con 2+ bloques → todos heredan +1 día; bloque sin flag no se afecta.
+- __F3.__ Test de integración `FormSesionesAcademicas`: guardar con check activo → releer y verificar persistencia y restauración del check.
+- __F4.__ Compilar solución y ejecutar `dotnet test` completo.
+
+---
+
+## Decisiones que necesito que confirmes
+
+Auto-approve:Read, Edit, Commands, Web Fetch, MCP
+
+
+-------------------------
+

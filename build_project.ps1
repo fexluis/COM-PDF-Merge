@@ -34,9 +34,13 @@ if ($msbuild) {
             if (!(Test-Path $outputPath)) { New-Item -ItemType Directory -Force -Path $outputPath }
 
             $metadataDll = "$env:USERPROFILE\.nuget\packages\system.reflection.metadata\6.0.0\lib\net461\System.Reflection.Metadata.dll"
-            if (Test-Path $metadataDll) {
-                Copy-Item $metadataDll -Destination "$outputPath\" -Force
-            }
+            if (Test-Path $metadataDll) { Copy-Item $metadataDll -Destination "$outputPath\" -Force }
+
+            $immutableDll = "$env:USERPROFILE\.nuget\packages\system.collections.immutable\6.0.0\lib\net461\System.Collections.Immutable.dll"
+            if (Test-Path $immutableDll) { Copy-Item $immutableDll -Destination "$outputPath\" -Force }
+
+            $functionalDll = "$env:USERPROFILE\.nuget\packages\csharpfunctionalextensions\2.40.3\lib\net461\CSharpFunctionalExtensions.dll"
+            if (Test-Path $functionalDll) { Copy-Item $functionalDll -Destination "$outputPath\" -Force }
 
             Write-Host "Iniciando compilación de ConversorPDF.XLL..."
             & $msbuild ".\ConversorPDF.XLL\ConversorPDF.XLL.csproj" /p:Configuration=$config /p:Platform=$plat /m /v:m

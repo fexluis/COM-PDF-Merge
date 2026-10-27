@@ -16,7 +16,7 @@
       <meta name="docfx:rel" content="../">
       
       
-      <meta name="docfx:docurl" content="https://github.com/fexluis/COM-PDF-Merge/blob/main-1/docs/articles/developer-guide.md/#L1">
+      <meta name="docfx:docurl" content="https://github.com/fexluis/COM-PDF-Merge/blob/refactor/academic-modularization/docs/articles/developer-guide.md/#L1">
       <meta name="loc:inThisArticle" content="In this article">
       <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
       <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
@@ -222,6 +222,12 @@ EncryptedSQLiteContext.EnsureSQLiteConfigurationFile();
 // Tests (directorio simulado):
 EncryptedSQLiteContext.EnsureSQLiteConfigurationFile(&quot;/tmp/shadow-copy-sim/&quot;);
 </code></pre>
+<h2 id="gotchas-de-winforms-datagridviewcheckboxcolumn">Gotchas de WinForms: DataGridViewCheckBoxColumn</h2>
+<p>Cuando se trabaja con <code>DataGridView</code> sin un <code>DataSource</code> vinculado (modo un-bound), la columna de tipo <code>DataGridViewCheckBoxColumn</code> tiene un comportamiento atípico conocido en WinForms:</p>
+<ol>
+<li><strong>Bug del <code>DataPropertyName</code></strong>: Si la columna tiene asignado un <code>DataPropertyName</code> pero no hay <code>DataSource</code>, el motor interno de WinForms intentará resolver la propiedad contra un contexto nulo durante repaints o llamadas a <code>Rows.Add()</code>, provocando que el valor booleano se restablezca silenciosamente a <code>false</code>. <strong>Solución</strong>: Asegúrate de que <code>DataPropertyName</code> esté vacío en grids un-bound.</li>
+<li><strong>Renderizado de Asignaciones Programáticas</strong>: Si se asigna el valor de la celda de forma programática (ej. <code>row.Cells[&quot;ColViatica&quot;].Value = true;</code>), el backing store se actualiza, pero la interfaz gráfica (el checkmark) podría no renderizarse de inmediato. <strong>Solución</strong>: Llama explícitamente a <code>dgv.Refresh()</code> después de poblar el grid para forzar la actualización visual del estado.</li>
+</ol>
 <h2 id="pruebas-unitarias-y-desacoplamiento-v1251">Pruebas Unitarias y Desacoplamiento (v1.2.51+)</h2>
 <p>Para garantizar la integridad de los datos en módulos complejos (como el Académico), se debe seguir el patrón de desacoplamiento de lógica de UI.</p>
 <h3 id="1-extracción-de-lógica-mappers">1. Extracción de Lógica (Mappers)</h3>
@@ -238,7 +244,154 @@ public static class MiModuloMapper {
 <h5>Tip</h5>
 <p>Consulta la regla formal en <code>.agents/rules/grid-mapper-pattern.md</code> para ver el patrón de implementación completo y las guardas de integridad obligatorias.</p>
 </div>
-<h3 id="2-suite-de-pruebas-net-48">2. Suite de Pruebas (.NET 4.8)</h3>
+<h3 id="3-patrón-de-resultados-y-errores-csharpfunctionalextensions">3. Patrón de Resultados y Errores (CSharpFunctionalExtensions)</h3>
+<p>Evita lanzar excepciones para reglas de negocio. Utiliza <code>Result</code> o <code>Result&lt;T&gt;</code> para canalizar errores de forma segura hacia la UI.</p>
+<pre><code class="lang-csharp">// Ejemplo: Generador de Sesiones
+public Result&lt;IReadOnlyList&lt;Sesion&gt;&gt; Generar(...)
+{
+    if (!Validar(dias))
+        return Result.Failure&lt;IReadOnlyList&lt;Sesion&gt;&gt;(&quot;Días no consecutivos.&quot;);
+
+    var sesiones = new List&lt;Sesion&gt;();
+    // ... lógica ...
+    return Result.Success&lt;IReadOnlyList&lt;Sesion&gt;&gt;(sesiones);
+}
+
+// Consumo en UI (WinForms)
+var result = _service.Generar(...);
+if (result.IsFailure)
+{
+    MessageBox.Show(result.Error, &quot;Error&quot;, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+    return;
+}
+_grid.DataSource = result.Value;
+</code></pre>
+<h3 id="4-inmutabilidad-y-builder-pattern">4. Inmutabilidad y Builder Pattern</h3>
+<p>Para modelos de estado complejo que se construyen paso a paso, utiliza objetos inmutables con un Builder interno o dedicado. Esto previene cambios accidentales de estado en capas superiores.</p>
+<pre><code class="lang-csharp">// Modelo Inmutable
+public sealed class AcademicDateAdjustment
+{
+    public bool NeedsAdjustment { get; }
+    public IReadOnlyList&lt;string&gt; Messages { get; }
+
+    internal AcademicDateAdjustment(bool needsAdjustment, List&lt;string&gt; messages)
+    {
+        NeedsAdjustment = needsAdjustment;
+        Messages = messages.AsReadOnly();
+    }
+}
+
+// Uso del Builder
+var builder = new AcademicDateAdjustmentBuilder();
+builder.AddMessage(&quot;Fecha ajustada&quot;);
+AcademicDateAdjustment result = builder.Build();
+</code></pre>
+<h3 id="5-caché-de-propiedades-lazy-calculation">5. Caché de Propiedades (Lazy Calculation)</h3>
+<p>Para propiedades pesadas que dependen de colecciones (ej: cálculos LINQ sobre miles de filas), utiliza un patrón de <strong>Dirty Flag</strong> para cachear el resultado y mejorar el rendimiento de la UI (DataGridView).</p>
+<pre><code class="lang-csharp">private double? _cachedTotal;
+private bool _dirty = true;
+
+public double TotalHoras
+{
+    get
+    {
+        if (_dirty || !_cachedTotal.HasValue)
+        {
+            _cachedTotal = Sesiones.Sum(s =&gt; s.Horas);
+            _dirty = false;
+        }
+        return _cachedTotal.Value;
+    }
+}
+
+public void Agregar(Sesion s)
+{
+    Sesiones.Add(s);
+    _dirty = true; // Invalida la caché
+}
+</code></pre>
+<h3 id="6-análisis-de-conflictos-viaticoconflictanalyzer">6. Análisis de Conflictos (ViaticoConflictAnalyzer)</h3>
+<p>Para detectar solapamientos de agenda entre sedes distintas, utilice el servicio <code>ViaticoConflictAnalyzer</code>. Este servicio está desacoplado de la UI y es ideal para validaciones masivas.</p>
+<pre><code class="lang-csharp">// 1. Preparar lista plana de (Sede, Bloque)
+var bloquesDocente = new List&lt;(string Sede, ViaticoBloque Bloque)&gt;
+{
+    (&quot;Sede A&quot;, bloque1),
+    (&quot;Sede B&quot;, bloque2)
+};
+
+// 2. Detectar bloques cruzados
+HashSet&lt;ViaticoBloque&gt; conflictos = ViaticoConflictAnalyzer.DetectarBloquesCruzados(bloquesDocente);
+
+if (conflictos.Contains(bloque1))
+{
+    // 3. Obtener detalle para Tooltip o logs
+    string detalle = ViaticoConflictAnalyzer.ObtenerDetalleCruce(bloque1, bloquesDocente, &quot;Sede A&quot;);
+    Console.WriteLine(detalle);
+}
+</code></pre>
+<h3 id="7-análisis-de-conflictos-académicos-y-salvedades-sesionconflictanalyzer">7. Análisis de Conflictos Académicos y Salvedades (SesionConflictAnalyzer)</h3>
+<p>Para detectar conflictos de horarios en la programación académica de los docentes, utilice <code>SesionConflictAnalyzer</code> en conjunto con <code>HorarioSesionParser</code>. Esta lógica maneja tres estados de conflicto y permite cargar salvedades previamente autorizadas por el usuario.</p>
+<pre><code class="lang-csharp">// 1. Cargar las salvedades confirmadas previamente desde la Base de Datos
+var salvedades = await _salvedadRepository.GetByPeriodoAsync(idPeriodo);
+
+// 2. Ejecutar el análisis para todas las sesiones de un docente
+var analisis = SesionConflictAnalyzer.Analizar(sesionesDocente, salvedades);
+
+// 3. Evaluar el estado de cada sesión (Ninguno, Salvado, RevisarViabilidad, ConflictoReal)
+foreach(var sesion in sesionesDocente)
+{
+    var estado = analisis.ContainsKey(sesion.IdSesion) ? analisis[sesion.IdSesion] : EstadoConflicto.Ninguno;
+    
+    if (estado == EstadoConflicto.ConflictoReal)
+    {
+        Console.WriteLine($&quot;La sesión {sesion.IdSesion} tiene un conflicto real de horario.&quot;);
+    }
+    else if (estado == EstadoConflicto.RevisarViabilidad)
+    {
+        Console.WriteLine($&quot;La sesión {sesion.IdSesion} ocurre el mismo día en otra sede. Requiere confirmación de traslado.&quot;);
+    }
+}
+</code></pre>
+<h3 id="8-lógica-de-distribución-en-exportadores-asignaturasexcelexporter">8. Lógica de Distribución en Exportadores (AsignaturasExcelExporter)</h3>
+<p>Cuando un reporte requiere cruzar una entidad padre (Asignatura) con una entidad global agrupada (Viáticos Multi-Sede del Docente), se emplea un algoritmo de distribución con punteros y duplicación dinámica de filas (Phantom Rows) para acomodar el exceso de datos secundarios.</p>
+<pre><code class="lang-csharp">// 1. Extraer grupos globales (Viáticos de todas sus asignaturas)
+var bloquesGlobales = ViaticoBloque.AgruparConsecutivos(todasSesiones);
+var asignaturas = ObtenerAsignaturas(todasSesiones);
+
+int asigIndex = 0;
+int bloqueIndex = 0;
+
+// 2. Iterar hasta agotar tanto Asignaturas como Viáticos
+while (asigIndex &lt; asignaturas.Count || bloqueIndex &lt; bloquesGlobales.Count)
+{
+    var grupoAsignatura = asigIndex &lt; asignaturas.Count 
+        ? asignaturas[asigIndex] 
+        : asignaturas[0]; // Tomar la primera asignatura como base para Fila Duplicada
+
+    bool esFilaDuplicada = asigIndex &gt;= asignaturas.Count;
+
+    if (esFilaDuplicada)
+    {
+        // 3. Imprimir solo campos de identificación (PKs visuales)
+        EscribirCelda(ws, fila, CodMateria, grupoAsignatura.CodMateria);
+        EscribirCelda(ws, fila, DocenteCedula, grupoAsignatura.Cedula);
+    }
+    else
+    {
+        // 4. Imprimir toda la información salarial y horas
+        EscribirFilaCompleta(ws, fila, grupoAsignatura);
+    }
+
+    // 5. Tomar Chunk de hasta 4 viáticos y escribirlos en la fila actual
+    var bloquesEnFila = bloquesGlobales.Skip(bloqueIndex).Take(4).ToList();
+    EscribirComisiones(ws, fila, bloquesEnFila);
+
+    asigIndex++;
+    bloqueIndex += 4;
+    fila++;
+}
+</code></pre>
+<h3 id="9-suite-de-pruebas-net-48">9. Suite de Pruebas (.NET 4.8)</h3>
 <p>El proyecto utiliza <strong>xUnit</strong> para lógica pura y <strong>MSTest (STAThread)</strong> para integración con WinForms.</p>
 <ul>
 <li><strong>Ubicación</strong>: <code>ConversorPDF.Tests/</code></li>
@@ -257,7 +410,7 @@ dotnet test ConversorPDF.Tests\ConversorPDF.Tests.csproj
 </article>
 
         <div class="contribution d-print-none">
-          <a href="https://github.com/fexluis/COM-PDF-Merge/blob/main-1/docs/articles/developer-guide.md/#L1" class="edit-link">Edit this page</a>
+          <a href="https://github.com/fexluis/COM-PDF-Merge/blob/refactor/academic-modularization/docs/articles/developer-guide.md/#L1" class="edit-link">Edit this page</a>
         </div>
 
         <div class="next-article d-print-none border-top" id="nextArticle"></div>

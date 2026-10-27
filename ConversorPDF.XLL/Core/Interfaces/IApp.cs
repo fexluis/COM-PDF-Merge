@@ -8,12 +8,12 @@ using ConversorPDF.XLL.Core.Helpers;
 using ConversorPDF.XLL.Core.Enums;
 namespace ConversorPDF.XLL.Core.Interfaces
 {
-    [ComVisible(true)]
-    [Guid("A5C7E123-4B6C-4F1D-8A7E-1234567890AB")]
-    [InterfaceType(ComInterfaceType.InterfaceIsDual)]
     /// <summary>
     /// Interfaz principal (Entry Point) expuesta para interacción COM, coordinando los servicios del Add-in.
     /// </summary>
+    [ComVisible(true)]
+    [Guid("A5C7E123-4B6C-4F1D-8A7E-1234567890AB")]
+    [InterfaceType(ComInterfaceType.InterfaceIsDual)]
     public interface IApp
     {
         /// <summary> Combina una lista de archivos PDF en uno solo. </summary>
@@ -39,6 +39,18 @@ namespace ConversorPDF.XLL.Core.Interfaces
         /// <summary> Obtiene la firma (Base64) del usuario de Windows actual. </summary>
         [DispId(8)]
         string GetFirmaUsuarioActual();
+
+        /// <summary> Obtiene la firma (Base64) del usuario actual con prompt interactivo si falta. </summary>
+        [DispId(13)]
+        string GetFirmaUsuarioActualInteractivo();
+
+        /// <summary> Obtiene la firma del usuario desde la base de datos con prompt interactivo. </summary>
+        [DispId(14)]
+        string GetFirmaHelperUsuarioInteractivo();
+
+        /// <summary> Guarda o actualiza la firma base64 para el usuario actual. </summary>
+        [DispId(15)]
+        void SaveFirmaHelperUsuario(string base64);
 
         /// <summary> Genera un archivo de texto con la firma en Base64 para depuración. </summary>
         [DispId(9)]

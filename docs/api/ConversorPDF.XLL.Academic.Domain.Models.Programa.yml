@@ -1,0 +1,495 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Academic.Domain.Models.Programa
+  commentId: T:ConversorPDF.XLL.Academic.Domain.Models.Programa
+  id: Programa
+  parent: ConversorPDF.XLL.Academic.Domain.Models
+  children:
+  - ConversorPDF.XLL.Academic.Domain.Models.Programa.#ctor
+  - ConversorPDF.XLL.Academic.Domain.Models.Programa.Abreviatura
+  - ConversorPDF.XLL.Academic.Domain.Models.Programa.Id
+  - ConversorPDF.XLL.Academic.Domain.Models.Programa.NombrePrograma
+  - ConversorPDF.XLL.Academic.Domain.Models.Programa.Tipo
+  langs:
+  - csharp
+  - vb
+  name: Programa
+  nameWithType: Programa
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.Programa
+  type: Class
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Models
+  syntax:
+    content: public class Programa
+    content.vb: Public Class Programa
+  inheritance:
+  - System.Object
+  inheritedMembers:
+  - System.Object.ToString
+  - System.Object.Equals(System.Object)
+  - System.Object.Equals(System.Object,System.Object)
+  - System.Object.ReferenceEquals(System.Object,System.Object)
+  - System.Object.GetHashCode
+  - System.Object.GetType
+  - System.Object.MemberwiseClone
+- uid: ConversorPDF.XLL.Academic.Domain.Models.Programa.#ctor
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Models.Programa.#ctor
+  id: '#ctor'
+  parent: ConversorPDF.XLL.Academic.Domain.Models.Programa
+  langs:
+  - csharp
+  - vb
+  name: Programa()
+  nameWithType: Programa.Programa()
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.Programa.Programa()
+  type: Constructor
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Models
+  syntax:
+    content: public Programa()
+    content.vb: Public Sub New()
+  overload: ConversorPDF.XLL.Academic.Domain.Models.Programa.#ctor*
+  nameWithType.vb: Programa.New()
+  fullName.vb: ConversorPDF.XLL.Academic.Domain.Models.Programa.New()
+  name.vb: New()
+- uid: ConversorPDF.XLL.Academic.Domain.Models.Programa.Id
+  commentId: P:ConversorPDF.XLL.Academic.Domain.Models.Programa.Id
+  id: Id
+  parent: ConversorPDF.XLL.Academic.Domain.Models.Programa
+  langs:
+  - csharp
+  - vb
+  name: Id
+  nameWithType: Programa.Id
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.Programa.Id
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Models
+  syntax:
+    content: public int Id { get; set; }
+    parameters: []
+    return:
+      type: System.Int32
+    content.vb: Public Property Id As Integer
+  overload: ConversorPDF.XLL.Academic.Domain.Models.Programa.Id*
+- uid: ConversorPDF.XLL.Academic.Domain.Models.Programa.NombrePrograma
+  commentId: P:ConversorPDF.XLL.Academic.Domain.Models.Programa.NombrePrograma
+  id: NombrePrograma
+  parent: ConversorPDF.XLL.Academic.Domain.Models.Programa
+  langs:
+  - csharp
+  - vb
+  name: NombrePrograma
+  nameWithType: Programa.NombrePrograma
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.Programa.NombrePrograma
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Models
+  syntax:
+    content: public string NombrePrograma { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property NombrePrograma As String
+  overload: ConversorPDF.XLL.Academic.Domain.Models.Programa.NombrePrograma*
+- uid: ConversorPDF.XLL.Academic.Domain.Models.Programa.Abreviatura
+  commentId: P:ConversorPDF.XLL.Academic.Domain.Models.Programa.Abreviatura
+  id: Abreviatura
+  parent: ConversorPDF.XLL.Academic.Domain.Models.Programa
+  langs:
+  - csharp
+  - vb
+  name: Abreviatura
+  nameWithType: Programa.Abreviatura
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.Programa.Abreviatura
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Models
+  syntax:
+    content: public string Abreviatura { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property Abreviatura As String
+  overload: ConversorPDF.XLL.Academic.Domain.Models.Programa.Abreviatura*
+- uid: ConversorPDF.XLL.Academic.Domain.Models.Programa.Tipo
+  commentId: P:ConversorPDF.XLL.Academic.Domain.Models.Programa.Tipo
+  id: Tipo
+  parent: ConversorPDF.XLL.Academic.Domain.Models.Programa
+  langs:
+  - csharp
+  - vb
+  name: Tipo
+  nameWithType: Programa.Tipo
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.Programa.Tipo
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Models
+  syntax:
+    content: public string Tipo { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property Tipo As String
+  overload: ConversorPDF.XLL.Academic.Domain.Models.Programa.Tipo*
+references:
+- uid: ConversorPDF.XLL.Academic.Domain.Models
+  commentId: N:ConversorPDF.XLL.Academic.Domain.Models
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Academic.Domain.Models
+  nameWithType: ConversorPDF.XLL.Academic.Domain.Models
+  fullName: ConversorPDF.XLL.Academic.Domain.Models
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic
+    name: Academic
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Domain
+    name: Domain
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Domain.Models
+    name: Models
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic
+    name: Academic
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Domain
+    name: Domain
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Domain.Models
+    name: Models
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.html
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+  nameWithType: object
+  fullName: object
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: System.Object.ToString
+  commentId: M:System.Object.ToString
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  name: ToString()
+  nameWithType: object.ToString()
+  fullName: object.ToString()
+  nameWithType.vb: Object.ToString()
+  fullName.vb: Object.ToString()
+  spec.csharp:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+- uid: System.Object.Equals(System.Object)
+  commentId: M:System.Object.Equals(System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  name: Equals(object)
+  nameWithType: object.Equals(object)
+  fullName: object.Equals(object)
+  nameWithType.vb: Object.Equals(Object)
+  fullName.vb: Object.Equals(Object)
+  name.vb: Equals(Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.Equals(System.Object,System.Object)
+  commentId: M:System.Object.Equals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  name: Equals(object, object)
+  nameWithType: object.Equals(object, object)
+  fullName: object.Equals(object, object)
+  nameWithType.vb: Object.Equals(Object, Object)
+  fullName.vb: Object.Equals(Object, Object)
+  name.vb: Equals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.ReferenceEquals(System.Object,System.Object)
+  commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  name: ReferenceEquals(object, object)
+  nameWithType: object.ReferenceEquals(object, object)
+  fullName: object.ReferenceEquals(object, object)
+  nameWithType.vb: Object.ReferenceEquals(Object, Object)
+  fullName.vb: Object.ReferenceEquals(Object, Object)
+  name.vb: ReferenceEquals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.GetHashCode
+  commentId: M:System.Object.GetHashCode
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  name: GetHashCode()
+  nameWithType: object.GetHashCode()
+  fullName: object.GetHashCode()
+  nameWithType.vb: Object.GetHashCode()
+  fullName.vb: Object.GetHashCode()
+  spec.csharp:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+- uid: System.Object.GetType
+  commentId: M:System.Object.GetType
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  name: GetType()
+  nameWithType: object.GetType()
+  fullName: object.GetType()
+  nameWithType.vb: Object.GetType()
+  fullName.vb: Object.GetType()
+  spec.csharp:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+- uid: System.Object.MemberwiseClone
+  commentId: M:System.Object.MemberwiseClone
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  name: MemberwiseClone()
+  nameWithType: object.MemberwiseClone()
+  fullName: object.MemberwiseClone()
+  nameWithType.vb: Object.MemberwiseClone()
+  fullName.vb: Object.MemberwiseClone()
+  spec.csharp:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: ConversorPDF.XLL.Academic.Domain.Models.Programa.#ctor*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Models.Programa.#ctor
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.Programa.html#ConversorPDF_XLL_Academic_Domain_Models_Programa__ctor
+  name: Programa
+  nameWithType: Programa.Programa
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.Programa.Programa
+  nameWithType.vb: Programa.New
+  fullName.vb: ConversorPDF.XLL.Academic.Domain.Models.Programa.New
+  name.vb: New
+- uid: ConversorPDF.XLL.Academic.Domain.Models.Programa.Id*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Models.Programa.Id
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.Programa.html#ConversorPDF_XLL_Academic_Domain_Models_Programa_Id
+  name: Id
+  nameWithType: Programa.Id
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.Programa.Id
+- uid: System.Int32
+  commentId: T:System.Int32
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int
+  nameWithType: int
+  fullName: int
+  nameWithType.vb: Integer
+  fullName.vb: Integer
+  name.vb: Integer
+- uid: ConversorPDF.XLL.Academic.Domain.Models.Programa.NombrePrograma*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Models.Programa.NombrePrograma
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.Programa.html#ConversorPDF_XLL_Academic_Domain_Models_Programa_NombrePrograma
+  name: NombrePrograma
+  nameWithType: Programa.NombrePrograma
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.Programa.NombrePrograma
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: ConversorPDF.XLL.Academic.Domain.Models.Programa.Abreviatura*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Models.Programa.Abreviatura
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.Programa.html#ConversorPDF_XLL_Academic_Domain_Models_Programa_Abreviatura
+  name: Abreviatura
+  nameWithType: Programa.Abreviatura
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.Programa.Abreviatura
+- uid: ConversorPDF.XLL.Academic.Domain.Models.Programa.Tipo*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Models.Programa.Tipo
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.Programa.html#ConversorPDF_XLL_Academic_Domain_Models_Programa_Tipo
+  name: Tipo
+  nameWithType: Programa.Tipo
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.Programa.Tipo

@@ -1,0 +1,938 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository
+  commentId: T:ConversorPDF.XLL.Core.Interfaces.IExcelRepository
+  id: IExcelRepository
+  parent: ConversorPDF.XLL.Core.Interfaces
+  children:
+  - ConversorPDF.XLL.Core.Interfaces.IExcelRepository.CreateWorksheetCopy(System.String,System.String)
+  - ConversorPDF.XLL.Core.Interfaces.IExcelRepository.DeleteWorksheet(System.String)
+  - ConversorPDF.XLL.Core.Interfaces.IExcelRepository.DisplayAlerts(System.Boolean)
+  - ConversorPDF.XLL.Core.Interfaces.IExcelRepository.ExportToPdf(System.Object,System.String,System.Boolean)
+  - ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetActiveSheet
+  - ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetActiveWorkbook
+  - ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetCellValue(System.Object,System.String)
+  - ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetGlobalVariable(System.String)
+  - ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetOneDriveFolderPath
+  - ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetRangeValues(System.Object,System.Int32,System.Int32,System.Int32,System.Int32)
+  - ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetTableColumnValues(System.String,System.String)
+  - ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetTableData(System.String)
+  - ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetWorksheet(System.String)
+  - ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetWorksheetData(System.String)
+  - ConversorPDF.XLL.Core.Interfaces.IExcelRepository.SaveAs(System.Object,System.String)
+  - ConversorPDF.XLL.Core.Interfaces.IExcelRepository.ScreenUpdating(System.Boolean)
+  - ConversorPDF.XLL.Core.Interfaces.IExcelRepository.SetCellValue(System.Object,System.String,System.Object)
+  - ConversorPDF.XLL.Core.Interfaces.IExcelRepository.SetTableData(System.String,System.Object[0:,0:])
+  - ConversorPDF.XLL.Core.Interfaces.IExcelRepository.WorksheetExists(System.String)
+  langs:
+  - csharp
+  - vb
+  name: IExcelRepository
+  nameWithType: IExcelRepository
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository
+  type: Interface
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: >-
+    Interfaz para la manipulación de datos y objetos de Microsoft Excel.
+
+    Provee una capa de abstracción sobre Microsoft.Office.Interop.Excel.
+  example: []
+  syntax:
+    content: public interface IExcelRepository
+    content.vb: Public Interface IExcelRepository
+  derivedClasses:
+  - ConversorPDF.XLL.Core.Repositories.ExcelRepository
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetActiveWorkbook
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetActiveWorkbook
+  id: GetActiveWorkbook
+  parent: ConversorPDF.XLL.Core.Interfaces.IExcelRepository
+  langs:
+  - csharp
+  - vb
+  name: GetActiveWorkbook()
+  nameWithType: IExcelRepository.GetActiveWorkbook()
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetActiveWorkbook()
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Obtiene la instancia del libro de Excel activo.
+  example: []
+  syntax:
+    content: dynamic GetActiveWorkbook()
+    return:
+      type: dynamic
+    content.vb: Function GetActiveWorkbook() As Object
+  overload: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetActiveWorkbook*
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetActiveSheet
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetActiveSheet
+  id: GetActiveSheet
+  parent: ConversorPDF.XLL.Core.Interfaces.IExcelRepository
+  langs:
+  - csharp
+  - vb
+  name: GetActiveSheet()
+  nameWithType: IExcelRepository.GetActiveSheet()
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetActiveSheet()
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Obtiene la instancia de la hoja de cálculo activa.
+  example: []
+  syntax:
+    content: dynamic GetActiveSheet()
+    return:
+      type: dynamic
+    content.vb: Function GetActiveSheet() As Object
+  overload: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetActiveSheet*
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetCellValue(System.Object,System.String)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetCellValue(System.Object,System.String)
+  id: GetCellValue(System.Object,System.String)
+  parent: ConversorPDF.XLL.Core.Interfaces.IExcelRepository
+  langs:
+  - csharp
+  - vb
+  name: GetCellValue(dynamic, string)
+  nameWithType: IExcelRepository.GetCellValue(dynamic, string)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetCellValue(dynamic, string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Lee el valor de una celda o rango específico.
+  example: []
+  syntax:
+    content: object GetCellValue(dynamic sheet, string range)
+    parameters:
+    - id: sheet
+      type: dynamic
+    - id: range
+      type: System.String
+    return:
+      type: System.Object
+    content.vb: Function GetCellValue(sheet As Object, range As String) As Object
+  overload: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetCellValue*
+  nameWithType.vb: IExcelRepository.GetCellValue(Object, String)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetCellValue(Object, String)
+  name.vb: GetCellValue(Object, String)
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.SetCellValue(System.Object,System.String,System.Object)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IExcelRepository.SetCellValue(System.Object,System.String,System.Object)
+  id: SetCellValue(System.Object,System.String,System.Object)
+  parent: ConversorPDF.XLL.Core.Interfaces.IExcelRepository
+  langs:
+  - csharp
+  - vb
+  name: SetCellValue(dynamic, string, object)
+  nameWithType: IExcelRepository.SetCellValue(dynamic, string, object)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.SetCellValue(dynamic, string, object)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Escribe un valor en una celda o rango específico.
+  example: []
+  syntax:
+    content: void SetCellValue(dynamic sheet, string range, object value)
+    parameters:
+    - id: sheet
+      type: dynamic
+    - id: range
+      type: System.String
+    - id: value
+      type: System.Object
+    content.vb: Sub SetCellValue(sheet As Object, range As String, value As Object)
+  overload: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.SetCellValue*
+  nameWithType.vb: IExcelRepository.SetCellValue(Object, String, Object)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.SetCellValue(Object, String, Object)
+  name.vb: SetCellValue(Object, String, Object)
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetRangeValues(System.Object,System.Int32,System.Int32,System.Int32,System.Int32)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetRangeValues(System.Object,System.Int32,System.Int32,System.Int32,System.Int32)
+  id: GetRangeValues(System.Object,System.Int32,System.Int32,System.Int32,System.Int32)
+  parent: ConversorPDF.XLL.Core.Interfaces.IExcelRepository
+  langs:
+  - csharp
+  - vb
+  name: GetRangeValues(dynamic, int, int, int, int)
+  nameWithType: IExcelRepository.GetRangeValues(dynamic, int, int, int, int)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetRangeValues(dynamic, int, int, int, int)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Obtiene una matriz de valores de un rango bidimensional.
+  example: []
+  syntax:
+    content: object[,] GetRangeValues(dynamic sheet, int startRow, int startCol, int endRow, int endCol)
+    parameters:
+    - id: sheet
+      type: dynamic
+    - id: startRow
+      type: System.Int32
+    - id: startCol
+      type: System.Int32
+    - id: endRow
+      type: System.Int32
+    - id: endCol
+      type: System.Int32
+    return:
+      type: System.Object[,]
+    content.vb: Function GetRangeValues(sheet As Object, startRow As Integer, startCol As Integer, endRow As Integer, endCol As Integer) As Object(,)
+  overload: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetRangeValues*
+  nameWithType.vb: IExcelRepository.GetRangeValues(Object, Integer, Integer, Integer, Integer)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetRangeValues(Object, Integer, Integer, Integer, Integer)
+  name.vb: GetRangeValues(Object, Integer, Integer, Integer, Integer)
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetWorksheet(System.String)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetWorksheet(System.String)
+  id: GetWorksheet(System.String)
+  parent: ConversorPDF.XLL.Core.Interfaces.IExcelRepository
+  langs:
+  - csharp
+  - vb
+  name: GetWorksheet(string)
+  nameWithType: IExcelRepository.GetWorksheet(string)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetWorksheet(string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Obtiene una hoja por su nombre.
+  example: []
+  syntax:
+    content: dynamic GetWorksheet(string name)
+    parameters:
+    - id: name
+      type: System.String
+    return:
+      type: dynamic
+    content.vb: Function GetWorksheet(name As String) As Object
+  overload: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetWorksheet*
+  nameWithType.vb: IExcelRepository.GetWorksheet(String)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetWorksheet(String)
+  name.vb: GetWorksheet(String)
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.WorksheetExists(System.String)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IExcelRepository.WorksheetExists(System.String)
+  id: WorksheetExists(System.String)
+  parent: ConversorPDF.XLL.Core.Interfaces.IExcelRepository
+  langs:
+  - csharp
+  - vb
+  name: WorksheetExists(string)
+  nameWithType: IExcelRepository.WorksheetExists(string)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.WorksheetExists(string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Verifica si una hoja existe en el libro activo.
+  example: []
+  syntax:
+    content: bool WorksheetExists(string name)
+    parameters:
+    - id: name
+      type: System.String
+    return:
+      type: System.Boolean
+    content.vb: Function WorksheetExists(name As String) As Boolean
+  overload: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.WorksheetExists*
+  nameWithType.vb: IExcelRepository.WorksheetExists(String)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.WorksheetExists(String)
+  name.vb: WorksheetExists(String)
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.CreateWorksheetCopy(System.String,System.String)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IExcelRepository.CreateWorksheetCopy(System.String,System.String)
+  id: CreateWorksheetCopy(System.String,System.String)
+  parent: ConversorPDF.XLL.Core.Interfaces.IExcelRepository
+  langs:
+  - csharp
+  - vb
+  name: CreateWorksheetCopy(string, string)
+  nameWithType: IExcelRepository.CreateWorksheetCopy(string, string)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.CreateWorksheetCopy(string, string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Crea una copia de una hoja existente al final del libro.
+  example: []
+  syntax:
+    content: dynamic CreateWorksheetCopy(string sourceName, string newName)
+    parameters:
+    - id: sourceName
+      type: System.String
+    - id: newName
+      type: System.String
+    return:
+      type: dynamic
+    content.vb: Function CreateWorksheetCopy(sourceName As String, newName As String) As Object
+  overload: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.CreateWorksheetCopy*
+  nameWithType.vb: IExcelRepository.CreateWorksheetCopy(String, String)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.CreateWorksheetCopy(String, String)
+  name.vb: CreateWorksheetCopy(String, String)
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.DeleteWorksheet(System.String)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IExcelRepository.DeleteWorksheet(System.String)
+  id: DeleteWorksheet(System.String)
+  parent: ConversorPDF.XLL.Core.Interfaces.IExcelRepository
+  langs:
+  - csharp
+  - vb
+  name: DeleteWorksheet(string)
+  nameWithType: IExcelRepository.DeleteWorksheet(string)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.DeleteWorksheet(string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Elimina una hoja permanentemente.
+  example: []
+  syntax:
+    content: void DeleteWorksheet(string name)
+    parameters:
+    - id: name
+      type: System.String
+    content.vb: Sub DeleteWorksheet(name As String)
+  overload: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.DeleteWorksheet*
+  nameWithType.vb: IExcelRepository.DeleteWorksheet(String)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.DeleteWorksheet(String)
+  name.vb: DeleteWorksheet(String)
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetWorksheetData(System.String)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetWorksheetData(System.String)
+  id: GetWorksheetData(System.String)
+  parent: ConversorPDF.XLL.Core.Interfaces.IExcelRepository
+  langs:
+  - csharp
+  - vb
+  name: GetWorksheetData(string)
+  nameWithType: IExcelRepository.GetWorksheetData(string)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetWorksheetData(string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Obtiene todos los datos del área usada de una hoja como matriz C#.
+  example: []
+  syntax:
+    content: object[,] GetWorksheetData(string name)
+    parameters:
+    - id: name
+      type: System.String
+    return:
+      type: System.Object[,]
+    content.vb: Function GetWorksheetData(name As String) As Object(,)
+  overload: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetWorksheetData*
+  nameWithType.vb: IExcelRepository.GetWorksheetData(String)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetWorksheetData(String)
+  name.vb: GetWorksheetData(String)
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.SaveAs(System.Object,System.String)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IExcelRepository.SaveAs(System.Object,System.String)
+  id: SaveAs(System.Object,System.String)
+  parent: ConversorPDF.XLL.Core.Interfaces.IExcelRepository
+  langs:
+  - csharp
+  - vb
+  name: SaveAs(dynamic, string)
+  nameWithType: IExcelRepository.SaveAs(dynamic, string)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.SaveAs(dynamic, string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Guarda el libro de Excel en una ruta específica (Save Copy As).
+  example: []
+  syntax:
+    content: void SaveAs(dynamic workbook, string path)
+    parameters:
+    - id: workbook
+      type: dynamic
+    - id: path
+      type: System.String
+    content.vb: Sub SaveAs(workbook As Object, path As String)
+  overload: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.SaveAs*
+  nameWithType.vb: IExcelRepository.SaveAs(Object, String)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.SaveAs(Object, String)
+  name.vb: SaveAs(Object, String)
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.ExportToPdf(System.Object,System.String,System.Boolean)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IExcelRepository.ExportToPdf(System.Object,System.String,System.Boolean)
+  id: ExportToPdf(System.Object,System.String,System.Boolean)
+  parent: ConversorPDF.XLL.Core.Interfaces.IExcelRepository
+  langs:
+  - csharp
+  - vb
+  name: ExportToPdf(dynamic, string, bool)
+  nameWithType: IExcelRepository.ExportToPdf(dynamic, string, bool)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.ExportToPdf(dynamic, string, bool)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Exporta una hoja seleccionada a formato PDF con opciones de orientación.
+  example: []
+  syntax:
+    content: void ExportToPdf(dynamic sheet, string path, bool forcedPortrait = false)
+    parameters:
+    - id: sheet
+      type: dynamic
+    - id: path
+      type: System.String
+    - id: forcedPortrait
+      type: System.Boolean
+    content.vb: Sub ExportToPdf(sheet As Object, path As String, forcedPortrait As Boolean = False)
+  overload: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.ExportToPdf*
+  nameWithType.vb: IExcelRepository.ExportToPdf(Object, String, Boolean)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.ExportToPdf(Object, String, Boolean)
+  name.vb: ExportToPdf(Object, String, Boolean)
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.ScreenUpdating(System.Boolean)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IExcelRepository.ScreenUpdating(System.Boolean)
+  id: ScreenUpdating(System.Boolean)
+  parent: ConversorPDF.XLL.Core.Interfaces.IExcelRepository
+  langs:
+  - csharp
+  - vb
+  name: ScreenUpdating(bool)
+  nameWithType: IExcelRepository.ScreenUpdating(bool)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.ScreenUpdating(bool)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Controla el refresco visual de la aplicación Excel.
+  example: []
+  syntax:
+    content: void ScreenUpdating(bool enabled)
+    parameters:
+    - id: enabled
+      type: System.Boolean
+    content.vb: Sub ScreenUpdating(enabled As Boolean)
+  overload: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.ScreenUpdating*
+  nameWithType.vb: IExcelRepository.ScreenUpdating(Boolean)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.ScreenUpdating(Boolean)
+  name.vb: ScreenUpdating(Boolean)
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.DisplayAlerts(System.Boolean)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IExcelRepository.DisplayAlerts(System.Boolean)
+  id: DisplayAlerts(System.Boolean)
+  parent: ConversorPDF.XLL.Core.Interfaces.IExcelRepository
+  langs:
+  - csharp
+  - vb
+  name: DisplayAlerts(bool)
+  nameWithType: IExcelRepository.DisplayAlerts(bool)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.DisplayAlerts(bool)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Controla la visualización de cuadros de diálogo de alerta de Excel.
+  example: []
+  syntax:
+    content: void DisplayAlerts(bool enabled)
+    parameters:
+    - id: enabled
+      type: System.Boolean
+    content.vb: Sub DisplayAlerts(enabled As Boolean)
+  overload: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.DisplayAlerts*
+  nameWithType.vb: IExcelRepository.DisplayAlerts(Boolean)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.DisplayAlerts(Boolean)
+  name.vb: DisplayAlerts(Boolean)
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetGlobalVariable(System.String)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetGlobalVariable(System.String)
+  id: GetGlobalVariable(System.String)
+  parent: ConversorPDF.XLL.Core.Interfaces.IExcelRepository
+  langs:
+  - csharp
+  - vb
+  name: GetGlobalVariable(string)
+  nameWithType: IExcelRepository.GetGlobalVariable(string)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetGlobalVariable(string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Recupera el valor de una variable global almacenada en el entorno de Excel.
+  example: []
+  syntax:
+    content: string GetGlobalVariable(string varName)
+    parameters:
+    - id: varName
+      type: System.String
+    return:
+      type: System.String
+    content.vb: Function GetGlobalVariable(varName As String) As String
+  overload: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetGlobalVariable*
+  nameWithType.vb: IExcelRepository.GetGlobalVariable(String)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetGlobalVariable(String)
+  name.vb: GetGlobalVariable(String)
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetOneDriveFolderPath
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetOneDriveFolderPath
+  id: GetOneDriveFolderPath
+  parent: ConversorPDF.XLL.Core.Interfaces.IExcelRepository
+  langs:
+  - csharp
+  - vb
+  name: GetOneDriveFolderPath()
+  nameWithType: IExcelRepository.GetOneDriveFolderPath()
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetOneDriveFolderPath()
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Obtiene la ruta de la carpeta de OneDrive configurada.
+  example: []
+  syntax:
+    content: string GetOneDriveFolderPath()
+    return:
+      type: System.String
+    content.vb: Function GetOneDriveFolderPath() As String
+  overload: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetOneDriveFolderPath*
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetTableColumnValues(System.String,System.String)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetTableColumnValues(System.String,System.String)
+  id: GetTableColumnValues(System.String,System.String)
+  parent: ConversorPDF.XLL.Core.Interfaces.IExcelRepository
+  langs:
+  - csharp
+  - vb
+  name: GetTableColumnValues(string, string)
+  nameWithType: IExcelRepository.GetTableColumnValues(string, string)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetTableColumnValues(string, string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Obtiene los valores de una columna específica dentro de una Tabla (ListObject).
+  example: []
+  syntax:
+    content: List<string> GetTableColumnValues(string tableName, string columnName)
+    parameters:
+    - id: tableName
+      type: System.String
+    - id: columnName
+      type: System.String
+    return:
+      type: System.Collections.Generic.List{System.String}
+    content.vb: Function GetTableColumnValues(tableName As String, columnName As String) As List(Of String)
+  overload: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetTableColumnValues*
+  nameWithType.vb: IExcelRepository.GetTableColumnValues(String, String)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetTableColumnValues(String, String)
+  name.vb: GetTableColumnValues(String, String)
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetTableData(System.String)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetTableData(System.String)
+  id: GetTableData(System.String)
+  parent: ConversorPDF.XLL.Core.Interfaces.IExcelRepository
+  langs:
+  - csharp
+  - vb
+  name: GetTableData(string)
+  nameWithType: IExcelRepository.GetTableData(string)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetTableData(string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Obtiene el contenido completo de una tabla de Excel como matriz.
+  example: []
+  syntax:
+    content: object[,] GetTableData(string tableName)
+    parameters:
+    - id: tableName
+      type: System.String
+    return:
+      type: System.Object[,]
+    content.vb: Function GetTableData(tableName As String) As Object(,)
+  overload: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetTableData*
+  nameWithType.vb: IExcelRepository.GetTableData(String)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetTableData(String)
+  name.vb: GetTableData(String)
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.SetTableData(System.String,System.Object[0:,0:])
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IExcelRepository.SetTableData(System.String,System.Object[0:,0:])
+  id: SetTableData(System.String,System.Object[0:,0:])
+  parent: ConversorPDF.XLL.Core.Interfaces.IExcelRepository
+  langs:
+  - csharp
+  - vb
+  name: SetTableData(string, object[,])
+  nameWithType: IExcelRepository.SetTableData(string, object[,])
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.SetTableData(string, object[,])
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Actualiza los datos de una tabla de Excel con una nueva matriz.
+  example: []
+  syntax:
+    content: void SetTableData(string tableName, object[,] data)
+    parameters:
+    - id: tableName
+      type: System.String
+    - id: data
+      type: System.Object[,]
+    content.vb: Sub SetTableData(tableName As String, data As Object(,))
+  overload: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.SetTableData*
+  nameWithType.vb: IExcelRepository.SetTableData(String, Object(,))
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.SetTableData(String, Object(,))
+  name.vb: SetTableData(String, Object(,))
+references:
+- uid: ConversorPDF.XLL.Core.Interfaces
+  commentId: N:ConversorPDF.XLL.Core.Interfaces
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Core.Interfaces
+  nameWithType: ConversorPDF.XLL.Core.Interfaces
+  fullName: ConversorPDF.XLL.Core.Interfaces
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Interfaces
+    name: Interfaces
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Interfaces
+    name: Interfaces
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.html
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetActiveWorkbook*
+  commentId: Overload:ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetActiveWorkbook
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.html#ConversorPDF_XLL_Core_Interfaces_IExcelRepository_GetActiveWorkbook
+  name: GetActiveWorkbook
+  nameWithType: IExcelRepository.GetActiveWorkbook
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetActiveWorkbook
+- uid: dynamic
+  commentId: T:System.Object
+  isExternal: true
+  name: dynamic
+  nameWithType: dynamic
+  fullName: dynamic
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetActiveSheet*
+  commentId: Overload:ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetActiveSheet
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.html#ConversorPDF_XLL_Core_Interfaces_IExcelRepository_GetActiveSheet
+  name: GetActiveSheet
+  nameWithType: IExcelRepository.GetActiveSheet
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetActiveSheet
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetCellValue*
+  commentId: Overload:ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetCellValue
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.html#ConversorPDF_XLL_Core_Interfaces_IExcelRepository_GetCellValue_System_Object_System_String_
+  name: GetCellValue
+  nameWithType: IExcelRepository.GetCellValue
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetCellValue
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+  nameWithType: object
+  fullName: object
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.SetCellValue*
+  commentId: Overload:ConversorPDF.XLL.Core.Interfaces.IExcelRepository.SetCellValue
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.html#ConversorPDF_XLL_Core_Interfaces_IExcelRepository_SetCellValue_System_Object_System_String_System_Object_
+  name: SetCellValue
+  nameWithType: IExcelRepository.SetCellValue
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.SetCellValue
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetRangeValues*
+  commentId: Overload:ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetRangeValues
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.html#ConversorPDF_XLL_Core_Interfaces_IExcelRepository_GetRangeValues_System_Object_System_Int32_System_Int32_System_Int32_System_Int32_
+  name: GetRangeValues
+  nameWithType: IExcelRepository.GetRangeValues
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetRangeValues
+- uid: System.Int32
+  commentId: T:System.Int32
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int
+  nameWithType: int
+  fullName: int
+  nameWithType.vb: Integer
+  fullName.vb: Integer
+  name.vb: Integer
+- uid: System.Object[,]
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object[,]
+  nameWithType: object[,]
+  fullName: object[,]
+  nameWithType.vb: Object(,)
+  fullName.vb: Object(,)
+  name.vb: Object(,)
+  spec.csharp:
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: '['
+  - name: ','
+  - name: ']'
+  spec.vb:
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: (
+  - name: ','
+  - name: )
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetWorksheet*
+  commentId: Overload:ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetWorksheet
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.html#ConversorPDF_XLL_Core_Interfaces_IExcelRepository_GetWorksheet_System_String_
+  name: GetWorksheet
+  nameWithType: IExcelRepository.GetWorksheet
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetWorksheet
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.WorksheetExists*
+  commentId: Overload:ConversorPDF.XLL.Core.Interfaces.IExcelRepository.WorksheetExists
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.html#ConversorPDF_XLL_Core_Interfaces_IExcelRepository_WorksheetExists_System_String_
+  name: WorksheetExists
+  nameWithType: IExcelRepository.WorksheetExists
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.WorksheetExists
+- uid: System.Boolean
+  commentId: T:System.Boolean
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.boolean
+  name: bool
+  nameWithType: bool
+  fullName: bool
+  nameWithType.vb: Boolean
+  fullName.vb: Boolean
+  name.vb: Boolean
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.CreateWorksheetCopy*
+  commentId: Overload:ConversorPDF.XLL.Core.Interfaces.IExcelRepository.CreateWorksheetCopy
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.html#ConversorPDF_XLL_Core_Interfaces_IExcelRepository_CreateWorksheetCopy_System_String_System_String_
+  name: CreateWorksheetCopy
+  nameWithType: IExcelRepository.CreateWorksheetCopy
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.CreateWorksheetCopy
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.DeleteWorksheet*
+  commentId: Overload:ConversorPDF.XLL.Core.Interfaces.IExcelRepository.DeleteWorksheet
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.html#ConversorPDF_XLL_Core_Interfaces_IExcelRepository_DeleteWorksheet_System_String_
+  name: DeleteWorksheet
+  nameWithType: IExcelRepository.DeleteWorksheet
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.DeleteWorksheet
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetWorksheetData*
+  commentId: Overload:ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetWorksheetData
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.html#ConversorPDF_XLL_Core_Interfaces_IExcelRepository_GetWorksheetData_System_String_
+  name: GetWorksheetData
+  nameWithType: IExcelRepository.GetWorksheetData
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetWorksheetData
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.SaveAs*
+  commentId: Overload:ConversorPDF.XLL.Core.Interfaces.IExcelRepository.SaveAs
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.html#ConversorPDF_XLL_Core_Interfaces_IExcelRepository_SaveAs_System_Object_System_String_
+  name: SaveAs
+  nameWithType: IExcelRepository.SaveAs
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.SaveAs
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.ExportToPdf*
+  commentId: Overload:ConversorPDF.XLL.Core.Interfaces.IExcelRepository.ExportToPdf
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.html#ConversorPDF_XLL_Core_Interfaces_IExcelRepository_ExportToPdf_System_Object_System_String_System_Boolean_
+  name: ExportToPdf
+  nameWithType: IExcelRepository.ExportToPdf
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.ExportToPdf
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.ScreenUpdating*
+  commentId: Overload:ConversorPDF.XLL.Core.Interfaces.IExcelRepository.ScreenUpdating
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.html#ConversorPDF_XLL_Core_Interfaces_IExcelRepository_ScreenUpdating_System_Boolean_
+  name: ScreenUpdating
+  nameWithType: IExcelRepository.ScreenUpdating
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.ScreenUpdating
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.DisplayAlerts*
+  commentId: Overload:ConversorPDF.XLL.Core.Interfaces.IExcelRepository.DisplayAlerts
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.html#ConversorPDF_XLL_Core_Interfaces_IExcelRepository_DisplayAlerts_System_Boolean_
+  name: DisplayAlerts
+  nameWithType: IExcelRepository.DisplayAlerts
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.DisplayAlerts
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetGlobalVariable*
+  commentId: Overload:ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetGlobalVariable
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.html#ConversorPDF_XLL_Core_Interfaces_IExcelRepository_GetGlobalVariable_System_String_
+  name: GetGlobalVariable
+  nameWithType: IExcelRepository.GetGlobalVariable
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetGlobalVariable
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetOneDriveFolderPath*
+  commentId: Overload:ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetOneDriveFolderPath
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.html#ConversorPDF_XLL_Core_Interfaces_IExcelRepository_GetOneDriveFolderPath
+  name: GetOneDriveFolderPath
+  nameWithType: IExcelRepository.GetOneDriveFolderPath
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetOneDriveFolderPath
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetTableColumnValues*
+  commentId: Overload:ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetTableColumnValues
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.html#ConversorPDF_XLL_Core_Interfaces_IExcelRepository_GetTableColumnValues_System_String_System_String_
+  name: GetTableColumnValues
+  nameWithType: IExcelRepository.GetTableColumnValues
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetTableColumnValues
+- uid: System.Collections.Generic.List{System.String}
+  commentId: T:System.Collections.Generic.List{System.String}
+  parent: System.Collections.Generic
+  definition: System.Collections.Generic.List`1
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  name: List<string>
+  nameWithType: List<string>
+  fullName: System.Collections.Generic.List<string>
+  nameWithType.vb: List(Of String)
+  fullName.vb: System.Collections.Generic.List(Of String)
+  name.vb: List(Of String)
+  spec.csharp:
+  - uid: System.Collections.Generic.List`1
+    name: List
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  - name: <
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.List`1
+    name: List
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+- uid: System.Collections.Generic.List`1
+  commentId: T:System.Collections.Generic.List`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  name: List<T>
+  nameWithType: List<T>
+  fullName: System.Collections.Generic.List<T>
+  nameWithType.vb: List(Of T)
+  fullName.vb: System.Collections.Generic.List(Of T)
+  name.vb: List(Of T)
+  spec.csharp:
+  - uid: System.Collections.Generic.List`1
+    name: List
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.List`1
+    name: List
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: System.Collections.Generic
+  commentId: N:System.Collections.Generic
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System.Collections.Generic
+  nameWithType: System.Collections.Generic
+  fullName: System.Collections.Generic
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Collections
+    name: Collections
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections
+  - name: .
+  - uid: System.Collections.Generic
+    name: Generic
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Collections
+    name: Collections
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections
+  - name: .
+  - uid: System.Collections.Generic
+    name: Generic
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetTableData*
+  commentId: Overload:ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetTableData
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.html#ConversorPDF_XLL_Core_Interfaces_IExcelRepository_GetTableData_System_String_
+  name: GetTableData
+  nameWithType: IExcelRepository.GetTableData
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.GetTableData
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.SetTableData*
+  commentId: Overload:ConversorPDF.XLL.Core.Interfaces.IExcelRepository.SetTableData
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.html#ConversorPDF_XLL_Core_Interfaces_IExcelRepository_SetTableData_System_String_System_Object_0
+  name: SetTableData
+  nameWithType: IExcelRepository.SetTableData
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.SetTableData

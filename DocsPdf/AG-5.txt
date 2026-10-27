@@ -1,0 +1,128 @@
+# PLAN v12 — Unificado y consolidado (Fases 378-390)
+
+**Nueva regla incorporada:** el reparto de `TotalHorasAsignatura` **no es un patrón fijo**: puede escalar hasta **3 días consecutivos por semana**, combinando 2 y 3 días. Verifiqué tu ejemplo y **cierra exacto**:
+
+```text
+64 h ⇒ 16 sesiones (4 h c/u)
+  2 semanas × 2 días (VIERNES/JUEVES)        = 8 h/sem  →  16 h
+  4 semanas × 3 días (SÁBADO/VIERNES/JUEVES) = 12 h/sem →  48 h
+                                              TOTAL      =  64 h ✔
+```
+
+## 0. Hallazgo que valida el algoritmo (regla extraída del Excel)
+
+Analicé las 18 filas: **`Fecha Inicio` define el primer día del patrón**, y los días del patrón son **consecutivos desde ese día** (`n = 1..3`); `Fecha Final` = día de la última sesión.
+
+| Fila | Horas | D/H (etiqueta) | Ini (día) | Sesiones | Estructura real |
+|---|---|---|---|---|---|
+| R3 | 48 | VIERNES/JUEVES | 09-24 **jue** | 12 | **6 sem × 2 días** ({Jue,Vie}) |
+| R5 | 48 | DOMINGO/SÁBADO | 08-15 **sáb** | 12 | 6 sem × 2 días ({Sáb,Dom}) |
+| R8 | 48 | SÁBADO/VIERNES/JUEVES | 11-12 **jue** | 12 | **4 sem × 3 días** ({Jue,Vie,Sáb}) |
+| R9 | 32 | MIÉRCOLES/MARTES | 11-10 **mar** | 8 | 4 sem × 2 días ({Mar,Mié}) |
+| R20 | 48 | SÁBADO/VIERNES | 08-14 **vie** | 12 | 6 sem × 2 días ({Vie,Sáb}) |
+
+**Algoritmo canónico (nuevo, F381):**
+```
+sesiones           = Horas / 4
+n                  = diasBase (1..3, consecutivos desde FechaInicio)
+semanasDisponibles = #semanas con ≥1 día válido en [Ini..Fin], descontando festivos
+mientras ceil(sesiones / n) > semanasDisponibles y n < 3:  n++
+semanas = min(semanasDisponibles, ceil(sesiones / n))
+base  = floor(sesiones / semanas) ; resto = sesiones mod semanas
+→ resto semanas con (base+1) días · (semanas−resto) semanas con base días
+→ validar Σ = sesiones y que ninguna semana tenga 0/“coja” días
+```
+Pruebas de mesa: `48 h base2/6sem ⇒ ceil(12/2)=6 ✓ 6×2` · `32 h ⇒ 4×2` · `48 h base3 ⇒ 4×3` · **`64 h base2/6sem ⇒ ceil(16/2)=8>6 ⇒ n=3 ⇒ semanas=6, base=2, resto=4 ⇒ 4×3 + 2×2 = 16 ✔** (tu caso).
+
+---
+
+## 1. Fases 378-390 (reajustadas)
+
+### Bloque A — Núcleo desbloqueante
+
+| Fase | Objetivo | Entregable verificable |
+|---|---|---|
+| **F378** | **Normalización de semestre** (`"4"≡"IV"`) en `TerceroAsignaturaKey`, SQL y UI | Tests ida/vuelta |
+| **F379** | **Demanda acotada al semestre, sin fallback global**; 0 filas ⇒ error tipificado | APT-53 Sem I ⇒ **18 asignaturas / 768 h** |
+| **F380** | **Oferta por ocurrencias reales**: `Σ_{aula∈alcance} Σ_{franja} (4 h × #ocurrencias(franja.día, ventana, festivos))` + chequeo de techo semanal (≤28 h/aula) + traza por día | Desglose `franja → #ocurrencias → h`; sin bloqueo si `768 ≤ oferta` |
+| **F381** | **Planificador de patrón semanal (NUEVO)**: días base 1-3 **consecutivos**, **escalado hasta 3 días** (≥64 h), distribución uniforme en semanas completas, sin semanas cojas | `48 ⇒ 6×2` · `48 ⇒ 4×3` · `64 ⇒ 4×3 + 2×2` (test) |
+| **F382** | **Modelo multi-día en el AG (1 ↔ N genes)**: `HorasSemanales = 4 h × días(semana)` por gen; `TotalHorasAsignatura` compartido y **vector de días por semana** (patrón variable) | `48 h {Jue,Vie}` ⇒ 12 sesiones en 6 sem |
+| **F383** | **Invariante de proyección**: `Σ horas_sesiones(vinculación) == Horas` y `#sesiones == Horas/4`; reporte tipo `SubTotal (DZ)` | 18 filas ⇒ **192 sesiones / 768 h** |
+| **F384** | **Materialización verificada**: `Result` + log + conteo de staging + purga previa | `SesionesStaging = 192` |
+
+### Bloque B — Verdad de datos
+
+| Fase | Objetivo |
+|---|---|
+| **F385** | **Pool por unión** (semestre ∪ general) — elimina el fallback condicional ⇒ cobertura completa |
+| **F386** | **Homónimos de programa** + **alcance multi-sede** (CALI ×12, PRADERA ×6) |
+| **F387** | **Festivos canónicos 2026**; validar los saltos semanales del Excel (10-06/07, 10-08/09, 10-10/11…) |
+| **F388** | **UI honesta**: limpiar métricas/grid si corrida fallida o staging vacío |
+| **F389** | **Ventana α canónica parametrizada**: Excel `2026-08-11→12-06` (118 d) vs `periodos` `2026-08-15→12-12` (17 sem) |
+
+### Bloque C — QA, paridad y salida
+
+| Fase | Objetivo |
+|---|---|
+| **F390** | **Test de oro + export espejo**: fixture de las 18 filas ⇒ comparación **fecha a fecha**, `Σ=768 h`, `192 sesiones`; export con el layout exacto (`A:K` + columnas diarias + `SubTotal`) para *diff* contra el Excel; pre-vuelo unificado |
+
+**Bloqueantes:** F378 → F379 → F380 → **F381** → F382 → F383 → F384.
+**Orden:** A (378-384) → build Release + tests → smoke en **copia** → B (385-389) → C (390).
+
+---
+
+## 2. Invariantes unificados v12
+
+1. **Franja** = (día, hora inicio-fin) recurrente semanalmente; catálogo = 7 franjas (Mar/Mié/Jue/Vie 18-22 · Sáb 08-12 · Sáb 13-17 · Dom 08-12).
+2. **Columna diaria** = 1 día; sesión = 4 h en el día del patrón.
+3. `Σ días = SubTotal = Horas` por fila (**DZ = D**).
+4. `#sesiones = Horas / 4` (exacto, sin fracciones).
+5. **Patrón**: días **consecutivos** desde `Fecha Inicio`; `n ∈ {1,2,3}`; **hasta 3 días** cuando `Horas ≥ 64 h` o cuando el sub-rango no alcanza.
+6. **Reparto**: uniforme en semanas completas (`base` y `base+1`), sin semanas con 0 días y minimizando semanas de 1 día.
+7. `oferta(aula) = Σ_franjas 4 h × #ocurrencias efectivas`; `demanda = Σ Horas` del semestre/programa.
+8. Vacante: causa tipificada, nunca Hard.
+9. Prohibido mostrar métricas de corrida fallida o sin staging.
+
+## 3. Decisiones abiertas (necesarias para cerrar F380 y F389)
+
+| ID | Decisión | Default propuesto |
+|---|---|---|
+| **D-A** | ¿“aula” del Excel = aula **dedicada** por asignación (capacidad = columna D, oferta = Σ D = 768 h) o **aula física compartida** (contención por franja/día)? | **Dedicada** ⇒ el chequeo de capacidad pasa a ser *por asignación* (`sesiones ≤ semanas × 3`) + contención **docente**; si eliges compartida, se activa **F380-bis** (chequeo por franja/día/aula) |
+| **D-B** | ¿Ventana α = `periodos` (08-15→12-12) o la del Excel (08-11→12-06)? | Parametrizar con `override` por periodo; **validar que α ⊇ ventana de cada asignatura** |
+| **D-C** | Día con **2 franjas** (Sábado mañana/tarde): ¿cuál usa el patrón? | Franja "primera disponible" del día, configurable por subunidad |
+| **D-D** | ¿La regla “primer día del patrón = `Fecha Inicio`” es dura o sólo convención de generación? | **Dura** (evidencia: 18/18 filas la cumplen) |
+
+## 4. Resumen del cambio frente a v11
+
+- **F381/F382 se reescriben**: ya no es “1↔N gens con patrón fijo”, sino **patrón semanal variable** (2-3 días según remanente), tal como tu regla de 64 h.
+- **F383** sube a bloqueante (sin `Σ = Horas` no hay paridad con `DZ`).
+- **F389/F390** pasan a verificación estricta contra el Excel (fecha a fecha), no sólo conteos.
+- Se mantiene el diagnóstico G1-G9 (unidades, demanda 2224→768, staging vacío, multi-día, alcance, festivos, homónimos).
+
+¿Confirmas **D-A = aula dedicada** (mi default) para que F380 quede cerrada, o la tratamos como aula física compartida y activo F380-bis? Con tu respuesta ya puedo dejarte el plan en modo ejecución (toggle a Act) y arrancar por **F378→F384**.
+
+
+
+------------
+
+
+La Ventana α = `periodos` (08-15→12-12) está dada por schema periodo y los campos periodo_inicio a perdiodo_fin; 
+Explica este punto con ejemplos: ¿“aula” del Excel = aula dedicada por asignación (capacidad = columna D, oferta = Σ D = 768 h) o aula física compartida (contención por franja/día)?	Dedicada ⇒ el chequeo de capacidad pasa a ser por asignación (sesiones ≤ semanas × 3) + contención docente; si eliges compartida, se activa F380-bis (chequeo por franja/día/aula)
+
+Ajusta una regla para el reparto de `TotalHorasAsignatura` __no es un patrón fijo__: puede escalar hasta __3 días consecutivos por semana__,  y que __`Fecha Inicio` del aula, salón o asignatura define el primer día del patrón__, y los días del patrón son __consecutivos desde ese día__ (`n = 1..3`); `Fecha Final` = día de la última sesión.
+
+A continuación proporciono archivo excel que contiene:
+219 Aulas (Contexto académico, columna A, Tupla C, cada fila representa tupla S = { IdPeriodo , IdPrograma La Ventana α = `periodos` (08-15→12-12) está dada por schema periodo y los campos periodo_inicio a perdiodo_fin; 
+Explica este punto con ejemplos: ¿“aula” del Excel = aula dedicada por asignación (capacidad = columna D, oferta = Σ D = 768 h) o aula física compartida (contención por franja/día)?	Dedicada ⇒ el chequeo de capacidad pasa a ser por asignación (sesiones ≤ semanas × 3) + contención docente; si eliges compartida, se activa F380-bis (chequeo por franja/día/aula)
+
+Ajusta una regla para el reparto de `TotalHorasAsignatura` __no es un patrón fijo__: puede escalar hasta __3 días consecutivos por semana__,  y que __`Fecha Inicio` del aula, salón o asignatura define el primer día del patrón__, y los días del patrón son __consecutivos desde ese día__ (`n = 1..3`); `Fecha Final` = día de la última sesión.
+
+A continuación proporciono archivo excel que contiene:
+219 Aulas (Contexto académico, columna A, Tupla C, cada fila representa tupla S = { IdPeriodo , IdPrograma , IdSede, Semestre, Grupo}  que identifican el IdAula; y en la columna columna H contiene los Terceros asignados por el algoritmo AG y corresponde la Tupla P = IdTercero,
+Las horas de las aulas (columna E asignaturas)  van de 16, 28, 32, 48, 64 y hasta 80 horas semestrales (multiplos de 4 horas)
+LA columna k representa β = DiaSemana,   γ = IdBloqueHorario,
+El rango de la columna L hasta la DZ está relacionada con horas = { HorasSemanales, TotalHorasAsignatura },   α = { FechaInicioEstimada, FechaFinEstimada, DentroDeVentana }, contiene ademas los dias festivos y presenciales que son restringidos.
+Comprueba y realiza los Hallazgos que validan el algoritmo (reglas extraídas del Excel para aplicar), IdSede, Semestre, Grupo, IdAula } y en la columna columna H contiene los Terceros asignados.
+ESto es lo que queremos predecir con el AG
+
+Ajusta el PLAN v13 — Unificado y consolidado (Fases 378-390

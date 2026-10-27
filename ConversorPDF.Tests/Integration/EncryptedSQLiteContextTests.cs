@@ -5,10 +5,10 @@ using System.IO;
 using System.Security;
 using System.Data.SQLite;
 using Dapper;
-using ConversorPDF.XLL.Core.Data;
+using ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context;
 using ConversorPDF.XLL.Core.Helpers;
 
-namespace ConversorPDF.Tests.Integration
+namespace ConversorPDF.Tests.Academic.Infrastructure.Persistence.Integration
 {
     public class EncryptedSQLiteContextTests : IDisposable
     {

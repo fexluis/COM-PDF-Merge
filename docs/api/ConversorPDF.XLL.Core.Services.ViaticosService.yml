@@ -1,0 +1,2451 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService
+  commentId: T:ConversorPDF.XLL.Core.Services.ViaticosService
+  id: ViaticosService
+  parent: ConversorPDF.XLL.Core.Services
+  children:
+  - ConversorPDF.XLL.Core.Services.ViaticosService.#ctor(ConversorPDF.XLL.Core.Interfaces.IExcelRepository,ConversorPDF.XLL.Core.Interfaces.IUserService,ConversorPDF.XLL.Core.Interfaces.IViaticosRepository,ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor,ConversorPDF.XLL.Core.Interfaces.IViaticosMasivoProcessor,ConversorPDF.XLL.Core.Interfaces.IViaticosCumplidosProcessor,ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor)
+  - ConversorPDF.XLL.Core.Services.ViaticosService.ClearCache
+  - ConversorPDF.XLL.Core.Services.ViaticosService.FilaSeleccionadaSaveConfig(System.Object,System.Object,System.String)
+  - ConversorPDF.XLL.Core.Services.ViaticosService.GetAdvancedConfigRows
+  - ConversorPDF.XLL.Core.Services.ViaticosService.GetCdpList
+  - ConversorPDF.XLL.Core.Services.ViaticosService.GetConfig(System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String)
+  - ConversorPDF.XLL.Core.Services.ViaticosService.GetEmpleado(System.String)
+  - ConversorPDF.XLL.Core.Services.ViaticosService.GetGlobalVariable(System.String)
+  - ConversorPDF.XLL.Core.Services.ViaticosService.GetSelectionConfig
+  - ConversorPDF.XLL.Core.Services.ViaticosService.GetTableData(System.String)
+  - ConversorPDF.XLL.Core.Services.ViaticosService.GetViajeFromRow(System.Object[0:,0:],System.Int32)
+  - ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarCumplidos(System.Action{System.Int32,System.Int32},System.Action)
+  - ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarFilaSeleccionada(System.Action{System.Int32,System.Int32})
+  - ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarIndividual(System.Action{System.Int32,System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String)
+  - ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarMasivo(System.Action{System.Int32,System.Int32})
+  - ConversorPDF.XLL.Core.Services.ViaticosService.RenombrarSolicitudes(System.Int32,System.Int32)
+  - ConversorPDF.XLL.Core.Services.ViaticosService.SaveAdvancedConfigRows(System.Object[0:,0:])
+  - ConversorPDF.XLL.Core.Services.ViaticosService.SaveTableData(System.String,System.Object[0:,0:])
+  - ConversorPDF.XLL.Core.Services.ViaticosService.UnificarSolicitudes(System.Int32,System.Int32)
+  - ConversorPDF.XLL.Core.Services.ViaticosService.ValidarFormatoComisionado(System.Object)
+  langs:
+  - csharp
+  - vb
+  name: ViaticosService
+  nameWithType: ViaticosService
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService
+  type: Class
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Services
+  summary: >-
+    Servicio fachada que coordina todas las operaciones relacionadas con viáticos.
+
+    Inyecta y utiliza repositorios y procesadores especializados para cada tarea.
+  example: []
+  syntax:
+    content: 'public class ViaticosService : IViaticosService'
+    content.vb: Public Class ViaticosService Implements IViaticosService
+  inheritance:
+  - System.Object
+  implements:
+  - ConversorPDF.XLL.Core.Interfaces.IViaticosService
+  inheritedMembers:
+  - System.Object.ToString
+  - System.Object.Equals(System.Object)
+  - System.Object.Equals(System.Object,System.Object)
+  - System.Object.ReferenceEquals(System.Object,System.Object)
+  - System.Object.GetHashCode
+  - System.Object.GetType
+  - System.Object.MemberwiseClone
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.#ctor(ConversorPDF.XLL.Core.Interfaces.IExcelRepository,ConversorPDF.XLL.Core.Interfaces.IUserService,ConversorPDF.XLL.Core.Interfaces.IViaticosRepository,ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor,ConversorPDF.XLL.Core.Interfaces.IViaticosMasivoProcessor,ConversorPDF.XLL.Core.Interfaces.IViaticosCumplidosProcessor,ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor)
+  commentId: M:ConversorPDF.XLL.Core.Services.ViaticosService.#ctor(ConversorPDF.XLL.Core.Interfaces.IExcelRepository,ConversorPDF.XLL.Core.Interfaces.IUserService,ConversorPDF.XLL.Core.Interfaces.IViaticosRepository,ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor,ConversorPDF.XLL.Core.Interfaces.IViaticosMasivoProcessor,ConversorPDF.XLL.Core.Interfaces.IViaticosCumplidosProcessor,ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor)
+  id: '#ctor(ConversorPDF.XLL.Core.Interfaces.IExcelRepository,ConversorPDF.XLL.Core.Interfaces.IUserService,ConversorPDF.XLL.Core.Interfaces.IViaticosRepository,ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor,ConversorPDF.XLL.Core.Interfaces.IViaticosMasivoProcessor,ConversorPDF.XLL.Core.Interfaces.IViaticosCumplidosProcessor,ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor)'
+  parent: ConversorPDF.XLL.Core.Services.ViaticosService
+  langs:
+  - csharp
+  - vb
+  name: ViaticosService(IExcelRepository, IUserService, IViaticosRepository, IViaticosIndividualProcessor, IViaticosMasivoProcessor, IViaticosCumplidosProcessor, IViaticosGestionProcessor)
+  nameWithType: ViaticosService.ViaticosService(IExcelRepository, IUserService, IViaticosRepository, IViaticosIndividualProcessor, IViaticosMasivoProcessor, IViaticosCumplidosProcessor, IViaticosGestionProcessor)
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.ViaticosService(ConversorPDF.XLL.Core.Interfaces.IExcelRepository, ConversorPDF.XLL.Core.Interfaces.IUserService, ConversorPDF.XLL.Core.Interfaces.IViaticosRepository, ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor, ConversorPDF.XLL.Core.Interfaces.IViaticosMasivoProcessor, ConversorPDF.XLL.Core.Interfaces.IViaticosCumplidosProcessor, ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor)
+  type: Constructor
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Services
+  summary: constructor con inyección de dependencias.
+  example: []
+  syntax:
+    content: public ViaticosService(IExcelRepository excelRepository, IUserService userService, IViaticosRepository viaticosRepository, IViaticosIndividualProcessor individualProcessor, IViaticosMasivoProcessor masivoProcessor, IViaticosCumplidosProcessor cumplidosProcessor, IViaticosGestionProcessor gestionProcessor)
+    parameters:
+    - id: excelRepository
+      type: ConversorPDF.XLL.Core.Interfaces.IExcelRepository
+    - id: userService
+      type: ConversorPDF.XLL.Core.Interfaces.IUserService
+    - id: viaticosRepository
+      type: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository
+    - id: individualProcessor
+      type: ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor
+    - id: masivoProcessor
+      type: ConversorPDF.XLL.Core.Interfaces.IViaticosMasivoProcessor
+    - id: cumplidosProcessor
+      type: ConversorPDF.XLL.Core.Interfaces.IViaticosCumplidosProcessor
+    - id: gestionProcessor
+      type: ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor
+    content.vb: Public Sub New(excelRepository As IExcelRepository, userService As IUserService, viaticosRepository As IViaticosRepository, individualProcessor As IViaticosIndividualProcessor, masivoProcessor As IViaticosMasivoProcessor, cumplidosProcessor As IViaticosCumplidosProcessor, gestionProcessor As IViaticosGestionProcessor)
+  overload: ConversorPDF.XLL.Core.Services.ViaticosService.#ctor*
+  nameWithType.vb: ViaticosService.New(IExcelRepository, IUserService, IViaticosRepository, IViaticosIndividualProcessor, IViaticosMasivoProcessor, IViaticosCumplidosProcessor, IViaticosGestionProcessor)
+  fullName.vb: ConversorPDF.XLL.Core.Services.ViaticosService.New(ConversorPDF.XLL.Core.Interfaces.IExcelRepository, ConversorPDF.XLL.Core.Interfaces.IUserService, ConversorPDF.XLL.Core.Interfaces.IViaticosRepository, ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor, ConversorPDF.XLL.Core.Interfaces.IViaticosMasivoProcessor, ConversorPDF.XLL.Core.Interfaces.IViaticosCumplidosProcessor, ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor)
+  name.vb: New(IExcelRepository, IUserService, IViaticosRepository, IViaticosIndividualProcessor, IViaticosMasivoProcessor, IViaticosCumplidosProcessor, IViaticosGestionProcessor)
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.ClearCache
+  commentId: M:ConversorPDF.XLL.Core.Services.ViaticosService.ClearCache
+  id: ClearCache
+  parent: ConversorPDF.XLL.Core.Services.ViaticosService
+  langs:
+  - csharp
+  - vb
+  name: ClearCache()
+  nameWithType: ViaticosService.ClearCache()
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.ClearCache()
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Services
+  summary: Limpia el caché interno de empleados y configuraciones.
+  example: []
+  syntax:
+    content: public void ClearCache()
+    content.vb: Public Sub ClearCache()
+  overload: ConversorPDF.XLL.Core.Services.ViaticosService.ClearCache*
+  implements:
+  - ConversorPDF.XLL.Core.Interfaces.IViaticosService.ClearCache
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.GetConfig(System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String)
+  commentId: M:ConversorPDF.XLL.Core.Services.ViaticosService.GetConfig(System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String)
+  id: GetConfig(System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String)
+  parent: ConversorPDF.XLL.Core.Services.ViaticosService
+  langs:
+  - csharp
+  - vb
+  name: GetConfig(DateTime?, DateTime?, string)
+  nameWithType: ViaticosService.GetConfig(DateTime?, DateTime?, string)
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.GetConfig(System.DateTime?, System.DateTime?, string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Services
+  summary: Obtiene la configuración actual de viáticos.
+  example: []
+  syntax:
+    content: public ViaticosConfig GetConfig(DateTime? start = null, DateTime? end = null, string cdp = null)
+    parameters:
+    - id: start
+      type: System.Nullable{System.DateTime}
+    - id: end
+      type: System.Nullable{System.DateTime}
+    - id: cdp
+      type: System.String
+    return:
+      type: ConversorPDF.XLL.Core.Models.ViaticosConfig
+    content.vb: Public Function GetConfig(start As Date? = Nothing, [end] As Date? = Nothing, cdp As String = Nothing) As ViaticosConfig
+  overload: ConversorPDF.XLL.Core.Services.ViaticosService.GetConfig*
+  implements:
+  - ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetConfig(System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String)
+  nameWithType.vb: ViaticosService.GetConfig(Date?, Date?, String)
+  fullName.vb: ConversorPDF.XLL.Core.Services.ViaticosService.GetConfig(Date?, Date?, String)
+  name.vb: GetConfig(Date?, Date?, String)
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.GetEmpleado(System.String)
+  commentId: M:ConversorPDF.XLL.Core.Services.ViaticosService.GetEmpleado(System.String)
+  id: GetEmpleado(System.String)
+  parent: ConversorPDF.XLL.Core.Services.ViaticosService
+  langs:
+  - csharp
+  - vb
+  name: GetEmpleado(string)
+  nameWithType: ViaticosService.GetEmpleado(string)
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.GetEmpleado(string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Services
+  summary: Busca y obtiene la información de un empleado por su cédula.
+  example: []
+  syntax:
+    content: public Empleado GetEmpleado(string cc)
+    parameters:
+    - id: cc
+      type: System.String
+    return:
+      type: ConversorPDF.XLL.Core.Models.Empleado
+    content.vb: Public Function GetEmpleado(cc As String) As Empleado
+  overload: ConversorPDF.XLL.Core.Services.ViaticosService.GetEmpleado*
+  implements:
+  - ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetEmpleado(System.String)
+  nameWithType.vb: ViaticosService.GetEmpleado(String)
+  fullName.vb: ConversorPDF.XLL.Core.Services.ViaticosService.GetEmpleado(String)
+  name.vb: GetEmpleado(String)
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.GetViajeFromRow(System.Object[0:,0:],System.Int32)
+  commentId: M:ConversorPDF.XLL.Core.Services.ViaticosService.GetViajeFromRow(System.Object[0:,0:],System.Int32)
+  id: GetViajeFromRow(System.Object[0:,0:],System.Int32)
+  parent: ConversorPDF.XLL.Core.Services.ViaticosService
+  langs:
+  - csharp
+  - vb
+  name: GetViajeFromRow(object[,], int)
+  nameWithType: ViaticosService.GetViajeFromRow(object[,], int)
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.GetViajeFromRow(object[,], int)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Services
+  summary: Extrae los datos de un viaje específico desde una fila de Excel.
+  example: []
+  syntax:
+    content: public Viaje GetViajeFromRow(object[,] data, int r)
+    parameters:
+    - id: data
+      type: System.Object[,]
+    - id: r
+      type: System.Int32
+    return:
+      type: ConversorPDF.XLL.Core.Models.Viaje
+    content.vb: Public Function GetViajeFromRow(data As Object(,), r As Integer) As Viaje
+  overload: ConversorPDF.XLL.Core.Services.ViaticosService.GetViajeFromRow*
+  implements:
+  - ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetViajeFromRow(System.Object[0:,0:],System.Int32)
+  nameWithType.vb: ViaticosService.GetViajeFromRow(Object(,), Integer)
+  fullName.vb: ConversorPDF.XLL.Core.Services.ViaticosService.GetViajeFromRow(Object(,), Integer)
+  name.vb: GetViajeFromRow(Object(,), Integer)
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarIndividual(System.Action{System.Int32,System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String)
+  commentId: M:ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarIndividual(System.Action{System.Int32,System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String)
+  id: ProcesarIndividual(System.Action{System.Int32,System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String)
+  parent: ConversorPDF.XLL.Core.Services.ViaticosService
+  langs:
+  - csharp
+  - vb
+  name: ProcesarIndividual(Action<int, int>, DateTime?, DateTime?, string)
+  nameWithType: ViaticosService.ProcesarIndividual(Action<int, int>, DateTime?, DateTime?, string)
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarIndividual(System.Action<int, int>, System.DateTime?, System.DateTime?, string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Services
+  summary: Ejecuta el procesamiento de viáticos individuales.
+  example: []
+  syntax:
+    content: public int ProcesarIndividual(Action<int, int> progressCallback = null, DateTime? inicio = null, DateTime? fin = null, string cdp = null)
+    parameters:
+    - id: progressCallback
+      type: System.Action{System.Int32,System.Int32}
+    - id: inicio
+      type: System.Nullable{System.DateTime}
+    - id: fin
+      type: System.Nullable{System.DateTime}
+    - id: cdp
+      type: System.String
+    return:
+      type: System.Int32
+    content.vb: Public Function ProcesarIndividual(progressCallback As Action(Of Integer, Integer) = Nothing, inicio As Date? = Nothing, fin As Date? = Nothing, cdp As String = Nothing) As Integer
+  overload: ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarIndividual*
+  implements:
+  - ConversorPDF.XLL.Core.Interfaces.IViaticosService.ProcesarIndividual(System.Action{System.Int32,System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String)
+  nameWithType.vb: ViaticosService.ProcesarIndividual(Action(Of Integer, Integer), Date?, Date?, String)
+  fullName.vb: ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarIndividual(System.Action(Of Integer, Integer), Date?, Date?, String)
+  name.vb: ProcesarIndividual(Action(Of Integer, Integer), Date?, Date?, String)
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarMasivo(System.Action{System.Int32,System.Int32})
+  commentId: M:ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarMasivo(System.Action{System.Int32,System.Int32})
+  id: ProcesarMasivo(System.Action{System.Int32,System.Int32})
+  parent: ConversorPDF.XLL.Core.Services.ViaticosService
+  langs:
+  - csharp
+  - vb
+  name: ProcesarMasivo(Action<int, int>)
+  nameWithType: ViaticosService.ProcesarMasivo(Action<int, int>)
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarMasivo(System.Action<int, int>)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Services
+  summary: Ejecuta el procesamiento masivo de viáticos.
+  example: []
+  syntax:
+    content: public int ProcesarMasivo(Action<int, int> progressCallback = null)
+    parameters:
+    - id: progressCallback
+      type: System.Action{System.Int32,System.Int32}
+    return:
+      type: System.Int32
+    content.vb: Public Function ProcesarMasivo(progressCallback As Action(Of Integer, Integer) = Nothing) As Integer
+  overload: ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarMasivo*
+  implements:
+  - ConversorPDF.XLL.Core.Interfaces.IViaticosService.ProcesarMasivo(System.Action{System.Int32,System.Int32})
+  nameWithType.vb: ViaticosService.ProcesarMasivo(Action(Of Integer, Integer))
+  fullName.vb: ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarMasivo(System.Action(Of Integer, Integer))
+  name.vb: ProcesarMasivo(Action(Of Integer, Integer))
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarCumplidos(System.Action{System.Int32,System.Int32},System.Action)
+  commentId: M:ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarCumplidos(System.Action{System.Int32,System.Int32},System.Action)
+  id: ProcesarCumplidos(System.Action{System.Int32,System.Int32},System.Action)
+  parent: ConversorPDF.XLL.Core.Services.ViaticosService
+  langs:
+  - csharp
+  - vb
+  name: ProcesarCumplidos(Action<int, int>, Action)
+  nameWithType: ViaticosService.ProcesarCumplidos(Action<int, int>, Action)
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarCumplidos(System.Action<int, int>, System.Action)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Services
+  summary: Ejecuta la validación de cumplidos e informes de actividades.
+  example: []
+  syntax:
+    content: public int ProcesarCumplidos(Action<int, int> progressCallback = null, Action onComplete = null)
+    parameters:
+    - id: progressCallback
+      type: System.Action{System.Int32,System.Int32}
+    - id: onComplete
+      type: System.Action
+    return:
+      type: System.Int32
+    content.vb: Public Function ProcesarCumplidos(progressCallback As Action(Of Integer, Integer) = Nothing, onComplete As Action = Nothing) As Integer
+  overload: ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarCumplidos*
+  implements:
+  - ConversorPDF.XLL.Core.Interfaces.IViaticosService.ProcesarCumplidos(System.Action{System.Int32,System.Int32},System.Action)
+  nameWithType.vb: ViaticosService.ProcesarCumplidos(Action(Of Integer, Integer), Action)
+  fullName.vb: ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarCumplidos(System.Action(Of Integer, Integer), System.Action)
+  name.vb: ProcesarCumplidos(Action(Of Integer, Integer), Action)
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarFilaSeleccionada(System.Action{System.Int32,System.Int32})
+  commentId: M:ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarFilaSeleccionada(System.Action{System.Int32,System.Int32})
+  id: ProcesarFilaSeleccionada(System.Action{System.Int32,System.Int32})
+  parent: ConversorPDF.XLL.Core.Services.ViaticosService
+  langs:
+  - csharp
+  - vb
+  name: ProcesarFilaSeleccionada(Action<int, int>)
+  nameWithType: ViaticosService.ProcesarFilaSeleccionada(Action<int, int>)
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarFilaSeleccionada(System.Action<int, int>)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Services
+  summary: >-
+    Determina el tipo de procesamiento basado en la hoja activa de Excel y ejecuta el proceso para la fila seleccionada.
+
+    Identifica si el usuario está en la hoja de CONSULTAS (cumplidos) o Programación (individual).
+  example: []
+  syntax:
+    content: public int ProcesarFilaSeleccionada(Action<int, int> progressCallback = null)
+    parameters:
+    - id: progressCallback
+      type: System.Action{System.Int32,System.Int32}
+    return:
+      type: System.Int32
+    content.vb: Public Function ProcesarFilaSeleccionada(progressCallback As Action(Of Integer, Integer) = Nothing) As Integer
+  overload: ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarFilaSeleccionada*
+  implements:
+  - ConversorPDF.XLL.Core.Interfaces.IViaticosService.ProcesarFilaSeleccionada(System.Action{System.Int32,System.Int32})
+  nameWithType.vb: ViaticosService.ProcesarFilaSeleccionada(Action(Of Integer, Integer))
+  fullName.vb: ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarFilaSeleccionada(System.Action(Of Integer, Integer))
+  name.vb: ProcesarFilaSeleccionada(Action(Of Integer, Integer))
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.RenombrarSolicitudes(System.Int32,System.Int32)
+  commentId: M:ConversorPDF.XLL.Core.Services.ViaticosService.RenombrarSolicitudes(System.Int32,System.Int32)
+  id: RenombrarSolicitudes(System.Int32,System.Int32)
+  parent: ConversorPDF.XLL.Core.Services.ViaticosService
+  langs:
+  - csharp
+  - vb
+  name: RenombrarSolicitudes(int, int)
+  nameWithType: ViaticosService.RenombrarSolicitudes(int, int)
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.RenombrarSolicitudes(int, int)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Services
+  summary: Renombra archivos PDF de solicitudes basándose en el rango e información extraída.
+  example: []
+  syntax:
+    content: public void RenombrarSolicitudes(int inicio, int fin)
+    parameters:
+    - id: inicio
+      type: System.Int32
+    - id: fin
+      type: System.Int32
+    content.vb: Public Sub RenombrarSolicitudes(inicio As Integer, fin As Integer)
+  overload: ConversorPDF.XLL.Core.Services.ViaticosService.RenombrarSolicitudes*
+  implements:
+  - ConversorPDF.XLL.Core.Interfaces.IViaticosService.RenombrarSolicitudes(System.Int32,System.Int32)
+  nameWithType.vb: ViaticosService.RenombrarSolicitudes(Integer, Integer)
+  fullName.vb: ConversorPDF.XLL.Core.Services.ViaticosService.RenombrarSolicitudes(Integer, Integer)
+  name.vb: RenombrarSolicitudes(Integer, Integer)
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.UnificarSolicitudes(System.Int32,System.Int32)
+  commentId: M:ConversorPDF.XLL.Core.Services.ViaticosService.UnificarSolicitudes(System.Int32,System.Int32)
+  id: UnificarSolicitudes(System.Int32,System.Int32)
+  parent: ConversorPDF.XLL.Core.Services.ViaticosService
+  langs:
+  - csharp
+  - vb
+  name: UnificarSolicitudes(int, int)
+  nameWithType: ViaticosService.UnificarSolicitudes(int, int)
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.UnificarSolicitudes(int, int)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Services
+  summary: Unifica los expedientes de viáticos en archivos únicos por comisionado.
+  example: []
+  syntax:
+    content: public int UnificarSolicitudes(int inicio, int fin)
+    parameters:
+    - id: inicio
+      type: System.Int32
+    - id: fin
+      type: System.Int32
+    return:
+      type: System.Int32
+    content.vb: Public Function UnificarSolicitudes(inicio As Integer, fin As Integer) As Integer
+  overload: ConversorPDF.XLL.Core.Services.ViaticosService.UnificarSolicitudes*
+  implements:
+  - ConversorPDF.XLL.Core.Interfaces.IViaticosService.UnificarSolicitudes(System.Int32,System.Int32)
+  nameWithType.vb: ViaticosService.UnificarSolicitudes(Integer, Integer)
+  fullName.vb: ConversorPDF.XLL.Core.Services.ViaticosService.UnificarSolicitudes(Integer, Integer)
+  name.vb: UnificarSolicitudes(Integer, Integer)
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.ValidarFormatoComisionado(System.Object)
+  commentId: M:ConversorPDF.XLL.Core.Services.ViaticosService.ValidarFormatoComisionado(System.Object)
+  id: ValidarFormatoComisionado(System.Object)
+  parent: ConversorPDF.XLL.Core.Services.ViaticosService
+  langs:
+  - csharp
+  - vb
+  name: ValidarFormatoComisionado(dynamic)
+  nameWithType: ViaticosService.ValidarFormatoComisionado(dynamic)
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.ValidarFormatoComisionado(dynamic)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Services
+  summary: Verifica si la hoja cumple con el formato estándar de viáticos.
+  example: []
+  syntax:
+    content: public bool ValidarFormatoComisionado(dynamic sheet)
+    parameters:
+    - id: sheet
+      type: dynamic
+    return:
+      type: System.Boolean
+    content.vb: Public Function ValidarFormatoComisionado(sheet As Object) As Boolean
+  overload: ConversorPDF.XLL.Core.Services.ViaticosService.ValidarFormatoComisionado*
+  implements:
+  - ConversorPDF.XLL.Core.Interfaces.IViaticosService.ValidarFormatoComisionado(System.Object)
+  nameWithType.vb: ViaticosService.ValidarFormatoComisionado(Object)
+  fullName.vb: ConversorPDF.XLL.Core.Services.ViaticosService.ValidarFormatoComisionado(Object)
+  name.vb: ValidarFormatoComisionado(Object)
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.GetCdpList
+  commentId: M:ConversorPDF.XLL.Core.Services.ViaticosService.GetCdpList
+  id: GetCdpList
+  parent: ConversorPDF.XLL.Core.Services.ViaticosService
+  langs:
+  - csharp
+  - vb
+  name: GetCdpList()
+  nameWithType: ViaticosService.GetCdpList()
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.GetCdpList()
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Services
+  summary: Obtiene la lista cargada de CDPs válidos para la vigencia.
+  example: []
+  syntax:
+    content: public List<string> GetCdpList()
+    return:
+      type: System.Collections.Generic.List{System.String}
+    content.vb: Public Function GetCdpList() As List(Of String)
+  overload: ConversorPDF.XLL.Core.Services.ViaticosService.GetCdpList*
+  implements:
+  - ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetCdpList
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.GetSelectionConfig
+  commentId: M:ConversorPDF.XLL.Core.Services.ViaticosService.GetSelectionConfig
+  id: GetSelectionConfig
+  parent: ConversorPDF.XLL.Core.Services.ViaticosService
+  langs:
+  - csharp
+  - vb
+  name: GetSelectionConfig()
+  nameWithType: ViaticosService.GetSelectionConfig()
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.GetSelectionConfig()
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Services
+  summary: Recupera la configuración de selección del formulario (Rango de filas y CDP).
+  example: []
+  syntax:
+    content: public string[] GetSelectionConfig()
+    return:
+      type: System.String[]
+    content.vb: Public Function GetSelectionConfig() As String()
+  overload: ConversorPDF.XLL.Core.Services.ViaticosService.GetSelectionConfig*
+  implements:
+  - ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetSelectionConfig
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.FilaSeleccionadaSaveConfig(System.Object,System.Object,System.String)
+  commentId: M:ConversorPDF.XLL.Core.Services.ViaticosService.FilaSeleccionadaSaveConfig(System.Object,System.Object,System.String)
+  id: FilaSeleccionadaSaveConfig(System.Object,System.Object,System.String)
+  parent: ConversorPDF.XLL.Core.Services.ViaticosService
+  langs:
+  - csharp
+  - vb
+  name: FilaSeleccionadaSaveConfig(object, object, string)
+  nameWithType: ViaticosService.FilaSeleccionadaSaveConfig(object, object, string)
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.FilaSeleccionadaSaveConfig(object, object, string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Services
+  summary: Guarda temporalmente la configuración de fechas y CDP en la hoja 'Config' para que los procesadores la utilicen.
+  example: []
+  syntax:
+    content: public void FilaSeleccionadaSaveConfig(object inicio, object fin, string cdp = null)
+    parameters:
+    - id: inicio
+      type: System.Object
+    - id: fin
+      type: System.Object
+    - id: cdp
+      type: System.String
+    content.vb: Public Sub FilaSeleccionadaSaveConfig(inicio As Object, fin As Object, cdp As String = Nothing)
+  overload: ConversorPDF.XLL.Core.Services.ViaticosService.FilaSeleccionadaSaveConfig*
+  implements:
+  - ConversorPDF.XLL.Core.Interfaces.IViaticosService.FilaSeleccionadaSaveConfig(System.Object,System.Object,System.String)
+  nameWithType.vb: ViaticosService.FilaSeleccionadaSaveConfig(Object, Object, String)
+  fullName.vb: ConversorPDF.XLL.Core.Services.ViaticosService.FilaSeleccionadaSaveConfig(Object, Object, String)
+  name.vb: FilaSeleccionadaSaveConfig(Object, Object, String)
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.GetGlobalVariable(System.String)
+  commentId: M:ConversorPDF.XLL.Core.Services.ViaticosService.GetGlobalVariable(System.String)
+  id: GetGlobalVariable(System.String)
+  parent: ConversorPDF.XLL.Core.Services.ViaticosService
+  langs:
+  - csharp
+  - vb
+  name: GetGlobalVariable(string)
+  nameWithType: ViaticosService.GetGlobalVariable(string)
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.GetGlobalVariable(string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Services
+  summary: Obtiene una variable global de Excel.
+  example: []
+  syntax:
+    content: public string GetGlobalVariable(string varName)
+    parameters:
+    - id: varName
+      type: System.String
+    return:
+      type: System.String
+    content.vb: Public Function GetGlobalVariable(varName As String) As String
+  overload: ConversorPDF.XLL.Core.Services.ViaticosService.GetGlobalVariable*
+  implements:
+  - ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetGlobalVariable(System.String)
+  nameWithType.vb: ViaticosService.GetGlobalVariable(String)
+  fullName.vb: ConversorPDF.XLL.Core.Services.ViaticosService.GetGlobalVariable(String)
+  name.vb: GetGlobalVariable(String)
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.GetAdvancedConfigRows
+  commentId: M:ConversorPDF.XLL.Core.Services.ViaticosService.GetAdvancedConfigRows
+  id: GetAdvancedConfigRows
+  parent: ConversorPDF.XLL.Core.Services.ViaticosService
+  langs:
+  - csharp
+  - vb
+  name: GetAdvancedConfigRows()
+  nameWithType: ViaticosService.GetAdvancedConfigRows()
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.GetAdvancedConfigRows()
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Services
+  summary: Obtiene los datos de configuración avanzada de viáticos.
+  example: []
+  syntax:
+    content: public object[,] GetAdvancedConfigRows()
+    return:
+      type: System.Object[,]
+    content.vb: Public Function GetAdvancedConfigRows() As Object(,)
+  overload: ConversorPDF.XLL.Core.Services.ViaticosService.GetAdvancedConfigRows*
+  implements:
+  - ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetAdvancedConfigRows
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.SaveAdvancedConfigRows(System.Object[0:,0:])
+  commentId: M:ConversorPDF.XLL.Core.Services.ViaticosService.SaveAdvancedConfigRows(System.Object[0:,0:])
+  id: SaveAdvancedConfigRows(System.Object[0:,0:])
+  parent: ConversorPDF.XLL.Core.Services.ViaticosService
+  langs:
+  - csharp
+  - vb
+  name: SaveAdvancedConfigRows(object[,])
+  nameWithType: ViaticosService.SaveAdvancedConfigRows(object[,])
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.SaveAdvancedConfigRows(object[,])
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Services
+  summary: Guarda los datos de configuración avanzada.
+  example: []
+  syntax:
+    content: public void SaveAdvancedConfigRows(object[,] data)
+    parameters:
+    - id: data
+      type: System.Object[,]
+    content.vb: Public Sub SaveAdvancedConfigRows(data As Object(,))
+  overload: ConversorPDF.XLL.Core.Services.ViaticosService.SaveAdvancedConfigRows*
+  implements:
+  - ConversorPDF.XLL.Core.Interfaces.IViaticosService.SaveAdvancedConfigRows(System.Object[0:,0:])
+  nameWithType.vb: ViaticosService.SaveAdvancedConfigRows(Object(,))
+  fullName.vb: ConversorPDF.XLL.Core.Services.ViaticosService.SaveAdvancedConfigRows(Object(,))
+  name.vb: SaveAdvancedConfigRows(Object(,))
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.GetTableData(System.String)
+  commentId: M:ConversorPDF.XLL.Core.Services.ViaticosService.GetTableData(System.String)
+  id: GetTableData(System.String)
+  parent: ConversorPDF.XLL.Core.Services.ViaticosService
+  langs:
+  - csharp
+  - vb
+  name: GetTableData(string)
+  nameWithType: ViaticosService.GetTableData(string)
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.GetTableData(string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Services
+  summary: Acceso genérico a datos de tablas de Excel configuradas.
+  example: []
+  syntax:
+    content: public object[,] GetTableData(string tableName)
+    parameters:
+    - id: tableName
+      type: System.String
+    return:
+      type: System.Object[,]
+    content.vb: Public Function GetTableData(tableName As String) As Object(,)
+  overload: ConversorPDF.XLL.Core.Services.ViaticosService.GetTableData*
+  implements:
+  - ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetTableData(System.String)
+  nameWithType.vb: ViaticosService.GetTableData(String)
+  fullName.vb: ConversorPDF.XLL.Core.Services.ViaticosService.GetTableData(String)
+  name.vb: GetTableData(String)
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.SaveTableData(System.String,System.Object[0:,0:])
+  commentId: M:ConversorPDF.XLL.Core.Services.ViaticosService.SaveTableData(System.String,System.Object[0:,0:])
+  id: SaveTableData(System.String,System.Object[0:,0:])
+  parent: ConversorPDF.XLL.Core.Services.ViaticosService
+  langs:
+  - csharp
+  - vb
+  name: SaveTableData(string, object[,])
+  nameWithType: ViaticosService.SaveTableData(string, object[,])
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.SaveTableData(string, object[,])
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Services
+  summary: Guarda datos en una tabla específica de Excel.
+  example: []
+  syntax:
+    content: public void SaveTableData(string tableName, object[,] data)
+    parameters:
+    - id: tableName
+      type: System.String
+    - id: data
+      type: System.Object[,]
+    content.vb: Public Sub SaveTableData(tableName As String, data As Object(,))
+  overload: ConversorPDF.XLL.Core.Services.ViaticosService.SaveTableData*
+  implements:
+  - ConversorPDF.XLL.Core.Interfaces.IViaticosService.SaveTableData(System.String,System.Object[0:,0:])
+  nameWithType.vb: ViaticosService.SaveTableData(String, Object(,))
+  fullName.vb: ConversorPDF.XLL.Core.Services.ViaticosService.SaveTableData(String, Object(,))
+  name.vb: SaveTableData(String, Object(,))
+references:
+- uid: ConversorPDF.XLL.Core.Services
+  commentId: N:ConversorPDF.XLL.Core.Services
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Core.Services
+  nameWithType: ConversorPDF.XLL.Core.Services
+  fullName: ConversorPDF.XLL.Core.Services
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Services
+    name: Services
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Services.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Services
+    name: Services
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Services.html
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+  nameWithType: object
+  fullName: object
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService
+  commentId: T:ConversorPDF.XLL.Core.Interfaces.IViaticosService
+  parent: ConversorPDF.XLL.Core.Interfaces
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html
+  name: IViaticosService
+  nameWithType: IViaticosService
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosService
+- uid: System.Object.ToString
+  commentId: M:System.Object.ToString
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  name: ToString()
+  nameWithType: object.ToString()
+  fullName: object.ToString()
+  nameWithType.vb: Object.ToString()
+  fullName.vb: Object.ToString()
+  spec.csharp:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+- uid: System.Object.Equals(System.Object)
+  commentId: M:System.Object.Equals(System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  name: Equals(object)
+  nameWithType: object.Equals(object)
+  fullName: object.Equals(object)
+  nameWithType.vb: Object.Equals(Object)
+  fullName.vb: Object.Equals(Object)
+  name.vb: Equals(Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.Equals(System.Object,System.Object)
+  commentId: M:System.Object.Equals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  name: Equals(object, object)
+  nameWithType: object.Equals(object, object)
+  fullName: object.Equals(object, object)
+  nameWithType.vb: Object.Equals(Object, Object)
+  fullName.vb: Object.Equals(Object, Object)
+  name.vb: Equals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.ReferenceEquals(System.Object,System.Object)
+  commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  name: ReferenceEquals(object, object)
+  nameWithType: object.ReferenceEquals(object, object)
+  fullName: object.ReferenceEquals(object, object)
+  nameWithType.vb: Object.ReferenceEquals(Object, Object)
+  fullName.vb: Object.ReferenceEquals(Object, Object)
+  name.vb: ReferenceEquals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.GetHashCode
+  commentId: M:System.Object.GetHashCode
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  name: GetHashCode()
+  nameWithType: object.GetHashCode()
+  fullName: object.GetHashCode()
+  nameWithType.vb: Object.GetHashCode()
+  fullName.vb: Object.GetHashCode()
+  spec.csharp:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+- uid: System.Object.GetType
+  commentId: M:System.Object.GetType
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  name: GetType()
+  nameWithType: object.GetType()
+  fullName: object.GetType()
+  nameWithType.vb: Object.GetType()
+  fullName.vb: Object.GetType()
+  spec.csharp:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+- uid: System.Object.MemberwiseClone
+  commentId: M:System.Object.MemberwiseClone
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  name: MemberwiseClone()
+  nameWithType: object.MemberwiseClone()
+  fullName: object.MemberwiseClone()
+  nameWithType.vb: Object.MemberwiseClone()
+  fullName.vb: Object.MemberwiseClone()
+  spec.csharp:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: ConversorPDF.XLL.Core.Interfaces
+  commentId: N:ConversorPDF.XLL.Core.Interfaces
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Core.Interfaces
+  nameWithType: ConversorPDF.XLL.Core.Interfaces
+  fullName: ConversorPDF.XLL.Core.Interfaces
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Interfaces
+    name: Interfaces
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Interfaces
+    name: Interfaces
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.html
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.#ctor*
+  commentId: Overload:ConversorPDF.XLL.Core.Services.ViaticosService.#ctor
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Services.ViaticosService.html#ConversorPDF_XLL_Core_Services_ViaticosService__ctor_ConversorPDF_XLL_Core_Interfaces_IExcelRepository_ConversorPDF_XLL_Core_Interfaces_IUserService_ConversorPDF_XLL_Core_Interfaces_IViaticosRepository_ConversorPDF_XLL_Core_Interfaces_IViaticosIndividualProcessor_ConversorPDF_XLL_Core_Interfaces_IViaticosMasivoProcessor_ConversorPDF_XLL_Core_Interfaces_IViaticosCumplidosProcessor_ConversorPDF_XLL_Core_Interfaces_IViaticosGestionProcessor_
+  name: ViaticosService
+  nameWithType: ViaticosService.ViaticosService
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.ViaticosService
+  nameWithType.vb: ViaticosService.New
+  fullName.vb: ConversorPDF.XLL.Core.Services.ViaticosService.New
+  name.vb: New
+- uid: ConversorPDF.XLL.Core.Interfaces.IExcelRepository
+  commentId: T:ConversorPDF.XLL.Core.Interfaces.IExcelRepository
+  parent: ConversorPDF.XLL.Core.Interfaces
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IExcelRepository.html
+  name: IExcelRepository
+  nameWithType: IExcelRepository
+  fullName: ConversorPDF.XLL.Core.Interfaces.IExcelRepository
+- uid: ConversorPDF.XLL.Core.Interfaces.IUserService
+  commentId: T:ConversorPDF.XLL.Core.Interfaces.IUserService
+  parent: ConversorPDF.XLL.Core.Interfaces
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IUserService.html
+  name: IUserService
+  nameWithType: IUserService
+  fullName: ConversorPDF.XLL.Core.Interfaces.IUserService
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository
+  commentId: T:ConversorPDF.XLL.Core.Interfaces.IViaticosRepository
+  parent: ConversorPDF.XLL.Core.Interfaces
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.html
+  name: IViaticosRepository
+  nameWithType: IViaticosRepository
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosRepository
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor
+  commentId: T:ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor
+  parent: ConversorPDF.XLL.Core.Interfaces
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor.html
+  name: IViaticosIndividualProcessor
+  nameWithType: IViaticosIndividualProcessor
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosMasivoProcessor
+  commentId: T:ConversorPDF.XLL.Core.Interfaces.IViaticosMasivoProcessor
+  parent: ConversorPDF.XLL.Core.Interfaces
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosMasivoProcessor.html
+  name: IViaticosMasivoProcessor
+  nameWithType: IViaticosMasivoProcessor
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosMasivoProcessor
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosCumplidosProcessor
+  commentId: T:ConversorPDF.XLL.Core.Interfaces.IViaticosCumplidosProcessor
+  parent: ConversorPDF.XLL.Core.Interfaces
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosCumplidosProcessor.html
+  name: IViaticosCumplidosProcessor
+  nameWithType: IViaticosCumplidosProcessor
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosCumplidosProcessor
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor
+  commentId: T:ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor
+  parent: ConversorPDF.XLL.Core.Interfaces
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.html
+  name: IViaticosGestionProcessor
+  nameWithType: IViaticosGestionProcessor
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.ClearCache*
+  commentId: Overload:ConversorPDF.XLL.Core.Services.ViaticosService.ClearCache
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Services.ViaticosService.html#ConversorPDF_XLL_Core_Services_ViaticosService_ClearCache
+  name: ClearCache
+  nameWithType: ViaticosService.ClearCache
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.ClearCache
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.ClearCache
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IViaticosService.ClearCache
+  parent: ConversorPDF.XLL.Core.Interfaces.IViaticosService
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_ClearCache
+  name: ClearCache()
+  nameWithType: IViaticosService.ClearCache()
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosService.ClearCache()
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.ClearCache
+    name: ClearCache
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_ClearCache
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.ClearCache
+    name: ClearCache
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_ClearCache
+  - name: (
+  - name: )
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.GetConfig*
+  commentId: Overload:ConversorPDF.XLL.Core.Services.ViaticosService.GetConfig
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Services.ViaticosService.html#ConversorPDF_XLL_Core_Services_ViaticosService_GetConfig_System_Nullable_System_DateTime__System_Nullable_System_DateTime__System_String_
+  name: GetConfig
+  nameWithType: ViaticosService.GetConfig
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.GetConfig
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetConfig(System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetConfig(System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String)
+  parent: ConversorPDF.XLL.Core.Interfaces.IViaticosService
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_GetConfig_System_Nullable_System_DateTime__System_Nullable_System_DateTime__System_String_
+  name: GetConfig(DateTime?, DateTime?, string)
+  nameWithType: IViaticosService.GetConfig(DateTime?, DateTime?, string)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetConfig(System.DateTime?, System.DateTime?, string)
+  nameWithType.vb: IViaticosService.GetConfig(Date?, Date?, String)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetConfig(Date?, Date?, String)
+  name.vb: GetConfig(Date?, Date?, String)
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetConfig(System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String)
+    name: GetConfig
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_GetConfig_System_Nullable_System_DateTime__System_Nullable_System_DateTime__System_String_
+  - name: (
+  - uid: System.DateTime
+    name: DateTime
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.datetime
+  - name: '?'
+  - name: ','
+  - name: " "
+  - uid: System.DateTime
+    name: DateTime
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.datetime
+  - name: '?'
+  - name: ','
+  - name: " "
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetConfig(System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String)
+    name: GetConfig
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_GetConfig_System_Nullable_System_DateTime__System_Nullable_System_DateTime__System_String_
+  - name: (
+  - uid: System.DateTime
+    name: Date
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.datetime
+  - name: '?'
+  - name: ','
+  - name: " "
+  - uid: System.DateTime
+    name: Date
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.datetime
+  - name: '?'
+  - name: ','
+  - name: " "
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+- uid: System.Nullable{System.DateTime}
+  commentId: T:System.Nullable{System.DateTime}
+  parent: System
+  definition: System.Nullable`1
+  href: https://learn.microsoft.com/dotnet/api/system.datetime
+  name: DateTime?
+  nameWithType: DateTime?
+  fullName: System.DateTime?
+  nameWithType.vb: Date?
+  fullName.vb: Date?
+  name.vb: Date?
+  spec.csharp:
+  - uid: System.DateTime
+    name: DateTime
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.datetime
+  - name: '?'
+  spec.vb:
+  - uid: System.DateTime
+    name: Date
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.datetime
+  - name: '?'
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: ConversorPDF.XLL.Core.Models.ViaticosConfig
+  commentId: T:ConversorPDF.XLL.Core.Models.ViaticosConfig
+  parent: ConversorPDF.XLL.Core.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ViaticosConfig.html
+  name: ViaticosConfig
+  nameWithType: ViaticosConfig
+  fullName: ConversorPDF.XLL.Core.Models.ViaticosConfig
+- uid: System.Nullable`1
+  commentId: T:System.Nullable`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  name: Nullable<T>
+  nameWithType: Nullable<T>
+  fullName: System.Nullable<T>
+  nameWithType.vb: Nullable(Of T)
+  fullName.vb: System.Nullable(Of T)
+  name.vb: Nullable(Of T)
+  spec.csharp:
+  - uid: System.Nullable`1
+    name: Nullable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.Nullable`1
+    name: Nullable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: ConversorPDF.XLL.Core.Models
+  commentId: N:ConversorPDF.XLL.Core.Models
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Core.Models
+  nameWithType: ConversorPDF.XLL.Core.Models
+  fullName: ConversorPDF.XLL.Core.Models
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Models
+    name: Models
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Models
+    name: Models
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.html
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.GetEmpleado*
+  commentId: Overload:ConversorPDF.XLL.Core.Services.ViaticosService.GetEmpleado
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Services.ViaticosService.html#ConversorPDF_XLL_Core_Services_ViaticosService_GetEmpleado_System_String_
+  name: GetEmpleado
+  nameWithType: ViaticosService.GetEmpleado
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.GetEmpleado
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetEmpleado(System.String)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetEmpleado(System.String)
+  parent: ConversorPDF.XLL.Core.Interfaces.IViaticosService
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_GetEmpleado_System_String_
+  name: GetEmpleado(string)
+  nameWithType: IViaticosService.GetEmpleado(string)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetEmpleado(string)
+  nameWithType.vb: IViaticosService.GetEmpleado(String)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetEmpleado(String)
+  name.vb: GetEmpleado(String)
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetEmpleado(System.String)
+    name: GetEmpleado
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_GetEmpleado_System_String_
+  - name: (
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetEmpleado(System.String)
+    name: GetEmpleado
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_GetEmpleado_System_String_
+  - name: (
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+- uid: ConversorPDF.XLL.Core.Models.Empleado
+  commentId: T:ConversorPDF.XLL.Core.Models.Empleado
+  parent: ConversorPDF.XLL.Core.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.Empleado.html
+  name: Empleado
+  nameWithType: Empleado
+  fullName: ConversorPDF.XLL.Core.Models.Empleado
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.GetViajeFromRow*
+  commentId: Overload:ConversorPDF.XLL.Core.Services.ViaticosService.GetViajeFromRow
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Services.ViaticosService.html#ConversorPDF_XLL_Core_Services_ViaticosService_GetViajeFromRow_System_Object_0
+  name: GetViajeFromRow
+  nameWithType: ViaticosService.GetViajeFromRow
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.GetViajeFromRow
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetViajeFromRow(System.Object[0:,0:],System.Int32)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetViajeFromRow(System.Object[0:,0:],System.Int32)
+  parent: ConversorPDF.XLL.Core.Interfaces.IViaticosService
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_GetViajeFromRow_System_Object_0
+  name: GetViajeFromRow(object[,], int)
+  nameWithType: IViaticosService.GetViajeFromRow(object[,], int)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetViajeFromRow(object[,], int)
+  nameWithType.vb: IViaticosService.GetViajeFromRow(Object(,), Integer)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetViajeFromRow(Object(,), Integer)
+  name.vb: GetViajeFromRow(Object(,), Integer)
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetViajeFromRow(System.Object[0:,0:],System.Int32)
+    name: GetViajeFromRow
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_GetViajeFromRow_System_Object_0
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: '['
+  - name: ','
+  - name: ']'
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: )
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetViajeFromRow(System.Object[0:,0:],System.Int32)
+    name: GetViajeFromRow
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_GetViajeFromRow_System_Object_0
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: (
+  - name: ','
+  - name: )
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: )
+- uid: System.Object[,]
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object[,]
+  nameWithType: object[,]
+  fullName: object[,]
+  nameWithType.vb: Object(,)
+  fullName.vb: Object(,)
+  name.vb: Object(,)
+  spec.csharp:
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: '['
+  - name: ','
+  - name: ']'
+  spec.vb:
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: (
+  - name: ','
+  - name: )
+- uid: System.Int32
+  commentId: T:System.Int32
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int
+  nameWithType: int
+  fullName: int
+  nameWithType.vb: Integer
+  fullName.vb: Integer
+  name.vb: Integer
+- uid: ConversorPDF.XLL.Core.Models.Viaje
+  commentId: T:ConversorPDF.XLL.Core.Models.Viaje
+  parent: ConversorPDF.XLL.Core.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.Viaje.html
+  name: Viaje
+  nameWithType: Viaje
+  fullName: ConversorPDF.XLL.Core.Models.Viaje
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarIndividual*
+  commentId: Overload:ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarIndividual
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Services.ViaticosService.html#ConversorPDF_XLL_Core_Services_ViaticosService_ProcesarIndividual_System_Action_System_Int32_System_Int32__System_Nullable_System_DateTime__System_Nullable_System_DateTime__System_String_
+  name: ProcesarIndividual
+  nameWithType: ViaticosService.ProcesarIndividual
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarIndividual
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.ProcesarIndividual(System.Action{System.Int32,System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IViaticosService.ProcesarIndividual(System.Action{System.Int32,System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String)
+  parent: ConversorPDF.XLL.Core.Interfaces.IViaticosService
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_ProcesarIndividual_System_Action_System_Int32_System_Int32__System_Nullable_System_DateTime__System_Nullable_System_DateTime__System_String_
+  name: ProcesarIndividual(Action<int, int>, DateTime?, DateTime?, string)
+  nameWithType: IViaticosService.ProcesarIndividual(Action<int, int>, DateTime?, DateTime?, string)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosService.ProcesarIndividual(System.Action<int, int>, System.DateTime?, System.DateTime?, string)
+  nameWithType.vb: IViaticosService.ProcesarIndividual(Action(Of Integer, Integer), Date?, Date?, String)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IViaticosService.ProcesarIndividual(System.Action(Of Integer, Integer), Date?, Date?, String)
+  name.vb: ProcesarIndividual(Action(Of Integer, Integer), Date?, Date?, String)
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.ProcesarIndividual(System.Action{System.Int32,System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String)
+    name: ProcesarIndividual
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_ProcesarIndividual_System_Action_System_Int32_System_Int32__System_Nullable_System_DateTime__System_Nullable_System_DateTime__System_String_
+  - name: (
+  - uid: System.Action`2
+    name: Action
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.action-2
+  - name: <
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '>'
+  - name: ','
+  - name: " "
+  - uid: System.DateTime
+    name: DateTime
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.datetime
+  - name: '?'
+  - name: ','
+  - name: " "
+  - uid: System.DateTime
+    name: DateTime
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.datetime
+  - name: '?'
+  - name: ','
+  - name: " "
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.ProcesarIndividual(System.Action{System.Int32,System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String)
+    name: ProcesarIndividual
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_ProcesarIndividual_System_Action_System_Int32_System_Int32__System_Nullable_System_DateTime__System_Nullable_System_DateTime__System_String_
+  - name: (
+  - uid: System.Action`2
+    name: Action
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.action-2
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: )
+  - name: ','
+  - name: " "
+  - uid: System.DateTime
+    name: Date
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.datetime
+  - name: '?'
+  - name: ','
+  - name: " "
+  - uid: System.DateTime
+    name: Date
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.datetime
+  - name: '?'
+  - name: ','
+  - name: " "
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+- uid: System.Action{System.Int32,System.Int32}
+  commentId: T:System.Action{System.Int32,System.Int32}
+  parent: System
+  definition: System.Action`2
+  href: https://learn.microsoft.com/dotnet/api/system.action-2
+  name: Action<int, int>
+  nameWithType: Action<int, int>
+  fullName: System.Action<int, int>
+  nameWithType.vb: Action(Of Integer, Integer)
+  fullName.vb: System.Action(Of Integer, Integer)
+  name.vb: Action(Of Integer, Integer)
+  spec.csharp:
+  - uid: System.Action`2
+    name: Action
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.action-2
+  - name: <
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '>'
+  spec.vb:
+  - uid: System.Action`2
+    name: Action
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.action-2
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: )
+- uid: System.Action`2
+  commentId: T:System.Action`2
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.action-2
+  name: Action<T1, T2>
+  nameWithType: Action<T1, T2>
+  fullName: System.Action<T1, T2>
+  nameWithType.vb: Action(Of T1, T2)
+  fullName.vb: System.Action(Of T1, T2)
+  name.vb: Action(Of T1, T2)
+  spec.csharp:
+  - uid: System.Action`2
+    name: Action
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.action-2
+  - name: <
+  - name: T1
+  - name: ','
+  - name: " "
+  - name: T2
+  - name: '>'
+  spec.vb:
+  - uid: System.Action`2
+    name: Action
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.action-2
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T1
+  - name: ','
+  - name: " "
+  - name: T2
+  - name: )
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarMasivo*
+  commentId: Overload:ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarMasivo
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Services.ViaticosService.html#ConversorPDF_XLL_Core_Services_ViaticosService_ProcesarMasivo_System_Action_System_Int32_System_Int32__
+  name: ProcesarMasivo
+  nameWithType: ViaticosService.ProcesarMasivo
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarMasivo
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.ProcesarMasivo(System.Action{System.Int32,System.Int32})
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IViaticosService.ProcesarMasivo(System.Action{System.Int32,System.Int32})
+  parent: ConversorPDF.XLL.Core.Interfaces.IViaticosService
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_ProcesarMasivo_System_Action_System_Int32_System_Int32__
+  name: ProcesarMasivo(Action<int, int>)
+  nameWithType: IViaticosService.ProcesarMasivo(Action<int, int>)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosService.ProcesarMasivo(System.Action<int, int>)
+  nameWithType.vb: IViaticosService.ProcesarMasivo(Action(Of Integer, Integer))
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IViaticosService.ProcesarMasivo(System.Action(Of Integer, Integer))
+  name.vb: ProcesarMasivo(Action(Of Integer, Integer))
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.ProcesarMasivo(System.Action{System.Int32,System.Int32})
+    name: ProcesarMasivo
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_ProcesarMasivo_System_Action_System_Int32_System_Int32__
+  - name: (
+  - uid: System.Action`2
+    name: Action
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.action-2
+  - name: <
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '>'
+  - name: )
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.ProcesarMasivo(System.Action{System.Int32,System.Int32})
+    name: ProcesarMasivo
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_ProcesarMasivo_System_Action_System_Int32_System_Int32__
+  - name: (
+  - uid: System.Action`2
+    name: Action
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.action-2
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: )
+  - name: )
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarCumplidos*
+  commentId: Overload:ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarCumplidos
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Services.ViaticosService.html#ConversorPDF_XLL_Core_Services_ViaticosService_ProcesarCumplidos_System_Action_System_Int32_System_Int32__System_Action_
+  name: ProcesarCumplidos
+  nameWithType: ViaticosService.ProcesarCumplidos
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarCumplidos
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.ProcesarCumplidos(System.Action{System.Int32,System.Int32},System.Action)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IViaticosService.ProcesarCumplidos(System.Action{System.Int32,System.Int32},System.Action)
+  parent: ConversorPDF.XLL.Core.Interfaces.IViaticosService
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_ProcesarCumplidos_System_Action_System_Int32_System_Int32__System_Action_
+  name: ProcesarCumplidos(Action<int, int>, Action)
+  nameWithType: IViaticosService.ProcesarCumplidos(Action<int, int>, Action)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosService.ProcesarCumplidos(System.Action<int, int>, System.Action)
+  nameWithType.vb: IViaticosService.ProcesarCumplidos(Action(Of Integer, Integer), Action)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IViaticosService.ProcesarCumplidos(System.Action(Of Integer, Integer), System.Action)
+  name.vb: ProcesarCumplidos(Action(Of Integer, Integer), Action)
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.ProcesarCumplidos(System.Action{System.Int32,System.Int32},System.Action)
+    name: ProcesarCumplidos
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_ProcesarCumplidos_System_Action_System_Int32_System_Int32__System_Action_
+  - name: (
+  - uid: System.Action`2
+    name: Action
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.action-2
+  - name: <
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '>'
+  - name: ','
+  - name: " "
+  - uid: System.Action
+    name: Action
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.action
+  - name: )
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.ProcesarCumplidos(System.Action{System.Int32,System.Int32},System.Action)
+    name: ProcesarCumplidos
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_ProcesarCumplidos_System_Action_System_Int32_System_Int32__System_Action_
+  - name: (
+  - uid: System.Action`2
+    name: Action
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.action-2
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: )
+  - name: ','
+  - name: " "
+  - uid: System.Action
+    name: Action
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.action
+  - name: )
+- uid: System.Action
+  commentId: T:System.Action
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.action
+  name: Action
+  nameWithType: Action
+  fullName: System.Action
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarFilaSeleccionada*
+  commentId: Overload:ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarFilaSeleccionada
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Services.ViaticosService.html#ConversorPDF_XLL_Core_Services_ViaticosService_ProcesarFilaSeleccionada_System_Action_System_Int32_System_Int32__
+  name: ProcesarFilaSeleccionada
+  nameWithType: ViaticosService.ProcesarFilaSeleccionada
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarFilaSeleccionada
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.ProcesarFilaSeleccionada(System.Action{System.Int32,System.Int32})
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IViaticosService.ProcesarFilaSeleccionada(System.Action{System.Int32,System.Int32})
+  parent: ConversorPDF.XLL.Core.Interfaces.IViaticosService
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_ProcesarFilaSeleccionada_System_Action_System_Int32_System_Int32__
+  name: ProcesarFilaSeleccionada(Action<int, int>)
+  nameWithType: IViaticosService.ProcesarFilaSeleccionada(Action<int, int>)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosService.ProcesarFilaSeleccionada(System.Action<int, int>)
+  nameWithType.vb: IViaticosService.ProcesarFilaSeleccionada(Action(Of Integer, Integer))
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IViaticosService.ProcesarFilaSeleccionada(System.Action(Of Integer, Integer))
+  name.vb: ProcesarFilaSeleccionada(Action(Of Integer, Integer))
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.ProcesarFilaSeleccionada(System.Action{System.Int32,System.Int32})
+    name: ProcesarFilaSeleccionada
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_ProcesarFilaSeleccionada_System_Action_System_Int32_System_Int32__
+  - name: (
+  - uid: System.Action`2
+    name: Action
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.action-2
+  - name: <
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '>'
+  - name: )
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.ProcesarFilaSeleccionada(System.Action{System.Int32,System.Int32})
+    name: ProcesarFilaSeleccionada
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_ProcesarFilaSeleccionada_System_Action_System_Int32_System_Int32__
+  - name: (
+  - uid: System.Action`2
+    name: Action
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.action-2
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: )
+  - name: )
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.RenombrarSolicitudes*
+  commentId: Overload:ConversorPDF.XLL.Core.Services.ViaticosService.RenombrarSolicitudes
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Services.ViaticosService.html#ConversorPDF_XLL_Core_Services_ViaticosService_RenombrarSolicitudes_System_Int32_System_Int32_
+  name: RenombrarSolicitudes
+  nameWithType: ViaticosService.RenombrarSolicitudes
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.RenombrarSolicitudes
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.RenombrarSolicitudes(System.Int32,System.Int32)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IViaticosService.RenombrarSolicitudes(System.Int32,System.Int32)
+  parent: ConversorPDF.XLL.Core.Interfaces.IViaticosService
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_RenombrarSolicitudes_System_Int32_System_Int32_
+  name: RenombrarSolicitudes(int, int)
+  nameWithType: IViaticosService.RenombrarSolicitudes(int, int)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosService.RenombrarSolicitudes(int, int)
+  nameWithType.vb: IViaticosService.RenombrarSolicitudes(Integer, Integer)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IViaticosService.RenombrarSolicitudes(Integer, Integer)
+  name.vb: RenombrarSolicitudes(Integer, Integer)
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.RenombrarSolicitudes(System.Int32,System.Int32)
+    name: RenombrarSolicitudes
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_RenombrarSolicitudes_System_Int32_System_Int32_
+  - name: (
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: )
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.RenombrarSolicitudes(System.Int32,System.Int32)
+    name: RenombrarSolicitudes
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_RenombrarSolicitudes_System_Int32_System_Int32_
+  - name: (
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: )
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.UnificarSolicitudes*
+  commentId: Overload:ConversorPDF.XLL.Core.Services.ViaticosService.UnificarSolicitudes
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Services.ViaticosService.html#ConversorPDF_XLL_Core_Services_ViaticosService_UnificarSolicitudes_System_Int32_System_Int32_
+  name: UnificarSolicitudes
+  nameWithType: ViaticosService.UnificarSolicitudes
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.UnificarSolicitudes
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.UnificarSolicitudes(System.Int32,System.Int32)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IViaticosService.UnificarSolicitudes(System.Int32,System.Int32)
+  parent: ConversorPDF.XLL.Core.Interfaces.IViaticosService
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_UnificarSolicitudes_System_Int32_System_Int32_
+  name: UnificarSolicitudes(int, int)
+  nameWithType: IViaticosService.UnificarSolicitudes(int, int)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosService.UnificarSolicitudes(int, int)
+  nameWithType.vb: IViaticosService.UnificarSolicitudes(Integer, Integer)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IViaticosService.UnificarSolicitudes(Integer, Integer)
+  name.vb: UnificarSolicitudes(Integer, Integer)
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.UnificarSolicitudes(System.Int32,System.Int32)
+    name: UnificarSolicitudes
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_UnificarSolicitudes_System_Int32_System_Int32_
+  - name: (
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: )
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.UnificarSolicitudes(System.Int32,System.Int32)
+    name: UnificarSolicitudes
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_UnificarSolicitudes_System_Int32_System_Int32_
+  - name: (
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: )
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.ValidarFormatoComisionado*
+  commentId: Overload:ConversorPDF.XLL.Core.Services.ViaticosService.ValidarFormatoComisionado
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Services.ViaticosService.html#ConversorPDF_XLL_Core_Services_ViaticosService_ValidarFormatoComisionado_System_Object_
+  name: ValidarFormatoComisionado
+  nameWithType: ViaticosService.ValidarFormatoComisionado
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.ValidarFormatoComisionado
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.ValidarFormatoComisionado(System.Object)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IViaticosService.ValidarFormatoComisionado(System.Object)
+  parent: ConversorPDF.XLL.Core.Interfaces.IViaticosService
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_ValidarFormatoComisionado_System_Object_
+  name: ValidarFormatoComisionado(dynamic)
+  nameWithType: IViaticosService.ValidarFormatoComisionado(dynamic)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosService.ValidarFormatoComisionado(dynamic)
+  nameWithType.vb: IViaticosService.ValidarFormatoComisionado(Object)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IViaticosService.ValidarFormatoComisionado(Object)
+  name.vb: ValidarFormatoComisionado(Object)
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.ValidarFormatoComisionado(System.Object)
+    name: ValidarFormatoComisionado
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_ValidarFormatoComisionado_System_Object_
+  - name: (
+  - uid: dynamic
+    name: dynamic
+    isExternal: true
+  - name: )
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.ValidarFormatoComisionado(System.Object)
+    name: ValidarFormatoComisionado
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_ValidarFormatoComisionado_System_Object_
+  - name: (
+  - name: Object
+  - name: )
+- uid: dynamic
+  commentId: T:System.Object
+  isExternal: true
+  name: dynamic
+  nameWithType: dynamic
+  fullName: dynamic
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: System.Boolean
+  commentId: T:System.Boolean
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.boolean
+  name: bool
+  nameWithType: bool
+  fullName: bool
+  nameWithType.vb: Boolean
+  fullName.vb: Boolean
+  name.vb: Boolean
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.GetCdpList*
+  commentId: Overload:ConversorPDF.XLL.Core.Services.ViaticosService.GetCdpList
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Services.ViaticosService.html#ConversorPDF_XLL_Core_Services_ViaticosService_GetCdpList
+  name: GetCdpList
+  nameWithType: ViaticosService.GetCdpList
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.GetCdpList
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetCdpList
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetCdpList
+  parent: ConversorPDF.XLL.Core.Interfaces.IViaticosService
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_GetCdpList
+  name: GetCdpList()
+  nameWithType: IViaticosService.GetCdpList()
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetCdpList()
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetCdpList
+    name: GetCdpList
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_GetCdpList
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetCdpList
+    name: GetCdpList
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_GetCdpList
+  - name: (
+  - name: )
+- uid: System.Collections.Generic.List{System.String}
+  commentId: T:System.Collections.Generic.List{System.String}
+  parent: System.Collections.Generic
+  definition: System.Collections.Generic.List`1
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  name: List<string>
+  nameWithType: List<string>
+  fullName: System.Collections.Generic.List<string>
+  nameWithType.vb: List(Of String)
+  fullName.vb: System.Collections.Generic.List(Of String)
+  name.vb: List(Of String)
+  spec.csharp:
+  - uid: System.Collections.Generic.List`1
+    name: List
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  - name: <
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.List`1
+    name: List
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+- uid: System.Collections.Generic.List`1
+  commentId: T:System.Collections.Generic.List`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  name: List<T>
+  nameWithType: List<T>
+  fullName: System.Collections.Generic.List<T>
+  nameWithType.vb: List(Of T)
+  fullName.vb: System.Collections.Generic.List(Of T)
+  name.vb: List(Of T)
+  spec.csharp:
+  - uid: System.Collections.Generic.List`1
+    name: List
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.List`1
+    name: List
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: System.Collections.Generic
+  commentId: N:System.Collections.Generic
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System.Collections.Generic
+  nameWithType: System.Collections.Generic
+  fullName: System.Collections.Generic
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Collections
+    name: Collections
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections
+  - name: .
+  - uid: System.Collections.Generic
+    name: Generic
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Collections
+    name: Collections
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections
+  - name: .
+  - uid: System.Collections.Generic
+    name: Generic
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.GetSelectionConfig*
+  commentId: Overload:ConversorPDF.XLL.Core.Services.ViaticosService.GetSelectionConfig
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Services.ViaticosService.html#ConversorPDF_XLL_Core_Services_ViaticosService_GetSelectionConfig
+  name: GetSelectionConfig
+  nameWithType: ViaticosService.GetSelectionConfig
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.GetSelectionConfig
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetSelectionConfig
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetSelectionConfig
+  parent: ConversorPDF.XLL.Core.Interfaces.IViaticosService
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_GetSelectionConfig
+  name: GetSelectionConfig()
+  nameWithType: IViaticosService.GetSelectionConfig()
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetSelectionConfig()
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetSelectionConfig
+    name: GetSelectionConfig
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_GetSelectionConfig
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetSelectionConfig
+    name: GetSelectionConfig
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_GetSelectionConfig
+  - name: (
+  - name: )
+- uid: System.String[]
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string[]
+  nameWithType: string[]
+  fullName: string[]
+  nameWithType.vb: String()
+  fullName.vb: String()
+  name.vb: String()
+  spec.csharp:
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: '['
+  - name: ']'
+  spec.vb:
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: (
+  - name: )
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.FilaSeleccionadaSaveConfig*
+  commentId: Overload:ConversorPDF.XLL.Core.Services.ViaticosService.FilaSeleccionadaSaveConfig
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Services.ViaticosService.html#ConversorPDF_XLL_Core_Services_ViaticosService_FilaSeleccionadaSaveConfig_System_Object_System_Object_System_String_
+  name: FilaSeleccionadaSaveConfig
+  nameWithType: ViaticosService.FilaSeleccionadaSaveConfig
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.FilaSeleccionadaSaveConfig
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.FilaSeleccionadaSaveConfig(System.Object,System.Object,System.String)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IViaticosService.FilaSeleccionadaSaveConfig(System.Object,System.Object,System.String)
+  parent: ConversorPDF.XLL.Core.Interfaces.IViaticosService
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_FilaSeleccionadaSaveConfig_System_Object_System_Object_System_String_
+  name: FilaSeleccionadaSaveConfig(object, object, string)
+  nameWithType: IViaticosService.FilaSeleccionadaSaveConfig(object, object, string)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosService.FilaSeleccionadaSaveConfig(object, object, string)
+  nameWithType.vb: IViaticosService.FilaSeleccionadaSaveConfig(Object, Object, String)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IViaticosService.FilaSeleccionadaSaveConfig(Object, Object, String)
+  name.vb: FilaSeleccionadaSaveConfig(Object, Object, String)
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.FilaSeleccionadaSaveConfig(System.Object,System.Object,System.String)
+    name: FilaSeleccionadaSaveConfig
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_FilaSeleccionadaSaveConfig_System_Object_System_Object_System_String_
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.FilaSeleccionadaSaveConfig(System.Object,System.Object,System.String)
+    name: FilaSeleccionadaSaveConfig
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_FilaSeleccionadaSaveConfig_System_Object_System_Object_System_String_
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.GetGlobalVariable*
+  commentId: Overload:ConversorPDF.XLL.Core.Services.ViaticosService.GetGlobalVariable
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Services.ViaticosService.html#ConversorPDF_XLL_Core_Services_ViaticosService_GetGlobalVariable_System_String_
+  name: GetGlobalVariable
+  nameWithType: ViaticosService.GetGlobalVariable
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.GetGlobalVariable
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetGlobalVariable(System.String)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetGlobalVariable(System.String)
+  parent: ConversorPDF.XLL.Core.Interfaces.IViaticosService
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_GetGlobalVariable_System_String_
+  name: GetGlobalVariable(string)
+  nameWithType: IViaticosService.GetGlobalVariable(string)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetGlobalVariable(string)
+  nameWithType.vb: IViaticosService.GetGlobalVariable(String)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetGlobalVariable(String)
+  name.vb: GetGlobalVariable(String)
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetGlobalVariable(System.String)
+    name: GetGlobalVariable
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_GetGlobalVariable_System_String_
+  - name: (
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetGlobalVariable(System.String)
+    name: GetGlobalVariable
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_GetGlobalVariable_System_String_
+  - name: (
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.GetAdvancedConfigRows*
+  commentId: Overload:ConversorPDF.XLL.Core.Services.ViaticosService.GetAdvancedConfigRows
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Services.ViaticosService.html#ConversorPDF_XLL_Core_Services_ViaticosService_GetAdvancedConfigRows
+  name: GetAdvancedConfigRows
+  nameWithType: ViaticosService.GetAdvancedConfigRows
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.GetAdvancedConfigRows
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetAdvancedConfigRows
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetAdvancedConfigRows
+  parent: ConversorPDF.XLL.Core.Interfaces.IViaticosService
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_GetAdvancedConfigRows
+  name: GetAdvancedConfigRows()
+  nameWithType: IViaticosService.GetAdvancedConfigRows()
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetAdvancedConfigRows()
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetAdvancedConfigRows
+    name: GetAdvancedConfigRows
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_GetAdvancedConfigRows
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetAdvancedConfigRows
+    name: GetAdvancedConfigRows
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_GetAdvancedConfigRows
+  - name: (
+  - name: )
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.SaveAdvancedConfigRows*
+  commentId: Overload:ConversorPDF.XLL.Core.Services.ViaticosService.SaveAdvancedConfigRows
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Services.ViaticosService.html#ConversorPDF_XLL_Core_Services_ViaticosService_SaveAdvancedConfigRows_System_Object_0
+  name: SaveAdvancedConfigRows
+  nameWithType: ViaticosService.SaveAdvancedConfigRows
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.SaveAdvancedConfigRows
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.SaveAdvancedConfigRows(System.Object[0:,0:])
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IViaticosService.SaveAdvancedConfigRows(System.Object[0:,0:])
+  parent: ConversorPDF.XLL.Core.Interfaces.IViaticosService
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_SaveAdvancedConfigRows_System_Object_0
+  name: SaveAdvancedConfigRows(object[,])
+  nameWithType: IViaticosService.SaveAdvancedConfigRows(object[,])
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosService.SaveAdvancedConfigRows(object[,])
+  nameWithType.vb: IViaticosService.SaveAdvancedConfigRows(Object(,))
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IViaticosService.SaveAdvancedConfigRows(Object(,))
+  name.vb: SaveAdvancedConfigRows(Object(,))
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.SaveAdvancedConfigRows(System.Object[0:,0:])
+    name: SaveAdvancedConfigRows
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_SaveAdvancedConfigRows_System_Object_0
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: '['
+  - name: ','
+  - name: ']'
+  - name: )
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.SaveAdvancedConfigRows(System.Object[0:,0:])
+    name: SaveAdvancedConfigRows
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_SaveAdvancedConfigRows_System_Object_0
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: (
+  - name: ','
+  - name: )
+  - name: )
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.GetTableData*
+  commentId: Overload:ConversorPDF.XLL.Core.Services.ViaticosService.GetTableData
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Services.ViaticosService.html#ConversorPDF_XLL_Core_Services_ViaticosService_GetTableData_System_String_
+  name: GetTableData
+  nameWithType: ViaticosService.GetTableData
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.GetTableData
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetTableData(System.String)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetTableData(System.String)
+  parent: ConversorPDF.XLL.Core.Interfaces.IViaticosService
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_GetTableData_System_String_
+  name: GetTableData(string)
+  nameWithType: IViaticosService.GetTableData(string)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetTableData(string)
+  nameWithType.vb: IViaticosService.GetTableData(String)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetTableData(String)
+  name.vb: GetTableData(String)
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetTableData(System.String)
+    name: GetTableData
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_GetTableData_System_String_
+  - name: (
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.GetTableData(System.String)
+    name: GetTableData
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_GetTableData_System_String_
+  - name: (
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+- uid: ConversorPDF.XLL.Core.Services.ViaticosService.SaveTableData*
+  commentId: Overload:ConversorPDF.XLL.Core.Services.ViaticosService.SaveTableData
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Services.ViaticosService.html#ConversorPDF_XLL_Core_Services_ViaticosService_SaveTableData_System_String_System_Object_0
+  name: SaveTableData
+  nameWithType: ViaticosService.SaveTableData
+  fullName: ConversorPDF.XLL.Core.Services.ViaticosService.SaveTableData
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.SaveTableData(System.String,System.Object[0:,0:])
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IViaticosService.SaveTableData(System.String,System.Object[0:,0:])
+  parent: ConversorPDF.XLL.Core.Interfaces.IViaticosService
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_SaveTableData_System_String_System_Object_0
+  name: SaveTableData(string, object[,])
+  nameWithType: IViaticosService.SaveTableData(string, object[,])
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosService.SaveTableData(string, object[,])
+  nameWithType.vb: IViaticosService.SaveTableData(String, Object(,))
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IViaticosService.SaveTableData(String, Object(,))
+  name.vb: SaveTableData(String, Object(,))
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.SaveTableData(System.String,System.Object[0:,0:])
+    name: SaveTableData
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_SaveTableData_System_String_System_Object_0
+  - name: (
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: '['
+  - name: ','
+  - name: ']'
+  - name: )
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.SaveTableData(System.String,System.Object[0:,0:])
+    name: SaveTableData
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html#ConversorPDF_XLL_Core_Interfaces_IViaticosService_SaveTableData_System_String_System_Object_0
+  - name: (
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: (
+  - name: ','
+  - name: )
+  - name: )

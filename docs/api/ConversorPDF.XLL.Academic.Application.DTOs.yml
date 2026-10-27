@@ -1,0 +1,90 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Academic.Application.DTOs
+  commentId: N:ConversorPDF.XLL.Academic.Application.DTOs
+  id: ConversorPDF.XLL.Academic.Application.DTOs
+  children:
+  - ConversorPDF.XLL.Academic.Application.DTOs.GridRowDto
+  - ConversorPDF.XLL.Academic.Application.DTOs.VinculacionFilterDto
+  langs:
+  - csharp
+  - vb
+  name: ConversorPDF.XLL.Academic.Application.DTOs
+  nameWithType: ConversorPDF.XLL.Academic.Application.DTOs
+  fullName: ConversorPDF.XLL.Academic.Application.DTOs
+  type: Namespace
+  assemblies:
+  - ConversorPDF.XLL
+references:
+- uid: ConversorPDF.XLL.Academic.Application.DTOs.GridRowDto
+  commentId: T:ConversorPDF.XLL.Academic.Application.DTOs.GridRowDto
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Application.DTOs.GridRowDto.html
+  name: GridRowDto
+  nameWithType: GridRowDto
+  fullName: ConversorPDF.XLL.Academic.Application.DTOs.GridRowDto
+- uid: ConversorPDF.XLL.Academic.Application.DTOs.VinculacionFilterDto
+  commentId: T:ConversorPDF.XLL.Academic.Application.DTOs.VinculacionFilterDto
+  parent: ConversorPDF.XLL.Academic.Application.DTOs
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Application.DTOs.VinculacionFilterDto.html
+  name: VinculacionFilterDto
+  nameWithType: VinculacionFilterDto
+  fullName: ConversorPDF.XLL.Academic.Application.DTOs.VinculacionFilterDto
+- uid: ConversorPDF.XLL.Academic.Application.DTOs
+  commentId: N:ConversorPDF.XLL.Academic.Application.DTOs
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Academic.Application.DTOs
+  nameWithType: ConversorPDF.XLL.Academic.Application.DTOs
+  fullName: ConversorPDF.XLL.Academic.Application.DTOs
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic
+    name: Academic
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Application
+    name: Application
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Application.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Application.DTOs
+    name: DTOs
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Application.DTOs.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic
+    name: Academic
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Application
+    name: Application
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Application.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Application.DTOs
+    name: DTOs
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Application.DTOs.html

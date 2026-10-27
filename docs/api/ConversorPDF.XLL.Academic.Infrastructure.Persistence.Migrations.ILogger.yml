@@ -1,0 +1,212 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger
+  commentId: T:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger
+  id: ILogger
+  parent: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations
+  children:
+  - ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger.Error(System.String,System.Exception)
+  - ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger.Info(System.String)
+  - ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger.Warning(System.String)
+  langs:
+  - csharp
+  - vb
+  name: ILogger
+  nameWithType: ILogger
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger
+  type: Interface
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations
+  syntax:
+    content: public interface ILogger
+    content.vb: Public Interface ILogger
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger.Info(System.String)
+  commentId: M:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger.Info(System.String)
+  id: Info(System.String)
+  parent: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger
+  langs:
+  - csharp
+  - vb
+  name: Info(string)
+  nameWithType: ILogger.Info(string)
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger.Info(string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations
+  syntax:
+    content: void Info(string message)
+    parameters:
+    - id: message
+      type: System.String
+    content.vb: Sub Info(message As String)
+  overload: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger.Info*
+  nameWithType.vb: ILogger.Info(String)
+  fullName.vb: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger.Info(String)
+  name.vb: Info(String)
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger.Warning(System.String)
+  commentId: M:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger.Warning(System.String)
+  id: Warning(System.String)
+  parent: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger
+  langs:
+  - csharp
+  - vb
+  name: Warning(string)
+  nameWithType: ILogger.Warning(string)
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger.Warning(string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations
+  syntax:
+    content: void Warning(string message)
+    parameters:
+    - id: message
+      type: System.String
+    content.vb: Sub Warning(message As String)
+  overload: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger.Warning*
+  nameWithType.vb: ILogger.Warning(String)
+  fullName.vb: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger.Warning(String)
+  name.vb: Warning(String)
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger.Error(System.String,System.Exception)
+  commentId: M:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger.Error(System.String,System.Exception)
+  id: Error(System.String,System.Exception)
+  parent: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger
+  langs:
+  - csharp
+  - vb
+  name: Error(string, Exception)
+  nameWithType: ILogger.Error(string, Exception)
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger.Error(string, System.Exception)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations
+  syntax:
+    content: void Error(string message, Exception ex = null)
+    parameters:
+    - id: message
+      type: System.String
+    - id: ex
+      type: System.Exception
+    content.vb: Sub [Error](message As String, ex As Exception = Nothing)
+  overload: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger.Error*
+  nameWithType.vb: ILogger.Error(String, Exception)
+  fullName.vb: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger.Error(String, System.Exception)
+  name.vb: Error(String, Exception)
+references:
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations
+  commentId: N:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations
+  nameWithType: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic
+    name: Academic
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Infrastructure
+    name: Infrastructure
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Infrastructure.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence
+    name: Persistence
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations
+    name: Migrations
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic
+    name: Academic
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Infrastructure
+    name: Infrastructure
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Infrastructure.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence
+    name: Persistence
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations
+    name: Migrations
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.html
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger.Info*
+  commentId: Overload:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger.Info
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger.html#ConversorPDF_XLL_Academic_Infrastructure_Persistence_Migrations_ILogger_Info_System_String_
+  name: Info
+  nameWithType: ILogger.Info
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger.Info
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger.Warning*
+  commentId: Overload:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger.Warning
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger.html#ConversorPDF_XLL_Academic_Infrastructure_Persistence_Migrations_ILogger_Warning_System_String_
+  name: Warning
+  nameWithType: ILogger.Warning
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger.Warning
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger.Error*
+  commentId: Overload:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger.Error
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger.html#ConversorPDF_XLL_Academic_Infrastructure_Persistence_Migrations_ILogger_Error_System_String_System_Exception_
+  name: Error
+  nameWithType: ILogger.Error
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger.Error
+- uid: System.Exception
+  commentId: T:System.Exception
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.exception
+  name: Exception
+  nameWithType: Exception
+  fullName: System.Exception

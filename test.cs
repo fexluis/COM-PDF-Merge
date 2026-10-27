@@ -1,0 +1,1 @@
+using System; using System.Collections.Generic; using System.Linq; class Program { static void Main() { var list = new List<string> { "PRESENCIAL", "PRESENCIALES", " PRES ", "FESTIVO" }; var pres = list.Where(f => (f ?? "").Trim().StartsWith("PRES", StringComparison.OrdinalIgnoreCase)).ToList(); foreach (var p in pres) Console.WriteLine(p); } }

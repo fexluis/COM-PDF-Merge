@@ -4,19 +4,12 @@
       "src": [
         {
           "files": [
-            "ConversorPDF.XLL/ConversorPDF.XLL.csproj"
+            "ConversorPDF.XLL.dll"
           ],
-          "exclude": [
-            "**/bin/**",
-            "**/obj/**"
-          ],
-          "src": ".."
+          "src": "../ConversorPDF.XLL/bin/x64/Release"
         }
       ],
-      "dest": "api",
-      "properties": {
-        "TargetFramework": "net48"
-      }
+      "dest": "api"
     }
   ],
   "build": {

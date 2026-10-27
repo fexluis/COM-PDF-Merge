@@ -1,18 +1,14 @@
 using System;
-using ConversorPDF.XLL.Core.Services;
-using ConversorPDF.XLL.Core.Repositories;
-using ConversorPDF.XLL.Core.Processors;
-using ConversorPDF.XLL.Core.Models;
-using ConversorPDF.XLL.Core.Interfaces;
-using ConversorPDF.XLL.Core.Helpers;
-using ConversorPDF.XLL.Core.Enums;
 using System.Diagnostics;
 using System.Threading;
 using System.Windows.Forms;
+using ConversorPDF.XLL.Core.Helpers;
+
 namespace ConversorPDF.XLL.UI
 {
     public class ProgressManager : IDisposable
     {
+        private int _disposed;
         private ProgressForm _form;
         private Thread _uiThread;
         private Stopwatch _stopwatch;
@@ -33,16 +29,23 @@ namespace ConversorPDF.XLL.UI
                     try
                     {
                         _form = new ProgressForm(title, max);
-                        _form.HandleCreated += (s, e) => _formStarted.Set();
+                        _form.HandleCreated += (s, e) => 
+                        {
+                            try { _formStarted.Set(); } catch (ObjectDisposedException) { }
+                        };
                         Application.Run(_form);
                     }
                     catch (Exception ex)
                     {
                         LoggerHelper.Error("Error en el hilo de UI del progreso", ex);
-                        _formStarted.Set();
+                    }
+                    finally
+                    {
+                        try { _formStarted.Set(); } catch (ObjectDisposedException) { }
                     }
                 });
                 _uiThread.SetApartmentState(ApartmentState.STA);
+                _uiThread.IsBackground = true;
                 _uiThread.Start();
 
                 if (!_formStarted.WaitOne(2000))
@@ -55,6 +58,7 @@ namespace ConversorPDF.XLL.UI
             catch (Exception ex)
             {
                 LoggerHelper.Error("Error iniciando ProgressManager", ex);
+                _formStarted?.Set();
             }
         }
 
@@ -64,7 +68,48 @@ namespace ConversorPDF.XLL.UI
             if (_current > _max) _current = _max;
 
             string etaText = CalculateETA();
-            _form?.UpdateProgress(_current, etaText);
+            try
+            {
+                if (_form != null && !_form.IsDisposed && _form.IsHandleCreated)
+                {
+                    double currentSnapshot = _current;
+                    string etaSnapshot = etaText;
+                    _form.BeginInvoke(new Action(() =>
+                    {
+                        try { _form.UpdateProgress(currentSnapshot, etaSnapshot); }
+                        catch (Exception ex) { LoggerHelper.Warning($"Error en UpdateProgress: {ex.Message}"); }
+                    }));
+                }
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Warning($"Error actualizando el progreso: {ex.Message}");
+            }
+        }
+
+        public void ReportProgress(double value)
+        {
+            _current = value;
+            if (_current > _max) _current = _max;
+
+            string etaText = CalculateETA();
+            try
+            {
+                if (_form != null && !_form.IsDisposed && _form.IsHandleCreated)
+                {
+                    double currentSnapshot = _current;
+                    string etaSnapshot = etaText;
+                    _form.BeginInvoke(new Action(() =>
+                    {
+                        try { _form.UpdateProgress(currentSnapshot, etaSnapshot); }
+                        catch (Exception ex) { LoggerHelper.Warning($"Error en UpdateProgress: {ex.Message}"); }
+                    }));
+                }
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Warning($"Error actualizando el progreso: {ex.Message}");
+            }
         }
 
         private string CalculateETA()
@@ -94,9 +139,10 @@ namespace ConversorPDF.XLL.UI
             {
                 if (_form != null && !_form.IsDisposed && _form.IsHandleCreated)
                 {
-                    _form.Invoke(new Action(() => 
+                    _form.BeginInvoke(new Action(() => 
                     {
-                        try { _form.Close(); } catch { } 
+                        try { _form.Close(); }
+                        catch (Exception ex) { LoggerHelper.Warning($"Error cerrando form: {ex.Message}"); }
                     }));
                 }
             }
@@ -106,10 +152,36 @@ namespace ConversorPDF.XLL.UI
             }
         }
 
+        public void CloseAndWait(int timeoutMs = 500)
+        {
+            try
+            {
+                if (_form != null && !_form.IsDisposed && _form.IsHandleCreated)
+                {
+                    _form.BeginInvoke(new Action(() => 
+                    {
+                        try { _form.Close(); }
+                        catch (Exception ex) { LoggerHelper.Warning($"Error cerrando form: {ex.Message}"); }
+                    }));
+                }
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Warning($"Error en CloseAndWait: {ex.Message}");
+            }
+
+            if (_uiThread != null && _uiThread.IsAlive)
+            {
+                _uiThread.Join(timeoutMs);
+            }
+        }
+
         public void Dispose()
         {
-            Close();
-            _stopwatch.Stop();
+            if (Interlocked.Exchange(ref _disposed, 1) == 1) return;
+            CloseAndWait(500);
+            _stopwatch?.Stop();
+            _formStarted?.Dispose();
         }
     }
 }

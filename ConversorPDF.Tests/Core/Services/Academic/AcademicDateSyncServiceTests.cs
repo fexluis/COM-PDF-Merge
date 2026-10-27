@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using ConversorPDF.XLL.Core.Models.Academic;
-using ConversorPDF.XLL.Core.Services.Academic;
+using ConversorPDF.XLL.Academic.Domain.Models;
+using ConversorPDF.XLL.Academic.Application.Services;
 using FluentAssertions;
 using Xunit;
 
-namespace ConversorPDF.Tests.Core.Services.Academic
+namespace ConversorPDF.Tests.Academic.Application.Services
 {
     public class AcademicDateSyncServiceTests
     {
@@ -39,8 +39,8 @@ namespace ConversorPDF.Tests.Core.Services.Academic
             var end = new DateTime(2026, 4, 15);
             var sesiones = new List<Sesion>
             {
-                new Sesion { fechasesionInicial = start, fechasesionFinal = start },
-                new Sesion { fechasesionInicial = end, fechasesionFinal = end }
+                new Sesion { FechaSesion = start },
+                new Sesion { FechaSesion = end }
             };
 
             // Act
@@ -60,8 +60,8 @@ namespace ConversorPDF.Tests.Core.Services.Academic
             
             var sesiones = new List<Sesion>
             {
-                new Sesion { fechasesionInicial = realStart, fechasesionFinal = realStart },
-                new Sesion { fechasesionInicial = currentEnd, fechasesionFinal = currentEnd }
+                new Sesion { FechaSesion = realStart },
+                new Sesion { FechaSesion = currentEnd }
             };
 
             // Act
@@ -83,8 +83,8 @@ namespace ConversorPDF.Tests.Core.Services.Academic
             
             var sesiones = new List<Sesion>
             {
-                new Sesion { fechasesionInicial = currentStart, fechasesionFinal = currentStart },
-                new Sesion { fechasesionInicial = realEnd, fechasesionFinal = realEnd }
+                new Sesion { FechaSesion = currentStart },
+                new Sesion { FechaSesion = realEnd }
             };
 
             // Act

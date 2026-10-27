@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Class RibbonController | ESAP - ConversorPDF </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Class RibbonController | ESAP - ConversorPDF ">
+      
+      <meta name="description" content="Controlador del Ribbon ESAP. Conecta los botones de Excel con la l&#243;gica C# existente.">
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="ManagedReference">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="ConversorPDF.XLL.RibbonController">
+
+
+
+  <h1 id="ConversorPDF_XLL_RibbonController" data-uid="ConversorPDF.XLL.RibbonController" class="text-break">
+Class RibbonController  
+  </h1>
+
+  <div class="facts text-secondary">
+    <dl><dt>Namespace</dt><dd><a class="xref" href="ConversorPDF.html">ConversorPDF</a>.<a class="xref" href="ConversorPDF.XLL.html">XLL</a></dd></dl>
+  <dl><dt>Assembly</dt><dd>ConversorPDF.XLL.dll</dd></dl>
+  </div>
+
+  <div class="markdown summary"><p>Controlador del Ribbon ESAP. Conecta los botones de Excel con la lógica C# existente.</p>
+</div>
+  <div class="markdown conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">[ComVisible(true)]
+public class RibbonController : ExcelRibbon</code></pre>
+  </div>
+
+
+
+
+  <dl class="typelist inheritance">
+    <dt>Inheritance</dt>
+    <dd>
+      <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></div>
+      <div><span class="xref">RibbonController</span></div>
+    </dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+  <h2 class="section" id="constructors">Constructors
+</h2>
+
+
+  <a id="ConversorPDF_XLL_RibbonController__ctor_" data-uid="ConversorPDF.XLL.RibbonController.#ctor*"></a>
+
+  <h3 id="ConversorPDF_XLL_RibbonController__ctor" data-uid="ConversorPDF.XLL.RibbonController.#ctor">
+  RibbonController()
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public RibbonController()</code></pre>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <h2 class="section" id="methods">Methods
+</h2>
+
+
+  <a id="ConversorPDF_XLL_RibbonController_BuscarInformes_" data-uid="ConversorPDF.XLL.RibbonController.BuscarInformes*"></a>
+
+  <h3 id="ConversorPDF_XLL_RibbonController_BuscarInformes_ExcelDna_Integration_CustomUI_IRibbonControl_" data-uid="ConversorPDF.XLL.RibbonController.BuscarInformes(ExcelDna.Integration.CustomUI.IRibbonControl)">
+  BuscarInformes(IRibbonControl)
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void BuscarInformes(IRibbonControl control)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>control</code> <span class="xref">IRibbonControl</span></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_RibbonController_ConvertirPDF_" data-uid="ConversorPDF.XLL.RibbonController.ConvertirPDF*"></a>
+
+  <h3 id="ConversorPDF_XLL_RibbonController_ConvertirPDF_ExcelDna_Integration_CustomUI_IRibbonControl_" data-uid="ConversorPDF.XLL.RibbonController.ConvertirPDF(ExcelDna.Integration.CustomUI.IRibbonControl)">
+  ConvertirPDF(IRibbonControl)
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void ConvertirPDF(IRibbonControl control)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>control</code> <span class="xref">IRibbonControl</span></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_RibbonController_GenerarFilaSeleccionada_" data-uid="ConversorPDF.XLL.RibbonController.GenerarFilaSeleccionada*"></a>
+
+  <h3 id="ConversorPDF_XLL_RibbonController_GenerarFilaSeleccionada_ExcelDna_Integration_CustomUI_IRibbonControl_" data-uid="ConversorPDF.XLL.RibbonController.GenerarFilaSeleccionada(ExcelDna.Integration.CustomUI.IRibbonControl)">
+  GenerarFilaSeleccionada(IRibbonControl)
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void GenerarFilaSeleccionada(IRibbonControl control)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>control</code> <span class="xref">IRibbonControl</span></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_RibbonController_GenerarFirmaBase64_" data-uid="ConversorPDF.XLL.RibbonController.GenerarFirmaBase64*"></a>
+
+  <h3 id="ConversorPDF_XLL_RibbonController_GenerarFirmaBase64_ExcelDna_Integration_CustomUI_IRibbonControl_" data-uid="ConversorPDF.XLL.RibbonController.GenerarFirmaBase64(ExcelDna.Integration.CustomUI.IRibbonControl)">
+  GenerarFirmaBase64(IRibbonControl)
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void GenerarFirmaBase64(IRibbonControl control)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>control</code> <span class="xref">IRibbonControl</span></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_RibbonController_GestionDocumentalViaticos_" data-uid="ConversorPDF.XLL.RibbonController.GestionDocumentalViaticos*"></a>
+
+  <h3 id="ConversorPDF_XLL_RibbonController_GestionDocumentalViaticos_ExcelDna_Integration_CustomUI_IRibbonControl_" data-uid="ConversorPDF.XLL.RibbonController.GestionDocumentalViaticos(ExcelDna.Integration.CustomUI.IRibbonControl)">
+  GestionDocumentalViaticos(IRibbonControl)
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void GestionDocumentalViaticos(IRibbonControl control)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>control</code> <span class="xref">IRibbonControl</span></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_RibbonController_GetButtonVisible_" data-uid="ConversorPDF.XLL.RibbonController.GetButtonVisible*"></a>
+
+  <h3 id="ConversorPDF_XLL_RibbonController_GetButtonVisible_ExcelDna_Integration_CustomUI_IRibbonControl_" data-uid="ConversorPDF.XLL.RibbonController.GetButtonVisible(ExcelDna.Integration.CustomUI.IRibbonControl)">
+  GetButtonVisible(IRibbonControl)
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool GetButtonVisible(IRibbonControl control)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>control</code> <span class="xref">IRibbonControl</span></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_RibbonController_GetCustomUI_" data-uid="ConversorPDF.XLL.RibbonController.GetCustomUI*"></a>
+
+  <h3 id="ConversorPDF_XLL_RibbonController_GetCustomUI_System_String_" data-uid="ConversorPDF.XLL.RibbonController.GetCustomUI(System.String)">
+  GetCustomUI(string)
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override string GetCustomUI(string ribbonID)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>ribbonID</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_RibbonController_GetImage_" data-uid="ConversorPDF.XLL.RibbonController.GetImage*"></a>
+
+  <h3 id="ConversorPDF_XLL_RibbonController_GetImage_System_String_" data-uid="ConversorPDF.XLL.RibbonController.GetImage(System.String)">
+  GetImage(string)
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public object GetImage(string imageId)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>imageId</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_RibbonController_LeerMetadatos_" data-uid="ConversorPDF.XLL.RibbonController.LeerMetadatos*"></a>
+
+  <h3 id="ConversorPDF_XLL_RibbonController_LeerMetadatos_ExcelDna_Integration_CustomUI_IRibbonControl_" data-uid="ConversorPDF.XLL.RibbonController.LeerMetadatos(ExcelDna.Integration.CustomUI.IRibbonControl)">
+  LeerMetadatos(IRibbonControl)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Callback del Ribbon para leer metadatos de archivos PDF seleccionados.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void LeerMetadatos(IRibbonControl control)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>control</code> <span class="xref">IRibbonControl</span></dt>
+    <dd><p>Referencia al botón del Ribbon que dispara la acción.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_RibbonController_Office365UserManager_" data-uid="ConversorPDF.XLL.RibbonController.Office365UserManager*"></a>
+
+  <h3 id="ConversorPDF_XLL_RibbonController_Office365UserManager_ExcelDna_Integration_CustomUI_IRibbonControl_" data-uid="ConversorPDF.XLL.RibbonController.Office365UserManager(ExcelDna.Integration.CustomUI.IRibbonControl)">
+  Office365UserManager(IRibbonControl)
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void Office365UserManager(IRibbonControl control)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>control</code> <span class="xref">IRibbonControl</span></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_RibbonController_OnConvertirObligacionContador_" data-uid="ConversorPDF.XLL.RibbonController.OnConvertirObligacionContador*"></a>
+
+  <h3 id="ConversorPDF_XLL_RibbonController_OnConvertirObligacionContador_ExcelDna_Integration_CustomUI_IRibbonControl_" data-uid="ConversorPDF.XLL.RibbonController.OnConvertirObligacionContador(ExcelDna.Integration.CustomUI.IRibbonControl)">
+  OnConvertirObligacionContador(IRibbonControl)
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void OnConvertirObligacionContador(IRibbonControl control)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>control</code> <span class="xref">IRibbonControl</span></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_RibbonController_ProcesarCumplidos_" data-uid="ConversorPDF.XLL.RibbonController.ProcesarCumplidos*"></a>
+
+  <h3 id="ConversorPDF_XLL_RibbonController_ProcesarCumplidos_ExcelDna_Integration_CustomUI_IRibbonControl_" data-uid="ConversorPDF.XLL.RibbonController.ProcesarCumplidos(ExcelDna.Integration.CustomUI.IRibbonControl)">
+  ProcesarCumplidos(IRibbonControl)
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void ProcesarCumplidos(IRibbonControl control)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>control</code> <span class="xref">IRibbonControl</span></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_RibbonController_ProcesarViaticosMasivo_" data-uid="ConversorPDF.XLL.RibbonController.ProcesarViaticosMasivo*"></a>
+
+  <h3 id="ConversorPDF_XLL_RibbonController_ProcesarViaticosMasivo_ExcelDna_Integration_CustomUI_IRibbonControl_" data-uid="ConversorPDF.XLL.RibbonController.ProcesarViaticosMasivo(ExcelDna.Integration.CustomUI.IRibbonControl)">
+  ProcesarViaticosMasivo(IRibbonControl)
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void ProcesarViaticosMasivo(IRibbonControl control)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>control</code> <span class="xref">IRibbonControl</span></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_RibbonController_Ribbon_Load_" data-uid="ConversorPDF.XLL.RibbonController.Ribbon_Load*"></a>
+
+  <h3 id="ConversorPDF_XLL_RibbonController_Ribbon_Load_ExcelDna_Integration_CustomUI_IRibbonUI_" data-uid="ConversorPDF.XLL.RibbonController.Ribbon_Load(ExcelDna.Integration.CustomUI.IRibbonUI)">
+  Ribbon_Load(IRibbonUI)
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void Ribbon_Load(IRibbonUI ribbonUI)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>ribbonUI</code> <span class="xref">IRibbonUI</span></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_RibbonController_SesionesAcademicas_" data-uid="ConversorPDF.XLL.RibbonController.SesionesAcademicas*"></a>
+
+  <h3 id="ConversorPDF_XLL_RibbonController_SesionesAcademicas_ExcelDna_Integration_CustomUI_IRibbonControl_" data-uid="ConversorPDF.XLL.RibbonController.SesionesAcademicas(ExcelDna.Integration.CustomUI.IRibbonControl)">
+  SesionesAcademicas(IRibbonControl)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Callback del Ribbon para abrir el generador de sesiones académicas.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void SesionesAcademicas(IRibbonControl control)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>control</code> <span class="xref">IRibbonControl</span></dt>
+    <dd><p>Referencia al botón del Ribbon.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_RibbonController_UnificarObligacionContador_" data-uid="ConversorPDF.XLL.RibbonController.UnificarObligacionContador*"></a>
+
+  <h3 id="ConversorPDF_XLL_RibbonController_UnificarObligacionContador_ExcelDna_Integration_CustomUI_IRibbonControl_" data-uid="ConversorPDF.XLL.RibbonController.UnificarObligacionContador(ExcelDna.Integration.CustomUI.IRibbonControl)">
+  UnificarObligacionContador(IRibbonControl)
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void UnificarObligacionContador(IRibbonControl control)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>control</code> <span class="xref">IRibbonControl</span></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_RibbonController_UnificarOrdenPago_" data-uid="ConversorPDF.XLL.RibbonController.UnificarOrdenPago*"></a>
+
+  <h3 id="ConversorPDF_XLL_RibbonController_UnificarOrdenPago_ExcelDna_Integration_CustomUI_IRibbonControl_" data-uid="ConversorPDF.XLL.RibbonController.UnificarOrdenPago(ExcelDna.Integration.CustomUI.IRibbonControl)">
+  UnificarOrdenPago(IRibbonControl)
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void UnificarOrdenPago(IRibbonControl control)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>control</code> <span class="xref">IRibbonControl</span></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_RibbonController_ViaticosUnificarSoportes_" data-uid="ConversorPDF.XLL.RibbonController.ViaticosUnificarSoportes*"></a>
+
+  <h3 id="ConversorPDF_XLL_RibbonController_ViaticosUnificarSoportes_ExcelDna_Integration_CustomUI_IRibbonControl_" data-uid="ConversorPDF.XLL.RibbonController.ViaticosUnificarSoportes(ExcelDna.Integration.CustomUI.IRibbonControl)">
+  ViaticosUnificarSoportes(IRibbonControl)
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void ViaticosUnificarSoportes(IRibbonControl control)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>control</code> <span class="xref">IRibbonControl</span></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_RibbonController_VinculacionesAcademicas_" data-uid="ConversorPDF.XLL.RibbonController.VinculacionesAcademicas*"></a>
+
+  <h3 id="ConversorPDF_XLL_RibbonController_VinculacionesAcademicas_ExcelDna_Integration_CustomUI_IRibbonControl_" data-uid="ConversorPDF.XLL.RibbonController.VinculacionesAcademicas(ExcelDna.Integration.CustomUI.IRibbonControl)">
+  VinculacionesAcademicas(IRibbonControl)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Callback del Ribbon para abrir el listado de vinculaciones académicas.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void VinculacionesAcademicas(IRibbonControl control)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>control</code> <span class="xref">IRibbonControl</span></dt>
+    <dd><p>Referencia al botón del Ribbon.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          ESAP - ConversorPDF Doc
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

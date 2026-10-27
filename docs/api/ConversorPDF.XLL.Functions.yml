@@ -1,0 +1,24 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Functions
+  commentId: N:ConversorPDF.XLL.Functions
+  id: ConversorPDF.XLL.Functions
+  children:
+  - ConversorPDF.XLL.Functions.WindowsUserFunctions
+  langs:
+  - csharp
+  - vb
+  name: ConversorPDF.XLL.Functions
+  nameWithType: ConversorPDF.XLL.Functions
+  fullName: ConversorPDF.XLL.Functions
+  type: Namespace
+  assemblies:
+  - ConversorPDF.XLL
+references:
+- uid: ConversorPDF.XLL.Functions.WindowsUserFunctions
+  commentId: T:ConversorPDF.XLL.Functions.WindowsUserFunctions
+  isExternal: true
+  href: ConversorPDF.XLL.Functions.WindowsUserFunctions.html
+  name: WindowsUserFunctions
+  nameWithType: WindowsUserFunctions
+  fullName: ConversorPDF.XLL.Functions.WindowsUserFunctions

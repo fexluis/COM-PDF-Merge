@@ -1,0 +1,763 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Core.Models.ExtraerDatos
+  commentId: T:ConversorPDF.XLL.Core.Models.ExtraerDatos
+  id: ExtraerDatos
+  parent: ConversorPDF.XLL.Core.Models
+  children:
+  - ConversorPDF.XLL.Core.Models.ExtraerDatos.#ctor
+  - ConversorPDF.XLL.Core.Models.ExtraerDatos.xCDP
+  - ConversorPDF.XLL.Core.Models.ExtraerDatos.xCategoria
+  - ConversorPDF.XLL.Core.Models.ExtraerDatos.xDep
+  - ConversorPDF.XLL.Core.Models.ExtraerDatos.xEstado
+  - ConversorPDF.XLL.Core.Models.ExtraerDatos.xFechaStr
+  - ConversorPDF.XLL.Core.Models.ExtraerDatos.xIdentificacion
+  - ConversorPDF.XLL.Core.Models.ExtraerDatos.xNumero
+  - ConversorPDF.XLL.Core.Models.ExtraerDatos.xOB
+  - ConversorPDF.XLL.Core.Models.ExtraerDatos.xOP
+  - ConversorPDF.XLL.Core.Models.ExtraerDatos.xObjeto
+  - ConversorPDF.XLL.Core.Models.ExtraerDatos.xRP
+  - ConversorPDF.XLL.Core.Models.ExtraerDatos.xTercero
+  - ConversorPDF.XLL.Core.Models.ExtraerDatos.xUnifiedFileName
+  langs:
+  - csharp
+  - vb
+  name: ExtraerDatos
+  nameWithType: ExtraerDatos
+  fullName: ConversorPDF.XLL.Core.Models.ExtraerDatos
+  type: Class
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Modelo que encapsula los datos extraídos de documentos.
+  example: []
+  syntax:
+    content: public class ExtraerDatos
+    content.vb: Public Class ExtraerDatos
+  inheritance:
+  - System.Object
+  inheritedMembers:
+  - System.Object.ToString
+  - System.Object.Equals(System.Object)
+  - System.Object.Equals(System.Object,System.Object)
+  - System.Object.ReferenceEquals(System.Object,System.Object)
+  - System.Object.GetHashCode
+  - System.Object.GetType
+  - System.Object.MemberwiseClone
+- uid: ConversorPDF.XLL.Core.Models.ExtraerDatos.#ctor
+  commentId: M:ConversorPDF.XLL.Core.Models.ExtraerDatos.#ctor
+  id: '#ctor'
+  parent: ConversorPDF.XLL.Core.Models.ExtraerDatos
+  langs:
+  - csharp
+  - vb
+  name: ExtraerDatos()
+  nameWithType: ExtraerDatos.ExtraerDatos()
+  fullName: ConversorPDF.XLL.Core.Models.ExtraerDatos.ExtraerDatos()
+  type: Constructor
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  syntax:
+    content: public ExtraerDatos()
+    content.vb: Public Sub New()
+  overload: ConversorPDF.XLL.Core.Models.ExtraerDatos.#ctor*
+  nameWithType.vb: ExtraerDatos.New()
+  fullName.vb: ConversorPDF.XLL.Core.Models.ExtraerDatos.New()
+  name.vb: New()
+- uid: ConversorPDF.XLL.Core.Models.ExtraerDatos.xNumero
+  commentId: P:ConversorPDF.XLL.Core.Models.ExtraerDatos.xNumero
+  id: xNumero
+  parent: ConversorPDF.XLL.Core.Models.ExtraerDatos
+  langs:
+  - csharp
+  - vb
+  name: xNumero
+  nameWithType: ExtraerDatos.xNumero
+  fullName: ConversorPDF.XLL.Core.Models.ExtraerDatos.xNumero
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Número identificador de la obligación presupuestal (OB).
+  example: []
+  syntax:
+    content: public string xNumero { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property xNumero As String
+  overload: ConversorPDF.XLL.Core.Models.ExtraerDatos.xNumero*
+- uid: ConversorPDF.XLL.Core.Models.ExtraerDatos.xFechaStr
+  commentId: P:ConversorPDF.XLL.Core.Models.ExtraerDatos.xFechaStr
+  id: xFechaStr
+  parent: ConversorPDF.XLL.Core.Models.ExtraerDatos
+  langs:
+  - csharp
+  - vb
+  name: xFechaStr
+  nameWithType: ExtraerDatos.xFechaStr
+  fullName: ConversorPDF.XLL.Core.Models.ExtraerDatos.xFechaStr
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Fecha de la obligación leída del documento.
+  example: []
+  syntax:
+    content: public string xFechaStr { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property xFechaStr As String
+  overload: ConversorPDF.XLL.Core.Models.ExtraerDatos.xFechaStr*
+- uid: ConversorPDF.XLL.Core.Models.ExtraerDatos.xTercero
+  commentId: P:ConversorPDF.XLL.Core.Models.ExtraerDatos.xTercero
+  id: xTercero
+  parent: ConversorPDF.XLL.Core.Models.ExtraerDatos
+  langs:
+  - csharp
+  - vb
+  name: xTercero
+  nameWithType: ExtraerDatos.xTercero
+  fullName: ConversorPDF.XLL.Core.Models.ExtraerDatos.xTercero
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Nombre del beneficiario o tercero de la obligación.
+  example: []
+  syntax:
+    content: public string xTercero { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property xTercero As String
+  overload: ConversorPDF.XLL.Core.Models.ExtraerDatos.xTercero*
+- uid: ConversorPDF.XLL.Core.Models.ExtraerDatos.xIdentificacion
+  commentId: P:ConversorPDF.XLL.Core.Models.ExtraerDatos.xIdentificacion
+  id: xIdentificacion
+  parent: ConversorPDF.XLL.Core.Models.ExtraerDatos
+  langs:
+  - csharp
+  - vb
+  name: xIdentificacion
+  nameWithType: ExtraerDatos.xIdentificacion
+  fullName: ConversorPDF.XLL.Core.Models.ExtraerDatos.xIdentificacion
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Documento de identidad (NIT/CC) del tercero.
+  example: []
+  syntax:
+    content: public string xIdentificacion { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property xIdentificacion As String
+  overload: ConversorPDF.XLL.Core.Models.ExtraerDatos.xIdentificacion*
+- uid: ConversorPDF.XLL.Core.Models.ExtraerDatos.xRP
+  commentId: P:ConversorPDF.XLL.Core.Models.ExtraerDatos.xRP
+  id: xRP
+  parent: ConversorPDF.XLL.Core.Models.ExtraerDatos
+  langs:
+  - csharp
+  - vb
+  name: xRP
+  nameWithType: ExtraerDatos.xRP
+  fullName: ConversorPDF.XLL.Core.Models.ExtraerDatos.xRP
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Registro Presupuestal (RP) asociado a la obligación.
+  example: []
+  syntax:
+    content: public string xRP { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property xRP As String
+  overload: ConversorPDF.XLL.Core.Models.ExtraerDatos.xRP*
+- uid: ConversorPDF.XLL.Core.Models.ExtraerDatos.xCDP
+  commentId: P:ConversorPDF.XLL.Core.Models.ExtraerDatos.xCDP
+  id: xCDP
+  parent: ConversorPDF.XLL.Core.Models.ExtraerDatos
+  langs:
+  - csharp
+  - vb
+  name: xCDP
+  nameWithType: ExtraerDatos.xCDP
+  fullName: ConversorPDF.XLL.Core.Models.ExtraerDatos.xCDP
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Certificado de Disponibilidad Presupuestal (CDP).
+  example: []
+  syntax:
+    content: public string xCDP { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property xCDP As String
+  overload: ConversorPDF.XLL.Core.Models.ExtraerDatos.xCDP*
+- uid: ConversorPDF.XLL.Core.Models.ExtraerDatos.xOP
+  commentId: P:ConversorPDF.XLL.Core.Models.ExtraerDatos.xOP
+  id: xOP
+  parent: ConversorPDF.XLL.Core.Models.ExtraerDatos
+  langs:
+  - csharp
+  - vb
+  name: xOP
+  nameWithType: ExtraerDatos.xOP
+  fullName: ConversorPDF.XLL.Core.Models.ExtraerDatos.xOP
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Orden de Pago (OP).
+  example: []
+  syntax:
+    content: public string xOP { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property xOP As String
+  overload: ConversorPDF.XLL.Core.Models.ExtraerDatos.xOP*
+- uid: ConversorPDF.XLL.Core.Models.ExtraerDatos.xOB
+  commentId: P:ConversorPDF.XLL.Core.Models.ExtraerDatos.xOB
+  id: xOB
+  parent: ConversorPDF.XLL.Core.Models.ExtraerDatos
+  langs:
+  - csharp
+  - vb
+  name: xOB
+  nameWithType: ExtraerDatos.xOB
+  fullName: ConversorPDF.XLL.Core.Models.ExtraerDatos.xOB
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Obligación presupuestal (OB).
+  example: []
+  syntax:
+    content: public string xOB { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property xOB As String
+  overload: ConversorPDF.XLL.Core.Models.ExtraerDatos.xOB*
+- uid: ConversorPDF.XLL.Core.Models.ExtraerDatos.xEstado
+  commentId: P:ConversorPDF.XLL.Core.Models.ExtraerDatos.xEstado
+  id: xEstado
+  parent: ConversorPDF.XLL.Core.Models.ExtraerDatos
+  langs:
+  - csharp
+  - vb
+  name: xEstado
+  nameWithType: ExtraerDatos.xEstado
+  fullName: ConversorPDF.XLL.Core.Models.ExtraerDatos.xEstado
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: 'Estado del documento (ej: Anulada).'
+  example: []
+  syntax:
+    content: public string xEstado { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property xEstado As String
+  overload: ConversorPDF.XLL.Core.Models.ExtraerDatos.xEstado*
+- uid: ConversorPDF.XLL.Core.Models.ExtraerDatos.xDep
+  commentId: P:ConversorPDF.XLL.Core.Models.ExtraerDatos.xDep
+  id: xDep
+  parent: ConversorPDF.XLL.Core.Models.ExtraerDatos
+  langs:
+  - csharp
+  - vb
+  name: xDep
+  nameWithType: ExtraerDatos.xDep
+  fullName: ConversorPDF.XLL.Core.Models.ExtraerDatos.xDep
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Dependencia o centro de costo responsable.
+  example: []
+  syntax:
+    content: public string xDep { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property xDep As String
+  overload: ConversorPDF.XLL.Core.Models.ExtraerDatos.xDep*
+- uid: ConversorPDF.XLL.Core.Models.ExtraerDatos.xObjeto
+  commentId: P:ConversorPDF.XLL.Core.Models.ExtraerDatos.xObjeto
+  id: xObjeto
+  parent: ConversorPDF.XLL.Core.Models.ExtraerDatos
+  langs:
+  - csharp
+  - vb
+  name: xObjeto
+  nameWithType: ExtraerDatos.xObjeto
+  fullName: ConversorPDF.XLL.Core.Models.ExtraerDatos.xObjeto
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Descripción detallada del objeto de la obligación.
+  example: []
+  syntax:
+    content: public string xObjeto { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property xObjeto As String
+  overload: ConversorPDF.XLL.Core.Models.ExtraerDatos.xObjeto*
+- uid: ConversorPDF.XLL.Core.Models.ExtraerDatos.xCategoria
+  commentId: P:ConversorPDF.XLL.Core.Models.ExtraerDatos.xCategoria
+  id: xCategoria
+  parent: ConversorPDF.XLL.Core.Models.ExtraerDatos
+  langs:
+  - csharp
+  - vb
+  name: xCategoria
+  nameWithType: ExtraerDatos.xCategoria
+  fullName: ConversorPDF.XLL.Core.Models.ExtraerDatos.xCategoria
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Categoría corta calculada (VIA, HON, SSO, etc.).
+  example: []
+  syntax:
+    content: public string xCategoria { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property xCategoria As String
+  overload: ConversorPDF.XLL.Core.Models.ExtraerDatos.xCategoria*
+- uid: ConversorPDF.XLL.Core.Models.ExtraerDatos.xUnifiedFileName
+  commentId: P:ConversorPDF.XLL.Core.Models.ExtraerDatos.xUnifiedFileName
+  id: xUnifiedFileName
+  parent: ConversorPDF.XLL.Core.Models.ExtraerDatos
+  langs:
+  - csharp
+  - vb
+  name: xUnifiedFileName
+  nameWithType: ExtraerDatos.xUnifiedFileName
+  fullName: ConversorPDF.XLL.Core.Models.ExtraerDatos.xUnifiedFileName
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Nombre unificado sugerido para el archivo (sin extensión).
+  example: []
+  syntax:
+    content: public string xUnifiedFileName { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property xUnifiedFileName As String
+  overload: ConversorPDF.XLL.Core.Models.ExtraerDatos.xUnifiedFileName*
+references:
+- uid: ConversorPDF.XLL.Core.Models
+  commentId: N:ConversorPDF.XLL.Core.Models
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Core.Models
+  nameWithType: ConversorPDF.XLL.Core.Models
+  fullName: ConversorPDF.XLL.Core.Models
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Models
+    name: Models
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Models
+    name: Models
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.html
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+  nameWithType: object
+  fullName: object
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: System.Object.ToString
+  commentId: M:System.Object.ToString
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  name: ToString()
+  nameWithType: object.ToString()
+  fullName: object.ToString()
+  nameWithType.vb: Object.ToString()
+  fullName.vb: Object.ToString()
+  spec.csharp:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+- uid: System.Object.Equals(System.Object)
+  commentId: M:System.Object.Equals(System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  name: Equals(object)
+  nameWithType: object.Equals(object)
+  fullName: object.Equals(object)
+  nameWithType.vb: Object.Equals(Object)
+  fullName.vb: Object.Equals(Object)
+  name.vb: Equals(Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.Equals(System.Object,System.Object)
+  commentId: M:System.Object.Equals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  name: Equals(object, object)
+  nameWithType: object.Equals(object, object)
+  fullName: object.Equals(object, object)
+  nameWithType.vb: Object.Equals(Object, Object)
+  fullName.vb: Object.Equals(Object, Object)
+  name.vb: Equals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.ReferenceEquals(System.Object,System.Object)
+  commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  name: ReferenceEquals(object, object)
+  nameWithType: object.ReferenceEquals(object, object)
+  fullName: object.ReferenceEquals(object, object)
+  nameWithType.vb: Object.ReferenceEquals(Object, Object)
+  fullName.vb: Object.ReferenceEquals(Object, Object)
+  name.vb: ReferenceEquals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.GetHashCode
+  commentId: M:System.Object.GetHashCode
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  name: GetHashCode()
+  nameWithType: object.GetHashCode()
+  fullName: object.GetHashCode()
+  nameWithType.vb: Object.GetHashCode()
+  fullName.vb: Object.GetHashCode()
+  spec.csharp:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+- uid: System.Object.GetType
+  commentId: M:System.Object.GetType
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  name: GetType()
+  nameWithType: object.GetType()
+  fullName: object.GetType()
+  nameWithType.vb: Object.GetType()
+  fullName.vb: Object.GetType()
+  spec.csharp:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+- uid: System.Object.MemberwiseClone
+  commentId: M:System.Object.MemberwiseClone
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  name: MemberwiseClone()
+  nameWithType: object.MemberwiseClone()
+  fullName: object.MemberwiseClone()
+  nameWithType.vb: Object.MemberwiseClone()
+  fullName.vb: Object.MemberwiseClone()
+  spec.csharp:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: ConversorPDF.XLL.Core.Models.ExtraerDatos.#ctor*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.ExtraerDatos.#ctor
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ExtraerDatos.html#ConversorPDF_XLL_Core_Models_ExtraerDatos__ctor
+  name: ExtraerDatos
+  nameWithType: ExtraerDatos.ExtraerDatos
+  fullName: ConversorPDF.XLL.Core.Models.ExtraerDatos.ExtraerDatos
+  nameWithType.vb: ExtraerDatos.New
+  fullName.vb: ConversorPDF.XLL.Core.Models.ExtraerDatos.New
+  name.vb: New
+- uid: ConversorPDF.XLL.Core.Models.ExtraerDatos.xNumero*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.ExtraerDatos.xNumero
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ExtraerDatos.html#ConversorPDF_XLL_Core_Models_ExtraerDatos_xNumero
+  name: xNumero
+  nameWithType: ExtraerDatos.xNumero
+  fullName: ConversorPDF.XLL.Core.Models.ExtraerDatos.xNumero
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: ConversorPDF.XLL.Core.Models.ExtraerDatos.xFechaStr*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.ExtraerDatos.xFechaStr
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ExtraerDatos.html#ConversorPDF_XLL_Core_Models_ExtraerDatos_xFechaStr
+  name: xFechaStr
+  nameWithType: ExtraerDatos.xFechaStr
+  fullName: ConversorPDF.XLL.Core.Models.ExtraerDatos.xFechaStr
+- uid: ConversorPDF.XLL.Core.Models.ExtraerDatos.xTercero*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.ExtraerDatos.xTercero
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ExtraerDatos.html#ConversorPDF_XLL_Core_Models_ExtraerDatos_xTercero
+  name: xTercero
+  nameWithType: ExtraerDatos.xTercero
+  fullName: ConversorPDF.XLL.Core.Models.ExtraerDatos.xTercero
+- uid: ConversorPDF.XLL.Core.Models.ExtraerDatos.xIdentificacion*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.ExtraerDatos.xIdentificacion
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ExtraerDatos.html#ConversorPDF_XLL_Core_Models_ExtraerDatos_xIdentificacion
+  name: xIdentificacion
+  nameWithType: ExtraerDatos.xIdentificacion
+  fullName: ConversorPDF.XLL.Core.Models.ExtraerDatos.xIdentificacion
+- uid: ConversorPDF.XLL.Core.Models.ExtraerDatos.xRP*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.ExtraerDatos.xRP
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ExtraerDatos.html#ConversorPDF_XLL_Core_Models_ExtraerDatos_xRP
+  name: xRP
+  nameWithType: ExtraerDatos.xRP
+  fullName: ConversorPDF.XLL.Core.Models.ExtraerDatos.xRP
+- uid: ConversorPDF.XLL.Core.Models.ExtraerDatos.xCDP*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.ExtraerDatos.xCDP
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ExtraerDatos.html#ConversorPDF_XLL_Core_Models_ExtraerDatos_xCDP
+  name: xCDP
+  nameWithType: ExtraerDatos.xCDP
+  fullName: ConversorPDF.XLL.Core.Models.ExtraerDatos.xCDP
+- uid: ConversorPDF.XLL.Core.Models.ExtraerDatos.xOP*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.ExtraerDatos.xOP
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ExtraerDatos.html#ConversorPDF_XLL_Core_Models_ExtraerDatos_xOP
+  name: xOP
+  nameWithType: ExtraerDatos.xOP
+  fullName: ConversorPDF.XLL.Core.Models.ExtraerDatos.xOP
+- uid: ConversorPDF.XLL.Core.Models.ExtraerDatos.xOB*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.ExtraerDatos.xOB
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ExtraerDatos.html#ConversorPDF_XLL_Core_Models_ExtraerDatos_xOB
+  name: xOB
+  nameWithType: ExtraerDatos.xOB
+  fullName: ConversorPDF.XLL.Core.Models.ExtraerDatos.xOB
+- uid: ConversorPDF.XLL.Core.Models.ExtraerDatos.xEstado*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.ExtraerDatos.xEstado
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ExtraerDatos.html#ConversorPDF_XLL_Core_Models_ExtraerDatos_xEstado
+  name: xEstado
+  nameWithType: ExtraerDatos.xEstado
+  fullName: ConversorPDF.XLL.Core.Models.ExtraerDatos.xEstado
+- uid: ConversorPDF.XLL.Core.Models.ExtraerDatos.xDep*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.ExtraerDatos.xDep
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ExtraerDatos.html#ConversorPDF_XLL_Core_Models_ExtraerDatos_xDep
+  name: xDep
+  nameWithType: ExtraerDatos.xDep
+  fullName: ConversorPDF.XLL.Core.Models.ExtraerDatos.xDep
+- uid: ConversorPDF.XLL.Core.Models.ExtraerDatos.xObjeto*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.ExtraerDatos.xObjeto
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ExtraerDatos.html#ConversorPDF_XLL_Core_Models_ExtraerDatos_xObjeto
+  name: xObjeto
+  nameWithType: ExtraerDatos.xObjeto
+  fullName: ConversorPDF.XLL.Core.Models.ExtraerDatos.xObjeto
+- uid: ConversorPDF.XLL.Core.Models.ExtraerDatos.xCategoria*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.ExtraerDatos.xCategoria
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ExtraerDatos.html#ConversorPDF_XLL_Core_Models_ExtraerDatos_xCategoria
+  name: xCategoria
+  nameWithType: ExtraerDatos.xCategoria
+  fullName: ConversorPDF.XLL.Core.Models.ExtraerDatos.xCategoria
+- uid: ConversorPDF.XLL.Core.Models.ExtraerDatos.xUnifiedFileName*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.ExtraerDatos.xUnifiedFileName
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ExtraerDatos.html#ConversorPDF_XLL_Core_Models_ExtraerDatos_xUnifiedFileName
+  name: xUnifiedFileName
+  nameWithType: ExtraerDatos.xUnifiedFileName
+  fullName: ConversorPDF.XLL.Core.Models.ExtraerDatos.xUnifiedFileName

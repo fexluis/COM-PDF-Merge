@@ -1,0 +1,2223 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository
+  commentId: T:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository
+  id: IAcademicRepository
+  parent: ConversorPDF.XLL.Academic.Domain.Interfaces
+  children:
+  - ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.DeleteSede(System.Int32)
+  - ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.DeleteSesionesByVinculacion(System.Int32)
+  - ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.DeleteTercero(System.Int32)
+  - ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.ExecuteRawSql(System.String)
+  - ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetAsignaturaByAbreviatura(System.String)
+  - ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetAsignaturasByPrograma(System.Int32,System.String)
+  - ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetContenidosByMicrocurriculo(System.Int32)
+  - ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetMicrocurriculoByAsignatura(System.Int32)
+  - ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetPeriodoById(System.Int32)
+  - ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetPeriodos
+  - ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetProgramaById(System.Int32)
+  - ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetProgramas
+  - ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetSedeById(System.Int32)
+  - ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetSedes
+  - ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetSesionesByVinculacion(System.Int32)
+  - ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetTerceroByCedula(System.String)
+  - ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetTerceros(System.Boolean)
+  - ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetVinculacionById(System.Int32)
+  - ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetVinculaciones
+  - ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertAsignatura(ConversorPDF.XLL.Academic.Domain.Models.Asignatura)
+  - ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertContenido(ConversorPDF.XLL.Academic.Domain.Models.Contenido)
+  - ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertMicrocurriculo(ConversorPDF.XLL.Academic.Domain.Models.Microcurriculo)
+  - ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertPeriodo(ConversorPDF.XLL.Academic.Domain.Models.Periodo)
+  - ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertPrograma(ConversorPDF.XLL.Academic.Domain.Models.Programa)
+  - ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertSede(ConversorPDF.XLL.Academic.Domain.Models.Sede)
+  - ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertSesion(ConversorPDF.XLL.Academic.Domain.Models.Sesion)
+  - ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertSesiones(System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Sesion})
+  - ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertTercero(ConversorPDF.XLL.Academic.Domain.Models.Tercero)
+  - ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertVinculacion(ConversorPDF.XLL.Academic.Domain.Models.Vinculacion)
+  - ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.SeedCatalogosTransaccional
+  - ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.UpdateSede(ConversorPDF.XLL.Academic.Domain.Models.Sede)
+  - ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.UpdateTercero(ConversorPDF.XLL.Academic.Domain.Models.Tercero)
+  - ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.UpdateVinculacion(ConversorPDF.XLL.Academic.Domain.Models.Vinculacion)
+  langs:
+  - csharp
+  - vb
+  name: IAcademicRepository
+  nameWithType: IAcademicRepository
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository
+  type: Interface
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Interfaces
+  summary: Interfaz para el repositorio de datos académicos.
+  example: []
+  syntax:
+    content: public interface IAcademicRepository
+    content.vb: Public Interface IAcademicRepository
+  derivedClasses:
+  - ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.AcademicRepository
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetProgramas
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetProgramas
+  id: GetProgramas
+  parent: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository
+  langs:
+  - csharp
+  - vb
+  name: GetProgramas()
+  nameWithType: IAcademicRepository.GetProgramas()
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetProgramas()
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Interfaces
+  summary: Obtiene todos los programas académicos.
+  example: []
+  syntax:
+    content: SqliteResult<IEnumerable<Programa>> GetProgramas()
+    return:
+      type: ConversorPDF.XLL.Core.Models.SqliteResult{System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Programa}}
+    content.vb: Function GetProgramas() As SqliteResult(Of IEnumerable(Of Programa))
+  overload: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetProgramas*
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetProgramaById(System.Int32)
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetProgramaById(System.Int32)
+  id: GetProgramaById(System.Int32)
+  parent: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository
+  langs:
+  - csharp
+  - vb
+  name: GetProgramaById(int)
+  nameWithType: IAcademicRepository.GetProgramaById(int)
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetProgramaById(int)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Interfaces
+  summary: Obtiene un programa por su identificador.
+  example: []
+  syntax:
+    content: SqliteResult<Programa> GetProgramaById(int id)
+    parameters:
+    - id: id
+      type: System.Int32
+    return:
+      type: ConversorPDF.XLL.Core.Models.SqliteResult{ConversorPDF.XLL.Academic.Domain.Models.Programa}
+    content.vb: Function GetProgramaById(id As Integer) As SqliteResult(Of Programa)
+  overload: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetProgramaById*
+  nameWithType.vb: IAcademicRepository.GetProgramaById(Integer)
+  fullName.vb: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetProgramaById(Integer)
+  name.vb: GetProgramaById(Integer)
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertPrograma(ConversorPDF.XLL.Academic.Domain.Models.Programa)
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertPrograma(ConversorPDF.XLL.Academic.Domain.Models.Programa)
+  id: InsertPrograma(ConversorPDF.XLL.Academic.Domain.Models.Programa)
+  parent: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository
+  langs:
+  - csharp
+  - vb
+  name: InsertPrograma(Programa)
+  nameWithType: IAcademicRepository.InsertPrograma(Programa)
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertPrograma(ConversorPDF.XLL.Academic.Domain.Models.Programa)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Interfaces
+  summary: Inserta un nuevo programa.
+  example: []
+  syntax:
+    content: SqliteResult<int> InsertPrograma(Programa programa)
+    parameters:
+    - id: programa
+      type: ConversorPDF.XLL.Academic.Domain.Models.Programa
+    return:
+      type: ConversorPDF.XLL.Core.Models.SqliteResult{System.Int32}
+    content.vb: Function InsertPrograma(programa As Programa) As SqliteResult(Of Integer)
+  overload: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertPrograma*
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetAsignaturasByPrograma(System.Int32,System.String)
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetAsignaturasByPrograma(System.Int32,System.String)
+  id: GetAsignaturasByPrograma(System.Int32,System.String)
+  parent: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository
+  langs:
+  - csharp
+  - vb
+  name: GetAsignaturasByPrograma(int, string)
+  nameWithType: IAcademicRepository.GetAsignaturasByPrograma(int, string)
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetAsignaturasByPrograma(int, string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Interfaces
+  summary: Obtiene las asignaturas de un programa, opcionalmente filtradas por semestre.
+  example: []
+  syntax:
+    content: SqliteResult<IEnumerable<Asignatura>> GetAsignaturasByPrograma(int idPrograma, string semestre = null)
+    parameters:
+    - id: idPrograma
+      type: System.Int32
+    - id: semestre
+      type: System.String
+    return:
+      type: ConversorPDF.XLL.Core.Models.SqliteResult{System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Asignatura}}
+    content.vb: Function GetAsignaturasByPrograma(idPrograma As Integer, semestre As String = Nothing) As SqliteResult(Of IEnumerable(Of Asignatura))
+  overload: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetAsignaturasByPrograma*
+  nameWithType.vb: IAcademicRepository.GetAsignaturasByPrograma(Integer, String)
+  fullName.vb: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetAsignaturasByPrograma(Integer, String)
+  name.vb: GetAsignaturasByPrograma(Integer, String)
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetAsignaturaByAbreviatura(System.String)
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetAsignaturaByAbreviatura(System.String)
+  id: GetAsignaturaByAbreviatura(System.String)
+  parent: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository
+  langs:
+  - csharp
+  - vb
+  name: GetAsignaturaByAbreviatura(string)
+  nameWithType: IAcademicRepository.GetAsignaturaByAbreviatura(string)
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetAsignaturaByAbreviatura(string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Interfaces
+  summary: Obtiene una asignatura por su abreviatura.
+  example: []
+  syntax:
+    content: SqliteResult<Asignatura> GetAsignaturaByAbreviatura(string abreviatura)
+    parameters:
+    - id: abreviatura
+      type: System.String
+    return:
+      type: ConversorPDF.XLL.Core.Models.SqliteResult{ConversorPDF.XLL.Academic.Domain.Models.Asignatura}
+    content.vb: Function GetAsignaturaByAbreviatura(abreviatura As String) As SqliteResult(Of Asignatura)
+  overload: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetAsignaturaByAbreviatura*
+  nameWithType.vb: IAcademicRepository.GetAsignaturaByAbreviatura(String)
+  fullName.vb: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetAsignaturaByAbreviatura(String)
+  name.vb: GetAsignaturaByAbreviatura(String)
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertAsignatura(ConversorPDF.XLL.Academic.Domain.Models.Asignatura)
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertAsignatura(ConversorPDF.XLL.Academic.Domain.Models.Asignatura)
+  id: InsertAsignatura(ConversorPDF.XLL.Academic.Domain.Models.Asignatura)
+  parent: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository
+  langs:
+  - csharp
+  - vb
+  name: InsertAsignatura(Asignatura)
+  nameWithType: IAcademicRepository.InsertAsignatura(Asignatura)
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertAsignatura(ConversorPDF.XLL.Academic.Domain.Models.Asignatura)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Interfaces
+  summary: Inserta una nueva asignatura.
+  example: []
+  syntax:
+    content: SqliteResult<int> InsertAsignatura(Asignatura asignatura)
+    parameters:
+    - id: asignatura
+      type: ConversorPDF.XLL.Academic.Domain.Models.Asignatura
+    return:
+      type: ConversorPDF.XLL.Core.Models.SqliteResult{System.Int32}
+    content.vb: Function InsertAsignatura(asignatura As Asignatura) As SqliteResult(Of Integer)
+  overload: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertAsignatura*
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetMicrocurriculoByAsignatura(System.Int32)
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetMicrocurriculoByAsignatura(System.Int32)
+  id: GetMicrocurriculoByAsignatura(System.Int32)
+  parent: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository
+  langs:
+  - csharp
+  - vb
+  name: GetMicrocurriculoByAsignatura(int)
+  nameWithType: IAcademicRepository.GetMicrocurriculoByAsignatura(int)
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetMicrocurriculoByAsignatura(int)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Interfaces
+  summary: Obtiene el microcurriculo asociado a una asignatura.
+  example: []
+  syntax:
+    content: SqliteResult<Microcurriculo> GetMicrocurriculoByAsignatura(int idAsignatura)
+    parameters:
+    - id: idAsignatura
+      type: System.Int32
+    return:
+      type: ConversorPDF.XLL.Core.Models.SqliteResult{ConversorPDF.XLL.Academic.Domain.Models.Microcurriculo}
+    content.vb: Function GetMicrocurriculoByAsignatura(idAsignatura As Integer) As SqliteResult(Of Microcurriculo)
+  overload: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetMicrocurriculoByAsignatura*
+  nameWithType.vb: IAcademicRepository.GetMicrocurriculoByAsignatura(Integer)
+  fullName.vb: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetMicrocurriculoByAsignatura(Integer)
+  name.vb: GetMicrocurriculoByAsignatura(Integer)
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertMicrocurriculo(ConversorPDF.XLL.Academic.Domain.Models.Microcurriculo)
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertMicrocurriculo(ConversorPDF.XLL.Academic.Domain.Models.Microcurriculo)
+  id: InsertMicrocurriculo(ConversorPDF.XLL.Academic.Domain.Models.Microcurriculo)
+  parent: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository
+  langs:
+  - csharp
+  - vb
+  name: InsertMicrocurriculo(Microcurriculo)
+  nameWithType: IAcademicRepository.InsertMicrocurriculo(Microcurriculo)
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertMicrocurriculo(ConversorPDF.XLL.Academic.Domain.Models.Microcurriculo)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Interfaces
+  summary: Inserta un nuevo microcurriculo.
+  example: []
+  syntax:
+    content: SqliteResult<int> InsertMicrocurriculo(Microcurriculo microcurriculo)
+    parameters:
+    - id: microcurriculo
+      type: ConversorPDF.XLL.Academic.Domain.Models.Microcurriculo
+    return:
+      type: ConversorPDF.XLL.Core.Models.SqliteResult{System.Int32}
+    content.vb: Function InsertMicrocurriculo(microcurriculo As Microcurriculo) As SqliteResult(Of Integer)
+  overload: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertMicrocurriculo*
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetContenidosByMicrocurriculo(System.Int32)
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetContenidosByMicrocurriculo(System.Int32)
+  id: GetContenidosByMicrocurriculo(System.Int32)
+  parent: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository
+  langs:
+  - csharp
+  - vb
+  name: GetContenidosByMicrocurriculo(int)
+  nameWithType: IAcademicRepository.GetContenidosByMicrocurriculo(int)
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetContenidosByMicrocurriculo(int)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Interfaces
+  summary: Obtiene los contenidos asociados a un microcurriculo.
+  example: []
+  syntax:
+    content: SqliteResult<IEnumerable<Contenido>> GetContenidosByMicrocurriculo(int idMicrocurriculo)
+    parameters:
+    - id: idMicrocurriculo
+      type: System.Int32
+    return:
+      type: ConversorPDF.XLL.Core.Models.SqliteResult{System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Contenido}}
+    content.vb: Function GetContenidosByMicrocurriculo(idMicrocurriculo As Integer) As SqliteResult(Of IEnumerable(Of Contenido))
+  overload: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetContenidosByMicrocurriculo*
+  nameWithType.vb: IAcademicRepository.GetContenidosByMicrocurriculo(Integer)
+  fullName.vb: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetContenidosByMicrocurriculo(Integer)
+  name.vb: GetContenidosByMicrocurriculo(Integer)
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertContenido(ConversorPDF.XLL.Academic.Domain.Models.Contenido)
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertContenido(ConversorPDF.XLL.Academic.Domain.Models.Contenido)
+  id: InsertContenido(ConversorPDF.XLL.Academic.Domain.Models.Contenido)
+  parent: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository
+  langs:
+  - csharp
+  - vb
+  name: InsertContenido(Contenido)
+  nameWithType: IAcademicRepository.InsertContenido(Contenido)
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertContenido(ConversorPDF.XLL.Academic.Domain.Models.Contenido)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Interfaces
+  summary: Inserta un nuevo contenido programático.
+  example: []
+  syntax:
+    content: SqliteResult<int> InsertContenido(Contenido contenido)
+    parameters:
+    - id: contenido
+      type: ConversorPDF.XLL.Academic.Domain.Models.Contenido
+    return:
+      type: ConversorPDF.XLL.Core.Models.SqliteResult{System.Int32}
+    content.vb: Function InsertContenido(contenido As Contenido) As SqliteResult(Of Integer)
+  overload: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertContenido*
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetTerceros(System.Boolean)
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetTerceros(System.Boolean)
+  id: GetTerceros(System.Boolean)
+  parent: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository
+  langs:
+  - csharp
+  - vb
+  name: GetTerceros(bool)
+  nameWithType: IAcademicRepository.GetTerceros(bool)
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetTerceros(bool)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Interfaces
+  summary: Obtiene todos los terceros (docentes/contratistas).
+  example: []
+  syntax:
+    content: SqliteResult<IEnumerable<Tercero>> GetTerceros(bool soloActivos = true)
+    parameters:
+    - id: soloActivos
+      type: System.Boolean
+    return:
+      type: ConversorPDF.XLL.Core.Models.SqliteResult{System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Tercero}}
+    content.vb: Function GetTerceros(soloActivos As Boolean = True) As SqliteResult(Of IEnumerable(Of Tercero))
+  overload: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetTerceros*
+  nameWithType.vb: IAcademicRepository.GetTerceros(Boolean)
+  fullName.vb: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetTerceros(Boolean)
+  name.vb: GetTerceros(Boolean)
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetTerceroByCedula(System.String)
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetTerceroByCedula(System.String)
+  id: GetTerceroByCedula(System.String)
+  parent: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository
+  langs:
+  - csharp
+  - vb
+  name: GetTerceroByCedula(string)
+  nameWithType: IAcademicRepository.GetTerceroByCedula(string)
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetTerceroByCedula(string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Interfaces
+  summary: Obtiene un tercero por su cédula.
+  example: []
+  syntax:
+    content: SqliteResult<Tercero> GetTerceroByCedula(string cedula)
+    parameters:
+    - id: cedula
+      type: System.String
+    return:
+      type: ConversorPDF.XLL.Core.Models.SqliteResult{ConversorPDF.XLL.Academic.Domain.Models.Tercero}
+    content.vb: Function GetTerceroByCedula(cedula As String) As SqliteResult(Of Tercero)
+  overload: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetTerceroByCedula*
+  nameWithType.vb: IAcademicRepository.GetTerceroByCedula(String)
+  fullName.vb: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetTerceroByCedula(String)
+  name.vb: GetTerceroByCedula(String)
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertTercero(ConversorPDF.XLL.Academic.Domain.Models.Tercero)
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertTercero(ConversorPDF.XLL.Academic.Domain.Models.Tercero)
+  id: InsertTercero(ConversorPDF.XLL.Academic.Domain.Models.Tercero)
+  parent: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository
+  langs:
+  - csharp
+  - vb
+  name: InsertTercero(Tercero)
+  nameWithType: IAcademicRepository.InsertTercero(Tercero)
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertTercero(ConversorPDF.XLL.Academic.Domain.Models.Tercero)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Interfaces
+  summary: Inserta un nuevo tercero.
+  example: []
+  syntax:
+    content: SqliteResult<int> InsertTercero(Tercero tercero)
+    parameters:
+    - id: tercero
+      type: ConversorPDF.XLL.Academic.Domain.Models.Tercero
+    return:
+      type: ConversorPDF.XLL.Core.Models.SqliteResult{System.Int32}
+    content.vb: Function InsertTercero(tercero As Tercero) As SqliteResult(Of Integer)
+  overload: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertTercero*
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.UpdateTercero(ConversorPDF.XLL.Academic.Domain.Models.Tercero)
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.UpdateTercero(ConversorPDF.XLL.Academic.Domain.Models.Tercero)
+  id: UpdateTercero(ConversorPDF.XLL.Academic.Domain.Models.Tercero)
+  parent: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository
+  langs:
+  - csharp
+  - vb
+  name: UpdateTercero(Tercero)
+  nameWithType: IAcademicRepository.UpdateTercero(Tercero)
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.UpdateTercero(ConversorPDF.XLL.Academic.Domain.Models.Tercero)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Interfaces
+  summary: Actualiza la información de un tercero existente.
+  example: []
+  syntax:
+    content: SqliteResult<int> UpdateTercero(Tercero tercero)
+    parameters:
+    - id: tercero
+      type: ConversorPDF.XLL.Academic.Domain.Models.Tercero
+    return:
+      type: ConversorPDF.XLL.Core.Models.SqliteResult{System.Int32}
+    content.vb: Function UpdateTercero(tercero As Tercero) As SqliteResult(Of Integer)
+  overload: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.UpdateTercero*
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.DeleteTercero(System.Int32)
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.DeleteTercero(System.Int32)
+  id: DeleteTercero(System.Int32)
+  parent: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository
+  langs:
+  - csharp
+  - vb
+  name: DeleteTercero(int)
+  nameWithType: IAcademicRepository.DeleteTercero(int)
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.DeleteTercero(int)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Interfaces
+  summary: Elimina un tercero por su identificador.
+  example: []
+  syntax:
+    content: SqliteResult<int> DeleteTercero(int id)
+    parameters:
+    - id: id
+      type: System.Int32
+    return:
+      type: ConversorPDF.XLL.Core.Models.SqliteResult{System.Int32}
+    content.vb: Function DeleteTercero(id As Integer) As SqliteResult(Of Integer)
+  overload: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.DeleteTercero*
+  nameWithType.vb: IAcademicRepository.DeleteTercero(Integer)
+  fullName.vb: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.DeleteTercero(Integer)
+  name.vb: DeleteTercero(Integer)
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetSedes
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetSedes
+  id: GetSedes
+  parent: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository
+  langs:
+  - csharp
+  - vb
+  name: GetSedes()
+  nameWithType: IAcademicRepository.GetSedes()
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetSedes()
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Interfaces
+  summary: Obtiene todas las sedes registradas.
+  example: []
+  syntax:
+    content: SqliteResult<IEnumerable<Sede>> GetSedes()
+    return:
+      type: ConversorPDF.XLL.Core.Models.SqliteResult{System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Sede}}
+    content.vb: Function GetSedes() As SqliteResult(Of IEnumerable(Of Sede))
+  overload: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetSedes*
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetSedeById(System.Int32)
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetSedeById(System.Int32)
+  id: GetSedeById(System.Int32)
+  parent: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository
+  langs:
+  - csharp
+  - vb
+  name: GetSedeById(int)
+  nameWithType: IAcademicRepository.GetSedeById(int)
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetSedeById(int)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Interfaces
+  summary: Obtiene una sede por su identificador.
+  example: []
+  syntax:
+    content: SqliteResult<Sede> GetSedeById(int id)
+    parameters:
+    - id: id
+      type: System.Int32
+    return:
+      type: ConversorPDF.XLL.Core.Models.SqliteResult{ConversorPDF.XLL.Academic.Domain.Models.Sede}
+    content.vb: Function GetSedeById(id As Integer) As SqliteResult(Of Sede)
+  overload: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetSedeById*
+  nameWithType.vb: IAcademicRepository.GetSedeById(Integer)
+  fullName.vb: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetSedeById(Integer)
+  name.vb: GetSedeById(Integer)
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertSede(ConversorPDF.XLL.Academic.Domain.Models.Sede)
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertSede(ConversorPDF.XLL.Academic.Domain.Models.Sede)
+  id: InsertSede(ConversorPDF.XLL.Academic.Domain.Models.Sede)
+  parent: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository
+  langs:
+  - csharp
+  - vb
+  name: InsertSede(Sede)
+  nameWithType: IAcademicRepository.InsertSede(Sede)
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertSede(ConversorPDF.XLL.Academic.Domain.Models.Sede)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Interfaces
+  summary: Inserta una nueva sede.
+  example: []
+  syntax:
+    content: SqliteResult<int> InsertSede(Sede sede)
+    parameters:
+    - id: sede
+      type: ConversorPDF.XLL.Academic.Domain.Models.Sede
+    return:
+      type: ConversorPDF.XLL.Core.Models.SqliteResult{System.Int32}
+    content.vb: Function InsertSede(sede As Sede) As SqliteResult(Of Integer)
+  overload: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertSede*
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.UpdateSede(ConversorPDF.XLL.Academic.Domain.Models.Sede)
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.UpdateSede(ConversorPDF.XLL.Academic.Domain.Models.Sede)
+  id: UpdateSede(ConversorPDF.XLL.Academic.Domain.Models.Sede)
+  parent: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository
+  langs:
+  - csharp
+  - vb
+  name: UpdateSede(Sede)
+  nameWithType: IAcademicRepository.UpdateSede(Sede)
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.UpdateSede(ConversorPDF.XLL.Academic.Domain.Models.Sede)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Interfaces
+  summary: Actualiza la información de una sede.
+  example: []
+  syntax:
+    content: SqliteResult<int> UpdateSede(Sede sede)
+    parameters:
+    - id: sede
+      type: ConversorPDF.XLL.Academic.Domain.Models.Sede
+    return:
+      type: ConversorPDF.XLL.Core.Models.SqliteResult{System.Int32}
+    content.vb: Function UpdateSede(sede As Sede) As SqliteResult(Of Integer)
+  overload: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.UpdateSede*
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.DeleteSede(System.Int32)
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.DeleteSede(System.Int32)
+  id: DeleteSede(System.Int32)
+  parent: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository
+  langs:
+  - csharp
+  - vb
+  name: DeleteSede(int)
+  nameWithType: IAcademicRepository.DeleteSede(int)
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.DeleteSede(int)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Interfaces
+  summary: Elimina una sede por su identificador.
+  example: []
+  syntax:
+    content: SqliteResult<int> DeleteSede(int id)
+    parameters:
+    - id: id
+      type: System.Int32
+    return:
+      type: ConversorPDF.XLL.Core.Models.SqliteResult{System.Int32}
+    content.vb: Function DeleteSede(id As Integer) As SqliteResult(Of Integer)
+  overload: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.DeleteSede*
+  nameWithType.vb: IAcademicRepository.DeleteSede(Integer)
+  fullName.vb: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.DeleteSede(Integer)
+  name.vb: DeleteSede(Integer)
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetPeriodos
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetPeriodos
+  id: GetPeriodos
+  parent: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository
+  langs:
+  - csharp
+  - vb
+  name: GetPeriodos()
+  nameWithType: IAcademicRepository.GetPeriodos()
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetPeriodos()
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Interfaces
+  summary: Obtiene los períodos académicos.
+  example: []
+  syntax:
+    content: SqliteResult<IEnumerable<Periodo>> GetPeriodos()
+    return:
+      type: ConversorPDF.XLL.Core.Models.SqliteResult{System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Periodo}}
+    content.vb: Function GetPeriodos() As SqliteResult(Of IEnumerable(Of Periodo))
+  overload: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetPeriodos*
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetPeriodoById(System.Int32)
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetPeriodoById(System.Int32)
+  id: GetPeriodoById(System.Int32)
+  parent: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository
+  langs:
+  - csharp
+  - vb
+  name: GetPeriodoById(int)
+  nameWithType: IAcademicRepository.GetPeriodoById(int)
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetPeriodoById(int)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Interfaces
+  summary: Obtiene un período por su identificador.
+  example: []
+  syntax:
+    content: SqliteResult<Periodo> GetPeriodoById(int id)
+    parameters:
+    - id: id
+      type: System.Int32
+    return:
+      type: ConversorPDF.XLL.Core.Models.SqliteResult{ConversorPDF.XLL.Academic.Domain.Models.Periodo}
+    content.vb: Function GetPeriodoById(id As Integer) As SqliteResult(Of Periodo)
+  overload: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetPeriodoById*
+  nameWithType.vb: IAcademicRepository.GetPeriodoById(Integer)
+  fullName.vb: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetPeriodoById(Integer)
+  name.vb: GetPeriodoById(Integer)
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertPeriodo(ConversorPDF.XLL.Academic.Domain.Models.Periodo)
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertPeriodo(ConversorPDF.XLL.Academic.Domain.Models.Periodo)
+  id: InsertPeriodo(ConversorPDF.XLL.Academic.Domain.Models.Periodo)
+  parent: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository
+  langs:
+  - csharp
+  - vb
+  name: InsertPeriodo(Periodo)
+  nameWithType: IAcademicRepository.InsertPeriodo(Periodo)
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertPeriodo(ConversorPDF.XLL.Academic.Domain.Models.Periodo)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Interfaces
+  summary: Inserta un nuevo período académico.
+  example: []
+  syntax:
+    content: SqliteResult<int> InsertPeriodo(Periodo periodo)
+    parameters:
+    - id: periodo
+      type: ConversorPDF.XLL.Academic.Domain.Models.Periodo
+    return:
+      type: ConversorPDF.XLL.Core.Models.SqliteResult{System.Int32}
+    content.vb: Function InsertPeriodo(periodo As Periodo) As SqliteResult(Of Integer)
+  overload: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertPeriodo*
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetVinculaciones
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetVinculaciones
+  id: GetVinculaciones
+  parent: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository
+  langs:
+  - csharp
+  - vb
+  name: GetVinculaciones()
+  nameWithType: IAcademicRepository.GetVinculaciones()
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetVinculaciones()
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Interfaces
+  summary: Obtiene todas las vinculaciones académicas.
+  example: []
+  syntax:
+    content: SqliteResult<IEnumerable<Vinculacion>> GetVinculaciones()
+    return:
+      type: ConversorPDF.XLL.Core.Models.SqliteResult{System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Vinculacion}}
+    content.vb: Function GetVinculaciones() As SqliteResult(Of IEnumerable(Of Vinculacion))
+  overload: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetVinculaciones*
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetVinculacionById(System.Int32)
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetVinculacionById(System.Int32)
+  id: GetVinculacionById(System.Int32)
+  parent: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository
+  langs:
+  - csharp
+  - vb
+  name: GetVinculacionById(int)
+  nameWithType: IAcademicRepository.GetVinculacionById(int)
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetVinculacionById(int)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Interfaces
+  summary: Obtiene una vinculación por su identificador.
+  example: []
+  syntax:
+    content: SqliteResult<Vinculacion> GetVinculacionById(int id)
+    parameters:
+    - id: id
+      type: System.Int32
+    return:
+      type: ConversorPDF.XLL.Core.Models.SqliteResult{ConversorPDF.XLL.Academic.Domain.Models.Vinculacion}
+    content.vb: Function GetVinculacionById(id As Integer) As SqliteResult(Of Vinculacion)
+  overload: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetVinculacionById*
+  nameWithType.vb: IAcademicRepository.GetVinculacionById(Integer)
+  fullName.vb: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetVinculacionById(Integer)
+  name.vb: GetVinculacionById(Integer)
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertVinculacion(ConversorPDF.XLL.Academic.Domain.Models.Vinculacion)
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertVinculacion(ConversorPDF.XLL.Academic.Domain.Models.Vinculacion)
+  id: InsertVinculacion(ConversorPDF.XLL.Academic.Domain.Models.Vinculacion)
+  parent: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository
+  langs:
+  - csharp
+  - vb
+  name: InsertVinculacion(Vinculacion)
+  nameWithType: IAcademicRepository.InsertVinculacion(Vinculacion)
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertVinculacion(ConversorPDF.XLL.Academic.Domain.Models.Vinculacion)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Interfaces
+  summary: Inserta una nueva vinculación.
+  example: []
+  syntax:
+    content: SqliteResult<int> InsertVinculacion(Vinculacion vinculacion)
+    parameters:
+    - id: vinculacion
+      type: ConversorPDF.XLL.Academic.Domain.Models.Vinculacion
+    return:
+      type: ConversorPDF.XLL.Core.Models.SqliteResult{System.Int32}
+    content.vb: Function InsertVinculacion(vinculacion As Vinculacion) As SqliteResult(Of Integer)
+  overload: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertVinculacion*
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.UpdateVinculacion(ConversorPDF.XLL.Academic.Domain.Models.Vinculacion)
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.UpdateVinculacion(ConversorPDF.XLL.Academic.Domain.Models.Vinculacion)
+  id: UpdateVinculacion(ConversorPDF.XLL.Academic.Domain.Models.Vinculacion)
+  parent: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository
+  langs:
+  - csharp
+  - vb
+  name: UpdateVinculacion(Vinculacion)
+  nameWithType: IAcademicRepository.UpdateVinculacion(Vinculacion)
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.UpdateVinculacion(ConversorPDF.XLL.Academic.Domain.Models.Vinculacion)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Interfaces
+  summary: Actualiza una vinculación existente.
+  example: []
+  syntax:
+    content: SqliteResult<int> UpdateVinculacion(Vinculacion vinculacion)
+    parameters:
+    - id: vinculacion
+      type: ConversorPDF.XLL.Academic.Domain.Models.Vinculacion
+    return:
+      type: ConversorPDF.XLL.Core.Models.SqliteResult{System.Int32}
+    content.vb: Function UpdateVinculacion(vinculacion As Vinculacion) As SqliteResult(Of Integer)
+  overload: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.UpdateVinculacion*
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetSesionesByVinculacion(System.Int32)
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetSesionesByVinculacion(System.Int32)
+  id: GetSesionesByVinculacion(System.Int32)
+  parent: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository
+  langs:
+  - csharp
+  - vb
+  name: GetSesionesByVinculacion(int)
+  nameWithType: IAcademicRepository.GetSesionesByVinculacion(int)
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetSesionesByVinculacion(int)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Interfaces
+  summary: Obtiene las sesiones asociadas a una vinculación.
+  example: []
+  syntax:
+    content: SqliteResult<IEnumerable<Sesion>> GetSesionesByVinculacion(int idVinculacion)
+    parameters:
+    - id: idVinculacion
+      type: System.Int32
+    return:
+      type: ConversorPDF.XLL.Core.Models.SqliteResult{System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Sesion}}
+    content.vb: Function GetSesionesByVinculacion(idVinculacion As Integer) As SqliteResult(Of IEnumerable(Of Sesion))
+  overload: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetSesionesByVinculacion*
+  nameWithType.vb: IAcademicRepository.GetSesionesByVinculacion(Integer)
+  fullName.vb: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetSesionesByVinculacion(Integer)
+  name.vb: GetSesionesByVinculacion(Integer)
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertSesion(ConversorPDF.XLL.Academic.Domain.Models.Sesion)
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertSesion(ConversorPDF.XLL.Academic.Domain.Models.Sesion)
+  id: InsertSesion(ConversorPDF.XLL.Academic.Domain.Models.Sesion)
+  parent: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository
+  langs:
+  - csharp
+  - vb
+  name: InsertSesion(Sesion)
+  nameWithType: IAcademicRepository.InsertSesion(Sesion)
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertSesion(ConversorPDF.XLL.Academic.Domain.Models.Sesion)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Interfaces
+  summary: Inserta una sesión individual.
+  example: []
+  syntax:
+    content: SqliteResult<int> InsertSesion(Sesion sesion)
+    parameters:
+    - id: sesion
+      type: ConversorPDF.XLL.Academic.Domain.Models.Sesion
+    return:
+      type: ConversorPDF.XLL.Core.Models.SqliteResult{System.Int32}
+    content.vb: Function InsertSesion(sesion As Sesion) As SqliteResult(Of Integer)
+  overload: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertSesion*
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertSesiones(System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Sesion})
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertSesiones(System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Sesion})
+  id: InsertSesiones(System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Sesion})
+  parent: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository
+  langs:
+  - csharp
+  - vb
+  name: InsertSesiones(IEnumerable<Sesion>)
+  nameWithType: IAcademicRepository.InsertSesiones(IEnumerable<Sesion>)
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertSesiones(System.Collections.Generic.IEnumerable<ConversorPDF.XLL.Academic.Domain.Models.Sesion>)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Interfaces
+  summary: Inserta un lote de sesiones.
+  example: []
+  syntax:
+    content: SqliteResult<int> InsertSesiones(IEnumerable<Sesion> sesiones)
+    parameters:
+    - id: sesiones
+      type: System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Sesion}
+    return:
+      type: ConversorPDF.XLL.Core.Models.SqliteResult{System.Int32}
+    content.vb: Function InsertSesiones(sesiones As IEnumerable(Of Sesion)) As SqliteResult(Of Integer)
+  overload: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertSesiones*
+  nameWithType.vb: IAcademicRepository.InsertSesiones(IEnumerable(Of Sesion))
+  fullName.vb: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertSesiones(System.Collections.Generic.IEnumerable(Of ConversorPDF.XLL.Academic.Domain.Models.Sesion))
+  name.vb: InsertSesiones(IEnumerable(Of Sesion))
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.DeleteSesionesByVinculacion(System.Int32)
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.DeleteSesionesByVinculacion(System.Int32)
+  id: DeleteSesionesByVinculacion(System.Int32)
+  parent: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository
+  langs:
+  - csharp
+  - vb
+  name: DeleteSesionesByVinculacion(int)
+  nameWithType: IAcademicRepository.DeleteSesionesByVinculacion(int)
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.DeleteSesionesByVinculacion(int)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Interfaces
+  summary: Elimina todas las sesiones de una vinculación.
+  example: []
+  syntax:
+    content: SqliteResult<int> DeleteSesionesByVinculacion(int idVinculacion)
+    parameters:
+    - id: idVinculacion
+      type: System.Int32
+    return:
+      type: ConversorPDF.XLL.Core.Models.SqliteResult{System.Int32}
+    content.vb: Function DeleteSesionesByVinculacion(idVinculacion As Integer) As SqliteResult(Of Integer)
+  overload: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.DeleteSesionesByVinculacion*
+  nameWithType.vb: IAcademicRepository.DeleteSesionesByVinculacion(Integer)
+  fullName.vb: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.DeleteSesionesByVinculacion(Integer)
+  name.vb: DeleteSesionesByVinculacion(Integer)
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.ExecuteRawSql(System.String)
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.ExecuteRawSql(System.String)
+  id: ExecuteRawSql(System.String)
+  parent: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository
+  langs:
+  - csharp
+  - vb
+  name: ExecuteRawSql(string)
+  nameWithType: IAcademicRepository.ExecuteRawSql(string)
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.ExecuteRawSql(string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Interfaces
+  summary: Ejecuta SQL crudo (uso interno).
+  example: []
+  syntax:
+    content: SqliteResult<int> ExecuteRawSql(string sql)
+    parameters:
+    - id: sql
+      type: System.String
+    return:
+      type: ConversorPDF.XLL.Core.Models.SqliteResult{System.Int32}
+    content.vb: Function ExecuteRawSql(sql As String) As SqliteResult(Of Integer)
+  overload: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.ExecuteRawSql*
+  nameWithType.vb: IAcademicRepository.ExecuteRawSql(String)
+  fullName.vb: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.ExecuteRawSql(String)
+  name.vb: ExecuteRawSql(String)
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.SeedCatalogosTransaccional
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.SeedCatalogosTransaccional
+  id: SeedCatalogosTransaccional
+  parent: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository
+  langs:
+  - csharp
+  - vb
+  name: SeedCatalogosTransaccional()
+  nameWithType: IAcademicRepository.SeedCatalogosTransaccional()
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.SeedCatalogosTransaccional()
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Interfaces
+  summary: Inicializa los catálogos con datos semilla de forma transaccional.
+  example: []
+  syntax:
+    content: SqliteResult<int> SeedCatalogosTransaccional()
+    return:
+      type: ConversorPDF.XLL.Core.Models.SqliteResult{System.Int32}
+    content.vb: Function SeedCatalogosTransaccional() As SqliteResult(Of Integer)
+  overload: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.SeedCatalogosTransaccional*
+references:
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces
+  commentId: N:ConversorPDF.XLL.Academic.Domain.Interfaces
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Academic.Domain.Interfaces
+  nameWithType: ConversorPDF.XLL.Academic.Domain.Interfaces
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic
+    name: Academic
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Domain
+    name: Domain
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Domain.Interfaces
+    name: Interfaces
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Interfaces.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic
+    name: Academic
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Domain
+    name: Domain
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Domain.Interfaces
+    name: Interfaces
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Interfaces.html
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetProgramas*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetProgramas
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.html#ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetProgramas
+  name: GetProgramas
+  nameWithType: IAcademicRepository.GetProgramas
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetProgramas
+- uid: ConversorPDF.XLL.Core.Models.SqliteResult{System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Programa}}
+  commentId: T:ConversorPDF.XLL.Core.Models.SqliteResult{System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Programa}}
+  parent: ConversorPDF.XLL.Core.Models
+  definition: ConversorPDF.XLL.Core.Models.SqliteResult`1
+  href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  name: SqliteResult<IEnumerable<Programa>>
+  nameWithType: SqliteResult<IEnumerable<Programa>>
+  fullName: ConversorPDF.XLL.Core.Models.SqliteResult<System.Collections.Generic.IEnumerable<ConversorPDF.XLL.Academic.Domain.Models.Programa>>
+  nameWithType.vb: SqliteResult(Of IEnumerable(Of Programa))
+  fullName.vb: ConversorPDF.XLL.Core.Models.SqliteResult(Of System.Collections.Generic.IEnumerable(Of ConversorPDF.XLL.Academic.Domain.Models.Programa))
+  name.vb: SqliteResult(Of IEnumerable(Of Programa))
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+    name: SqliteResult
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  - name: <
+  - uid: System.Collections.Generic.IEnumerable`1
+    name: IEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  - name: <
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Programa
+    name: Programa
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.Programa.html
+  - name: '>'
+  - name: '>'
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+    name: SqliteResult
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Collections.Generic.IEnumerable`1
+    name: IEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Programa
+    name: Programa
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.Programa.html
+  - name: )
+  - name: )
+- uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+  commentId: T:ConversorPDF.XLL.Core.Models.SqliteResult`1
+  parent: ConversorPDF.XLL.Core.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  name: SqliteResult<T>
+  nameWithType: SqliteResult<T>
+  fullName: ConversorPDF.XLL.Core.Models.SqliteResult<T>
+  nameWithType.vb: SqliteResult(Of T)
+  fullName.vb: ConversorPDF.XLL.Core.Models.SqliteResult(Of T)
+  name.vb: SqliteResult(Of T)
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+    name: SqliteResult
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+    name: SqliteResult
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: ConversorPDF.XLL.Core.Models
+  commentId: N:ConversorPDF.XLL.Core.Models
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Core.Models
+  nameWithType: ConversorPDF.XLL.Core.Models
+  fullName: ConversorPDF.XLL.Core.Models
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Models
+    name: Models
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Models
+    name: Models
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.html
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetProgramaById*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetProgramaById
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.html#ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetProgramaById_System_Int32_
+  name: GetProgramaById
+  nameWithType: IAcademicRepository.GetProgramaById
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetProgramaById
+- uid: System.Int32
+  commentId: T:System.Int32
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int
+  nameWithType: int
+  fullName: int
+  nameWithType.vb: Integer
+  fullName.vb: Integer
+  name.vb: Integer
+- uid: ConversorPDF.XLL.Core.Models.SqliteResult{ConversorPDF.XLL.Academic.Domain.Models.Programa}
+  commentId: T:ConversorPDF.XLL.Core.Models.SqliteResult{ConversorPDF.XLL.Academic.Domain.Models.Programa}
+  parent: ConversorPDF.XLL.Core.Models
+  definition: ConversorPDF.XLL.Core.Models.SqliteResult`1
+  href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  name: SqliteResult<Programa>
+  nameWithType: SqliteResult<Programa>
+  fullName: ConversorPDF.XLL.Core.Models.SqliteResult<ConversorPDF.XLL.Academic.Domain.Models.Programa>
+  nameWithType.vb: SqliteResult(Of Programa)
+  fullName.vb: ConversorPDF.XLL.Core.Models.SqliteResult(Of ConversorPDF.XLL.Academic.Domain.Models.Programa)
+  name.vb: SqliteResult(Of Programa)
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+    name: SqliteResult
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  - name: <
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Programa
+    name: Programa
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.Programa.html
+  - name: '>'
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+    name: SqliteResult
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Programa
+    name: Programa
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.Programa.html
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertPrograma*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertPrograma
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.html#ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_InsertPrograma_ConversorPDF_XLL_Academic_Domain_Models_Programa_
+  name: InsertPrograma
+  nameWithType: IAcademicRepository.InsertPrograma
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertPrograma
+- uid: ConversorPDF.XLL.Academic.Domain.Models.Programa
+  commentId: T:ConversorPDF.XLL.Academic.Domain.Models.Programa
+  parent: ConversorPDF.XLL.Academic.Domain.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.Programa.html
+  name: Programa
+  nameWithType: Programa
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.Programa
+- uid: ConversorPDF.XLL.Core.Models.SqliteResult{System.Int32}
+  commentId: T:ConversorPDF.XLL.Core.Models.SqliteResult{System.Int32}
+  parent: ConversorPDF.XLL.Core.Models
+  definition: ConversorPDF.XLL.Core.Models.SqliteResult`1
+  href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  name: SqliteResult<int>
+  nameWithType: SqliteResult<int>
+  fullName: ConversorPDF.XLL.Core.Models.SqliteResult<int>
+  nameWithType.vb: SqliteResult(Of Integer)
+  fullName.vb: ConversorPDF.XLL.Core.Models.SqliteResult(Of Integer)
+  name.vb: SqliteResult(Of Integer)
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+    name: SqliteResult
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  - name: <
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '>'
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+    name: SqliteResult
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: )
+- uid: ConversorPDF.XLL.Academic.Domain.Models
+  commentId: N:ConversorPDF.XLL.Academic.Domain.Models
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Academic.Domain.Models
+  nameWithType: ConversorPDF.XLL.Academic.Domain.Models
+  fullName: ConversorPDF.XLL.Academic.Domain.Models
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic
+    name: Academic
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Domain
+    name: Domain
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Domain.Models
+    name: Models
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic
+    name: Academic
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Domain
+    name: Domain
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Domain.Models
+    name: Models
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.html
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetAsignaturasByPrograma*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetAsignaturasByPrograma
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.html#ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetAsignaturasByPrograma_System_Int32_System_String_
+  name: GetAsignaturasByPrograma
+  nameWithType: IAcademicRepository.GetAsignaturasByPrograma
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetAsignaturasByPrograma
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: ConversorPDF.XLL.Core.Models.SqliteResult{System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Asignatura}}
+  commentId: T:ConversorPDF.XLL.Core.Models.SqliteResult{System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Asignatura}}
+  parent: ConversorPDF.XLL.Core.Models
+  definition: ConversorPDF.XLL.Core.Models.SqliteResult`1
+  href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  name: SqliteResult<IEnumerable<Asignatura>>
+  nameWithType: SqliteResult<IEnumerable<Asignatura>>
+  fullName: ConversorPDF.XLL.Core.Models.SqliteResult<System.Collections.Generic.IEnumerable<ConversorPDF.XLL.Academic.Domain.Models.Asignatura>>
+  nameWithType.vb: SqliteResult(Of IEnumerable(Of Asignatura))
+  fullName.vb: ConversorPDF.XLL.Core.Models.SqliteResult(Of System.Collections.Generic.IEnumerable(Of ConversorPDF.XLL.Academic.Domain.Models.Asignatura))
+  name.vb: SqliteResult(Of IEnumerable(Of Asignatura))
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+    name: SqliteResult
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  - name: <
+  - uid: System.Collections.Generic.IEnumerable`1
+    name: IEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  - name: <
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Asignatura
+    name: Asignatura
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.Asignatura.html
+  - name: '>'
+  - name: '>'
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+    name: SqliteResult
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Collections.Generic.IEnumerable`1
+    name: IEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Asignatura
+    name: Asignatura
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.Asignatura.html
+  - name: )
+  - name: )
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetAsignaturaByAbreviatura*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetAsignaturaByAbreviatura
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.html#ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetAsignaturaByAbreviatura_System_String_
+  name: GetAsignaturaByAbreviatura
+  nameWithType: IAcademicRepository.GetAsignaturaByAbreviatura
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetAsignaturaByAbreviatura
+- uid: ConversorPDF.XLL.Core.Models.SqliteResult{ConversorPDF.XLL.Academic.Domain.Models.Asignatura}
+  commentId: T:ConversorPDF.XLL.Core.Models.SqliteResult{ConversorPDF.XLL.Academic.Domain.Models.Asignatura}
+  parent: ConversorPDF.XLL.Core.Models
+  definition: ConversorPDF.XLL.Core.Models.SqliteResult`1
+  href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  name: SqliteResult<Asignatura>
+  nameWithType: SqliteResult<Asignatura>
+  fullName: ConversorPDF.XLL.Core.Models.SqliteResult<ConversorPDF.XLL.Academic.Domain.Models.Asignatura>
+  nameWithType.vb: SqliteResult(Of Asignatura)
+  fullName.vb: ConversorPDF.XLL.Core.Models.SqliteResult(Of ConversorPDF.XLL.Academic.Domain.Models.Asignatura)
+  name.vb: SqliteResult(Of Asignatura)
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+    name: SqliteResult
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  - name: <
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Asignatura
+    name: Asignatura
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.Asignatura.html
+  - name: '>'
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+    name: SqliteResult
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Asignatura
+    name: Asignatura
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.Asignatura.html
+  - name: )
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertAsignatura*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertAsignatura
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.html#ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_InsertAsignatura_ConversorPDF_XLL_Academic_Domain_Models_Asignatura_
+  name: InsertAsignatura
+  nameWithType: IAcademicRepository.InsertAsignatura
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertAsignatura
+- uid: ConversorPDF.XLL.Academic.Domain.Models.Asignatura
+  commentId: T:ConversorPDF.XLL.Academic.Domain.Models.Asignatura
+  parent: ConversorPDF.XLL.Academic.Domain.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.Asignatura.html
+  name: Asignatura
+  nameWithType: Asignatura
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.Asignatura
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetMicrocurriculoByAsignatura*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetMicrocurriculoByAsignatura
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.html#ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetMicrocurriculoByAsignatura_System_Int32_
+  name: GetMicrocurriculoByAsignatura
+  nameWithType: IAcademicRepository.GetMicrocurriculoByAsignatura
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetMicrocurriculoByAsignatura
+- uid: ConversorPDF.XLL.Core.Models.SqliteResult{ConversorPDF.XLL.Academic.Domain.Models.Microcurriculo}
+  commentId: T:ConversorPDF.XLL.Core.Models.SqliteResult{ConversorPDF.XLL.Academic.Domain.Models.Microcurriculo}
+  parent: ConversorPDF.XLL.Core.Models
+  definition: ConversorPDF.XLL.Core.Models.SqliteResult`1
+  href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  name: SqliteResult<Microcurriculo>
+  nameWithType: SqliteResult<Microcurriculo>
+  fullName: ConversorPDF.XLL.Core.Models.SqliteResult<ConversorPDF.XLL.Academic.Domain.Models.Microcurriculo>
+  nameWithType.vb: SqliteResult(Of Microcurriculo)
+  fullName.vb: ConversorPDF.XLL.Core.Models.SqliteResult(Of ConversorPDF.XLL.Academic.Domain.Models.Microcurriculo)
+  name.vb: SqliteResult(Of Microcurriculo)
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+    name: SqliteResult
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  - name: <
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Microcurriculo
+    name: Microcurriculo
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.Microcurriculo.html
+  - name: '>'
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+    name: SqliteResult
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Microcurriculo
+    name: Microcurriculo
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.Microcurriculo.html
+  - name: )
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertMicrocurriculo*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertMicrocurriculo
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.html#ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_InsertMicrocurriculo_ConversorPDF_XLL_Academic_Domain_Models_Microcurriculo_
+  name: InsertMicrocurriculo
+  nameWithType: IAcademicRepository.InsertMicrocurriculo
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertMicrocurriculo
+- uid: ConversorPDF.XLL.Academic.Domain.Models.Microcurriculo
+  commentId: T:ConversorPDF.XLL.Academic.Domain.Models.Microcurriculo
+  parent: ConversorPDF.XLL.Academic.Domain.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.Microcurriculo.html
+  name: Microcurriculo
+  nameWithType: Microcurriculo
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.Microcurriculo
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetContenidosByMicrocurriculo*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetContenidosByMicrocurriculo
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.html#ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetContenidosByMicrocurriculo_System_Int32_
+  name: GetContenidosByMicrocurriculo
+  nameWithType: IAcademicRepository.GetContenidosByMicrocurriculo
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetContenidosByMicrocurriculo
+- uid: ConversorPDF.XLL.Core.Models.SqliteResult{System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Contenido}}
+  commentId: T:ConversorPDF.XLL.Core.Models.SqliteResult{System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Contenido}}
+  parent: ConversorPDF.XLL.Core.Models
+  definition: ConversorPDF.XLL.Core.Models.SqliteResult`1
+  href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  name: SqliteResult<IEnumerable<Contenido>>
+  nameWithType: SqliteResult<IEnumerable<Contenido>>
+  fullName: ConversorPDF.XLL.Core.Models.SqliteResult<System.Collections.Generic.IEnumerable<ConversorPDF.XLL.Academic.Domain.Models.Contenido>>
+  nameWithType.vb: SqliteResult(Of IEnumerable(Of Contenido))
+  fullName.vb: ConversorPDF.XLL.Core.Models.SqliteResult(Of System.Collections.Generic.IEnumerable(Of ConversorPDF.XLL.Academic.Domain.Models.Contenido))
+  name.vb: SqliteResult(Of IEnumerable(Of Contenido))
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+    name: SqliteResult
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  - name: <
+  - uid: System.Collections.Generic.IEnumerable`1
+    name: IEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  - name: <
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Contenido
+    name: Contenido
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.Contenido.html
+  - name: '>'
+  - name: '>'
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+    name: SqliteResult
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Collections.Generic.IEnumerable`1
+    name: IEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Contenido
+    name: Contenido
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.Contenido.html
+  - name: )
+  - name: )
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertContenido*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertContenido
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.html#ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_InsertContenido_ConversorPDF_XLL_Academic_Domain_Models_Contenido_
+  name: InsertContenido
+  nameWithType: IAcademicRepository.InsertContenido
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertContenido
+- uid: ConversorPDF.XLL.Academic.Domain.Models.Contenido
+  commentId: T:ConversorPDF.XLL.Academic.Domain.Models.Contenido
+  parent: ConversorPDF.XLL.Academic.Domain.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.Contenido.html
+  name: Contenido
+  nameWithType: Contenido
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.Contenido
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetTerceros*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetTerceros
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.html#ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetTerceros_System_Boolean_
+  name: GetTerceros
+  nameWithType: IAcademicRepository.GetTerceros
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetTerceros
+- uid: System.Boolean
+  commentId: T:System.Boolean
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.boolean
+  name: bool
+  nameWithType: bool
+  fullName: bool
+  nameWithType.vb: Boolean
+  fullName.vb: Boolean
+  name.vb: Boolean
+- uid: ConversorPDF.XLL.Core.Models.SqliteResult{System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Tercero}}
+  commentId: T:ConversorPDF.XLL.Core.Models.SqliteResult{System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Tercero}}
+  parent: ConversorPDF.XLL.Core.Models
+  definition: ConversorPDF.XLL.Core.Models.SqliteResult`1
+  href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  name: SqliteResult<IEnumerable<Tercero>>
+  nameWithType: SqliteResult<IEnumerable<Tercero>>
+  fullName: ConversorPDF.XLL.Core.Models.SqliteResult<System.Collections.Generic.IEnumerable<ConversorPDF.XLL.Academic.Domain.Models.Tercero>>
+  nameWithType.vb: SqliteResult(Of IEnumerable(Of Tercero))
+  fullName.vb: ConversorPDF.XLL.Core.Models.SqliteResult(Of System.Collections.Generic.IEnumerable(Of ConversorPDF.XLL.Academic.Domain.Models.Tercero))
+  name.vb: SqliteResult(Of IEnumerable(Of Tercero))
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+    name: SqliteResult
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  - name: <
+  - uid: System.Collections.Generic.IEnumerable`1
+    name: IEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  - name: <
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Tercero
+    name: Tercero
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.Tercero.html
+  - name: '>'
+  - name: '>'
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+    name: SqliteResult
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Collections.Generic.IEnumerable`1
+    name: IEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Tercero
+    name: Tercero
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.Tercero.html
+  - name: )
+  - name: )
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetTerceroByCedula*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetTerceroByCedula
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.html#ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetTerceroByCedula_System_String_
+  name: GetTerceroByCedula
+  nameWithType: IAcademicRepository.GetTerceroByCedula
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetTerceroByCedula
+- uid: ConversorPDF.XLL.Core.Models.SqliteResult{ConversorPDF.XLL.Academic.Domain.Models.Tercero}
+  commentId: T:ConversorPDF.XLL.Core.Models.SqliteResult{ConversorPDF.XLL.Academic.Domain.Models.Tercero}
+  parent: ConversorPDF.XLL.Core.Models
+  definition: ConversorPDF.XLL.Core.Models.SqliteResult`1
+  href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  name: SqliteResult<Tercero>
+  nameWithType: SqliteResult<Tercero>
+  fullName: ConversorPDF.XLL.Core.Models.SqliteResult<ConversorPDF.XLL.Academic.Domain.Models.Tercero>
+  nameWithType.vb: SqliteResult(Of Tercero)
+  fullName.vb: ConversorPDF.XLL.Core.Models.SqliteResult(Of ConversorPDF.XLL.Academic.Domain.Models.Tercero)
+  name.vb: SqliteResult(Of Tercero)
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+    name: SqliteResult
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  - name: <
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Tercero
+    name: Tercero
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.Tercero.html
+  - name: '>'
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+    name: SqliteResult
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Tercero
+    name: Tercero
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.Tercero.html
+  - name: )
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertTercero*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertTercero
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.html#ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_InsertTercero_ConversorPDF_XLL_Academic_Domain_Models_Tercero_
+  name: InsertTercero
+  nameWithType: IAcademicRepository.InsertTercero
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertTercero
+- uid: ConversorPDF.XLL.Academic.Domain.Models.Tercero
+  commentId: T:ConversorPDF.XLL.Academic.Domain.Models.Tercero
+  parent: ConversorPDF.XLL.Academic.Domain.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.Tercero.html
+  name: Tercero
+  nameWithType: Tercero
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.Tercero
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.UpdateTercero*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.UpdateTercero
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.html#ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_UpdateTercero_ConversorPDF_XLL_Academic_Domain_Models_Tercero_
+  name: UpdateTercero
+  nameWithType: IAcademicRepository.UpdateTercero
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.UpdateTercero
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.DeleteTercero*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.DeleteTercero
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.html#ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_DeleteTercero_System_Int32_
+  name: DeleteTercero
+  nameWithType: IAcademicRepository.DeleteTercero
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.DeleteTercero
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetSedes*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetSedes
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.html#ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetSedes
+  name: GetSedes
+  nameWithType: IAcademicRepository.GetSedes
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetSedes
+- uid: ConversorPDF.XLL.Core.Models.SqliteResult{System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Sede}}
+  commentId: T:ConversorPDF.XLL.Core.Models.SqliteResult{System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Sede}}
+  parent: ConversorPDF.XLL.Core.Models
+  definition: ConversorPDF.XLL.Core.Models.SqliteResult`1
+  href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  name: SqliteResult<IEnumerable<Sede>>
+  nameWithType: SqliteResult<IEnumerable<Sede>>
+  fullName: ConversorPDF.XLL.Core.Models.SqliteResult<System.Collections.Generic.IEnumerable<ConversorPDF.XLL.Academic.Domain.Models.Sede>>
+  nameWithType.vb: SqliteResult(Of IEnumerable(Of Sede))
+  fullName.vb: ConversorPDF.XLL.Core.Models.SqliteResult(Of System.Collections.Generic.IEnumerable(Of ConversorPDF.XLL.Academic.Domain.Models.Sede))
+  name.vb: SqliteResult(Of IEnumerable(Of Sede))
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+    name: SqliteResult
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  - name: <
+  - uid: System.Collections.Generic.IEnumerable`1
+    name: IEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  - name: <
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Sede
+    name: Sede
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.Sede.html
+  - name: '>'
+  - name: '>'
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+    name: SqliteResult
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Collections.Generic.IEnumerable`1
+    name: IEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Sede
+    name: Sede
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.Sede.html
+  - name: )
+  - name: )
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetSedeById*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetSedeById
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.html#ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetSedeById_System_Int32_
+  name: GetSedeById
+  nameWithType: IAcademicRepository.GetSedeById
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetSedeById
+- uid: ConversorPDF.XLL.Core.Models.SqliteResult{ConversorPDF.XLL.Academic.Domain.Models.Sede}
+  commentId: T:ConversorPDF.XLL.Core.Models.SqliteResult{ConversorPDF.XLL.Academic.Domain.Models.Sede}
+  parent: ConversorPDF.XLL.Core.Models
+  definition: ConversorPDF.XLL.Core.Models.SqliteResult`1
+  href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  name: SqliteResult<Sede>
+  nameWithType: SqliteResult<Sede>
+  fullName: ConversorPDF.XLL.Core.Models.SqliteResult<ConversorPDF.XLL.Academic.Domain.Models.Sede>
+  nameWithType.vb: SqliteResult(Of Sede)
+  fullName.vb: ConversorPDF.XLL.Core.Models.SqliteResult(Of ConversorPDF.XLL.Academic.Domain.Models.Sede)
+  name.vb: SqliteResult(Of Sede)
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+    name: SqliteResult
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  - name: <
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Sede
+    name: Sede
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.Sede.html
+  - name: '>'
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+    name: SqliteResult
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Sede
+    name: Sede
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.Sede.html
+  - name: )
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertSede*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertSede
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.html#ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_InsertSede_ConversorPDF_XLL_Academic_Domain_Models_Sede_
+  name: InsertSede
+  nameWithType: IAcademicRepository.InsertSede
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertSede
+- uid: ConversorPDF.XLL.Academic.Domain.Models.Sede
+  commentId: T:ConversorPDF.XLL.Academic.Domain.Models.Sede
+  parent: ConversorPDF.XLL.Academic.Domain.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.Sede.html
+  name: Sede
+  nameWithType: Sede
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.Sede
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.UpdateSede*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.UpdateSede
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.html#ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_UpdateSede_ConversorPDF_XLL_Academic_Domain_Models_Sede_
+  name: UpdateSede
+  nameWithType: IAcademicRepository.UpdateSede
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.UpdateSede
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.DeleteSede*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.DeleteSede
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.html#ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_DeleteSede_System_Int32_
+  name: DeleteSede
+  nameWithType: IAcademicRepository.DeleteSede
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.DeleteSede
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetPeriodos*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetPeriodos
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.html#ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetPeriodos
+  name: GetPeriodos
+  nameWithType: IAcademicRepository.GetPeriodos
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetPeriodos
+- uid: ConversorPDF.XLL.Core.Models.SqliteResult{System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Periodo}}
+  commentId: T:ConversorPDF.XLL.Core.Models.SqliteResult{System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Periodo}}
+  parent: ConversorPDF.XLL.Core.Models
+  definition: ConversorPDF.XLL.Core.Models.SqliteResult`1
+  href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  name: SqliteResult<IEnumerable<Periodo>>
+  nameWithType: SqliteResult<IEnumerable<Periodo>>
+  fullName: ConversorPDF.XLL.Core.Models.SqliteResult<System.Collections.Generic.IEnumerable<ConversorPDF.XLL.Academic.Domain.Models.Periodo>>
+  nameWithType.vb: SqliteResult(Of IEnumerable(Of Periodo))
+  fullName.vb: ConversorPDF.XLL.Core.Models.SqliteResult(Of System.Collections.Generic.IEnumerable(Of ConversorPDF.XLL.Academic.Domain.Models.Periodo))
+  name.vb: SqliteResult(Of IEnumerable(Of Periodo))
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+    name: SqliteResult
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  - name: <
+  - uid: System.Collections.Generic.IEnumerable`1
+    name: IEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  - name: <
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Periodo
+    name: Periodo
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.Periodo.html
+  - name: '>'
+  - name: '>'
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+    name: SqliteResult
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Collections.Generic.IEnumerable`1
+    name: IEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Periodo
+    name: Periodo
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.Periodo.html
+  - name: )
+  - name: )
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetPeriodoById*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetPeriodoById
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.html#ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetPeriodoById_System_Int32_
+  name: GetPeriodoById
+  nameWithType: IAcademicRepository.GetPeriodoById
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetPeriodoById
+- uid: ConversorPDF.XLL.Core.Models.SqliteResult{ConversorPDF.XLL.Academic.Domain.Models.Periodo}
+  commentId: T:ConversorPDF.XLL.Core.Models.SqliteResult{ConversorPDF.XLL.Academic.Domain.Models.Periodo}
+  parent: ConversorPDF.XLL.Core.Models
+  definition: ConversorPDF.XLL.Core.Models.SqliteResult`1
+  href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  name: SqliteResult<Periodo>
+  nameWithType: SqliteResult<Periodo>
+  fullName: ConversorPDF.XLL.Core.Models.SqliteResult<ConversorPDF.XLL.Academic.Domain.Models.Periodo>
+  nameWithType.vb: SqliteResult(Of Periodo)
+  fullName.vb: ConversorPDF.XLL.Core.Models.SqliteResult(Of ConversorPDF.XLL.Academic.Domain.Models.Periodo)
+  name.vb: SqliteResult(Of Periodo)
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+    name: SqliteResult
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  - name: <
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Periodo
+    name: Periodo
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.Periodo.html
+  - name: '>'
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+    name: SqliteResult
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Periodo
+    name: Periodo
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.Periodo.html
+  - name: )
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertPeriodo*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertPeriodo
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.html#ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_InsertPeriodo_ConversorPDF_XLL_Academic_Domain_Models_Periodo_
+  name: InsertPeriodo
+  nameWithType: IAcademicRepository.InsertPeriodo
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertPeriodo
+- uid: ConversorPDF.XLL.Academic.Domain.Models.Periodo
+  commentId: T:ConversorPDF.XLL.Academic.Domain.Models.Periodo
+  parent: ConversorPDF.XLL.Academic.Domain.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.Periodo.html
+  name: Periodo
+  nameWithType: Periodo
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.Periodo
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetVinculaciones*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetVinculaciones
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.html#ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetVinculaciones
+  name: GetVinculaciones
+  nameWithType: IAcademicRepository.GetVinculaciones
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetVinculaciones
+- uid: ConversorPDF.XLL.Core.Models.SqliteResult{System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Vinculacion}}
+  commentId: T:ConversorPDF.XLL.Core.Models.SqliteResult{System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Vinculacion}}
+  parent: ConversorPDF.XLL.Core.Models
+  definition: ConversorPDF.XLL.Core.Models.SqliteResult`1
+  href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  name: SqliteResult<IEnumerable<Vinculacion>>
+  nameWithType: SqliteResult<IEnumerable<Vinculacion>>
+  fullName: ConversorPDF.XLL.Core.Models.SqliteResult<System.Collections.Generic.IEnumerable<ConversorPDF.XLL.Academic.Domain.Models.Vinculacion>>
+  nameWithType.vb: SqliteResult(Of IEnumerable(Of Vinculacion))
+  fullName.vb: ConversorPDF.XLL.Core.Models.SqliteResult(Of System.Collections.Generic.IEnumerable(Of ConversorPDF.XLL.Academic.Domain.Models.Vinculacion))
+  name.vb: SqliteResult(Of IEnumerable(Of Vinculacion))
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+    name: SqliteResult
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  - name: <
+  - uid: System.Collections.Generic.IEnumerable`1
+    name: IEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  - name: <
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Vinculacion
+    name: Vinculacion
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.Vinculacion.html
+  - name: '>'
+  - name: '>'
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+    name: SqliteResult
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Collections.Generic.IEnumerable`1
+    name: IEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Vinculacion
+    name: Vinculacion
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.Vinculacion.html
+  - name: )
+  - name: )
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetVinculacionById*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetVinculacionById
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.html#ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetVinculacionById_System_Int32_
+  name: GetVinculacionById
+  nameWithType: IAcademicRepository.GetVinculacionById
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetVinculacionById
+- uid: ConversorPDF.XLL.Core.Models.SqliteResult{ConversorPDF.XLL.Academic.Domain.Models.Vinculacion}
+  commentId: T:ConversorPDF.XLL.Core.Models.SqliteResult{ConversorPDF.XLL.Academic.Domain.Models.Vinculacion}
+  parent: ConversorPDF.XLL.Core.Models
+  definition: ConversorPDF.XLL.Core.Models.SqliteResult`1
+  href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  name: SqliteResult<Vinculacion>
+  nameWithType: SqliteResult<Vinculacion>
+  fullName: ConversorPDF.XLL.Core.Models.SqliteResult<ConversorPDF.XLL.Academic.Domain.Models.Vinculacion>
+  nameWithType.vb: SqliteResult(Of Vinculacion)
+  fullName.vb: ConversorPDF.XLL.Core.Models.SqliteResult(Of ConversorPDF.XLL.Academic.Domain.Models.Vinculacion)
+  name.vb: SqliteResult(Of Vinculacion)
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+    name: SqliteResult
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  - name: <
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Vinculacion
+    name: Vinculacion
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.Vinculacion.html
+  - name: '>'
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+    name: SqliteResult
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Vinculacion
+    name: Vinculacion
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.Vinculacion.html
+  - name: )
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertVinculacion*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertVinculacion
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.html#ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_InsertVinculacion_ConversorPDF_XLL_Academic_Domain_Models_Vinculacion_
+  name: InsertVinculacion
+  nameWithType: IAcademicRepository.InsertVinculacion
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertVinculacion
+- uid: ConversorPDF.XLL.Academic.Domain.Models.Vinculacion
+  commentId: T:ConversorPDF.XLL.Academic.Domain.Models.Vinculacion
+  parent: ConversorPDF.XLL.Academic.Domain.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.Vinculacion.html
+  name: Vinculacion
+  nameWithType: Vinculacion
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.Vinculacion
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.UpdateVinculacion*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.UpdateVinculacion
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.html#ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_UpdateVinculacion_ConversorPDF_XLL_Academic_Domain_Models_Vinculacion_
+  name: UpdateVinculacion
+  nameWithType: IAcademicRepository.UpdateVinculacion
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.UpdateVinculacion
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetSesionesByVinculacion*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetSesionesByVinculacion
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.html#ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetSesionesByVinculacion_System_Int32_
+  name: GetSesionesByVinculacion
+  nameWithType: IAcademicRepository.GetSesionesByVinculacion
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetSesionesByVinculacion
+- uid: ConversorPDF.XLL.Core.Models.SqliteResult{System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Sesion}}
+  commentId: T:ConversorPDF.XLL.Core.Models.SqliteResult{System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Sesion}}
+  parent: ConversorPDF.XLL.Core.Models
+  definition: ConversorPDF.XLL.Core.Models.SqliteResult`1
+  href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  name: SqliteResult<IEnumerable<Sesion>>
+  nameWithType: SqliteResult<IEnumerable<Sesion>>
+  fullName: ConversorPDF.XLL.Core.Models.SqliteResult<System.Collections.Generic.IEnumerable<ConversorPDF.XLL.Academic.Domain.Models.Sesion>>
+  nameWithType.vb: SqliteResult(Of IEnumerable(Of Sesion))
+  fullName.vb: ConversorPDF.XLL.Core.Models.SqliteResult(Of System.Collections.Generic.IEnumerable(Of ConversorPDF.XLL.Academic.Domain.Models.Sesion))
+  name.vb: SqliteResult(Of IEnumerable(Of Sesion))
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+    name: SqliteResult
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  - name: <
+  - uid: System.Collections.Generic.IEnumerable`1
+    name: IEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  - name: <
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Sesion
+    name: Sesion
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.Sesion.html
+  - name: '>'
+  - name: '>'
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+    name: SqliteResult
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Collections.Generic.IEnumerable`1
+    name: IEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Sesion
+    name: Sesion
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.Sesion.html
+  - name: )
+  - name: )
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertSesion*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertSesion
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.html#ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_InsertSesion_ConversorPDF_XLL_Academic_Domain_Models_Sesion_
+  name: InsertSesion
+  nameWithType: IAcademicRepository.InsertSesion
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertSesion
+- uid: ConversorPDF.XLL.Academic.Domain.Models.Sesion
+  commentId: T:ConversorPDF.XLL.Academic.Domain.Models.Sesion
+  parent: ConversorPDF.XLL.Academic.Domain.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.Sesion.html
+  name: Sesion
+  nameWithType: Sesion
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.Sesion
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertSesiones*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertSesiones
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.html#ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_InsertSesiones_System_Collections_Generic_IEnumerable_ConversorPDF_XLL_Academic_Domain_Models_Sesion__
+  name: InsertSesiones
+  nameWithType: IAcademicRepository.InsertSesiones
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertSesiones
+- uid: System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Sesion}
+  commentId: T:System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Sesion}
+  parent: System.Collections.Generic
+  definition: System.Collections.Generic.IEnumerable`1
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  name: IEnumerable<Sesion>
+  nameWithType: IEnumerable<Sesion>
+  fullName: System.Collections.Generic.IEnumerable<ConversorPDF.XLL.Academic.Domain.Models.Sesion>
+  nameWithType.vb: IEnumerable(Of Sesion)
+  fullName.vb: System.Collections.Generic.IEnumerable(Of ConversorPDF.XLL.Academic.Domain.Models.Sesion)
+  name.vb: IEnumerable(Of Sesion)
+  spec.csharp:
+  - uid: System.Collections.Generic.IEnumerable`1
+    name: IEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  - name: <
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Sesion
+    name: Sesion
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.Sesion.html
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.IEnumerable`1
+    name: IEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Sesion
+    name: Sesion
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.Sesion.html
+  - name: )
+- uid: System.Collections.Generic.IEnumerable`1
+  commentId: T:System.Collections.Generic.IEnumerable`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  name: IEnumerable<T>
+  nameWithType: IEnumerable<T>
+  fullName: System.Collections.Generic.IEnumerable<T>
+  nameWithType.vb: IEnumerable(Of T)
+  fullName.vb: System.Collections.Generic.IEnumerable(Of T)
+  name.vb: IEnumerable(Of T)
+  spec.csharp:
+  - uid: System.Collections.Generic.IEnumerable`1
+    name: IEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.IEnumerable`1
+    name: IEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: System.Collections.Generic
+  commentId: N:System.Collections.Generic
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System.Collections.Generic
+  nameWithType: System.Collections.Generic
+  fullName: System.Collections.Generic
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Collections
+    name: Collections
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections
+  - name: .
+  - uid: System.Collections.Generic
+    name: Generic
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Collections
+    name: Collections
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections
+  - name: .
+  - uid: System.Collections.Generic
+    name: Generic
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.DeleteSesionesByVinculacion*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.DeleteSesionesByVinculacion
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.html#ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_DeleteSesionesByVinculacion_System_Int32_
+  name: DeleteSesionesByVinculacion
+  nameWithType: IAcademicRepository.DeleteSesionesByVinculacion
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.DeleteSesionesByVinculacion
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.ExecuteRawSql*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.ExecuteRawSql
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.html#ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_ExecuteRawSql_System_String_
+  name: ExecuteRawSql
+  nameWithType: IAcademicRepository.ExecuteRawSql
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.ExecuteRawSql
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.SeedCatalogosTransaccional*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.SeedCatalogosTransaccional
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.html#ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_SeedCatalogosTransaccional
+  name: SeedCatalogosTransaccional
+  nameWithType: IAcademicRepository.SeedCatalogosTransaccional
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.SeedCatalogosTransaccional

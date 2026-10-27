@@ -1,14 +1,8 @@
 using System;
-using ConversorPDF.XLL.Core.Services;
-using ConversorPDF.XLL.Core.Repositories;
-using ConversorPDF.XLL.Core.Processors;
-using ConversorPDF.XLL.Core.Models;
-using ConversorPDF.XLL.Core.Interfaces;
-using ConversorPDF.XLL.Core.Helpers;
-using ConversorPDF.XLL.Core.Enums;
 using System.Drawing;
 using System.Windows.Forms;
 using ConversorPDF.XLL;
+using ConversorPDF.XLL.Core.Helpers;
 namespace ConversorPDF.XLL.FormProgramador
 {
     partial class FormInfo
@@ -16,8 +10,10 @@ namespace ConversorPDF.XLL.FormProgramador
         private System.ComponentModel.IContainer components = null;
         private PictureBox picHero;
         private Label lblAppName;
+        private Label lblSlogan;
         private Label lblVersion;
         private Label lblDetails;
+        private Button btnSync;
         private Button btnClose;
 
         protected override void Dispose(bool disposing)
@@ -33,8 +29,10 @@ namespace ConversorPDF.XLL.FormProgramador
         {
             this.picHero = new PictureBox();
             this.lblAppName = new Label();
+            this.lblSlogan = new Label();
             this.lblVersion = new Label();
             this.lblDetails = new Label();
+            this.btnSync = new Button();
             this.btnClose = new Button();
             this.SuspendLayout();
 
@@ -51,28 +49,45 @@ namespace ConversorPDF.XLL.FormProgramador
             this.lblAppName.Text = "ConversorPDF";
             this.lblAppName.TextAlign = ContentAlignment.MiddleCenter;
 
+            // lblSlogan
+            this.lblSlogan.Font = new Font("Segoe UI", 8F, FontStyle.Italic);
+            this.lblSlogan.Location = new Point(20, 215);
+            this.lblSlogan.Size = new Size(320, 25);
+            this.lblSlogan.Text = "Programas menos. Gestionas más.";
+            this.lblSlogan.TextAlign = ContentAlignment.MiddleCenter;
+
+
             // lblVersion
-            this.lblVersion.Font = new Font("Segoe UI", 10F);
-            this.lblVersion.Location = new Point(20, 220);
+            this.lblVersion.Font = new Font("Segoe UI", 8F);
+            this.lblVersion.Location = new Point(20, 245);
             this.lblVersion.Size = new Size(320, 20);
             this.lblVersion.Text = $"Versión {App.APP_VERSION}";
             this.lblVersion.TextAlign = ContentAlignment.MiddleCenter;
 
             // lblDetails
             this.lblDetails.Font = new Font("Segoe UI", 9F);
-            this.lblDetails.Location = new Point(20, 250);
+            this.lblDetails.Location = new Point(20, 280);
             this.lblDetails.Size = new Size(320, 150);
             this.lblDetails.Text = $"Usuario: {App.DEFAULT_USER}\n" +
-                               "Plataforma: 64-bit x86 Windows\n" +
-                               "Registro: 80babf47-af47-4518-a228-9258c54f8726\n" +
                                "Autor: Luis Eduardo Bechara Polanía\n" +
                                "Contacto: luis.bechara@esap.edu.co\n" +
-                               "Escuela Superior de Administración Pública\n\n" +
+                               "Territorial Valle del Cauca\n" +
+                               "Escuela Superior de Administración Pública\n" +
                                "ESAP 2026";
             this.lblDetails.TextAlign = ContentAlignment.TopCenter;
 
+            // btnSync
+            this.btnSync.Location = new Point(70, 435);
+            this.btnSync.Size = new Size(100, 35);
+            this.btnSync.Text = "SYNC";
+            this.btnSync.FlatStyle = FlatStyle.Flat;
+            this.btnSync.BackColor = Color.White;
+            this.btnSync.FlatAppearance.BorderColor = Color.LightGray;
+            this.btnSync.Cursor = Cursors.Hand;
+            this.btnSync.Click += new EventHandler(this.btnSync_Click);
+
             // btnClose
-            this.btnClose.Location = new Point(130, 410);
+            this.btnClose.Location = new Point(190, 435);
             this.btnClose.Size = new Size(100, 35);
             this.btnClose.Text = "CERRAR";
             this.btnClose.FlatStyle = FlatStyle.Flat;
@@ -84,11 +99,13 @@ namespace ConversorPDF.XLL.FormProgramador
             // FormInfo
             this.AutoScaleDimensions = new SizeF(7F, 15F);
             this.AutoScaleMode = AutoScaleMode.Font;
-            this.ClientSize = new Size(360, 460);
+            this.ClientSize = new Size(360, 485);
             this.Controls.Add(this.picHero);
             this.Controls.Add(this.lblAppName);
+            this.Controls.Add(this.lblSlogan);
             this.Controls.Add(this.lblVersion);
             this.Controls.Add(this.lblDetails);
+            this.Controls.Add(this.btnSync);
             this.Controls.Add(this.btnClose);
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;

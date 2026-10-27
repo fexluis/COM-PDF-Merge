@@ -1,0 +1,755 @@
+
+# PLAN DE DISEÑO CONSOLIDADO **v4** — Módulo AG + Pool Docente↔Asignatura (`terceros_asignaturas`)
+
+> **Modo Plan.** Sólo análisis y diseño. **No se compiló, ejecutó ni modificó ningún archivo.** Consolidación v1+v2+v3 + las decisiones de esta ronda. Queda a la espera de aprobación.
+
+---
+
+## 0. Changelog v4
+
+| # | Cambio solicitado | Resolución |
+|---|---|---|
+| D1 | **Usar `idvinculacion`** de la vista *Por Semestre* de `FormVerVinculaciones` para relacionar qué asignaturas puede dictar cada tercero | **Derivación histórica**: cada vinculación histórica es **evidencia** `(P, Programa, Asignatura, Semestre)`. 4 mecanismos de captura + backfill idempotente (§3) |
+| D2 | Crear en el **schema actual, con CRDT**, la tabla `TercerosConAsignatura` | Tabla **`terceros_asignaturas`** (producción) **conforme a CR-SQLite** + registro en `CrdtTables[]` (§4) |
+| D3 | Que `FormSesionesAcademicas` y/o las vinculaciones aprobadas **guarden automáticamente** `idTercero, idPrograma, idAsignatura, activo` | Hooks transaccionales en `GuardarAsync` + `AgPromotorVinculaciones` (§3.3) |
+| D4 | **UI en `FormTerceros`** para editar/agregar esos campos | `TabControl` con 2 pestañas + grilla editable + *Importar desde histórico* (§6) |
+| D5 | Mejor asignación del AG | El pool del AG deja de ser local: **`AgAsignadorTercero` lee `terceros_asignaturas`**; se **elimina `ag_asignatura_tercero`** (§7) |
+| D6 | Consolidar todo | Este documento |
+
+---
+
+## 1. Contexto verificado (nuevos hallazgos de esta ronda)
+
+### 1.1 Vistas existentes (columnas reales)
+| Vista | Columnas relevantes |
+|---|---|
+| `vw_VinculacionesDetalle` | `IdVinculacion, IdSede, IdTercero, IdPeriodo, PeriodoNombre, ProgramaTipo, ProgramaAbreviatura, TerceroNombre, Semestre, AsignaturaNombre, SedeCiudad, SesionFechaInicial, SesionFechaFinal, SesionHoras, SesionViatica, Modalidad, Subunidad` → **NO expone `IdPrograma` ni `IdAsignatura`** |
+| `vw_SesionesDetalle` | `IdSesion, IdVinculacion, IdPeriodo, IdSede, **IdPrograma**, IdTercero, ProgramaTipo, ProgramaAbreviatura, Semestre, DocenteNombre, CedulaTercero, AsignaturaNombre, AsignaturaAbreviatura, SedeCiudad, Subsede, DiaSemana, Horas, HorarioSesion, FechaSesion, Viatica, SedeDepartamento, TransporteSede, ProgramaNombre, AsignaturaCreditos, AsignaturaMetodologia, AsignaturaCodMateria, Nivel, Grupo, VinculacionFechaInicio, VinculacionFechaFin, Modalidad, IsTerminalAereo, IdTerminales, GastoTerminalAerea, TerminalAereaNombre, Subunidad` → **NO expone `IdAsignatura`** |
+
+> **Consecuencia de diseño:** para la derivación se consulta la **tabla base `vinculaciones`** (que sí tiene `idprograma`, `idasignatura`, `semestre`, `idtercero`, `idsede`, `idperiodo`) y no la vista. `FormVerVinculaciones` aporta **la selección y el agrupamiento** (Programa/Semestre/Sede/Periodo) desde el árbol.
+
+### 1.2 Requisitos **reales** de CRDT (leídos en `Core\Sync\SyncInitializer.cs`)
+| Regla | Evidencia en código |
+|---|---|
+| **PK única de una sola columna** | `GetPrimaryKeyColumn(...)` → devuelve **un** `string`; `if (string.IsNullOrEmpty(pkColumn))` aborta |
+| **PK `INTEGER/TEXT PRIMARY KEY NOT NULL` sin `AUTOINCREMENT`** | `ReplacePrimaryKeyWithNotNull` (L674–693) reemplaza `... PRIMARY KEY AUTOINCREMENT` por `... PRIMARY KEY NOT NULL`; `EnsurePrimaryKeyNotNull` (L438–466) verifica `notnullValue == 1` |
+| **Sin `FOREIGN KEY`** | `hasFks` → `RemoveForeignKeyConstraints` (L746) |
+| **Sin `NOT NULL` en columnas no-PK sin `DEFAULT`** | `CheckNotNullWithoutDefault` (L767–780): `name != pkColumn && notnull == 1 && string.IsNullOrEmpty(dflt_value)` → si existe, **reconstruye la tabla** |
+| **UNIQUE**: sólo se elimina automáticamente en `config`, `usuarios`, `salvedades_conflictos`, `BaseGastosTerrestre` | L457 `needsUniqueRemoval` |
+| **Se recrea la tabla si algo no cumple** (con DROP de vistas dependientes) | L469–508 |
+| **Filtro obligatorio por `subunidad`** | `CrdtTables[]` L21–28 + convención `WHERE (subunidad = @S OR subunidad = '' OR subunidad IS NULL)` |
+
+> **Regla de oro v4:** el DDL de `terceros_asignaturas` debe nacer **100 % conforme** para que `SyncInitializer` **NO** reconstruya la tabla (log: *"ya cumple requisitos CRDT… Omitiendo"*) y sólo ejecute `crsql_as_crr`.
+
+### 1.3 `FormTerceros` (estructura real)
+- `FormTerceros(Func<IDbConnection> connectionFactory)`; campos: `dgvTerceros`, `pnlTop`, `pnlDetails`; **no usa `TabControl`**; guarda con `repo.InsertTercero(t)` / `repo.UpdateTercero(t)` (L406).
+- Se abre desde `FormVinculaciones.btnTerceros_Click` → `new FormTerceros(_dbFactory)`.
+- Exporta a Excel (`ExportarAExcel`, `btnExportarBase/Todos`).
+
+---
+
+## 2. Respuesta directa: ¿cómo usar la información de `idvinculacion`?
+
+**Concepto:** una vinculación histórica **demuestra** que un Tercero `P` fue habilitado/dictó la Asignatura `C` del Programa `Pr` en el Semestre `S`. Por tanto `idvinculacion` es la **evidencia** del par `(P, C)` dentro de `(Pr, S)`.
+
+```
+FormVerVinculaciones · Vista "Por Semestre"
+   Nodo: PROGRAMA ▸ SEMESTRE ▸ (Sede/Periodo) ▸ SesionListItem
+                                                    │  IdVinculacion, IdTercero, IdPrograma*, Semestre, IdSede, IdPeriodo
+                                                    ▼
+                    Derivación (consulta a `vinculaciones` base)
+                                                    ▼
+              terceros_asignaturas (P × Programa × Asignatura × Semestre)
+                                                    ▼
+                      AgAsignadorTercero  →  mejor cruce S+C+P  →  menos vacantes
+```
+`*` `IdPrograma` está en `SesionListItem` (viene de `vw_SesionesDetalle`); `IdAsignatura` no, por lo que la derivación baja a la tabla base `vinculaciones`.
+
+**Consulta de derivación (idempotente, recalculando el peso):**
+```sql
+-- Backfill / re-sincronización del pool a partir del histórico de vinculaciones
+SELECT  v.idtercero    AS IdTercero,
+        v.idprograma   AS IdPrograma,
+        v.idasignatura AS IdAsignatura,
+        v.semestre     AS Semestre,
+        COUNT(DISTINCT v.id) AS VecesAsignada,
+        MAX(COALESCE(NULLIF(v.fecha_fin,''), NULLIF(v.fecha_inicio,''))) AS FechaUltimaAsignacion
+FROM vinculaciones v
+WHERE v.idtercero    IS NOT NULL AND v.idtercero    > 0
+  AND v.idasignatura IS NOT NULL AND v.idasignatura > 0
+  AND v.idprograma   IS NOT NULL AND v.idprograma   > 0
+  AND (@IdSede    IS NULL OR v.idsede    = @IdSede)
+  AND (@IdPrograma IS NULL OR v.idprograma = @IdPrograma)
+  AND (@Semestre  IS NULL OR v.semestre  = @Semestre)
+  AND (@IdPeriodo IS NULL OR v.idperiodo = @IdPeriodo)
+GROUP BY v.idtercero, v.idprograma, v.idasignatura, v.semestre;
+```
+
+---
+
+## 3. Cuatro mecanismos de población del pool
+
+### 3.1 M1 — **Derivación histórica (backfill)** · `TerceroAsignaturaSyncService.DerivarDesdeVinculaciones(filtro)`
+- Idempotente: **recalcula** `veces_asignada` (no incrementa) → se puede re-ejecutar sin inflar.
+- `origen = 'HISTORICO'`, `activo = 1` (configurable: sólo `>= N` vinculaciones).
+- Disparadores:
+  - **Migración V49**: backfill inicial de todo el histórico (`subunidad = ''` o la activa).
+  - **Botón "Sincronizar pool"** en `FormTerceros` (por tercero / global).
+  - **Menú contextual en `FormVerVinculaciones`** (por nodo: asignatura, semestre o programa).
+
+### 3.2 M2 — **Captura incremental automática (hooks)**
+| Hook | Punto exacto | Datos que guarda |
+|---|---|---|
+| **H1** | `FormSesionesAcademicas.GuardarAsync` → dentro de la **misma transacción** (tras `InsertVinculacion`/`UpdateVinculacion` + `InsertSesiones`) | `idTercero, idPrograma, idAsignatura, semestre, activo=1, veces_asignada++` |
+| **H2** | `AgPromotorVinculaciones` → tras el `Commit` de la promoción | idem con `origen='AG_APROBADO'` |
+| **H3** | `FormSesionesAcademicas.btnEliminar_Click` | **no** deshabilita; sólo deja de incrementar (el pool es histórico acumulativo) |
+
+### 3.3 M3 — **Captura manual** (UI `FormTerceros`, §6)
+
+### 3.4 M4 — **Aprendizaje del AG**
+- Al aprobar/promover, las vinculaciones aprobadas alimentan el pool (`origen='AG_APROBADO'`), por lo que **cada ciclo del AG mejora** las asignaciones siguientes.
+- `veces_asignada` + `prioridad` alimentan **F4** (afinidad docente↔asignatura) del fitness.
+
+### 3.5 Contrato de escritura (upsert determinista, conforme a CRDT)
+```csharp
+// Pseudocontrato del repositorio (dentro de la transacción del llamador)
+public Result Upsert(TerceroAsignatura fila)
+{
+    // 1) PK determinista: evita duplicados al converger réplicas CRDT
+    fila.Id = TerceroAsignaturaKey.Calcular(fila.IdTercero, fila.IdPrograma, fila.IdAsignatura, fila.Semestre);
+    // 2) Si el PK existe y la clave coincide -> UPDATE (activo, prioridad, veces++, fecha, origen)
+    //    Si colisiona con OTRA clave -> sondear PK+1 (resolución de colisión)
+    // 3) INSERT si no existe
+}
+```
+- **Nunca** `INSERT OR IGNORE` (sin `UNIQUE` no deduplica).
+- `NOT NULL` + `DEFAULT` en todas las columnas no-PK (requisito CRDT).
+- Tras el commit el `UnitOfWork`/`NotifyMarkDirty` dispara la sincronización.
+
+---
+
+## 4. Nueva tabla de producción: **`terceros_asignaturas`** (CRDT)
+
+> Nombre de tabla en `snake_case` (consistente con `salvedades_conflictos`). Modelo C#: `TerceroAsignatura`. Alias funcional solicitado: *"TercerosConAsignatura"*.
+
+### 4.1 DDL **conforme a CR-SQLite**
+```sql
+CREATE TABLE IF NOT EXISTS terceros_asignaturas (
+    id                      INTEGER PRIMARY KEY NOT NULL,   -- PK ÚNICA, NOT NULL, SIN AUTOINCREMENT
+    idtercero               INTEGER NOT NULL DEFAULT 0,
+    idprograma              INTEGER NOT NULL DEFAULT 0,
+    idasignatura            INTEGER NOT NULL DEFAULT 0,
+    semestre                TEXT    NOT NULL DEFAULT '',     -- 'I'..'X' | '' = todos
+    activo                  INTEGER NOT NULL DEFAULT 1,
+    prioridad               INTEGER NOT NULL DEFAULT 0,      -- 0..100 (preferencia declarada)
+    veces_asignada          INTEGER NOT NULL DEFAULT 0,      -- frecuencia histórica (F4)
+    fecha_ultima_asignacion TEXT    NOT NULL DEFAULT '',
+    origen                  TEXT    NOT NULL DEFAULT 'MANUAL', -- MANUAL | HISTORICO | AG_APROBADO
+    observaciones           TEXT    NOT NULL DEFAULT '',
+    subunidad               TEXT    NOT NULL DEFAULT '',
+    created_at              TEXT    NOT NULL DEFAULT '',
+    updated_at              TEXT    NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_tas_tercero    ON terceros_asignaturas(idtercero);
+CREATE INDEX IF NOT EXISTS idx_tas_asignatura ON terceros_asignaturas(idasignatura);
+CREATE INDEX IF NOT EXISTS idx_tas_programa   ON terceros_asignaturas(idprograma, semestre);
+```
+**Checklist de conformidad CRDT (verificado contra `SyncInitializer`):**
+| Requisito | Cumple |
+|---|---|
+| PK única de una sola columna | ✅ `id` |
+| PK `NOT NULL`, **sin** `AUTOINCREMENT` | ✅ `INTEGER PRIMARY KEY NOT NULL` |
+| Sin `FOREIGN KEY` | ✅ |
+| Sin `UNIQUE` | ✅ (unicidad garantizada por PK determinista) |
+| Ningún `NOT NULL` no-PK sin `DEFAULT` | ✅ todos con `DEFAULT` |
+| Columna `subunidad` | ✅ |
+| Sin vistas dependientes | ✅ |
+
+**PK determinista** (C#): `FNV-1a 32 bits` sobre `"{idtercero}|{idprograma}|{idasignatura}|{semestre}"`, enmascarado a positivo (`& 0x7FFFFFFF`) y con sondeo ante colisión. Ventaja CRDT: **la misma fila lógica creada en dos sedes converge en una única fila** (mismo PK) en lugar de duplicarse.
+
+### 4.2 Registro CRDT
+- Añadir `"terceros_asignaturas"` a `Core\Sync\SyncInitializer.CrdtTables[]` (L21–28) → **se sincroniza entre subunidades** (justo lo deseado: el pool es conocimiento compartido).
+- **NO** añadirla a `tablesWithViews` (no tiene vistas).
+- Filtro de lectura por subunidad con la convención existente: `WHERE (subunidad = @S OR subunidad = '' OR subunidad IS NULL)`.
+
+---
+
+## 5. Impacto en el **AG** (sustitución del pool local)
+
+| Antes (v3) | Ahora (v4) |
+|---|---|
+| `ag_asignatura_tercero` (tabla local AG, sin CRDT) | **ELIMINADA**. Fuente única = **`terceros_asignaturas`** (producción + CRDT) |
+| `AgAsignadorTercero` leía `ag_asignatura_tercero` | `AgAsignadorTercero` lee **`ITerceroAsignaturaRepository`** |
+| Pool local a la corrida | Pool **global, sincronizado y que aprende** |
+
+### 5.1 Resolución del pool por tupla
+```csharp
+// AgAsignadorTercero.ObtenerCandidatos(idasignatura, semestre, idprograma, subunidad)
+// 1) Filas de terceros_asignaturas con activo = 1
+//    y (semestre = @Semestre OR semestre = '')
+//    y idasignatura = @IdAsignatura y idprograma = @IdPrograma
+// 2) JOIN terceros t ON t.id = idtercero WHERE t.activo = 1
+// 3) Requisitos: subunidad/departamento (duro por defecto); residencia/tipo/categoría -> blandos (F4)
+// 4) Orden de preferencia: prioridad DESC, veces_asignada DESC
+```
+### 5.2 Efecto en `es_vacante` (verificado en v3, ahora más preciso)
+| Motivo | Causa con el nuevo modelo |
+|---|---|
+| **`SIN_CANDIDATOS`** | **No hay filas** en `terceros_asignaturas` para `(idasignatura, idprograma, semestre)` con `activo=1` → **se resuelve poblando el pool** (M1/M2/M3) |
+| **`SIN_DISPONIBILIDAD`** | Hay candidatos pero todos chocan en `(día, bloque)` (**R1**) o `(fecha, hora)` (**R7**) → reparable moviendo franja |
+| **`NO_CUMPLE_REQUISITOS`** | Hay candidatos libres pero ninguno pasa el filtro duro (subunidad/departamento) o los requisitos activados |
+
+### 5.3 Fitness
+- **F4** ahora usa señal real: `prioridad` + `veces_asignada` (histórico probado) → mejores cruces.
+- Beneficio medible: **menos `SIN_CANDIDATOS`** en el panel de vacantes de la Pestaña 2.
+
+---
+
+## 6. UI
+
+### 6.1 `FormTerceros` — **nueva pestaña "Asignaturas habilitadas"**
+Intervención en `FormTerceros.cs` + `FormTerceros.Designer.cs`:
+1. Insertar un `TabControl` (`tabTercero`) con 2 `TabPage`:
+   - **Pestaña 1 — "Datos"**: rehospeda los controles actuales (`pnlTop`, `dgvTerceros`, `pnlDetails`).
+   - **Pestaña 2 — "Asignaturas habilitadas"**: `dgvAsignaturas` + panel de edición + botonera.
+2. **Grilla** (`dgvAsignaturas`, no enlazada, `AllowUserToAddRows=false`, `SortMode=NotSortable` — convención Fase 239):
+   `Programa | Semestre | Asignatura | Activo | Prioridad | Veces asignada | Última asignación | Origen | Observaciones`
+3. **Editor** (panel): `cmbPrograma → cmbSemestre (I–X, '' = todos) → cmbAsignatura` (dependiente de programa+semestre, igual que `FormSesionesAcademicas.UpdateAsignaturas`), `chkActivo`, `numPrioridad`, `txtObservaciones`.
+4. **Botonera**: *Agregar*, *Editar*, *Eliminar*, **"Importar desde histórico"** (M1, filtrado al tercero seleccionado), *Exportar a Excel* (reutiliza `ExportarAExcel`).
+5. **Mapeo sin lógica en code-behind**: construir `GridRowDto`/DTO y llamar a `TerceroAsignaturaSyncService` (patrón `GridToSesionMapper`).
+6. Persistencia: `ITerceroAsignaturaRepository.Upsert/Delete` con la sesión de conexión del formulario.
+
+> **Alternativa de menor cirugía** (si se prefiere no mover controles en el Designer): un formulario dedicado `FormTerceroAsignaturas(idTercero, Func<IDbConnection>)` invocado desde un botón *"Asignaturas habilitadas…"* en `FormTerceros`. Se documenta como **fallback**; la opción recomendada es el `TabControl` (cumple literalmente "adicionar en FormTerceros una UI").
+
+### 6.2 `FormVerVinculaciones` — menú contextual **"Habilitar docente para asignatura"**
+Sobre las vistas `PorSemestres` / `PorAsignaturas` (nodos con `Tag = SesionListItem`):
+| Acción | Efecto |
+|---|---|
+| *Habilitar esta combinación* | `Upsert(idTercero, idPrograma, idAsignatura, semestre, origen='MANUAL')` |
+| *Sincronizar pool del semestre* | `DerivarDesdeVinculaciones(programa, semestre, sede, periodo)` (M1) |
+| *Ver asignaturas habilitadas del docente* | Abre la pestaña 2 de `FormTerceros` filtrada por el tercero |
+- Se reutiliza `_nodoSeleccionadoContextual` y el patrón de `CrearNodoSesion` ya existente.
+- Modo AG: las mismas acciones operan sobre `ag_vinculaciones` (vía `vw_AgSesionesDetalle`), pero el pool se escribe **siempre** en la tabla de producción (es conocimiento compartido, no staging).
+
+### 6.3 `FormSesionesAcademicas` — hook automático
+- En `GuardarAsync`, dentro de la transacción, tras el `InsertSesiones(...)`:
+  `new TerceroAsignaturaRepository(_sharedConn, transaction, suppressMarkDirty:true).Upsert(...)` por cada vinculación guardada.
+- Sin cambios visuales; sólo un `LoggerHelper.Info` de trazabilidad.
+
+---
+
+## 7. Migraciones (dos nuevas, ambas registradas en `BuildMigrator()`)
+
+| Migración | Contenido | Convenciones |
+|---|---|---|
+| **`MigrationV48_AddAgHorariosTables.cs`** | 13 tablas `ag_*` + 2 vistas `vw_Ag*` + seed γ | `IF NOT EXISTS`, `DROP VIEW IF EXISTS`, **sin CRDT** |
+| **`MigrationV49_AddTercerosAsignaturas.cs`** | Tabla `terceros_asignaturas` (DDL conforme §4.1) + **backfill histórico** (§3.1) | **CRDT habilitado** (registro en `CrdtTables[]`) |
+
+### 7.1 Registro
+```csharp
+// Core\Helpers\SqliteHelper.cs → BuildMigrator()
+new MigrationV47_SeedTerminalesCanonicos(),
+new MigrationV48_AddAgHorariosTables(),        // ← AG (local, sin CRDT)
+new MigrationV49_AddTercerosAsignaturas()      // ← Pool docente↔asignatura (CRDT)
+```
+```csharp
+// Core\Sync\SyncInitializer.cs → CrdtTables[]
+..., "terminales", "cdpDependencias", "permisos",
+"terceros_asignaturas"                          // ← NUEVA (sincronizada)
+```
+
+### 7.2 Decisiones de esquema base
+| Tabla | ¿`AcademicSchema.sql`? | ¿`BASE_TABLES[]`? | ¿`CrdtTables[]`? |
+|---|---|---|---|
+| `ag_*` (13) + `vw_Ag*` (2) | ❌ | ❌ | ❌ |
+| `terceros_asignaturas` | ❌ | ❌ | ✅ |
+
+**Por qué no tocar `BASE_TABLES[]`:** `RepairBaseSchemaIfNeeded()` compara `baseTablesCount == BASE_TABLES.Length`. Añadir nombres sin DDL en `AcademicSchema.sql` provoca **bucle de reparación** en cada arranque; añadirlos a ambos dispara la purga de `__SchemaVersion > 28` y la **re-ejecución de V29…V49** en vaults existentes. Mantener `BASE_TABLES[]` intacto ⇒ sólo corre V48/V49 una vez. **Cero cambios en `vinculaciones`/`sesiones`.**
+
+---
+
+## 8. Modelo AG — 3 capas (consolidado, sin `ag_asignatura_tercero`)
+
+```
+CAPA 1 — ALGORITMO (memoria + auditoría, NO CRDT)
+  AgAula (S) ──1:N──► AgAulaAsignatura (C)
+      └──1:N──► AgCorrida (R) ──1:N──► AgIndividuo ══► List<AgGen>
+                                              │            └──0:N──► AgViolacion
+                                              └──N──► AgBitacora
+  Tablas: ag_aula, ag_aula_asignatura, ag_bloque_horario, ag_corrida,
+          ag_individuo, ag_gen, ag_violacion, ag_bitacora
+
+CAPA 2 — STAGING EDITABLE (espejo, NO CRDT)
+  ag_vinculaciones ──1:N──► ag_sesiones
+  Puente: ag_vinculacion_gen   ·   Paridad: ag_salvedades_conflictos
+  Vistas: vw_AgVinculacionesDetalle, vw_AgSesionesDetalle
+
+CAPA 3 — PRODUCCIÓN (CRDT, sin cambios en tablas existentes)
+  vinculaciones ──1:N──► sesiones        +  ag_promocion
+  NUEVA: terceros_asignaturas  ← pool P×C (evidencia histórica) · CRDT
+```
+
+### Relación `AgIndividuo` ↔ `List<AgGen>` ↔ `ag_vinculaciones`/`ag_sesiones`
+| Relación | Cardinalidad | Significado |
+|---|---|---|
+| `AgAula` → `AgAulaAsignatura` | 1 : N | C dependientes (`idprograma`+`semestre`) |
+| `AgAula` → `AgCorrida` | 1 : N | Varias corridas por aula |
+| `AgCorrida` → `AgIndividuo` | 1 : N | Población por generación |
+| **`AgIndividuo` → `AgGen` (`List<AgGen>`)** | **1 : N** | **El cromosoma contiene N genes = N tuplas** |
+| `AgIndividuo` → `AgViolacion` | 1 : N | Descartes + regla |
+| `AgGen` ↔ `AgVinculacion` | N : M (`ag_vinculacion_gen`) | Genes del mismo `(asignatura, docente, aula, ventana)` se **agrupan** en 1 cabeza |
+| `AgVinculacion` → `AgSesion` | 1 : N | Expansión α |
+| `AgVinculacion` → `Vinculacion` | 1 : 1 | Promoción (copia con remapeo) |
+
+- **`AgGen`** = `(C, P, S, Día β, Hora γ)` + ventana α + `es_vacante` + `motivo_vacante` (granularidad **día/bloque**, como la literatura).
+- **`AgIndividuo`** = **solución completa** de un `AgAula`.
+
+### Pipeline de materialización
+```
+List<AgGen> → agrupar por (idasignatura, idtercero, idaula, ventana)   → cabezas
+            → AgPlanificadorTemporal (α, secuencia R6)
+            → GeneradorSesionesRecurrentes.Generar(...) por día
+            → AcademicDateSyncService.CalculateAdjustment(...)
+            → INSERT ag_vinculaciones + ag_sesiones   [estado_ag='BORRADOR_MATERIALIZADO']
+            → edición humana (3 Forms en Modo AG)
+            → AgSincronizadorCorrecciones (re-sincroniza genes + recalcula fitness)
+            → APROBACIÓN (estado_ag='APROBADO')
+            → (M2: upsert pool con origen='AG_APROBADO')
+            → PROMOCIÓN: copia con remapeo → vinculaciones + sesiones + ag_promocion
+```
+
+---
+
+## 9. DDL consolidado del esquema AG
+
+### 9.1 `ag_aula` — Módulo Aula/Salón (S)
+```sql
+CREATE TABLE IF NOT EXISTS ag_aula (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    idperiodo INTEGER, idsede INTEGER, idprograma INTEGER,
+    semestre TEXT, grupo TEXT DEFAULT '', modalidadVinculacion TEXT,
+    fecha_inicio TEXT, fecha_fin TEXT, aula_ref TEXT,
+    estado TEXT DEFAULT 'BORRADOR',   -- BORRADOR|LISTO|EN_AG|APROBADO|PROMOVIDO|DESCARTADO
+    observaciones TEXT, fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP, subunidad TEXT DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_ag_aula_ref ON ag_aula(aula_ref);
+```
+### 9.2 `ag_aula_asignatura` — C dependientes
+```sql
+CREATE TABLE IF NOT EXISTS ag_aula_asignatura (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    idaula INTEGER NOT NULL, idasignatura INTEGER NOT NULL,
+    semestre_asignatura TEXT, orden_curricular INTEGER DEFAULT 0,
+    horas_objetivo REAL DEFAULT 0, creditos INTEGER DEFAULT 0,
+    requerida INTEGER DEFAULT 1, activo INTEGER DEFAULT 1, subunidad TEXT DEFAULT ''
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_ag_aula_asignatura ON ag_aula_asignatura(idaula, idasignatura);
+```
+### 9.3 `ag_bloque_horario` — γ + seed
+```sql
+CREATE TABLE IF NOT EXISTS ag_bloque_horario (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    dia_semana INTEGER, orden INTEGER, hora_inicio TEXT, hora_fin TEXT,
+    etiqueta TEXT, horas REAL, activo INTEGER DEFAULT 1, subunidad TEXT DEFAULT ''
+);
+-- SEED: MARTES..VIERNES ord1 18:00-22:00 (4h) · SÁBADO ord1 08:00-12:00 y ord2 13:00-17:00 (4h) · DOMINGO ord1 08:00-12:00
+```
+### 9.4 `ag_corrida` — Módulo Cruzamiento (R)
+```sql
+CREATE TABLE IF NOT EXISTS ag_corrida (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, idaula INTEGER NOT NULL, idperiodo INTEGER,
+    dias_habilitados TEXT, bloques_json TEXT,
+    max_asignaturas_semana INTEGER DEFAULT 2, horas_bloque REAL DEFAULT 4,
+    tamano_poblacion INTEGER DEFAULT 60, generaciones_max INTEGER DEFAULT 200,
+    tasa_cruce REAL DEFAULT 0.85, tasa_mutacion REAL DEFAULT 0.10, tamano_torneo INTEGER DEFAULT 3,
+    umbral_fitness REAL DEFAULT 0, estancamiento_max INTEGER DEFAULT 30, semilla INTEGER DEFAULT 0,
+    estado TEXT DEFAULT 'BORRADOR',   -- BORRADOR|EJECUTANDO|COMPLETADA|APROBADA|DESCARTADA
+    generaciones_ejecutadas INTEGER DEFAULT 0, fitness_mejor REAL DEFAULT 0,
+    idindividuo_mejor INTEGER, idindividuo_materializado INTEGER,
+    usuario TEXT, huella_parametros TEXT,
+    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP, subunidad TEXT DEFAULT ''
+);
+```
+### 9.5 `ag_individuo` — cromosoma
+```sql
+CREATE TABLE IF NOT EXISTS ag_individuo (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, idcorrida INTEGER NOT NULL, generacion INTEGER DEFAULT 0,
+    fitness REAL DEFAULT 0, penalizacion REAL DEFAULT 0,
+    violaciones_duras INTEGER DEFAULT 0, vacantes INTEGER DEFAULT 0,
+    estado TEXT DEFAULT 'EVALUADO',   -- EVALUADO|DESCARTADO|APTO|SELECCIONADO|MATERIALIZADO|MODIFICADO_MANUAL|APROBADO|PROMOVIDO
+    es_materializado INTEGER DEFAULT 0, es_mejor INTEGER DEFAULT 0, firma_hash TEXT,
+    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP, subunidad TEXT DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_ag_individuo_corrida ON ag_individuo(idcorrida, fitness DESC);
+```
+### 9.6 `ag_gen` — la **tupla** (con `es_vacante` + `motivo_vacante`)
+```sql
+CREATE TABLE IF NOT EXISTS ag_gen (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, idindividuo INTEGER NOT NULL, posicion INTEGER NOT NULL,
+    idaula INTEGER NOT NULL, aula_ref TEXT, idperiodo INTEGER, idsede INTEGER, idprograma INTEGER,
+    semestre TEXT, grupo TEXT, modalidad TEXT,
+    idasignatura INTEGER,
+    idtercero INTEGER NULL,
+    es_vacante INTEGER DEFAULT 0,
+    motivo_vacante TEXT DEFAULT '',    -- SIN_CANDIDATOS|SIN_DISPONIBILIDAD|NO_CUMPLE_REQUISITOS
+    dia_semana INTEGER, idbloque_horario INTEGER, horas REAL DEFAULT 4,
+    fecha_inicio TEXT, fecha_fin TEXT,
+    estado_gen TEXT DEFAULT 'OK',      -- OK|REPARADO|VACANTE|CONFLICTO|DESCARTADO
+    subunidad TEXT DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_ag_gen_individuo ON ag_gen(idindividuo, posicion);
+CREATE INDEX IF NOT EXISTS idx_ag_gen_slot      ON ag_gen(idaula, dia_semana, idbloque_horario);
+```
+### 9.7 `ag_vinculaciones` — espejo de `vinculaciones`
+```sql
+CREATE TABLE IF NOT EXISTS ag_vinculaciones (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    -- idénticas a `vinculaciones`
+    idsede INTEGER, idtercero INTEGER, idprograma INTEGER, idperiodo INTEGER,
+    grupo TEXT, semestre TEXT, idasignatura INTEGER, total_horas INTEGER,
+    dia_horas_semanales TEXT, fecha_inicio TEXT, fecha_fin TEXT,
+    modalidadVinculacion TEXT, subunidad TEXT DEFAULT '',
+    isTerminalAereo INTEGER DEFAULT 0, idTerminales INTEGER DEFAULT 0, gastoTerminalAerea REAL DEFAULT 0,
+    -- metadatos AG
+    idaula INTEGER, idcorrida INTEGER, idindividuo INTEGER, fitness REAL DEFAULT 0,
+    vacante INTEGER DEFAULT 0, motivo_vacante TEXT DEFAULT '',
+    estado_ag TEXT DEFAULT 'BORRADOR',  -- BORRADOR|BORRADOR_MATERIALIZADO|MODIFICADO|APROBADO|PROMOVIDO|DESCARTADO
+    origen_ag INTEGER DEFAULT 1, modificado_por TEXT,
+    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP, fecha_modificacion TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_ag_vinc_corrida   ON ag_vinculaciones(idcorrida, estado_ag);
+CREATE INDEX IF NOT EXISTS idx_ag_vinc_individuo ON ag_vinculaciones(idindividuo);
+CREATE INDEX IF NOT EXISTS idx_ag_vinc_aula      ON ag_vinculaciones(idaula);
+```
+### 9.8 `ag_sesiones` — espejo de `sesiones`
+```sql
+CREATE TABLE IF NOT EXISTS ag_sesiones (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    idvinculacion INTEGER, idtercero INTEGER, fechasesion TEXT,
+    horariosesion TEXT, horas REAL, viatica INTEGER, subunidad TEXT DEFAULT '',
+    idindividuo INTEGER, idgen INTEGER NULL, origen_ag INTEGER DEFAULT 1,
+    estado_ag TEXT DEFAULT 'BORRADOR', fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_ag_ses_vinc      ON ag_sesiones(idvinculacion);
+CREATE INDEX IF NOT EXISTS idx_ag_ses_fecha     ON ag_sesiones(fechasesion);
+CREATE INDEX IF NOT EXISTS idx_ag_ses_individuo ON ag_sesiones(idindividuo);
+```
+### 9.9 `ag_vinculacion_gen` (puente N:M)
+```sql
+CREATE TABLE IF NOT EXISTS ag_vinculacion_gen (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    idagvinculacion INTEGER NOT NULL, idgen INTEGER NOT NULL, subunidad TEXT DEFAULT ''
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_ag_vinc_gen ON ag_vinculacion_gen(idagvinculacion, idgen);
+```
+### 9.10 `ag_violacion`
+```sql
+CREATE TABLE IF NOT EXISTS ag_violacion (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, idindividuo INTEGER NOT NULL,
+    regla TEXT,   -- R1|R2|R3|R4|R5|R6|R7|BETA|GAMMA|SOLAPE|VACANTE|COBERTURA
+    idgen_a INTEGER, idgen_b INTEGER NULL, descripcion TEXT, peso REAL DEFAULT 0, subunidad TEXT DEFAULT ''
+);
+```
+### 9.11 `ag_salvedades_conflictos` (paridad)
+```sql
+CREATE TABLE IF NOT EXISTS ag_salvedades_conflictos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, idsesion_a INTEGER NOT NULL, idsesion_b INTEGER NOT NULL,
+    idtercero INTEGER NOT NULL, idperiodo INTEGER, justificacion TEXT,
+    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP, subunidad TEXT DEFAULT '', UNIQUE(idsesion_a, idsesion_b)
+);
+```
+### 9.12 `ag_promocion`
+```sql
+CREATE TABLE IF NOT EXISTS ag_promocion (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, idaula INTEGER, idcorrida INTEGER, idindividuo INTEGER,
+    idagvinculacion INTEGER, idvinculacion INTEGER, idtercero INTEGER, idasignatura INTEGER,
+    fecha_inicio TEXT, fecha_fin TEXT, sesiones_count INTEGER DEFAULT 0,
+    modo TEXT,  -- COPIA_REMAPEO | REGENERACION
+    usuario TEXT, fecha_promocion TEXT DEFAULT CURRENT_TIMESTAMP, subunidad TEXT DEFAULT ''
+);
+```
+### 9.13 `ag_bitacora`
+```sql
+CREATE TABLE IF NOT EXISTS ag_bitacora (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, idcorrida INTEGER, generacion INTEGER,
+    mejor_fitness REAL, promedio_fitness REAL, peor_fitness REAL,
+    evaluados INTEGER, descartados INTEGER, vacantes INTEGER,
+    duracion_ms INTEGER, fecha_registro TEXT DEFAULT CURRENT_TIMESTAMP
+);
+```
+### 9.14 Vistas `vw_Ag*` — **mismos alias** que las deterministas
+`vw_AgVinculacionesDetalle` (sobre `ag_vinculaciones` + `programas`/`asignaturas`/`sedes`/`terceros`/`periodos`) y `vw_AgSesionesDetalle` (sobre `ag_sesiones` + `ag_vinculaciones` + catálogos + `terminales`), replicando **exactamente** los alias de `vw_VinculacionesDetalle`/`vw_SesionesDetalle` y **añadiendo al final** columnas `AgAula/IdAgIndividuo/AgFitness/AgVacante/AgEstado` (Dapper ignora las extra).
+
+> Gracias a esto, `SELECT * FROM {vista}` de `VinculacionQueryRepository` sigue funcionando → **viáticos, exportables y vistas sin cambios**.
+
+---
+
+## 10. Modo AG — compatibilidad de los 3 formularios
+
+**Pieza central:** `AgModoDatos` (Domain) con los nombres físicos.
+```csharp
+public sealed class AgModoDatos {
+    public string TablaVinculaciones { get; }  // "vinculaciones"    | "ag_vinculaciones"
+    public string TablaSesiones      { get; }  // "sesiones"         | "ag_sesiones"
+    public string VistaVinculaciones { get; }  // "vw_VinculacionesDetalle" | "vw_AgVinculacionesDetalle"
+    public string VistaSesiones      { get; }  // "vw_SesionesDetalle"      | "vw_AgSesionesDetalle"
+    public string TablaSalvedades    { get; }  // "salvedades_conflictos"   | "ag_salvedades_conflictos"
+    public bool EsModoAg { get; }
+    public static AgModoDatos Determinista { get; }
+    public static AgModoDatos Ag { get; }
+}
+```
+| Clase/Form | Cambio (aditivo, default = determinista) |
+|---|---|
+| `AcademicRepository` | + `AgModoDatos modo = null`; interpola `_tablaVinculaciones`/`_tablaSesiones` |
+| `VinculacionQueryRepository` | + `AgModoDatos modo = null`; `FROM {_vistaSesiones}` |
+| `SalvedadConflictoRepository` | + `AgModoDatos modo = null`; `FROM {_tablaSalvedades}` |
+| `FormSesionesAcademicas` | + `AgModoDatos modo = null` (carga/edita/genera/guarda `ag_vinculaciones`+`ag_sesiones`) |
+| `FormVinculaciones` | + `AgModoDatos modo` (lista sobre `vw_AgSesionesDetalle`) |
+| `FormVerVinculaciones` | + `AgModoDatos modo` (árboles/conflictos/salvedades sobre datos AG) |
+
+**Garantías:** viáticos (`ViaticoBloque`, `ViaticoConflictAnalyzer`, `ViaticosIndividualExporter`), exportables (`AsignaturasExcelExporter`, `SemestresExcelExporter`) y las 4 vistas del árbol operan **sin cambios**; en Modo Determinista el comportamiento es **idéntico al actual** (regresión cero).
+
+### Edición (3 niveles)
+1. **Sesión** → `FormSesionesAcademicas` / `FormVerVinculaciones` en **Modo AG** (misma UX).
+2. **Tupla** (`ag_gen`/`List<AgGen>`) → **Pestaña 2 de `AgFormGeneradorHorarios`** (grilla de tuplas con validación interactiva R1–R7).
+3. **Re-sincronización** → `AgSincronizadorCorrecciones`: reconstruye genes desde `ag_vinculaciones`/`ag_sesiones`, actualiza `ag_gen`+`ag_vinculacion_gen`, marca `MODIFICADO_MANUAL`, **recalcula fitness/violaciones** y audita.
+
+---
+
+## 11. Módulos (S y R)
+
+### 11.1 Pestaña 1 — **Módulo Aula/Salón (S)** (insumo; **no** genera vinculaciones)
+1. 		
+2. **Fechas:** `dtpInicio` (**insumo de α**), `dtpFin` (límite).
+3. **C dependientes:** `idprograma + semestre` → grilla (`orden_curricular`=`num_nivel`, `horas_objetivo`=`int_horaria`, `creditos`, `requerida`).
+4. **Pool (P):** vista de `terceros_asignaturas` por asignatura — **con botón "Sincronizar pool"**.
+5. **"Generar encabezado"** → persiste `ag_aula` (+`ag_aula_asignatura`), `estado='LISTO'`, `aula_ref`.
+6. **Duplicados:** `aula_ref` existente → advertencia.
+7. **Indicadores:** nº C, horas objetivo, **asignaturas sin candidatos** (riesgo `SIN_CANDIDATOS`).
+8. **Acciones:** *Guardar*, *Marcar LISTO*, *Ir a Cruzamiento*, *Eliminar*.
+
+### 11.2 Pestaña 2 — **Módulo Cruzamiento (R)** (detalle)
+| Bloque | Contenido |
+|---|---|
+| **A. Cabecera** | Selector de `ag_aula` (`LISTO`) + resumen `Periodo·Sede·Programa·Semestre·Grupo·Modalidad` + nº C + **semilla** |
+| **B. β/γ** | `DayHoursDropdown` (días) + `ag_bloque_horario` (γ, editable) + `max_asignaturas_semana=2` (**R5**) + `horas_bloque` (4/8) |
+| **C. Parámetros AG** | población/generaciones/tasas/torneo/umbral/estancamiento/operador de cruce |
+| **D. Comandos** | *Ejecutar AG* (Task.Run + ProgressManager + CancellationToken) · *Ver evolución* (`ag_bitacora`) · *Materializar mejor/seleccionado* → `ag_vinculaciones`+`ag_sesiones` · *Abrir en modo AG →* (los 3 Forms con `AgModoDatos.Ag`) · *Descartar corrida* |
+| **E. Grilla de TUPLAS (nivel 2)** | `Sede·Programa·Semestre·Grupo·Modalidad | C | P | Día | Franja | Horas | FechaInicio | FechaFin | Fitness | Violaciones | Vacante | Estado`; validación interactiva R1–R7; filtros *Solo vacantes / Solo violaciones / Por asignatura / Por docente / Por día*; acciones *Reasignar docente*, *Mover franja*, *Marcar vacante + motivo*, *Ver genealogía* |
+| **F. Grilla de INDIVIDUOS** | `Id·Generación·Fitness·Penalización·Violaciones duras·Vacantes·Estado·Es mejor`; *Materializar*, *Marcar candidato*, *Comparar* |
+| **G. Panel de VACANTES** | Agrupado por motivo: `SIN_CANDIDATOS` → *"Cargar pool"* (abre `FormTerceros`); `SIN_DISPONIBILIDAD` → *"Mover franja"*; `NO_CUMPLE_REQUISITOS` → *"Revisar requisitos"* |
+| **H. Estado** | `C cubiertas/total · Vacantes · Violaciones duras · Generación · Δ fitness · ms/gen` |
+| **I. Cierre** | `estado='APROBADA'` → habilita **"Promover"** (sin `APROBADA` no hay promoción) |
+
+**Ciclo de vida**
+```
+ag_aula:          BORRADOR → LISTO → EN_AG → APROBADO → PROMOVIDO ↘ DESCARTADO
+ag_corrida:       BORRADOR → EJECUTANDO → COMPLETADA → APROBADA ↘ DESCARTADA
+ag_individuo:     EVALUADO → APTO → SELECCIONADO → MATERIALIZADO → MODIFICADO_MANUAL → APROBADO → PROMOVIDO ↘ DESCARTADO
+ag_vinculaciones: BORRADOR_MATERIALIZADO → MODIFICADO → APROBADO → PROMOVIDO ↘ DESCARTADO
+```
+
+---
+
+## 12. Algoritmo (consolidado)
+
+### 12.1 Representación
+`AgIndividuo` = `List<AgGen>` ordenado por `posicion`; `AgGen = (C, P, S, β, γ, horas, α, es_vacante, motivo_vacante)`; azar determinista vía `IAgRandomProvider` + `semilla`.
+
+### 12.2 Restricciones
+| Regla | Enunciado | Reparación | Peso | Tipo |
+|---|---|---|---|---|
+| **R1** | Docente no en dos lugares a la misma hora | Elimina tupla conflictiva + reasigna (o Vacante) | 100 | Dura |
+| **R2** | Aula no alberga dos cursos simultáneos | Muta franja/día | 80 | Dura |
+| **R3** | Mismo curso en días diferentes (si es diario) | Intercambia posiciones | 40 | Dura |
+| **R4** | Grupo sin dos C el mismo día, **salvo sábado** (2×4 h o 1×8 h) | Mueve a otro día / admite pareja sábado | 60 | Dura |
+| **R5** | Máx. **2 Asignaturas semanales** por grupo (ej. C1: MAR/MIÉ · C2: JUE/VIE) | Reagrupa por semanas | 50 | Dura |
+| **R6** | Debe **finalizar** las C de la 1.ª asignación antes de iniciar 1–2 nuevas | Reordena ventanas α por `orden_curricular` | 70 | Dura |
+| **R7** | Tercero no en dos grupos a la misma fecha y hora | Reasigna franja | 100 | Dura |
+| **BETA/GAMMA** | Día ∉ β / Bloque ∉ γ | Reasignar | 200 | Dura |
+| **SOLAPE** | Franjas solapadas en el mismo `aula_ref` (`FranjaHoraria.SeSolapaCon`) | Reasignar franja | 90 | Dura |
+| **VACANTE** | Tupla sin docente (`es_vacante=1`) | — (penaliza) | 100 | Blanda-fuerte |
+| **COBERTURA** | Asignatura requerida sin tupla | Inserta tupla | 150 | Dura |
+
+### 12.3 Fitness `F = F1 − F2 + 2·F3 + F4 + 2·F5`
+| Término | Definición |
+|---|---|
+| **F1** | Cobertura de C requeridas |
+| **F2** | Suma ponderada de violaciones (se resta) |
+| **F3** | Escalonado + R5/R6 (**×2**) |
+| **F4** | Balance de carga + **afinidad `terceros_asignaturas` (`prioridad`, `veces_asignada`)** + `residencia ↔ sede` |
+| **F5** | Preservación de bloques (**×2**) |
+
+### 12.4 Cruce (C#) — OP2/OX/restricciones + reparación en cascada + Vacante
+```csharp
+internal sealed class AgOperadorCruce
+{
+    public Result<AgParHijos> Cruzar(AgIndividuo p1, AgIndividuo p2, AgContexto ctx)
+    {
+        int corte = _random.Siguiente(1, p1.Genes.Count);
+        var h1 = Heredar(p1.Genes, 0, corte, p2.Genes, corte, ctx);
+        var h2 = Heredar(p2.Genes, 0, corte, p1.Genes, corte, ctx);
+
+        foreach (var hijo in new[] { h1, h2 })
+        {
+            foreach (var gen in hijo.Genes)
+            {
+                if (gen.EsVacante) { continue; }
+                if (_validador.DocenteDisponible(gen, hijo)) { continue; }
+
+                var alterno = _asignador.BuscarAlterno(gen, ctx, hijo);   // ← lee terceros_asignaturas
+                if (alterno.HasValue) { gen.IdTercero = alterno.Value; gen.EstadoGen = AgEstadoGen.Reparado; continue; }
+
+                gen.IdTercero = null; gen.EsVacante = true;
+                gen.MotivoVacante = _asignador.DiagnosticarMotivo(gen, ctx);
+                gen.EstadoGen = AgEstadoGen.Vacante;
+                hijo.Penalizacion += AgPesosFitness.Vacante;              // 100
+            }
+            var violaciones = _validador.Validar(hijo);                    // R1..R7, BETA, GAMMA, SOLAPE
+            hijo.Violaciones.AddRange(violaciones);
+            hijo.Estado = violaciones.Exists(v => AgPesosFitness.EsDura(v.Regla))
+                        ? AgEstadoIndividuo.Descartado : AgEstadoIndividuo.Apto;
+        }
+        return Result.Success(new AgParHijos(h1, h2));
+    }
+}
+```
+Mutación (4 modos: β/γ, docente, swap, ventana α). Selección: torneo + elitismo. Terminación: generaciones ∪ umbral ∪ estancamiento. I/O: evaluación en memoria; se persiste seleccionado + descartados + `ag_bitacora`.
+
+---
+
+## 13. Promoción (gate de aprobación + copia con remapeo)
+1. Requiere `ag_aula.estado='APROBADO'` **y** `ag_corrida.estado='APROBADA'`; valida `vacantes=0` (o justificación explícita) y `violaciones_duras=0`.
+2. **Transacción única:** por cada `ag_vinculaciones` → `INSERT vinculaciones` (remapeo `mapaId`); por cada `ag_sesiones` → `INSERT sesiones (idvinculacion = mapaId[...])`; `INSERT ag_promocion (modo='COPIA_REMAPEO')`; `UPDATE` de estados a `PROMOVIDO`.
+3. **En la misma transacción (M2/H2):** `Upsert` en `terceros_asignaturas` con `origen='AG_APROBADO'`.
+4. **Fallback `REGENERACION`** si `ag_sesiones` está vacío → `GeneradorSesionesRecurrentes` + `AcademicDateSyncService`.
+5. **Re-promoción** idempotente vía `ag_promocion` (`UPDATE` + re-`InsertSesiones`).
+
+---
+
+## 14. Naming (prefijo `Ag` **al inicio** para el módulo AG)
+| Antes | Ahora |
+|---|---|
+| `HorariosAcademicosAg` | **`AgHorariosAcademicos`** |
+| `FormAgGeneradorHorarios` | **`AgFormGeneradorHorarios`** |
+| `GeneticScheduleRepository` / `IGeneticScheduleRepository` | **`AgScheduleRepository`** / **`IAgScheduleRepository`** |
+| `IGeneticScheduleService` | **`IAgScheduleService`** |
+| `AgGenToVinculacionMapper` | **`AgGenToAgVinculacionMapper`** |
+| `AgAulaToVinculacionMapper` | **`AgAulaToAgVinculacionMapper`** |
+| *(nuevo)* | **`AgVinculacionToVinculacionMapper`** |
+| `MigrationV48_AddGeneticAlgorithmTables` | **`MigrationV48_AddAgHorariosTables`** |
+
+**Módulo de producción `terceros_asignaturas`** (no es del módulo AG → sin prefijo `Ag`): `TerceroAsignatura`, `ITerceroAsignaturaRepository`, `TerceroAsignaturaRepository`, `TerceroAsignaturaSyncService`, `TerceroAsignaturaKey`.
+
+---
+
+## 15. Inventario de archivos
+
+### Nuevos — AG
+**Domain** `Academic\Domain\Models\Genetica\`: `AgAula`, `AgAulaAsignatura`, `AgBloqueHorario`, `AgCorrida`, `AgIndividuo`, `AgGen`, `AgVinculacion`, `AgSesion`, `AgViolacion`, `AgPromocion`, `AgBitacora`, `AgSalvedad`, `AgContexto`, `AgPesosFitness`, `AgResultadoCorrida`, `AgModoDatos`, `AgMotivoVacante`
+`Academic\Domain\Enums\`: `AgEstadoAula`, `AgEstadoCorrida`, `AgEstadoIndividuo`, `AgEstadoGen`, `AgEstadoAgVinculacion`, `AgReglaViolacion`
+`Academic\Domain\Interfaces\`: `IAgScheduleRepository`, `IAgSalvedadRepository`
+**Application** `Academic\Application\Services\Genetica\`: `AgFabricaIndividuos`, `AgEvaluadorAptitud`, `AgValidadorReglas`, `AgOperadorCruce`, `AgOperadorMutacion`, `AgOperadorSeleccion`, `AgGeneradorHorarios`, `AgPlanificadorTemporal`, `AgMaterializadorSesiones`, `AgAsignadorTercero`, `AgPromotorVinculaciones`, `AgSincronizadorCorrecciones`, `AgEncabezadoVinculacionFactory`
+`Academic\Application\Interfaces\`: `IAgScheduleService`, `IAgRandomProvider`
+`Academic\Application\Mappers\`: `AgGenToAgVinculacionMapper`, `AgAulaToAgVinculacionMapper`, `AgVinculacionToVinculacionMapper`
+`Academic\Application\DTOs\`: `AgResultadoDto`, `AgEncabezadoDto`, `AgConfiguracionDto`, `AgTuplaDto`
+**Infrastructure**: `Academic\Infrastructure\Persistence\Repositories\AgScheduleRepository.cs`, `AgSalvedadRepository.cs` · `Academic\Infrastructure\Persistence\Migrations\MigrationV48_AddAgHorariosTables.cs`
+**UI**: `Academic\UI\Forms\AgFormGeneradorHorarios.cs` (+Designer) · `Academic\UI\Genetica\AgResultadosGridBuilder.cs`, `AgValidacionInteractiva.cs`
+
+### Nuevos — Pool Docente↔Asignatura (producción, CRDT)
+`Academic\Domain\Models\TerceroAsignatura.cs` · `Academic\Domain\Interfaces\ITerceroAsignaturaRepository.cs` · `Academic\Domain\Services\TerceroAsignaturaKey.cs` *(o `Application\Mappers\`)* · `Academic\Application\Interfaces\ITerceroAsignaturaSyncService.cs` · `Academic\Application\Services\TerceroAsignaturaSyncService.cs` · `Academic\Application\Mappers\TerceroAsignaturaMapper.cs` · `Academic\Application\DTOs\TerceroAsignaturaDto.cs` · `Academic\Infrastructure\Persistence\Repositories\TerceroAsignaturaRepository.cs` · `Academic\Infrastructure\Persistence\Migrations\MigrationV49_AddTercerosAsignaturas.cs` · `Academic\UI\Forms\FormTerceroAsignaturas.cs` *(sólo si se elige el fallback)*
+
+### Existentes a modificar (aditivo, default = actual)
+`Core\Helpers\SqliteHelper.cs` · `Core\Sync\SyncInitializer.cs` · `Core\Enums\RibbonButtonId.cs` · `Ribbon\Ribbon.xml` · `Ribbon\RibbonController.cs` · `AcademicRepository.cs` · `VinculacionQueryRepository.cs` · `SalvedadConflictoRepository.cs` · `FormSesionesAcademicas.cs` · `FormVinculaciones.cs` · `FormVerVinculaciones.cs` · **`FormTerceros.cs` + `FormTerceros.Designer.cs`**
+**Sin cambios:** `AcademicSchema.sql`, `BASE_SCHEMA_VERSION`, `BASE_TABLES[]`, `vinculaciones`, `sesiones`, `vw_VinculacionesDetalle`, `vw_SesionesDetalle`.
+
+---
+
+## 16. Plan de pruebas (TDD)
+
+### Unit — `ConversorPDF.Tests\Unit\Academic\`
+| Test | Cobertura |
+|---|---|
+| `AgEvaluadorAptitudTests` | F1…F5; `es_vacante` ≥ 100; **F4 usa `prioridad`/`veces_asignada`** |
+| `AgValidadorReglasTests` | **R1–R7** (incl. excepción sábado), β/γ, SOLAPE |
+| `AgOperadorCruceTests` | corte, OP2, OX, cascada (alterno / **Vacante con 3 motivos**) |
+| `AgOperadorMutacionTests` / `AgOperadorSeleccionTests` | 4 modos; torneo + elitismo |
+| `AgPlanificadorTemporalTests` | **α** + secuencia **R6** |
+| `AgGeneradorHorariosTests` | convergencia con semilla fija; dedupe `firma_hash` |
+| `AgMaterializadorSesionesTests` | agrupación genes→cabeza; formato `"{DIA}\|{HORAS}\|{HORARIO}"` |
+| `AgAsignadorTerceroTests` | pool desde `terceros_asignaturas`; **`SIN_CANDIDATOS` cuando está vacío** |
+| `AgSincronizadorCorreccionesTests` | correcciones sobreviven y recalculan fitness |
+| `AgModoDatosTests` | defaults = tablas reales (regresión cero) |
+| **`TerceroAsignaturaKeyTests`** | PK determinista estable + sondeo ante colisión |
+| **`TerceroAsignaturaSyncServiceTests`** | backfill idempotente (`veces_asignada` recalculado); upsert incremental; `origen` correcto |
+| `AgPromotorVinculacionesTests` | copia con remapeo + **upsert pool `AG_APROBADO`** |
+
+### Integración — `ConversorPDF.Tests\Integration\Academic\`
+| Test | Cobertura |
+|---|---|
+| `AgSchemaMigrationTests` | V48: 13 tablas + 2 vistas + seed γ |
+| **`TercerosAsignaturasCrdtTests`** | V49: DDL **conforme**; `SyncInitializer` **no** reconstruye la tabla; `crsql_as_crr` OK; tabla presente en `CrdtTables` |
+| **`TerceroAsignaturaDerivacionTests`** | derivación desde `vinculaciones` (por sede/programa/semestre/periodo); idempotencia; `veces_asignada` = `COUNT(DISTINCT idvinculacion)` |
+| `AgVistasCompatibilidadTests` | `vw_Ag*` con los mismos alias requeridos por `SesionListItem`/`VinculacionListItem` |
+| `AgModoAgCompatibilidadTests` | repos en Modo AG leen/escriben `ag_*`; Modo Determinista sin cambios |
+| `AgPromocionIntegrationTests` | promoción + `ag_promocion` + pool; rollback |
+| `AgFormsModoAgTests` | los 3 Forms cargan datos AG sin excepción |
+
+---
+
+## 17. Plan de implementación por fases
+
+| Fase | Entregable | Prueba |
+|---|---|---|
+| **0** | `MigrationV49_AddTercerosAsignaturas` + registro en `BuildMigrator()` + alta en `CrdtTables[]` + **backfill** | `TercerosAsignaturasCrdtTests`, `TerceroAsignaturaDerivacionTests` |
+| **1** | Modelo + `TerceroAsignaturaKey` + `ITerceroAsignaturaRepository` + `TerceroAsignaturaRepository` + `TerceroAsignaturaSyncService` | `TerceroAsignaturaKeyTests`, `TerceroAsignaturaSyncServiceTests`, `TerceroAsignaturaRepositoryTests` |
+| **2** | **UI `FormTerceros`** (TabControl + grilla + Importar desde histórico) | UI integration |
+| **3** | **Hook en `FormSesionesAcademicas.GuardarAsync`** + menú contextual en `FormVerVinculaciones` | integración |
+| **4** | `MigrationV48_AddAgHorariosTables` + `vw_Ag*` | `AgSchemaMigrationTests`, `AgVistasCompatibilidadTests` |
+| **5** | Modelos/enums AG (incl. `AgModoDatos`, `es_vacante`+motivos) | compilación + mapeo |
+| **6** | `AgPesosFitness` + `AgEvaluadorAptitud` | `AgEvaluadorAptitudTests` |
+| **7** | `AgValidadorReglas` (**R1–R7**) | `AgValidadorReglasTests` |
+| **8** | `IAgRandomProvider` + `AgFabricaIndividuos` | `AgFabricaIndividuosTests` |
+| **9** | `AgOperadorCruce` (+ cascada + Vacante) | `AgOperadorCruceTests` |
+| **10** | `AgOperadorMutacion` + `AgOperadorSeleccion` | tests |
+| **11** | `AgPlanificadorTemporal` (α + R6) | `AgPlanificadorTemporalTests` |
+| **12** | `AgAsignadorTercero` (pool CRDT) + `AgGeneradorHorarios` | `AgAsignadorTerceroTests`, `AgGeneradorHorariosTests` |
+| **13** | `AgScheduleRepository` + `AgSalvedadRepository` | `AgScheduleRepositoryTests` |
+| **14** | **Modo AG** en repos + los 3 Forms | `AgModoAgCompatibilidadTests`, `AgFormsModoAgTests` |
+| **15** | `AgMaterializadorSesiones` + mappers | `AgMaterializadorSesionesTests` |
+| **16** | `AgSincronizadorCorrecciones` | `AgSincronizadorCorreccionesTests` |
+| **17** | `AgPromotorVinculaciones` (gate + copia-remapeo + pool) | `AgPromocionIntegrationTests` |
+| **18** | `AgFormGeneradorHorarios` (2 pestañas) + Ribbon + permiso | UI integration |
+| **19** | Doc `docs/articles/changes/<fecha>-ag-horarios-academicos.md` | — |
+
+---
+
+## 18. Riesgos y decisiones abiertas
+
+| # | Punto | Recomendación |
+|---|---|---|
+| 1 | **`FormTerceros`: `TabControl` vs formulario dedicado** | `TabControl` (cumple el requerimiento); fallback: `FormTerceroAsignaturas` |
+| 2 | **UMBRAL mínimo para habilitar** desde histórico | `>= 1` vinculación (configurable a `>= N`) |
+| 3 | **`semestre` en la clave del pool** | Por defecto incluir semestre; el AG acepta `semestre=''` como comodín |
+| 4 | **¿La tabla debe llamarse `terceros_asignaturas` o `TercerosConAsignatura`?** | `terceros_asignaturas` (snake_case, consistente con el repo); el modelo C# `TerceroAsignatura` |
+| 5 | **Requisitos duros vs blandos** | Subunidad/departamento **duro**; residencia/tipo/categoría **blandos (F4)** |
+| 6 | **PK determinista vs `AUTOINCREMENT`** | **Determinista** (CRDT converge sin duplicados) |
+| 7 | **¿Eliminar `ag_asignatura_tercero`?** | **Sí** (fuente única = `terceros_asignaturas`) |
+| 8 | **Materializar 1 o varios individuos** | El seleccionado (1 por defecto; varios para comparar) |
+| 9 | **`ag_salvedades_conflictos`** | Incluir (paridad para conflictos de viáticos en Modo AG) |
+
+---
+
+## 19. Resumen ejecutivo
+
+- **Nuevo en v4:** la tabla de producción **`terceros_asignaturas`** (CRDT, conforme a `SyncInitializer`, PK determinista) como **fuente única del pool Docente↔Asignatura**, alimentada por **4 mecanismos** (derivación histórica desde `vinculaciones`/`idvinculacion`, hooks automáticos en `FormSesionesAcademicas` y en la promoción, edición manual en `FormTerceros`, y aprendizaje del AG al aprobar).
+- **Respuesta a "cómo usar `idvinculacion`":** cada vinculación histórica es **evidencia** `(P, Programa, Asignatura, Semestre)`; `FormVerVinculaciones` *Por Semestre* aporta el agrupamiento/filtros y la derivación se ejecuta contra `vinculaciones` base (la vista no expone `IdAsignatura`).
+- **UI:** `FormTerceros` gana la pestaña **"Asignaturas habilitadas"** (grilla + editor + *Importar desde histórico*); `FormVerVinculaciones` gana menú contextual *Habilitar/Sincronizar pool*.
+- **AG:** `AgAsignadorTercero` lee el pool CRDT → menos `SIN_CANDIDATOS`, **F4** con señal real (`prioridad`, `veces_asignada`); se elimina `ag_asignatura_tercero`.
+- **Compatibilidad total:** `ag_vinculaciones`/`ag_sesiones` son **espejo exacto**; `vw_Ag*` con los mismos alias ⇒ **viáticos, exportables y vistas sin cambios**; los 3 Forms operan en **Modo AG** con la misma UX y **regresión cero** en Modo Determinista.
+- **Alcance:** 13 tablas `ag_*` + 2 vistas (V48) + 1 tabla producción CRDT (V49) + 10 archivos existentes tocados de forma **aditiva con defaults**; **`vinculaciones`/`sesiones` intactas**.
+
+---
+
+Cuando apruebes este plan (y confirmes las decisiones de §18, en especial **#1, #2 y #4**), **cambia a Act mode** y arranco por la **Fase 0** (migración V49 + CRDT + backfill, con `TercerosAsignaturasCrdtTests` y `TerceroAsignaturaDerivacionTests`), aplicando el ciclo atómico code→test→fix del skill `development-process`.

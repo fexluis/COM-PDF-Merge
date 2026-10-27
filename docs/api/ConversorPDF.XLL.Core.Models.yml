@@ -1,0 +1,172 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Core.Models
+  commentId: N:ConversorPDF.XLL.Core.Models
+  id: ConversorPDF.XLL.Core.Models
+  children:
+  - ConversorPDF.XLL.Core.Models.Empleado
+  - ConversorPDF.XLL.Core.Models.ExtraerDatos
+  - ConversorPDF.XLL.Core.Models.Metadata
+  - ConversorPDF.XLL.Core.Models.SqliteResult
+  - ConversorPDF.XLL.Core.Models.SqliteResult`1
+  - ConversorPDF.XLL.Core.Models.UserIdentification
+  - ConversorPDF.XLL.Core.Models.Viaje
+  - ConversorPDF.XLL.Core.Models.ViaticoRow
+  - ConversorPDF.XLL.Core.Models.ViaticosConfig
+  - ConversorPDF.XLL.Core.Models.ViaticosFormatException
+  langs:
+  - csharp
+  - vb
+  name: ConversorPDF.XLL.Core.Models
+  nameWithType: ConversorPDF.XLL.Core.Models
+  fullName: ConversorPDF.XLL.Core.Models
+  type: Namespace
+  assemblies:
+  - ConversorPDF.XLL
+references:
+- uid: ConversorPDF.XLL.Core.Models.Empleado
+  commentId: T:ConversorPDF.XLL.Core.Models.Empleado
+  parent: ConversorPDF.XLL.Core.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.Empleado.html
+  name: Empleado
+  nameWithType: Empleado
+  fullName: ConversorPDF.XLL.Core.Models.Empleado
+- uid: ConversorPDF.XLL.Core.Models.Viaje
+  commentId: T:ConversorPDF.XLL.Core.Models.Viaje
+  parent: ConversorPDF.XLL.Core.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.Viaje.html
+  name: Viaje
+  nameWithType: Viaje
+  fullName: ConversorPDF.XLL.Core.Models.Viaje
+- uid: ConversorPDF.XLL.Core.Models.ViaticosConfig
+  commentId: T:ConversorPDF.XLL.Core.Models.ViaticosConfig
+  parent: ConversorPDF.XLL.Core.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ViaticosConfig.html
+  name: ViaticosConfig
+  nameWithType: ViaticosConfig
+  fullName: ConversorPDF.XLL.Core.Models.ViaticosConfig
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow
+  commentId: T:ConversorPDF.XLL.Core.Models.ViaticoRow
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ViaticoRow.html
+  name: ViaticoRow
+  nameWithType: ViaticoRow
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow
+- uid: ConversorPDF.XLL.Core.Models.ViaticosFormatException
+  commentId: T:ConversorPDF.XLL.Core.Models.ViaticosFormatException
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ViaticosFormatException.html
+  name: ViaticosFormatException
+  nameWithType: ViaticosFormatException
+  fullName: ConversorPDF.XLL.Core.Models.ViaticosFormatException
+- uid: ConversorPDF.XLL.Core.Models.ExtraerDatos
+  commentId: T:ConversorPDF.XLL.Core.Models.ExtraerDatos
+  parent: ConversorPDF.XLL.Core.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ExtraerDatos.html
+  name: ExtraerDatos
+  nameWithType: ExtraerDatos
+  fullName: ConversorPDF.XLL.Core.Models.ExtraerDatos
+- uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+  commentId: T:ConversorPDF.XLL.Core.Models.SqliteResult`1
+  parent: ConversorPDF.XLL.Core.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  name: SqliteResult<T>
+  nameWithType: SqliteResult<T>
+  fullName: ConversorPDF.XLL.Core.Models.SqliteResult<T>
+  nameWithType.vb: SqliteResult(Of T)
+  fullName.vb: ConversorPDF.XLL.Core.Models.SqliteResult(Of T)
+  name.vb: SqliteResult(Of T)
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+    name: SqliteResult
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Models.SqliteResult`1
+    name: SqliteResult
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.SqliteResult-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: ConversorPDF.XLL.Core.Models.SqliteResult
+  commentId: T:ConversorPDF.XLL.Core.Models.SqliteResult
+  parent: ConversorPDF.XLL.Core.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.SqliteResult.html
+  name: SqliteResult
+  nameWithType: SqliteResult
+  fullName: ConversorPDF.XLL.Core.Models.SqliteResult
+- uid: ConversorPDF.XLL.Core.Models.Metadata
+  commentId: T:ConversorPDF.XLL.Core.Models.Metadata
+  parent: ConversorPDF.XLL.Core.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.Metadata.html
+  name: Metadata
+  nameWithType: Metadata
+  fullName: ConversorPDF.XLL.Core.Models.Metadata
+- uid: ConversorPDF.XLL.Core.Models.UserIdentification
+  commentId: T:ConversorPDF.XLL.Core.Models.UserIdentification
+  parent: ConversorPDF.XLL.Core.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.UserIdentification.html
+  name: UserIdentification
+  nameWithType: UserIdentification
+  fullName: ConversorPDF.XLL.Core.Models.UserIdentification
+- uid: ConversorPDF.XLL.Core.Models
+  commentId: N:ConversorPDF.XLL.Core.Models
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Core.Models
+  nameWithType: ConversorPDF.XLL.Core.Models
+  fullName: ConversorPDF.XLL.Core.Models
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Models
+    name: Models
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Models
+    name: Models
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.html

@@ -5,10 +5,10 @@ using System.Windows.Forms;
 using System.Threading;
 using System.Linq;
 using System.Globalization;
-using ConversorPDF.XLL.FormAcademic;
-using ConversorPDF.XLL.Core.Models.Academic;
+using ConversorPDF.XLL.Academic.UI.Forms;
+using ConversorPDF.XLL.Academic.Domain.Models;
 
-namespace ConversorPDF.Tests.UI
+namespace ConversorPDF.Tests.Academic.UI.Integration
 {
     [TestClass]
     public class FormSesionesAcademicasIntegrationTests
@@ -19,7 +19,7 @@ namespace ConversorPDF.Tests.UI
         {
             RunInSTA(() =>
             {
-                using (var form = new FormSesionesAcademicas())
+                using (var form = new FormSesionesAcademicas(() => null))
                 {
                     var handle = form.Handle; // Forzar handle
                     var grid = TestHelper.GetPrivateField<DataGridView>(form, "dgvSesiones");
@@ -36,22 +36,31 @@ namespace ConversorPDF.Tests.UI
                         TestHelper.SetPrivateField(form, "_currentVinculacionId", 1);
 
                         grid.AllowUserToAddRows = false; // Evitar filas fantasma
-                        Application.DoEvents(); // Procesar bindings
+                        System.Windows.Forms.Application.DoEvents(); // Procesar bindings
                     }));
 
                     // Agregar filas
                     form.Invoke((Action)(() => {
+                        var testDate = new DateTime(2026, 4, 23);
+                        var testDateStr = testDate.ToString("dd/MM/yyyy");
+
                         int i1 = grid.Rows.Add();
                         grid.Rows[i1].Cells["ColChecked"].Value = true;
-                        grid.Rows[i1].Tag = new Sesion { IdTercero = 1, Horas = 8 };
+                        grid.Rows[i1].Cells["ColFechaSesion"].Value = testDateStr;
+                        grid.Rows[i1].Cells["ColHoras"].Value = 8;
+                        grid.Rows[i1].Tag = new Sesion { IdTercero = 1, Horas = 8, FechaSesion = testDate };
 
                         int i2 = grid.Rows.Add();
                         grid.Rows[i2].Cells["ColChecked"].Value = true;
-                        grid.Rows[i2].Tag = new Sesion { IdTercero = 1, Horas = 8 };
+                        grid.Rows[i2].Cells["ColFechaSesion"].Value = testDateStr;
+                        grid.Rows[i2].Cells["ColHoras"].Value = 8;
+                        grid.Rows[i2].Tag = new Sesion { IdTercero = 1, Horas = 8, FechaSesion = testDate };
 
                         int i3 = grid.Rows.Add();
                         grid.Rows[i3].Cells["ColChecked"].Value = false;
-                        grid.Rows[i3].Tag = new Sesion { IdTercero = 1, Horas = 8 };
+                        grid.Rows[i3].Cells["ColFechaSesion"].Value = testDateStr;
+                        grid.Rows[i3].Cells["ColHoras"].Value = 8;
+                        grid.Rows[i3].Tag = new Sesion { IdTercero = 1, Horas = 8, FechaSesion = testDate };
                     }));
 
                     var resultado = TestHelper.InvokePrivateMethod<IEnumerable<Sesion>>(form, "PrepararSesionesDesdeGrid");
@@ -68,7 +77,7 @@ namespace ConversorPDF.Tests.UI
             RunInSTA(() =>
             {
                 // Este test simula el ciclo de vida: Abrir -> Generar -> Guardar -> Cerrar -> Abrir
-                using (var form = new FormSesionesAcademicas())
+                using (var form = new FormSesionesAcademicas(() => null))
                 {
                     var handle = form.Handle;
                     var grid = TestHelper.GetPrivateField<DataGridView>(form, "dgvSesiones");

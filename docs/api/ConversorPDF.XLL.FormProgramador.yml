@@ -1,0 +1,56 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.FormProgramador
+  commentId: N:ConversorPDF.XLL.FormProgramador
+  id: ConversorPDF.XLL.FormProgramador
+  children:
+  - ConversorPDF.XLL.FormProgramador.FormConfig
+  - ConversorPDF.XLL.FormProgramador.FormGestionDocumental
+  - ConversorPDF.XLL.FormProgramador.FormInfo
+  - ConversorPDF.XLL.FormProgramador.FormProgramador
+  - ConversorPDF.XLL.FormProgramador.FormTableEditor
+  langs:
+  - csharp
+  - vb
+  name: ConversorPDF.XLL.FormProgramador
+  nameWithType: ConversorPDF.XLL.FormProgramador
+  fullName: ConversorPDF.XLL.FormProgramador
+  type: Namespace
+  assemblies:
+  - ConversorPDF.XLL
+references:
+- uid: ConversorPDF.XLL.FormProgramador.FormProgramador
+  commentId: T:ConversorPDF.XLL.FormProgramador.FormProgramador
+  isExternal: true
+  href: ConversorPDF.XLL.FormProgramador.FormProgramador.html
+  name: FormProgramador
+  nameWithType: FormProgramador
+  fullName: ConversorPDF.XLL.FormProgramador.FormProgramador
+- uid: ConversorPDF.XLL.FormProgramador.FormConfig
+  commentId: T:ConversorPDF.XLL.FormProgramador.FormConfig
+  isExternal: true
+  href: ConversorPDF.XLL.FormProgramador.FormConfig.html
+  name: FormConfig
+  nameWithType: FormConfig
+  fullName: ConversorPDF.XLL.FormProgramador.FormConfig
+- uid: ConversorPDF.XLL.FormProgramador.FormGestionDocumental
+  commentId: T:ConversorPDF.XLL.FormProgramador.FormGestionDocumental
+  isExternal: true
+  href: ConversorPDF.XLL.FormProgramador.FormGestionDocumental.html
+  name: FormGestionDocumental
+  nameWithType: FormGestionDocumental
+  fullName: ConversorPDF.XLL.FormProgramador.FormGestionDocumental
+- uid: ConversorPDF.XLL.FormProgramador.FormTableEditor
+  commentId: T:ConversorPDF.XLL.FormProgramador.FormTableEditor
+  isExternal: true
+  href: ConversorPDF.XLL.FormProgramador.FormTableEditor.html
+  name: FormTableEditor
+  nameWithType: FormTableEditor
+  fullName: ConversorPDF.XLL.FormProgramador.FormTableEditor
+- uid: ConversorPDF.XLL.FormProgramador.FormInfo
+  commentId: T:ConversorPDF.XLL.FormProgramador.FormInfo
+  isExternal: true
+  href: ConversorPDF.XLL.FormProgramador.FormInfo.html
+  name: FormInfo
+  nameWithType: FormInfo
+  fullName: ConversorPDF.XLL.FormProgramador.FormInfo

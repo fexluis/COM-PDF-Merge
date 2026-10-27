@@ -1,0 +1,2023 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  commentId: T:ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  id: ConstantsHelper
+  parent: ConversorPDF.XLL.Core.Helpers
+  children:
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_AEROPUERTO_BASE
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_CARGO_DT
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_CARGO_SUSTITUTO
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_CDP
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_CEDULA_GERENTE
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_CIUDAD_BASE
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_COL_VALOR
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_DEPTO_BASE
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_FECHA_FIN
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_FECHA_INICIO
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_GERENTE_SUSTITUTO
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_NOMBRE_DT
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_PORC_A
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_PORC_B
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_ROW_MAX
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_SALARIO_DECRETO
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_VIATICO_A
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_VIATICO_B
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_CDP
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_CEDULA
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_COL_MAX
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_ESTADO
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_ES_MASIVO
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_FECHA_COMISION
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_FECHA_FIN
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_FECHA_INICIO
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_INFORME
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_ITINERARIO
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_NOMBRE_COMPLETO
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_NUMERO_COMISION
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_OB
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_OBJETO_RAW
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_OP
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_ROL
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_RP
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_VALOR_TOTAL
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_CATEGORIA
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_CEDULA
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_CONTRATO
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_CORREO
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_CUENTA_NUM
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_CUENTA_TIPO
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_DEPENDENCIA
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_ENTIDAD
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_NACIMIENTO
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_NOMBRE
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_ROL
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_SALARIO
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_TEL
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DB_PASSWORD
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEP_CDP
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEP_CORTA
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEP_ELABORO
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEP_FCDP
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEP_FULL
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEP_REVISO
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEP_RUBRO
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEST_CIUDAD
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEST_DEP
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEST_NORMALIZADA
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.FORMATO_PASSWORD
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.GetTemplate(ConversorPDF.XLL.Core.Enums.TipoFormato)
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_CEDULA
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_COL_MAX
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_DEPENDENCIA
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_DURACION
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_FECHAFIN
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_FECHAVIAJE
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_ITINERARIO
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_NOMBRE
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_OBJETO
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_TERMINAL
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_TIPOFORMATO
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_TRANSPORTE
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_TRANSPORTEAEREO
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.SHEET_CONFIG
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.SHEET_CONSULTAS
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.SHEET_DATOS
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.SHEET_DEPENDENCIAS
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.SHEET_PROG
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper.THEME_PATH
+  langs:
+  - csharp
+  - vb
+  name: ConstantsHelper
+  nameWithType: ConstantsHelper
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  type: Class
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public static class ConstantsHelper
+    content.vb: Public Module ConstantsHelper
+  inheritance:
+  - System.Object
+  inheritedMembers:
+  - System.Object.ToString
+  - System.Object.Equals(System.Object)
+  - System.Object.Equals(System.Object,System.Object)
+  - System.Object.ReferenceEquals(System.Object,System.Object)
+  - System.Object.GetHashCode
+  - System.Object.GetType
+  - System.Object.MemberwiseClone
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.FORMATO_PASSWORD
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.FORMATO_PASSWORD
+  id: FORMATO_PASSWORD
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: FORMATO_PASSWORD
+  nameWithType: ConstantsHelper.FORMATO_PASSWORD
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.FORMATO_PASSWORD
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const string FORMATO_PASSWORD = "qapst01"
+    return:
+      type: System.String
+    content.vb: Public Const FORMATO_PASSWORD As String = "qapst01"
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DB_PASSWORD
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DB_PASSWORD
+  id: DB_PASSWORD
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: DB_PASSWORD
+  nameWithType: ConstantsHelper.DB_PASSWORD
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DB_PASSWORD
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const string DB_PASSWORD = "Sqlite@ESAP.2026"
+    return:
+      type: System.String
+    content.vb: Public Const DB_PASSWORD As String = "Sqlite@ESAP.2026"
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_TIPOFORMATO
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_TIPOFORMATO
+  id: PROG_TIPOFORMATO
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: PROG_TIPOFORMATO
+  nameWithType: ConstantsHelper.PROG_TIPOFORMATO
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_TIPOFORMATO
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int PROG_TIPOFORMATO = 1
+    return:
+      type: System.Int32
+    content.vb: Public Const PROG_TIPOFORMATO As Integer = 1
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_CEDULA
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_CEDULA
+  id: PROG_CEDULA
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: PROG_CEDULA
+  nameWithType: ConstantsHelper.PROG_CEDULA
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_CEDULA
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int PROG_CEDULA = 2
+    return:
+      type: System.Int32
+    content.vb: Public Const PROG_CEDULA As Integer = 2
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_NOMBRE
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_NOMBRE
+  id: PROG_NOMBRE
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: PROG_NOMBRE
+  nameWithType: ConstantsHelper.PROG_NOMBRE
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_NOMBRE
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int PROG_NOMBRE = 3
+    return:
+      type: System.Int32
+    content.vb: Public Const PROG_NOMBRE As Integer = 3
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_ITINERARIO
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_ITINERARIO
+  id: PROG_ITINERARIO
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: PROG_ITINERARIO
+  nameWithType: ConstantsHelper.PROG_ITINERARIO
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_ITINERARIO
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int PROG_ITINERARIO = 6
+    return:
+      type: System.Int32
+    content.vb: Public Const PROG_ITINERARIO As Integer = 6
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_FECHAVIAJE
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_FECHAVIAJE
+  id: PROG_FECHAVIAJE
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: PROG_FECHAVIAJE
+  nameWithType: ConstantsHelper.PROG_FECHAVIAJE
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_FECHAVIAJE
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int PROG_FECHAVIAJE = 8
+    return:
+      type: System.Int32
+    content.vb: Public Const PROG_FECHAVIAJE As Integer = 8
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_FECHAFIN
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_FECHAFIN
+  id: PROG_FECHAFIN
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: PROG_FECHAFIN
+  nameWithType: ConstantsHelper.PROG_FECHAFIN
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_FECHAFIN
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int PROG_FECHAFIN = 9
+    return:
+      type: System.Int32
+    content.vb: Public Const PROG_FECHAFIN As Integer = 9
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_DURACION
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_DURACION
+  id: PROG_DURACION
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: PROG_DURACION
+  nameWithType: ConstantsHelper.PROG_DURACION
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_DURACION
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int PROG_DURACION = 10
+    return:
+      type: System.Int32
+    content.vb: Public Const PROG_DURACION As Integer = 10
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_TERMINAL
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_TERMINAL
+  id: PROG_TERMINAL
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: PROG_TERMINAL
+  nameWithType: ConstantsHelper.PROG_TERMINAL
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_TERMINAL
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int PROG_TERMINAL = 16
+    return:
+      type: System.Int32
+    content.vb: Public Const PROG_TERMINAL As Integer = 16
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_TRANSPORTE
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_TRANSPORTE
+  id: PROG_TRANSPORTE
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: PROG_TRANSPORTE
+  nameWithType: ConstantsHelper.PROG_TRANSPORTE
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_TRANSPORTE
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int PROG_TRANSPORTE = 17
+    return:
+      type: System.Int32
+    content.vb: Public Const PROG_TRANSPORTE As Integer = 17
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_TRANSPORTEAEREO
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_TRANSPORTEAEREO
+  id: PROG_TRANSPORTEAEREO
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: PROG_TRANSPORTEAEREO
+  nameWithType: ConstantsHelper.PROG_TRANSPORTEAEREO
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_TRANSPORTEAEREO
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int PROG_TRANSPORTEAEREO = 18
+    return:
+      type: System.Int32
+    content.vb: Public Const PROG_TRANSPORTEAEREO As Integer = 18
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_OBJETO
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_OBJETO
+  id: PROG_OBJETO
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: PROG_OBJETO
+  nameWithType: ConstantsHelper.PROG_OBJETO
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_OBJETO
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int PROG_OBJETO = 20
+    return:
+      type: System.Int32
+    content.vb: Public Const PROG_OBJETO As Integer = 20
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_DEPENDENCIA
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_DEPENDENCIA
+  id: PROG_DEPENDENCIA
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: PROG_DEPENDENCIA
+  nameWithType: ConstantsHelper.PROG_DEPENDENCIA
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_DEPENDENCIA
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int PROG_DEPENDENCIA = 21
+    return:
+      type: System.Int32
+    content.vb: Public Const PROG_DEPENDENCIA As Integer = 21
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_COL_MAX
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_COL_MAX
+  id: PROG_COL_MAX
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: PROG_COL_MAX
+  nameWithType: ConstantsHelper.PROG_COL_MAX
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.PROG_COL_MAX
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int PROG_COL_MAX = 21
+    return:
+      type: System.Int32
+    content.vb: Public Const PROG_COL_MAX As Integer = 21
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_FECHA_COMISION
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_FECHA_COMISION
+  id: CONSULTAS_FECHA_COMISION
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: CONSULTAS_FECHA_COMISION
+  nameWithType: ConstantsHelper.CONSULTAS_FECHA_COMISION
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_FECHA_COMISION
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int CONSULTAS_FECHA_COMISION = 1
+    return:
+      type: System.Int32
+    content.vb: Public Const CONSULTAS_FECHA_COMISION As Integer = 1
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_NUMERO_COMISION
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_NUMERO_COMISION
+  id: CONSULTAS_NUMERO_COMISION
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: CONSULTAS_NUMERO_COMISION
+  nameWithType: ConstantsHelper.CONSULTAS_NUMERO_COMISION
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_NUMERO_COMISION
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int CONSULTAS_NUMERO_COMISION = 2
+    return:
+      type: System.Int32
+    content.vb: Public Const CONSULTAS_NUMERO_COMISION As Integer = 2
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_ESTADO
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_ESTADO
+  id: CONSULTAS_ESTADO
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: CONSULTAS_ESTADO
+  nameWithType: ConstantsHelper.CONSULTAS_ESTADO
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_ESTADO
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int CONSULTAS_ESTADO = 3
+    return:
+      type: System.Int32
+    content.vb: Public Const CONSULTAS_ESTADO As Integer = 3
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_VALOR_TOTAL
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_VALOR_TOTAL
+  id: CONSULTAS_VALOR_TOTAL
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: CONSULTAS_VALOR_TOTAL
+  nameWithType: ConstantsHelper.CONSULTAS_VALOR_TOTAL
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_VALOR_TOTAL
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int CONSULTAS_VALOR_TOTAL = 4
+    return:
+      type: System.Int32
+    content.vb: Public Const CONSULTAS_VALOR_TOTAL As Integer = 4
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_INFORME
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_INFORME
+  id: CONSULTAS_INFORME
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: CONSULTAS_INFORME
+  nameWithType: ConstantsHelper.CONSULTAS_INFORME
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_INFORME
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int CONSULTAS_INFORME = 8
+    return:
+      type: System.Int32
+    content.vb: Public Const CONSULTAS_INFORME As Integer = 8
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_CEDULA
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_CEDULA
+  id: CONSULTAS_CEDULA
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: CONSULTAS_CEDULA
+  nameWithType: ConstantsHelper.CONSULTAS_CEDULA
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_CEDULA
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int CONSULTAS_CEDULA = 10
+    return:
+      type: System.Int32
+    content.vb: Public Const CONSULTAS_CEDULA As Integer = 10
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_NOMBRE_COMPLETO
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_NOMBRE_COMPLETO
+  id: CONSULTAS_NOMBRE_COMPLETO
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: CONSULTAS_NOMBRE_COMPLETO
+  nameWithType: ConstantsHelper.CONSULTAS_NOMBRE_COMPLETO
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_NOMBRE_COMPLETO
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int CONSULTAS_NOMBRE_COMPLETO = 11
+    return:
+      type: System.Int32
+    content.vb: Public Const CONSULTAS_NOMBRE_COMPLETO As Integer = 11
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_ITINERARIO
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_ITINERARIO
+  id: CONSULTAS_ITINERARIO
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: CONSULTAS_ITINERARIO
+  nameWithType: ConstantsHelper.CONSULTAS_ITINERARIO
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_ITINERARIO
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int CONSULTAS_ITINERARIO = 12
+    return:
+      type: System.Int32
+    content.vb: Public Const CONSULTAS_ITINERARIO As Integer = 12
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_FECHA_INICIO
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_FECHA_INICIO
+  id: CONSULTAS_FECHA_INICIO
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: CONSULTAS_FECHA_INICIO
+  nameWithType: ConstantsHelper.CONSULTAS_FECHA_INICIO
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_FECHA_INICIO
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int CONSULTAS_FECHA_INICIO = 13
+    return:
+      type: System.Int32
+    content.vb: Public Const CONSULTAS_FECHA_INICIO As Integer = 13
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_FECHA_FIN
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_FECHA_FIN
+  id: CONSULTAS_FECHA_FIN
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: CONSULTAS_FECHA_FIN
+  nameWithType: ConstantsHelper.CONSULTAS_FECHA_FIN
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_FECHA_FIN
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int CONSULTAS_FECHA_FIN = 14
+    return:
+      type: System.Int32
+    content.vb: Public Const CONSULTAS_FECHA_FIN As Integer = 14
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_CDP
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_CDP
+  id: CONSULTAS_CDP
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: CONSULTAS_CDP
+  nameWithType: ConstantsHelper.CONSULTAS_CDP
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_CDP
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int CONSULTAS_CDP = 18
+    return:
+      type: System.Int32
+    content.vb: Public Const CONSULTAS_CDP As Integer = 18
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_RP
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_RP
+  id: CONSULTAS_RP
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: CONSULTAS_RP
+  nameWithType: ConstantsHelper.CONSULTAS_RP
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_RP
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int CONSULTAS_RP = 19
+    return:
+      type: System.Int32
+    content.vb: Public Const CONSULTAS_RP As Integer = 19
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_OB
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_OB
+  id: CONSULTAS_OB
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: CONSULTAS_OB
+  nameWithType: ConstantsHelper.CONSULTAS_OB
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_OB
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int CONSULTAS_OB = 21
+    return:
+      type: System.Int32
+    content.vb: Public Const CONSULTAS_OB As Integer = 21
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_OP
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_OP
+  id: CONSULTAS_OP
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: CONSULTAS_OP
+  nameWithType: ConstantsHelper.CONSULTAS_OP
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_OP
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int CONSULTAS_OP = 22
+    return:
+      type: System.Int32
+    content.vb: Public Const CONSULTAS_OP As Integer = 22
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_ROL
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_ROL
+  id: CONSULTAS_ROL
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: CONSULTAS_ROL
+  nameWithType: ConstantsHelper.CONSULTAS_ROL
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_ROL
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int CONSULTAS_ROL = 27
+    return:
+      type: System.Int32
+    content.vb: Public Const CONSULTAS_ROL As Integer = 27
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_OBJETO_RAW
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_OBJETO_RAW
+  id: CONSULTAS_OBJETO_RAW
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: CONSULTAS_OBJETO_RAW
+  nameWithType: ConstantsHelper.CONSULTAS_OBJETO_RAW
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_OBJETO_RAW
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int CONSULTAS_OBJETO_RAW = 32
+    return:
+      type: System.Int32
+    content.vb: Public Const CONSULTAS_OBJETO_RAW As Integer = 32
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_ES_MASIVO
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_ES_MASIVO
+  id: CONSULTAS_ES_MASIVO
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: CONSULTAS_ES_MASIVO
+  nameWithType: ConstantsHelper.CONSULTAS_ES_MASIVO
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_ES_MASIVO
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int CONSULTAS_ES_MASIVO = 33
+    return:
+      type: System.Int32
+    content.vb: Public Const CONSULTAS_ES_MASIVO As Integer = 33
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_COL_MAX
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_COL_MAX
+  id: CONSULTAS_COL_MAX
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: CONSULTAS_COL_MAX
+  nameWithType: ConstantsHelper.CONSULTAS_COL_MAX
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONSULTAS_COL_MAX
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int CONSULTAS_COL_MAX = 33
+    return:
+      type: System.Int32
+    content.vb: Public Const CONSULTAS_COL_MAX As Integer = 33
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_NOMBRE
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_NOMBRE
+  id: DATOS_NOMBRE
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: DATOS_NOMBRE
+  nameWithType: ConstantsHelper.DATOS_NOMBRE
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_NOMBRE
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int DATOS_NOMBRE = 1
+    return:
+      type: System.Int32
+    content.vb: Public Const DATOS_NOMBRE As Integer = 1
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_CEDULA
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_CEDULA
+  id: DATOS_CEDULA
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: DATOS_CEDULA
+  nameWithType: ConstantsHelper.DATOS_CEDULA
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_CEDULA
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int DATOS_CEDULA = 2
+    return:
+      type: System.Int32
+    content.vb: Public Const DATOS_CEDULA As Integer = 2
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_SALARIO
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_SALARIO
+  id: DATOS_SALARIO
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: DATOS_SALARIO
+  nameWithType: ConstantsHelper.DATOS_SALARIO
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_SALARIO
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int DATOS_SALARIO = 4
+    return:
+      type: System.Int32
+    content.vb: Public Const DATOS_SALARIO As Integer = 4
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_ROL
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_ROL
+  id: DATOS_ROL
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: DATOS_ROL
+  nameWithType: ConstantsHelper.DATOS_ROL
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_ROL
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int DATOS_ROL = 5
+    return:
+      type: System.Int32
+    content.vb: Public Const DATOS_ROL As Integer = 5
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_CATEGORIA
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_CATEGORIA
+  id: DATOS_CATEGORIA
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: DATOS_CATEGORIA
+  nameWithType: ConstantsHelper.DATOS_CATEGORIA
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_CATEGORIA
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int DATOS_CATEGORIA = 6
+    return:
+      type: System.Int32
+    content.vb: Public Const DATOS_CATEGORIA As Integer = 6
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_ENTIDAD
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_ENTIDAD
+  id: DATOS_ENTIDAD
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: DATOS_ENTIDAD
+  nameWithType: ConstantsHelper.DATOS_ENTIDAD
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_ENTIDAD
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int DATOS_ENTIDAD = 7
+    return:
+      type: System.Int32
+    content.vb: Public Const DATOS_ENTIDAD As Integer = 7
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_CUENTA_NUM
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_CUENTA_NUM
+  id: DATOS_CUENTA_NUM
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: DATOS_CUENTA_NUM
+  nameWithType: ConstantsHelper.DATOS_CUENTA_NUM
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_CUENTA_NUM
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int DATOS_CUENTA_NUM = 8
+    return:
+      type: System.Int32
+    content.vb: Public Const DATOS_CUENTA_NUM As Integer = 8
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_CUENTA_TIPO
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_CUENTA_TIPO
+  id: DATOS_CUENTA_TIPO
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: DATOS_CUENTA_TIPO
+  nameWithType: ConstantsHelper.DATOS_CUENTA_TIPO
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_CUENTA_TIPO
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int DATOS_CUENTA_TIPO = 9
+    return:
+      type: System.Int32
+    content.vb: Public Const DATOS_CUENTA_TIPO As Integer = 9
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_TEL
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_TEL
+  id: DATOS_TEL
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: DATOS_TEL
+  nameWithType: ConstantsHelper.DATOS_TEL
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_TEL
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int DATOS_TEL = 10
+    return:
+      type: System.Int32
+    content.vb: Public Const DATOS_TEL As Integer = 10
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_CORREO
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_CORREO
+  id: DATOS_CORREO
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: DATOS_CORREO
+  nameWithType: ConstantsHelper.DATOS_CORREO
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_CORREO
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int DATOS_CORREO = 11
+    return:
+      type: System.Int32
+    content.vb: Public Const DATOS_CORREO As Integer = 11
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_NACIMIENTO
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_NACIMIENTO
+  id: DATOS_NACIMIENTO
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: DATOS_NACIMIENTO
+  nameWithType: ConstantsHelper.DATOS_NACIMIENTO
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_NACIMIENTO
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int DATOS_NACIMIENTO = 12
+    return:
+      type: System.Int32
+    content.vb: Public Const DATOS_NACIMIENTO As Integer = 12
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_CONTRATO
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_CONTRATO
+  id: DATOS_CONTRATO
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: DATOS_CONTRATO
+  nameWithType: ConstantsHelper.DATOS_CONTRATO
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_CONTRATO
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int DATOS_CONTRATO = 13
+    return:
+      type: System.Int32
+    content.vb: Public Const DATOS_CONTRATO As Integer = 13
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_DEPENDENCIA
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_DEPENDENCIA
+  id: DATOS_DEPENDENCIA
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: DATOS_DEPENDENCIA
+  nameWithType: ConstantsHelper.DATOS_DEPENDENCIA
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DATOS_DEPENDENCIA
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int DATOS_DEPENDENCIA = 14
+    return:
+      type: System.Int32
+    content.vb: Public Const DATOS_DEPENDENCIA As Integer = 14
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEP_CORTA
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEP_CORTA
+  id: DEP_CORTA
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: DEP_CORTA
+  nameWithType: ConstantsHelper.DEP_CORTA
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEP_CORTA
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int DEP_CORTA = 1
+    return:
+      type: System.Int32
+    content.vb: Public Const DEP_CORTA As Integer = 1
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEP_FULL
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEP_FULL
+  id: DEP_FULL
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: DEP_FULL
+  nameWithType: ConstantsHelper.DEP_FULL
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEP_FULL
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int DEP_FULL = 2
+    return:
+      type: System.Int32
+    content.vb: Public Const DEP_FULL As Integer = 2
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEP_CDP
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEP_CDP
+  id: DEP_CDP
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: DEP_CDP
+  nameWithType: ConstantsHelper.DEP_CDP
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEP_CDP
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int DEP_CDP = 3
+    return:
+      type: System.Int32
+    content.vb: Public Const DEP_CDP As Integer = 3
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEP_FCDP
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEP_FCDP
+  id: DEP_FCDP
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: DEP_FCDP
+  nameWithType: ConstantsHelper.DEP_FCDP
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEP_FCDP
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int DEP_FCDP = 4
+    return:
+      type: System.Int32
+    content.vb: Public Const DEP_FCDP As Integer = 4
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEP_RUBRO
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEP_RUBRO
+  id: DEP_RUBRO
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: DEP_RUBRO
+  nameWithType: ConstantsHelper.DEP_RUBRO
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEP_RUBRO
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int DEP_RUBRO = 5
+    return:
+      type: System.Int32
+    content.vb: Public Const DEP_RUBRO As Integer = 5
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEP_ELABORO
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEP_ELABORO
+  id: DEP_ELABORO
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: DEP_ELABORO
+  nameWithType: ConstantsHelper.DEP_ELABORO
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEP_ELABORO
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int DEP_ELABORO = 8
+    return:
+      type: System.Int32
+    content.vb: Public Const DEP_ELABORO As Integer = 8
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEP_REVISO
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEP_REVISO
+  id: DEP_REVISO
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: DEP_REVISO
+  nameWithType: ConstantsHelper.DEP_REVISO
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEP_REVISO
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int DEP_REVISO = 9
+    return:
+      type: System.Int32
+    content.vb: Public Const DEP_REVISO As Integer = 9
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEST_DEP
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEST_DEP
+  id: DEST_DEP
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: DEST_DEP
+  nameWithType: ConstantsHelper.DEST_DEP
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEST_DEP
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int DEST_DEP = 1
+    return:
+      type: System.Int32
+    content.vb: Public Const DEST_DEP As Integer = 1
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEST_CIUDAD
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEST_CIUDAD
+  id: DEST_CIUDAD
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: DEST_CIUDAD
+  nameWithType: ConstantsHelper.DEST_CIUDAD
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEST_CIUDAD
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int DEST_CIUDAD = 2
+    return:
+      type: System.Int32
+    content.vb: Public Const DEST_CIUDAD As Integer = 2
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEST_NORMALIZADA
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEST_NORMALIZADA
+  id: DEST_NORMALIZADA
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: DEST_NORMALIZADA
+  nameWithType: ConstantsHelper.DEST_NORMALIZADA
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.DEST_NORMALIZADA
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int DEST_NORMALIZADA = 3
+    return:
+      type: System.Int32
+    content.vb: Public Const DEST_NORMALIZADA As Integer = 3
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_COL_VALOR
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_COL_VALOR
+  id: CONFIG_COL_VALOR
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: CONFIG_COL_VALOR
+  nameWithType: ConstantsHelper.CONFIG_COL_VALOR
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_COL_VALOR
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int CONFIG_COL_VALOR = 2
+    return:
+      type: System.Int32
+    content.vb: Public Const CONFIG_COL_VALOR As Integer = 2
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_FECHA_INICIO
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_FECHA_INICIO
+  id: CONFIG_FECHA_INICIO
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: CONFIG_FECHA_INICIO
+  nameWithType: ConstantsHelper.CONFIG_FECHA_INICIO
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_FECHA_INICIO
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int CONFIG_FECHA_INICIO = 1
+    return:
+      type: System.Int32
+    content.vb: Public Const CONFIG_FECHA_INICIO As Integer = 1
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_FECHA_FIN
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_FECHA_FIN
+  id: CONFIG_FECHA_FIN
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: CONFIG_FECHA_FIN
+  nameWithType: ConstantsHelper.CONFIG_FECHA_FIN
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_FECHA_FIN
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int CONFIG_FECHA_FIN = 2
+    return:
+      type: System.Int32
+    content.vb: Public Const CONFIG_FECHA_FIN As Integer = 2
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_CDP
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_CDP
+  id: CONFIG_CDP
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: CONFIG_CDP
+  nameWithType: ConstantsHelper.CONFIG_CDP
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_CDP
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int CONFIG_CDP = 3
+    return:
+      type: System.Int32
+    content.vb: Public Const CONFIG_CDP As Integer = 3
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_SALARIO_DECRETO
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_SALARIO_DECRETO
+  id: CONFIG_SALARIO_DECRETO
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: CONFIG_SALARIO_DECRETO
+  nameWithType: ConstantsHelper.CONFIG_SALARIO_DECRETO
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_SALARIO_DECRETO
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int CONFIG_SALARIO_DECRETO = 4
+    return:
+      type: System.Int32
+    content.vb: Public Const CONFIG_SALARIO_DECRETO As Integer = 4
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_VIATICO_A
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_VIATICO_A
+  id: CONFIG_VIATICO_A
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: CONFIG_VIATICO_A
+  nameWithType: ConstantsHelper.CONFIG_VIATICO_A
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_VIATICO_A
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int CONFIG_VIATICO_A = 5
+    return:
+      type: System.Int32
+    content.vb: Public Const CONFIG_VIATICO_A As Integer = 5
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_VIATICO_B
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_VIATICO_B
+  id: CONFIG_VIATICO_B
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: CONFIG_VIATICO_B
+  nameWithType: ConstantsHelper.CONFIG_VIATICO_B
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_VIATICO_B
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int CONFIG_VIATICO_B = 6
+    return:
+      type: System.Int32
+    content.vb: Public Const CONFIG_VIATICO_B As Integer = 6
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_PORC_A
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_PORC_A
+  id: CONFIG_PORC_A
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: CONFIG_PORC_A
+  nameWithType: ConstantsHelper.CONFIG_PORC_A
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_PORC_A
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int CONFIG_PORC_A = 7
+    return:
+      type: System.Int32
+    content.vb: Public Const CONFIG_PORC_A As Integer = 7
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_PORC_B
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_PORC_B
+  id: CONFIG_PORC_B
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: CONFIG_PORC_B
+  nameWithType: ConstantsHelper.CONFIG_PORC_B
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_PORC_B
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int CONFIG_PORC_B = 8
+    return:
+      type: System.Int32
+    content.vb: Public Const CONFIG_PORC_B As Integer = 8
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_NOMBRE_DT
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_NOMBRE_DT
+  id: CONFIG_NOMBRE_DT
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: CONFIG_NOMBRE_DT
+  nameWithType: ConstantsHelper.CONFIG_NOMBRE_DT
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_NOMBRE_DT
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int CONFIG_NOMBRE_DT = 9
+    return:
+      type: System.Int32
+    content.vb: Public Const CONFIG_NOMBRE_DT As Integer = 9
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_CARGO_DT
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_CARGO_DT
+  id: CONFIG_CARGO_DT
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: CONFIG_CARGO_DT
+  nameWithType: ConstantsHelper.CONFIG_CARGO_DT
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_CARGO_DT
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int CONFIG_CARGO_DT = 10
+    return:
+      type: System.Int32
+    content.vb: Public Const CONFIG_CARGO_DT As Integer = 10
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_CEDULA_GERENTE
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_CEDULA_GERENTE
+  id: CONFIG_CEDULA_GERENTE
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: CONFIG_CEDULA_GERENTE
+  nameWithType: ConstantsHelper.CONFIG_CEDULA_GERENTE
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_CEDULA_GERENTE
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int CONFIG_CEDULA_GERENTE = 11
+    return:
+      type: System.Int32
+    content.vb: Public Const CONFIG_CEDULA_GERENTE As Integer = 11
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_GERENTE_SUSTITUTO
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_GERENTE_SUSTITUTO
+  id: CONFIG_GERENTE_SUSTITUTO
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: CONFIG_GERENTE_SUSTITUTO
+  nameWithType: ConstantsHelper.CONFIG_GERENTE_SUSTITUTO
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_GERENTE_SUSTITUTO
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int CONFIG_GERENTE_SUSTITUTO = 12
+    return:
+      type: System.Int32
+    content.vb: Public Const CONFIG_GERENTE_SUSTITUTO As Integer = 12
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_CARGO_SUSTITUTO
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_CARGO_SUSTITUTO
+  id: CONFIG_CARGO_SUSTITUTO
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: CONFIG_CARGO_SUSTITUTO
+  nameWithType: ConstantsHelper.CONFIG_CARGO_SUSTITUTO
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_CARGO_SUSTITUTO
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int CONFIG_CARGO_SUSTITUTO = 13
+    return:
+      type: System.Int32
+    content.vb: Public Const CONFIG_CARGO_SUSTITUTO As Integer = 13
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_DEPTO_BASE
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_DEPTO_BASE
+  id: CONFIG_DEPTO_BASE
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: CONFIG_DEPTO_BASE
+  nameWithType: ConstantsHelper.CONFIG_DEPTO_BASE
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_DEPTO_BASE
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int CONFIG_DEPTO_BASE = 14
+    return:
+      type: System.Int32
+    content.vb: Public Const CONFIG_DEPTO_BASE As Integer = 14
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_CIUDAD_BASE
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_CIUDAD_BASE
+  id: CONFIG_CIUDAD_BASE
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: CONFIG_CIUDAD_BASE
+  nameWithType: ConstantsHelper.CONFIG_CIUDAD_BASE
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_CIUDAD_BASE
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int CONFIG_CIUDAD_BASE = 15
+    return:
+      type: System.Int32
+    content.vb: Public Const CONFIG_CIUDAD_BASE As Integer = 15
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_AEROPUERTO_BASE
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_AEROPUERTO_BASE
+  id: CONFIG_AEROPUERTO_BASE
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: CONFIG_AEROPUERTO_BASE
+  nameWithType: ConstantsHelper.CONFIG_AEROPUERTO_BASE
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_AEROPUERTO_BASE
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int CONFIG_AEROPUERTO_BASE = 16
+    return:
+      type: System.Int32
+    content.vb: Public Const CONFIG_AEROPUERTO_BASE As Integer = 16
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_ROW_MAX
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_ROW_MAX
+  id: CONFIG_ROW_MAX
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: CONFIG_ROW_MAX
+  nameWithType: ConstantsHelper.CONFIG_ROW_MAX
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.CONFIG_ROW_MAX
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const int CONFIG_ROW_MAX = 16
+    return:
+      type: System.Int32
+    content.vb: Public Const CONFIG_ROW_MAX As Integer = 16
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.SHEET_PROG
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.SHEET_PROG
+  id: SHEET_PROG
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: SHEET_PROG
+  nameWithType: ConstantsHelper.SHEET_PROG
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.SHEET_PROG
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const string SHEET_PROG = "Programación"
+    return:
+      type: System.String
+    content.vb: Public Const SHEET_PROG As String = "Programación"
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.SHEET_CONSULTAS
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.SHEET_CONSULTAS
+  id: SHEET_CONSULTAS
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: SHEET_CONSULTAS
+  nameWithType: ConstantsHelper.SHEET_CONSULTAS
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.SHEET_CONSULTAS
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const string SHEET_CONSULTAS = "CONSULTAS"
+    return:
+      type: System.String
+    content.vb: Public Const SHEET_CONSULTAS As String = "CONSULTAS"
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.SHEET_DATOS
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.SHEET_DATOS
+  id: SHEET_DATOS
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: SHEET_DATOS
+  nameWithType: ConstantsHelper.SHEET_DATOS
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.SHEET_DATOS
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const string SHEET_DATOS = "Datos"
+    return:
+      type: System.String
+    content.vb: Public Const SHEET_DATOS As String = "Datos"
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.SHEET_CONFIG
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.SHEET_CONFIG
+  id: SHEET_CONFIG
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: SHEET_CONFIG
+  nameWithType: ConstantsHelper.SHEET_CONFIG
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.SHEET_CONFIG
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const string SHEET_CONFIG = "Config"
+    return:
+      type: System.String
+    content.vb: Public Const SHEET_CONFIG As String = "Config"
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.SHEET_DEPENDENCIAS
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.SHEET_DEPENDENCIAS
+  id: SHEET_DEPENDENCIAS
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: SHEET_DEPENDENCIAS
+  nameWithType: ConstantsHelper.SHEET_DEPENDENCIAS
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.SHEET_DEPENDENCIAS
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const string SHEET_DEPENDENCIAS = "Dependencias"
+    return:
+      type: System.String
+    content.vb: Public Const SHEET_DEPENDENCIAS As String = "Dependencias"
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.THEME_PATH
+  commentId: F:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.THEME_PATH
+  id: THEME_PATH
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: THEME_PATH
+  nameWithType: ConstantsHelper.THEME_PATH
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.THEME_PATH
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const string THEME_PATH = "C:\\Program Files\\Microsoft Office\\root\\Document Themes 16\\Theme Colors\\Office 2013 - 2022.xml"
+    return:
+      type: System.String
+    content.vb: Public Const THEME_PATH As String = "C:\Program Files\Microsoft Office\root\Document Themes 16\Theme Colors\Office 2013 - 2022.xml"
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.GetTemplate(ConversorPDF.XLL.Core.Enums.TipoFormato)
+  commentId: M:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.GetTemplate(ConversorPDF.XLL.Core.Enums.TipoFormato)
+  id: GetTemplate(ConversorPDF.XLL.Core.Enums.TipoFormato)
+  parent: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  langs:
+  - csharp
+  - vb
+  name: GetTemplate(TipoFormato)
+  nameWithType: ConstantsHelper.GetTemplate(TipoFormato)
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.GetTemplate(ConversorPDF.XLL.Core.Enums.TipoFormato)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public static string GetTemplate(TipoFormato type)
+    parameters:
+    - id: type
+      type: ConversorPDF.XLL.Core.Enums.TipoFormato
+    return:
+      type: System.String
+    content.vb: Public Shared Function GetTemplate(type As TipoFormato) As String
+  overload: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.GetTemplate*
+references:
+- uid: ConversorPDF.XLL.Core.Helpers
+  commentId: N:ConversorPDF.XLL.Core.Helpers
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Core.Helpers
+  nameWithType: ConversorPDF.XLL.Core.Helpers
+  fullName: ConversorPDF.XLL.Core.Helpers
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Helpers
+    name: Helpers
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Helpers.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Helpers
+    name: Helpers
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Helpers.html
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+  nameWithType: object
+  fullName: object
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: System.Object.ToString
+  commentId: M:System.Object.ToString
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  name: ToString()
+  nameWithType: object.ToString()
+  fullName: object.ToString()
+  nameWithType.vb: Object.ToString()
+  fullName.vb: Object.ToString()
+  spec.csharp:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+- uid: System.Object.Equals(System.Object)
+  commentId: M:System.Object.Equals(System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  name: Equals(object)
+  nameWithType: object.Equals(object)
+  fullName: object.Equals(object)
+  nameWithType.vb: Object.Equals(Object)
+  fullName.vb: Object.Equals(Object)
+  name.vb: Equals(Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.Equals(System.Object,System.Object)
+  commentId: M:System.Object.Equals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  name: Equals(object, object)
+  nameWithType: object.Equals(object, object)
+  fullName: object.Equals(object, object)
+  nameWithType.vb: Object.Equals(Object, Object)
+  fullName.vb: Object.Equals(Object, Object)
+  name.vb: Equals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.ReferenceEquals(System.Object,System.Object)
+  commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  name: ReferenceEquals(object, object)
+  nameWithType: object.ReferenceEquals(object, object)
+  fullName: object.ReferenceEquals(object, object)
+  nameWithType.vb: Object.ReferenceEquals(Object, Object)
+  fullName.vb: Object.ReferenceEquals(Object, Object)
+  name.vb: ReferenceEquals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.GetHashCode
+  commentId: M:System.Object.GetHashCode
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  name: GetHashCode()
+  nameWithType: object.GetHashCode()
+  fullName: object.GetHashCode()
+  nameWithType.vb: Object.GetHashCode()
+  fullName.vb: Object.GetHashCode()
+  spec.csharp:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+- uid: System.Object.GetType
+  commentId: M:System.Object.GetType
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  name: GetType()
+  nameWithType: object.GetType()
+  fullName: object.GetType()
+  nameWithType.vb: Object.GetType()
+  fullName.vb: Object.GetType()
+  spec.csharp:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+- uid: System.Object.MemberwiseClone
+  commentId: M:System.Object.MemberwiseClone
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  name: MemberwiseClone()
+  nameWithType: object.MemberwiseClone()
+  fullName: object.MemberwiseClone()
+  nameWithType.vb: Object.MemberwiseClone()
+  fullName.vb: Object.MemberwiseClone()
+  spec.csharp:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: System.Int32
+  commentId: T:System.Int32
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int
+  nameWithType: int
+  fullName: int
+  nameWithType.vb: Integer
+  fullName.vb: Integer
+  name.vb: Integer
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.GetTemplate*
+  commentId: Overload:ConversorPDF.XLL.Core.Helpers.ConstantsHelper.GetTemplate
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.html#ConversorPDF_XLL_Core_Helpers_ConstantsHelper_GetTemplate_ConversorPDF_XLL_Core_Enums_TipoFormato_
+  name: GetTemplate
+  nameWithType: ConstantsHelper.GetTemplate
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.GetTemplate
+- uid: ConversorPDF.XLL.Core.Enums.TipoFormato
+  commentId: T:ConversorPDF.XLL.Core.Enums.TipoFormato
+  parent: ConversorPDF.XLL.Core.Enums
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Enums.TipoFormato.html
+  name: TipoFormato
+  nameWithType: TipoFormato
+  fullName: ConversorPDF.XLL.Core.Enums.TipoFormato
+- uid: ConversorPDF.XLL.Core.Enums
+  commentId: N:ConversorPDF.XLL.Core.Enums
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Core.Enums
+  nameWithType: ConversorPDF.XLL.Core.Enums
+  fullName: ConversorPDF.XLL.Core.Enums
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Enums
+    name: Enums
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Enums.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Enums
+    name: Enums
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Enums.html

@@ -1,0 +1,24 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.VisTimeline.Infrastructure.Services
+  commentId: N:ConversorPDF.XLL.VisTimeline.Infrastructure.Services
+  id: ConversorPDF.XLL.VisTimeline.Infrastructure.Services
+  children:
+  - ConversorPDF.XLL.VisTimeline.Infrastructure.Services.TimelineHtmlGenerator
+  langs:
+  - csharp
+  - vb
+  name: ConversorPDF.XLL.VisTimeline.Infrastructure.Services
+  nameWithType: ConversorPDF.XLL.VisTimeline.Infrastructure.Services
+  fullName: ConversorPDF.XLL.VisTimeline.Infrastructure.Services
+  type: Namespace
+  assemblies:
+  - ConversorPDF.XLL
+references:
+- uid: ConversorPDF.XLL.VisTimeline.Infrastructure.Services.TimelineHtmlGenerator
+  commentId: T:ConversorPDF.XLL.VisTimeline.Infrastructure.Services.TimelineHtmlGenerator
+  isExternal: true
+  href: ConversorPDF.XLL.VisTimeline.Infrastructure.Services.TimelineHtmlGenerator.html
+  name: TimelineHtmlGenerator
+  nameWithType: TimelineHtmlGenerator
+  fullName: ConversorPDF.XLL.VisTimeline.Infrastructure.Services.TimelineHtmlGenerator

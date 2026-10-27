@@ -43,19 +43,19 @@ namespace ConversorPDF.XLL.Core.Models
         /// <summary> Cargo de la autoridad competente. </summary>
         public string CargoDT { get; set; }
 
-        /// <summary> Nombre del Gerente o responsable de la entidad. </summary>
+        /// <summary> Nombre del Director Territorial, aprobador habitual por defecto (config.dt_nombre). </summary>
         public string Gerente { get; set; }
 
-        /// <summary> Cargo principal del responsable. </summary>
+        /// <summary> Cargo del aprobador habitual (config.dt_cargo). </summary>
         public string Cargo { get; set; }
 
-        /// <summary> Documento de identidad del gerente. </summary>
+        /// <summary> Cédula del aprobador habitual / Director Territorial (config.corporativo_cedula). </summary>
         public string CedulaGerente { get; set; }
 
-        /// <summary> Nombre de quien sustituye en caso de ausencia. </summary>
+        /// <summary> Nombre del aprobador sustituto si el comisionado es el aprobador habitual (config.corporativo_nombre). </summary>
         public string GerenteSustituto { get; set; }
 
-        /// <summary> Cargo de la persona sustituta. </summary>
+        /// <summary> Cargo del aprobador sustituto (config.corporativo_cargo). </summary>
         public string CargoSustituto { get; set; }
 
         /// <summary> Departamento base para el cálculo de origen (ej: Cundinamarca). </summary>
@@ -84,6 +84,12 @@ namespace ConversorPDF.XLL.Core.Models
 
         /// <summary> Nombre de quien revisó o auditó el trámite. </summary>
         public string Reviso { get; set; }
+
+        /// <summary> Nombre del responsable asignado en el CDP (tabla cdpDependencias). </summary>
+        public string ResponsableCDP { get; set; }
+
+        /// <summary> Cargo del responsable asignado en el CDP (tabla cdpDependencias). </summary>
+        public string CargoResponsableCDP { get; set; }
 
         /// <summary> Ruta física donde se guardarán los PDFs generados. </summary>
         public string CarpetaDestino { get; set; }

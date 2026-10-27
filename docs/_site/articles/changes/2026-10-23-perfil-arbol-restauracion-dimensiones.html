@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Restauraci&#243;n de las 3 Dimensiones en Perfiles de &#193;rbol Acad&#233;mico y Estabilizaci&#243;n de Sincronizaci&#243;n | ESAP - ConversorPDF </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Restauraci&#243;n de las 3 Dimensiones en Perfiles de &#193;rbol Acad&#233;mico y Estabilizaci&#243;n de Sincronizaci&#243;n | ESAP - ConversorPDF ">
+      
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="../../toc.html">
+      <meta name="docfx:tocrel" content="../toc.html">
+      
+      <meta name="docfx:rel" content="../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/fexluis/COM-PDF-Merge/blob/refactor/academic-modularization/docs/articles/changes/2026-10-23-perfil-arbol-restauracion-dimensiones.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="restauración-de-las-3-dimensiones-en-perfiles-de-árbol-académico-y-estabilización-de-sincronización">Restauración de las 3 Dimensiones en Perfiles de Árbol Académico y Estabilización de Sincronización</h1>
+
+<p><strong>Fecha:</strong> 2026-10-23<br>
+<strong>Ronda:</strong> 221 / 222<br>
+<strong>Fases:</strong> 1203 a 1222<br>
+<strong>Módulo:</strong> <code>Academic.Application</code> / <code>Academic.UI.Forms</code> / <code>Academic.Infrastructure.Persistence</code></p>
+<hr>
+<h2 id="1-propósito-y-causa-raíz">1. Propósito y Causa Raíz</h2>
+<p>Al guardar un perfil de árbol de selección académica, las 3 dimensiones de configuración (<code>Jornada</code>, <code>HorasDia</code>, <code>DiasVentana</code>) se persisten correctamente en la base de datos a través de <code>AgArbolMapper</code> y <code>AgArbolRepository</code>. Sin embargo, al cargar el perfil mediante <code>AsegurarSubarbol</code> (<code>AgFormGeneradorHorarios.cs</code>), únicamente se activaba la casilla <code>Checked = true</code> en el nodo de nivel 6 (Modalidad), sin sincronizar las 3 dimensiones desde el DTO hacia el objeto tipado <code>AgNodoArbolKey</code> asignado al <code>Tag</code> del nodo.</p>
+<p>Como el método <code>CargarHijosLazy</code> siembra valores por defecto (<code>MANANA / 4h / MAR-VIE</code>), el árbol mostraba visualmente estos valores por defecto y, si el usuario procedía a sobrescribir o guardar nuevamente el perfil, se persistían dichos defaults en vez de las dimensiones originales previamente guardadas (<code>AgSeleccionMapper</code> lee directamente desde la key).</p>
+<p>Adicionalmente, se detectaron y corrigieron anomalías colaterales en el ciclo de vida del árbol, sincronización asíncrona y migraciones SQLite:</p>
+<ol>
+<li><code>MigrationV73</code> no estaba registrada en <code>SqliteHelper</code>.</li>
+<li><code>MigrationV76</code> realizaba mapeo frágil de 8 columnas mediante <code>ValueTuple</code>.</li>
+<li>El debounce de sincronización de dimensiones filtraba por <code>ActiveSubunidad</code> global en vez de respetar la clave canónica <code>AulaRef</code>.</li>
+<li>El cierre del formulario no detenía ni volcaba el temporizador de debounce, provocando riesgo de pérdida de datos y deadlocks con el hilo STA.</li>
+<li><code>AsegurarSubarbol</code> desplegaba modales bloqueantes durante la restauración automática en <code>OnShown</code>.</li>
+</ol>
+<hr>
+<h2 id="2-resumen-de-cambios-por-fase">2. Resumen de Cambios por Fase</h2>
+<h3 id="fase-1203--mapeador-agnodoarbolkeymapper-y-registro-en-csproj">Fase 1203 — Mapeador <code>AgNodoArbolKeyMapper</code> y Registro en CSPROJ</h3>
+<ul>
+<li>Creación de <code>ConversorPDF.XLL\Academic\Application\Mappers\AgNodoArbolKeyMapper.cs</code>.</li>
+<li>Método <code>AplicarDimensiones(AgNodoArbolKey key, AgContextoSeleccionDto dto)</code> que normaliza cadenas con <code>Trim().ToUpperInvariant()</code>, valida jornada no vacía, horas ∈ {4, 8} y ventana de días contra <code>AgDiasVentana.Dias()</code>.</li>
+<li>Fallback defensivo (<code>MANANA / 4 / MAR-VIE</code>) y <code>Result.Failure(&quot;I1_RESTAURACION_INCOMPLETA: ...&quot;)</code> ante datos incompletos.</li>
+<li>Registro en <code>ConversorPDF.XLL.csproj</code>.</li>
+</ul>
+<h3 id="fase-1204--suite-de-pruebas-unitarias">Fase 1204 — Suite de Pruebas Unitarias</h3>
+<ul>
+<li>Archivo <code>ConversorPDF.Tests\Academic\Application\Mappers\AgNodoArbolKeyMapperTests.cs</code>.</li>
+<li>6 pruebas xUnit bajo convención <code>{Accion}_When_{Cond}_Should_{Res}</code> con FluentAssertions 6.12 cubriendo dimensiones válidas, fallbacks y guardas de nulos.</li>
+</ul>
+<h3 id="fase-1205--restauración-de-dimensiones-en-el-árbol">Fase 1205 — Restauración de Dimensiones en el Árbol</h3>
+<ul>
+<li>En <code>AsegurarSubarbol</code>, invocación de <code>AgNodoArbolKeyMapper.AplicarDimensiones</code> sobre nodos de nivel 6 (localizados y dinámicos).</li>
+<li>Conteo de combinaciones que requirieron fallback (<code>dimensionesDefecto</code>).</li>
+</ul>
+<h3 id="fase-1206--visibilidad-repintado-y-refresco-de-cabeceras">Fase 1206 — Visibilidad, Repintado y Refresco de Cabeceras</h3>
+<ul>
+<li>Invocación de <code>primerNodoRestaurado.EnsureVisible()</code>, <code>treeContextoAcademico.Invalidate()</code> y <code>ActualizarCabecerasNivel6()</code> en el <code>finally</code>.</li>
+</ul>
+<h3 id="fase-1207--prevención-de-descarte-silencioso-al-persistir">Fase 1207 — Prevención de Descarte Silencioso al Persistir</h3>
+<ul>
+<li>En <code>GuardarNuevoPerfilArbolAsync</code> y <code>SobrescribirPerfilArbolAsync</code>, evaluación de <code>descartes</code> y diálogo modal <code>Yes/No</code> con detalle de hasta 10 nodos.</li>
+</ul>
+<h3 id="fase-1208--sincronización-de-combos-sedes-y-programas">Fase 1208 — Sincronización de Combos Sedes y Programas</h3>
+<ul>
+<li>En <code>CargarPerfilArbolSeleccionadoAsync</code>, sincronización del <code>SelectedItem</code> de <code>cmbSedes</code> y <code>cmbProgramas</code> con el primer DTO de la selección.</li>
+</ul>
+<h3 id="fase-1209--telemetría-estructurada-y-traza-diagnóstica-p12">Fase 1209 — Telemetría Estructurada y Traza Diagnóstica P12</h3>
+<ul>
+<li>Enlace con <code>CrearTraza(&quot;CargarPerfilArbol&quot;)</code> introduciendo el paso canónico <code>P12_RestaurarDimensionesPerfil</code>.</li>
+</ul>
+<h3 id="fase-1210--documentación-técnica-de-cambios-inicial">Fase 1210 — Documentación Técnica de Cambios Inicial</h3>
+<ul>
+<li>Documentación inicial del comportamiento del árbol y advertencia sobre perfiles históricos sobreescritos.</li>
+</ul>
+<h3 id="fase-1212--registro-de-migrationv73-en-sqlitehelper">Fase 1212 — Registro de <code>MigrationV73</code> en <code>SqliteHelper</code></h3>
+<ul>
+<li>Inclusión de <code>new MigrationV73_LimpiarDiasPatronMultidia()</code> en <code>SqliteHelper._migrations</code>.</li>
+</ul>
+<h3 id="fase-1213--poco-agauladimensionescandidato-para-migrationv76">Fase 1213 — POCO <code>AgAulaDimensionesCandidato</code> para <code>MigrationV76</code></h3>
+<ul>
+<li>Reemplazo de <code>ValueTuple</code> de 8 elementos por clase POCO sellada registrada en <code>ConversorPDF.XLL.csproj</code>.</li>
+</ul>
+<h3 id="fase-1214--aislamiento-de-sincronización-frente-a-activesubunidad">Fase 1214 — Aislamiento de Sincronización frente a <code>ActiveSubunidad</code></h3>
+<ul>
+<li>Envío de <code>string.Empty</code> en la sincronización del debounce (<code>AgFormGeneradorHorarios.cs:106</code>) y preservación del filtro en <code>AgAulaDimensionesSync.cs</code> solo cuando se informa explícitamente.</li>
+</ul>
+<h3 id="fase-1215--parada-y-flush-del-timer-de-dimensiones-en-cierre">Fase 1215 — Parada y Flush del Timer de Dimensiones en Cierre</h3>
+<ul>
+<li>Invocación de <code>_timerSyncDimensiones.Stop()</code> y vaciado de cambios pendientes al inicio de <code>OnFormClosing</code>.</li>
+</ul>
+<h3 id="fase-1216--acotamiento-de-logging-diagnóstico-en-migrationv76">Fase 1216 — Acotamiento de Logging Diagnóstico en <code>MigrationV76</code></h3>
+<ul>
+<li>Truncado a 20 advertencias individuales (<code>Take(20)</code>) con resumen general del total.</li>
+</ul>
+<h3 id="fase-1217--eliminación-de-async-sin-await-cs1998">Fase 1217 — Eliminación de <code>async</code> sin <code>await</code> (CS1998)</h3>
+<ul>
+<li>Conversión de <code>AsegurarSubarbolAsync</code> a método síncrono <code>AsegurarSubarbol(IReadOnlyCollection&lt;AgContextoSeleccionDto&gt; nodos, bool mostrarAvisos = true)</code>.</li>
+</ul>
+<h3 id="fase-1218--prevención-de-deadlock-en-hilo-ui-al-cerrar-formulario">Fase 1218 — Prevención de Deadlock en Hilo UI al Cerrar Formulario</h3>
+<ul>
+<li>Inclusión de <code>.ConfigureAwait(false)</code> en <code>AgAulaDimensionesSync.ExecuteAsync</code> y ejecución mediante <code>Task.Run</code> protegido con <code>try/catch</code> en <code>OnFormClosing</code>.</li>
+</ul>
+<h3 id="fase-1219--guarda-post-await-en-temporizador-de-debounce">Fase 1219 — Guarda Post-Await en Temporizador de Debounce</h3>
+<ul>
+<li>Inclusión de <code>if (IsDisposed || Disposing || !IsHandleCreated) return;</code> tras <code>await SincronizarAsync</code> en el evento <code>Tick</code> para prevenir excepciones <code>ObjectDisposedException</code>.</li>
+</ul>
+<h3 id="fase-1220--normalización-de-trazabilidad-p12-y-causa-de-fallo">Fase 1220 — Normalización de Trazabilidad P12 y Causa de Fallo</h3>
+<ul>
+<li>Separación de <code>P12_CargarPerfil</code> (<code>AgCausaFallo.SinAulas</code>) y <code>P12_RestaurarDimensionesPerfil</code> (<code>AgCausaFallo.HorasDiaInvalidoNivel</code>). <code>traza.Fin(true)</code> consistente.</li>
+</ul>
+<h3 id="fase-1221--supresión-de-modales-en-restauración-automática-onshown">Fase 1221 — Supresión de Modales en Restauración Automática (<code>OnShown</code>)</h3>
+<ul>
+<li>Pase de <code>mostrarAvisos: false</code> desde <code>OnShown</code> para garantizar una carga fluida sin interrupciones emergentes.</li>
+</ul>
+<h3 id="fase-1222--auditoría-de-filas-afectadas-en-migrationv73">Fase 1222 — Auditoría de Filas Afectadas en <code>MigrationV73</code></h3>
+<ul>
+<li>Conteo previo de filas candidatas con <code>SELECT COUNT(*)</code> antes de ejecutar la limpieza de <code>dias_patron</code>.</li>
+</ul>
+<hr>
+<h2 id="3-cómo-usar">3. Cómo Usar</h2>
+<ol>
+<li>En <code>AgFormGeneradorHorarios</code>, configure las dimensiones deseadas en el árbol para las modalidades seleccionadas (ej. <code>TARDE</code>, <code>8 Horas</code>, <code>JUE-SAB</code>).</li>
+<li>Guarde un nuevo perfil o sobrescriba uno existente. Si alguna combinación no tiene sus dimensiones completas, el sistema advertirá con un diálogo de confirmación indicando cuáles combinaciones serán omitidas.</li>
+<li>Al cargar el perfil guardado mediante el combo:
+<ul>
+<li>Se restauran los radios de jornada, horas y días exactamente según lo guardado.</li>
+<li>La rama del árbol se expande y se hace visible automáticamente.</li>
+<li>Los combos de Sedes y Programas reflejan el contexto del perfil.</li>
+<li>En el log de diagnóstico (<code>Modo Debug</code>), se registra la traza del paso <code>P12_RestaurarDimensionesPerfil</code>.</li>
+</ul>
+</li>
+<li>Al abrir el formulario, el último perfil activo se restaura silenciosamente en segundo plano sin desplegar modales molestos.</li>
+</ol>
+<hr>
+<h2 id="4-cobertura-de-pruebas">4. Cobertura de Pruebas</h2>
+<ul>
+<li>Mapeador de dimensiones: <code>AgNodoArbolKeyMapperTests</code> (100% cubierto, 8 casos de prueba).</li>
+<li>Mapeador de selección inverso: <code>AgSeleccionMapperTests</code> (100% cubierto).</li>
+<li>Sincronización con subunidad vacía: <code>AgAulaDimensionesSyncTests</code> (100% cubierto).</li>
+<li>Migración de dimensiones: <code>MigrationV76Tests</code> (100% cubierto).</li>
+</ul>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/fexluis/COM-PDF-Merge/blob/refactor/academic-modularization/docs/articles/changes/2026-10-23-perfil-arbol-restauracion-dimensiones.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          ESAP - ConversorPDF Doc
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

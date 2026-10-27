@@ -1,0 +1,90 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Core.Enums
+  commentId: N:ConversorPDF.XLL.Core.Enums
+  id: ConversorPDF.XLL.Core.Enums
+  children:
+  - ConversorPDF.XLL.Core.Enums.TipoFormMode
+  - ConversorPDF.XLL.Core.Enums.TipoFormato
+  - ConversorPDF.XLL.Core.Enums.TipoMetadata
+  langs:
+  - csharp
+  - vb
+  name: ConversorPDF.XLL.Core.Enums
+  nameWithType: ConversorPDF.XLL.Core.Enums
+  fullName: ConversorPDF.XLL.Core.Enums
+  type: Namespace
+  assemblies:
+  - ConversorPDF.XLL
+references:
+- uid: ConversorPDF.XLL.Core.Enums.TipoFormato
+  commentId: T:ConversorPDF.XLL.Core.Enums.TipoFormato
+  parent: ConversorPDF.XLL.Core.Enums
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Enums.TipoFormato.html
+  name: TipoFormato
+  nameWithType: TipoFormato
+  fullName: ConversorPDF.XLL.Core.Enums.TipoFormato
+- uid: ConversorPDF.XLL.Core.Enums.TipoFormMode
+  commentId: T:ConversorPDF.XLL.Core.Enums.TipoFormMode
+  parent: ConversorPDF.XLL.Core.Enums
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Enums.TipoFormMode.html
+  name: TipoFormMode
+  nameWithType: TipoFormMode
+  fullName: ConversorPDF.XLL.Core.Enums.TipoFormMode
+- uid: ConversorPDF.XLL.Core.Enums.TipoMetadata
+  commentId: T:ConversorPDF.XLL.Core.Enums.TipoMetadata
+  parent: ConversorPDF.XLL.Core.Enums
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Enums.TipoMetadata.html
+  name: TipoMetadata
+  nameWithType: TipoMetadata
+  fullName: ConversorPDF.XLL.Core.Enums.TipoMetadata
+- uid: ConversorPDF.XLL.Core.Enums
+  commentId: N:ConversorPDF.XLL.Core.Enums
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Core.Enums
+  nameWithType: ConversorPDF.XLL.Core.Enums
+  fullName: ConversorPDF.XLL.Core.Enums
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Enums
+    name: Enums
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Enums.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Enums
+    name: Enums
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Enums.html

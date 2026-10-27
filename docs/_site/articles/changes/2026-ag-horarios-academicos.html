@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Motor de Optimizaci&#243;n de Horarios Acad&#233;micos mediante Algoritmos Gen&#233;ticos (AG v7) | ESAP - ConversorPDF </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Motor de Optimizaci&#243;n de Horarios Acad&#233;micos mediante Algoritmos Gen&#233;ticos (AG v7) | ESAP - ConversorPDF ">
+      
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="../../toc.html">
+      <meta name="docfx:tocrel" content="../toc.html">
+      
+      <meta name="docfx:rel" content="../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/fexluis/COM-PDF-Merge/blob/refactor/academic-modularization/docs/articles/changes/2026-ag-horarios-academicos.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="motor-de-optimización-de-horarios-académicos-mediante-algoritmos-genéticos-ag-v7">Motor de Optimización de Horarios Académicos mediante Algoritmos Genéticos (AG v7)</h1>
+
+<h2 id="1-visión-general">1. Visión General</h2>
+<p>El motor genético académico de <strong>ConversorPDF</strong> optimiza la programación horaria y asignación docente para las asignaturas de las distintas subunidades académicas. Opera bajo una ventana temporal semestral acotada (<span class="math">\(\alpha\)</span>), validando restricciones duras (R1-R7, W1) y blandas (S1-S5), con integración al pool docente, cálculo automático de viáticos desacoplado, y promoción no destructiva mediante un esquema <em>staging</em> (<code>ag_corridas</code>, <code>ag_individuos</code>, <code>ag_genes</code>, <code>ag_sesiones</code>).</p>
+<hr>
+<h2 id="2-definición-del-genoma-y-cromosoma">2. Definición del Genoma y Cromosoma</h2>
+<h3 id="estructura-del-gen-aggen">Estructura del Gen (<code>AgGen</code>)</h3>
+<p>Representa la asignación indivisible de una asignatura en un bloque horario dentro de un aula específica:</p>
+<ul>
+<li><code>Id</code>: Identificador único del gen.</li>
+<li><code>IdAsignatura</code>: Asignatura a programar.</li>
+<li><code>IdTercero</code>: Docente habilitado en el pool.</li>
+<li><code>IdAula</code>: Aula física asignada para la corrida.</li>
+<li><code>IdBloqueHorario</code>: Bloque temporal (día de la semana, hora inicio, hora fin).</li>
+<li><code>FechaInicioEstimada</code> y <code>FechaFinEstimada</code>: Rango temporal acotado <span class="math">\(\alpha\)</span> de la asignatura.</li>
+<li><code>HorasSemanales</code> y <code>TotalHorasAsignatura</code>: Carga horaria requerida.</li>
+<li><code>EsFijo</code>: Flag binario (1 = asignación inmutable pre-existente, 0 = mutable).</li>
+</ul>
+<h3 id="estructura-del-individuo-agindividuo">Estructura del Individuo (<code>AgIndividuo</code>)</h3>
+<p>Cromosoma que agrupa una colección completa de genes para la subunidad y aula.</p>
+<ul>
+<li><code>Genes</code>: Lista de genes que cubren las asignaturas requeridas.</li>
+<li><code>Fitness</code>: Aptitud calculada mediante la función objetivo multitérmino.</li>
+<li><code>HardViolations</code>: Número de violaciones de restricciones duras.</li>
+<li><code>SoftViolations</code>: Puntaje acumulado de penalizaciones blandas.</li>
+<li><code>EsFactible</code>: <code>true</code> si y solo si <code>HardViolations == 0</code>.</li>
+</ul>
+<hr>
+<h2 id="3-función-de-aptitud-fitness-formal">3. Función de Aptitud (Fitness) Formal</h2>
+<p>La aptitud de cada solución se evalúa mediante la formulación:
+<span class="math">\(F = F_1 - F_2 + 2F_3 + F_4 + 2F_5\)</span></p>
+<p>Donde:</p>
+<ul>
+<li><strong><span class="math">\(F_1\)</span> (Cobertura):</strong> Cantidad de genes/cursos válidamente representados en el individuo.</li>
+<li><strong><span class="math">\(F_2\)</span> (Penalizaciones):</strong> <span class="math">\(\text{HardViolations} \times \text{PenalidadHardBase} + \text{SoftViolations}\)</span>.</li>
+<li><strong><span class="math">\(F_3\)</span> (Ventana Semestral):</strong> Bonificación por asignaciones con rango estimado <span class="math">\([F_{\text{inicio}}, F_{\text{fin}}]\)</span> estrictamente contenido en la ventana semestral <span class="math">\(\alpha\)</span>.</li>
+<li><strong><span class="math">\(F_4\)</span> (Afinidad Pool y Residencia):</strong> Bonificación cuando la residencia del docente coincide con la ciudad de la sede (minimizando viáticos de desplazamiento).</li>
+<li><strong><span class="math">\(F_5\)</span> (Preservación):</strong> Bonificación por mantener intactos los genes fijados previamente (<code>EsFijo == 1</code>).</li>
+</ul>
+<hr>
+<h2 id="4-restricciones-y-reglas-del-sistema">4. Restricciones y Reglas del Sistema</h2>
+<h3 id="restricciones-duras-hard-constraints">Restricciones Duras (Hard Constraints)</h3>
+<ol>
+<li><strong>R1 (Superposición Docente):</strong> Un docente no puede tener dos clases simultáneas en el mismo bloque horario.</li>
+<li><strong>R2 (Superposición Aula):</strong> Un aula no puede albergar dos asignaturas simultáneamente en el mismo bloque horario.</li>
+<li><strong>R3 (Superposición Grupo):</strong> Un grupo estudiantil (<code>Programa + Semestre + Grupo</code>) no puede tener dos clases en simultáneo.</li>
+<li><strong>R4 (Compatibilidad Aula):</strong> El aula asignada debe estar en estado <code>Disponible</code>.</li>
+<li><strong>R5 (Habilitación Pool):</strong> El docente asignado debe estar activo y habilitado en la tabla <code>terceros_asignaturas</code> para la asignatura y semestre.</li>
+<li><strong>R6 (Consistencia de Horas):</strong> La suma de horas de las sesiones expandidas debe satisfacer <code>TotalHorasAsignatura</code>.</li>
+<li><strong>R7 (Ocupación Externa):</strong> El docente no puede tener sesiones aprobadas o preexistentes en otra subunidad en las mismas fechas y franjas.</li>
+<li><strong>W1 (Ventana Semestral <span class="math">\(\alpha\)</span>):</strong> Ninguna sesión ni fecha estimada puede situarse fuera de <span class="math">\([F_{\text{inicio}}, F_{\text{fin}}]\)</span> del semestre.</li>
+</ol>
+<h3 id="restricciones-blandas-soft-constraints">Restricciones Blandas (Soft Constraints)</h3>
+<ol>
+<li><strong>S1 (Preferencia Horaria):</strong> Penalización por bloques en días u horas no preferidas por el docente.</li>
+<li><strong>S2 (Desplazamientos Inter-Sede):</strong> Penalización si un docente debe trasladarse entre sedes distintas en el mismo día.</li>
+<li><strong>S3 (Huecos Horarios):</strong> Penalización por ventanas inactivas excesivas entre clases del mismo día.</li>
+<li><strong>S4 (Distribución de Días):</strong> Incentivar distribución uniforme a lo largo de la semana.</li>
+<li><strong>S5 (Balance de Carga):</strong> Evitar sobrecargar a un docente con más horas de las recomendadas.</li>
+</ol>
+<hr>
+<h2 id="5-operadores-genéticos-y-reparación">5. Operadores Genéticos y Reparación</h2>
+<ol>
+<li><strong>Selección:</strong> Selección por Torneo (<code>AgOperadorSeleccion</code>) con presión de selección configurable (<span class="math">\(k = 3\)</span>).</li>
+<li><strong>Cruce (Order Crossover - OX):</strong> Cruce por permutación/segmentos preservando genes fijados y vacantes. Incorpora reparación en cascada mediante <code>AgAsignadorTercero</code> con búsqueda de docentes alternos habilitados y diagnóstico de vacantes (<code>EsVacante = 1</code>, <code>MotivoVacante</code>) (<code>AgOperadorCruce</code>).</li>
+<li><strong>Mutación:</strong> Mutación guiada con exploración de docentes habilitados en el pool, franjas horarias y bloques horarios activos (<code>AgOperadorMutacion</code>).</li>
+<li><strong>Elitismo y Métricas:</strong> Preservación de los mejores <span class="math">\(N\)</span> individuos a la siguiente generación con cálculo unificado de penalizaciones en <code>AgMetricas.Recalcular(individuo, contexto)</code>.</li>
+</ol>
+<hr>
+<h2 id="6-persistencia-mappers-y-promoción-staging-a-producción">6. Persistencia, Mappers y Promoción (Staging a Producción)</h2>
+<ul>
+<li><p><strong>Mappers Desacoplados:</strong></p>
+<ul>
+<li><code>AgGenToAgVinculacionMapper</code>: Mapeo puro de genes hacia cabeceras de vinculación en staging.</li>
+<li><code>AgAulaToAgVinculacionMapper</code>: Enriquecimiento y herencia de atributos de aula sobre la vinculación (modalidad, fechas, periodo).</li>
+<li><code>AgVinculacionToVinculacionMapper</code>: Mapeo estricto de vinculaciones de staging hacia la entidad de producción <code>Vinculacion</code>.</li>
+</ul>
+</li>
+<li><p><strong>Tablas de Staging y Trazabilidad:</strong></p>
+<ul>
+<li><code>ag_corridas</code>: Metadatos de la corrida, configuración de hiperparámetros y ventana <span class="math">\(\alpha\)</span>.</li>
+<li><code>ag_individuos</code>: Cromosomas generados en cada generación.</li>
+<li><code>ag_genes</code>: Asignaciones específicas de cada individuo con trazabilidad de vacantes y pertenencia a ventana <span class="math">\(\alpha\)</span>.</li>
+<li><code>ag_vinculaciones</code>: Cabeceras de vinculación en staging con columnas espejo (<code>grupo</code>, <code>dia_horas_semanales</code>, <code>modalidadVinculacion</code>).</li>
+<li><code>ag_vinculacion_gen</code>: Tabla puente N:M para trazabilidad de cabeceras de vinculación y genes.</li>
+<li><code>ag_sesiones</code>: Sesiones detalladas expandidas fecha a fecha con <code>id_aula</code> explícito.</li>
+<li><code>ag_salvedades</code>: Registro de excepciones y justificaciones cuando una restricción es omitida manualmente.</li>
+<li><code>ag_bitacora</code>: Registro histórico de convergencia (<span class="math">\(F_{\text{mejor}}\)</span>, <span class="math">\(F_{\text{promedio}}\)</span>, <span class="math">\(F_{\text{peor}}\)</span>, y <code>duracion_ms</code> por generación).</li>
+<li><code>ag_preferencia_docente</code>: Preferencias horarias de docentes por día (1=LUNES..7=DOMINGO) y franja.</li>
+</ul>
+</li>
+<li><p><strong>Vistas Idempotentes de Staging:</strong></p>
+<ul>
+<li><code>vw_AgSesionesDetalle</code>: Vista espejo de sesiones detalladas con alias PascalCase completos.</li>
+<li><code>vw_AgVinculacionesDetalle</code>: Vista espejo de cabeceras de vinculación para consumo transparente en formularios WinForms.</li>
+</ul>
+</li>
+<li><p><strong>Alineación de Esquema Defensiva:</strong></p>
+<ul>
+<li><code>MigrationV49_AddAgHorariosTables</code> ejecuta un bloque de actualización con <code>ALTER TABLE ... ADD COLUMN ...</code> idempotente que asegura compatibilidad hacia atrás en bases de datos creadas con versiones preliminares del esquema AG.</li>
+</ul>
+</li>
+<li><p><strong>Promoción a Producción (<code>AgPromotorVinculaciones</code>):</strong></p>
+<ul>
+<li>Valida compuerta estricta: bloquea promoción si existen vacantes (<code>EsVacante == 1</code> o <code>IdTercero &lt;= 0</code>), aula no aprobada (<code>AgEstadoAula.Aprobado</code>) o violaciones de restricciones duras.</li>
+<li>Promueve vinculaciones usando <code>AgVinculacionToVinculacionMapper</code> y sesiones fecha a fecha de forma atómica bajo transacción.</li>
+<li>Implementa idempotencia en re-promoción: si <code>idagvinculacion</code> ya existe en <code>ag_promocion</code>, actualiza la vinculación de producción (<code>UpdateVinculacion</code>) y sus sesiones (<code>DeleteSesionesByVinculacion</code> + re-inserción) evitando registros duplicados.</li>
+<li>Registra una fila por vinculación en <code>ag_promocion</code> vinculando <code>idagvinculacion</code> con <code>idvinculacion</code>.</li>
+<li>Actualiza el estado del individuo a <code>AgEstadoIndividuo.Promocionado</code>.</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="7-ciclo-de-vida-de-estados-y-bloques-canónicos">7. Ciclo de Vida de Estados y Bloques Canónicos</h2>
+<h3 id="estados-de-gen-agestadogen">Estados de Gen (<code>AgEstadoGen</code>)</h3>
+<ul>
+<li><code>Valido (0)</code>: Asignación viable sin conflictos detectados.</li>
+<li><code>Conflicto / Conflictivo (1)</code>: Asignación que colisiona con restricciones duras.</li>
+<li><code>Incompleto (2)</code>: Gen marcado como vacante (<code>EsVacante == 1</code>, sin docente asignable).</li>
+<li><code>Fijado (3)</code>: Asignación predeterminada e inmutable (<code>EsFijo == 1</code>).</li>
+</ul>
+<h3 id="estados-de-individuo-agestadoindividuo">Estados de Individuo (<code>AgEstadoIndividuo</code>)</h3>
+<ul>
+<li><code>NoEvaluado (0)</code>: Estado inicial tras instanciación.</li>
+<li><code>Factible (1)</code>: Evaluado con cero violaciones duras (<code>HardViolations == 0</code>).</li>
+<li><code>Infactible (2)</code>: Posee una o más violaciones duras no resueltas.</li>
+<li><code>Optimo (3)</code>: Mejor individuo global de la corrida con cero restricciones duras.</li>
+<li><code>Promocionado (4)</code>: Individuo materializado y promovido formalmente a la base de producción.</li>
+</ul>
+<h3 id="diagnóstico-de-vacantes-agmotivovacante">Diagnóstico de Vacantes (<code>AgMotivoVacante</code>)</h3>
+<ul>
+<li><code>SinCandidatos (1)</code>: El pool docente para la asignatura está vacío o sin registros activos.</li>
+<li><code>SinDisponibilidad (2)</code>: Existen docentes en el pool pero todos presentan solapes horarios en la franja.</li>
+<li><code>NoCumpleRequisitos (3)</code>: Existen docentes en el pool pero no están habilitados para el programa o semestre específico.</li>
+<li><code>FueraDeVentanaSemestre (4)</code>: La fecha de la sesión tentativa excede la ventana temporal acotada del semestre.</li>
+</ul>
+<h3 id="bloques-horarios-canónicos-γ">Bloques Horarios Canónicos (γ)</h3>
+<p>Definidos estrictamente para la semana académica Martes a Domingo:</p>
+<ul>
+<li><strong>Martes a Viernes (Días 2..5):</strong> 1 bloque diario (18:00–22:00, 4.0h, franja <code>NOCHE</code>).</li>
+<li><strong>Sábado (Día 6):</strong> 2 bloques diarios (08:00–12:00, 4.0h, franja <code>MANANA</code> y 13:00–17:00, 4.0h, franja <code>TARDE</code>).</li>
+<li><strong>Domingo (Día 7):</strong> 1 bloque diario (08:00–12:00, 4.0h, franja <code>MANANA</code>).</li>
+</ul>
+<hr>
+<h2 id="8-rediseño-de-la-ventana-temporal-semestral-y-jerarquía-de-6-niveles-fases-151---170">8. Rediseño de la Ventana Temporal Semestral y Jerarquía de 6 Niveles (Fases 151 - 170)</h2>
+<h3 id="81-resolución-de-ventana-en-cascada-fases-151---155">8.1 Resolución de Ventana en Cascada (Fases 151 - 155)</h3>
+<p>La resolución de la ventana temporal semestral (<span class="math">\(\alpha\)</span>) opera bajo una jerarquía estricta de prioridades en <code>AgResolutorVentanaSemestre</code>:</p>
+<ol>
+<li><strong>Prioridad 1 — Fechas canónicas en <code>periodos</code> (<code>AgOrigenVentana.Periodos = 5</code>):</strong> Lectura de <code>periodo_inicio</code> y <code>periodo_fin</code> en la tabla <code>periodos</code>. Si existen y <code>periodo_fin &gt;= periodo_inicio</code>, se adopta inmediatamente.</li>
+<li><strong>Prioridad 2 — Festivos presenciales (<code>AgOrigenVentana.Presencial = 1</code>):</strong> Rango abarcado por registros en <code>festivos</code> con <code>tipofestivo = 'PRESENCIAL'</code>.</li>
+<li><strong>Prioridad 3 — Rango manual (<code>AgOrigenVentana.Manual = 4</code>):</strong> Fechas manuales suministradas por el usuario en el formulario.</li>
+<li><strong>Prioridad 4 — Bloqueo informativo:</strong> Error bloqueante descriptivo si no se configuraron fechas válidas.</li>
+</ol>
+<p>La migración <strong>V50</strong> (<code>MigrationV50_AddPeriodoVentana</code>) incorpora las columnas <code>periodo_inicio TEXT</code> y <code>periodo_fin TEXT</code> a <code>periodos</code> mediante <code>ALTER TABLE</code> condicional y ejecuta un <code>UPDATE</code> de backfill para periodos preexistentes (IDs 1, 2 y 3).</p>
+<h3 id="82-árbol-jerárquico-de-6-niveles-y-tupla-de-contexto--fases-156---164">8.2 Árbol Jerárquico de 6 Niveles y Tupla de Contexto <span class="math">\(S\)</span> (Fases 156 - 164)</h3>
+<ul>
+<li><strong>Estructura del Árbol:</strong> <code>Periodo (1) -&gt; Sede (2) -&gt; Programa (3) -&gt; Semestre (4) -&gt; Grupo (5) -&gt; Modalidad (6)</code>.</li>
+<li><strong>Lazy Loading y Claves:</strong> Carga bajo demanda en <code>treeContextoAcademico_BeforeExpand</code> utilizando <code>AgNodoArbolKey</code> para almacenar el tipo de nodo y las claves jerárquicas asociadas sin consultas prematuras a la base de datos.</li>
+<li><strong>Servicio de Selección Tri-Estado (<code>AgTreeViewCheckService</code>):</strong> Manejo recursivo de selección ascendente (padres indeterminados/marcados) y descendente (hijos marcados/desmarcados) con conteo de combinaciones en tiempo real.</li>
+<li><strong>Expansión y Control de Cardinalidad (<code>AgSeleccionAulaExpandidor</code>):</strong> Genera la lista plana de <code>AgContextoSeleccionDto</code>, deduplica mediante <code>AulaRef</code>, y aplica un tope de salvaguarda de <span class="math">\(\le 500\)</span> combinaciones para prevenir explosión combinatoria.</li>
+<li><strong>Tupla <span class="math">\(S\)</span> con Modalidad:</strong> <code>AulaRef</code> incorpora la modalidad en mayúsculas (<code>{IdPeriodo}|{IdSede}|{IdPrograma}|{Semestre}|{Grupo}|{MODALIDAD}</code>), erradicando colisiones entre grupos presenciales y virtuales homónimos.</li>
+<li><strong>Arquitectura Espacial y Docking Responsivo (Ronda 204 - Fases 1039 a 1044):</strong>
+<ul>
+<li>Reorganización modular con <code>SplitContainer</code> horizontal (<code>splitContenedorSim</code>): Panel superior expandible para selección académica y parámetros, panel inferior redimensionable para bitácora diagnóstica y acciones.</li>
+<li>El control <code>treeContextoAcademico</code> adopta <code>Dock = Fill</code> dentro de <code>grpSeleccion</code>, alcanzando un área visual útil de <span class="math">\(\ge 240\)</span> px por defecto (hasta ~345 px mediante splitter) y erradicando espacios vacíos.</li>
+<li>Distribución matemática unificada de columnas de Nivel 6 (<code>AgColumnasNivel6</code>): reparto proporcional (Jornada 30%, Días Ventana 48%, Horas/Día 22%) con anchos mínimos garantizados (62/74/64 px) sincronizando en un solo punto el dibujo (<code>DrawNode</code>), el área de clic (<code>ProcesarClickDimensionNivel6</code>), el cursor (<code>MouseMove</code>) y las cabeceras (<code>ActualizarCabecerasNivel6</code>).</li>
+<li>Cabeceras desacopladas en contenedor dedicado <code>pnlCabecerasNivel6</code> con visibilidad condicional (<code>HayNodoNivel6Visible()</code>), mostrándose únicamente cuando existen ramas de modalidad desplegadas en pantalla.</li>
+</ul>
+</li>
+</ul>
+<h3 id="83-correcciones-de-esquema-estabilidad-y-factorías-fases-165---169">8.3 Correcciones de Esquema, Estabilidad y Factorías (Fases 165 - 169)</h3>
+<ul>
+<li><strong>Fase 165 (Bloqueante):</strong> Corrección de la consulta <code>sqlAsig</code> en <code>AgFormGeneradorHorarios</code> para alinearse exclusivamente a las columnas existentes en la tabla <code>asignaturas</code> (<code>id, idprograma, semestre, num_nivel, cod_unidad, cod_materia, uni_teorica, metodologia, abreviatura, nucleo, nombre, creditos, int_horaria, tipoasignatura, tipocredito, prerequisito, subunidad</code>), resolviendo la excepción <code>no such column: codigo</code>.</li>
+<li><strong>Fase 166:</strong> Blindaje de <code>TotalHorasAsignatura</code> en <code>AgFabricaIndividuos</code>, resolviendo en cascada <code>HorasObjetivo -&gt; IntHoraria -&gt; Horas -&gt; Creditos*16 -&gt; 64.0</code>, asegurando que el total de horas sea siempre <span class="math">\(&gt; 0\)</span>.</li>
+<li><strong>Fase 167:</strong> Corrección del filtro de semestre en <code>sqlPool</code> de <code>AgFormGeneradorHorarios</code>, vinculando <code>semestreRama</code> para acotar adecuadamente el pool docente del nivel seleccionado.</li>
+<li><strong>Fase 168:</strong> Implementación de la suite completa de pruebas unitarias para el rediseño:
+<ul>
+<li><code>AgResolutorVentanaSemestreTests</code>: Validación de cascada de prioridades (<code>PERIODOS &gt; FESTIVOS &gt; MANUAL &gt; Failure</code>).</li>
+<li><code>MigrationV50Tests</code>: Verificación de <code>ALTER TABLE</code> y backfill de fechas en tablas preexistentes.</li>
+<li><code>AgAulaFactoryTests</code>: Verificación de mapeo DTO a <code>AgAula</code> y modalidad en <code>AulaRef</code>.</li>
+<li><code>AgSeleccionAulaExpandidorTests</code>: Expansión, deduplicación y límite de combinaciones.</li>
+<li><code>AgTreeViewCheckServiceTests</code>: Propagación de estados en el árbol de 6 niveles.</li>
+<li><code>PeriodoTests</code>: Validación de entidad y método <code>TryObtenerVentana</code>.</li>
+</ul>
+</li>
+<li><strong>Fase 169:</strong> Endurecimiento de <code>AgAulaFactory</code> con valores predeterminados seguros (<code>Capacidad &gt;= 30/999</code>, <code>TipoAula = 'ESTANDAR'/'VIRTUAL'</code>, <code>CaracteristicasJson = '{}'</code>, <code>Codigo/Nombre</code> no nulos) para satisfacer estrictamente las restricciones <code>NOT NULL</code> de la tabla <code>ag_aula</code>.</li>
+</ul>
+<h3 id="84-fase-170--veredicto-y-protocolo-de-pase-a-build">8.4 Fase 170 — Veredicto y Protocolo de Pase a Build</h3>
+<ul>
+<li><strong>Veredicto de Build:</strong> Favorable. La solución cumple con todas las restricciones de arquitectura limpia, .NET Framework 4.8, C# 7.3 y convención de tipo único por archivo.</li>
+<li><strong>Protocolo de Validación en Entorno Seguro:</strong>
+<ol>
+<li>Ejecutar compilación MSBuild del proyecto <code>ConversorPDF.XLL</code> y de la suite <code>ConversorPDF.Tests</code>.</li>
+<li>Ejecutar la suite completa de pruebas unitarias xUnit (<code>AgResolutorVentanaSemestreTests</code>, <code>MigrationV50Tests</code>, etc.).</li>
+<li>Ejecutar smoke test sobre una <strong>copia aislada</strong> del vault de datos antes de la promoción definitiva a producción.</li>
+</ol>
+</li>
+</ul>
+<h3 id="85-perfiles-de-selección-de-árbol-y-sincronía-canónica-fases-235---244">8.5 Perfiles de Selección de Árbol y Sincronía Canónica (Fases 235 - 244)</h3>
+<ul>
+<li><strong>Fase 235:</strong> Carga obligatoria de <code>_periodos</code> en el catálogo inicial de <code>AgFormGeneradorHorarios</code> con orden canónico por activo e ID, previniendo combos vacíos.</li>
+<li><strong>Fase 236:</strong> Migración <code>MigrationV53_AddAgArbolTables</code> para almacenar <code>ag_arbol</code> y <code>ag_arbol_nodo</code>, preservando parámetros evolutivos y atributos de aula por cada combinación.</li>
+<li><strong>Fase 237:</strong> Entidades de dominio <code>AgArbol</code> y <code>AgArbolNodo</code>, y puerto de persistencia <code>IAgArbolRepository</code>.</li>
+<li><strong>Fase 238:</strong> Repositorio transaccional <code>AgArbolRepository</code> con operaciones atómicas de guardado, sobrescritura, carga y eliminación en cascada.</li>
+<li><strong>Fase 239:</strong> Mapeador <code>AgArbolMapper</code> y servicio <code>IAgArbolService</code> con validaciones de negocio (nombre obligatorio, <span class="math">\(\ge 1\)</span> nodo seleccionado).</li>
+<li><strong>Fase 240:</strong> Interfaz de usuario con diálogo modal <code>FormNombreArbol</code> y controles de barra de herramientas (<code>cmbArboles</code>, <code>btnNuevoArbol</code>, <code>btnCargarArbol</code>, <code>btnSobrescribirArbol</code>, <code>btnEliminarArbol</code>).</li>
+<li><strong>Fase 241:</strong> Algoritmo <code>AsegurarSubarbolAsync</code> para restaurar ramas y selecciones del árbol jerárquico bajo demanda, omitiendo o alertando huérfanos.</li>
+<li><strong>Fase 243:</strong> Cobertura de pruebas unitarias con <code>AgArbolRepositoryTests</code>, <code>AgArbolServiceTests</code> y <code>MigrationV53SchemaTests</code>.</li>
+<li><strong>Fase 244:</strong> Auditoría de exportación CSV con 16 columnas canónicas (<code>IdSesion;Fecha;Dia;Horario;Horas;Periodo;Sede;Programa;Semestre;Grupo;Modalidad;Asignatura;Docente;Aula;AulaRef;Viatica</code>).</li>
+</ul>
+<h3 id="86-robustez-de-perfiles-ventana-temporal-e-integridad-transaccional-fases-245---252">8.6 Robustez de Perfiles, Ventana Temporal e Integridad Transaccional (Fases 245 - 252)</h3>
+<ul>
+<li><strong>Fase 245:</strong> Corrección de la secuencia de restauración en <code>CargarPerfilArbolSeleccionadoAsync</code>: <code>ActualizarVentanaSemestralAsync</code> se invoca estrictamente después de restaurar <code>chkManualVentana</code> y los selectores de fecha, garantizando la reproducibilidad de la ventana manual <span class="math">\(\alpha\)</span>.</li>
+<li><strong>Fase 246:</strong> Sincronización en caliente de <code>_ventanaResuelta</code> antes de guardar o sobrescribir perfiles con fechas manuales activas (<code>chkManualVentana = true</code>).</li>
+<li><strong>Fase 247:</strong> Detección de filas afectadas en <code>AgArbolRepository.GuardarAsync</code> durante <code>UPDATE</code>: aborto con <code>tx.Rollback()</code> ante IDs inexistentes para erradicar la creación de nodos huérfanos en <code>ag_arbol_nodo</code>.</li>
+<li><strong>Fase 248:</strong> Unificación del predicado SQL para unicidad y sobrescritura de perfiles: <code>LOWER(TRIM(nombre))</code> y <code>COALESCE(subunidad, '')</code>, resolviendo duplicados por casing o espacios.</li>
+<li><strong>Fase 249:</strong> Deduplicación estricta de colecciones en <code>AgArbolService.GuardarPerfilAsync</code> por <code>AulaRef</code> para blindar el índice único <code>uq_ag_arbol_nodo(idarbol, aula_ref)</code>.</li>
+<li><strong>Fase 250:</strong> Propagación explícita de <code>EsVirtual = 1</code> en <code>ObtenerCombinacionesSeleccionadas</code> cuando la modalidad seleccionada en el árbol es <code>&quot;Virtual&quot;</code>.</li>
+<li><strong>Fase 251:</strong> Inclusión de nodo placeholder <code>&quot;Cargando...&quot;</code> en <code>AsegurarSubarbolAsync</code> para nodos creados manualmente, preservando la capacidad de expansión diferida en <code>CargarHijosLazy</code>.</li>
+<li><strong>Fase 252:</strong> Compuertas de validación temprana en <code>GuardarNuevoPerfilArbolAsync</code> y <code>SobrescribirPerfilArbolAsync</code> ante períodos inválidos o ventanas temporales sin resolver.</li>
+</ul>
+<h3 id="87-eliminación-de-carreras-ui-manejo-seguro-de-eventos-async-y-preservación-de-dominio-fases-253---256">8.7 Eliminación de Carreras UI, Manejo Seguro de Eventos Async y Preservación de Dominio (Fases 253 - 256)</h3>
+<ul>
+<li><strong>Fase 253:</strong> Introducción de la bandera <code>_restaurandoPerfil</code> en <code>AgFormGeneradorHorarios</code> para suprimir la ejecución desordenada de múltiples manejadores asíncronos concurrentes durante la carga de perfiles, garantizando una única resolución final de <code>_ventanaResuelta</code>.</li>
+<li><strong>Fase 254:</strong> Creación del manejador centralizado <code>OnVentanaChanged</code> con protección <code>try / catch</code> y registro en <code>LoggerHelper.Error</code> para prevenir excepciones no controladas en eventos <code>async void</code>.</li>
+<li><strong>Fase 255:</strong> Verificación de unicidad y conectividad en <code>AgArbolService.GuardarPerfilAsync</code> mediante <code>ExisteNombreAsync</code>, reportando tempranamente fallos del repositorio antes de construir entidades.</li>
+<li><strong>Fase 256:</strong> Asignación fiel del atributo <code>Habilitado = n.Habilitado &gt; 0 ? 1 : 0</code> en <code>AgArbolRepository.GuardarAsync</code>, respetando el valor definido en la entidad de dominio <code>AgArbolNodo</code>.</li>
+</ul>
+<h3 id="88-control-de-sobrescritura-de-perfiles-y-estandarización-de-migración-v53-fases-257---260">8.8 Control de Sobrescritura de Perfiles y Estandarización de Migración V53 (Fases 257 - 260)</h3>
+<ul>
+<li><strong>Fase 257:</strong> Formalización de la semántica de <code>ExisteNombreAsync</code> en <code>AgArbolService.GuardarPerfilAsync</code>, donde <code>dup.Value == true</code> ratifica la sobrescritura transaccional intencional manejada por el repositorio.</li>
+<li><strong>Fase 258:</strong> Prevención de sobrescritura accidental en <code>GuardarNuevoPerfilArbolAsync</code> mediante advertencia interactiva <code>MessageBoxButtons.YesNo</code> si el nombre ingresado coincide con un perfil preexistente.</li>
+<li><strong>Fase 259:</strong> Adopción explícita de <code>IMigrationTolerante</code> con <code>Aditiva =&gt; false</code> en <code>MigrationV53_AddAgArbolTables</code>, homologando la convención de <code>MigrationV52</code> y validando metadatos en pruebas unitarias.</li>
+<li><strong>Fase 260:</strong> Asignación explícita de <code>Capacidad = 999</code> para aulas de modalidad virtual en <code>ObtenerCombinacionesSeleccionadas</code>.</li>
+</ul>
+<h3 id="89-corrección-crítica-de-esquema-en-generación-de-aulas-y-validación-operativa-fases-262---263">8.9 Corrección Crítica de Esquema en Generación de Aulas y Validación Operativa (Fases 262 - 263)</h3>
+<ul>
+<li><strong>Fase 262:</strong> Corrección de nombres de columnas en <code>GenerarEncabezadosAulasAsync</code> para la tabla <code>ag_aula_asignatura</code>. Se reemplazaron identificadores erróneos (<code>idaula</code>, <code>idasignatura</code>, <code>activo</code>) por las columnas canónicas de <code>MigrationV49</code> (<code>id_aula</code>, <code>id_asignatura</code>, <code>exclusivo</code>, <code>prioridad</code>, <code>horas_objetivo</code>, <code>orden_curricular</code>, <code>requerida</code>, <code>subunidad</code>), eliminando la excepción <code>no such column: idaula</code> que abortaba la transacción y vaciaba <code>ag_aula</code>.</li>
+<li><strong>Fase 263:</strong> Definición del protocolo de verificación de integridad relacional: validación de asignaturas activas por programa/semestre, persistencia exacta de <code>AulaRef</code> en <code>ag_aula</code>, vinculación no vacía en <code>ag_aula_asignatura</code> y ausencia de rollbacks en logs de ejecución.</li>
+</ul>
+<h3 id="810-corrección-de-filtro-inexistente-en-tabla-asignaturas-fases-264---265">8.10 Corrección de Filtro Inexistente en Tabla Asignaturas (Fases 264 - 265)</h3>
+<ul>
+<li><strong>Fase 264:</strong> Supresión del predicado <code>AND activo = 1</code> en la consulta <code>sqlAsigs</code> dentro de <code>GenerarEncabezadosAulasAsync</code>. Dado que la tabla <code>asignaturas</code> no contiene columna <code>activo</code> en su esquema canónico (<code>AcademicSchema.sql</code>), el filtro provocaba <code>no such column: activo</code> y abortaba la transacción de generación de aulas.</li>
+<li><strong>Fase 265:</strong> Protocolo de validación operativa en copia de respaldo para conteo de combinaciones en perfiles y vinculación efectiva de asignaturas dependientes.</li>
+</ul>
+<h3 id="811-fallback-defensivo-en-vinculación-de-asignaturas-fases-266---267">8.11 Fallback Defensivo en Vinculación de Asignaturas (Fases 266 - 267)</h3>
+<ul>
+<li><strong>Fase 266:</strong> Implementación de consulta de fallback en <code>GenerarEncabezadosAulasAsync</code> para tolerar posibles discrepancias de formato entre la tupla seleccionada (ej. semestre romano <code>'VIII'</code>) y la persistencia en la base de datos (ej. formato numérico <code>'8'</code>). Si la consulta acotada retorna 0 filas, se recuperan automáticamente las asignaturas del programa activo, impidiendo aulas huérfanas en <code>ag_aula_asignatura</code>.</li>
+<li><strong>Fase 267:</strong> Protocolo de verificación de integridad para corridas del AG y estado de pre-vuelo.</li>
+</ul>
+<h3 id="812-persistencia-en-vault-cifrado-y-restauración-automática-de-perfil-fases-268---269">8.12 Persistencia en Vault Cifrado y Restauración Automática de Perfil (Fases 268 - 269)</h3>
+<ul>
+<li><strong>Fase 268:</strong> Notificación de mutaciones al programador de sincronización (<code>SyncContext.Scheduler?.MarkDirty()</code>) desde <code>AgArbolRepository</code>, <code>AgScheduleRepository</code> y <code>GenerarEncabezadosAulasAsync</code>. Resuelve la pérdida crítica de datos al cerrar Excel, asegurando que el temporizador de debounce y el <code>Flush()</code> de cierre persistan y re-cifren <code>ag_arbol</code>, <code>ag_arbol_nodo</code>, <code>ag_aula</code> y <code>ag_aula_asignatura</code> en el vault <code>.db.enc</code>.</li>
+<li><strong>Fase 269:</strong> Restauración inmediata del perfil activo en el evento <code>OnShown</code> de <code>AgFormGeneradorHorarios</code> si existen perfiles persistidos en la subunidad actual, cargando automáticamente el árbol jerárquico, la ventana <span class="math">\(\alpha\)</span> y los parámetros evolutivos.</li>
+</ul>
+<h3 id="813-persistencia-forzada-en-cierre-y-blindaje-de-repositorios-fases-270---272">8.13 Persistencia Forzada en Cierre y Blindaje de Repositorios (Fases 270 - 272)</h3>
+<ul>
+<li><strong>Fase 270:</strong> Sobrescritura de <code>OnFormClosing</code> en <code>AgFormGeneradorHorarios</code> para forzar <code>ForcePersistVaultAsync</code> y <code>Flush()</code> sincrónicamente antes de que el Ribbon destruya la sesión compartida. Protege contra cierres repentinos de Excel previos a la expiración del debounce de 5s.</li>
+<li><strong>Fase 271:</strong> Notificación integral de <code>NotifyMarkDirty()</code> en todas las operaciones de escritura de <code>AgScheduleRepository</code> (<code>InsertAulaAsync</code>, <code>InsertCorridaAsync</code>, <code>UpdateCorridaAsync</code>, <code>SaveIndividuoAsync</code>, <code>SaveBitacoraAsync</code>, <code>GuardarSesionesStagingAsync</code>).</li>
+<li><strong>Fase 272:</strong> Definición del protocolo de verificación de persistencia y consistencia relacional post-cierre de Excel.</li>
+</ul>
+<h3 id="814-fallback-en-construircontextoasync-y-diagnóstico-accionable-de-catálogo-fases-274---276">8.14 Fallback en ConstruirContextoAsync y Diagnóstico Accionable de Catálogo (Fases 274 - 276)</h3>
+<ul>
+<li><strong>Fase 274:</strong> Implementación de consultas fallback en <code>ConstruirContextoAsync</code> para <code>Asignaturas</code> y <code>PoolDocentes</code>. Resuelve el bloqueo de pre-vuelo (<code>El aula o el programa no tiene asignaturas dependientes activas</code>) cuando la rama del árbol usa una nomenclatura de semestre (ej. <code>'I'</code>) distinta a la almacenada en el catálogo <code>asignaturas</code> (ej. <code>'1'</code>, vacío o nulo). Al retornar 0 filas la consulta filtrada, se ejecuta inmediatamente una consulta por <code>idprograma</code> y <code>subunidad</code> sin restricción de semestre.</li>
+<li><strong>Fase 275:</strong> Mejora de diagnósticos para máxima accionabilidad:
+<ol>
+<li>En <code>EjecutarDiagnosticoPreVueloAsync</code> y <code>btnOptimizar_Click</code>, se reemplazó el mensaje genérico por un detalle contextual con los parámetros de búsqueda (<code>idprograma</code>, <code>semestreRama</code>, <code>subunidad</code>), guiando al usuario si debe verificar el catálogo o cargar el pensum.</li>
+<li>En <code>GenerarEncabezadosAulasAsync</code>, se incorporó el contador explícito <code>sinAsignaturas</code>, notificando con advertencia en el diálogo final y en la bitácora si alguna de las aulas quedó huérfana de asignaturas en <code>ag_aula_asignatura</code>.</li>
+</ol>
+</li>
+<li><strong>Fase 276:</strong> Protocolo de verificación mediante consultas directas SQL en el vault para validar consistencia de <code>idprograma</code>, formatos de <code>semestre</code>, asignaciones en <code>ag_aula_asignatura</code> y pre-vuelo exitoso.</li>
+</ul>
+<h3 id="815-trazabilidad-y-diagnóstico-de-esquema-en-módulo-s-fases-277---283">8.15 Trazabilidad y Diagnóstico de Esquema en Módulo S (Fases 277 - 283)</h3>
+<ul>
+<li><strong>Fase 277:</strong> Creación del motor de traza diagnóstica estructurada <code>AgDiagnosticoTraza</code> (<code>ConversorPDF.XLL.Academic.Application.Services.Genetica</code>). Provee temporización relativa continua en milisegundos (<code>Stopwatch</code>), numeración secuencial de pasos <code>[P01..Pnn]</code>, normalización de sentencias SQL, serialización segura de parámetros, conteos preventivos con detección de umbrales mínimos (<code>ALERTA (&lt;min)</code>), volcado exhaustivo del objeto <code>AgContexto</code> y vinculación dual hacia <code>LoggerHelper</code> y el componente de bitácora UI <code>txtLogAG</code>.</li>
+<li><strong>Fase 278:</strong> Implementación del validador preventivo de esquema SQLite <code>AgEsquemaDiagnostico</code>. Examina metadatos mediante <code>PRAGMA table_info</code> antes de que la lógica de negocio consuma tablas fundamentales (<code>ag_aula</code>, <code>ag_aula_asignatura</code>, <code>asignaturas</code>, <code>terceros_asignaturas</code>, <code>periodos</code>, <code>ag_corrida</code>, etc.), advirtiendo proactivamente en los logs sobre columnas ausentes antes de lanzar excepciones Dapper o abortar transacciones.</li>
+<li><strong>Fase 279:</strong> Instrumentación integral paso a paso del Módulo S (<code>AgFormGeneradorHorarios</code>):
+<ul>
+<li><strong>P01 — Catálogos y Esquema:</strong> Validación de 10 tablas críticas y conteo de periodos, programas y sedes activos.</li>
+<li><strong>P02 — Ventana Semestral:</strong> Volcado de parámetros temporales, modo de resolución (manual vs periodos) y días hábiles calculados.</li>
+<li><strong>P03 — Árbol Académico:</strong> Métrica de nodos generados por nivel jerárquico y total de hojas <code>AulaRef</code>.</li>
+<li><strong>P04 — Generación de Aulas:</strong> Combinaciones evaluadas, consultas SQL a <code>asignaturas</code>, detección de fallbacks de semestre y conteo de huérfanas <code>sinAsignaturas</code>.</li>
+<li><strong>P05 — Contexto Genético:</strong> Inspección detallada con SQL, parámetros y conteos de filas para cada dimensión (<code>ag_aula</code>, <code>ag_bloque_horario</code>, <code>ag_aula_asignatura</code>, <code>asignaturas</code>, <code>terceros_asignaturas</code>, <code>terceros</code>, <code>festivos</code>, <code>presenciales</code>).</li>
+<li><strong>P06 — Índices Cruzados:</strong> Volcado completo del contexto y cardinalidad de índices en memoria.</li>
+<li><strong>P07 — Diagnóstico Pre-Vuelo:</strong> Registro de factibilidad con tipificación de causa (<code>AgCausaFallo</code>) ante cualquier bloqueo.</li>
+<li><strong>P08 — Optimización Evolutiva:</strong> Parámetros de corrida, semilla aleatoria y métricas de convergencia y fitness.</li>
+<li><strong>P09 — Staging:</strong> Cantidad de individuos y sesiones provisionales materializadas.</li>
+<li><strong>P10 — Promoción a Producción:</strong> Transacción de inserción en tablas operativas y sincronización de pools.</li>
+<li><strong>P11 — Cierre de Formulario:</strong> Persistencia forzada en vault cifrado (<code>ForcePersistVaultAsync</code>) y tiempo de vaciado.</li>
+</ul>
+</li>
+<li><strong>Fase 280:</strong> Catálogo tipificado de causas raíz <code>AgCausaFallo</code> (<code>ConversorPDF.XLL.Academic.Domain.Enums</code>), aislando en su propio archivo las causas de bloqueo (<code>SinPeriodo</code>, <code>SinVentana</code>, <code>SinAulas</code>, <code>SinAnclajeAula</code>, <code>SinAsignaturas</code>, <code>SinAulaAsignaturas</code>, <code>SinPoolDocente</code>, <code>SinBloques</code>, <code>VentanaInfactible</code>, <code>EsquemaIncompleto</code>, etc.).</li>
+<li><strong>Fase 281:</strong> Control de verbosidad dinámico en UI mediante la casilla de verificación <code>chkModoDebug</code> en <code>pnlBotonesSim</code>, permitiendo al operador alternar la visualización de trazas de nivel <code>DEBUG</code> en pantalla sin reiniciar la aplicación ni alterar la persistencia en el archivo físico de logs.</li>
+<li><strong>Fase 282:</strong> Registro de los nuevos componentes en <code>ConversorPDF.XLL.csproj</code> y desarrollo de la suite de pruebas unitarias en <code>ConversorPDF.Tests</code> (<code>AgDiagnosticoTrazaTests</code> y <code>AgEsquemaDiagnosticoTests</code> con SQLite in-memory).</li>
+<li><strong>Fase 283:</strong> Actualización de la documentación arquitectónica y operativa del motor genético.</li>
+<li><strong>Fase 284:</strong> Incorporación de la sobrecarga <code>traza.Causa(AgCausaFallo, detalle)</code> y la propiedad <code>UltimaCausa</code> en <code>AgDiagnosticoTraza</code>, permitiendo asentar códigos de causas raíz no acompañados de excepción y eliminando el error de compilación CS1061.</li>
+<li><strong>Fase 285:</strong> Depuración de columnas evaluadas por <code>AgEsquemaDiagnostico</code> en <code>CargarCatalogosAsync</code>, reemplazando columnas inexistentes (<code>nombre</code> en <code>sedes</code> e <code>id_aula</code> en <code>ag_corrida</code>) por las canónicas del esquema (<code>ciudad</code>, <code>subsede</code>, <code>activo</code> para <code>sedes</code> e <code>idaula</code> para <code>ag_corrida</code>), eliminando falsos positivos en los diagnósticos de arranque.</li>
+<li><strong>Fase 286:</strong> Verificación y validación estática integral de compilación, sintaxis C# 7.3 sobre .NET Framework 4.8 y concordancia relacional con <code>AcademicSchema.sql</code> y <code>MigrationV49</code>.</li>
+</ul>
+<h3 id="816-carga-de-aulaasignaturas-resolución-de-sede-en-staging-y-cobertura-docente-fases-293---296">8.16 Carga de AulaAsignaturas, Resolución de Sede en Staging y Cobertura Docente (Fases 293 - 296)</h3>
+<ul>
+<li><strong>Fase 293:</strong> Incorporación de la carga relacional de <code>ctx.AulaAsignaturas</code> en <code>ConstruirContextoAsync</code> para el aula anclada (<code>IdAulaCorrida</code>). Pobla el índice O(1) <code>ctx.AulaAsignaturasPorId</code> y habilita la verificación temprana en pre-vuelo (<code>AgCausaFallo.SinAulaAsignaturas</code>) para aulas huérfanas de asignaturas.</li>
+<li><strong>Fase 294:</strong> Resolución robusta de <code>IdSede</code> en toda la cadena evolutiva y de staging: inclusión de <code>IdSede</code> en <code>AgContexto</code>, propagación determinista en <code>AgFabricaIndividuos</code>, fallback hacia aula/contexto en <code>AgGenToAgVinculacionMapper</code> y compuerta fail-fast en <code>AgMaterializadorSesiones</code> que impide la persistencia de vinculaciones con <code>idsede = 0</code>.</li>
+<li><strong>Fase 295:</strong> Control preventivo de la regla R5 y vacantes docentes: validación de cobertura de pool docente en pre-vuelo e inicio de optimización (<code>AgCausaFallo.SinPoolDocente</code>), prevención de generación de <code>idDocente = 0</code> en <code>AgFabricaIndividuos</code> y clasificación como bloqueo crítico en <code>AgValidadorVentana</code> ante ausencia total de docentes.</li>
+<li><strong>Fase 296:</strong> Incorporación de telemetría de cobertura (<code>CoberturaDocente</code> y <code>AulasSinAsignaturas</code>) en el motor de diagnóstico estructurado <code>AgDiagnosticoTraza</code>.</li>
+</ul>
+<h3 id="817-acceso-a-modo-ag-desde-módulo-r-y-distinción-de-staging-fases-297---299">8.17 Acceso a Modo AG desde Módulo R y Distinción de Staging (Fases 297 - 299)</h3>
+<ul>
+<li><strong>Fase 297:</strong> Incorporación del panel de auditoría staging <code>pnlAgModo</code> en la pestaña Módulo R (<code>tabResultados</code>) de <code>AgFormGeneradorHorarios</code>. Provee acceso directo mediante botones dedicados: <code>btnAgVinculaciones</code> (&quot;🔗 Vinculaciones (AG)&quot;), <code>btnAgVerVinculaciones</code> (&quot;📋 Detalle (AG)&quot;) y <code>btnAgSesiones</code> (&quot;✏️ Sesión (AG)&quot;), junto con el indicador visual <code>lblAgModo</code> (&quot;Modo AG · staging: ag_vinculaciones / ag_sesiones&quot;).</li>
+<li><strong>Fase 298:</strong> Cableado asíncrono y robusto de eventos desde Módulo R hacia los tres formularios académicos conmutados en <code>AgModoDatos.Ag</code>:
+<ul>
+<li><code>AbrirVinculacionesModoAgAsync()</code>: Inicializa el grafo completo de repositorios (<code>VinculacionQueryRepository</code>, lookups y <code>VinculacionListService</code>) configurados en modo staging y presenta <code>FormVinculaciones</code> modalmente.</li>
+<li><code>AbrirDetalleSesionesModoAgAsync()</code>: Consulta <code>vw_ag_sesiones_detalle</code> con <code>VinculacionQueryRepository.GetSesionesAsync(...)</code>, tipando el resultado en <code>List&lt;SesionListItem&gt;</code> para inicializar <code>FormVerVinculaciones</code>.</li>
+<li><code>AbrirSesionModoAgAsync()</code>: Resuelve el <code>id_vinculacion</code> a partir del <code>IdSesion</code> seleccionado en la grilla mediante consulta parametrizada a <code>ag_sesiones</code> y abre <code>FormSesionesAcademicas</code> en modo staging.</li>
+<li>Resincronización automática de resultados mediante <code>CargarModuloResultadosAsync</code> tras el cierre de cualquier diálogo modal.</li>
+</ul>
+</li>
+<li><strong>Fase 299:</strong> Distinción inequívoca de contexto staging en la barra de título de los formularios modales: inclusión de <code>if (_modo.EsModoAg) this.Text = $&quot;{this.Text} [MODO AG - STAGING]&quot;;</code> en <code>FormSesionesAcademicas</code> (homologado con <code>FormVinculaciones</code> y <code>FormVerVinculaciones</code>).</li>
+</ul>
+<h3 id="818-bloqueo-estricto-por-cobertura-incompleta-e-inicialización-visual-fases-303---306">8.18 Bloqueo Estricto por Cobertura Incompleta e Inicialización Visual (Fases 303 - 306)</h3>
+<ul>
+<li><strong>Fase 303:</strong> Compuerta estricta de validación del pool docente en pre-vuelo e inicio de optimización. Bloquea si existen asignaturas sin docentes habilitados en <code>terceros_asignaturas</code> (<code>asigSinPool &gt; 0</code>), informando detalladamente la lista de asignaturas incompletas e impidiendo la generación de soluciones que incurran en violaciones duras de la regla R5 (<code>R5_HabilitacionDocentePool</code>).</li>
+<li><strong>Fase 304:</strong> Blindaje estricto en <code>AgFabricaIndividuos</code>: salvaguarda fail-fast que previene la creación de genes con <code>IdTercero &lt;= 0</code>, garantizando que ninguna solución inicial contenga tuplas degeneradas.</li>
+<li><strong>Fase 305:</strong> Inicialización explícita del indicador <code>lblAgModo</code> en el constructor de <code>AgFormGeneradorHorarios</code> con texto parametrizado según las tablas canónicas de staging (<code>ag_vinculaciones</code> / <code>ag_sesiones</code>).</li>
+<li><strong>Fase 306:</strong> Verificación de la jerarquía de acoplamiento (<code>Dock = DockStyle.Top</code>) en <code>tabResultados</code>, garantizando la disposición visual armónica sin colisiones entre el encabezado superior, el panel de Modo AG y el contenedor de resultados.</li>
+</ul>
+<h3 id="819-encapsulamiento-de-excepciones-y-trazabilidad-en-ejecución-evolutiva-fases-307---308">8.19 Encapsulamiento de Excepciones y Trazabilidad en Ejecución Evolutiva (Fases 307 - 308)</h3>
+<ul>
+<li><strong>Fase 307:</strong> Envoltorio integral mediante <code>try/catch</code> en <code>AgGeneradorHorarios.EjecutarOptimizacionAsync</code>. Captura <code>OperationCanceledException</code> y cualquier <code>Exception</code> no controlada, retornando <code>Result.Failure&lt;AgResultadoCorrida&gt;</code> seguro e impidiendo caídas del proceso de escritorio. En la capa de UI (<code>AgFormGeneradorHorarios.IniciarOptimizacionAsync</code>), se enriqueció el bloque <code>catch</code> con el registro formal <code>traza.Fallo(&quot;P08_EjecutarOptimizacionAsync&quot;, ex, AgCausaFallo.ExcepcionNoControlada)</code>.</li>
+<li><strong>Fase 308:</strong> Protocolo de validación operativa verificando contención de fallos, trazabilidad estructurada y consistencia visual de las interfaces de optimización y staging.</li>
+</ul>
+<h3 id="820-alineación-relacional-de-esquema-y-títulos-en-apertura-modo-ag-fases-309---312">8.20 Alineación Relacional de Esquema y Títulos en Apertura Modo AG (Fases 309 - 312)</h3>
+<ul>
+<li><strong>Fase 309:</strong> Corrección del identificador de columna en la consulta de resolución de vinculación: se alineó a <code>SELECT idvinculacion FROM ag_sesiones WHERE id = @IdSesion LIMIT 1;</code> conforme al DDL canónico de <code>MigrationV49</code>, eliminando la excepción <code>no such column: id_vinculacion</code>.</li>
+<li><strong>Fase 310:</strong> Unificación del título de ventana en <code>FormSesionesAcademicas</code> a <code>&quot;Sesiones Académicas [MODO AG - STAGING]&quot;</code>, erradicando sufijos duplicados.</li>
+<li><strong>Fase 311:</strong> Interpolación canónica de <code>modo.VistaSesionesDetalle</code> en las notificaciones informativas de la UI ante ausencia de registros en staging.</li>
+<li><strong>Fase 312:</strong> Protocolo integral de verificación de integración del flujo Módulo R hacia formularios modales en Modo AG.</li>
+</ul>
+<h3 id="821-rehidratación-de-corridas-y-validación-preventiva-en-modo-ag-fases-313---315">8.21 Rehidratación de Corridas y Validación Preventiva en Modo AG (Fases 313 - 315)</h3>
+<ul>
+<li><strong>Fase 313:</strong> Validación estricta de <code>idVinculacion</code> en <code>AbrirSesionModoAgAsync</code>. Impide la invocación de <code>AbrirEnModoAg(null)</code> ante filas sin <code>IdSesion</code> válido o inexistentes en <code>ag_sesiones</code>, informando al usuario y evitando la apertura involuntaria de borradores vacíos.</li>
+<li><strong>Fase 314:</strong> Rehidratación persistente de soluciones en Módulo R (<code>_idCorridaCargada</code> y reconstrucción de <code>_ultimoResultado</code>):
+<ul>
+<li>Inclusión del campo <code>_idCorridaCargada</code> para rastrear la corrida visualizada en <code>AgFormGeneradorHorarios</code>.</li>
+<li>Rehidratación automática de <code>_ultimoResultado</code> desde SQLite (<code>GetCorridaByIdAsync</code> y <code>GetIndividuoByIdAsync</code>) al cargar resultados de corridas históricas o tras reiniciar Excel.</li>
+<li>Corrección de la compuerta en <code>AbrirDetalleSesionesModoAgAsync</code>, eliminando bloqueos falsos cuando existen filas en el grid pero <code>_ultimoResultado</code> no residía en memoria.</li>
+<li>Actualización de los callbacks de cierre modal en Modo AG para refrescar la grilla evaluando <code>_idCorridaCargada &gt; 0</code>.</li>
+<li>Habilitación de las compuertas de seguridad (&quot;Aprobar Corrida y Aula&quot; y &quot;Promover a Producción&quot;) para operar de forma transparente con corridas recargadas.</li>
+</ul>
+</li>
+<li><strong>Fase 315:</strong> Protocolo de validación operativa post-reinicio garantizando auditoría, edición unitaria y promoción estables.</li>
+</ul>
+<h3 id="822-tratamiento-integral-de-vacantes-docentes-y-panel-de-vacantes-fases-317---324">8.22 Tratamiento Integral de Vacantes Docentes y Panel de Vacantes (Fases 317 - 324)</h3>
+<ul>
+<li><strong>Fase 317 (Esquema BD):</strong> Migración <code>MigrationV54_AddVacanteColumns</code> con tolerancia a fallos agregando las columnas <code>es_vacante INTEGER DEFAULT 0</code>, <code>motivo_vacante TEXT DEFAULT ''</code>, <code>candidatos_pool INTEGER DEFAULT 0</code> a <code>ag_vinculaciones</code> y <code>ag_sesiones</code>, y <code>es_vacante</code>, <code>motivo_vacante</code> a <code>vinculaciones</code> y <code>sesiones</code> en producción.</li>
+<li><strong>Fase 318 (Dominio):</strong>
+<ul>
+<li>Creación del enum canónico <code>AgMotivoVacante</code>: <code>Ninguno = 0</code>, <code>SIN_CANDIDATOS = 1</code>, <code>SIN_DISPONIBILIDAD = 2</code>, <code>NO_CUMPLE_REQUISITOS = 3</code>, <code>POOL_VACIO = 4</code>, <code>FueraDeVentanaSemestre = 5</code>.</li>
+<li>Inclusión de las propiedades <code>EsVacante</code>, <code>MotivoVacante</code> y <code>CandidatosPool</code> en <code>AgGen</code>, <code>AgVinculacion</code>, <code>AgSesion</code>, <code>Vinculacion</code> y <code>Sesion</code>.</li>
+<li>Creación del DTO de presentación <code>AgVacanteGridDto</code>.</li>
+</ul>
+</li>
+<li><strong>Fase 319 (Clasificación de Causa en Fábrica):</strong>
+<ul>
+<li>Implementación de <code>AgFabricaIndividuos.ClasificarMotivo(contexto, asignatura, fecha, bloque)</code>.</li>
+<li>En lugar de abortar mediante excepciones no controladas cuando una asignatura carece de docente habilitado, la fábrica genera genes vacantes con <code>IdTercero = 0</code>, <code>EsVacante = 1</code> y asigna su motivo específico según disponibilidad del pool.</li>
+</ul>
+</li>
+<li><strong>Fase 320 (Relajación de Regla R5 y Métrica de Vacantes):</strong>
+<ul>
+<li><code>AgValidadorReglas</code> omite la violación dura <code>R5_HabilitacionDocentePool</code> cuando el gen está marcado como vacante (<code>EsVacante == 1</code> o <code>IdTercero &lt;= 0</code>).</li>
+<li>Incorporación de penalización blanda configurable <code>softScore += vacantes * PesoVacante</code> (<code>PesoVacante = 50.0</code>).</li>
+<li>Métrica auditable <code>Vacantes</code> en <code>AgIndividuo</code>, <code>AgResultadoCorrida</code> y <code>AgCorrida</code>.</li>
+<li>Advertencia preventiva y confirmación obligatoria al promover soluciones que contienen vacantes no resueltas.</li>
+</ul>
+</li>
+<li><strong>Fase 321 (Pre-vuelo con Diálogo de Consentimiento):</strong>
+<ul>
+<li>Conversión de compuerta dura en diálogo de consentimiento explícito (<code>MessageBoxButtons.YesNo</code>): ante asignaturas sin docente en pool, el usuario puede autorizar la optimización en modo vacante.</li>
+</ul>
+</li>
+<li><strong>Fase 322 (Panel de Vacantes en Módulo R):</strong>
+<ul>
+<li>Nueva pestaña &quot;👤 Panel de Vacantes&quot; en el panel inferior de auditoría con <code>dgvVacantes</code>, combo de filtrado por motivo (<code>cmbMotivoVacante</code>), contador dinámico y botón de acción contextual <code>btnAccionVacante</code>.</li>
+<li>Botón contextual dinámico:
+<ul>
+<li><code>SIN_CANDIDATOS</code> o <code>POOL_VACIO</code>: &quot;Cargar pool&quot; (abre <code>FormTerceroAsignaturas</code> prefiltrado por programa, asignatura y semestre).</li>
+<li><code>SIN_DISPONIBILIDAD</code>: &quot;Mover franja&quot; (abre <code>FormSesionesAcademicas</code> en Modo AG para la vinculación).</li>
+<li><code>NO_CUMPLE_REQUISITOS</code>: &quot;Revisar requisitos&quot; (abre <code>FormTerceroAsignaturas</code> para revisar salvedades/requisitos).</li>
+<li>Tras resolver en diálogo modal, el Módulo R recalcula y actualiza el contador de vacantes.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>Fase 323 (Tests Unitarios):</strong>
+<ul>
+<li><code>AgMotivoVacanteTests</code>: Cobertura exhaustiva de clasificación para cada escenario (<code>POOL_VACIO</code>, <code>SIN_CANDIDATOS</code>, <code>NO_CUMPLE_REQUISITOS</code>, <code>SIN_DISPONIBILIDAD</code>) y generación de genes vacantes sin excepciones.</li>
+<li><code>AgValidadorReglasTests</code>: Verificación de omisión de HardViolations en R5 y cómputo de penalización suave para vacantes.</li>
+</ul>
+</li>
+<li><strong>Fase 324 (Documentación y Exportación CSV):</strong>
+<ul>
+<li>Sincronización del manual técnico y ampliación del exportador CSV con columnas <code>Vacante</code>, <code>Motivo</code> y <code>Candidatos</code>.</li>
+</ul>
+</li>
+</ul>
+<h3 id="823-formato-unificado-de-asignatura-y-semestre-romano-fases-325---328">8.23 Formato Unificado de Asignatura y Semestre Romano (Fases 325 - 328)</h3>
+<ul>
+<li><strong>Fase 325 (Helper de Formato):</strong> Implementación de <code>AgFormatoAsignatura</code> con:
+<ul>
+<li><code>SemestreRomano(string)</code>: Normalización bidireccional y tolerante de semestre (arábigos <code>&quot;2&quot;</code> → <code>&quot;II&quot;</code>, minúsculas <code>&quot;ii&quot;</code> → <code>&quot;II&quot;</code>, nulos/vacíos → <code>&quot;SIN ASIGNAR&quot;</code>, passthrough para romanos extendidos o texto especial).</li>
+<li><code>Linea(Asignatura a)</code>: Proyección estandarizada <code>&quot;{a.Id}: {SemestreRomano(a.Semestre)} → {a.Nombre}&quot;</code>.</li>
+<li><code>BulletList(IEnumerable&lt;Asignatura&gt;)</code>: Unión con viñeta <code>&quot;• &quot;</code> para presentación en cuadros de diálogo y bitácoras.</li>
+<li>Propiedad configurable <code>Flecha</code> (<code>&quot;→&quot;</code> por defecto, configurable a <code>&quot;-&gt;&quot;</code> para entornos ASCII puro).</li>
+</ul>
+</li>
+<li><strong>Fase 326 (Integración en Puntos de Llamada):</strong> Adopción de <code>AgFormatoAsignatura.BulletList</code> en:
+<ul>
+<li><code>ValidarFactibilidadVentanaAsync</code>: Notificación diagnóstica pre-vuelo y diálogo modal <code>MessageBox.Show</code>.</li>
+<li><code>IniciarOptimizacionAsync</code>: Validación pre-vuelo antes de inicializar la población genética.</li>
+<li>Registro estructurado en telemetría: <code>traza.Dato(&quot;AsignaturasSinDocente&quot;, listaSin.Replace(&quot;\n&quot;, &quot; &quot;))</code>.</li>
+</ul>
+</li>
+<li><strong>Fase 327 (Pruebas Unitarias):</strong> Cobertura exhaustiva en <code>AgFormatoAsignaturaTests</code> validando:
+<ul>
+<li>Casos arábigos, minúsculas, números romanos, vacíos, nulos y passthrough.</li>
+<li>Formato de línea individual y listas con viñetas.</li>
+<li>Configuración dinámica del separador ASCII / Unicode.</li>
+</ul>
+</li>
+<li><strong>Fase 328 (Documentación y Auditoría):</strong> Registro formal del formato legible en la documentación técnica del módulo académico.</li>
+</ul>
+<h3 id="824-normalización-de-motivos-promoción-parcial-con-justificación-y-ajuste-de-ui-fases-329---332">8.24 Normalización de Motivos, Promoción Parcial con Justificación y Ajuste de UI (Fases 329 - 332)</h3>
+<ul>
+<li><strong>Fase 329 (Normalización Determinista de <code>AgMotivoVacante</code>):</strong>
+<ul>
+<li>Erradicación de identificadores duplicados con el mismo valor ordinal en <code>AgMotivoVacante</code>, eliminando inconsistencias causadas por llamadas no deterministas a <code>Enum.ToString()</code>.</li>
+<li>Estandarización de miembros canónicos en mayúsculas: <code>Ninguno = 0</code>, <code>SIN_CANDIDATOS = 1</code>, <code>SIN_DISPONIBILIDAD = 2</code>, <code>NO_CUMPLE_REQUISITOS = 3</code>, <code>POOL_VACIO = 4</code>, <code>FUERA_DE_VENTANA = 5</code>.</li>
+<li>Creación de la clase desacoplada <code>AgMotivoVacanteExtensions</code> con métodos <code>Codigo()</code> (representación textual en mayúsculas) y <code>Desde(string)</code> (conversión segura case-insensitive).</li>
+<li>Adopción de <code>.Codigo()</code> en <code>AgAsignadorTercero</code>, <code>AgFabricaIndividuos</code>, <code>AgVacanteGridDto</code> y suites de pruebas unitarias.</li>
+</ul>
+</li>
+<li><strong>Fase 330 (Promoción Parcial con Justificación de Vacantes):</strong>
+<ul>
+<li>Ampliación de la interfaz <code>IAgPromotorVinculaciones</code> y servicio <code>AgPromotorVinculaciones</code> con la sobrecarga <code>PromoverAProduccionAsync(..., string justificacionVacante, ...)</code>.</li>
+<li>Desbloqueo de la promoción para individuos con asignaturas vacantes siempre que el usuario suministre una justificación formal.</li>
+<li>Asiento de <code>es_vacante = 1</code> y <code>motivo_vacante</code> en tablas de producción (<code>vinculaciones</code>, <code>sesiones</code>), así como <code>justificacion_vacante</code> en la tabla de trazabilidad <code>ag_promocion</code>.</li>
+<li>Filtrado de docentes válidos (<code>sv.IdTercero &gt; 0</code>) para prevenir la inserción de registros huérfanos o vacíos en la sincronización del pool docente.</li>
+</ul>
+</li>
+<li><strong>Fase 331 (Población Dinámica del Combo de Motivos):</strong>
+<ul>
+<li>Reemplazo de la lista manual hardcodeada de motivos en <code>AgFormGeneradorHorarios</code> por enumeración dinámica de <code>AgMotivoVacante</code>, incorporando automáticamente nuevos estados como <code>FUERA_DE_VENTANA</code>.</li>
+<li>Acción contextual dedicada para <code>FUERA_DE_VENTANA</code>: botón &quot;Ajustar ventana&quot; que conduce al usuario a las herramientas de edición en modo staging.</li>
+</ul>
+</li>
+<li><strong>Fase 332 (Verificación Visual y Espacial en Designer):</strong>
+<ul>
+<li>Auditoría de coordenadas en el encabezado de resultados (<code>pnlHeaderResultados</code>): verificación matemática de separación libre (&gt;120 px) entre <code>lblVacantes</code> (375,15, ancho 85 px) y <code>btnExportarSimulacion</code> (580,10), confirmando la ausencia de superposiciones o solapes.</li>
+</ul>
+</li>
+<li><strong>Fase 333 (Acción Contextual y Navegación Dual para <code>FUERA_DE_VENTANA</code>):</strong>
+<ul>
+<li>Cobertura explícita del motivo <code>FUERA_DE_VENTANA</code> en el Panel de Vacantes: configuración dinámica del botón contextual como <code>&quot;Ajustar ventana&quot;</code>.</li>
+<li>Despacho de flujo interactivo dual: diálogo que ofrece abrir la vinculación/sesión en Modo AG (<code>FormSesionesAcademicas</code>) para retocar fechas individuales, o bien redirigir a la pestaña del Módulo S (<code>tabSimulacion</code>) para ampliar o revisar el rango de la ventana semestral activa.</li>
+</ul>
+</li>
+</ul>
+<h3 id="825-modelo-de-proyección-semestral-multi-día-y-calibración-con-horarios-reales-fases-378---390--391---408">8.25 Modelo de Proyección Semestral Multi-Día y Calibración con Horarios Reales (Fases 378 - 390 / 391 - 408)</h3>
+<p>Consolidación arquitectónica y algorítmica para proyectar fielmente la programación académica semestral reflejada en la matriz empírica (<code>Horarios.xlsx</code>: 219 aulas, 119 columnas-día desde 2026-08-11 hasta 2026-12-07, 9.340 horas y 2.324 sesiones distribuidas en 16 patrones semanales).</p>
+<ul>
+<li><p><strong>Fase 378 / Fase 399 (Normalización y Parsing de Semestres y Grupos):</strong></p>
+<ul>
+<li>Incorporación en <code>AgFormatoAsignatura</code> de <code>SemestreArabigo(string)</code> y <code>ParsearSemestreGrupo(string)</code> con soporte de expresiones regulares y arrays compatibles con C# 7.3.</li>
+<li>Conversión bidireccional tolerante: romanos (<code>&quot;II&quot;</code>) a arábigos (<code>&quot;2&quot;</code>), extracción de semestre y sufijo de grupo (ej. <code>&quot;2-1&quot;</code> <span class="math">\(\rightarrow\)</span> Semestre: <code>&quot;2&quot;</code>, Grupo: <code>&quot;1&quot;</code>) permitiendo la desambiguación de cohortes paralelas en la misma aula.</li>
+</ul>
+</li>
+<li><p><strong>Fase 379 / Fase 400 (Acotamiento Estricto de Demanda en UI):</strong></p>
+<ul>
+<li>Modificación de la consulta <code>sqlAsig</code> en <code>AgFormGeneradorHorarios.ConstruirContextoAsync</code>: filtrado estricto por <code>subunidad_id IN (SELECT DISTINCT subunidad_id FROM aulas WHERE id IN @AulasIds)</code>.</li>
+<li>Erradicación del fallback global a toda la sede, garantizando que el optimizador solo planifique las asignaturas correspondientes a las subunidades propietarias de las aulas seleccionadas por el usuario.</li>
+</ul>
+</li>
+<li><p><strong>Fase 380 / Fase 401 (Capacidad por Ocurrencias Reales y Corrección de Bloqueo Pre-Vuelo):</strong></p>
+<ul>
+<li>Implementación de <code>AgPlanificadorTemporal.ContarOcurrencias(DayOfWeek, DateTime, DateTime, Func&lt;DateTime, bool&gt;)</code>: cálculo de ocurrencias de cada día de la semana en la ventana semestral <span class="math">\(\alpha\)</span> descontando festivos reales.</li>
+<li>Validación de capacidad de oferta de aulas (<code>AgValidadorVentana.ValidarFactibilidadAsync</code>) basada en ocurrencias exactas (<code>diasOcurrencias * 4.0</code>), en reemplazo de aproximaciones lineales de semanas uniformes.</li>
+<li>Comprobación de factibilidad individual por curso: alerta si la demanda horaria de una asignatura excede las ocurrencias máximas del día de su bloque.</li>
+<li><strong>Eliminación del falso positivo <code>R-DOC</code> en pre-vuelo:</strong> En la matriz real existen 98 asignaciones válidas donde un mismo docente dicta dos cursos el mismo día en franjas distintas (ej. Sábado Mañana 08:00-12:00 y Sábado Tarde 13:00-17:00). La restricción dura R1 ya previene solapamientos a nivel <code>(docente, fecha, franja_horaria)</code>.</li>
+</ul>
+</li>
+<li><p><strong>Fase 381 / Fase 402 (Patrón Semanal Multi-Día y Genoma 1↔N):</strong></p>
+<ul>
+<li>Creación de la entidad de dominio <code>AgPatronSemanal</code> y el servicio <code>AgPlanificadorPatronSemanal</code>.</li>
+<li>Simulación calendario real (<code>GenerarFechas</code> y <code>Construir</code>): calcula iterativamente las fechas válidas para cada día del patrón semanal desde la fecha de inicio, determinando la distribución exacta de horas por día y reproduciendo fielmente los 13 histogramas semanales empíricos (ej. patrones 2-2, 2-3, 3-3, 4-4).</li>
+<li>Ampliación de <code>AgGen</code>: propiedades <code>IndiceDiaPatron</code>, <code>PatronSemanal</code>, <code>DiasPatron</code>, <code>ClaveGrupo</code>, <code>HorasGen</code> y método <code>SesionesDelGen()</code>.</li>
+<li><code>AgFabricaIndividuos</code>: Asignaturas con patrones multi-día generan <span class="math">\(N\)</span> genes vinculados bajo la misma <code>ClaveGrupo</code> (<code>$&quot;{asig.Id}|{idAula}|{grupoEfectivo}&quot;</code>), cada uno con su día, bloque y carga horaria individual <code>HorasGen</code>.</li>
+</ul>
+</li>
+<li><p><strong>Fase 382 / Fase 403 (Mapeo Invariante a Cabeceras y Materialización):</strong></p>
+<ul>
+<li>Actualización de <code>AgGenToAgVinculacionMapper</code>: cálculo de <code>TotalHoras</code> sumando <code>x.HorasGen &gt; 0 ? x.HorasGen : x.TotalHorasAsignatura</code>, asegurando el cumplimiento estricto del invariante I1 (<span class="math">\(\sum \text{HorasGen} = \text{TotalHorasAsignatura}\)</span>).</li>
+<li><code>AgExpansorSesiones</code>: Proyección de fechas y sesiones acotada a <code>horasObjetivoGen</code> (<code>gen.HorasGen</code>).</li>
+<li><code>AgMaterializadorSesiones</code>: Agrupación de genes multi-día por <code>ClaveGrupo</code> en una única cabecera <code>ag_vinculaciones</code> con formato compuesto de horario: <code>DiaHorasSemanales = &quot;DIA|horas, DIA|horas&quot;</code>.</li>
+</ul>
+</li>
+<li><p><strong>Fase 383 / Fase 404 (Validación Defensiva de Materialización y Causa de Fallo StagingVacio):</strong></p>
+<ul>
+<li>Incorporación del valor <code>AgCausaFallo.StagingVacio = 12</code> en el enum canónico.</li>
+<li><code>AgFormGeneradorHorarios</code>: Verificación explícita de <code>matRes.IsFailure</code> tras la optimización.</li>
+<li>Validación post-materialización: conteo de registros en <code>ag_vinculaciones</code> y <code>ag_sesiones</code> de la corrida; si no se generaron registros o la suma de horas es 0, se interrumpe el flujo y se notifica al usuario sin proceder a visualización errónea.</li>
+</ul>
+</li>
+<li><p><strong>Fase 384 (Búsqueda Unificada en Pool Docente y Normalización de Semestre):</strong></p>
+<ul>
+<li>Modificación de la consulta de carga del pool docente en <code>AgFormGeneradorHorarios</code> para extraer <code>terceros_asignaturas</code> correspondientes al alcance de subunidades seleccionadas.</li>
+<li>Ampliación de <code>AgContexto.EsDocenteHabilitado</code>: fallback multinivel para resolución de asignaturas en el pool (clave cruda, semestre romano <code>&quot;II&quot;</code>, semestre arábigo <code>&quot;2&quot;</code>, y comodín genérico <code>&quot;*&quot;</code>).</li>
+</ul>
+</li>
+<li><p><strong>Fase 385 (Migración de Esquema SQLite V55):</strong></p>
+<ul>
+<li>Creación de <code>MigrationV55_AddAgGenPatronSemanal</code>: agregación idempotente de 5 columnas en <code>ag_gen</code> (<code>indice_dia_patron</code>, <code>patron_semanal</code>, <code>dias_patron</code>, <code>clave_grupo</code>, <code>horas_gen</code>), columna <code>dias_patron</code> en <code>ag_aula_asignatura</code>, y semilla para el bloque lunes tarde (13:00-17:00).</li>
+<li>Registro de la migración en <code>SqliteHelper.BuildMigrator()</code> y en el proyecto <code>ConversorPDF.XLL.csproj</code>.</li>
+</ul>
+</li>
+<li><p><strong>Fase 386 (Migración de Esquema SQLite V56):</strong></p>
+<ul>
+<li>Creación de <code>MigrationV56_AjustarInicioPeriodo2026_02</code>: actualización de <code>periodos.periodo_inicio = '2026-08-11'</code> para el periodo <code>2026-02</code>, alineando el inicio semestral con el primer martes de clases del calendario institucional de 17 semanas.</li>
+<li>Registro en el pipeline de migraciones.</li>
+</ul>
+</li>
+<li><p><strong>Fase 387 / Fase 405 (Sincronización Honesta de UI ante Fallos):</strong></p>
+<ul>
+<li>Implementación en <code>AgFormGeneradorHorarios.CargarResultados</code>: limpieza completa de DataGridViews de resultados (<code>dgvResultados</code>, <code>dgvSesiones</code>, <code>dgvVacantes</code>) y restablecimiento de etiquetas informativas a 0 cuando la corrida finaliza sin registros válidos en staging.</li>
+</ul>
+</li>
+<li><p><strong>Fase 388 / Fase 406 (Encabezados de Aulas con Intensidad Horaria Real):</strong></p>
+<ul>
+<li>Refactorización de <code>AgFormGeneradorHorarios.GenerarEncabezadosAulasAsync</code>: cálculo de <code>horas_objetivo</code> derivado de la intensidad horaria real <code>int_horaria</code> de la asignatura y parseo del semestre mediante <code>AgFormatoAsignatura.ParsearSemestreGrupo</code>.</li>
+</ul>
+</li>
+<li><p><strong>Fase 389 / Fase 407 (Batería Exhaustiva de Pruebas Unitarias):</strong></p>
+<ul>
+<li><code>AgPlanificadorPatronSemanalTests</code>: Cobertura de derivación de fechas, distribución de horas (patrones 2-2, 3-3, 4-4, etc.) y consistencia de sumatorias.</li>
+<li><code>AgFormatoAsignaturaTests</code>: Cobertura de <code>SemestreArabigo</code> y <code>ParsearSemestreGrupo</code> para valores estándar, con sufijo de grupo, inválidos o vacíos.</li>
+<li><code>AgValidadorVentanaTests</code>: Cobertura de cómputo de capacidad por ocurrencias reales descontando festivos.</li>
+<li><code>PoolDocenteUnionTests</code>: Cobertura de fallback de claves de habilitación docente en <code>AgContexto</code>.</li>
+</ul>
+</li>
+<li><p><strong>Fase 390 / Fase 408 (Exportación Espejo 1:1 a Excel de Proyección Semestral):</strong></p>
+<ul>
+<li>Incorporación del botón <code>btnExportarProyeccion</code> en el diseñador de <code>AgFormGeneradorHorarios</code> con estilo visual coherente.</li>
+<li>Implementación de <code>ExportarProyeccionEspejo()</code>: genera una hoja de cálculo con la estructura exacta de <code>Horarios.xlsx</code>:
+<ul>
+<li>Metadatos (Aulas, Asignatura, Docente, Horas Objetivo).</li>
+<li>119 columnas-día consecutivas rotuladas con etiqueta de día (<code>Ma, Mi, J, V, S, D, L</code>) y fecha (<code>dd/MM/yyyy</code>).</li>
+<li>Matriz de sesiones proyectadas (4 horas por sesión).</li>
+<li>Columna de verificación <code>SubTotal</code> con fórmula Excel <code>=SUMA(L{fila}:DZ{fila})</code>.</li>
+<li>Resumen inferior de validación de horas proyectadas contra horas objetivo.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="826-ronda-52--estabilización-paridad-y-blindaje-de-invariantes-fases-409---422">8.26 Ronda 52 — Estabilización, Paridad y Blindaje de Invariantes (Fases 409 - 422)</h3>
+<ul>
+<li><strong>Fase 409 (Corrección CS1061 en Materialización):</strong>
+<ul>
+<li>Desacoplamiento de la clave de grupo (<code>grp.Key</code> string) mediante extracción determinista de <code>idAulaGrupo = genes[0].IdAula</code>.</li>
+</ul>
+</li>
+<li><strong>Fase 410 (Corrección de DDL en Migración V55):</strong>
+<ul>
+<li>Reemplazo de <code>turno</code> por <code>franja</code> en el seed de <code>ag_bloque_horario</code>, previniendo excepción de SQLite al arranque.</li>
+</ul>
+</li>
+<li><strong>Fase 411 (Derivación e Inserción de <code>dias_patron</code>):</strong>
+<ul>
+<li>Poblamiento dinámico de <code>ag_aula_asignatura.dias_patron</code> según carga horaria ($\ge 80$h <span class="math">\(\rightarrow\)</span> <code>&quot;2,3,4,5,6&quot;</code>, $\ge 64$h <span class="math">\(\rightarrow\)</span> <code>&quot;4,5,6&quot;</code>, $&lt;64$h <span class="math">\(\rightarrow\)</span> <code>&quot;2,3&quot;</code>), eliminando cadenas vacías.</li>
+</ul>
+</li>
+<li><strong>Fase 412 (Degradación Defensiva a Día Único):</strong>
+<ul>
+<li>Si la construcción del patrón semanal falla, se degrada a un único día (<code>diasK[0]</code>) para evitar multiplicar la carga horaria en múltiples genes.</li>
+</ul>
+</li>
+<li><strong>Fase 413 y Fase 415 (Histogramas Escalonados y Semanas Relativas):</strong>
+<ul>
+<li>Implementación en <code>AgPlanificadorPatronSemanal</code> de rampa de sesiones escalonada para reproducir los patrones empíricos observados (<code>[3,4,4,5]</code>, <code>[2,3,3,4,4]</code>, <code>[1,2,3,3,3]</code>, <code>[1,2,2,2]</code>). Agrupación por semanas ordinales relativas a <code>FechaInicio</code> garantizando ordenamiento temporal invariante al año calendario.</li>
+</ul>
+</li>
+<li><strong>Fase 414 (Proyección Cronológica Fiel con <code>FechasGen</code>):</strong>
+<ul>
+<li>Incorporación de <code>FechasGen</code> en <code>AgGen</code> (con soporte en <code>Clonar</code>) y consumo prioritario en <code>AgExpansorSesiones</code> para proyectar las sesiones en las fechas calculadas por el planificador semanal.</li>
+</ul>
+</li>
+<li><strong>Fase 416 y Fase 417 (Blindaje de Invariantes I1 e I2):</strong>
+<ul>
+<li>Comprobación matemática en fábrica y compuertas <code>Result.Failure</code> en <code>AgMaterializadorSesiones</code>:
+<ul>
+<li>I1: <span class="math">\(\sum \text{HorasGen} == \text{TotalHorasAsignatura}\)</span>.</li>
+<li>I2: <span class="math">\(\text{TotalSesiones} \times 4.0 == \text{TotalHorasAsignatura}\)</span>.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>Fase 418 y Fase 419 (Coherencia de Alcances y Default Unificado):</strong>
+<ul>
+<li><code>AgValidadorVentana</code>: Oferta calculada sobre <code>aulasDisponibles</code> (mismo alcance curricular de semestre/grupo que la demanda). Default unificado de <code>diasDeclarados = 2</code> en validador y fábrica.</li>
+</ul>
+</li>
+<li><strong>Fase 420 (Deuda Técnica y Encapsulación):</strong>
+<ul>
+<li>Limpieza de nombres inline en <code>AgContexto</code> y restablecimiento de visibilidad de <code>PoolPorAsignatura</code> a <code>{ get; private set; }</code>.</li>
+</ul>
+</li>
+<li><strong>Fase 421 (Exportación Espejo 1:1 con Seriales OADate):</strong>
+<ul>
+<li>Título A1 <code>&quot;PROGRAMACION DOCENTE PERIODO 2026-02&quot;</code> y seriales <code>ToOADate()</code> en columnas-día para interoperabilidad nativa de fórmulas y gráficos en Excel.</li>
+</ul>
+</li>
+<li><strong>Fase 422 (Ampliación de Pruebas Unitarias):</strong>
+<ul>
+<li>Cobertura de los 4 casos empíricos de histogramas escalonados y comprobación de conservación de suma de horas en <code>ConversorPDF.Tests</code>.</li>
+</ul>
+</li>
+</ul>
+<h3 id="827-ronda-53--calibración-de-reparto-monótono-integración-de-festivos-y-protección-i1-fases-423---429">8.27 Ronda 53 — Calibración de Reparto Monótono, Integración de Festivos y Protección I1 (Fases 423 - 429)</h3>
+<ul>
+<li><strong>Fase 423 (Conservación Estricta <span class="math">\(\sum \text{sesiones} == S\)</span>):</strong>
+<ul>
+<li>Guarda condicional y validación final <code>porSemana.Sum() == S</code> en <code>AgPlanificadorPatronSemanal</code>, evitando pérdidas de sesiones por saturación de tope.</li>
+</ul>
+</li>
+<li><strong>Fase 424 (Reparto Monótono Creciente por Redondeo Acumulado):</strong>
+<ul>
+<li>Formulación acumulativa telescópica <span class="math">\(\lceil S \times w / W \rceil - \lceil S \times (w-1) / W \rceil\)</span>, garantizando orden no decreciente y suma exacta. Relajación de pruebas unitarias a invariantes matemáticos estables.</li>
+</ul>
+</li>
+<li><strong>Fase 425 (Preservación de Patrones Uniformes Canónicos):</strong>
+<ul>
+<li>El escalado solo se activa si el patrón uniforme no cabe en la ventana disponible <code>W</code>, preservando el 90% de las filas uniformes del Excel (<code>[2,2,2,2,2,2]</code>, <code>[2,2,2,2]</code>).</li>
+</ul>
+</li>
+<li><strong>Fase 426 (Integración de Festivos en 'SemanasDisponibles'):</strong>
+<ul>
+<li>Detección semana a semana de días hábiles no festivos en <code>diasK</code>, evitando inflación de semanas disponibles en periodos con festivos.</li>
+</ul>
+</li>
+<li><strong>Fase 427 (Restricción de Días a 'diasK'):</strong>
+<ul>
+<li>Acotamiento estricto de días planificados a los declarados en <code>diasK</code> y tope <span class="math">\(n \le \min(\text{diasK.Count}, 5)\)</span>.</li>
+</ul>
+</li>
+<li><strong>Fase 428 (Penalización Dura y Vacante ante Inconsistencia I1 en Fábrica):</strong>
+<ul>
+<li>Penalización explícita con <code>individuo.HardViolations++</code> y marcado de <code>EsVacante = 1</code> ante discrepancias en la suma de horas de genes.</li>
+</ul>
+</li>
+<li><strong>Fase 429 (Normalización Canónica de Horas Semanales en Día Único):</strong>
+<ul>
+<li>Fijación de <code>HorasSemanales = 4.0;</code> e <code>HorasGen = totalHoras;</code> en la rama de día único para mantener la sesión elemental de 4 horas.</li>
+</ul>
+</li>
+</ul>
+<h3 id="828-ronda-54--orden-ascendente-semanas-exactas-y-ajuste-determinista-i1-fases-430---433">8.28 Ronda 54 — Orden Ascendente, Semanas Exactas y Ajuste Determinista I1 (Fases 430 - 433)</h3>
+<ul>
+<li><strong>Fase 430 (Orden Ascendente Estable en Reparto Escalado):</strong>
+<ul>
+<li>Ordenamiento determinista <code>porSemana.Sort()</code> tras el cálculo telescópico para garantizar monotonicidad no decreciente compatible con la progresión de semanas y validación de rango <span class="math">\([1..nCap]\)</span>.</li>
+</ul>
+</li>
+<li><strong>Fase 431 (Reporte Estricto de Semanas Disponibles sin Enmascarar 0):</strong>
+<ul>
+<li>Retorno directo de semanas hábiles en <code>SemanasDisponibles</code> (permitiendo 0) e inserción de guarda en <code>Construir</code> que falla de inmediato si la ventana no contiene días hábiles para los días K configurados.</li>
+</ul>
+</li>
+<li><strong>Fase 432 (Ajuste Constructivo del Residuo en Gen 0):</strong>
+<ul>
+<li>Compensación exacta de residuo de redondeo en <code>g0.HorasGen += (totalHoras - sumaGenes)</code> en <code>AgFabricaIndividuos</code>, eliminando incrementos improcedentes a <code>HardViolations</code>.</li>
+</ul>
+</li>
+<li><strong>Fase 433 (Diagnóstico Accionable ante Insuficiencia de Franjas):</strong>
+<ul>
+<li>Mensaje detallado ante semanas con festivos que impiden cumplir la cuota semanal, orientando al usuario a ampliar la ventana o agregar franjas.</li>
+</ul>
+</li>
+</ul>
+<h3 id="829-ronda-55--paridad-pre-vuelo-cuantización-de-sesiones-y-rotación-de-franjas-fases-434---437">8.29 Ronda 55 — Paridad Pre-Vuelo, Cuantización de Sesiones y Rotación de Franjas (Fases 434 - 437)</h3>
+<ul>
+<li><strong>Fase 434 (Sincronización Pre-Vuelo vs Planificador en Semanas Disponibles):</strong>
+<ul>
+<li><code>AgValidadorVentana</code> delega el cálculo de semanas disponibles a <code>AgPlanificadorPatronSemanal.SemanasDisponibles</code>, considerando festivos y días no hábiles del patrón. Emisión de bloqueo de pre-vuelo directo si semanas disponibles es 0, unificando el cómputo de horas con la jerarquía completa de la fábrica.</li>
+</ul>
+</li>
+<li><strong>Fase 435 (Normalización Canónica de Horas a Múltiplos de 4):</strong>
+<ul>
+<li>En <code>AgFabricaIndividuos</code>, normalización preventiva de <code>totalHoras</code> a <span class="math">\(\lceil \text{totalHoras} / 4.0 \rceil \times 4.0\)</span> con advertencia en <code>LoggerHelper.Warning</code> (<code>[I2]</code>), garantizando <span class="math">\(\text{totalHoras} == \text{sesiones} \times 4.0\)</span> sin residuos negativos ni sesiones fraccionarias.</li>
+</ul>
+</li>
+<li><strong>Fase 436 (Eliminación de Código Muerto 'Clamp'):</strong>
+<ul>
+<li>Remoción de la función auxiliar estática <code>Clamp</code> en <code>AgPlanificadorPatronSemanal</code>, erradicando advertencias de análisis estático tras la consolidación del escalado.</li>
+</ul>
+</li>
+<li><strong>Fase 437 (Rotación Determinista de Franjas Horarias):</strong>
+<ul>
+<li>En <code>AgFabricaIndividuos</code>, selección de franjas por rotación <span class="math">\(\text{franjasDia}[(asig.Id + i) \% N]\)</span>, eliminando la saturación sistemática de la franja Sábado MAÑANA y reduciendo conflictos R4 aula/horario en la población inicial.</li>
+</ul>
+</li>
+</ul>
+<h3 id="830-ronda-56--respeto-de-patrón-declarado-fuente-única-de-días-k-y-limpieza-de-aulasalcance-fases-438---440">8.30 Ronda 56 — Respeto de Patrón Declarado, Fuente Única de Días K y Limpieza de AulasAlcance (Fases 438 - 440)</h3>
+<ul>
+<li><strong>Fase 438 (Respeto de Patrón Declarado en Catálogo):</strong>
+<ul>
+<li>En <code>AgFormGeneradorHorarios</code>, lectura previa de <code>ag_aula_asignatura.dias_patron</code> mediante <code>LEFT JOIN</code>, preservando las combinaciones reales configuradas por el usuario o importadas desde <code>Horarios.xlsx</code> antes de aplicar la heurística fallback.</li>
+</ul>
+</li>
+<li><strong>Fase 439 (Fuente Única Canónica de Días K - 'DiasKDe'):</strong>
+<ul>
+<li>Centralización del parseo de <code>DiasPatron</code> en <code>AgPlanificadorPatronSemanal.DiasKDe(AgAulaAsignatura aa)</code> con retorno inmutable <code>IReadOnlyList&lt;int&gt;</code>, consumido idénticamente por <code>AgValidadorVentana</code> y <code>AgFabricaIndividuos</code>. Erradicación de discrepancias pre-vuelo vs corrida.</li>
+</ul>
+</li>
+<li><strong>Fase 440 (Eliminación de Consulta Redundante de 'AulasAlcance'):</strong>
+<ul>
+<li>Remoción de la segunda consulta asíncrona a SQLite de <code>AulasAlcance</code> en <code>AgFormGeneradorHorarios</code>, sincronizándola directamente desde <code>ctx.Aulas</code> para telemetría sin latencia adicional.</li>
+</ul>
+</li>
+</ul>
+<h3 id="831-ronda-57--dapper-poco-mapping-en-net-48-supresión-de-64h-ficticias-y-select-distinct-fases-441---443">8.31 Ronda 57 — Dapper POCO Mapping en .NET 4.8, Supresión de 64h Ficticias y SELECT DISTINCT (Fases 441 - 443)</h3>
+<ul>
+<li><strong>Fase 441 (Dapper POCO Mapping y 'int_horaria' Anulable):</strong>
+<ul>
+<li>Creación de la clase auxiliar <code>AsigSeedRow</code> en <code>AgFormGeneradorHorarios</code>, reemplazando el uso de <code>ValueTuple</code> no soportado por Dapper en .NET Framework 4.8 y manejando de forma segura valores <code>NULL</code> en <code>int_horaria</code>.</li>
+</ul>
+</li>
+<li><strong>Fase 442 (Supresión de Asignaturas sin Carga Horaria):</strong>
+<ul>
+<li>Omisión estricta de asignaturas con <code>IntHoraria</code> nula o <span class="math">\(\le 0\)</span> en la siembra de <code>ag_aula_asignatura</code>, evitando inflar artificialmente la oferta con 64 horas ficticias y falsos patrones de 3 días.</li>
+</ul>
+</li>
+<li><strong>Fase 443 (Garantía de Unicidad con 'SELECT DISTINCT'):</strong>
+<ul>
+<li>Inclusión de <code>SELECT DISTINCT</code> en la consulta <code>sqlAsigs</code>, eliminando registros duplicados provocados por el <code>LEFT JOIN</code> cuando existían filas redundantes en <code>ag_aula_asignatura</code>.</li>
+</ul>
+</li>
+</ul>
+<h3 id="832-fase-444--desacoplamiento-de-métrica-sinhoras-del-contador-omitidas">8.32 Fase 444 — Desacoplamiento de Métrica 'sinHoras' del Contador 'omitidas'</h3>
+<ul>
+<li><strong>Fase 444 (Métricas Independientes de Aulas vs Asignaturas):</strong>
+<ul>
+<li>En <code>AgFormGeneradorHorarios</code>, introducción de la variable independiente <code>sinHoras</code> para contabilizar exclusivamente materias sin <code>int_horaria</code>, preservando <code>omitidas</code> para aulas preexistentes y ofreciendo métricas claras y transparentes en la UI, trazas y archivos de registro.</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="9-plan-unificado-v4--decisiones-explícitas-de-franjadíashoras-y-unificación-militar-fases-648---659">9. Plan Unificado v4 — Decisiones Explícitas de Franja/Días/Horas y Unificación Militar (Fases 648 - 659)</h2>
+<h3 id="91-decisiones-ratificadas-de-horario-y-jornada">9.1 Decisiones Ratificadas de Horario y Jornada</h3>
+<table>
+<thead>
+<tr>
+<th>Jornada</th>
+<th>Horas/Día</th>
+<th>Franja Devuelta</th>
+<th>Hora Inicio</th>
+<th>Hora Fin</th>
+<th>Duración (h)</th>
+<th>Observaciones</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MAÑANA</td>
+<td>4</td>
+<td>MANANA</td>
+<td>08:00</td>
+<td>12:00</td>
+<td>4.0</td>
+<td>Sesión matutina estándar</td>
+</tr>
+<tr>
+<td>MAÑANA</td>
+<td>8</td>
+<td>MANANA</td>
+<td>08:00</td>
+<td>17:00</td>
+<td>8.0</td>
+<td>Sesión de día completo</td>
+</tr>
+<tr>
+<td>TARDE</td>
+<td>4</td>
+<td>TARDE</td>
+<td>13:00</td>
+<td>17:00</td>
+<td>4.0</td>
+<td>Franja vespertina regular</td>
+</tr>
+<tr>
+<td>TARDE</td>
+<td>8</td>
+<td>TARDE</td>
+<td>14:00</td>
+<td>22:00</td>
+<td>8.0</td>
+<td>Jornada continua sin pausa (14:00 a 22:00)</td>
+</tr>
+<tr>
+<td>NOCHE</td>
+<td>4</td>
+<td>NOCHE</td>
+<td>18:00</td>
+<td>22:00</td>
+<td>4.0</td>
+<td>Franja nocturna regular</td>
+</tr>
+<tr>
+<td>NOCHE</td>
+<td>8</td>
+<td>NOCHE</td>
+<td>14:00</td>
+<td>22:00</td>
+<td>8.0</td>
+<td>Comparte ventana con TARDE 8h (2:00 PM a 10:00 PM)</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Nota de Diseño</strong>: Para 8 horas se programa <strong>1 sola sesión por día</strong> de 8 horas continuas, garantizando alineación estricta con los registros de producción.</p>
+</blockquote>
+<h3 id="92-catálogo-canónico-de-ventanas-de-días-agdiasventana">9.2 Catálogo Canónico de Ventanas de Días (<code>AgDiasVentana</code>)</h3>
+<ol>
+<li><code>LUN-JUE</code>: <code>1,2,3,4</code></li>
+<li><code>MAR-VIE</code>: <code>2,3,4,5</code></li>
+<li><code>JUE-SAB</code>: <code>4,5,6</code> <em>(Añadido para cubrir las filas J-V-S)</em></li>
+<li><code>VIE-SAB</code>: <code>5,6</code></li>
+<li><code>VIE-DOM</code>: <code>5,6,7</code></li>
+</ol>
+<h3 id="93-unificación-a-formato-militar-hhmm-a-hhmm">9.3 Unificación a Formato Militar (&quot;HH:mm A HH:mm&quot;)</h3>
+<ul>
+<li><strong>Causa raíz resuelta</strong>: <code>DayHoursDropdown</code> utilizaba cadenas de 12 horas AM/PM mientras el AG generaba en formato militar de 24 horas, provocando discrepancias de coincidencia y asignaciones <code>DBNull.Value</code>.</li>
+<li><strong><code>HorarioMilitarizador</code></strong>: Normalizador estricto e idempotente para convertir cualquier representación temporal a <code>&quot;HH:mm A HH:mm&quot;</code>.</li>
+<li><strong>Migraciones V62 y V63</strong>:
+<ul>
+<li><code>MigrationV62_AddAgAulaVentanasYBloquesSemilla</code>: Expande <code>ag_aula</code> y <code>ag_arbol_nodo</code> con <code>jornada</code>, <code>horas_dia</code>, <code>dias_ventana</code> y siembra 42 bloques horarios canónicos (6 franjas × 7 días) mediante <code>WHERE NOT EXISTS</code>.</li>
+<li><code>MigrationV63_UnificarHorariosMilitar</code>: Normaliza retrospectivamente <code>sesiones.horariosesion</code>, <code>ag_sesiones.horariosesion</code> y el tercer componente de <code>vinculaciones.dia_horas_semanales</code>.</li>
+</ul>
+</li>
+</ul>
+<h3 id="94-protección-genética-congelamiento-temporal-esfijotemporal">9.4 Protección Genética: Congelamiento Temporal (<code>EsFijoTemporal</code>)</h3>
+<ul>
+<li><code>AgGen.EsFijoTemporal</code>: Flag independiente de <code>Estado</code> que preserva la decisión explícita de aula, franja y bloque tomada por el usuario en el árbol académico.</li>
+<li><code>Clonar()</code>: Replica íntegramente <code>EsFijoTemporal</code>.</li>
+<li><code>AgOperadorMutacion</code>: Salta mutación de aula y bloque horario cuando <code>gen.EsFijoTemporal == true</code>, pero mantiene activa la optimización y exploración docente en el pool.</li>
+<li><code>AgOperadorCruce (OX)</code>: Preserva el bloque, franja y día heredados cuando <code>dst.EsFijoTemporal == true</code>, transfiriendo exclusivamente el docente del progenitor.</li>
+</ul>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/fexluis/COM-PDF-Merge/blob/refactor/academic-modularization/docs/articles/changes/2026-ag-horarios-academicos.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          ESAP - ConversorPDF Doc
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

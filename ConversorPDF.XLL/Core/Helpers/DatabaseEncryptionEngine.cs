@@ -250,7 +250,7 @@ namespace ConversorPDF.XLL.Core.Helpers
                 File.Move(filePath, newName);
                 File.Delete(newName);
             }
-            catch (Exception ex)
+            catch
             {
                 // Fallback delete
                 if (File.Exists(filePath))

@@ -1,0 +1,940 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow
+  commentId: T:ConversorPDF.XLL.Core.Models.ViaticoRow
+  id: ViaticoRow
+  parent: ConversorPDF.XLL.Core.Models
+  children:
+  - ConversorPDF.XLL.Core.Models.ViaticoRow.#ctor
+  - ConversorPDF.XLL.Core.Models.ViaticoRow.CDP
+  - ConversorPDF.XLL.Core.Models.ViaticoRow.Cedula
+  - ConversorPDF.XLL.Core.Models.ViaticoRow.Estado
+  - ConversorPDF.XLL.Core.Models.ViaticoRow.FechaComision
+  - ConversorPDF.XLL.Core.Models.ViaticoRow.FechaFin
+  - ConversorPDF.XLL.Core.Models.ViaticoRow.FechaInicio
+  - ConversorPDF.XLL.Core.Models.ViaticoRow.Index
+  - ConversorPDF.XLL.Core.Models.ViaticoRow.Informe
+  - ConversorPDF.XLL.Core.Models.ViaticoRow.Itinerario
+  - ConversorPDF.XLL.Core.Models.ViaticoRow.NombreCompleto
+  - ConversorPDF.XLL.Core.Models.ViaticoRow.NumeroComision
+  - ConversorPDF.XLL.Core.Models.ViaticoRow.OB
+  - ConversorPDF.XLL.Core.Models.ViaticoRow.OP
+  - ConversorPDF.XLL.Core.Models.ViaticoRow.ObjetoProcesado
+  - ConversorPDF.XLL.Core.Models.ViaticoRow.ObjetoRAW
+  - ConversorPDF.XLL.Core.Models.ViaticoRow.RP
+  - ConversorPDF.XLL.Core.Models.ViaticoRow.Rol
+  - ConversorPDF.XLL.Core.Models.ViaticoRow.ValorTotal
+  langs:
+  - csharp
+  - vb
+  name: ViaticoRow
+  nameWithType: ViaticoRow
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow
+  type: Class
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Representa una fila de datos de viáticos extraída de las hojas de programación o consultas de Excel.
+  example: []
+  syntax:
+    content: public class ViaticoRow
+    content.vb: Public Class ViaticoRow
+  inheritance:
+  - System.Object
+  inheritedMembers:
+  - System.Object.ToString
+  - System.Object.Equals(System.Object)
+  - System.Object.Equals(System.Object,System.Object)
+  - System.Object.ReferenceEquals(System.Object,System.Object)
+  - System.Object.GetHashCode
+  - System.Object.GetType
+  - System.Object.MemberwiseClone
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow.#ctor
+  commentId: M:ConversorPDF.XLL.Core.Models.ViaticoRow.#ctor
+  id: '#ctor'
+  parent: ConversorPDF.XLL.Core.Models.ViaticoRow
+  langs:
+  - csharp
+  - vb
+  name: ViaticoRow()
+  nameWithType: ViaticoRow.ViaticoRow()
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow.ViaticoRow()
+  type: Constructor
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  syntax:
+    content: public ViaticoRow()
+    content.vb: Public Sub New()
+  overload: ConversorPDF.XLL.Core.Models.ViaticoRow.#ctor*
+  nameWithType.vb: ViaticoRow.New()
+  fullName.vb: ConversorPDF.XLL.Core.Models.ViaticoRow.New()
+  name.vb: New()
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow.Index
+  commentId: P:ConversorPDF.XLL.Core.Models.ViaticoRow.Index
+  id: Index
+  parent: ConversorPDF.XLL.Core.Models.ViaticoRow
+  langs:
+  - csharp
+  - vb
+  name: Index
+  nameWithType: ViaticoRow.Index
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow.Index
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Índice de la fila en la hoja de Excel.
+  example: []
+  syntax:
+    content: public int Index { get; set; }
+    parameters: []
+    return:
+      type: System.Int32
+    content.vb: Public Property Index As Integer
+  overload: ConversorPDF.XLL.Core.Models.ViaticoRow.Index*
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow.NumeroComision
+  commentId: P:ConversorPDF.XLL.Core.Models.ViaticoRow.NumeroComision
+  id: NumeroComision
+  parent: ConversorPDF.XLL.Core.Models.ViaticoRow
+  langs:
+  - csharp
+  - vb
+  name: NumeroComision
+  nameWithType: ViaticoRow.NumeroComision
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow.NumeroComision
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Identificador numérico de la comisión administrativa.
+  example: []
+  syntax:
+    content: public string NumeroComision { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property NumeroComision As String
+  overload: ConversorPDF.XLL.Core.Models.ViaticoRow.NumeroComision*
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow.FechaComision
+  commentId: P:ConversorPDF.XLL.Core.Models.ViaticoRow.FechaComision
+  id: FechaComision
+  parent: ConversorPDF.XLL.Core.Models.ViaticoRow
+  langs:
+  - csharp
+  - vb
+  name: FechaComision
+  nameWithType: ViaticoRow.FechaComision
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow.FechaComision
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Fecha de emisión del documento de comisión.
+  example: []
+  syntax:
+    content: public DateTime FechaComision { get; set; }
+    parameters: []
+    return:
+      type: System.DateTime
+    content.vb: Public Property FechaComision As Date
+  overload: ConversorPDF.XLL.Core.Models.ViaticoRow.FechaComision*
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow.FechaInicio
+  commentId: P:ConversorPDF.XLL.Core.Models.ViaticoRow.FechaInicio
+  id: FechaInicio
+  parent: ConversorPDF.XLL.Core.Models.ViaticoRow
+  langs:
+  - csharp
+  - vb
+  name: FechaInicio
+  nameWithType: ViaticoRow.FechaInicio
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow.FechaInicio
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Fecha en la que inicia la comisión.
+  example: []
+  syntax:
+    content: public DateTime FechaInicio { get; set; }
+    parameters: []
+    return:
+      type: System.DateTime
+    content.vb: Public Property FechaInicio As Date
+  overload: ConversorPDF.XLL.Core.Models.ViaticoRow.FechaInicio*
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow.FechaFin
+  commentId: P:ConversorPDF.XLL.Core.Models.ViaticoRow.FechaFin
+  id: FechaFin
+  parent: ConversorPDF.XLL.Core.Models.ViaticoRow
+  langs:
+  - csharp
+  - vb
+  name: FechaFin
+  nameWithType: ViaticoRow.FechaFin
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow.FechaFin
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Fecha de finalización programada de la comisión.
+  example: []
+  syntax:
+    content: public DateTime FechaFin { get; set; }
+    parameters: []
+    return:
+      type: System.DateTime
+    content.vb: Public Property FechaFin As Date
+  overload: ConversorPDF.XLL.Core.Models.ViaticoRow.FechaFin*
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow.Estado
+  commentId: P:ConversorPDF.XLL.Core.Models.ViaticoRow.Estado
+  id: Estado
+  parent: ConversorPDF.XLL.Core.Models.ViaticoRow
+  langs:
+  - csharp
+  - vb
+  name: Estado
+  nameWithType: ViaticoRow.Estado
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow.Estado
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: 'Estado actual del trámite (ej: Pagado, Pendiente).'
+  example: []
+  syntax:
+    content: public string Estado { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property Estado As String
+  overload: ConversorPDF.XLL.Core.Models.ViaticoRow.Estado*
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow.Informe
+  commentId: P:ConversorPDF.XLL.Core.Models.ViaticoRow.Informe
+  id: Informe
+  parent: ConversorPDF.XLL.Core.Models.ViaticoRow
+  langs:
+  - csharp
+  - vb
+  name: Informe
+  nameWithType: ViaticoRow.Informe
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow.Informe
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Número o código del informe de actividades presentado.
+  example: []
+  syntax:
+    content: public string Informe { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property Informe As String
+  overload: ConversorPDF.XLL.Core.Models.ViaticoRow.Informe*
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow.Cedula
+  commentId: P:ConversorPDF.XLL.Core.Models.ViaticoRow.Cedula
+  id: Cedula
+  parent: ConversorPDF.XLL.Core.Models.ViaticoRow
+  langs:
+  - csharp
+  - vb
+  name: Cedula
+  nameWithType: ViaticoRow.Cedula
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow.Cedula
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Documento de identidad del beneficiario.
+  example: []
+  syntax:
+    content: public string Cedula { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property Cedula As String
+  overload: ConversorPDF.XLL.Core.Models.ViaticoRow.Cedula*
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow.NombreCompleto
+  commentId: P:ConversorPDF.XLL.Core.Models.ViaticoRow.NombreCompleto
+  id: NombreCompleto
+  parent: ConversorPDF.XLL.Core.Models.ViaticoRow
+  langs:
+  - csharp
+  - vb
+  name: NombreCompleto
+  nameWithType: ViaticoRow.NombreCompleto
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow.NombreCompleto
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Nombre completo del comisionado.
+  example: []
+  syntax:
+    content: public string NombreCompleto { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property NombreCompleto As String
+  overload: ConversorPDF.XLL.Core.Models.ViaticoRow.NombreCompleto*
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow.Rol
+  commentId: P:ConversorPDF.XLL.Core.Models.ViaticoRow.Rol
+  id: Rol
+  parent: ConversorPDF.XLL.Core.Models.ViaticoRow
+  langs:
+  - csharp
+  - vb
+  name: Rol
+  nameWithType: ViaticoRow.Rol
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow.Rol
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Cargo o rol del funcionario.
+  example: []
+  syntax:
+    content: public string Rol { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property Rol As String
+  overload: ConversorPDF.XLL.Core.Models.ViaticoRow.Rol*
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow.Itinerario
+  commentId: P:ConversorPDF.XLL.Core.Models.ViaticoRow.Itinerario
+  id: Itinerario
+  parent: ConversorPDF.XLL.Core.Models.ViaticoRow
+  langs:
+  - csharp
+  - vb
+  name: Itinerario
+  nameWithType: ViaticoRow.Itinerario
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow.Itinerario
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Descripción del itinerario de viaje.
+  example: []
+  syntax:
+    content: public string Itinerario { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property Itinerario As String
+  overload: ConversorPDF.XLL.Core.Models.ViaticoRow.Itinerario*
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow.CDP
+  commentId: P:ConversorPDF.XLL.Core.Models.ViaticoRow.CDP
+  id: CDP
+  parent: ConversorPDF.XLL.Core.Models.ViaticoRow
+  langs:
+  - csharp
+  - vb
+  name: CDP
+  nameWithType: ViaticoRow.CDP
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow.CDP
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Número de Certificado de Disponibilidad Presupuestal (CDP).
+  example: []
+  syntax:
+    content: public string CDP { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property CDP As String
+  overload: ConversorPDF.XLL.Core.Models.ViaticoRow.CDP*
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow.RP
+  commentId: P:ConversorPDF.XLL.Core.Models.ViaticoRow.RP
+  id: RP
+  parent: ConversorPDF.XLL.Core.Models.ViaticoRow
+  langs:
+  - csharp
+  - vb
+  name: RP
+  nameWithType: ViaticoRow.RP
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow.RP
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Número de Registro Presupuestal (RP).
+  example: []
+  syntax:
+    content: public string RP { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property RP As String
+  overload: ConversorPDF.XLL.Core.Models.ViaticoRow.RP*
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow.ValorTotal
+  commentId: P:ConversorPDF.XLL.Core.Models.ViaticoRow.ValorTotal
+  id: ValorTotal
+  parent: ConversorPDF.XLL.Core.Models.ViaticoRow
+  langs:
+  - csharp
+  - vb
+  name: ValorTotal
+  nameWithType: ViaticoRow.ValorTotal
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow.ValorTotal
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Valor total liquidado por concepto de viáticos.
+  example: []
+  syntax:
+    content: public string ValorTotal { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property ValorTotal As String
+  overload: ConversorPDF.XLL.Core.Models.ViaticoRow.ValorTotal*
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow.ObjetoRAW
+  commentId: P:ConversorPDF.XLL.Core.Models.ViaticoRow.ObjetoRAW
+  id: ObjetoRAW
+  parent: ConversorPDF.XLL.Core.Models.ViaticoRow
+  langs:
+  - csharp
+  - vb
+  name: ObjetoRAW
+  nameWithType: ViaticoRow.ObjetoRAW
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow.ObjetoRAW
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Texto original del objeto de la comisión (sin procesar).
+  example: []
+  syntax:
+    content: public string ObjetoRAW { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property ObjetoRAW As String
+  overload: ConversorPDF.XLL.Core.Models.ViaticoRow.ObjetoRAW*
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow.ObjetoProcesado
+  commentId: P:ConversorPDF.XLL.Core.Models.ViaticoRow.ObjetoProcesado
+  id: ObjetoProcesado
+  parent: ConversorPDF.XLL.Core.Models.ViaticoRow
+  langs:
+  - csharp
+  - vb
+  name: ObjetoProcesado
+  nameWithType: ViaticoRow.ObjetoProcesado
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow.ObjetoProcesado
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Texto del objeto de la comisión tras limpieza y formateo.
+  example: []
+  syntax:
+    content: public string ObjetoProcesado { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property ObjetoProcesado As String
+  overload: ConversorPDF.XLL.Core.Models.ViaticoRow.ObjetoProcesado*
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow.OB
+  commentId: P:ConversorPDF.XLL.Core.Models.ViaticoRow.OB
+  id: OB
+  parent: ConversorPDF.XLL.Core.Models.ViaticoRow
+  langs:
+  - csharp
+  - vb
+  name: OB
+  nameWithType: ViaticoRow.OB
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow.OB
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Número de Obligación (OB).
+  example: []
+  syntax:
+    content: public string OB { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property OB As String
+  overload: ConversorPDF.XLL.Core.Models.ViaticoRow.OB*
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow.OP
+  commentId: P:ConversorPDF.XLL.Core.Models.ViaticoRow.OP
+  id: OP
+  parent: ConversorPDF.XLL.Core.Models.ViaticoRow
+  langs:
+  - csharp
+  - vb
+  name: OP
+  nameWithType: ViaticoRow.OP
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow.OP
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Número de Orden de Pago (OP).
+  example: []
+  syntax:
+    content: public string OP { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property OP As String
+  overload: ConversorPDF.XLL.Core.Models.ViaticoRow.OP*
+references:
+- uid: ConversorPDF.XLL.Core.Models
+  commentId: N:ConversorPDF.XLL.Core.Models
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Core.Models
+  nameWithType: ConversorPDF.XLL.Core.Models
+  fullName: ConversorPDF.XLL.Core.Models
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Models
+    name: Models
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Models
+    name: Models
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.html
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+  nameWithType: object
+  fullName: object
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: System.Object.ToString
+  commentId: M:System.Object.ToString
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  name: ToString()
+  nameWithType: object.ToString()
+  fullName: object.ToString()
+  nameWithType.vb: Object.ToString()
+  fullName.vb: Object.ToString()
+  spec.csharp:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+- uid: System.Object.Equals(System.Object)
+  commentId: M:System.Object.Equals(System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  name: Equals(object)
+  nameWithType: object.Equals(object)
+  fullName: object.Equals(object)
+  nameWithType.vb: Object.Equals(Object)
+  fullName.vb: Object.Equals(Object)
+  name.vb: Equals(Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.Equals(System.Object,System.Object)
+  commentId: M:System.Object.Equals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  name: Equals(object, object)
+  nameWithType: object.Equals(object, object)
+  fullName: object.Equals(object, object)
+  nameWithType.vb: Object.Equals(Object, Object)
+  fullName.vb: Object.Equals(Object, Object)
+  name.vb: Equals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.ReferenceEquals(System.Object,System.Object)
+  commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  name: ReferenceEquals(object, object)
+  nameWithType: object.ReferenceEquals(object, object)
+  fullName: object.ReferenceEquals(object, object)
+  nameWithType.vb: Object.ReferenceEquals(Object, Object)
+  fullName.vb: Object.ReferenceEquals(Object, Object)
+  name.vb: ReferenceEquals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.GetHashCode
+  commentId: M:System.Object.GetHashCode
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  name: GetHashCode()
+  nameWithType: object.GetHashCode()
+  fullName: object.GetHashCode()
+  nameWithType.vb: Object.GetHashCode()
+  fullName.vb: Object.GetHashCode()
+  spec.csharp:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+- uid: System.Object.GetType
+  commentId: M:System.Object.GetType
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  name: GetType()
+  nameWithType: object.GetType()
+  fullName: object.GetType()
+  nameWithType.vb: Object.GetType()
+  fullName.vb: Object.GetType()
+  spec.csharp:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+- uid: System.Object.MemberwiseClone
+  commentId: M:System.Object.MemberwiseClone
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  name: MemberwiseClone()
+  nameWithType: object.MemberwiseClone()
+  fullName: object.MemberwiseClone()
+  nameWithType.vb: Object.MemberwiseClone()
+  fullName.vb: Object.MemberwiseClone()
+  spec.csharp:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow.#ctor*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.ViaticoRow.#ctor
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ViaticoRow.html#ConversorPDF_XLL_Core_Models_ViaticoRow__ctor
+  name: ViaticoRow
+  nameWithType: ViaticoRow.ViaticoRow
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow.ViaticoRow
+  nameWithType.vb: ViaticoRow.New
+  fullName.vb: ConversorPDF.XLL.Core.Models.ViaticoRow.New
+  name.vb: New
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow.Index*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.ViaticoRow.Index
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ViaticoRow.html#ConversorPDF_XLL_Core_Models_ViaticoRow_Index
+  name: Index
+  nameWithType: ViaticoRow.Index
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow.Index
+- uid: System.Int32
+  commentId: T:System.Int32
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int
+  nameWithType: int
+  fullName: int
+  nameWithType.vb: Integer
+  fullName.vb: Integer
+  name.vb: Integer
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow.NumeroComision*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.ViaticoRow.NumeroComision
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ViaticoRow.html#ConversorPDF_XLL_Core_Models_ViaticoRow_NumeroComision
+  name: NumeroComision
+  nameWithType: ViaticoRow.NumeroComision
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow.NumeroComision
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow.FechaComision*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.ViaticoRow.FechaComision
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ViaticoRow.html#ConversorPDF_XLL_Core_Models_ViaticoRow_FechaComision
+  name: FechaComision
+  nameWithType: ViaticoRow.FechaComision
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow.FechaComision
+- uid: System.DateTime
+  commentId: T:System.DateTime
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.datetime
+  name: DateTime
+  nameWithType: DateTime
+  fullName: System.DateTime
+  nameWithType.vb: Date
+  fullName.vb: Date
+  name.vb: Date
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow.FechaInicio*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.ViaticoRow.FechaInicio
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ViaticoRow.html#ConversorPDF_XLL_Core_Models_ViaticoRow_FechaInicio
+  name: FechaInicio
+  nameWithType: ViaticoRow.FechaInicio
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow.FechaInicio
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow.FechaFin*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.ViaticoRow.FechaFin
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ViaticoRow.html#ConversorPDF_XLL_Core_Models_ViaticoRow_FechaFin
+  name: FechaFin
+  nameWithType: ViaticoRow.FechaFin
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow.FechaFin
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow.Estado*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.ViaticoRow.Estado
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ViaticoRow.html#ConversorPDF_XLL_Core_Models_ViaticoRow_Estado
+  name: Estado
+  nameWithType: ViaticoRow.Estado
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow.Estado
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow.Informe*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.ViaticoRow.Informe
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ViaticoRow.html#ConversorPDF_XLL_Core_Models_ViaticoRow_Informe
+  name: Informe
+  nameWithType: ViaticoRow.Informe
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow.Informe
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow.Cedula*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.ViaticoRow.Cedula
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ViaticoRow.html#ConversorPDF_XLL_Core_Models_ViaticoRow_Cedula
+  name: Cedula
+  nameWithType: ViaticoRow.Cedula
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow.Cedula
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow.NombreCompleto*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.ViaticoRow.NombreCompleto
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ViaticoRow.html#ConversorPDF_XLL_Core_Models_ViaticoRow_NombreCompleto
+  name: NombreCompleto
+  nameWithType: ViaticoRow.NombreCompleto
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow.NombreCompleto
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow.Rol*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.ViaticoRow.Rol
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ViaticoRow.html#ConversorPDF_XLL_Core_Models_ViaticoRow_Rol
+  name: Rol
+  nameWithType: ViaticoRow.Rol
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow.Rol
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow.Itinerario*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.ViaticoRow.Itinerario
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ViaticoRow.html#ConversorPDF_XLL_Core_Models_ViaticoRow_Itinerario
+  name: Itinerario
+  nameWithType: ViaticoRow.Itinerario
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow.Itinerario
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow.CDP*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.ViaticoRow.CDP
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ViaticoRow.html#ConversorPDF_XLL_Core_Models_ViaticoRow_CDP
+  name: CDP
+  nameWithType: ViaticoRow.CDP
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow.CDP
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow.RP*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.ViaticoRow.RP
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ViaticoRow.html#ConversorPDF_XLL_Core_Models_ViaticoRow_RP
+  name: RP
+  nameWithType: ViaticoRow.RP
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow.RP
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow.ValorTotal*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.ViaticoRow.ValorTotal
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ViaticoRow.html#ConversorPDF_XLL_Core_Models_ViaticoRow_ValorTotal
+  name: ValorTotal
+  nameWithType: ViaticoRow.ValorTotal
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow.ValorTotal
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow.ObjetoRAW*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.ViaticoRow.ObjetoRAW
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ViaticoRow.html#ConversorPDF_XLL_Core_Models_ViaticoRow_ObjetoRAW
+  name: ObjetoRAW
+  nameWithType: ViaticoRow.ObjetoRAW
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow.ObjetoRAW
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow.ObjetoProcesado*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.ViaticoRow.ObjetoProcesado
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ViaticoRow.html#ConversorPDF_XLL_Core_Models_ViaticoRow_ObjetoProcesado
+  name: ObjetoProcesado
+  nameWithType: ViaticoRow.ObjetoProcesado
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow.ObjetoProcesado
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow.OB*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.ViaticoRow.OB
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ViaticoRow.html#ConversorPDF_XLL_Core_Models_ViaticoRow_OB
+  name: OB
+  nameWithType: ViaticoRow.OB
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow.OB
+- uid: ConversorPDF.XLL.Core.Models.ViaticoRow.OP*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.ViaticoRow.OP
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ViaticoRow.html#ConversorPDF_XLL_Core_Models_ViaticoRow_OP
+  name: OP
+  nameWithType: ViaticoRow.OP
+  fullName: ConversorPDF.XLL.Core.Models.ViaticoRow.OP

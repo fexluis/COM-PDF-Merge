@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Habilitar &quot;Usar Autofiltro&quot; en Hoja Protegida de Exportar Asignaturas | ESAP - ConversorPDF </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Habilitar &quot;Usar Autofiltro&quot; en Hoja Protegida de Exportar Asignaturas | ESAP - ConversorPDF ">
+      
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="../../toc.html">
+      <meta name="docfx:tocrel" content="../toc.html">
+      
+      <meta name="docfx:rel" content="../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/fexluis/COM-PDF-Merge/blob/refactor/academic-modularization/docs/articles/changes/2026-10-17-habilitar-autofiltro-proteccion-programacion.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="habilitar-usar-autofiltro-en-hoja-protegida-de-exportar-asignaturas">Habilitar &quot;Usar Autofiltro&quot; en Hoja Protegida de Exportar Asignaturas</h1>
+
+<p><strong>Fecha:</strong> 2026-10-17<br>
+<strong>Módulo:</strong> Académico (<code>ConversorPDF.XLL.Academic</code>)<br>
+<strong>Rondas:</strong> 134 (Fase 728), 135 (Fases 729 a 732), 136 (Fases 733 a 735), 137 (Fases 736 a 738), 138 (Fases 739 y 740) y 139 (Fases 741 a 743)</p>
+<h2 id="purpose">Purpose</h2>
+<p>Garantizar que tras la exportación de vinculaciones docentes por asignaturas (<code>FV-FO-033</code>), los usuarios puedan utilizar las capacidades de autofiltro en la tabla <code>T_Principal8</code> (fila 13, rango <code>A13:DF234</code>) de la hoja <code>PROGRAMACIÓN</code> sin que Excel arroje la alerta de celda/gráfico protegido, manteniendo protección contra escritura, blindaje con fallback trazable ante excepciones de invocación COM, y control estricto para solo reproteger hojas que fueron efectivamente desprotegidas por el sistema.</p>
+<h2 id="changes">Changes</h2>
+<ol>
+<li><strong><code>ConversorPDF.XLL\Academic\Infrastructure\Excel\AsignaturasExcelExporter.cs</code>:</strong>
+<ul>
+<li>Incorporación del método auxiliar privado estático <code>ProtegerHojaPermitiendoAutofiltro(dynamic ws, string password)</code>.</li>
+<li>Invocación de <code>Worksheet.Protect</code> mediante reflexión COM tardía (<code>InvokeMember</code>) pasando un arreglo de 16 argumentos posicionales con <code>Missing.Value</code>.</li>
+<li>Activación explícita del permiso posicional <code>AllowFiltering</code> (<code>args[14] = true</code>, Fase 728), preservando la contraseña interna (<code>ConstantsHelper.FORMATO_PASSWORD</code>).</li>
+<li>Reversión de <code>AllowSorting</code> (Fase 733): se conserva en <code>Missing.Value</code> (deshabilitado) dado que Excel exige que todas las celdas del rango estén desbloqueadas para permitir ordenamiento en hojas protegidas.</li>
+<li>Bandera <code>hojaDesprotegida</code> (Fases 734/736): <code>true</code> inmediatamente tras <code>Unprotect</code> exitoso; se invalida a <code>false</code> si <code>ProtectContents</code> persiste activo (contraseña distinta). El bloque <code>finally</code> únicamente ejecuta reprotección si la bandera es <code>true</code>.</li>
+<li>Trazabilidad y observabilidad en fallback (Fases 730 / 735): ante fallo en la invocación reflexiva, se registra advertencia mediante <code>LoggerHelper.Warning</code> y se aplica fallback con <code>ws.Protect(...)</code>. Si el fallback también falla, se captura y emite error detallado con <code>LoggerHelper.Error</code>.</li>
+</ul>
+</li>
+<li><strong><code>installer\InstaladorConversorPDF.wxs</code> y Workflow de Release (Fases 739, 741, 742):</strong>
+<ul>
+<li>Actualización de versión a <code>1.6.3.57</code> en manifiesto WiX, <code>App.cs</code> y <code>.csproj</code>.</li>
+<li>Enlace automático dinámico de versión de plantillas mediante <code>DefaultVersion=&quot;!(bind.FileVersion.filXllDll)&quot;</code> en <code>filTemplate1</code> y <code>filTemplate2</code>.</li>
+<li>Sincronización de tamaños de plantillas en checklist de <code>build-release.md</code> (<code>FV-FO-033 = 777082</code> B, <code>GF-FO-023 = 2938592</code> B).</li>
+</ul>
+</li>
+</ol>
+<h2 id="invariante-de-rango-de-datos-fase-731">Invariante de Rango de Datos (Fase 731)</h2>
+<ul>
+<li>La tabla de datos en la plantilla <code>FV-FO-033</code> (<code>T_Principal8</code>) posee un rango nativo de 221 filas de datos (<code>A13:DF234</code>).</li>
+<li>Las exportaciones que se encuentren dentro de dicho rango operan con soporte íntegro de fórmulas, formatos de tabla y autofiltro nativo.</li>
+<li>Por diseño no destructivo, no se fuerza redimensionamiento dinámico de la tabla (<code>ListObject.Resize</code>) en tiempo de exportación para proteger la integridad estructural de las fórmulas preexistentes en columnas calculadas.</li>
+</ul>
+<h2 id="how-to-use">How to use</h2>
+<ol>
+<li>En Excel, abrir el complemento <strong>Conversor Académico</strong>.</li>
+<li>Navegar a <strong>Ver Vinculaciones</strong> y seleccionar la vista <strong>Asignaturas</strong>.</li>
+<li>Hacer clic en <strong>Exportar</strong>.</li>
+<li>Al abrirse el archivo generado (<code>FV-FO-033-&lt;timestamp&gt;.xlsx</code>), la hoja <code>PROGRAMACIÓN</code> permanece protegida contra edición de celdas bloqueadas.</li>
+<li>Hacer clic en las flechas de desplegable de filtro en la fila 13: los filtros se abren y aplican criterios sin advertencia de bloqueo. El ordenamiento desde el desplegable requiere celdas desbloqueadas y no está habilitado en esta plantilla (Fase 733).</li>
+</ol>
+<h2 id="test-coverage-fase-732-733-735">Test Coverage (Fase 732, 733, 735)</h2>
+<ul>
+<li><strong>Análisis estático:</strong>
+<ul>
+<li><code>Protect</code> vía <code>InvokeMember</code> con 16 argumentos posicionales COM.</li>
+<li><code>args[0] = password</code>, <code>args[14] = true</code> (<code>AllowFiltering</code>), <code>args[13] = Missing.Value</code> (<code>AllowSorting</code> desactivado).</li>
+<li>Trazabilidad con <code>LoggerHelper.Warning</code> y <code>LoggerHelper.Error</code> en bloque de protección.</li>
+<li>Condición de reprotección vinculada a <code>hojaDesprotegida</code>.</li>
+</ul>
+</li>
+<li><strong>Smoke test manual (Excel 365 x64 - 2026-10-17 / build 1.6.3.57):</strong>
+<ul>
+<li>Desplegable de filtro en fila 13 sobre <code>T_Principal8</code> (<code>A13:DF234</code>) permite seleccionar y filtrar valores sin advertencia de celda protegida.</li>
+<li>Celdas bloqueadas de la hoja permanecen protegidas contra escritura directa.</li>
+<li>Menú &quot;Desproteger hoja&quot; valida la contraseña interna definida en <code>ConstantsHelper.FORMATO_PASSWORD</code>.</li>
+<li>Caso borde documentado: exportaciones &gt; 221 filas (filas 235+) quedan fuera del rango de <code>T_Principal8</code> (ver Fase 731).</li>
+</ul>
+</li>
+</ul>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/fexluis/COM-PDF-Merge/blob/refactor/academic-modularization/docs/articles/changes/2026-10-17-habilitar-autofiltro-proteccion-programacion.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          ESAP - ConversorPDF Doc
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

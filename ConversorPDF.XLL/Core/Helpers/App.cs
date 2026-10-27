@@ -16,14 +16,14 @@ using ConversorPDF.XLL.Core.Interfaces;
 
 namespace ConversorPDF.XLL.Core.Helpers
 {
-    [ComVisible(true)]
-    [Guid("4F97F332-3B6C-4B6E-8B7C-5AF9F4EEA4C9")]
-    [ProgId("ConversorPDF.App")]
-    [ClassInterface(ClassInterfaceType.None)]
     /// <summary>
     /// Clase principal de la aplicación ConversorPDF.
     /// Proporciona la lógica central para la integración con Office y servicios de PDF.
     /// </summary>
+    [ComVisible(true)]
+    [Guid("4F97F332-3B6C-4B6E-8B7C-5AF9F4EEA4C9")]
+    [ProgId("ConversorPDF.App")]
+    [ClassInterface(ClassInterfaceType.None)]
     public class App : IApp
     {
         private readonly IUserService _userService;
@@ -69,7 +69,7 @@ namespace ConversorPDF.XLL.Core.Helpers
         public IViaticosService Viaticos => _viaticosService;
 
 
-        public const string APP_VERSION = "1.2.51.0";
+        public const string APP_VERSION = "1.6.3.79";
         public const string APP_VIGENCIA = "2026";
         public const string APP_NAME = "ESAP - Conversor PDF v" + APP_VERSION;
         private static string _defaultUserCache;
@@ -121,6 +121,10 @@ namespace ConversorPDF.XLL.Core.Helpers
             public const string SOPORTES = "S";
             public const string AUTORIZADOS = "Autorizados";
             public const string SOLICITUDES = "Solicitudes";
+            /// <summary>
+            /// Carpeta histórica donde se archivan los boletines de Orden de Pago unificados.
+            /// </summary>
+            public const string OrdenesDePago = "OrdenesDePago";
         }
 
         /// <summary>
@@ -248,14 +252,16 @@ namespace ConversorPDF.XLL.Core.Helpers
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(base64String) || base64String.Length < 100)
+                if (string.IsNullOrWhiteSpace(base64String))
                     return "";
 
-                byte[] bytes = Convert.FromBase64String(base64String);
+                string cleanBase64 = FirmaPDFsHelper.LimpiarPrefijoBase64(base64String);
+
+                byte[] bytes = Convert.FromBase64String(cleanBase64);
 
                 string tempFolder = Path.GetTempPath();
                 string cleanName = string.Join("_", nombreBase.Split(Path.GetInvalidFileNameChars()));
-                string fileName = $"{cleanName}_{DateTime.Now:yyyyMMdd_HHmmss}_{new Random().Next(10000)}.png";
+                string fileName = $"{cleanName}_{DateTime.Now:yyyyMMdd_HHmmss}_{Guid.NewGuid().ToString("N").Substring(0, 8)}.png";
                 string fullPath = Path.Combine(tempFolder, fileName);
 
                 File.WriteAllBytes(fullPath, bytes);
@@ -281,6 +287,71 @@ namespace ConversorPDF.XLL.Core.Helpers
             return CrearArchivoBase64Temporal(base64Str, nombreBase);
         }
 
+        public void SaveFirmaHelperUsuario(string base64)
+        {
+            // FASE 13: Sanitizar/Normalizar el base64 eliminando prefijos HTML/UI antes de la base de datos
+            string cleanBase64 = FirmaPDFsHelper.LimpiarPrefijoBase64(base64 ?? string.Empty);
+            _userService.SaveFirmaBase64(GetUserName(), cleanBase64);
+        }
+
+        public string GetFirmaHelperUsuarioInteractivo()
+        {
+            string base64Str = GetFirmaHelperUsuario();
+            if (string.IsNullOrEmpty(base64Str))
+            {
+                var result = System.Windows.MessageBox.Show(
+                    "Su firma no está configurada o es inválida. ¿Desea seleccionar su firma ahora para continuar?",
+                    "Firma no configurada",
+                    System.Windows.MessageBoxButton.YesNo,
+                    System.Windows.MessageBoxImage.Question,
+                    System.Windows.MessageBoxResult.No,
+                    System.Windows.MessageBoxOptions.DefaultDesktopOnly);
+
+                if (result == System.Windows.MessageBoxResult.Yes)
+                {
+                    string nuevaFirmaBase64 = FirmasGeneradorHelper.SeleccionarYConvertirFirmaBase64();
+                    if (!string.IsNullOrEmpty(nuevaFirmaBase64) && !nuevaFirmaBase64.StartsWith("ERROR"))
+                    {
+                        try
+                        {
+                            SaveFirmaHelperUsuario(nuevaFirmaBase64);
+                            // FASE 9: NO llamar ResetState() en producción — destruye estado CRDT activo.
+                            // FASE 9+10: Retornar directamente la firma capturada, evitar round-trip a DB.
+                            base64Str = nuevaFirmaBase64;
+                            System.Windows.MessageBox.Show(
+                                "Firma guardada correctamente. El proceso continuará.",
+                                "Éxito",
+                                System.Windows.MessageBoxButton.OK,
+                                System.Windows.MessageBoxImage.Information,
+                                System.Windows.MessageBoxResult.OK,
+                                System.Windows.MessageBoxOptions.DefaultDesktopOnly);
+                        }
+                        catch (Exception ex)
+                        {
+                            // FASE 10: Capturar excepción de guardado para evitar flujo roto y dar feedback al usuario
+                            LoggerHelper.Error("[App] Error al guardar firma interactiva.", ex);
+                            System.Windows.MessageBox.Show(
+                                "Error al guardar la firma. Intente nuevamente.",
+                                "Error",
+                                System.Windows.MessageBoxButton.OK,
+                                System.Windows.MessageBoxImage.Error);
+                            // base64Str permanece vacío — proceso aborta correctamente
+                        }
+                    }
+                }
+            }
+            return base64Str;
+        }
+
+        public string GetFirmaUsuarioActualInteractivo()
+        {
+            string base64Str = GetFirmaHelperUsuarioInteractivo();
+            if (string.IsNullOrEmpty(base64Str)) return string.Empty;
+
+            string nombreBase = "Firma_" + DEFAULT_USER;
+            return CrearArchivoBase64Temporal(base64Str, nombreBase);
+        }
+
         /// <summary>
         /// Procesa las hojas del libro de Excel para firmar y guardar como PDF en el flujo de Obligaciones del Contador.
         /// </summary>
@@ -288,12 +359,12 @@ namespace ConversorPDF.XLL.Core.Helpers
         /// <returns>Cantidad de hojas procesadas.</returns>
         public int ConvertirObligacionContador(object activeWorkbook)
         {
-            return _contadorService.ConvertirObligacionContador(activeWorkbook, GetFirmaHelperUsuario());
+            return _contadorService.ConvertirObligacionContador(activeWorkbook, GetFirmaHelperUsuarioInteractivo());
         }
 
         public int UnificarObligacionContador(object activeWorkbook, string docType)
         {
-            return _contadorService.UnificarObligacionContador(activeWorkbook, docType);
+            return FirmaUnificarObHelper.UnificarObligacionContador(activeWorkbook, docType, this);
         }
 
         public string GenerarFirmaBase64Txt()

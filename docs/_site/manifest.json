@@ -1,5 +1,5 @@
 {
-  "source_base_path": "C:/Users/luis.bechara/OneDrive - Escuela Superior de Administración Publica/Antigravity/ConversorPDFv1.2.46.01/docs",
+  "source_base_path": "C:/Users/USUARIO/OneDrive - Escuela Superior de Administración Publica/Antigravity/ConversorPDFv1.6.3.72/docs",
   "xrefmap": "xrefmap.yml",
   "files": [
     {
@@ -11,11 +11,2142 @@
       }
     },
     {
-      "type": "Conceptual",
-      "source_relative_path": "api/index.md",
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Application.DTOs.GridRowDto.yml",
       "output": {
         ".html": {
-          "relative_path": "api/index.html"
+          "relative_path": "api/ConversorPDF.XLL.Academic.Application.DTOs.GridRowDto.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Application.DTOs.GridRowDto",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Academic.Application.DTOs.GridRowDto.yml\" sourcestartlinenumber=\"1\">DTO que representa una fila del DataGridView, sin dependencia de WinForms.\nUtilizado para el mapeo y testeo unitario de la lógica de extracción.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Application.DTOs.VinculacionFilterDto.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Application.DTOs.VinculacionFilterDto.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Application.DTOs.VinculacionFilterDto",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Academic.Application.DTOs.VinculacionFilterDto.yml\" sourcestartlinenumber=\"1\">DTO para filtrar la lista de vinculaciones.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Application.DTOs.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Application.DTOs.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Application.DTOs",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Application.Interfaces.IAcademicDateSyncService.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Application.Interfaces.IAcademicDateSyncService.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Application.Interfaces.IAcademicDateSyncService",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Academic.Application.Interfaces.IAcademicDateSyncService.yml\" sourcestartlinenumber=\"1\">Interfaz para el servicio de sincronización de fechas académicas.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Application.Interfaces.IVinculacionListService.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Application.Interfaces.IVinculacionListService.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Application.Interfaces.IVinculacionListService",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Academic.Application.Interfaces.IVinculacionListService.yml\" sourcestartlinenumber=\"1\">Servicio de aplicación para la gestión de la lista de vinculaciones.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Application.Interfaces.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Application.Interfaces.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Application.Interfaces",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Application.Mappers.GridToSesionMapper.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Application.Mappers.GridToSesionMapper.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Application.Mappers.GridToSesionMapper",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Academic.Application.Mappers.GridToSesionMapper.yml\" sourcestartlinenumber=\"1\">Extrae y valida sesiones desde una representación abstracta del grid (GridRowDto).\nPermite testear la lógica de extracción sin dependencia de WinForms.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Application.Mappers.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Application.Mappers.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Application.Mappers",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Application.Services.AcademicDateSyncService.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Application.Services.AcademicDateSyncService.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Application.Services.AcademicDateSyncService",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Academic.Application.Services.AcademicDateSyncService.yml\" sourcestartlinenumber=\"1\">Implementación del servicio de sincronización de fechas.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Application.Services.GeneradorSesionesRecurrentes.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Application.Services.GeneradorSesionesRecurrentes.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Application.Services.GeneradorSesionesRecurrentes",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Application.Services.VinculacionListService.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Application.Services.VinculacionListService.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Application.Services.VinculacionListService",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Academic.Application.Services.VinculacionListService.yml\" sourcestartlinenumber=\"1\">Implementación del servicio de aplicación para la lista de vinculaciones.\nSigue el patrón Vertical Slice.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Application.Services.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Application.Services.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Application.Services",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.yml\" sourcestartlinenumber=\"1\">Interfaz para el repositorio de datos académicos.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Domain.Interfaces.IPeriodoLookupRepository.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Domain.Interfaces.IPeriodoLookupRepository.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Domain.Interfaces.IPeriodoLookupRepository",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Domain.Interfaces.ISedeLookupRepository.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Domain.Interfaces.ISedeLookupRepository.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Domain.Interfaces.ISedeLookupRepository",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Domain.Interfaces.ITerceroLookupRepository.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Domain.Interfaces.ITerceroLookupRepository.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Domain.Interfaces.ITerceroLookupRepository",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Domain.Interfaces.IVinculacionQueryRepository.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Domain.Interfaces.IVinculacionQueryRepository.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Domain.Interfaces.IVinculacionQueryRepository",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Academic.Domain.Interfaces.IVinculacionQueryRepository.yml\" sourcestartlinenumber=\"1\">Interfaz para consultas especializadas de vinculaciones.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Domain.Interfaces.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Domain.Interfaces.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Domain.Interfaces",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Domain.Models.AcademicDateAdjustment.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Domain.Models.AcademicDateAdjustment.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Domain.Models.AcademicDateAdjustment",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Academic.Domain.Models.AcademicDateAdjustment.yml\" sourcestartlinenumber=\"1\">Representa el resultado inmutable del análisis de ajuste de fechas para una vinculación.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Domain.Models.Asignatura.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Domain.Models.Asignatura.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Domain.Models.Asignatura",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Domain.Models.ConfiguracionDia.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Domain.Models.ConfiguracionDia.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Domain.Models.ConfiguracionDia",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Domain.Models.Contenido.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Domain.Models.Contenido.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Domain.Models.Contenido",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Domain.Models.LookupItem.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Domain.Models.LookupItem.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Domain.Models.LookupItem",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Academic.Domain.Models.LookupItem.yml\" sourcestartlinenumber=\"1\">Objeto genérico para elementos de búsqueda (ComboBoxes).</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Domain.Models.Microcurriculo.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Domain.Models.Microcurriculo.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Domain.Models.Microcurriculo",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Domain.Models.Periodo.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Domain.Models.Periodo.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Domain.Models.Periodo",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Domain.Models.Programa.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Domain.Models.Programa.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Domain.Models.Programa",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Domain.Models.Sede.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Domain.Models.Sede.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Domain.Models.Sede",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Domain.Models.Sesion.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Domain.Models.Sesion.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Domain.Models.Sesion",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Domain.Models.SesionListItem",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.yml\" sourcestartlinenumber=\"1\">Modelo para representar una fila desnormalizada de sesión en el listado principal.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Domain.Models.Tercero.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Domain.Models.Tercero.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Domain.Models.Tercero",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.yml\" sourcestartlinenumber=\"1\">Agrupa sesiones con viática en bloques de días consecutivos.\nDuracionTotal = (FechaMaxima - FechaMinima).Days + 0.5</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Domain.Models.Vinculacion.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Domain.Models.Vinculacion.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Domain.Models.Vinculacion",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Academic.Domain.Models.Vinculacion.yml\" sourcestartlinenumber=\"1\">Representa una vinculación académica que asocia un docente (Tercero) con una asignatura,\nsede, programa y semestre, definiendo el cronograma de horas semanal.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Domain.Models.VinculacionListItem.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Domain.Models.VinculacionListItem.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Domain.Models.VinculacionListItem",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Academic.Domain.Models.VinculacionListItem.yml\" sourcestartlinenumber=\"1\">Representa un ítem de la lista de vinculaciones para visualización en el grid.\nEsta entidad es de solo lectura desde la perspectiva de la consulta de lista.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Domain.Models.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Domain.Models.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Domain.Models",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.AcademicUnitOfWork.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.AcademicUnitOfWork.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Infrastructure.Persistence.AcademicUnitOfWork",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.AcademicUnitOfWork.yml\" sourcestartlinenumber=\"1\">Patrón Unit of Work para consolidar operaciones de base de datos en una sola conexión\ny transacción de SQLite, evitando la creación de múltiples archivos temporales por guardado.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.AcademicDbSession.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.AcademicDbSession.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.AcademicDbSession",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.AcademicDbSession.yml\" sourcestartlinenumber=\"1\">Patrón Shared Context para el módulo académico.\nManeja el ciclo de vida de un EncryptedSQLiteContext y su conexión abierta.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.EncryptedSQLiteContext.yml\" sourcestartlinenumber=\"1\">NIVEL 2: Contexto de ciclo de vida para la base de datos SQLite encriptada (Vault Pattern).</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.SQLiteEngineBootstrap.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.SQLiteEngineBootstrap.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.SQLiteEngineBootstrap",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.SQLiteEngineBootstrap.yml\" sourcestartlinenumber=\"1\">NIVEL 1: Inicialización Única por PROCESO (Idempotencia Global).\nManeja el estado estático del motor SQLite y la resolución de dependencias nativas.\nUtiliza un Mutex Local y verificación de módulos cargados para evitar redundancia\nincluso cuando Excel-DNA carga el assembly en múltiples contextos/AppDomains.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ILogger",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.IMigration.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.IMigration.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.IMigration",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ISchemaMigrator.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ISchemaMigrator.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.ISchemaMigrator",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.IVaultPersister.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.IVaultPersister.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.IVaultPersister",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV2_VistasAcademicas.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV2_VistasAcademicas.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV2_VistasAcademicas",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV3_Periodos.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV3_Periodos.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV3_Periodos",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV4_VistaSesiones.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV4_VistaSesiones.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV4_VistaSesiones",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV5_SemestreSesiones.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV5_SemestreSesiones.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV5_SemestreSesiones",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV6_CedulaTercero.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV6_CedulaTercero.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV6_CedulaTercero",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV7_AsignaturaAbreviatura",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.SchemaMigrator.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.SchemaMigrator.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.SchemaMigrator",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.AcademicRepository.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.AcademicRepository.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.AcademicRepository",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.AcademicRepository.yml\" sourcestartlinenumber=\"1\">Implementación del repositorio académico para SQLite usando Dapper y App-Level Encryption (Vault).</p>\n<p sourcefile=\"api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.AcademicRepository.yml\" sourcestartlinenumber=\"3\">PATRÓN CORRECTO DE CONTEXTO:\nusing (var context = SqliteHelper.GetContext()) {\nvar db = context.Open();   // Sin 'using' — el contexto gestiona la conexión\ndb.Query(...);\n}\nLos métodos de escritura requieren llamar a ReEncryptAndPersist() explícitamente\nfuera del hilo UI para asegurar la persistencia en el Vault maestro.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.PeriodoLookupRepository.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.PeriodoLookupRepository.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.PeriodoLookupRepository",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.SedeLookupRepository.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.SedeLookupRepository.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.SedeLookupRepository",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.TerceroLookupRepository.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.TerceroLookupRepository.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.TerceroLookupRepository",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.VinculacionQueryRepository.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.VinculacionQueryRepository.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.VinculacionQueryRepository",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.VinculacionQueryRepository.yml\" sourcestartlinenumber=\"1\">Implementación de infraestructura para consultas de vinculaciones usando Dapper.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.Infrastructure.Persistence.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.Infrastructure.Persistence",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.UI.Forms.FormSedes.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.UI.Forms.FormSedes.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.UI.Forms.FormSedes",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.UI.Forms.FormSesionesAcademicas.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.UI.Forms.FormSesionesAcademicas.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.UI.Forms.FormSesionesAcademicas",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Academic.UI.Forms.FormSesionesAcademicas.yml\" sourcestartlinenumber=\"1\">Formulario de gestión de sesiones académicas.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.UI.Forms.FormTerceros.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.UI.Forms.FormTerceros.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.UI.Forms.FormTerceros",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.UI.Forms.FormViaticos.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.UI.Forms.FormViaticos.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.UI.Forms.FormViaticos",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.UI.Forms.FormVinculaciones.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.UI.Forms.FormVinculaciones.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.UI.Forms.FormVinculaciones",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Academic.UI.Forms.FormVinculaciones.yml\" sourcestartlinenumber=\"1\">Formulario para la gestión de vinculaciones académicas.\nSigue el principio de separación de responsabilidades: Cero lógica de negocio en el code-behind.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Academic.UI.Forms.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Academic.UI.Forms.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Academic.UI.Forms",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Enums.TipoFormMode.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Enums.TipoFormMode.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Enums.TipoFormMode",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Enums.TipoFormMode.yml\" sourcestartlinenumber=\"1\">Representa los estados de visualización y funcionalidad del formulario de programación de viáticos.\nDefine cómo se comporta la UI en función del tipo de trámite.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Enums.TipoFormato.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Enums.TipoFormato.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Enums.TipoFormato",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Enums.TipoFormato.yml\" sourcestartlinenumber=\"1\">Clasifica los tipos de vinculación laboral de los comisionados.\nEste valor determina qué hoja de Excel se utiliza como plantilla para la generación de PDFs.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Enums.TipoMetadata.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Enums.TipoMetadata.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Enums.TipoMetadata",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Enums.TipoMetadata.yml\" sourcestartlinenumber=\"1\">Clasificación de documentos según los metadatos inyectados en el PDF.\nPermite a otros sistemas identificar el tipo de trámite sin procesar el contenido.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Enums.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Enums.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Enums",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Helpers.App.FolderNames.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Helpers.App.FolderNames.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Helpers.App.FolderNames",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Helpers.App.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Helpers.App.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Helpers.App",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Helpers.CatalogCacheService.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Helpers.CatalogCacheService.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Helpers.CatalogCacheService",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Helpers.CatalogCacheService.yml\" sourcestartlinenumber=\"1\">Caché in-memory para los catálogos académicos inmutables o de rarísimo cambio.\nReduce significativamente los tiempos de I/O de la DB SQLite Encriptada\nal reabrir el Add-In de forma reiterada.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Helpers.ConstantsHelper.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Helpers.ConstantsHelper.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Helpers.ConstantsHelper",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Helpers.DatabaseEncryptionEngine.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Helpers.DatabaseEncryptionEngine.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Helpers.DatabaseEncryptionEngine",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Helpers.DatabaseEncryptionEngine.yml\" sourcestartlinenumber=\"1\">Motor de encriptación a nivel de archivo para SQLite (PBKDF2 + AES-256-CBC + HMAC-SHA256).</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Helpers.DayPatternParser.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Helpers.DayPatternParser.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Helpers.DayPatternParser",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Helpers.DayPatternParser.yml\" sourcestartlinenumber=\"1\">Utilidad para el parseo y traducción de patrones de días seleccionados (Español -&gt; Inglés).</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Helpers.ExcelAppStateHelper.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Helpers.ExcelAppStateHelper.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Helpers.ExcelAppStateHelper",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Helpers.ExcelOptimizeHelper.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Helpers.ExcelOptimizeHelper.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Helpers.ExcelOptimizeHelper",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Helpers.ExcelOptimizeHelper.yml\" sourcestartlinenumber=\"1\">Provee metodos para la optimizacion del estado de Excel durante operaciones intensivas.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Helpers.FirmaPDFsHelper.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Helpers.FirmaPDFsHelper.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Helpers.FirmaPDFsHelper",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Helpers.FirmaUnificarObHelper.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Helpers.FirmaUnificarObHelper.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Helpers.FirmaUnificarObHelper",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Helpers.FirmasGeneradorHelper.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Helpers.FirmasGeneradorHelper.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Helpers.FirmasGeneradorHelper",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Helpers.LoggerHelper.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Helpers.LoggerHelper.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Helpers.LoggerHelper",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Helpers.LoggerHelper.yml\" sourcestartlinenumber=\"1\">Proporciona funcionalidades de registro de eventos (logging) para la aplicación.\nUtiliza una cola asíncrona para escribir logs en archivos de texto locales.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Helpers.NativeLibraryPreloader.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Helpers.NativeLibraryPreloader.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Helpers.NativeLibraryPreloader",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Helpers.NativeLibraryPreloader.yml\" sourcestartlinenumber=\"1\">Utilidad para forzar la carga de librerías nativas (DLLs) antes de que el motor managed las requiera.\nResuelve problemas de EntryPointNotFoundException en entornos complejos como Excel.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Helpers.OneDriveHelper.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Helpers.OneDriveHelper.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Helpers.OneDriveHelper",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Helpers.PdfMetadataHelper.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Helpers.PdfMetadataHelper.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Helpers.PdfMetadataHelper",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Helpers.PdfMetadataHelper.yml\" sourcestartlinenumber=\"1\">Orquestador para la lectura de metadatos de archivos PDF seleccionados por el usuario.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Helpers.SqliteHelper.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Helpers.SqliteHelper.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Helpers.SqliteHelper",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Helpers.SqliteHelper.yml\" sourcestartlinenumber=\"1\">Ayudante para la gestión de la base de datos SQLite con encriptación Vault (App-Level).</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Helpers.ViaticosHelper.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Helpers.ViaticosHelper.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Helpers.ViaticosHelper",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Helpers.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Helpers.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Helpers",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Interfaces.IApp.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Interfaces.IApp.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Interfaces.IApp",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Interfaces.IContadorService.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Interfaces.IContadorService.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Interfaces.IContadorService",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Interfaces.IContadorService.yml\" sourcestartlinenumber=\"1\">Interfaz para el servicio de procesamiento de obligaciones del contador.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Interfaces.IExcelRepository.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Interfaces.IExcelRepository.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Interfaces.IExcelRepository",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Interfaces.IExcelRepository.yml\" sourcestartlinenumber=\"1\">Interfaz para la manipulación de datos y objetos de Microsoft Excel.\nProvee una capa de abstracción sobre Microsoft.Office.Interop.Excel.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Interfaces.IFirmaExtractService.yml\" sourcestartlinenumber=\"1\">Interfaz para el servicio de extracción de datos de documentos para firma.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Interfaces.IPdfMetadataService.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Interfaces.IPdfMetadataService.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Interfaces.IPdfMetadataService",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Interfaces.IPdfMetadataService.yml\" sourcestartlinenumber=\"1\">Interfaz para el servicio de gestión de metadatos en documentos PDF.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Interfaces.IPdfService.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Interfaces.IPdfService.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Interfaces.IPdfService",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Interfaces.IPdfService.yml\" sourcestartlinenumber=\"1\">Interfaz que define las operaciones de manipulación de archivos PDF.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Interfaces.IPdfToTexto",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.yml\" sourcestartlinenumber=\"1\">Interfaz para la extracción de texto de archivos PDF (vía iText7 o similar).\nExpuesta vía COM para ser consumida desde VBA.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Interfaces.IUserService.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Interfaces.IUserService.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Interfaces.IUserService",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Interfaces.IUserService.yml\" sourcestartlinenumber=\"1\">Interfaz para la gestión de usuarios e identidades (firmas, perfiles).</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Interfaces.IViaticosCumplidosProcessor.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Interfaces.IViaticosCumplidosProcessor.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Interfaces.IViaticosCumplidosProcessor",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Interfaces.IViaticosCumplidosProcessor.yml\" sourcestartlinenumber=\"1\">Procesador especializado en la generación de formatos de cumplimiento e informes de actividades.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.yml\" sourcestartlinenumber=\"1\">Define las operaciones de gestión documental para viáticos, incluyendo renombramiento de archivos mediante OCR y unificación de expedientes.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor.yml\" sourcestartlinenumber=\"1\">Procesador para la generación de viáticos de forma individual o específica.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Interfaces.IViaticosMasivoProcessor.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Interfaces.IViaticosMasivoProcessor.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Interfaces.IViaticosMasivoProcessor",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Interfaces.IViaticosMasivoProcessor.yml\" sourcestartlinenumber=\"1\">Procesador para la generación masiva de múltiples archivos PDF de viáticos.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Interfaces.IViaticosRepository",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.yml\" sourcestartlinenumber=\"1\">Interfaz para el acceso a datos de configuración, empleados y viajes desde Excel.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Interfaces.IViaticosService.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Interfaces.IViaticosService.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Interfaces.IViaticosService",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Interfaces.IViaticosService.yml\" sourcestartlinenumber=\"1\">Interfaz que orquestra el procesamiento de viáticos en sus diferentes modalidades.\nActúa como el servicio principal para el módulo de Viáticos.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Interfaces.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Interfaces.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Interfaces",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Models.Empleado.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Models.Empleado.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Models.Empleado",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Models.Empleado.yml\" sourcestartlinenumber=\"1\">Representa la información de un empleado o contratista extraída de la base de datos de Excel.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Models.ExtraerDatos.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Models.ExtraerDatos.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Models.ExtraerDatos",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Models.ExtraerDatos.yml\" sourcestartlinenumber=\"1\">Modelo que encapsula los datos extraídos de documentos.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Models.Metadata.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Models.Metadata.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Models.Metadata",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Models.Metadata.yml\" sourcestartlinenumber=\"1\">Estructura de datos para los metadatos de un documento PDF.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Models.SqliteResult-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Models.SqliteResult-1.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Models.SqliteResult<T>",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Models.SqliteResult-1.yml\" sourcestartlinenumber=\"1\">Representa el resultado de una operación de base de datos.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Models.SqliteResult.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Models.SqliteResult.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Models.SqliteResult",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Models.SqliteResult.yml\" sourcestartlinenumber=\"1\">Representa el resultado de una operación de base de datos sin valor de retorno.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Models.UserIdentification.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Models.UserIdentification.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Models.UserIdentification",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Models.UserIdentification.yml\" sourcestartlinenumber=\"1\">Representa los datos de identificación de un usuario para ser insertados en documentos Excel.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Models.Viaje.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Models.Viaje.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Models.Viaje",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Models.Viaje.yml\" sourcestartlinenumber=\"1\">Modelo que representa la información de un viaje o comisión de servicios.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Models.ViaticoRow.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Models.ViaticoRow.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Models.ViaticoRow",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Models.ViaticoRow.yml\" sourcestartlinenumber=\"1\">Representa una fila de datos de viáticos extraída de las hojas de programación o consultas de Excel.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Models.ViaticosConfig.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Models.ViaticosConfig.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Models.ViaticosConfig",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Models.ViaticosConfig.yml\" sourcestartlinenumber=\"1\">Modelo de configuración global para el procesamiento de viáticos, mapeado desde la hoja 'Config'.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Models.ViaticosFormatException.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Models.ViaticosFormatException.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Models.ViaticosFormatException",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Models.ViaticosFormatException.yml\" sourcestartlinenumber=\"1\">Excepción lanzada cuando el libro de Excel no cumple con el formato esperado\n(hojas o tablas faltantes).</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Models.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Models.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Models",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Repositories.ExcelRepository.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Repositories.ExcelRepository.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Repositories.ExcelRepository",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Repositories.ViaticosRepository.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Repositories.ViaticosRepository.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Repositories.ViaticosRepository",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Repositories.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Repositories.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Repositories",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Services.ContadorService.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Services.ContadorService.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Services.ContadorService",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Services.ContadorService.yml\" sourcestartlinenumber=\"1\">Servicio para el procesamiento de obligaciones del contador.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Services.FirmaExtractService.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Services.FirmaExtractService.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Services.FirmaExtractService",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Services.FirmaExtractService.yml\" sourcestartlinenumber=\"1\">Servicio para la extracción de datos de documentos para firma.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Services.PdfMetadataService.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Services.PdfMetadataService.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Services.PdfMetadataService",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Services.PdfMetadataService.yml\" sourcestartlinenumber=\"1\">Servicio para la gestión de metadatos en documentos PDF utilizando la librería PDFSharp.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Services.PdfService.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Services.PdfService.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Services.PdfService",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Services.PdfService.yml\" sourcestartlinenumber=\"1\">Servicio encargado de la manipulación de documentos PDF utilizando la librería PDFSharp.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Services.UserService.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Services.UserService.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Services.UserService",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Services.UserService.yml\" sourcestartlinenumber=\"1\">Servicio que gestiona la identidad del usuario y la recuperación de firmas digitales desde los recursos del ensamblado.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Services.ViaticosService.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Services.ViaticosService.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Services.ViaticosService",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.Core.Services.ViaticosService.yml\" sourcestartlinenumber=\"1\">Servicio fachada que coordina todas las operaciones relacionadas con viáticos.\nInyecta y utiliza repositorios y procesadores especializados para cada tarea.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Core.Services.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Core.Services.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Core.Services",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.ExcelAddIn.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.ExcelAddIn.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.ExcelAddIn",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.ExcelAddIn.yml\" sourcestartlinenumber=\"1\">Punto de entrada del Add-in. Se ejecuta al cargar/descargar desde Excel.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.FormProgramador.FormConfig.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.FormProgramador.FormConfig.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.FormProgramador.FormConfig",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.FormProgramador.FormGestionDocumental.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.FormProgramador.FormGestionDocumental.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.FormProgramador.FormGestionDocumental",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.FormProgramador.FormInfo.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.FormProgramador.FormInfo.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.FormProgramador.FormInfo",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.FormProgramador.FormProgramador.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.FormProgramador.FormProgramador.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.FormProgramador.FormProgramador",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.FormProgramador.FormTableEditor.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.FormProgramador.FormTableEditor.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.FormProgramador.FormTableEditor",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.FormProgramador.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.FormProgramador.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.FormProgramador",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Functions.WindowsUserFunctions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Functions.WindowsUserFunctions.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Functions.WindowsUserFunctions",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.Functions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.Functions.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.Functions",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.OneDriveFunctions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.OneDriveFunctions.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.OneDriveFunctions",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.OneDriveFunctions.yml\" sourcestartlinenumber=\"1\">Funciones UDF para resolución de rutas OneDrive/SharePoint y usuario Office.\nUso: =ONEDRIVE.RutaLocal(A1)</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.PdfFunctions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.PdfFunctions.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.PdfFunctions",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.PdfFunctions.yml\" sourcestartlinenumber=\"1\">Funciones UDF para extracción de texto PDF, disponibles como fórmulas en celdas Excel.\nUso: =PDF.ExtraerTexto(&quot;C:\\ruta\\archivo.pdf&quot;)</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.RibbonController.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.RibbonController.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.RibbonController",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.RibbonController.yml\" sourcestartlinenumber=\"1\">Controlador del Ribbon ESAP. Conecta los botones de Excel con la lógica C# existente.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.UI.DayHoursDropdown.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.UI.DayHoursDropdown.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.UI.DayHoursDropdown",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.UI.DayHoursDropdown.yml\" sourcestartlinenumber=\"1\">Control personalizado que actúa como un ComboBox multiselect para días de la semana y horas.\nBasado en DataGridView hospedado en un ToolStripDropDown.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.UI.ProgressDialog.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.UI.ProgressDialog.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.UI.ProgressDialog",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.UI.ProgressDialog.yml\" sourcestartlinenumber=\"1\">Formulario modal simplificado para mostrar el progreso de operaciones pesadas.\nDiseñado para mantener vivo el message pump de Windows en el hilo STA de Excel,\nevitando bloqueos de COM y diálogos OLE.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.UI.ProgressForm.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.UI.ProgressForm.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.UI.ProgressForm",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.UI.ProgressManager.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.UI.ProgressManager.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.UI.ProgressManager",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.UI.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.UI.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.UI",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.VisTimeline.Application.Services.ViaticoTimelineMapper.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.VisTimeline.Application.Services.ViaticoTimelineMapper.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.VisTimeline.Application.Services.ViaticoTimelineMapper",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.VisTimeline.Application.Services.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.VisTimeline.Application.Services.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.VisTimeline.Application.Services",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.VisTimeline.Domain.Models.TimelineGroup.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.VisTimeline.Domain.Models.TimelineGroup.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.VisTimeline.Domain.Models.TimelineGroup",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.VisTimeline.Domain.Models.TimelineGroup.yml\" sourcestartlinenumber=\"1\">Representa un grupo (fila) en vis-timeline.\nCada sede es un grupo independiente.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.VisTimeline.Domain.Models.TimelineItem.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.VisTimeline.Domain.Models.TimelineItem.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.VisTimeline.Domain.Models.TimelineItem",
+      "Summary": "<p sourcefile=\"api/ConversorPDF.XLL.VisTimeline.Domain.Models.TimelineItem.yml\" sourcestartlinenumber=\"1\">Representa un item en vis-timeline.\nLos nombres de propiedades son lowercase para coincidir exactamente\ncon la API de vis-timeline al serializar a JSON.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.VisTimeline.Domain.Models.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.VisTimeline.Domain.Models.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.VisTimeline.Domain.Models",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.VisTimeline.Infrastructure.Helpers.ResourceExtractor.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.VisTimeline.Infrastructure.Helpers.ResourceExtractor.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.VisTimeline.Infrastructure.Helpers.ResourceExtractor",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.VisTimeline.Infrastructure.Helpers.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.VisTimeline.Infrastructure.Helpers.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.VisTimeline.Infrastructure.Helpers",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.VisTimeline.Infrastructure.Services.TimelineHtmlGenerator.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.VisTimeline.Infrastructure.Services.TimelineHtmlGenerator.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.VisTimeline.Infrastructure.Services.TimelineHtmlGenerator",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.VisTimeline.Infrastructure.Services.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.VisTimeline.Infrastructure.Services.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.VisTimeline.Infrastructure.Services",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.VisTimeline.UI.TimelineViewer.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.VisTimeline.UI.TimelineViewer.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.VisTimeline.UI.TimelineViewer",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.VisTimeline.UI.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.VisTimeline.UI.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL.VisTimeline.UI",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ConversorPDF.XLL.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ConversorPDF.XLL.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ConversorPDF.XLL",
+      "Summary": null
+    },
+    {
+      "type": "Toc",
+      "source_relative_path": "api/toc.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/toc.html"
+        },
+        ".json": {
+          "relative_path": "api/toc.json"
         }
       },
       "version": ""
@@ -26,6 +2157,136 @@
       "output": {
         ".html": {
           "relative_path": "articles/BD.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/academic-viaticos.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/academic-viaticos.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/changes/2026-10-16-ajuste-formato-nivel2-viaticos.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/changes/2026-10-16-ajuste-formato-nivel2-viaticos.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/changes/2026-10-17-habilitar-autofiltro-proteccion-programacion.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/changes/2026-10-17-habilitar-autofiltro-proteccion-programacion.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/changes/2026-10-19-distribucion-viaticos-por-asignatura.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/changes/2026-10-19-distribucion-viaticos-por-asignatura.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/changes/2026-10-19-reparacion-ventana-periodos-crdt.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/changes/2026-10-19-reparacion-ventana-periodos-crdt.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/changes/2026-10-21-renombrado-modalidades-tutoria.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/changes/2026-10-21-renombrado-modalidades-tutoria.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/changes/2026-10-22-ag-carriles-oleadas.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/changes/2026-10-22-ag-carriles-oleadas.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/changes/2026-10-22-aislamiento-log-pruebas.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/changes/2026-10-22-aislamiento-log-pruebas.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/changes/2026-10-22-colision-nombre-funcion-de.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/changes/2026-10-22-colision-nombre-funcion-de.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/changes/2026-10-23-ag-carriles-oleadas-v4.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/changes/2026-10-23-ag-carriles-oleadas-v4.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/changes/2026-10-23-ag-oleadas-banda-dias.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/changes/2026-10-23-ag-oleadas-banda-dias.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/changes/2026-10-23-perfil-arbol-restauracion-dimensiones.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/changes/2026-10-23-perfil-arbol-restauracion-dimensiones.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/changes/2026-ag-horarios-academicos.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/changes/2026-ag-horarios-academicos.html"
         }
       },
       "version": ""

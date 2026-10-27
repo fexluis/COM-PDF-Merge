@@ -2,9 +2,9 @@ using System;
 using System.IO;
 using Xunit;
 using FluentAssertions;
-using ConversorPDF.XLL.Core.Data;
+using ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context;
 
-namespace ConversorPDF.Tests.Core.Data
+namespace ConversorPDF.Tests.Academic.Infrastructure.Persistence.Unit
 {
     /// <summary>
     /// Tests de contrato defensivos para el bootstrap de SQLite bajo el entorno Excel-DNA.

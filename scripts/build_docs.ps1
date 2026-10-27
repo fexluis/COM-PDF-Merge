@@ -20,7 +20,21 @@ if (-not $docfxInstalled) {
 
 # 2. Compilar el proyecto para generar el XML de documentación
 Write-Host "2. Preparando binarios y XML..." -ForegroundColor Yellow
-dotnet build $csproj -c Release
+$outputPath = Join-Path $root "ConversorPDF.XLL\bin\x64\Release"
+if (!(Test-Path $outputPath)) { New-Item -ItemType Directory -Force -Path $outputPath }
+
+$packages = "$env:USERPROFILE\.nuget\packages"
+if (Test-Path "$packages\system.reflection.metadata\6.0.0\lib\net461\System.Reflection.Metadata.dll") {
+    Copy-Item "$packages\system.reflection.metadata\6.0.0\lib\net461\System.Reflection.Metadata.dll" -Destination "$outputPath\" -Force
+}
+if (Test-Path "$packages\system.collections.immutable\6.0.0\lib\net461\System.Collections.Immutable.dll") {
+    Copy-Item "$packages\system.collections.immutable\6.0.0\lib\net461\System.Collections.Immutable.dll" -Destination "$outputPath\" -Force
+}
+if (Test-Path "$packages\csharpfunctionalextensions\2.40.3\lib\net461\CSharpFunctionalExtensions.dll") {
+    Copy-Item "$packages\csharpfunctionalextensions\2.40.3\lib\net461\CSharpFunctionalExtensions.dll" -Destination "$outputPath\" -Force
+}
+
+dotnet build $csproj -c Release -p:Platform=x64
 if ($LASTEXITCODE -ne 0) { throw "El build del proyecto falló." }
 
 # 3. Generar Metadatos y Construir Sitio

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Renombrado de Modalidades de Tutor&#237;a: Presencial / Plataforma / Mixta | ESAP - ConversorPDF </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Renombrado de Modalidades de Tutor&#237;a: Presencial / Plataforma / Mixta | ESAP - ConversorPDF ">
+      
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="../../toc.html">
+      <meta name="docfx:tocrel" content="../toc.html">
+      
+      <meta name="docfx:rel" content="../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/fexluis/COM-PDF-Merge/blob/refactor/academic-modularization/docs/articles/changes/2026-10-21-renombrado-modalidades-tutoria.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="renombrado-de-modalidades-de-tutoría-presencial--plataforma--mixta">Renombrado de Modalidades de Tutoría: Presencial / Plataforma / Mixta</h1>
+
+<p><strong>Fecha:</strong> 2026-10-21<br>
+<strong>Módulo:</strong> Académico (<code>ConversorPDF.XLL.Academic</code>)<br>
+<strong>Ronda:</strong> 148 (Fases 783 a 791)</p>
+<h2 id="propósito">Propósito</h2>
+<p>Renombrar las etiquetas visibles en la interfaz de usuario y los valores canónicos persistidos de <strong>Tipo Tutoría</strong> en toda la solución:</p>
+<ul>
+<li>La etiqueta y valor <strong><code>Virtual</code></strong> pasa a ser <strong><code>Plataforma</code></strong>.</li>
+<li>La etiqueta y valor <strong><code>Semipresencial</code></strong> pasa a ser <strong><code>Mixta</code></strong> (sustituyendo integralmente a <em>Semipresencial</em> y absorbiendo variantes legadas como <em>A Distancia</em> / <em>Distancia</em>).</li>
+<li>La modalidad <strong><code>Presencial</code></strong> se mantiene intacta sin cambios.</li>
+</ul>
+<p>El cambio unifica la terminología institucional en la UI, formularios de gestión académica (<code>FormSesionesAcademicas</code>, <code>FormVerVinculaciones</code>), árbol de configuración del Generador de Horarios (<code>AgFormGeneradorHorarios</code>), vistas, mappers, servicios de cálculo de viáticos y migraciones de base de datos SQLite (V66).</p>
+<h2 id="cambios">Cambios</h2>
+<ol>
+<li><p><strong>Catálogo Canónico (<code>ModalidadTutoriaCatalog.cs</code>, Fase 783):</strong></p>
+<ul>
+<li>Nuevo catálogo central en <code>Academic.Domain.Models</code> para evitar dependencias circulares entre capas.</li>
+<li>Constantes canónicas <code>Presencial = &quot;Presencial&quot;</code>, <code>Plataforma = &quot;Plataforma&quot;</code>, <code>Mixta = &quot;Mixta&quot;</code>.</li>
+<li>Propiedades <code>Opciones</code> (<code>string[]</code>), <code>Pares</code> (<code>IReadOnlyList&lt;(string Codigo, string Etiqueta)&gt;</code>).</li>
+<li>Métodos utilitarios: <code>Normalizar(modalidad)</code> con orden de evaluación estricto (Plataforma/Virtual → Mixta/Semi/Distancia → Presencial → Trim/Fallback), <code>AEtiqueta(codigo)</code>, <code>EsPresencial(modalidad)</code>, <code>EsPlataforma(modalidad)</code>, <code>EsMixta(modalidad)</code>.</li>
+</ul>
+</li>
+<li><p><strong>Nueva Migración V66 Aditiva y Tolerante (<code>MigrationV66_RenombrarModalidadTutoria.cs</code>, Fase 784):</strong></p>
+<ul>
+<li><code>Version = 66</code>, <code>Name = &quot;RenombrarModalidadTutoria&quot;</code>, <code>Aditiva = true</code>.</li>
+<li>Registrada en <code>SqliteHelper.BuildMigrator()</code> posterior a V65.</li>
+<li>Actualización set-based e idempotente de columnas de modalidad en 4 tablas:
+<ul>
+<li><code>vinculaciones.modalidadVinculacion</code></li>
+<li><code>ag_vinculaciones.modalidadVinculacion</code></li>
+<li><code>ag_aula.modalidadVinculacion</code></li>
+<li><code>ag_arbol_nodo.modalidad</code></li>
+</ul>
+</li>
+<li>Actualización de identificadores derivados en <code>ag_aula</code>:
+<ul>
+<li>Reemplazo seguro de tokens en <code>aula_ref</code>, <code>codigo</code>, <code>nombre</code>: <code>|VIRTUAL</code> → <code>|PLATAFORMA</code>, <code>|SEMIPRESENCIAL</code> → <code>|MIXTA</code>, <code>|A DISTANCIA</code> → <code>|MIXTA</code>.</li>
+</ul>
+</li>
+<li>Protección contra colisión en <code>uq_ag_arbol_nodo(idarbol, aula_ref)</code>:
+<ul>
+<li>Deduplicación explícita previa eliminando filas legadas duplicadas en el mismo perfil antes de ejecutar el <code>UPDATE</code>.</li>
+</ul>
+</li>
+<li>Preservación explícita fuera de alcance: <code>TipoAula</code> (<code>VIRTUAL</code>/<code>ESTANDAR</code>), <code>EsVirtual</code>/<code>es_virtual</code>, <code>programas.modalidad</code> (<code>PREGRADO</code>/<code>POSGRADO</code>), festivos <code>PRESENCIAL</code>.</li>
+</ul>
+</li>
+<li><p><strong>Dominio y DTOs (<code>AgAula.cs</code>, <code>AgVinculacion.cs</code>, <code>AgContextoSeleccionDto.cs</code>, Fase 785):</strong></p>
+<ul>
+<li>Valores por defecto inicializados con <code>ModalidadTutoriaCatalog.Presencial</code>.</li>
+<li>Normalización canónica en constructores de <code>AgContextoSeleccionDto</code>.</li>
+<li>Propiedad <code>ModalidadEfectiva =&gt; EsVirtual &gt; 0 ? ModalidadTutoriaCatalog.Plataforma : ModalidadTutoriaCatalog.Normalizar(Modalidad)</code>.</li>
+</ul>
+</li>
+<li><p><strong>Factorías y Mappers (Fase 786):</strong></p>
+<ul>
+<li><code>AgAulaFactory.ConstruirAulaRef</code>: normalización previa a <code>ToUpperInvariant()</code>.</li>
+<li><code>AgAulaFactory.CrearDesdeDto</code>: asignación <code>modVinculacion = esVirtual == 1 ? Plataforma : mod</code>.</li>
+<li><code>AgArbolMapper</code>: normalización bidireccional entre nodos del árbol y DTOs de contexto.</li>
+<li><code>AgExpansorSesiones</code>, <code>AgAulaToAgVinculacionMapper</code>, <code>AgVinculacionToVinculacionMapper</code>, <code>AgGenToAgVinculacionMapper</code>, <code>AgEncabezadoVinculacionFactory</code>: mapeo y normalización con fallback canónico.</li>
+</ul>
+</li>
+<li><p><strong>Servicios de Aplicación (Fase 787):</strong></p>
+<ul>
+<li><code>CalculadoraViaticaSesion</code>: evaluación con <code>ModalidadTutoriaCatalog.EsPlataforma</code>, <code>EsPresencial</code>, <code>EsMixta</code>. Semántica idéntica (Plataforma nunca viática; Presencial viática con desplazamiento; Mixta viática exclusivamente dentro de rangos presenciales).</li>
+<li><code>SesionConflictAnalyzer</code>: omisión de sesiones de modalidad Plataforma mediante <code>ModalidadTutoriaCatalog.EsPlataforma(s.Modalidad)</code>.</li>
+</ul>
+</li>
+<li><p><strong>Interfaz de Usuario (Fases 788 y 789):</strong></p>
+<ul>
+<li><code>FormSesionesAcademicas.Designer.cs</code>: controles renombrados <code>cmbTipoJornada</code> → <code>cmbTipoTutoria</code>, <code>lblTipoJornada</code> → <code>lblTipoTutoria</code>.</li>
+<li><code>FormSesionesAcademicas.cs</code>: carga de opciones <code>Presencial</code>, <code>Plataforma</code>, <code>Mixta</code>; persistencia y recuperación de estado; mensaje de advertencia actualizado explícitamente: <em>&quot;Con la modalidad Mixta, las sesiones se generarán sin viáticas asignadas...&quot;</em>.</li>
+<li><code>FormVerVinculaciones.cs</code>: uso de <code>ModalidadTutoriaCatalog.EsPlataforma</code>, distintivo visual <code>&quot; | 🌐 Plataforma&quot;</code>, exclusión de conflictos para Plataforma.</li>
+<li><code>AgFormGeneradorHorarios.cs</code>: nivel 5 (modalidad) poblado mediante pares <code>(par.Codigo, par.Etiqueta)</code> (<code>key6 = new AgNodoArbolKey(6, 0, par.Codigo, par.Codigo)</code>, <code>new TreeNode(par.Etiqueta)</code>); mensajes de error de aulas faltantes con etiqueta canónica <code>[Plataforma]</code> / <code>[Mixta]</code>; compatibilidad y normalización en carga de perfiles guardados.</li>
+</ul>
+</li>
+<li><p><strong>Pruebas y Documentación (Fases 790 y 791):</strong></p>
+<ul>
+<li>Creación de <code>ModalidadTutoriaCatalogTests.cs</code> y <code>MigrationV66Tests.cs</code>.</li>
+<li>Actualización de suites existentes: <code>CalculadoraViaticaSesionTests</code>, <code>AgAulaFactoryTests</code>, <code>AgArbolServiceTests</code>, <code>AgArbolMapperTests</code>, <code>AgAulaToAgVinculacionMapperTests</code>, <code>AgTreeViewCheckServiceTests</code>.</li>
+<li>Actualización de especificación en <code>AG-2.txt</code> (fila <code>cmbTipoTutoria</code>).</li>
+</ul>
+</li>
+</ol>
+<h2 id="cómo-usar">Cómo usar</h2>
+<ol>
+<li>Al iniciar la aplicación, <code>SchemaMigrator</code> ejecuta automáticamente la migración V66 actualizando los datos existentes.</li>
+<li>En <strong>Sesiones Académicas</strong>:
+<ul>
+<li>El desplegable <strong>Tipo Tutoría</strong> presenta tres opciones: <strong>Presencial</strong>, <strong>Plataforma</strong> y <strong>Mixta</strong> (por defecto <em>Presencial</em>).</li>
+<li>Al seleccionar <em>Plataforma</em>, las sesiones se generan sin viáticos ni restricciones de franja física.</li>
+<li>Al seleccionar <em>Mixta</em>, las sesiones generan viáticos únicamente si caen dentro de un rango presencial configurado.</li>
+<li>Vinculaciones históricas marcadas como <em>Virtual</em> se presentan automáticamente como <em>Plataforma</em>; vinculaciones marcadas como <em>Semipresencial</em> o <em>A Distancia</em> se presentan como <em>Mixta</em>.</li>
+</ul>
+</li>
+<li>En el <strong>Generador de Horarios (AG)</strong>:
+<ul>
+<li>Los nodos de nivel de modalidad en el árbol muestran: <code>Presencial</code>, <code>Plataforma</code>, <code>Mixta</code>.</li>
+<li>Al generar aulas, se generan claves canónicas con sufijos <code>|PLATAFORMA</code> y <code>|MIXTA</code>.</li>
+<li>Si faltan aulas por configurar, el diálogo reportará claramente los nombres canónicos entre corchetes (ej. <code>... [Plataforma]</code>, <code>... [Mixta]</code>).</li>
+</ul>
+</li>
+</ol>
+<h2 id="cobertura-de-pruebas-fase-790">Cobertura de pruebas (Fase 790)</h2>
+<ul>
+<li><code>ModalidadTutoriaCatalogTests.cs</code>:
+<ul>
+<li><code>Opciones_ShouldContainCanonicalValuesInCorrectOrder</code></li>
+<li><code>Pares_ShouldMatchCodeAndLabel</code></li>
+<li><code>Normalizar_WhenGivenVariedInputs_ShouldMapCorrectly</code></li>
+<li><code>AEtiqueta_WhenGivenInputs_ShouldReturnExpectedDisplayLabel</code></li>
+<li><code>Predicates_ShouldIdentifyModalitiesAccurately</code></li>
+</ul>
+</li>
+<li><code>MigrationV66Tests.cs</code>:
+<ul>
+<li><code>MigrationV66_Metadata_ShouldBeCorrect</code></li>
+<li><code>Up_WhenTablesMissing_ShouldNotThrowAndLogInfo</code></li>
+<li><code>Up_WhenLegacyDataPresent_ShouldNormalizeToPlataformaAndMixta</code></li>
+<li><code>Up_WhenCollisionInArbolNodoUniqueIndex_ShouldDeduplicateAndSucceed</code></li>
+<li><code>Up_WhenExecutedMultipleTimes_ShouldBeIdempotent</code></li>
+</ul>
+</li>
+<li>Suites de regresión y compatibilidad actualizadas:
+<ul>
+<li><code>CalculadoraViaticaSesionTests.cs</code> (casos canónicos y compatibilidad legada)</li>
+<li><code>AgAulaFactoryTests.cs</code> (generación y formateo con Plataforma y Mixta)</li>
+<li><code>AgArbolServiceTests.cs</code> (mapeo y carga de perfiles)</li>
+<li><code>AgArbolMapperTests.cs</code> (mapeo bidireccional DTO/Nodo)</li>
+<li><code>AgAulaToAgVinculacionMapperTests.cs</code> (mapeo aula a vinculación)</li>
+<li><code>AgTreeViewCheckServiceTests.cs</code> (expansión cartesiana de combinaciones)</li>
+</ul>
+</li>
+</ul>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/fexluis/COM-PDF-Merge/blob/refactor/academic-modularization/docs/articles/changes/2026-10-21-renombrado-modalidades-tutoria.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          ESAP - ConversorPDF Doc
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

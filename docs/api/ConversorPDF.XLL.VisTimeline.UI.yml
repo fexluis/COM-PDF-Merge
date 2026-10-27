@@ -1,0 +1,24 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.VisTimeline.UI
+  commentId: N:ConversorPDF.XLL.VisTimeline.UI
+  id: ConversorPDF.XLL.VisTimeline.UI
+  children:
+  - ConversorPDF.XLL.VisTimeline.UI.TimelineViewer
+  langs:
+  - csharp
+  - vb
+  name: ConversorPDF.XLL.VisTimeline.UI
+  nameWithType: ConversorPDF.XLL.VisTimeline.UI
+  fullName: ConversorPDF.XLL.VisTimeline.UI
+  type: Namespace
+  assemblies:
+  - ConversorPDF.XLL
+references:
+- uid: ConversorPDF.XLL.VisTimeline.UI.TimelineViewer
+  commentId: T:ConversorPDF.XLL.VisTimeline.UI.TimelineViewer
+  isExternal: true
+  href: ConversorPDF.XLL.VisTimeline.UI.TimelineViewer.html
+  name: TimelineViewer
+  nameWithType: TimelineViewer
+  fullName: ConversorPDF.XLL.VisTimeline.UI.TimelineViewer

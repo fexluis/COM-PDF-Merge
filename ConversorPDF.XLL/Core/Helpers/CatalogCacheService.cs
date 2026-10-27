@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ConversorPDF.XLL.Core.Interfaces;
-using ConversorPDF.XLL.Core.Models.Academic;
-using ConversorPDF.XLL.Core.Repositories;
+using ConversorPDF.XLL.Academic.Domain.Interfaces;
+using ConversorPDF.XLL.Academic.Domain.Models;
+using ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories;
 using System.Data;
 using Dapper;
 
@@ -20,6 +20,7 @@ namespace ConversorPDF.XLL.Core.Helpers
         private static readonly object _lock = new object();
 
         public static List<Sede> Sedes { get; private set; } = new List<Sede>();
+        public static List<Periodo> Periodos { get; private set; } = new List<Periodo>();
         public static List<Programa> Programas { get; private set; } = new List<Programa>();
         public static List<Asignatura> Asignaturas { get; private set; } = new List<Asignatura>();
         public static List<Tercero> Terceros { get; private set; } = new List<Tercero>();
@@ -41,16 +42,35 @@ namespace ConversorPDF.XLL.Core.Helpers
                 {
                     var sw = System.Diagnostics.Stopwatch.StartNew();
                     string query = @"
-                        SELECT * FROM sedes;
+                        SELECT idperiodo as IdPeriodo, periodo as PeriodoNombre, activo as Activo FROM periodos;
+                        SELECT * FROM sedes WHERE activo = 1;
                         SELECT * FROM programas;
-                        SELECT id, departamento, nombre, cedula, tipo, salario, rol, entidad_bancaria as EntidadBancaria, cuenta_bancaria as CuentaBancaria, telefono, correo, fecha_nacimiento as FechaDeNacimiento, contrato FROM terceros;";
+                        SELECT *, 
+                               entidad_bancaria as EntidadBancaria, 
+                               cuenta_bancaria as CuentaBancaria, 
+                               tipo_cuenta_bancaria as TipoCuentaBancaria,
+                               correo_personal as CorreoPersonal,
+                               fecha_nacimiento as FechaDeNacimiento 
+                        FROM terceros;";
+
+                    List<Periodo> periodos;
+                    List<Sede> sedes;
+                    List<Programa> programas;
+                    List<Tercero> terceros;
 
                     using (var multi = db.QueryMultiple(query))
                     {
-                        Sedes = multi.Read<Sede>().ToList();
-                        Programas = multi.Read<Programa>().ToList();
-                        Terceros = multi.Read<Tercero>().ToList();
+                        periodos = multi.Read<Periodo>().ToList();
+                        sedes = multi.Read<Sede>().ToList();
+                        programas = multi.Read<Programa>().ToList();
+                        terceros = multi.Read<Tercero>().ToList();
                     }
+
+                    Periodos = periodos;
+                    Sedes = sedes;
+                    Programas = programas;
+                    Terceros = terceros;
+
                     sw.Stop();
                     LoggerHelper.Info($"[PERF] [CatalogCacheService] Carga de catálogos finalizada en {sw.ElapsedMilliseconds}ms.");
 
@@ -69,6 +89,7 @@ namespace ConversorPDF.XLL.Core.Helpers
             lock (_lock)
             {
                 _isLoaded = false;
+                Periodos.Clear();
                 Sedes.Clear();
                 Programas.Clear();
                 Asignaturas.Clear();

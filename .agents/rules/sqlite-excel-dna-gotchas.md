@@ -17,7 +17,7 @@ Excel-DNA copies DLL assemblies to a CLR-managed temporary path before loading t
                                    └─ System.Data.SQLite.dll.config  ← MUST EXIST HERE
 ```
 
-`SQLiteConnection..ctor` internally calls `Path.Combine(Assembly.Location, ".config")`. 
+`SQLiteConnection..ctor` internally calls `Path.Combine(Assembly.Location, ".config")`.
 When the shadow-copy directory is brand new (e.g., after Excel restart), that `.config` file does not yet exist. The CLR's config-reader path resolution returns `null`, causing an `ArgumentNullException("path1")`.
 
 ### Mitigation
@@ -47,7 +47,7 @@ Excel-DNA loads the Add-in assembly multiple times (Ribbon, UDFs, COM). Each App
 ## Known Limitation 3: EntryPointNotFoundException (Native Mismatch)
 
 ### Root Cause
-Occurs when `System.Data.SQLite.dll` (Managed) cannot find a specific function (like `sqlite3_initialize`) in `SQLite.Interop.dll` (Native). 
+Occurs when `System.Data.SQLite.dll` (Managed) cannot find a specific function (like `sqlite3_initialize`) in `SQLite.Interop.dll` (Native).
 - **Cause A**: Version mismatch (Interop version < Managed version).
 - **Cause B**: Architecture mismatch (trying to load x86 DLL in x64 process).
 
@@ -60,7 +60,7 @@ Occurs when `System.Data.SQLite.dll` (Managed) cannot find a specific function (
 ## Diagnostic Cheat Sheet
 
 | Symptom | Probable Cause | First Check |
-|---------|---------------|--------------|
+|---------|----------------|-------------|
 | `ArgumentNullException("path1")` | Shadow copy without `.config` | Check if `.config` exists in `%TEMP%` path. |
 | `EntryPointNotFoundException` | Version/Architecture mismatch | Verify `SQLite.Interop.dll` is in `x64` folder. |
 | `DllNotFoundException` | Native DLL not found in search path | Ensure `NativeLibraryPreloader` ran successfully. |
@@ -75,4 +75,4 @@ Occurs when `System.Data.SQLite.dll` (Managed) cannot find a specific function (
 ---
 
 ## Long-Term Migration Note
-If the project migrates to **.NET 6+**, evaluate `Microsoft.Data.Sqlite` + `SQLitePCLRaw`. For the current **.NET Framework 4.8 + Excel-DNA** stack, estas mitigaciones son definitivas.
+If the project migrates to **.NET 6+**, evaluate `Microsoft.Data.Sqlite` + `SQLitePCLRaw`. For the current **.NET Framework 4.8 + Excel-DNA** stack, these mitigations are definitive.

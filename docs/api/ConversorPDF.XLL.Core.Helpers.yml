@@ -1,0 +1,228 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Core.Helpers
+  commentId: N:ConversorPDF.XLL.Core.Helpers
+  id: ConversorPDF.XLL.Core.Helpers
+  children:
+  - ConversorPDF.XLL.Core.Helpers.App
+  - ConversorPDF.XLL.Core.Helpers.App.FolderNames
+  - ConversorPDF.XLL.Core.Helpers.CatalogCacheService
+  - ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  - ConversorPDF.XLL.Core.Helpers.DatabaseEncryptionEngine
+  - ConversorPDF.XLL.Core.Helpers.DayPatternParser
+  - ConversorPDF.XLL.Core.Helpers.ExcelAppStateHelper
+  - ConversorPDF.XLL.Core.Helpers.ExcelOptimizeHelper
+  - ConversorPDF.XLL.Core.Helpers.FirmaPDFsHelper
+  - ConversorPDF.XLL.Core.Helpers.FirmaUnificarObHelper
+  - ConversorPDF.XLL.Core.Helpers.FirmasGeneradorHelper
+  - ConversorPDF.XLL.Core.Helpers.LoggerHelper
+  - ConversorPDF.XLL.Core.Helpers.NativeLibraryPreloader
+  - ConversorPDF.XLL.Core.Helpers.OneDriveHelper
+  - ConversorPDF.XLL.Core.Helpers.PdfMetadataHelper
+  - ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper
+  - ConversorPDF.XLL.Core.Helpers.SqliteHelper
+  - ConversorPDF.XLL.Core.Helpers.ViaticosHelper
+  langs:
+  - csharp
+  - vb
+  name: ConversorPDF.XLL.Core.Helpers
+  nameWithType: ConversorPDF.XLL.Core.Helpers
+  fullName: ConversorPDF.XLL.Core.Helpers
+  type: Namespace
+  assemblies:
+  - ConversorPDF.XLL
+references:
+- uid: ConversorPDF.XLL.Core.Helpers.LoggerHelper
+  commentId: T:ConversorPDF.XLL.Core.Helpers.LoggerHelper
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.LoggerHelper.html
+  name: LoggerHelper
+  nameWithType: LoggerHelper
+  fullName: ConversorPDF.XLL.Core.Helpers.LoggerHelper
+- uid: ConversorPDF.XLL.Core.Helpers.App
+  commentId: T:ConversorPDF.XLL.Core.Helpers.App
+  parent: ConversorPDF.XLL.Core.Helpers
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.App.html
+  name: App
+  nameWithType: App
+  fullName: ConversorPDF.XLL.Core.Helpers.App
+- uid: ConversorPDF.XLL.Core.Helpers.App.FolderNames
+  commentId: T:ConversorPDF.XLL.Core.Helpers.App.FolderNames
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.App.html
+  name: App.FolderNames
+  nameWithType: App.FolderNames
+  fullName: ConversorPDF.XLL.Core.Helpers.App.FolderNames
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Helpers.App
+    name: App
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Helpers.App.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Helpers.App.FolderNames
+    name: FolderNames
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Helpers.App.FolderNames.html
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Helpers.App
+    name: App
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Helpers.App.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Helpers.App.FolderNames
+    name: FolderNames
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Helpers.App.FolderNames.html
+- uid: ConversorPDF.XLL.Core.Helpers.ViaticosHelper
+  commentId: T:ConversorPDF.XLL.Core.Helpers.ViaticosHelper
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.ViaticosHelper.html
+  name: ViaticosHelper
+  nameWithType: ViaticosHelper
+  fullName: ConversorPDF.XLL.Core.Helpers.ViaticosHelper
+- uid: ConversorPDF.XLL.Core.Helpers.ExcelOptimizeHelper
+  commentId: T:ConversorPDF.XLL.Core.Helpers.ExcelOptimizeHelper
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.ExcelOptimizeHelper.html
+  name: ExcelOptimizeHelper
+  nameWithType: ExcelOptimizeHelper
+  fullName: ConversorPDF.XLL.Core.Helpers.ExcelOptimizeHelper
+- uid: ConversorPDF.XLL.Core.Helpers.ExcelAppStateHelper
+  commentId: T:ConversorPDF.XLL.Core.Helpers.ExcelAppStateHelper
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.ExcelAppStateHelper.html
+  name: ExcelAppStateHelper
+  nameWithType: ExcelAppStateHelper
+  fullName: ConversorPDF.XLL.Core.Helpers.ExcelAppStateHelper
+- uid: ConversorPDF.XLL.Core.Helpers.FirmaUnificarObHelper
+  commentId: T:ConversorPDF.XLL.Core.Helpers.FirmaUnificarObHelper
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.FirmaUnificarObHelper.html
+  name: FirmaUnificarObHelper
+  nameWithType: FirmaUnificarObHelper
+  fullName: ConversorPDF.XLL.Core.Helpers.FirmaUnificarObHelper
+- uid: ConversorPDF.XLL.Core.Helpers.FirmasGeneradorHelper
+  commentId: T:ConversorPDF.XLL.Core.Helpers.FirmasGeneradorHelper
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.FirmasGeneradorHelper.html
+  name: FirmasGeneradorHelper
+  nameWithType: FirmasGeneradorHelper
+  fullName: ConversorPDF.XLL.Core.Helpers.FirmasGeneradorHelper
+- uid: ConversorPDF.XLL.Core.Helpers.FirmaPDFsHelper
+  commentId: T:ConversorPDF.XLL.Core.Helpers.FirmaPDFsHelper
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.FirmaPDFsHelper.html
+  name: FirmaPDFsHelper
+  nameWithType: FirmaPDFsHelper
+  fullName: ConversorPDF.XLL.Core.Helpers.FirmaPDFsHelper
+- uid: ConversorPDF.XLL.Core.Helpers.SqliteHelper
+  commentId: T:ConversorPDF.XLL.Core.Helpers.SqliteHelper
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.SqliteHelper.html
+  name: SqliteHelper
+  nameWithType: SqliteHelper
+  fullName: ConversorPDF.XLL.Core.Helpers.SqliteHelper
+- uid: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  commentId: T:ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.ConstantsHelper.html
+  name: ConstantsHelper
+  nameWithType: ConstantsHelper
+  fullName: ConversorPDF.XLL.Core.Helpers.ConstantsHelper
+- uid: ConversorPDF.XLL.Core.Helpers.DatabaseEncryptionEngine
+  commentId: T:ConversorPDF.XLL.Core.Helpers.DatabaseEncryptionEngine
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.DatabaseEncryptionEngine.html
+  name: DatabaseEncryptionEngine
+  nameWithType: DatabaseEncryptionEngine
+  fullName: ConversorPDF.XLL.Core.Helpers.DatabaseEncryptionEngine
+- uid: ConversorPDF.XLL.Core.Helpers.NativeLibraryPreloader
+  commentId: T:ConversorPDF.XLL.Core.Helpers.NativeLibraryPreloader
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.NativeLibraryPreloader.html
+  name: NativeLibraryPreloader
+  nameWithType: NativeLibraryPreloader
+  fullName: ConversorPDF.XLL.Core.Helpers.NativeLibraryPreloader
+- uid: ConversorPDF.XLL.Core.Helpers.CatalogCacheService
+  commentId: T:ConversorPDF.XLL.Core.Helpers.CatalogCacheService
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.CatalogCacheService.html
+  name: CatalogCacheService
+  nameWithType: CatalogCacheService
+  fullName: ConversorPDF.XLL.Core.Helpers.CatalogCacheService
+- uid: ConversorPDF.XLL.Core.Helpers.DayPatternParser
+  commentId: T:ConversorPDF.XLL.Core.Helpers.DayPatternParser
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.DayPatternParser.html
+  name: DayPatternParser
+  nameWithType: DayPatternParser
+  fullName: ConversorPDF.XLL.Core.Helpers.DayPatternParser
+- uid: ConversorPDF.XLL.Core.Helpers.PdfMetadataHelper
+  commentId: T:ConversorPDF.XLL.Core.Helpers.PdfMetadataHelper
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.PdfMetadataHelper.html
+  name: PdfMetadataHelper
+  nameWithType: PdfMetadataHelper
+  fullName: ConversorPDF.XLL.Core.Helpers.PdfMetadataHelper
+- uid: ConversorPDF.XLL.Core.Helpers.OneDriveHelper
+  commentId: T:ConversorPDF.XLL.Core.Helpers.OneDriveHelper
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.OneDriveHelper.html
+  name: OneDriveHelper
+  nameWithType: OneDriveHelper
+  fullName: ConversorPDF.XLL.Core.Helpers.OneDriveHelper
+- uid: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper
+  commentId: T:ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.html
+  name: PdfToTextoHelper
+  nameWithType: PdfToTextoHelper
+  fullName: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper
+- uid: ConversorPDF.XLL.Core.Helpers
+  commentId: N:ConversorPDF.XLL.Core.Helpers
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Core.Helpers
+  nameWithType: ConversorPDF.XLL.Core.Helpers
+  fullName: ConversorPDF.XLL.Core.Helpers
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Helpers
+    name: Helpers
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Helpers.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Helpers
+    name: Helpers
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Helpers.html

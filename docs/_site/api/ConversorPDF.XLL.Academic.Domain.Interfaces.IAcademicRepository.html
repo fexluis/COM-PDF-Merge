@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Interface IAcademicRepository | ESAP - ConversorPDF </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Interface IAcademicRepository | ESAP - ConversorPDF ">
+      
+      <meta name="description" content="Interfaz para el repositorio de datos acad&#233;micos.">
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="ManagedReference">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository">
+
+
+
+  <h1 id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository" class="text-break">
+Interface IAcademicRepository  
+  </h1>
+
+  <div class="facts text-secondary">
+    <dl><dt>Namespace</dt><dd><a class="xref" href="ConversorPDF.html">ConversorPDF</a>.<a class="xref" href="ConversorPDF.XLL.html">XLL</a>.<a class="xref" href="ConversorPDF.XLL.Academic.html">Academic</a>.<a class="xref" href="ConversorPDF.XLL.Academic.Domain.html">Domain</a>.<a class="xref" href="ConversorPDF.XLL.Academic.Domain.Interfaces.html">Interfaces</a></dd></dl>
+  <dl><dt>Assembly</dt><dd>ConversorPDF.XLL.dll</dd></dl>
+  </div>
+
+  <div class="markdown summary"><p>Interfaz para el repositorio de datos académicos.</p>
+</div>
+  <div class="markdown conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public interface IAcademicRepository</code></pre>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <h2 class="section" id="methods">Methods
+</h2>
+
+
+  <a id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_DeleteSede_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.DeleteSede*"></a>
+
+  <h3 id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_DeleteSede_System_Int32_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.DeleteSede(System.Int32)">
+  DeleteSede(int)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Elimina una sede por su identificador.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">SqliteResult&lt;int&gt; DeleteSede(int id)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>id</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.SqliteResult-1.html">SqliteResult</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_DeleteSesionesByVinculacion_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.DeleteSesionesByVinculacion*"></a>
+
+  <h3 id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_DeleteSesionesByVinculacion_System_Int32_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.DeleteSesionesByVinculacion(System.Int32)">
+  DeleteSesionesByVinculacion(int)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Elimina todas las sesiones de una vinculación.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">SqliteResult&lt;int&gt; DeleteSesionesByVinculacion(int idVinculacion)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>idVinculacion</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.SqliteResult-1.html">SqliteResult</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_DeleteTercero_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.DeleteTercero*"></a>
+
+  <h3 id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_DeleteTercero_System_Int32_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.DeleteTercero(System.Int32)">
+  DeleteTercero(int)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Elimina un tercero por su identificador.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">SqliteResult&lt;int&gt; DeleteTercero(int id)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>id</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.SqliteResult-1.html">SqliteResult</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_ExecuteRawSql_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.ExecuteRawSql*"></a>
+
+  <h3 id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_ExecuteRawSql_System_String_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.ExecuteRawSql(System.String)">
+  ExecuteRawSql(string)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Ejecuta SQL crudo (uso interno).</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">SqliteResult&lt;int&gt; ExecuteRawSql(string sql)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>sql</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.SqliteResult-1.html">SqliteResult</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetAsignaturaByAbreviatura_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetAsignaturaByAbreviatura*"></a>
+
+  <h3 id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetAsignaturaByAbreviatura_System_String_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetAsignaturaByAbreviatura(System.String)">
+  GetAsignaturaByAbreviatura(string)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Obtiene una asignatura por su abreviatura.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">SqliteResult&lt;Asignatura&gt; GetAsignaturaByAbreviatura(string abreviatura)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>abreviatura</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.SqliteResult-1.html">SqliteResult</a>&lt;<a class="xref" href="ConversorPDF.XLL.Academic.Domain.Models.Asignatura.html">Asignatura</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetAsignaturasByPrograma_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetAsignaturasByPrograma*"></a>
+
+  <h3 id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetAsignaturasByPrograma_System_Int32_System_String_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetAsignaturasByPrograma(System.Int32,System.String)">
+  GetAsignaturasByPrograma(int, string)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Obtiene las asignaturas de un programa, opcionalmente filtradas por semestre.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">SqliteResult&lt;IEnumerable&lt;Asignatura&gt;&gt; GetAsignaturasByPrograma(int idPrograma, string semestre = null)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>idPrograma</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+    <dt><code>semestre</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.SqliteResult-1.html">SqliteResult</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable</a>&lt;<a class="xref" href="ConversorPDF.XLL.Academic.Domain.Models.Asignatura.html">Asignatura</a>&gt;&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetContenidosByMicrocurriculo_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetContenidosByMicrocurriculo*"></a>
+
+  <h3 id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetContenidosByMicrocurriculo_System_Int32_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetContenidosByMicrocurriculo(System.Int32)">
+  GetContenidosByMicrocurriculo(int)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Obtiene los contenidos asociados a un microcurriculo.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">SqliteResult&lt;IEnumerable&lt;Contenido&gt;&gt; GetContenidosByMicrocurriculo(int idMicrocurriculo)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>idMicrocurriculo</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.SqliteResult-1.html">SqliteResult</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable</a>&lt;<a class="xref" href="ConversorPDF.XLL.Academic.Domain.Models.Contenido.html">Contenido</a>&gt;&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetMicrocurriculoByAsignatura_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetMicrocurriculoByAsignatura*"></a>
+
+  <h3 id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetMicrocurriculoByAsignatura_System_Int32_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetMicrocurriculoByAsignatura(System.Int32)">
+  GetMicrocurriculoByAsignatura(int)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Obtiene el microcurriculo asociado a una asignatura.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">SqliteResult&lt;Microcurriculo&gt; GetMicrocurriculoByAsignatura(int idAsignatura)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>idAsignatura</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.SqliteResult-1.html">SqliteResult</a>&lt;<a class="xref" href="ConversorPDF.XLL.Academic.Domain.Models.Microcurriculo.html">Microcurriculo</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetPeriodoById_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetPeriodoById*"></a>
+
+  <h3 id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetPeriodoById_System_Int32_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetPeriodoById(System.Int32)">
+  GetPeriodoById(int)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Obtiene un período por su identificador.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">SqliteResult&lt;Periodo&gt; GetPeriodoById(int id)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>id</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.SqliteResult-1.html">SqliteResult</a>&lt;<a class="xref" href="ConversorPDF.XLL.Academic.Domain.Models.Periodo.html">Periodo</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetPeriodos_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetPeriodos*"></a>
+
+  <h3 id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetPeriodos" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetPeriodos">
+  GetPeriodos()
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Obtiene los períodos académicos.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">SqliteResult&lt;IEnumerable&lt;Periodo&gt;&gt; GetPeriodos()</code></pre>
+  </div>
+
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.SqliteResult-1.html">SqliteResult</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable</a>&lt;<a class="xref" href="ConversorPDF.XLL.Academic.Domain.Models.Periodo.html">Periodo</a>&gt;&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetProgramaById_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetProgramaById*"></a>
+
+  <h3 id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetProgramaById_System_Int32_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetProgramaById(System.Int32)">
+  GetProgramaById(int)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Obtiene un programa por su identificador.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">SqliteResult&lt;Programa&gt; GetProgramaById(int id)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>id</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.SqliteResult-1.html">SqliteResult</a>&lt;<a class="xref" href="ConversorPDF.XLL.Academic.Domain.Models.Programa.html">Programa</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetProgramas_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetProgramas*"></a>
+
+  <h3 id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetProgramas" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetProgramas">
+  GetProgramas()
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Obtiene todos los programas académicos.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">SqliteResult&lt;IEnumerable&lt;Programa&gt;&gt; GetProgramas()</code></pre>
+  </div>
+
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.SqliteResult-1.html">SqliteResult</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable</a>&lt;<a class="xref" href="ConversorPDF.XLL.Academic.Domain.Models.Programa.html">Programa</a>&gt;&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetSedeById_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetSedeById*"></a>
+
+  <h3 id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetSedeById_System_Int32_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetSedeById(System.Int32)">
+  GetSedeById(int)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Obtiene una sede por su identificador.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">SqliteResult&lt;Sede&gt; GetSedeById(int id)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>id</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.SqliteResult-1.html">SqliteResult</a>&lt;<a class="xref" href="ConversorPDF.XLL.Academic.Domain.Models.Sede.html">Sede</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetSedes_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetSedes*"></a>
+
+  <h3 id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetSedes" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetSedes">
+  GetSedes()
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Obtiene todas las sedes registradas.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">SqliteResult&lt;IEnumerable&lt;Sede&gt;&gt; GetSedes()</code></pre>
+  </div>
+
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.SqliteResult-1.html">SqliteResult</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable</a>&lt;<a class="xref" href="ConversorPDF.XLL.Academic.Domain.Models.Sede.html">Sede</a>&gt;&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetSesionesByVinculacion_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetSesionesByVinculacion*"></a>
+
+  <h3 id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetSesionesByVinculacion_System_Int32_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetSesionesByVinculacion(System.Int32)">
+  GetSesionesByVinculacion(int)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Obtiene las sesiones asociadas a una vinculación.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">SqliteResult&lt;IEnumerable&lt;Sesion&gt;&gt; GetSesionesByVinculacion(int idVinculacion)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>idVinculacion</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.SqliteResult-1.html">SqliteResult</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable</a>&lt;<a class="xref" href="ConversorPDF.XLL.Academic.Domain.Models.Sesion.html">Sesion</a>&gt;&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetTerceroByCedula_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetTerceroByCedula*"></a>
+
+  <h3 id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetTerceroByCedula_System_String_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetTerceroByCedula(System.String)">
+  GetTerceroByCedula(string)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Obtiene un tercero por su cédula.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">SqliteResult&lt;Tercero&gt; GetTerceroByCedula(string cedula)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>cedula</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.SqliteResult-1.html">SqliteResult</a>&lt;<a class="xref" href="ConversorPDF.XLL.Academic.Domain.Models.Tercero.html">Tercero</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetTerceros_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetTerceros*"></a>
+
+  <h3 id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetTerceros_System_Boolean_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetTerceros(System.Boolean)">
+  GetTerceros(bool)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Obtiene todos los terceros (docentes/contratistas).</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">SqliteResult&lt;IEnumerable&lt;Tercero&gt;&gt; GetTerceros(bool soloActivos = true)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>soloActivos</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.SqliteResult-1.html">SqliteResult</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable</a>&lt;<a class="xref" href="ConversorPDF.XLL.Academic.Domain.Models.Tercero.html">Tercero</a>&gt;&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetVinculacionById_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetVinculacionById*"></a>
+
+  <h3 id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetVinculacionById_System_Int32_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetVinculacionById(System.Int32)">
+  GetVinculacionById(int)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Obtiene una vinculación por su identificador.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">SqliteResult&lt;Vinculacion&gt; GetVinculacionById(int id)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>id</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.SqliteResult-1.html">SqliteResult</a>&lt;<a class="xref" href="ConversorPDF.XLL.Academic.Domain.Models.Vinculacion.html">Vinculacion</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetVinculaciones_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetVinculaciones*"></a>
+
+  <h3 id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_GetVinculaciones" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.GetVinculaciones">
+  GetVinculaciones()
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Obtiene todas las vinculaciones académicas.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">SqliteResult&lt;IEnumerable&lt;Vinculacion&gt;&gt; GetVinculaciones()</code></pre>
+  </div>
+
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.SqliteResult-1.html">SqliteResult</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable</a>&lt;<a class="xref" href="ConversorPDF.XLL.Academic.Domain.Models.Vinculacion.html">Vinculacion</a>&gt;&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_InsertAsignatura_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertAsignatura*"></a>
+
+  <h3 id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_InsertAsignatura_ConversorPDF_XLL_Academic_Domain_Models_Asignatura_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertAsignatura(ConversorPDF.XLL.Academic.Domain.Models.Asignatura)">
+  InsertAsignatura(Asignatura)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Inserta una nueva asignatura.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">SqliteResult&lt;int&gt; InsertAsignatura(Asignatura asignatura)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>asignatura</code> <a class="xref" href="ConversorPDF.XLL.Academic.Domain.Models.Asignatura.html">Asignatura</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.SqliteResult-1.html">SqliteResult</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_InsertContenido_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertContenido*"></a>
+
+  <h3 id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_InsertContenido_ConversorPDF_XLL_Academic_Domain_Models_Contenido_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertContenido(ConversorPDF.XLL.Academic.Domain.Models.Contenido)">
+  InsertContenido(Contenido)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Inserta un nuevo contenido programático.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">SqliteResult&lt;int&gt; InsertContenido(Contenido contenido)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>contenido</code> <a class="xref" href="ConversorPDF.XLL.Academic.Domain.Models.Contenido.html">Contenido</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.SqliteResult-1.html">SqliteResult</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_InsertMicrocurriculo_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertMicrocurriculo*"></a>
+
+  <h3 id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_InsertMicrocurriculo_ConversorPDF_XLL_Academic_Domain_Models_Microcurriculo_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertMicrocurriculo(ConversorPDF.XLL.Academic.Domain.Models.Microcurriculo)">
+  InsertMicrocurriculo(Microcurriculo)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Inserta un nuevo microcurriculo.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">SqliteResult&lt;int&gt; InsertMicrocurriculo(Microcurriculo microcurriculo)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>microcurriculo</code> <a class="xref" href="ConversorPDF.XLL.Academic.Domain.Models.Microcurriculo.html">Microcurriculo</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.SqliteResult-1.html">SqliteResult</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_InsertPeriodo_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertPeriodo*"></a>
+
+  <h3 id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_InsertPeriodo_ConversorPDF_XLL_Academic_Domain_Models_Periodo_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertPeriodo(ConversorPDF.XLL.Academic.Domain.Models.Periodo)">
+  InsertPeriodo(Periodo)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Inserta un nuevo período académico.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">SqliteResult&lt;int&gt; InsertPeriodo(Periodo periodo)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>periodo</code> <a class="xref" href="ConversorPDF.XLL.Academic.Domain.Models.Periodo.html">Periodo</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.SqliteResult-1.html">SqliteResult</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_InsertPrograma_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertPrograma*"></a>
+
+  <h3 id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_InsertPrograma_ConversorPDF_XLL_Academic_Domain_Models_Programa_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertPrograma(ConversorPDF.XLL.Academic.Domain.Models.Programa)">
+  InsertPrograma(Programa)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Inserta un nuevo programa.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">SqliteResult&lt;int&gt; InsertPrograma(Programa programa)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>programa</code> <a class="xref" href="ConversorPDF.XLL.Academic.Domain.Models.Programa.html">Programa</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.SqliteResult-1.html">SqliteResult</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_InsertSede_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertSede*"></a>
+
+  <h3 id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_InsertSede_ConversorPDF_XLL_Academic_Domain_Models_Sede_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertSede(ConversorPDF.XLL.Academic.Domain.Models.Sede)">
+  InsertSede(Sede)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Inserta una nueva sede.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">SqliteResult&lt;int&gt; InsertSede(Sede sede)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>sede</code> <a class="xref" href="ConversorPDF.XLL.Academic.Domain.Models.Sede.html">Sede</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.SqliteResult-1.html">SqliteResult</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_InsertSesion_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertSesion*"></a>
+
+  <h3 id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_InsertSesion_ConversorPDF_XLL_Academic_Domain_Models_Sesion_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertSesion(ConversorPDF.XLL.Academic.Domain.Models.Sesion)">
+  InsertSesion(Sesion)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Inserta una sesión individual.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">SqliteResult&lt;int&gt; InsertSesion(Sesion sesion)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>sesion</code> <a class="xref" href="ConversorPDF.XLL.Academic.Domain.Models.Sesion.html">Sesion</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.SqliteResult-1.html">SqliteResult</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_InsertSesiones_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertSesiones*"></a>
+
+  <h3 id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_InsertSesiones_System_Collections_Generic_IEnumerable_ConversorPDF_XLL_Academic_Domain_Models_Sesion__" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertSesiones(System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Sesion})">
+  InsertSesiones(IEnumerable&lt;Sesion&gt;)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Inserta un lote de sesiones.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">SqliteResult&lt;int&gt; InsertSesiones(IEnumerable&lt;Sesion&gt; sesiones)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>sesiones</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable</a>&lt;<a class="xref" href="ConversorPDF.XLL.Academic.Domain.Models.Sesion.html">Sesion</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.SqliteResult-1.html">SqliteResult</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_InsertTercero_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertTercero*"></a>
+
+  <h3 id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_InsertTercero_ConversorPDF_XLL_Academic_Domain_Models_Tercero_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertTercero(ConversorPDF.XLL.Academic.Domain.Models.Tercero)">
+  InsertTercero(Tercero)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Inserta un nuevo tercero.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">SqliteResult&lt;int&gt; InsertTercero(Tercero tercero)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>tercero</code> <a class="xref" href="ConversorPDF.XLL.Academic.Domain.Models.Tercero.html">Tercero</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.SqliteResult-1.html">SqliteResult</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_InsertVinculacion_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertVinculacion*"></a>
+
+  <h3 id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_InsertVinculacion_ConversorPDF_XLL_Academic_Domain_Models_Vinculacion_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.InsertVinculacion(ConversorPDF.XLL.Academic.Domain.Models.Vinculacion)">
+  InsertVinculacion(Vinculacion)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Inserta una nueva vinculación.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">SqliteResult&lt;int&gt; InsertVinculacion(Vinculacion vinculacion)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>vinculacion</code> <a class="xref" href="ConversorPDF.XLL.Academic.Domain.Models.Vinculacion.html">Vinculacion</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.SqliteResult-1.html">SqliteResult</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_SeedCatalogosTransaccional_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.SeedCatalogosTransaccional*"></a>
+
+  <h3 id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_SeedCatalogosTransaccional" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.SeedCatalogosTransaccional">
+  SeedCatalogosTransaccional()
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Inicializa los catálogos con datos semilla de forma transaccional.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">SqliteResult&lt;int&gt; SeedCatalogosTransaccional()</code></pre>
+  </div>
+
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.SqliteResult-1.html">SqliteResult</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_UpdateSede_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.UpdateSede*"></a>
+
+  <h3 id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_UpdateSede_ConversorPDF_XLL_Academic_Domain_Models_Sede_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.UpdateSede(ConversorPDF.XLL.Academic.Domain.Models.Sede)">
+  UpdateSede(Sede)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Actualiza la información de una sede.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">SqliteResult&lt;int&gt; UpdateSede(Sede sede)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>sede</code> <a class="xref" href="ConversorPDF.XLL.Academic.Domain.Models.Sede.html">Sede</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.SqliteResult-1.html">SqliteResult</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_UpdateTercero_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.UpdateTercero*"></a>
+
+  <h3 id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_UpdateTercero_ConversorPDF_XLL_Academic_Domain_Models_Tercero_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.UpdateTercero(ConversorPDF.XLL.Academic.Domain.Models.Tercero)">
+  UpdateTercero(Tercero)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Actualiza la información de un tercero existente.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">SqliteResult&lt;int&gt; UpdateTercero(Tercero tercero)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>tercero</code> <a class="xref" href="ConversorPDF.XLL.Academic.Domain.Models.Tercero.html">Tercero</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.SqliteResult-1.html">SqliteResult</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_UpdateVinculacion_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.UpdateVinculacion*"></a>
+
+  <h3 id="ConversorPDF_XLL_Academic_Domain_Interfaces_IAcademicRepository_UpdateVinculacion_ConversorPDF_XLL_Academic_Domain_Models_Vinculacion_" data-uid="ConversorPDF.XLL.Academic.Domain.Interfaces.IAcademicRepository.UpdateVinculacion(ConversorPDF.XLL.Academic.Domain.Models.Vinculacion)">
+  UpdateVinculacion(Vinculacion)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Actualiza una vinculación existente.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">SqliteResult&lt;int&gt; UpdateVinculacion(Vinculacion vinculacion)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>vinculacion</code> <a class="xref" href="ConversorPDF.XLL.Academic.Domain.Models.Vinculacion.html">Vinculacion</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.SqliteResult-1.html">SqliteResult</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          ESAP - ConversorPDF Doc
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

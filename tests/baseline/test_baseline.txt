@@ -1,0 +1,6 @@
+TOTAL: 51
+PASSED: 50
+FAILED: 1
+SKIPPED: 0
+
+FAILED ConversorPDF.Tests.UnitTest1.GetUserName_WhenServiceReturnsNull_ShouldReturnFallback

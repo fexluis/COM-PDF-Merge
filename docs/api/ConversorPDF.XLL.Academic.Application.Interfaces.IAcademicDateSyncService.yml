@@ -1,0 +1,305 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Academic.Application.Interfaces.IAcademicDateSyncService
+  commentId: T:ConversorPDF.XLL.Academic.Application.Interfaces.IAcademicDateSyncService
+  id: IAcademicDateSyncService
+  parent: ConversorPDF.XLL.Academic.Application.Interfaces
+  children:
+  - ConversorPDF.XLL.Academic.Application.Interfaces.IAcademicDateSyncService.CalculateAdjustment(System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Sesion},System.DateTime,System.DateTime)
+  langs:
+  - csharp
+  - vb
+  name: IAcademicDateSyncService
+  nameWithType: IAcademicDateSyncService
+  fullName: ConversorPDF.XLL.Academic.Application.Interfaces.IAcademicDateSyncService
+  type: Interface
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Application.Interfaces
+  summary: Interfaz para el servicio de sincronización de fechas académicas.
+  example: []
+  syntax:
+    content: public interface IAcademicDateSyncService
+    content.vb: Public Interface IAcademicDateSyncService
+  derivedClasses:
+  - ConversorPDF.XLL.Academic.Application.Services.AcademicDateSyncService
+- uid: ConversorPDF.XLL.Academic.Application.Interfaces.IAcademicDateSyncService.CalculateAdjustment(System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Sesion},System.DateTime,System.DateTime)
+  commentId: M:ConversorPDF.XLL.Academic.Application.Interfaces.IAcademicDateSyncService.CalculateAdjustment(System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Sesion},System.DateTime,System.DateTime)
+  id: CalculateAdjustment(System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Sesion},System.DateTime,System.DateTime)
+  parent: ConversorPDF.XLL.Academic.Application.Interfaces.IAcademicDateSyncService
+  langs:
+  - csharp
+  - vb
+  name: CalculateAdjustment(IEnumerable<Sesion>, DateTime, DateTime)
+  nameWithType: IAcademicDateSyncService.CalculateAdjustment(IEnumerable<Sesion>, DateTime, DateTime)
+  fullName: ConversorPDF.XLL.Academic.Application.Interfaces.IAcademicDateSyncService.CalculateAdjustment(System.Collections.Generic.IEnumerable<ConversorPDF.XLL.Academic.Domain.Models.Sesion>, System.DateTime, System.DateTime)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Application.Interfaces
+  summary: Calcula el ajuste de fechas basado en las sesiones generadas.
+  example: []
+  syntax:
+    content: AcademicDateAdjustment CalculateAdjustment(IEnumerable<Sesion> sesiones, DateTime currentStart, DateTime currentEnd)
+    parameters:
+    - id: sesiones
+      type: System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Sesion}
+    - id: currentStart
+      type: System.DateTime
+    - id: currentEnd
+      type: System.DateTime
+    return:
+      type: ConversorPDF.XLL.Academic.Domain.Models.AcademicDateAdjustment
+    content.vb: Function CalculateAdjustment(sesiones As IEnumerable(Of Sesion), currentStart As Date, currentEnd As Date) As AcademicDateAdjustment
+  overload: ConversorPDF.XLL.Academic.Application.Interfaces.IAcademicDateSyncService.CalculateAdjustment*
+  nameWithType.vb: IAcademicDateSyncService.CalculateAdjustment(IEnumerable(Of Sesion), Date, Date)
+  fullName.vb: ConversorPDF.XLL.Academic.Application.Interfaces.IAcademicDateSyncService.CalculateAdjustment(System.Collections.Generic.IEnumerable(Of ConversorPDF.XLL.Academic.Domain.Models.Sesion), Date, Date)
+  name.vb: CalculateAdjustment(IEnumerable(Of Sesion), Date, Date)
+references:
+- uid: ConversorPDF.XLL.Academic.Application.Interfaces
+  commentId: N:ConversorPDF.XLL.Academic.Application.Interfaces
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Academic.Application.Interfaces
+  nameWithType: ConversorPDF.XLL.Academic.Application.Interfaces
+  fullName: ConversorPDF.XLL.Academic.Application.Interfaces
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic
+    name: Academic
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Application
+    name: Application
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Application.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Application.Interfaces
+    name: Interfaces
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Application.Interfaces.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic
+    name: Academic
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Application
+    name: Application
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Application.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Application.Interfaces
+    name: Interfaces
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Application.Interfaces.html
+- uid: ConversorPDF.XLL.Academic.Application.Interfaces.IAcademicDateSyncService.CalculateAdjustment*
+  commentId: Overload:ConversorPDF.XLL.Academic.Application.Interfaces.IAcademicDateSyncService.CalculateAdjustment
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Application.Interfaces.IAcademicDateSyncService.html#ConversorPDF_XLL_Academic_Application_Interfaces_IAcademicDateSyncService_CalculateAdjustment_System_Collections_Generic_IEnumerable_ConversorPDF_XLL_Academic_Domain_Models_Sesion__System_DateTime_System_DateTime_
+  name: CalculateAdjustment
+  nameWithType: IAcademicDateSyncService.CalculateAdjustment
+  fullName: ConversorPDF.XLL.Academic.Application.Interfaces.IAcademicDateSyncService.CalculateAdjustment
+- uid: System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Sesion}
+  commentId: T:System.Collections.Generic.IEnumerable{ConversorPDF.XLL.Academic.Domain.Models.Sesion}
+  parent: System.Collections.Generic
+  definition: System.Collections.Generic.IEnumerable`1
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  name: IEnumerable<Sesion>
+  nameWithType: IEnumerable<Sesion>
+  fullName: System.Collections.Generic.IEnumerable<ConversorPDF.XLL.Academic.Domain.Models.Sesion>
+  nameWithType.vb: IEnumerable(Of Sesion)
+  fullName.vb: System.Collections.Generic.IEnumerable(Of ConversorPDF.XLL.Academic.Domain.Models.Sesion)
+  name.vb: IEnumerable(Of Sesion)
+  spec.csharp:
+  - uid: System.Collections.Generic.IEnumerable`1
+    name: IEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  - name: <
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Sesion
+    name: Sesion
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.Sesion.html
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.IEnumerable`1
+    name: IEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.Sesion
+    name: Sesion
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.Sesion.html
+  - name: )
+- uid: System.DateTime
+  commentId: T:System.DateTime
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.datetime
+  name: DateTime
+  nameWithType: DateTime
+  fullName: System.DateTime
+  nameWithType.vb: Date
+  fullName.vb: Date
+  name.vb: Date
+- uid: ConversorPDF.XLL.Academic.Domain.Models.AcademicDateAdjustment
+  commentId: T:ConversorPDF.XLL.Academic.Domain.Models.AcademicDateAdjustment
+  parent: ConversorPDF.XLL.Academic.Domain.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.AcademicDateAdjustment.html
+  name: AcademicDateAdjustment
+  nameWithType: AcademicDateAdjustment
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.AcademicDateAdjustment
+- uid: System.Collections.Generic.IEnumerable`1
+  commentId: T:System.Collections.Generic.IEnumerable`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  name: IEnumerable<T>
+  nameWithType: IEnumerable<T>
+  fullName: System.Collections.Generic.IEnumerable<T>
+  nameWithType.vb: IEnumerable(Of T)
+  fullName.vb: System.Collections.Generic.IEnumerable(Of T)
+  name.vb: IEnumerable(Of T)
+  spec.csharp:
+  - uid: System.Collections.Generic.IEnumerable`1
+    name: IEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.IEnumerable`1
+    name: IEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: System.Collections.Generic
+  commentId: N:System.Collections.Generic
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System.Collections.Generic
+  nameWithType: System.Collections.Generic
+  fullName: System.Collections.Generic
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Collections
+    name: Collections
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections
+  - name: .
+  - uid: System.Collections.Generic
+    name: Generic
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Collections
+    name: Collections
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections
+  - name: .
+  - uid: System.Collections.Generic
+    name: Generic
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: ConversorPDF.XLL.Academic.Domain.Models
+  commentId: N:ConversorPDF.XLL.Academic.Domain.Models
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Academic.Domain.Models
+  nameWithType: ConversorPDF.XLL.Academic.Domain.Models
+  fullName: ConversorPDF.XLL.Academic.Domain.Models
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic
+    name: Academic
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Domain
+    name: Domain
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Domain.Models
+    name: Models
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic
+    name: Academic
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Domain
+    name: Domain
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Domain.Models
+    name: Models
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.html

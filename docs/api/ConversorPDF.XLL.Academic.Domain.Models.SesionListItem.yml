@@ -1,0 +1,1005 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem
+  commentId: T:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem
+  id: SesionListItem
+  parent: ConversorPDF.XLL.Academic.Domain.Models
+  children:
+  - ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.#ctor
+  - ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.AbreviaturaAsignatura
+  - ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.AsignaturaNombre
+  - ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.CedulaTercero
+  - ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.DiaSemana
+  - ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.DocenteNombre
+  - ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.Duracion
+  - ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.FechaFinal
+  - ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.FechaInicial
+  - ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.Horas
+  - ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.IdPeriodo
+  - ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.IdSesion
+  - ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.IdVinculacion
+  - ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.ProgramaAbreviatura
+  - ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.ProgramaDetalle
+  - ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.ProgramaTipo
+  - ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.RangoFechas
+  - ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.SedeCiudad
+  - ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.Semestre
+  - ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.Viatica
+  langs:
+  - csharp
+  - vb
+  name: SesionListItem
+  nameWithType: SesionListItem
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem
+  type: Class
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Models
+  summary: Modelo para representar una fila desnormalizada de sesión en el listado principal.
+  example: []
+  syntax:
+    content: public class SesionListItem
+    content.vb: Public Class SesionListItem
+  inheritance:
+  - System.Object
+  inheritedMembers:
+  - System.Object.ToString
+  - System.Object.Equals(System.Object)
+  - System.Object.Equals(System.Object,System.Object)
+  - System.Object.ReferenceEquals(System.Object,System.Object)
+  - System.Object.GetHashCode
+  - System.Object.GetType
+  - System.Object.MemberwiseClone
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.#ctor
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.#ctor
+  id: '#ctor'
+  parent: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem
+  langs:
+  - csharp
+  - vb
+  name: SesionListItem()
+  nameWithType: SesionListItem.SesionListItem()
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.SesionListItem()
+  type: Constructor
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Models
+  syntax:
+    content: public SesionListItem()
+    content.vb: Public Sub New()
+  overload: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.#ctor*
+  nameWithType.vb: SesionListItem.New()
+  fullName.vb: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.New()
+  name.vb: New()
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.IdSesion
+  commentId: P:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.IdSesion
+  id: IdSesion
+  parent: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem
+  langs:
+  - csharp
+  - vb
+  name: IdSesion
+  nameWithType: SesionListItem.IdSesion
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.IdSesion
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Models
+  syntax:
+    content: public int IdSesion { get; set; }
+    parameters: []
+    return:
+      type: System.Int32
+    content.vb: Public Property IdSesion As Integer
+  overload: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.IdSesion*
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.IdVinculacion
+  commentId: P:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.IdVinculacion
+  id: IdVinculacion
+  parent: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem
+  langs:
+  - csharp
+  - vb
+  name: IdVinculacion
+  nameWithType: SesionListItem.IdVinculacion
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.IdVinculacion
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Models
+  syntax:
+    content: public int IdVinculacion { get; set; }
+    parameters: []
+    return:
+      type: System.Int32
+    content.vb: Public Property IdVinculacion As Integer
+  overload: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.IdVinculacion*
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.IdPeriodo
+  commentId: P:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.IdPeriodo
+  id: IdPeriodo
+  parent: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem
+  langs:
+  - csharp
+  - vb
+  name: IdPeriodo
+  nameWithType: SesionListItem.IdPeriodo
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.IdPeriodo
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Models
+  syntax:
+    content: public int IdPeriodo { get; set; }
+    parameters: []
+    return:
+      type: System.Int32
+    content.vb: Public Property IdPeriodo As Integer
+  overload: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.IdPeriodo*
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.ProgramaTipo
+  commentId: P:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.ProgramaTipo
+  id: ProgramaTipo
+  parent: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem
+  langs:
+  - csharp
+  - vb
+  name: ProgramaTipo
+  nameWithType: SesionListItem.ProgramaTipo
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.ProgramaTipo
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Models
+  syntax:
+    content: public string ProgramaTipo { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property ProgramaTipo As String
+  overload: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.ProgramaTipo*
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.ProgramaAbreviatura
+  commentId: P:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.ProgramaAbreviatura
+  id: ProgramaAbreviatura
+  parent: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem
+  langs:
+  - csharp
+  - vb
+  name: ProgramaAbreviatura
+  nameWithType: SesionListItem.ProgramaAbreviatura
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.ProgramaAbreviatura
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Models
+  syntax:
+    content: public string ProgramaAbreviatura { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property ProgramaAbreviatura As String
+  overload: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.ProgramaAbreviatura*
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.Semestre
+  commentId: P:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.Semestre
+  id: Semestre
+  parent: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem
+  langs:
+  - csharp
+  - vb
+  name: Semestre
+  nameWithType: SesionListItem.Semestre
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.Semestre
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Models
+  syntax:
+    content: public string Semestre { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property Semestre As String
+  overload: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.Semestre*
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.DocenteNombre
+  commentId: P:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.DocenteNombre
+  id: DocenteNombre
+  parent: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem
+  langs:
+  - csharp
+  - vb
+  name: DocenteNombre
+  nameWithType: SesionListItem.DocenteNombre
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.DocenteNombre
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Models
+  syntax:
+    content: public string DocenteNombre { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property DocenteNombre As String
+  overload: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.DocenteNombre*
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.CedulaTercero
+  commentId: P:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.CedulaTercero
+  id: CedulaTercero
+  parent: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem
+  langs:
+  - csharp
+  - vb
+  name: CedulaTercero
+  nameWithType: SesionListItem.CedulaTercero
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.CedulaTercero
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Models
+  syntax:
+    content: public string CedulaTercero { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property CedulaTercero As String
+  overload: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.CedulaTercero*
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.AsignaturaNombre
+  commentId: P:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.AsignaturaNombre
+  id: AsignaturaNombre
+  parent: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem
+  langs:
+  - csharp
+  - vb
+  name: AsignaturaNombre
+  nameWithType: SesionListItem.AsignaturaNombre
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.AsignaturaNombre
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Models
+  syntax:
+    content: public string AsignaturaNombre { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property AsignaturaNombre As String
+  overload: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.AsignaturaNombre*
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.AbreviaturaAsignatura
+  commentId: P:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.AbreviaturaAsignatura
+  id: AbreviaturaAsignatura
+  parent: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem
+  langs:
+  - csharp
+  - vb
+  name: AbreviaturaAsignatura
+  nameWithType: SesionListItem.AbreviaturaAsignatura
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.AbreviaturaAsignatura
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Models
+  syntax:
+    content: public string AbreviaturaAsignatura { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property AbreviaturaAsignatura As String
+  overload: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.AbreviaturaAsignatura*
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.SedeCiudad
+  commentId: P:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.SedeCiudad
+  id: SedeCiudad
+  parent: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem
+  langs:
+  - csharp
+  - vb
+  name: SedeCiudad
+  nameWithType: SesionListItem.SedeCiudad
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.SedeCiudad
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Models
+  syntax:
+    content: public string SedeCiudad { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property SedeCiudad As String
+  overload: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.SedeCiudad*
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.DiaSemana
+  commentId: P:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.DiaSemana
+  id: DiaSemana
+  parent: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem
+  langs:
+  - csharp
+  - vb
+  name: DiaSemana
+  nameWithType: SesionListItem.DiaSemana
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.DiaSemana
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Models
+  syntax:
+    content: public string DiaSemana { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property DiaSemana As String
+  overload: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.DiaSemana*
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.Horas
+  commentId: P:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.Horas
+  id: Horas
+  parent: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem
+  langs:
+  - csharp
+  - vb
+  name: Horas
+  nameWithType: SesionListItem.Horas
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.Horas
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Models
+  syntax:
+    content: public double Horas { get; set; }
+    parameters: []
+    return:
+      type: System.Double
+    content.vb: Public Property Horas As Double
+  overload: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.Horas*
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.Duracion
+  commentId: P:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.Duracion
+  id: Duracion
+  parent: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem
+  langs:
+  - csharp
+  - vb
+  name: Duracion
+  nameWithType: SesionListItem.Duracion
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.Duracion
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Models
+  syntax:
+    content: public double Duracion { get; set; }
+    parameters: []
+    return:
+      type: System.Double
+    content.vb: Public Property Duracion As Double
+  overload: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.Duracion*
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.FechaInicial
+  commentId: P:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.FechaInicial
+  id: FechaInicial
+  parent: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem
+  langs:
+  - csharp
+  - vb
+  name: FechaInicial
+  nameWithType: SesionListItem.FechaInicial
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.FechaInicial
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Models
+  syntax:
+    content: public DateTime? FechaInicial { get; set; }
+    parameters: []
+    return:
+      type: System.Nullable{System.DateTime}
+    content.vb: Public Property FechaInicial As Date?
+  overload: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.FechaInicial*
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.FechaFinal
+  commentId: P:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.FechaFinal
+  id: FechaFinal
+  parent: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem
+  langs:
+  - csharp
+  - vb
+  name: FechaFinal
+  nameWithType: SesionListItem.FechaFinal
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.FechaFinal
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Models
+  syntax:
+    content: public DateTime? FechaFinal { get; set; }
+    parameters: []
+    return:
+      type: System.Nullable{System.DateTime}
+    content.vb: Public Property FechaFinal As Date?
+  overload: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.FechaFinal*
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.Viatica
+  commentId: P:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.Viatica
+  id: Viatica
+  parent: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem
+  langs:
+  - csharp
+  - vb
+  name: Viatica
+  nameWithType: SesionListItem.Viatica
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.Viatica
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Models
+  syntax:
+    content: public bool Viatica { get; set; }
+    parameters: []
+    return:
+      type: System.Boolean
+    content.vb: Public Property Viatica As Boolean
+  overload: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.Viatica*
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.ProgramaDetalle
+  commentId: P:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.ProgramaDetalle
+  id: ProgramaDetalle
+  parent: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem
+  langs:
+  - csharp
+  - vb
+  name: ProgramaDetalle
+  nameWithType: SesionListItem.ProgramaDetalle
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.ProgramaDetalle
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Models
+  syntax:
+    content: public string ProgramaDetalle { get; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public ReadOnly Property ProgramaDetalle As String
+  overload: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.ProgramaDetalle*
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.RangoFechas
+  commentId: P:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.RangoFechas
+  id: RangoFechas
+  parent: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem
+  langs:
+  - csharp
+  - vb
+  name: RangoFechas
+  nameWithType: SesionListItem.RangoFechas
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.RangoFechas
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Models
+  syntax:
+    content: public string RangoFechas { get; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public ReadOnly Property RangoFechas As String
+  overload: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.RangoFechas*
+references:
+- uid: ConversorPDF.XLL.Academic.Domain.Models
+  commentId: N:ConversorPDF.XLL.Academic.Domain.Models
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Academic.Domain.Models
+  nameWithType: ConversorPDF.XLL.Academic.Domain.Models
+  fullName: ConversorPDF.XLL.Academic.Domain.Models
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic
+    name: Academic
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Domain
+    name: Domain
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Domain.Models
+    name: Models
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic
+    name: Academic
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Domain
+    name: Domain
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Domain.Models
+    name: Models
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.html
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+  nameWithType: object
+  fullName: object
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: System.Object.ToString
+  commentId: M:System.Object.ToString
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  name: ToString()
+  nameWithType: object.ToString()
+  fullName: object.ToString()
+  nameWithType.vb: Object.ToString()
+  fullName.vb: Object.ToString()
+  spec.csharp:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+- uid: System.Object.Equals(System.Object)
+  commentId: M:System.Object.Equals(System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  name: Equals(object)
+  nameWithType: object.Equals(object)
+  fullName: object.Equals(object)
+  nameWithType.vb: Object.Equals(Object)
+  fullName.vb: Object.Equals(Object)
+  name.vb: Equals(Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.Equals(System.Object,System.Object)
+  commentId: M:System.Object.Equals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  name: Equals(object, object)
+  nameWithType: object.Equals(object, object)
+  fullName: object.Equals(object, object)
+  nameWithType.vb: Object.Equals(Object, Object)
+  fullName.vb: Object.Equals(Object, Object)
+  name.vb: Equals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.ReferenceEquals(System.Object,System.Object)
+  commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  name: ReferenceEquals(object, object)
+  nameWithType: object.ReferenceEquals(object, object)
+  fullName: object.ReferenceEquals(object, object)
+  nameWithType.vb: Object.ReferenceEquals(Object, Object)
+  fullName.vb: Object.ReferenceEquals(Object, Object)
+  name.vb: ReferenceEquals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.GetHashCode
+  commentId: M:System.Object.GetHashCode
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  name: GetHashCode()
+  nameWithType: object.GetHashCode()
+  fullName: object.GetHashCode()
+  nameWithType.vb: Object.GetHashCode()
+  fullName.vb: Object.GetHashCode()
+  spec.csharp:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+- uid: System.Object.GetType
+  commentId: M:System.Object.GetType
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  name: GetType()
+  nameWithType: object.GetType()
+  fullName: object.GetType()
+  nameWithType.vb: Object.GetType()
+  fullName.vb: Object.GetType()
+  spec.csharp:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+- uid: System.Object.MemberwiseClone
+  commentId: M:System.Object.MemberwiseClone
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  name: MemberwiseClone()
+  nameWithType: object.MemberwiseClone()
+  fullName: object.MemberwiseClone()
+  nameWithType.vb: Object.MemberwiseClone()
+  fullName.vb: Object.MemberwiseClone()
+  spec.csharp:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.#ctor*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.#ctor
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.html#ConversorPDF_XLL_Academic_Domain_Models_SesionListItem__ctor
+  name: SesionListItem
+  nameWithType: SesionListItem.SesionListItem
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.SesionListItem
+  nameWithType.vb: SesionListItem.New
+  fullName.vb: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.New
+  name.vb: New
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.IdSesion*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.IdSesion
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.html#ConversorPDF_XLL_Academic_Domain_Models_SesionListItem_IdSesion
+  name: IdSesion
+  nameWithType: SesionListItem.IdSesion
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.IdSesion
+- uid: System.Int32
+  commentId: T:System.Int32
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int
+  nameWithType: int
+  fullName: int
+  nameWithType.vb: Integer
+  fullName.vb: Integer
+  name.vb: Integer
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.IdVinculacion*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.IdVinculacion
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.html#ConversorPDF_XLL_Academic_Domain_Models_SesionListItem_IdVinculacion
+  name: IdVinculacion
+  nameWithType: SesionListItem.IdVinculacion
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.IdVinculacion
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.IdPeriodo*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.IdPeriodo
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.html#ConversorPDF_XLL_Academic_Domain_Models_SesionListItem_IdPeriodo
+  name: IdPeriodo
+  nameWithType: SesionListItem.IdPeriodo
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.IdPeriodo
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.ProgramaTipo*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.ProgramaTipo
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.html#ConversorPDF_XLL_Academic_Domain_Models_SesionListItem_ProgramaTipo
+  name: ProgramaTipo
+  nameWithType: SesionListItem.ProgramaTipo
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.ProgramaTipo
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.ProgramaAbreviatura*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.ProgramaAbreviatura
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.html#ConversorPDF_XLL_Academic_Domain_Models_SesionListItem_ProgramaAbreviatura
+  name: ProgramaAbreviatura
+  nameWithType: SesionListItem.ProgramaAbreviatura
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.ProgramaAbreviatura
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.Semestre*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.Semestre
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.html#ConversorPDF_XLL_Academic_Domain_Models_SesionListItem_Semestre
+  name: Semestre
+  nameWithType: SesionListItem.Semestre
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.Semestre
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.DocenteNombre*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.DocenteNombre
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.html#ConversorPDF_XLL_Academic_Domain_Models_SesionListItem_DocenteNombre
+  name: DocenteNombre
+  nameWithType: SesionListItem.DocenteNombre
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.DocenteNombre
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.CedulaTercero*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.CedulaTercero
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.html#ConversorPDF_XLL_Academic_Domain_Models_SesionListItem_CedulaTercero
+  name: CedulaTercero
+  nameWithType: SesionListItem.CedulaTercero
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.CedulaTercero
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.AsignaturaNombre*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.AsignaturaNombre
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.html#ConversorPDF_XLL_Academic_Domain_Models_SesionListItem_AsignaturaNombre
+  name: AsignaturaNombre
+  nameWithType: SesionListItem.AsignaturaNombre
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.AsignaturaNombre
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.AbreviaturaAsignatura*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.AbreviaturaAsignatura
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.html#ConversorPDF_XLL_Academic_Domain_Models_SesionListItem_AbreviaturaAsignatura
+  name: AbreviaturaAsignatura
+  nameWithType: SesionListItem.AbreviaturaAsignatura
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.AbreviaturaAsignatura
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.SedeCiudad*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.SedeCiudad
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.html#ConversorPDF_XLL_Academic_Domain_Models_SesionListItem_SedeCiudad
+  name: SedeCiudad
+  nameWithType: SesionListItem.SedeCiudad
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.SedeCiudad
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.DiaSemana*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.DiaSemana
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.html#ConversorPDF_XLL_Academic_Domain_Models_SesionListItem_DiaSemana
+  name: DiaSemana
+  nameWithType: SesionListItem.DiaSemana
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.DiaSemana
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.Horas*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.Horas
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.html#ConversorPDF_XLL_Academic_Domain_Models_SesionListItem_Horas
+  name: Horas
+  nameWithType: SesionListItem.Horas
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.Horas
+- uid: System.Double
+  commentId: T:System.Double
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.double
+  name: double
+  nameWithType: double
+  fullName: double
+  nameWithType.vb: Double
+  fullName.vb: Double
+  name.vb: Double
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.Duracion*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.Duracion
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.html#ConversorPDF_XLL_Academic_Domain_Models_SesionListItem_Duracion
+  name: Duracion
+  nameWithType: SesionListItem.Duracion
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.Duracion
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.FechaInicial*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.FechaInicial
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.html#ConversorPDF_XLL_Academic_Domain_Models_SesionListItem_FechaInicial
+  name: FechaInicial
+  nameWithType: SesionListItem.FechaInicial
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.FechaInicial
+- uid: System.Nullable{System.DateTime}
+  commentId: T:System.Nullable{System.DateTime}
+  parent: System
+  definition: System.Nullable`1
+  href: https://learn.microsoft.com/dotnet/api/system.datetime
+  name: DateTime?
+  nameWithType: DateTime?
+  fullName: System.DateTime?
+  nameWithType.vb: Date?
+  fullName.vb: Date?
+  name.vb: Date?
+  spec.csharp:
+  - uid: System.DateTime
+    name: DateTime
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.datetime
+  - name: '?'
+  spec.vb:
+  - uid: System.DateTime
+    name: Date
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.datetime
+  - name: '?'
+- uid: System.Nullable`1
+  commentId: T:System.Nullable`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  name: Nullable<T>
+  nameWithType: Nullable<T>
+  fullName: System.Nullable<T>
+  nameWithType.vb: Nullable(Of T)
+  fullName.vb: System.Nullable(Of T)
+  name.vb: Nullable(Of T)
+  spec.csharp:
+  - uid: System.Nullable`1
+    name: Nullable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.Nullable`1
+    name: Nullable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.FechaFinal*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.FechaFinal
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.html#ConversorPDF_XLL_Academic_Domain_Models_SesionListItem_FechaFinal
+  name: FechaFinal
+  nameWithType: SesionListItem.FechaFinal
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.FechaFinal
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.Viatica*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.Viatica
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.html#ConversorPDF_XLL_Academic_Domain_Models_SesionListItem_Viatica
+  name: Viatica
+  nameWithType: SesionListItem.Viatica
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.Viatica
+- uid: System.Boolean
+  commentId: T:System.Boolean
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.boolean
+  name: bool
+  nameWithType: bool
+  fullName: bool
+  nameWithType.vb: Boolean
+  fullName.vb: Boolean
+  name.vb: Boolean
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.ProgramaDetalle*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.ProgramaDetalle
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.html#ConversorPDF_XLL_Academic_Domain_Models_SesionListItem_ProgramaDetalle
+  name: ProgramaDetalle
+  nameWithType: SesionListItem.ProgramaDetalle
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.ProgramaDetalle
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.RangoFechas*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.RangoFechas
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.html#ConversorPDF_XLL_Academic_Domain_Models_SesionListItem_RangoFechas
+  name: RangoFechas
+  nameWithType: SesionListItem.RangoFechas
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.RangoFechas

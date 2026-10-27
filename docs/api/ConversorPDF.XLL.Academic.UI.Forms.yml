@@ -1,0 +1,56 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Academic.UI.Forms
+  commentId: N:ConversorPDF.XLL.Academic.UI.Forms
+  id: ConversorPDF.XLL.Academic.UI.Forms
+  children:
+  - ConversorPDF.XLL.Academic.UI.Forms.FormSedes
+  - ConversorPDF.XLL.Academic.UI.Forms.FormSesionesAcademicas
+  - ConversorPDF.XLL.Academic.UI.Forms.FormTerceros
+  - ConversorPDF.XLL.Academic.UI.Forms.FormViaticos
+  - ConversorPDF.XLL.Academic.UI.Forms.FormVinculaciones
+  langs:
+  - csharp
+  - vb
+  name: ConversorPDF.XLL.Academic.UI.Forms
+  nameWithType: ConversorPDF.XLL.Academic.UI.Forms
+  fullName: ConversorPDF.XLL.Academic.UI.Forms
+  type: Namespace
+  assemblies:
+  - ConversorPDF.XLL
+references:
+- uid: ConversorPDF.XLL.Academic.UI.Forms.FormSesionesAcademicas
+  commentId: T:ConversorPDF.XLL.Academic.UI.Forms.FormSesionesAcademicas
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.UI.Forms.FormSesionesAcademicas.html
+  name: FormSesionesAcademicas
+  nameWithType: FormSesionesAcademicas
+  fullName: ConversorPDF.XLL.Academic.UI.Forms.FormSesionesAcademicas
+- uid: ConversorPDF.XLL.Academic.UI.Forms.FormVinculaciones
+  commentId: T:ConversorPDF.XLL.Academic.UI.Forms.FormVinculaciones
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.UI.Forms.FormVinculaciones.html
+  name: FormVinculaciones
+  nameWithType: FormVinculaciones
+  fullName: ConversorPDF.XLL.Academic.UI.Forms.FormVinculaciones
+- uid: ConversorPDF.XLL.Academic.UI.Forms.FormTerceros
+  commentId: T:ConversorPDF.XLL.Academic.UI.Forms.FormTerceros
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.UI.Forms.FormTerceros.html
+  name: FormTerceros
+  nameWithType: FormTerceros
+  fullName: ConversorPDF.XLL.Academic.UI.Forms.FormTerceros
+- uid: ConversorPDF.XLL.Academic.UI.Forms.FormSedes
+  commentId: T:ConversorPDF.XLL.Academic.UI.Forms.FormSedes
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.UI.Forms.FormSedes.html
+  name: FormSedes
+  nameWithType: FormSedes
+  fullName: ConversorPDF.XLL.Academic.UI.Forms.FormSedes
+- uid: ConversorPDF.XLL.Academic.UI.Forms.FormViaticos
+  commentId: T:ConversorPDF.XLL.Academic.UI.Forms.FormViaticos
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.UI.Forms.FormViaticos.html
+  name: FormViaticos
+  nameWithType: FormViaticos
+  fullName: ConversorPDF.XLL.Academic.UI.Forms.FormViaticos

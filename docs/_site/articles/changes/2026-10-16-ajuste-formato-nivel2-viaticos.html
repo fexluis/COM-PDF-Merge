@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Ajuste de Formato y Resaltado del Nivel 2 en Vista Vi&#225;ticos | ESAP - ConversorPDF </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Ajuste de Formato y Resaltado del Nivel 2 en Vista Vi&#225;ticos | ESAP - ConversorPDF ">
+      
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="../../toc.html">
+      <meta name="docfx:tocrel" content="../toc.html">
+      
+      <meta name="docfx:rel" content="../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/fexluis/COM-PDF-Merge/blob/refactor/academic-modularization/docs/articles/changes/2026-10-16-ajuste-formato-nivel2-viaticos.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="ajuste-de-formato-y-resaltado-del-nivel-2-en-vista-viáticos">Ajuste de Formato y Resaltado del Nivel 2 en Vista Viáticos</h1>
+
+<p><strong>Fecha:</strong> 2026-10-16<br>
+<strong>Módulo:</strong> Académico (<code>ConversorPDF.XLL.Academic</code>)<br>
+<strong>Ronda:</strong> 132 (Fases 714 a 720)</p>
+<h2 id="purpose">Purpose</h2>
+<p>Optimizar la legibilidad y presentación visual del nodo de Nivel 2 (Bloque de viático) en el <code>TreeView</code> de viáticos (<code>FormVerVinculaciones</code>), eliminando información redundante (<code>Cierre: </code>, código de ruta en la cadena de vista), compactando la unidad de duración (<code>días</code> → <code>d</code>), y destacando visualmente en color naranja oscuro (<code>Color.DarkOrange</code>) aquellos viajes que incorporan la regla de pernocta en el último día (<code>isPernoctaUltimoDia = 1</code>).</p>
+<h2 id="changes">Changes</h2>
+<ol>
+<li><strong><code>ViaticoBloqueFormatter.cs</code>:</strong>
+<ul>
+<li>Modificada la firma de <code>FormatearNodoNivel2</code>: se retira el parámetro <code>codRuta</code>.</li>
+<li>Modificado el template de cadena:
+<code>📅 [FechaInicio] - [FechaFin] | [Duración] d | [Aéreo/Terrestre] | [Ruta] | $[ValorTransporte] | [DIA HORA] | [Pernocta Ultimo Dia]</code></li>
+<li>Se elimina el prefijo literal <code>Cierre: </code>.</li>
+<li>Se mantiene intacto <code>ObtenerTextoCierre</code> y <code>ObtenerRangoComision</code>.</li>
+</ul>
+</li>
+<li><strong><code>ViaticoBloqueFormatterTests.cs</code>:</strong>
+<ul>
+<li>Actualizadas pruebas existentes de <code>FormatearNodoNivel2</code> con y sin pernocta al nuevo formato exacto.</li>
+<li>Añadidas pruebas unitarias <code>FormatearNodoNivel2_WhenSinPernocta_ShouldNotIncludeCierrePrefixNorCodigoRuta</code> y <code>FormatearNodoNivel2_WhenBloqueNull_ShouldReturnEmpty</code>.</li>
+</ul>
+</li>
+<li><strong><code>FormVerVinculaciones.cs</code>:</strong>
+<ul>
+<li>Se mantiene la llamada a <code>_trayectoEncoderService.GetOrCreateCodigoTrayecto(territorial, verificacion, transporteBase)</code> para asegurar la pre-creación en BD de rutas no catalogadas.</li>
+<li>Se elimina la variable local <code>codRutaDisplay</code> y se invoca <code>FormatearNodoNivel2</code> con 6 argumentos.</li>
+<li>Se condiciona el color de la fila: <code>ForeColor = bloque.TienePernoctaUltimoDia ? Color.DarkOrange : Color.DarkBlue</code>.</li>
+</ul>
+</li>
+<li><strong><code>docs/articles/academic-viaticos.md</code>:</strong>
+<ul>
+<li>Documentada la subsección descriptiva del Nivel 2 y el resaltado visual.</li>
+</ul>
+</li>
+</ol>
+<h2 id="how-to-use">How to use</h2>
+<ol>
+<li>En Excel, abrir la pestaña <strong>Conversor Académico</strong> → <strong>Ver Vinculaciones</strong>.</li>
+<li>Cambiar a la vista <strong>Viáticos</strong>.</li>
+<li>Observar los nodos de Nivel 2:
+<ul>
+<li>Bloques estándar se muestran en azul oscuro (<code>DarkBlue</code>) con duración abreviada en <code>d</code> y horario sin prefijo <code>Cierre:</code>.</li>
+<li>Bloques con pernocta en último día se resaltan en naranja oscuro (<code>DarkOrange</code>) con el sufijo <code>| Pernocta Ultimo Dia</code>.</li>
+</ul>
+</li>
+<li>Al exportar a <code>FV-FO-033</code>, la columna BL (<code>COD_RUTA</code>) sigue completándose adecuadamente a partir de los datos en base de datos.</li>
+</ol>
+<h2 id="test-coverage">Test Coverage</h2>
+<ul>
+<li><code>ViaticoBloqueFormatterTests.cs</code>:
+<ul>
+<li><code>FormatearNodoNivel2_WhenSinPernocta_ShouldNotIncludePernoctaUltimoDiaSuffix</code>: Valida formato exacto sin pernocta ni código.</li>
+<li><code>FormatearNodoNivel2_WhenConPernocta_ShouldIncludePernoctaUltimoDiaSuffix</code>: Valida sufijo de pernocta y fecha extendida.</li>
+<li><code>FormatearNodoNivel2_WhenSinPernocta_ShouldNotIncludeCierrePrefixNorCodigoRuta</code>: Valida ausencia de <code>Cierre:</code> y <code>SIN-COD</code>.</li>
+<li><code>FormatearNodoNivel2_WhenBloqueNull_ShouldReturnEmpty</code>: Valida manejo robusto de nulo.</li>
+</ul>
+</li>
+</ul>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/fexluis/COM-PDF-Merge/blob/refactor/academic-modularization/docs/articles/changes/2026-10-16-ajuste-formato-nivel2-viaticos.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          ESAP - ConversorPDF Doc
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

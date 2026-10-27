@@ -63,6 +63,11 @@ namespace ConversorPDF.XLL.Core.Processors
 
             var config = _viaticosRepository.GetConfig();
             if (config == null) return 0;
+            if (string.IsNullOrWhiteSpace(config.Cdp))
+            {
+                MessageBox.Show("No hay CDP configurado. Regístrelo en 'Gestión de CDP Dependencias' antes de generar documentos.", App.APP_NAME, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return 0;
+            }
 
             string folder = Path.Combine(config.CarpetaDestino, "Cumplidos");
             if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
@@ -121,6 +126,17 @@ namespace ConversorPDF.XLL.Core.Processors
             }
 
             var config = _viaticosRepository.GetConfig();
+            if (config == null)
+            {
+                MessageBox.Show("No se pudo cargar la configuración de viáticos (tabla config).", App.APP_NAME, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return 0;
+            }
+            if (string.IsNullOrWhiteSpace(config.Cdp))
+            {
+                MessageBox.Show("No hay CDP configurado. Regístrelo en 'Gestión de CDP Dependencias' antes de generar documentos.", App.APP_NAME, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return 0;
+            }
+
             string folder = Path.Combine(config.CarpetaDestino, "Cumplidos");
             if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
 
@@ -306,7 +322,7 @@ namespace ConversorPDF.XLL.Core.Processors
             ws.Range["F19"].Value = row.FechaFin.Day; ws.Range["G19"].Value = row.FechaFin.Month; ws.Range["H19"].Value = row.FechaFin.Year;
             ws.Range["D8"].Value = row.NombreCompleto;
             ws.Range["D10"].Value = row.Cedula;
-            ws.Range["D12"].Value = config.FullDependencia;
+            ws.Range["D12"].Value = string.IsNullOrWhiteSpace(config.FullDependencia) ? config.CortaDependencia : config.FullDependencia;
             ws.Range["M7"].Value = "SIIF Nación " + row.NumeroComision;
             ws.Range["M10"].Value = row.RP;
             //ws.Range["M12"].Value = config.NombreDT?.ToUpperInvariant();

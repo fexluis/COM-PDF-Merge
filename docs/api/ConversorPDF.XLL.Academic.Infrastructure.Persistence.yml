@@ -1,0 +1,24 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence
+  commentId: N:ConversorPDF.XLL.Academic.Infrastructure.Persistence
+  id: ConversorPDF.XLL.Academic.Infrastructure.Persistence
+  children:
+  - ConversorPDF.XLL.Academic.Infrastructure.Persistence.AcademicUnitOfWork
+  langs:
+  - csharp
+  - vb
+  name: ConversorPDF.XLL.Academic.Infrastructure.Persistence
+  nameWithType: ConversorPDF.XLL.Academic.Infrastructure.Persistence
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence
+  type: Namespace
+  assemblies:
+  - ConversorPDF.XLL
+references:
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.AcademicUnitOfWork
+  commentId: T:ConversorPDF.XLL.Academic.Infrastructure.Persistence.AcademicUnitOfWork
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.AcademicUnitOfWork.html
+  name: AcademicUnitOfWork
+  nameWithType: AcademicUnitOfWork
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.AcademicUnitOfWork

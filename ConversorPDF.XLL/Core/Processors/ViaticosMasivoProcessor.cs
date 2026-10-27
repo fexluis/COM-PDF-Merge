@@ -1,4 +1,5 @@
 using System;
+using System.Windows.Forms;
 using ConversorPDF.XLL.Core.Services;
 using ConversorPDF.XLL.Core.Processors;
 using ConversorPDF.XLL.Core.Interfaces;
@@ -43,6 +44,11 @@ namespace ConversorPDF.XLL.Core.Processors
 
             var config = _viaticosRepository.GetConfig();
             if (config == null) return 0;
+            if (string.IsNullOrWhiteSpace(config.Cdp))
+            {
+                MessageBox.Show("No hay CDP configurado. Regístrelo en 'Gestión de CDP Dependencias' antes de generar documentos.", App.APP_NAME, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return 0;
+            }
 
             dynamic wsProg = _excelRepository.GetWorksheet(ConstantsHelper.SHEET_PROG);
             int last = (int)wsProg.Cells[wsProg.Rows.Count, "A"].End[-4162 /*xlUp*/].Row;
@@ -140,9 +146,11 @@ namespace ConversorPDF.XLL.Core.Processors
                 if (fechaViaje < cfg.FechaInicio || fechaViaje > cfg.FechaFin) return false;
 
                 // --- Filtro de Dependencia ---
-                string dependenciaRaw = data[r, ConstantsHelper.PROG_DEPENDENCIA]?.ToString() ?? "";
-                if (!dependenciaRaw.Equals(cfg.CortaDependencia, StringComparison.OrdinalIgnoreCase))
+                string dependenciaRaw = data[r, ConstantsHelper.PROG_DEPENDENCIA]?.ToString()?.Trim() ?? "";
+                string dependenciaCfg = cfg.CortaDependencia?.Trim() ?? "";
+                if (!dependenciaRaw.Equals(dependenciaCfg, StringComparison.OrdinalIgnoreCase))
                 {
+                    LoggerHelper.Debug($"Fila {filaOrigen}: dependencia '{dependenciaRaw}' distinta de la configurada '{dependenciaCfg}'.");
                     return false;
                 }
 

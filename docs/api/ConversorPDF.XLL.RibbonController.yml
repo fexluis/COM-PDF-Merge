@@ -1,0 +1,720 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.RibbonController
+  commentId: T:ConversorPDF.XLL.RibbonController
+  id: RibbonController
+  parent: ConversorPDF.XLL
+  children:
+  - ConversorPDF.XLL.RibbonController.#ctor
+  - ConversorPDF.XLL.RibbonController.BuscarInformes(ExcelDna.Integration.CustomUI.IRibbonControl)
+  - ConversorPDF.XLL.RibbonController.ConvertirPDF(ExcelDna.Integration.CustomUI.IRibbonControl)
+  - ConversorPDF.XLL.RibbonController.GenerarFilaSeleccionada(ExcelDna.Integration.CustomUI.IRibbonControl)
+  - ConversorPDF.XLL.RibbonController.GenerarFirmaBase64(ExcelDna.Integration.CustomUI.IRibbonControl)
+  - ConversorPDF.XLL.RibbonController.GestionDocumentalViaticos(ExcelDna.Integration.CustomUI.IRibbonControl)
+  - ConversorPDF.XLL.RibbonController.GetButtonVisible(ExcelDna.Integration.CustomUI.IRibbonControl)
+  - ConversorPDF.XLL.RibbonController.GetCustomUI(System.String)
+  - ConversorPDF.XLL.RibbonController.GetImage(System.String)
+  - ConversorPDF.XLL.RibbonController.LeerMetadatos(ExcelDna.Integration.CustomUI.IRibbonControl)
+  - ConversorPDF.XLL.RibbonController.Office365UserManager(ExcelDna.Integration.CustomUI.IRibbonControl)
+  - ConversorPDF.XLL.RibbonController.OnConvertirObligacionContador(ExcelDna.Integration.CustomUI.IRibbonControl)
+  - ConversorPDF.XLL.RibbonController.ProcesarCumplidos(ExcelDna.Integration.CustomUI.IRibbonControl)
+  - ConversorPDF.XLL.RibbonController.ProcesarViaticosMasivo(ExcelDna.Integration.CustomUI.IRibbonControl)
+  - ConversorPDF.XLL.RibbonController.Ribbon_Load(ExcelDna.Integration.CustomUI.IRibbonUI)
+  - ConversorPDF.XLL.RibbonController.SesionesAcademicas(ExcelDna.Integration.CustomUI.IRibbonControl)
+  - ConversorPDF.XLL.RibbonController.UnificarObligacionContador(ExcelDna.Integration.CustomUI.IRibbonControl)
+  - ConversorPDF.XLL.RibbonController.UnificarOrdenPago(ExcelDna.Integration.CustomUI.IRibbonControl)
+  - ConversorPDF.XLL.RibbonController.ViaticosUnificarSoportes(ExcelDna.Integration.CustomUI.IRibbonControl)
+  - ConversorPDF.XLL.RibbonController.VinculacionesAcademicas(ExcelDna.Integration.CustomUI.IRibbonControl)
+  langs:
+  - csharp
+  - vb
+  name: RibbonController
+  nameWithType: RibbonController
+  fullName: ConversorPDF.XLL.RibbonController
+  type: Class
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL
+  summary: Controlador del Ribbon ESAP. Conecta los botones de Excel con la lógica C# existente.
+  example: []
+  syntax:
+    content: >-
+      [ComVisible(true)]
+
+      public class RibbonController : ExcelRibbon
+    content.vb: >-
+      <ComVisible(True)>
+
+      Public Class RibbonController Inherits ExcelRibbon
+  inheritance:
+  - System.Object
+  attributes:
+  - type: System.Runtime.InteropServices.ComVisibleAttribute
+    ctor: System.Runtime.InteropServices.ComVisibleAttribute.#ctor(System.Boolean)
+    arguments:
+    - type: System.Boolean
+      value: true
+- uid: ConversorPDF.XLL.RibbonController.GetCustomUI(System.String)
+  commentId: M:ConversorPDF.XLL.RibbonController.GetCustomUI(System.String)
+  id: GetCustomUI(System.String)
+  parent: ConversorPDF.XLL.RibbonController
+  langs:
+  - csharp
+  - vb
+  name: GetCustomUI(string)
+  nameWithType: RibbonController.GetCustomUI(string)
+  fullName: ConversorPDF.XLL.RibbonController.GetCustomUI(string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL
+  example: []
+  syntax:
+    content: public override string GetCustomUI(string ribbonID)
+    parameters:
+    - id: ribbonID
+      type: System.String
+    return:
+      type: System.String
+    content.vb: Public Overrides Function GetCustomUI(ribbonID As String) As String
+  overload: ConversorPDF.XLL.RibbonController.GetCustomUI*
+  nameWithType.vb: RibbonController.GetCustomUI(String)
+  fullName.vb: ConversorPDF.XLL.RibbonController.GetCustomUI(String)
+  name.vb: GetCustomUI(String)
+- uid: ConversorPDF.XLL.RibbonController.Ribbon_Load(ExcelDna.Integration.CustomUI.IRibbonUI)
+  commentId: M:ConversorPDF.XLL.RibbonController.Ribbon_Load(ExcelDna.Integration.CustomUI.IRibbonUI)
+  id: Ribbon_Load(ExcelDna.Integration.CustomUI.IRibbonUI)
+  parent: ConversorPDF.XLL.RibbonController
+  langs:
+  - csharp
+  - vb
+  name: Ribbon_Load(IRibbonUI)
+  nameWithType: RibbonController.Ribbon_Load(IRibbonUI)
+  fullName: ConversorPDF.XLL.RibbonController.Ribbon_Load(ExcelDna.Integration.CustomUI.IRibbonUI)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL
+  syntax:
+    content: public void Ribbon_Load(IRibbonUI ribbonUI)
+    parameters:
+    - id: ribbonUI
+      type: ExcelDna.Integration.CustomUI.IRibbonUI
+    content.vb: Public Sub Ribbon_Load(ribbonUI As IRibbonUI)
+  overload: ConversorPDF.XLL.RibbonController.Ribbon_Load*
+- uid: ConversorPDF.XLL.RibbonController.GetButtonVisible(ExcelDna.Integration.CustomUI.IRibbonControl)
+  commentId: M:ConversorPDF.XLL.RibbonController.GetButtonVisible(ExcelDna.Integration.CustomUI.IRibbonControl)
+  id: GetButtonVisible(ExcelDna.Integration.CustomUI.IRibbonControl)
+  parent: ConversorPDF.XLL.RibbonController
+  langs:
+  - csharp
+  - vb
+  name: GetButtonVisible(IRibbonControl)
+  nameWithType: RibbonController.GetButtonVisible(IRibbonControl)
+  fullName: ConversorPDF.XLL.RibbonController.GetButtonVisible(ExcelDna.Integration.CustomUI.IRibbonControl)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL
+  syntax:
+    content: public bool GetButtonVisible(IRibbonControl control)
+    parameters:
+    - id: control
+      type: ExcelDna.Integration.CustomUI.IRibbonControl
+    return:
+      type: System.Boolean
+    content.vb: Public Function GetButtonVisible(control As IRibbonControl) As Boolean
+  overload: ConversorPDF.XLL.RibbonController.GetButtonVisible*
+- uid: ConversorPDF.XLL.RibbonController.GetImage(System.String)
+  commentId: M:ConversorPDF.XLL.RibbonController.GetImage(System.String)
+  id: GetImage(System.String)
+  parent: ConversorPDF.XLL.RibbonController
+  langs:
+  - csharp
+  - vb
+  name: GetImage(string)
+  nameWithType: RibbonController.GetImage(string)
+  fullName: ConversorPDF.XLL.RibbonController.GetImage(string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL
+  syntax:
+    content: public object GetImage(string imageId)
+    parameters:
+    - id: imageId
+      type: System.String
+    return:
+      type: System.Object
+    content.vb: Public Function GetImage(imageId As String) As Object
+  overload: ConversorPDF.XLL.RibbonController.GetImage*
+  nameWithType.vb: RibbonController.GetImage(String)
+  fullName.vb: ConversorPDF.XLL.RibbonController.GetImage(String)
+  name.vb: GetImage(String)
+- uid: ConversorPDF.XLL.RibbonController.ConvertirPDF(ExcelDna.Integration.CustomUI.IRibbonControl)
+  commentId: M:ConversorPDF.XLL.RibbonController.ConvertirPDF(ExcelDna.Integration.CustomUI.IRibbonControl)
+  id: ConvertirPDF(ExcelDna.Integration.CustomUI.IRibbonControl)
+  parent: ConversorPDF.XLL.RibbonController
+  langs:
+  - csharp
+  - vb
+  name: ConvertirPDF(IRibbonControl)
+  nameWithType: RibbonController.ConvertirPDF(IRibbonControl)
+  fullName: ConversorPDF.XLL.RibbonController.ConvertirPDF(ExcelDna.Integration.CustomUI.IRibbonControl)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL
+  syntax:
+    content: public void ConvertirPDF(IRibbonControl control)
+    parameters:
+    - id: control
+      type: ExcelDna.Integration.CustomUI.IRibbonControl
+    content.vb: Public Sub ConvertirPDF(control As IRibbonControl)
+  overload: ConversorPDF.XLL.RibbonController.ConvertirPDF*
+- uid: ConversorPDF.XLL.RibbonController.UnificarObligacionContador(ExcelDna.Integration.CustomUI.IRibbonControl)
+  commentId: M:ConversorPDF.XLL.RibbonController.UnificarObligacionContador(ExcelDna.Integration.CustomUI.IRibbonControl)
+  id: UnificarObligacionContador(ExcelDna.Integration.CustomUI.IRibbonControl)
+  parent: ConversorPDF.XLL.RibbonController
+  langs:
+  - csharp
+  - vb
+  name: UnificarObligacionContador(IRibbonControl)
+  nameWithType: RibbonController.UnificarObligacionContador(IRibbonControl)
+  fullName: ConversorPDF.XLL.RibbonController.UnificarObligacionContador(ExcelDna.Integration.CustomUI.IRibbonControl)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL
+  syntax:
+    content: public void UnificarObligacionContador(IRibbonControl control)
+    parameters:
+    - id: control
+      type: ExcelDna.Integration.CustomUI.IRibbonControl
+    content.vb: Public Sub UnificarObligacionContador(control As IRibbonControl)
+  overload: ConversorPDF.XLL.RibbonController.UnificarObligacionContador*
+- uid: ConversorPDF.XLL.RibbonController.OnConvertirObligacionContador(ExcelDna.Integration.CustomUI.IRibbonControl)
+  commentId: M:ConversorPDF.XLL.RibbonController.OnConvertirObligacionContador(ExcelDna.Integration.CustomUI.IRibbonControl)
+  id: OnConvertirObligacionContador(ExcelDna.Integration.CustomUI.IRibbonControl)
+  parent: ConversorPDF.XLL.RibbonController
+  langs:
+  - csharp
+  - vb
+  name: OnConvertirObligacionContador(IRibbonControl)
+  nameWithType: RibbonController.OnConvertirObligacionContador(IRibbonControl)
+  fullName: ConversorPDF.XLL.RibbonController.OnConvertirObligacionContador(ExcelDna.Integration.CustomUI.IRibbonControl)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL
+  syntax:
+    content: public void OnConvertirObligacionContador(IRibbonControl control)
+    parameters:
+    - id: control
+      type: ExcelDna.Integration.CustomUI.IRibbonControl
+    content.vb: Public Sub OnConvertirObligacionContador(control As IRibbonControl)
+  overload: ConversorPDF.XLL.RibbonController.OnConvertirObligacionContador*
+- uid: ConversorPDF.XLL.RibbonController.UnificarOrdenPago(ExcelDna.Integration.CustomUI.IRibbonControl)
+  commentId: M:ConversorPDF.XLL.RibbonController.UnificarOrdenPago(ExcelDna.Integration.CustomUI.IRibbonControl)
+  id: UnificarOrdenPago(ExcelDna.Integration.CustomUI.IRibbonControl)
+  parent: ConversorPDF.XLL.RibbonController
+  langs:
+  - csharp
+  - vb
+  name: UnificarOrdenPago(IRibbonControl)
+  nameWithType: RibbonController.UnificarOrdenPago(IRibbonControl)
+  fullName: ConversorPDF.XLL.RibbonController.UnificarOrdenPago(ExcelDna.Integration.CustomUI.IRibbonControl)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL
+  syntax:
+    content: public void UnificarOrdenPago(IRibbonControl control)
+    parameters:
+    - id: control
+      type: ExcelDna.Integration.CustomUI.IRibbonControl
+    content.vb: Public Sub UnificarOrdenPago(control As IRibbonControl)
+  overload: ConversorPDF.XLL.RibbonController.UnificarOrdenPago*
+- uid: ConversorPDF.XLL.RibbonController.ViaticosUnificarSoportes(ExcelDna.Integration.CustomUI.IRibbonControl)
+  commentId: M:ConversorPDF.XLL.RibbonController.ViaticosUnificarSoportes(ExcelDna.Integration.CustomUI.IRibbonControl)
+  id: ViaticosUnificarSoportes(ExcelDna.Integration.CustomUI.IRibbonControl)
+  parent: ConversorPDF.XLL.RibbonController
+  langs:
+  - csharp
+  - vb
+  name: ViaticosUnificarSoportes(IRibbonControl)
+  nameWithType: RibbonController.ViaticosUnificarSoportes(IRibbonControl)
+  fullName: ConversorPDF.XLL.RibbonController.ViaticosUnificarSoportes(ExcelDna.Integration.CustomUI.IRibbonControl)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL
+  syntax:
+    content: public void ViaticosUnificarSoportes(IRibbonControl control)
+    parameters:
+    - id: control
+      type: ExcelDna.Integration.CustomUI.IRibbonControl
+    content.vb: Public Sub ViaticosUnificarSoportes(control As IRibbonControl)
+  overload: ConversorPDF.XLL.RibbonController.ViaticosUnificarSoportes*
+- uid: ConversorPDF.XLL.RibbonController.ProcesarViaticosMasivo(ExcelDna.Integration.CustomUI.IRibbonControl)
+  commentId: M:ConversorPDF.XLL.RibbonController.ProcesarViaticosMasivo(ExcelDna.Integration.CustomUI.IRibbonControl)
+  id: ProcesarViaticosMasivo(ExcelDna.Integration.CustomUI.IRibbonControl)
+  parent: ConversorPDF.XLL.RibbonController
+  langs:
+  - csharp
+  - vb
+  name: ProcesarViaticosMasivo(IRibbonControl)
+  nameWithType: RibbonController.ProcesarViaticosMasivo(IRibbonControl)
+  fullName: ConversorPDF.XLL.RibbonController.ProcesarViaticosMasivo(ExcelDna.Integration.CustomUI.IRibbonControl)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL
+  syntax:
+    content: public void ProcesarViaticosMasivo(IRibbonControl control)
+    parameters:
+    - id: control
+      type: ExcelDna.Integration.CustomUI.IRibbonControl
+    content.vb: Public Sub ProcesarViaticosMasivo(control As IRibbonControl)
+  overload: ConversorPDF.XLL.RibbonController.ProcesarViaticosMasivo*
+- uid: ConversorPDF.XLL.RibbonController.GestionDocumentalViaticos(ExcelDna.Integration.CustomUI.IRibbonControl)
+  commentId: M:ConversorPDF.XLL.RibbonController.GestionDocumentalViaticos(ExcelDna.Integration.CustomUI.IRibbonControl)
+  id: GestionDocumentalViaticos(ExcelDna.Integration.CustomUI.IRibbonControl)
+  parent: ConversorPDF.XLL.RibbonController
+  langs:
+  - csharp
+  - vb
+  name: GestionDocumentalViaticos(IRibbonControl)
+  nameWithType: RibbonController.GestionDocumentalViaticos(IRibbonControl)
+  fullName: ConversorPDF.XLL.RibbonController.GestionDocumentalViaticos(ExcelDna.Integration.CustomUI.IRibbonControl)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL
+  syntax:
+    content: public void GestionDocumentalViaticos(IRibbonControl control)
+    parameters:
+    - id: control
+      type: ExcelDna.Integration.CustomUI.IRibbonControl
+    content.vb: Public Sub GestionDocumentalViaticos(control As IRibbonControl)
+  overload: ConversorPDF.XLL.RibbonController.GestionDocumentalViaticos*
+- uid: ConversorPDF.XLL.RibbonController.ProcesarCumplidos(ExcelDna.Integration.CustomUI.IRibbonControl)
+  commentId: M:ConversorPDF.XLL.RibbonController.ProcesarCumplidos(ExcelDna.Integration.CustomUI.IRibbonControl)
+  id: ProcesarCumplidos(ExcelDna.Integration.CustomUI.IRibbonControl)
+  parent: ConversorPDF.XLL.RibbonController
+  langs:
+  - csharp
+  - vb
+  name: ProcesarCumplidos(IRibbonControl)
+  nameWithType: RibbonController.ProcesarCumplidos(IRibbonControl)
+  fullName: ConversorPDF.XLL.RibbonController.ProcesarCumplidos(ExcelDna.Integration.CustomUI.IRibbonControl)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL
+  syntax:
+    content: public void ProcesarCumplidos(IRibbonControl control)
+    parameters:
+    - id: control
+      type: ExcelDna.Integration.CustomUI.IRibbonControl
+    content.vb: Public Sub ProcesarCumplidos(control As IRibbonControl)
+  overload: ConversorPDF.XLL.RibbonController.ProcesarCumplidos*
+- uid: ConversorPDF.XLL.RibbonController.GenerarFilaSeleccionada(ExcelDna.Integration.CustomUI.IRibbonControl)
+  commentId: M:ConversorPDF.XLL.RibbonController.GenerarFilaSeleccionada(ExcelDna.Integration.CustomUI.IRibbonControl)
+  id: GenerarFilaSeleccionada(ExcelDna.Integration.CustomUI.IRibbonControl)
+  parent: ConversorPDF.XLL.RibbonController
+  langs:
+  - csharp
+  - vb
+  name: GenerarFilaSeleccionada(IRibbonControl)
+  nameWithType: RibbonController.GenerarFilaSeleccionada(IRibbonControl)
+  fullName: ConversorPDF.XLL.RibbonController.GenerarFilaSeleccionada(ExcelDna.Integration.CustomUI.IRibbonControl)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL
+  syntax:
+    content: public void GenerarFilaSeleccionada(IRibbonControl control)
+    parameters:
+    - id: control
+      type: ExcelDna.Integration.CustomUI.IRibbonControl
+    content.vb: Public Sub GenerarFilaSeleccionada(control As IRibbonControl)
+  overload: ConversorPDF.XLL.RibbonController.GenerarFilaSeleccionada*
+- uid: ConversorPDF.XLL.RibbonController.GenerarFirmaBase64(ExcelDna.Integration.CustomUI.IRibbonControl)
+  commentId: M:ConversorPDF.XLL.RibbonController.GenerarFirmaBase64(ExcelDna.Integration.CustomUI.IRibbonControl)
+  id: GenerarFirmaBase64(ExcelDna.Integration.CustomUI.IRibbonControl)
+  parent: ConversorPDF.XLL.RibbonController
+  langs:
+  - csharp
+  - vb
+  name: GenerarFirmaBase64(IRibbonControl)
+  nameWithType: RibbonController.GenerarFirmaBase64(IRibbonControl)
+  fullName: ConversorPDF.XLL.RibbonController.GenerarFirmaBase64(ExcelDna.Integration.CustomUI.IRibbonControl)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL
+  syntax:
+    content: public void GenerarFirmaBase64(IRibbonControl control)
+    parameters:
+    - id: control
+      type: ExcelDna.Integration.CustomUI.IRibbonControl
+    content.vb: Public Sub GenerarFirmaBase64(control As IRibbonControl)
+  overload: ConversorPDF.XLL.RibbonController.GenerarFirmaBase64*
+- uid: ConversorPDF.XLL.RibbonController.Office365UserManager(ExcelDna.Integration.CustomUI.IRibbonControl)
+  commentId: M:ConversorPDF.XLL.RibbonController.Office365UserManager(ExcelDna.Integration.CustomUI.IRibbonControl)
+  id: Office365UserManager(ExcelDna.Integration.CustomUI.IRibbonControl)
+  parent: ConversorPDF.XLL.RibbonController
+  langs:
+  - csharp
+  - vb
+  name: Office365UserManager(IRibbonControl)
+  nameWithType: RibbonController.Office365UserManager(IRibbonControl)
+  fullName: ConversorPDF.XLL.RibbonController.Office365UserManager(ExcelDna.Integration.CustomUI.IRibbonControl)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL
+  syntax:
+    content: public void Office365UserManager(IRibbonControl control)
+    parameters:
+    - id: control
+      type: ExcelDna.Integration.CustomUI.IRibbonControl
+    content.vb: Public Sub Office365UserManager(control As IRibbonControl)
+  overload: ConversorPDF.XLL.RibbonController.Office365UserManager*
+- uid: ConversorPDF.XLL.RibbonController.BuscarInformes(ExcelDna.Integration.CustomUI.IRibbonControl)
+  commentId: M:ConversorPDF.XLL.RibbonController.BuscarInformes(ExcelDna.Integration.CustomUI.IRibbonControl)
+  id: BuscarInformes(ExcelDna.Integration.CustomUI.IRibbonControl)
+  parent: ConversorPDF.XLL.RibbonController
+  langs:
+  - csharp
+  - vb
+  name: BuscarInformes(IRibbonControl)
+  nameWithType: RibbonController.BuscarInformes(IRibbonControl)
+  fullName: ConversorPDF.XLL.RibbonController.BuscarInformes(ExcelDna.Integration.CustomUI.IRibbonControl)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL
+  syntax:
+    content: public void BuscarInformes(IRibbonControl control)
+    parameters:
+    - id: control
+      type: ExcelDna.Integration.CustomUI.IRibbonControl
+    content.vb: Public Sub BuscarInformes(control As IRibbonControl)
+  overload: ConversorPDF.XLL.RibbonController.BuscarInformes*
+- uid: ConversorPDF.XLL.RibbonController.LeerMetadatos(ExcelDna.Integration.CustomUI.IRibbonControl)
+  commentId: M:ConversorPDF.XLL.RibbonController.LeerMetadatos(ExcelDna.Integration.CustomUI.IRibbonControl)
+  id: LeerMetadatos(ExcelDna.Integration.CustomUI.IRibbonControl)
+  parent: ConversorPDF.XLL.RibbonController
+  langs:
+  - csharp
+  - vb
+  name: LeerMetadatos(IRibbonControl)
+  nameWithType: RibbonController.LeerMetadatos(IRibbonControl)
+  fullName: ConversorPDF.XLL.RibbonController.LeerMetadatos(ExcelDna.Integration.CustomUI.IRibbonControl)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL
+  summary: Callback del Ribbon para leer metadatos de archivos PDF seleccionados.
+  example: []
+  syntax:
+    content: public void LeerMetadatos(IRibbonControl control)
+    parameters:
+    - id: control
+      type: ExcelDna.Integration.CustomUI.IRibbonControl
+      description: Referencia al botón del Ribbon que dispara la acción.
+    content.vb: Public Sub LeerMetadatos(control As IRibbonControl)
+  overload: ConversorPDF.XLL.RibbonController.LeerMetadatos*
+- uid: ConversorPDF.XLL.RibbonController.SesionesAcademicas(ExcelDna.Integration.CustomUI.IRibbonControl)
+  commentId: M:ConversorPDF.XLL.RibbonController.SesionesAcademicas(ExcelDna.Integration.CustomUI.IRibbonControl)
+  id: SesionesAcademicas(ExcelDna.Integration.CustomUI.IRibbonControl)
+  parent: ConversorPDF.XLL.RibbonController
+  langs:
+  - csharp
+  - vb
+  name: SesionesAcademicas(IRibbonControl)
+  nameWithType: RibbonController.SesionesAcademicas(IRibbonControl)
+  fullName: ConversorPDF.XLL.RibbonController.SesionesAcademicas(ExcelDna.Integration.CustomUI.IRibbonControl)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL
+  summary: Callback del Ribbon para abrir el generador de sesiones académicas.
+  example: []
+  syntax:
+    content: public void SesionesAcademicas(IRibbonControl control)
+    parameters:
+    - id: control
+      type: ExcelDna.Integration.CustomUI.IRibbonControl
+      description: Referencia al botón del Ribbon.
+    content.vb: Public Sub SesionesAcademicas(control As IRibbonControl)
+  overload: ConversorPDF.XLL.RibbonController.SesionesAcademicas*
+- uid: ConversorPDF.XLL.RibbonController.VinculacionesAcademicas(ExcelDna.Integration.CustomUI.IRibbonControl)
+  commentId: M:ConversorPDF.XLL.RibbonController.VinculacionesAcademicas(ExcelDna.Integration.CustomUI.IRibbonControl)
+  id: VinculacionesAcademicas(ExcelDna.Integration.CustomUI.IRibbonControl)
+  parent: ConversorPDF.XLL.RibbonController
+  langs:
+  - csharp
+  - vb
+  name: VinculacionesAcademicas(IRibbonControl)
+  nameWithType: RibbonController.VinculacionesAcademicas(IRibbonControl)
+  fullName: ConversorPDF.XLL.RibbonController.VinculacionesAcademicas(ExcelDna.Integration.CustomUI.IRibbonControl)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL
+  summary: Callback del Ribbon para abrir el listado de vinculaciones académicas.
+  example: []
+  syntax:
+    content: public void VinculacionesAcademicas(IRibbonControl control)
+    parameters:
+    - id: control
+      type: ExcelDna.Integration.CustomUI.IRibbonControl
+      description: Referencia al botón del Ribbon.
+    content.vb: Public Sub VinculacionesAcademicas(control As IRibbonControl)
+  overload: ConversorPDF.XLL.RibbonController.VinculacionesAcademicas*
+- uid: ConversorPDF.XLL.RibbonController.#ctor
+  commentId: M:ConversorPDF.XLL.RibbonController.#ctor
+  id: '#ctor'
+  parent: ConversorPDF.XLL.RibbonController
+  langs:
+  - csharp
+  - vb
+  name: RibbonController()
+  nameWithType: RibbonController.RibbonController()
+  fullName: ConversorPDF.XLL.RibbonController.RibbonController()
+  type: Constructor
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL
+  syntax:
+    content: public RibbonController()
+    content.vb: Public Sub New()
+  overload: ConversorPDF.XLL.RibbonController.#ctor*
+  nameWithType.vb: RibbonController.New()
+  fullName.vb: ConversorPDF.XLL.RibbonController.New()
+  name.vb: New()
+references:
+- uid: ConversorPDF.XLL
+  commentId: N:ConversorPDF.XLL
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL
+  nameWithType: ConversorPDF.XLL
+  fullName: ConversorPDF.XLL
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+  nameWithType: object
+  fullName: object
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: ConversorPDF.XLL.RibbonController.GetCustomUI*
+  commentId: Overload:ConversorPDF.XLL.RibbonController.GetCustomUI
+  isExternal: true
+  href: ConversorPDF.XLL.RibbonController.html#ConversorPDF_XLL_RibbonController_GetCustomUI_System_String_
+  name: GetCustomUI
+  nameWithType: RibbonController.GetCustomUI
+  fullName: ConversorPDF.XLL.RibbonController.GetCustomUI
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: ConversorPDF.XLL.RibbonController.Ribbon_Load*
+  commentId: Overload:ConversorPDF.XLL.RibbonController.Ribbon_Load
+  isExternal: true
+  href: ConversorPDF.XLL.RibbonController.html#ConversorPDF_XLL_RibbonController_Ribbon_Load_ExcelDna_Integration_CustomUI_IRibbonUI_
+  name: Ribbon_Load
+  nameWithType: RibbonController.Ribbon_Load
+  fullName: ConversorPDF.XLL.RibbonController.Ribbon_Load
+- uid: ExcelDna.Integration.CustomUI.IRibbonUI
+  commentId: '!:ExcelDna.Integration.CustomUI.IRibbonUI'
+  isExternal: true
+  name: IRibbonUI
+  nameWithType: IRibbonUI
+  fullName: ExcelDna.Integration.CustomUI.IRibbonUI
+- uid: ConversorPDF.XLL.RibbonController.GetButtonVisible*
+  commentId: Overload:ConversorPDF.XLL.RibbonController.GetButtonVisible
+  isExternal: true
+  href: ConversorPDF.XLL.RibbonController.html#ConversorPDF_XLL_RibbonController_GetButtonVisible_ExcelDna_Integration_CustomUI_IRibbonControl_
+  name: GetButtonVisible
+  nameWithType: RibbonController.GetButtonVisible
+  fullName: ConversorPDF.XLL.RibbonController.GetButtonVisible
+- uid: ExcelDna.Integration.CustomUI.IRibbonControl
+  isExternal: true
+  name: IRibbonControl
+  nameWithType: IRibbonControl
+  fullName: ExcelDna.Integration.CustomUI.IRibbonControl
+- uid: System.Boolean
+  commentId: T:System.Boolean
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.boolean
+  name: bool
+  nameWithType: bool
+  fullName: bool
+  nameWithType.vb: Boolean
+  fullName.vb: Boolean
+  name.vb: Boolean
+- uid: ConversorPDF.XLL.RibbonController.GetImage*
+  commentId: Overload:ConversorPDF.XLL.RibbonController.GetImage
+  isExternal: true
+  href: ConversorPDF.XLL.RibbonController.html#ConversorPDF_XLL_RibbonController_GetImage_System_String_
+  name: GetImage
+  nameWithType: RibbonController.GetImage
+  fullName: ConversorPDF.XLL.RibbonController.GetImage
+- uid: ConversorPDF.XLL.RibbonController.ConvertirPDF*
+  commentId: Overload:ConversorPDF.XLL.RibbonController.ConvertirPDF
+  isExternal: true
+  href: ConversorPDF.XLL.RibbonController.html#ConversorPDF_XLL_RibbonController_ConvertirPDF_ExcelDna_Integration_CustomUI_IRibbonControl_
+  name: ConvertirPDF
+  nameWithType: RibbonController.ConvertirPDF
+  fullName: ConversorPDF.XLL.RibbonController.ConvertirPDF
+- uid: ConversorPDF.XLL.RibbonController.UnificarObligacionContador*
+  commentId: Overload:ConversorPDF.XLL.RibbonController.UnificarObligacionContador
+  isExternal: true
+  href: ConversorPDF.XLL.RibbonController.html#ConversorPDF_XLL_RibbonController_UnificarObligacionContador_ExcelDna_Integration_CustomUI_IRibbonControl_
+  name: UnificarObligacionContador
+  nameWithType: RibbonController.UnificarObligacionContador
+  fullName: ConversorPDF.XLL.RibbonController.UnificarObligacionContador
+- uid: ConversorPDF.XLL.RibbonController.OnConvertirObligacionContador*
+  commentId: Overload:ConversorPDF.XLL.RibbonController.OnConvertirObligacionContador
+  isExternal: true
+  href: ConversorPDF.XLL.RibbonController.html#ConversorPDF_XLL_RibbonController_OnConvertirObligacionContador_ExcelDna_Integration_CustomUI_IRibbonControl_
+  name: OnConvertirObligacionContador
+  nameWithType: RibbonController.OnConvertirObligacionContador
+  fullName: ConversorPDF.XLL.RibbonController.OnConvertirObligacionContador
+- uid: ConversorPDF.XLL.RibbonController.UnificarOrdenPago*
+  commentId: Overload:ConversorPDF.XLL.RibbonController.UnificarOrdenPago
+  isExternal: true
+  href: ConversorPDF.XLL.RibbonController.html#ConversorPDF_XLL_RibbonController_UnificarOrdenPago_ExcelDna_Integration_CustomUI_IRibbonControl_
+  name: UnificarOrdenPago
+  nameWithType: RibbonController.UnificarOrdenPago
+  fullName: ConversorPDF.XLL.RibbonController.UnificarOrdenPago
+- uid: ConversorPDF.XLL.RibbonController.ViaticosUnificarSoportes*
+  commentId: Overload:ConversorPDF.XLL.RibbonController.ViaticosUnificarSoportes
+  isExternal: true
+  href: ConversorPDF.XLL.RibbonController.html#ConversorPDF_XLL_RibbonController_ViaticosUnificarSoportes_ExcelDna_Integration_CustomUI_IRibbonControl_
+  name: ViaticosUnificarSoportes
+  nameWithType: RibbonController.ViaticosUnificarSoportes
+  fullName: ConversorPDF.XLL.RibbonController.ViaticosUnificarSoportes
+- uid: ConversorPDF.XLL.RibbonController.ProcesarViaticosMasivo*
+  commentId: Overload:ConversorPDF.XLL.RibbonController.ProcesarViaticosMasivo
+  isExternal: true
+  href: ConversorPDF.XLL.RibbonController.html#ConversorPDF_XLL_RibbonController_ProcesarViaticosMasivo_ExcelDna_Integration_CustomUI_IRibbonControl_
+  name: ProcesarViaticosMasivo
+  nameWithType: RibbonController.ProcesarViaticosMasivo
+  fullName: ConversorPDF.XLL.RibbonController.ProcesarViaticosMasivo
+- uid: ConversorPDF.XLL.RibbonController.GestionDocumentalViaticos*
+  commentId: Overload:ConversorPDF.XLL.RibbonController.GestionDocumentalViaticos
+  isExternal: true
+  href: ConversorPDF.XLL.RibbonController.html#ConversorPDF_XLL_RibbonController_GestionDocumentalViaticos_ExcelDna_Integration_CustomUI_IRibbonControl_
+  name: GestionDocumentalViaticos
+  nameWithType: RibbonController.GestionDocumentalViaticos
+  fullName: ConversorPDF.XLL.RibbonController.GestionDocumentalViaticos
+- uid: ConversorPDF.XLL.RibbonController.ProcesarCumplidos*
+  commentId: Overload:ConversorPDF.XLL.RibbonController.ProcesarCumplidos
+  isExternal: true
+  href: ConversorPDF.XLL.RibbonController.html#ConversorPDF_XLL_RibbonController_ProcesarCumplidos_ExcelDna_Integration_CustomUI_IRibbonControl_
+  name: ProcesarCumplidos
+  nameWithType: RibbonController.ProcesarCumplidos
+  fullName: ConversorPDF.XLL.RibbonController.ProcesarCumplidos
+- uid: ConversorPDF.XLL.RibbonController.GenerarFilaSeleccionada*
+  commentId: Overload:ConversorPDF.XLL.RibbonController.GenerarFilaSeleccionada
+  isExternal: true
+  href: ConversorPDF.XLL.RibbonController.html#ConversorPDF_XLL_RibbonController_GenerarFilaSeleccionada_ExcelDna_Integration_CustomUI_IRibbonControl_
+  name: GenerarFilaSeleccionada
+  nameWithType: RibbonController.GenerarFilaSeleccionada
+  fullName: ConversorPDF.XLL.RibbonController.GenerarFilaSeleccionada
+- uid: ConversorPDF.XLL.RibbonController.GenerarFirmaBase64*
+  commentId: Overload:ConversorPDF.XLL.RibbonController.GenerarFirmaBase64
+  isExternal: true
+  href: ConversorPDF.XLL.RibbonController.html#ConversorPDF_XLL_RibbonController_GenerarFirmaBase64_ExcelDna_Integration_CustomUI_IRibbonControl_
+  name: GenerarFirmaBase64
+  nameWithType: RibbonController.GenerarFirmaBase64
+  fullName: ConversorPDF.XLL.RibbonController.GenerarFirmaBase64
+- uid: ConversorPDF.XLL.RibbonController.Office365UserManager*
+  commentId: Overload:ConversorPDF.XLL.RibbonController.Office365UserManager
+  isExternal: true
+  href: ConversorPDF.XLL.RibbonController.html#ConversorPDF_XLL_RibbonController_Office365UserManager_ExcelDna_Integration_CustomUI_IRibbonControl_
+  name: Office365UserManager
+  nameWithType: RibbonController.Office365UserManager
+  fullName: ConversorPDF.XLL.RibbonController.Office365UserManager
+- uid: ConversorPDF.XLL.RibbonController.BuscarInformes*
+  commentId: Overload:ConversorPDF.XLL.RibbonController.BuscarInformes
+  isExternal: true
+  href: ConversorPDF.XLL.RibbonController.html#ConversorPDF_XLL_RibbonController_BuscarInformes_ExcelDna_Integration_CustomUI_IRibbonControl_
+  name: BuscarInformes
+  nameWithType: RibbonController.BuscarInformes
+  fullName: ConversorPDF.XLL.RibbonController.BuscarInformes
+- uid: ConversorPDF.XLL.RibbonController.LeerMetadatos*
+  commentId: Overload:ConversorPDF.XLL.RibbonController.LeerMetadatos
+  isExternal: true
+  href: ConversorPDF.XLL.RibbonController.html#ConversorPDF_XLL_RibbonController_LeerMetadatos_ExcelDna_Integration_CustomUI_IRibbonControl_
+  name: LeerMetadatos
+  nameWithType: RibbonController.LeerMetadatos
+  fullName: ConversorPDF.XLL.RibbonController.LeerMetadatos
+- uid: ConversorPDF.XLL.RibbonController.SesionesAcademicas*
+  commentId: Overload:ConversorPDF.XLL.RibbonController.SesionesAcademicas
+  isExternal: true
+  href: ConversorPDF.XLL.RibbonController.html#ConversorPDF_XLL_RibbonController_SesionesAcademicas_ExcelDna_Integration_CustomUI_IRibbonControl_
+  name: SesionesAcademicas
+  nameWithType: RibbonController.SesionesAcademicas
+  fullName: ConversorPDF.XLL.RibbonController.SesionesAcademicas
+- uid: ConversorPDF.XLL.RibbonController.VinculacionesAcademicas*
+  commentId: Overload:ConversorPDF.XLL.RibbonController.VinculacionesAcademicas
+  isExternal: true
+  href: ConversorPDF.XLL.RibbonController.html#ConversorPDF_XLL_RibbonController_VinculacionesAcademicas_ExcelDna_Integration_CustomUI_IRibbonControl_
+  name: VinculacionesAcademicas
+  nameWithType: RibbonController.VinculacionesAcademicas
+  fullName: ConversorPDF.XLL.RibbonController.VinculacionesAcademicas
+- uid: ConversorPDF.XLL.RibbonController.#ctor*
+  commentId: Overload:ConversorPDF.XLL.RibbonController.#ctor
+  isExternal: true
+  href: ConversorPDF.XLL.RibbonController.html#ConversorPDF_XLL_RibbonController__ctor
+  name: RibbonController
+  nameWithType: RibbonController.RibbonController
+  fullName: ConversorPDF.XLL.RibbonController.RibbonController
+  nameWithType.vb: RibbonController.New
+  fullName.vb: ConversorPDF.XLL.RibbonController.New
+  name.vb: New

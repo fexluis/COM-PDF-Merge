@@ -1,0 +1,850 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque
+  commentId: T:ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque
+  id: ViaticoBloque
+  parent: ConversorPDF.XLL.Academic.Domain.Models
+  children:
+  - ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.#ctor
+  - ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.Agregar(ConversorPDF.XLL.Academic.Domain.Models.SesionListItem)
+  - ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.AgruparConsecutivos(System.Collections.Generic.List{ConversorPDF.XLL.Academic.Domain.Models.SesionListItem})
+  - ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.DisplayText
+  - ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.DuracionTotal
+  - ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.FechaMaxima
+  - ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.FechaMinima
+  - ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.InvalidateCache
+  - ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.Sesiones
+  - ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.TotalHoras
+  langs:
+  - csharp
+  - vb
+  name: ViaticoBloque
+  nameWithType: ViaticoBloque
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque
+  type: Class
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Models
+  summary: >-
+    Agrupa sesiones con viática en bloques de días consecutivos.
+
+    DuracionTotal = (FechaMaxima - FechaMinima).Days + 0.5
+  example: []
+  syntax:
+    content: public class ViaticoBloque
+    content.vb: Public Class ViaticoBloque
+  inheritance:
+  - System.Object
+  inheritedMembers:
+  - System.Object.ToString
+  - System.Object.Equals(System.Object)
+  - System.Object.Equals(System.Object,System.Object)
+  - System.Object.ReferenceEquals(System.Object,System.Object)
+  - System.Object.GetHashCode
+  - System.Object.GetType
+  - System.Object.MemberwiseClone
+- uid: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.Agregar(ConversorPDF.XLL.Academic.Domain.Models.SesionListItem)
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.Agregar(ConversorPDF.XLL.Academic.Domain.Models.SesionListItem)
+  id: Agregar(ConversorPDF.XLL.Academic.Domain.Models.SesionListItem)
+  parent: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque
+  langs:
+  - csharp
+  - vb
+  name: Agregar(SesionListItem)
+  nameWithType: ViaticoBloque.Agregar(SesionListItem)
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.Agregar(ConversorPDF.XLL.Academic.Domain.Models.SesionListItem)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Models
+  syntax:
+    content: public void Agregar(SesionListItem sesion)
+    parameters:
+    - id: sesion
+      type: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem
+    content.vb: Public Sub Agregar(sesion As SesionListItem)
+  overload: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.Agregar*
+- uid: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.InvalidateCache
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.InvalidateCache
+  id: InvalidateCache
+  parent: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque
+  langs:
+  - csharp
+  - vb
+  name: InvalidateCache()
+  nameWithType: ViaticoBloque.InvalidateCache()
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.InvalidateCache()
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Models
+  summary: Invalida la caché de cálculos. Llamar si se modifica <xref href="ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.Sesiones" data-throw-if-not-resolved="false"></xref> externamente.
+  example: []
+  syntax:
+    content: public void InvalidateCache()
+    content.vb: Public Sub InvalidateCache()
+  overload: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.InvalidateCache*
+- uid: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.AgruparConsecutivos(System.Collections.Generic.List{ConversorPDF.XLL.Academic.Domain.Models.SesionListItem})
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.AgruparConsecutivos(System.Collections.Generic.List{ConversorPDF.XLL.Academic.Domain.Models.SesionListItem})
+  id: AgruparConsecutivos(System.Collections.Generic.List{ConversorPDF.XLL.Academic.Domain.Models.SesionListItem})
+  parent: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque
+  langs:
+  - csharp
+  - vb
+  name: AgruparConsecutivos(List<SesionListItem>)
+  nameWithType: ViaticoBloque.AgruparConsecutivos(List<SesionListItem>)
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.AgruparConsecutivos(System.Collections.Generic.List<ConversorPDF.XLL.Academic.Domain.Models.SesionListItem>)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Models
+  syntax:
+    content: public static List<ViaticoBloque> AgruparConsecutivos(List<SesionListItem> sesiones)
+    parameters:
+    - id: sesiones
+      type: System.Collections.Generic.List{ConversorPDF.XLL.Academic.Domain.Models.SesionListItem}
+    return:
+      type: System.Collections.Generic.List{ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque}
+    content.vb: Public Shared Function AgruparConsecutivos(sesiones As List(Of SesionListItem)) As List(Of ViaticoBloque)
+  overload: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.AgruparConsecutivos*
+  nameWithType.vb: ViaticoBloque.AgruparConsecutivos(List(Of SesionListItem))
+  fullName.vb: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.AgruparConsecutivos(System.Collections.Generic.List(Of ConversorPDF.XLL.Academic.Domain.Models.SesionListItem))
+  name.vb: AgruparConsecutivos(List(Of SesionListItem))
+- uid: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.#ctor
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.#ctor
+  id: '#ctor'
+  parent: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque
+  langs:
+  - csharp
+  - vb
+  name: ViaticoBloque()
+  nameWithType: ViaticoBloque.ViaticoBloque()
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.ViaticoBloque()
+  type: Constructor
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Models
+  syntax:
+    content: public ViaticoBloque()
+    content.vb: Public Sub New()
+  overload: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.#ctor*
+  nameWithType.vb: ViaticoBloque.New()
+  fullName.vb: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.New()
+  name.vb: New()
+- uid: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.Sesiones
+  commentId: P:ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.Sesiones
+  id: Sesiones
+  parent: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque
+  langs:
+  - csharp
+  - vb
+  name: Sesiones
+  nameWithType: ViaticoBloque.Sesiones
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.Sesiones
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Models
+  syntax:
+    content: public List<SesionListItem> Sesiones { get; }
+    parameters: []
+    return:
+      type: System.Collections.Generic.List{ConversorPDF.XLL.Academic.Domain.Models.SesionListItem}
+    content.vb: Public ReadOnly Property Sesiones As List(Of SesionListItem)
+  overload: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.Sesiones*
+- uid: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.FechaMinima
+  commentId: P:ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.FechaMinima
+  id: FechaMinima
+  parent: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque
+  langs:
+  - csharp
+  - vb
+  name: FechaMinima
+  nameWithType: ViaticoBloque.FechaMinima
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.FechaMinima
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Models
+  syntax:
+    content: public DateTime? FechaMinima { get; }
+    parameters: []
+    return:
+      type: System.Nullable{System.DateTime}
+    content.vb: Public ReadOnly Property FechaMinima As Date?
+  overload: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.FechaMinima*
+- uid: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.FechaMaxima
+  commentId: P:ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.FechaMaxima
+  id: FechaMaxima
+  parent: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque
+  langs:
+  - csharp
+  - vb
+  name: FechaMaxima
+  nameWithType: ViaticoBloque.FechaMaxima
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.FechaMaxima
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Models
+  syntax:
+    content: public DateTime? FechaMaxima { get; }
+    parameters: []
+    return:
+      type: System.Nullable{System.DateTime}
+    content.vb: Public ReadOnly Property FechaMaxima As Date?
+  overload: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.FechaMaxima*
+- uid: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.TotalHoras
+  commentId: P:ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.TotalHoras
+  id: TotalHoras
+  parent: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque
+  langs:
+  - csharp
+  - vb
+  name: TotalHoras
+  nameWithType: ViaticoBloque.TotalHoras
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.TotalHoras
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Models
+  syntax:
+    content: public double TotalHoras { get; }
+    parameters: []
+    return:
+      type: System.Double
+    content.vb: Public ReadOnly Property TotalHoras As Double
+  overload: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.TotalHoras*
+- uid: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.DuracionTotal
+  commentId: P:ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.DuracionTotal
+  id: DuracionTotal
+  parent: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque
+  langs:
+  - csharp
+  - vb
+  name: DuracionTotal
+  nameWithType: ViaticoBloque.DuracionTotal
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.DuracionTotal
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Models
+  syntax:
+    content: public double DuracionTotal { get; }
+    parameters: []
+    return:
+      type: System.Double
+    content.vb: Public ReadOnly Property DuracionTotal As Double
+  overload: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.DuracionTotal*
+- uid: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.DisplayText
+  commentId: P:ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.DisplayText
+  id: DisplayText
+  parent: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque
+  langs:
+  - csharp
+  - vb
+  name: DisplayText
+  nameWithType: ViaticoBloque.DisplayText
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.DisplayText
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Models
+  syntax:
+    content: public string DisplayText { get; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public ReadOnly Property DisplayText As String
+  overload: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.DisplayText*
+references:
+- uid: ConversorPDF.XLL.Academic.Domain.Models
+  commentId: N:ConversorPDF.XLL.Academic.Domain.Models
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Academic.Domain.Models
+  nameWithType: ConversorPDF.XLL.Academic.Domain.Models
+  fullName: ConversorPDF.XLL.Academic.Domain.Models
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic
+    name: Academic
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Domain
+    name: Domain
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Domain.Models
+    name: Models
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic
+    name: Academic
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Domain
+    name: Domain
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Domain.Models
+    name: Models
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.html
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+  nameWithType: object
+  fullName: object
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: System.Object.ToString
+  commentId: M:System.Object.ToString
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  name: ToString()
+  nameWithType: object.ToString()
+  fullName: object.ToString()
+  nameWithType.vb: Object.ToString()
+  fullName.vb: Object.ToString()
+  spec.csharp:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+- uid: System.Object.Equals(System.Object)
+  commentId: M:System.Object.Equals(System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  name: Equals(object)
+  nameWithType: object.Equals(object)
+  fullName: object.Equals(object)
+  nameWithType.vb: Object.Equals(Object)
+  fullName.vb: Object.Equals(Object)
+  name.vb: Equals(Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.Equals(System.Object,System.Object)
+  commentId: M:System.Object.Equals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  name: Equals(object, object)
+  nameWithType: object.Equals(object, object)
+  fullName: object.Equals(object, object)
+  nameWithType.vb: Object.Equals(Object, Object)
+  fullName.vb: Object.Equals(Object, Object)
+  name.vb: Equals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.ReferenceEquals(System.Object,System.Object)
+  commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  name: ReferenceEquals(object, object)
+  nameWithType: object.ReferenceEquals(object, object)
+  fullName: object.ReferenceEquals(object, object)
+  nameWithType.vb: Object.ReferenceEquals(Object, Object)
+  fullName.vb: Object.ReferenceEquals(Object, Object)
+  name.vb: ReferenceEquals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.GetHashCode
+  commentId: M:System.Object.GetHashCode
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  name: GetHashCode()
+  nameWithType: object.GetHashCode()
+  fullName: object.GetHashCode()
+  nameWithType.vb: Object.GetHashCode()
+  fullName.vb: Object.GetHashCode()
+  spec.csharp:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+- uid: System.Object.GetType
+  commentId: M:System.Object.GetType
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  name: GetType()
+  nameWithType: object.GetType()
+  fullName: object.GetType()
+  nameWithType.vb: Object.GetType()
+  fullName.vb: Object.GetType()
+  spec.csharp:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+- uid: System.Object.MemberwiseClone
+  commentId: M:System.Object.MemberwiseClone
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  name: MemberwiseClone()
+  nameWithType: object.MemberwiseClone()
+  fullName: object.MemberwiseClone()
+  nameWithType.vb: Object.MemberwiseClone()
+  fullName.vb: Object.MemberwiseClone()
+  spec.csharp:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.Agregar*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.Agregar
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.html#ConversorPDF_XLL_Academic_Domain_Models_ViaticoBloque_Agregar_ConversorPDF_XLL_Academic_Domain_Models_SesionListItem_
+  name: Agregar
+  nameWithType: ViaticoBloque.Agregar
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.Agregar
+- uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem
+  commentId: T:ConversorPDF.XLL.Academic.Domain.Models.SesionListItem
+  parent: ConversorPDF.XLL.Academic.Domain.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.html
+  name: SesionListItem
+  nameWithType: SesionListItem
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem
+- uid: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.Sesiones
+  commentId: P:ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.Sesiones
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.html#ConversorPDF_XLL_Academic_Domain_Models_ViaticoBloque_Sesiones
+  name: Sesiones
+  nameWithType: ViaticoBloque.Sesiones
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.Sesiones
+- uid: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.InvalidateCache*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.InvalidateCache
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.html#ConversorPDF_XLL_Academic_Domain_Models_ViaticoBloque_InvalidateCache
+  name: InvalidateCache
+  nameWithType: ViaticoBloque.InvalidateCache
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.InvalidateCache
+- uid: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.AgruparConsecutivos*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.AgruparConsecutivos
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.html#ConversorPDF_XLL_Academic_Domain_Models_ViaticoBloque_AgruparConsecutivos_System_Collections_Generic_List_ConversorPDF_XLL_Academic_Domain_Models_SesionListItem__
+  name: AgruparConsecutivos
+  nameWithType: ViaticoBloque.AgruparConsecutivos
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.AgruparConsecutivos
+- uid: System.Collections.Generic.List{ConversorPDF.XLL.Academic.Domain.Models.SesionListItem}
+  commentId: T:System.Collections.Generic.List{ConversorPDF.XLL.Academic.Domain.Models.SesionListItem}
+  parent: System.Collections.Generic
+  definition: System.Collections.Generic.List`1
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  name: List<SesionListItem>
+  nameWithType: List<SesionListItem>
+  fullName: System.Collections.Generic.List<ConversorPDF.XLL.Academic.Domain.Models.SesionListItem>
+  nameWithType.vb: List(Of SesionListItem)
+  fullName.vb: System.Collections.Generic.List(Of ConversorPDF.XLL.Academic.Domain.Models.SesionListItem)
+  name.vb: List(Of SesionListItem)
+  spec.csharp:
+  - uid: System.Collections.Generic.List`1
+    name: List
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  - name: <
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem
+    name: SesionListItem
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.html
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.List`1
+    name: List
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem
+    name: SesionListItem
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.SesionListItem.html
+  - name: )
+- uid: System.Collections.Generic.List{ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque}
+  commentId: T:System.Collections.Generic.List{ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque}
+  parent: System.Collections.Generic
+  definition: System.Collections.Generic.List`1
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  name: List<ViaticoBloque>
+  nameWithType: List<ViaticoBloque>
+  fullName: System.Collections.Generic.List<ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque>
+  nameWithType.vb: List(Of ViaticoBloque)
+  fullName.vb: System.Collections.Generic.List(Of ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque)
+  name.vb: List(Of ViaticoBloque)
+  spec.csharp:
+  - uid: System.Collections.Generic.List`1
+    name: List
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  - name: <
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque
+    name: ViaticoBloque
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.html
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.List`1
+    name: List
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque
+    name: ViaticoBloque
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.html
+  - name: )
+- uid: System.Collections.Generic.List`1
+  commentId: T:System.Collections.Generic.List`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  name: List<T>
+  nameWithType: List<T>
+  fullName: System.Collections.Generic.List<T>
+  nameWithType.vb: List(Of T)
+  fullName.vb: System.Collections.Generic.List(Of T)
+  name.vb: List(Of T)
+  spec.csharp:
+  - uid: System.Collections.Generic.List`1
+    name: List
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.List`1
+    name: List
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: System.Collections.Generic
+  commentId: N:System.Collections.Generic
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System.Collections.Generic
+  nameWithType: System.Collections.Generic
+  fullName: System.Collections.Generic
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Collections
+    name: Collections
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections
+  - name: .
+  - uid: System.Collections.Generic
+    name: Generic
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Collections
+    name: Collections
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections
+  - name: .
+  - uid: System.Collections.Generic
+    name: Generic
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic
+- uid: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.#ctor*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.#ctor
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.html#ConversorPDF_XLL_Academic_Domain_Models_ViaticoBloque__ctor
+  name: ViaticoBloque
+  nameWithType: ViaticoBloque.ViaticoBloque
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.ViaticoBloque
+  nameWithType.vb: ViaticoBloque.New
+  fullName.vb: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.New
+  name.vb: New
+- uid: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.Sesiones*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.Sesiones
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.html#ConversorPDF_XLL_Academic_Domain_Models_ViaticoBloque_Sesiones
+  name: Sesiones
+  nameWithType: ViaticoBloque.Sesiones
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.Sesiones
+- uid: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.FechaMinima*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.FechaMinima
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.html#ConversorPDF_XLL_Academic_Domain_Models_ViaticoBloque_FechaMinima
+  name: FechaMinima
+  nameWithType: ViaticoBloque.FechaMinima
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.FechaMinima
+- uid: System.Nullable{System.DateTime}
+  commentId: T:System.Nullable{System.DateTime}
+  parent: System
+  definition: System.Nullable`1
+  href: https://learn.microsoft.com/dotnet/api/system.datetime
+  name: DateTime?
+  nameWithType: DateTime?
+  fullName: System.DateTime?
+  nameWithType.vb: Date?
+  fullName.vb: Date?
+  name.vb: Date?
+  spec.csharp:
+  - uid: System.DateTime
+    name: DateTime
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.datetime
+  - name: '?'
+  spec.vb:
+  - uid: System.DateTime
+    name: Date
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.datetime
+  - name: '?'
+- uid: System.Nullable`1
+  commentId: T:System.Nullable`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  name: Nullable<T>
+  nameWithType: Nullable<T>
+  fullName: System.Nullable<T>
+  nameWithType.vb: Nullable(Of T)
+  fullName.vb: System.Nullable(Of T)
+  name.vb: Nullable(Of T)
+  spec.csharp:
+  - uid: System.Nullable`1
+    name: Nullable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.Nullable`1
+    name: Nullable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.FechaMaxima*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.FechaMaxima
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.html#ConversorPDF_XLL_Academic_Domain_Models_ViaticoBloque_FechaMaxima
+  name: FechaMaxima
+  nameWithType: ViaticoBloque.FechaMaxima
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.FechaMaxima
+- uid: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.TotalHoras*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.TotalHoras
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.html#ConversorPDF_XLL_Academic_Domain_Models_ViaticoBloque_TotalHoras
+  name: TotalHoras
+  nameWithType: ViaticoBloque.TotalHoras
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.TotalHoras
+- uid: System.Double
+  commentId: T:System.Double
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.double
+  name: double
+  nameWithType: double
+  fullName: double
+  nameWithType.vb: Double
+  fullName.vb: Double
+  name.vb: Double
+- uid: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.DuracionTotal*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.DuracionTotal
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.html#ConversorPDF_XLL_Academic_Domain_Models_ViaticoBloque_DuracionTotal
+  name: DuracionTotal
+  nameWithType: ViaticoBloque.DuracionTotal
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.DuracionTotal
+- uid: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.DisplayText*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.DisplayText
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.html#ConversorPDF_XLL_Academic_Domain_Models_ViaticoBloque_DisplayText
+  name: DisplayText
+  nameWithType: ViaticoBloque.DisplayText
+  fullName: ConversorPDF.XLL.Academic.Domain.Models.ViaticoBloque.DisplayText
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String

@@ -1,0 +1,849 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper
+  commentId: T:ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper
+  id: PdfToTextoHelper
+  parent: ConversorPDF.XLL.Core.Helpers
+  children:
+  - ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.#ctor
+  - ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.ExtraerPalabras(System.String,System.Int32)
+  - ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.ExtraerTextoEnRectangulo(System.String,System.Int32,System.Double,System.Double,System.Double,System.Double)
+  - ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.ExtraerTextoPagina(System.String,System.Int32)
+  - ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.ExtraerTodoTexto(System.String)
+  langs:
+  - csharp
+  - vb
+  name: PdfToTextoHelper
+  nameWithType: PdfToTextoHelper
+  fullName: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper
+  type: Class
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: >-
+      [ComVisible(true)]
+
+      [ClassInterface(ClassInterfaceType.None)]
+
+      [Guid("F1E2D3C4-B5A6-9E8D-7C6B-5A4B3C2D1E0F")]
+
+      public class PdfToTextoHelper : IPdfToTexto
+    content.vb: >-
+      <ComVisible(True)>
+
+      <ClassInterface(ClassInterfaceType.None)>
+
+      <Guid("F1E2D3C4-B5A6-9E8D-7C6B-5A4B3C2D1E0F")>
+
+      Public Class PdfToTextoHelper Implements IPdfToTexto
+  inheritance:
+  - System.Object
+  implements:
+  - ConversorPDF.XLL.Core.Interfaces.IPdfToTexto
+  inheritedMembers:
+  - System.Object.ToString
+  - System.Object.Equals(System.Object)
+  - System.Object.Equals(System.Object,System.Object)
+  - System.Object.ReferenceEquals(System.Object,System.Object)
+  - System.Object.GetHashCode
+  - System.Object.GetType
+  - System.Object.MemberwiseClone
+  attributes:
+  - type: System.Runtime.InteropServices.ComVisibleAttribute
+    ctor: System.Runtime.InteropServices.ComVisibleAttribute.#ctor(System.Boolean)
+    arguments:
+    - type: System.Boolean
+      value: true
+  - type: System.Runtime.InteropServices.ClassInterfaceAttribute
+    ctor: System.Runtime.InteropServices.ClassInterfaceAttribute.#ctor(System.Runtime.InteropServices.ClassInterfaceType)
+    arguments:
+    - type: System.Runtime.InteropServices.ClassInterfaceType
+      value: 0
+  - type: System.Runtime.InteropServices.GuidAttribute
+    ctor: System.Runtime.InteropServices.GuidAttribute.#ctor(System.String)
+    arguments:
+    - type: System.String
+      value: F1E2D3C4-B5A6-9E8D-7C6B-5A4B3C2D1E0F
+- uid: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.ExtraerTodoTexto(System.String)
+  commentId: M:ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.ExtraerTodoTexto(System.String)
+  id: ExtraerTodoTexto(System.String)
+  parent: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper
+  langs:
+  - csharp
+  - vb
+  name: ExtraerTodoTexto(string)
+  nameWithType: PdfToTextoHelper.ExtraerTodoTexto(string)
+  fullName: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.ExtraerTodoTexto(string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  summary: Extrae todo el texto contenido en el archivo PDF.
+  example: []
+  syntax:
+    content: public string ExtraerTodoTexto(string rutaPdf)
+    parameters:
+    - id: rutaPdf
+      type: System.String
+    return:
+      type: System.String
+    content.vb: Public Function ExtraerTodoTexto(rutaPdf As String) As String
+  overload: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.ExtraerTodoTexto*
+  implements:
+  - ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.ExtraerTodoTexto(System.String)
+  nameWithType.vb: PdfToTextoHelper.ExtraerTodoTexto(String)
+  fullName.vb: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.ExtraerTodoTexto(String)
+  name.vb: ExtraerTodoTexto(String)
+- uid: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.ExtraerTextoPagina(System.String,System.Int32)
+  commentId: M:ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.ExtraerTextoPagina(System.String,System.Int32)
+  id: ExtraerTextoPagina(System.String,System.Int32)
+  parent: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper
+  langs:
+  - csharp
+  - vb
+  name: ExtraerTextoPagina(string, int)
+  nameWithType: PdfToTextoHelper.ExtraerTextoPagina(string, int)
+  fullName: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.ExtraerTextoPagina(string, int)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  summary: Extrae el texto de una página específica (1-based index).
+  example: []
+  syntax:
+    content: public string ExtraerTextoPagina(string rutaPdf, int numeroPagina)
+    parameters:
+    - id: rutaPdf
+      type: System.String
+    - id: numeroPagina
+      type: System.Int32
+    return:
+      type: System.String
+    content.vb: Public Function ExtraerTextoPagina(rutaPdf As String, numeroPagina As Integer) As String
+  overload: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.ExtraerTextoPagina*
+  implements:
+  - ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.ExtraerTextoPagina(System.String,System.Int32)
+  nameWithType.vb: PdfToTextoHelper.ExtraerTextoPagina(String, Integer)
+  fullName.vb: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.ExtraerTextoPagina(String, Integer)
+  name.vb: ExtraerTextoPagina(String, Integer)
+- uid: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.ExtraerPalabras(System.String,System.Int32)
+  commentId: M:ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.ExtraerPalabras(System.String,System.Int32)
+  id: ExtraerPalabras(System.String,System.Int32)
+  parent: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper
+  langs:
+  - csharp
+  - vb
+  name: ExtraerPalabras(string, int)
+  nameWithType: PdfToTextoHelper.ExtraerPalabras(string, int)
+  fullName: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.ExtraerPalabras(string, int)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  summary: Devuelve una lista detallada de palabras con sus coordenadas espaciales.
+  example: []
+  syntax:
+    content: public string ExtraerPalabras(string rutaPdf, int numeroPagina)
+    parameters:
+    - id: rutaPdf
+      type: System.String
+    - id: numeroPagina
+      type: System.Int32
+    return:
+      type: System.String
+    content.vb: Public Function ExtraerPalabras(rutaPdf As String, numeroPagina As Integer) As String
+  overload: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.ExtraerPalabras*
+  implements:
+  - ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.ExtraerPalabras(System.String,System.Int32)
+  nameWithType.vb: PdfToTextoHelper.ExtraerPalabras(String, Integer)
+  fullName.vb: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.ExtraerPalabras(String, Integer)
+  name.vb: ExtraerPalabras(String, Integer)
+- uid: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.ExtraerTextoEnRectangulo(System.String,System.Int32,System.Double,System.Double,System.Double,System.Double)
+  commentId: M:ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.ExtraerTextoEnRectangulo(System.String,System.Int32,System.Double,System.Double,System.Double,System.Double)
+  id: ExtraerTextoEnRectangulo(System.String,System.Int32,System.Double,System.Double,System.Double,System.Double)
+  parent: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper
+  langs:
+  - csharp
+  - vb
+  name: ExtraerTextoEnRectangulo(string, int, double, double, double, double)
+  nameWithType: PdfToTextoHelper.ExtraerTextoEnRectangulo(string, int, double, double, double, double)
+  fullName: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.ExtraerTextoEnRectangulo(string, int, double, double, double, double)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  summary: Extrae exclusivamente el texto dentro de un rectángulo delimitado por coordenadas.
+  example: []
+  syntax:
+    content: public string ExtraerTextoEnRectangulo(string rutaPdf, int numeroPagina, double left, double bottom, double width, double height)
+    parameters:
+    - id: rutaPdf
+      type: System.String
+    - id: numeroPagina
+      type: System.Int32
+    - id: left
+      type: System.Double
+    - id: bottom
+      type: System.Double
+    - id: width
+      type: System.Double
+    - id: height
+      type: System.Double
+    return:
+      type: System.String
+    content.vb: Public Function ExtraerTextoEnRectangulo(rutaPdf As String, numeroPagina As Integer, left As Double, bottom As Double, width As Double, height As Double) As String
+  overload: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.ExtraerTextoEnRectangulo*
+  implements:
+  - ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.ExtraerTextoEnRectangulo(System.String,System.Int32,System.Double,System.Double,System.Double,System.Double)
+  nameWithType.vb: PdfToTextoHelper.ExtraerTextoEnRectangulo(String, Integer, Double, Double, Double, Double)
+  fullName.vb: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.ExtraerTextoEnRectangulo(String, Integer, Double, Double, Double, Double)
+  name.vb: ExtraerTextoEnRectangulo(String, Integer, Double, Double, Double, Double)
+- uid: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.#ctor
+  commentId: M:ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.#ctor
+  id: '#ctor'
+  parent: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper
+  langs:
+  - csharp
+  - vb
+  name: PdfToTextoHelper()
+  nameWithType: PdfToTextoHelper.PdfToTextoHelper()
+  fullName: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.PdfToTextoHelper()
+  type: Constructor
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public PdfToTextoHelper()
+    content.vb: Public Sub New()
+  overload: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.#ctor*
+  nameWithType.vb: PdfToTextoHelper.New()
+  fullName.vb: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.New()
+  name.vb: New()
+references:
+- uid: ConversorPDF.XLL.Core.Helpers
+  commentId: N:ConversorPDF.XLL.Core.Helpers
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Core.Helpers
+  nameWithType: ConversorPDF.XLL.Core.Helpers
+  fullName: ConversorPDF.XLL.Core.Helpers
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Helpers
+    name: Helpers
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Helpers.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Helpers
+    name: Helpers
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Helpers.html
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+  nameWithType: object
+  fullName: object
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto
+  commentId: T:ConversorPDF.XLL.Core.Interfaces.IPdfToTexto
+  parent: ConversorPDF.XLL.Core.Interfaces
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.html
+  name: IPdfToTexto
+  nameWithType: IPdfToTexto
+  fullName: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto
+- uid: System.Object.ToString
+  commentId: M:System.Object.ToString
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  name: ToString()
+  nameWithType: object.ToString()
+  fullName: object.ToString()
+  nameWithType.vb: Object.ToString()
+  fullName.vb: Object.ToString()
+  spec.csharp:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+- uid: System.Object.Equals(System.Object)
+  commentId: M:System.Object.Equals(System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  name: Equals(object)
+  nameWithType: object.Equals(object)
+  fullName: object.Equals(object)
+  nameWithType.vb: Object.Equals(Object)
+  fullName.vb: Object.Equals(Object)
+  name.vb: Equals(Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.Equals(System.Object,System.Object)
+  commentId: M:System.Object.Equals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  name: Equals(object, object)
+  nameWithType: object.Equals(object, object)
+  fullName: object.Equals(object, object)
+  nameWithType.vb: Object.Equals(Object, Object)
+  fullName.vb: Object.Equals(Object, Object)
+  name.vb: Equals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.ReferenceEquals(System.Object,System.Object)
+  commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  name: ReferenceEquals(object, object)
+  nameWithType: object.ReferenceEquals(object, object)
+  fullName: object.ReferenceEquals(object, object)
+  nameWithType.vb: Object.ReferenceEquals(Object, Object)
+  fullName.vb: Object.ReferenceEquals(Object, Object)
+  name.vb: ReferenceEquals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.GetHashCode
+  commentId: M:System.Object.GetHashCode
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  name: GetHashCode()
+  nameWithType: object.GetHashCode()
+  fullName: object.GetHashCode()
+  nameWithType.vb: Object.GetHashCode()
+  fullName.vb: Object.GetHashCode()
+  spec.csharp:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+- uid: System.Object.GetType
+  commentId: M:System.Object.GetType
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  name: GetType()
+  nameWithType: object.GetType()
+  fullName: object.GetType()
+  nameWithType.vb: Object.GetType()
+  fullName.vb: Object.GetType()
+  spec.csharp:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+- uid: System.Object.MemberwiseClone
+  commentId: M:System.Object.MemberwiseClone
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  name: MemberwiseClone()
+  nameWithType: object.MemberwiseClone()
+  fullName: object.MemberwiseClone()
+  nameWithType.vb: Object.MemberwiseClone()
+  fullName.vb: Object.MemberwiseClone()
+  spec.csharp:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: ConversorPDF.XLL.Core.Interfaces
+  commentId: N:ConversorPDF.XLL.Core.Interfaces
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Core.Interfaces
+  nameWithType: ConversorPDF.XLL.Core.Interfaces
+  fullName: ConversorPDF.XLL.Core.Interfaces
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Interfaces
+    name: Interfaces
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Interfaces
+    name: Interfaces
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.html
+- uid: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.ExtraerTodoTexto*
+  commentId: Overload:ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.ExtraerTodoTexto
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.html#ConversorPDF_XLL_Core_Helpers_PdfToTextoHelper_ExtraerTodoTexto_System_String_
+  name: ExtraerTodoTexto
+  nameWithType: PdfToTextoHelper.ExtraerTodoTexto
+  fullName: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.ExtraerTodoTexto
+- uid: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.ExtraerTodoTexto(System.String)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.ExtraerTodoTexto(System.String)
+  parent: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.html#ConversorPDF_XLL_Core_Interfaces_IPdfToTexto_ExtraerTodoTexto_System_String_
+  name: ExtraerTodoTexto(string)
+  nameWithType: IPdfToTexto.ExtraerTodoTexto(string)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.ExtraerTodoTexto(string)
+  nameWithType.vb: IPdfToTexto.ExtraerTodoTexto(String)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.ExtraerTodoTexto(String)
+  name.vb: ExtraerTodoTexto(String)
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.ExtraerTodoTexto(System.String)
+    name: ExtraerTodoTexto
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.html#ConversorPDF_XLL_Core_Interfaces_IPdfToTexto_ExtraerTodoTexto_System_String_
+  - name: (
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.ExtraerTodoTexto(System.String)
+    name: ExtraerTodoTexto
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.html#ConversorPDF_XLL_Core_Interfaces_IPdfToTexto_ExtraerTodoTexto_System_String_
+  - name: (
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.ExtraerTextoPagina*
+  commentId: Overload:ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.ExtraerTextoPagina
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.html#ConversorPDF_XLL_Core_Helpers_PdfToTextoHelper_ExtraerTextoPagina_System_String_System_Int32_
+  name: ExtraerTextoPagina
+  nameWithType: PdfToTextoHelper.ExtraerTextoPagina
+  fullName: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.ExtraerTextoPagina
+- uid: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.ExtraerTextoPagina(System.String,System.Int32)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.ExtraerTextoPagina(System.String,System.Int32)
+  parent: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.html#ConversorPDF_XLL_Core_Interfaces_IPdfToTexto_ExtraerTextoPagina_System_String_System_Int32_
+  name: ExtraerTextoPagina(string, int)
+  nameWithType: IPdfToTexto.ExtraerTextoPagina(string, int)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.ExtraerTextoPagina(string, int)
+  nameWithType.vb: IPdfToTexto.ExtraerTextoPagina(String, Integer)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.ExtraerTextoPagina(String, Integer)
+  name.vb: ExtraerTextoPagina(String, Integer)
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.ExtraerTextoPagina(System.String,System.Int32)
+    name: ExtraerTextoPagina
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.html#ConversorPDF_XLL_Core_Interfaces_IPdfToTexto_ExtraerTextoPagina_System_String_System_Int32_
+  - name: (
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: )
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.ExtraerTextoPagina(System.String,System.Int32)
+    name: ExtraerTextoPagina
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.html#ConversorPDF_XLL_Core_Interfaces_IPdfToTexto_ExtraerTextoPagina_System_String_System_Int32_
+  - name: (
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: )
+- uid: System.Int32
+  commentId: T:System.Int32
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int
+  nameWithType: int
+  fullName: int
+  nameWithType.vb: Integer
+  fullName.vb: Integer
+  name.vb: Integer
+- uid: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.ExtraerPalabras*
+  commentId: Overload:ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.ExtraerPalabras
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.html#ConversorPDF_XLL_Core_Helpers_PdfToTextoHelper_ExtraerPalabras_System_String_System_Int32_
+  name: ExtraerPalabras
+  nameWithType: PdfToTextoHelper.ExtraerPalabras
+  fullName: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.ExtraerPalabras
+- uid: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.ExtraerPalabras(System.String,System.Int32)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.ExtraerPalabras(System.String,System.Int32)
+  parent: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.html#ConversorPDF_XLL_Core_Interfaces_IPdfToTexto_ExtraerPalabras_System_String_System_Int32_
+  name: ExtraerPalabras(string, int)
+  nameWithType: IPdfToTexto.ExtraerPalabras(string, int)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.ExtraerPalabras(string, int)
+  nameWithType.vb: IPdfToTexto.ExtraerPalabras(String, Integer)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.ExtraerPalabras(String, Integer)
+  name.vb: ExtraerPalabras(String, Integer)
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.ExtraerPalabras(System.String,System.Int32)
+    name: ExtraerPalabras
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.html#ConversorPDF_XLL_Core_Interfaces_IPdfToTexto_ExtraerPalabras_System_String_System_Int32_
+  - name: (
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: )
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.ExtraerPalabras(System.String,System.Int32)
+    name: ExtraerPalabras
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.html#ConversorPDF_XLL_Core_Interfaces_IPdfToTexto_ExtraerPalabras_System_String_System_Int32_
+  - name: (
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: )
+- uid: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.ExtraerTextoEnRectangulo*
+  commentId: Overload:ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.ExtraerTextoEnRectangulo
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.html#ConversorPDF_XLL_Core_Helpers_PdfToTextoHelper_ExtraerTextoEnRectangulo_System_String_System_Int32_System_Double_System_Double_System_Double_System_Double_
+  name: ExtraerTextoEnRectangulo
+  nameWithType: PdfToTextoHelper.ExtraerTextoEnRectangulo
+  fullName: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.ExtraerTextoEnRectangulo
+- uid: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.ExtraerTextoEnRectangulo(System.String,System.Int32,System.Double,System.Double,System.Double,System.Double)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.ExtraerTextoEnRectangulo(System.String,System.Int32,System.Double,System.Double,System.Double,System.Double)
+  parent: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.html#ConversorPDF_XLL_Core_Interfaces_IPdfToTexto_ExtraerTextoEnRectangulo_System_String_System_Int32_System_Double_System_Double_System_Double_System_Double_
+  name: ExtraerTextoEnRectangulo(string, int, double, double, double, double)
+  nameWithType: IPdfToTexto.ExtraerTextoEnRectangulo(string, int, double, double, double, double)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.ExtraerTextoEnRectangulo(string, int, double, double, double, double)
+  nameWithType.vb: IPdfToTexto.ExtraerTextoEnRectangulo(String, Integer, Double, Double, Double, Double)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.ExtraerTextoEnRectangulo(String, Integer, Double, Double, Double, Double)
+  name.vb: ExtraerTextoEnRectangulo(String, Integer, Double, Double, Double, Double)
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.ExtraerTextoEnRectangulo(System.String,System.Int32,System.Double,System.Double,System.Double,System.Double)
+    name: ExtraerTextoEnRectangulo
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.html#ConversorPDF_XLL_Core_Interfaces_IPdfToTexto_ExtraerTextoEnRectangulo_System_String_System_Int32_System_Double_System_Double_System_Double_System_Double_
+  - name: (
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: )
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.ExtraerTextoEnRectangulo(System.String,System.Int32,System.Double,System.Double,System.Double,System.Double)
+    name: ExtraerTextoEnRectangulo
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IPdfToTexto.html#ConversorPDF_XLL_Core_Interfaces_IPdfToTexto_ExtraerTextoEnRectangulo_System_String_System_Int32_System_Double_System_Double_System_Double_System_Double_
+  - name: (
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: )
+- uid: System.Double
+  commentId: T:System.Double
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.double
+  name: double
+  nameWithType: double
+  fullName: double
+  nameWithType.vb: Double
+  fullName.vb: Double
+  name.vb: Double
+- uid: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.#ctor*
+  commentId: Overload:ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.#ctor
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.html#ConversorPDF_XLL_Core_Helpers_PdfToTextoHelper__ctor
+  name: PdfToTextoHelper
+  nameWithType: PdfToTextoHelper.PdfToTextoHelper
+  fullName: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.PdfToTextoHelper
+  nameWithType.vb: PdfToTextoHelper.New
+  fullName.vb: ConversorPDF.XLL.Core.Helpers.PdfToTextoHelper.New
+  name.vb: New

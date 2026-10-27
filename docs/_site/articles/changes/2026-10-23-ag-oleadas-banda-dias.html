@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Oleadas por bandas de d&#237;as (v3) — Fases 1224–1235 | ESAP - ConversorPDF </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Oleadas por bandas de d&#237;as (v3) — Fases 1224–1235 | ESAP - ConversorPDF ">
+      
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="../../toc.html">
+      <meta name="docfx:tocrel" content="../toc.html">
+      
+      <meta name="docfx:rel" content="../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/fexluis/COM-PDF-Merge/blob/refactor/academic-modularization/docs/articles/changes/2026-10-23-ag-oleadas-banda-dias.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="oleadas-por-bandas-de-días-v3--fases-12241235">Oleadas por bandas de días (v3) — Fases 1224–1235</h1>
+
+<h2 id="problema">Problema</h2>
+<p>El planificador usaba carriles de 2 ranuras con rotación <code>i % carriles</code> y oleadas secuenciales:</p>
+<ul>
+<li>el carril limitaba los días simultáneos de una asignatura (ventanas de 3 días dejaban 1 día sin usar);</li>
+<li><code>olas = Min(olas, W)</code> forzaba el excedente a la última oleada sin chequear saturación (Fase 1239/1243);</li>
+<li>la siembra de <code>dias_patron</code> de un solo día contradecía el plan (Fase 1244).</li>
+</ul>
+<h2 id="solución">Solución</h2>
+<p><code>AgBandasDias.Particiones</code> genera las 2^(n-1) particiones contiguas disjuntas de la ventana.
+<code>AgBandasDias.Resolver</code> elige la asignación asignatura→banda con objetivo lexicográfico
+(infactibles, patrones violados, makespan, desperdicio, -nº bandas), exhaustivo si <code>k^n ≤ 4096</code>, si no BFD.
+<code>AgEscaleraVentanas</code> sugiere <code>VIE-SAB → JUE-SAB → 4,5,6,7</code> (máx. 2 pasos, idempotente) y
+<code>AgEscaladorVentanaAula</code> decide (dry-run) y aplica en <code>ag_aula</code>/<code>ag_arbol_nodo</code>.</p>
+<h2 id="resultados">Resultados</h2>
+<table>
+<thead>
+<tr>
+<th>Caso</th>
+<th>Demanda</th>
+<th>Partición</th>
+<th>Semanas</th>
+<th>Ocupación</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>60 sesiones</td>
+<td>2 bandas</td>
+<td>20</td>
+<td>100 %</td>
+</tr>
+<tr>
+<td>2</td>
+<td>64 sesiones</td>
+<td>2 bandas</td>
+<td>22</td>
+<td>92,8 % (+<code>I5_HOLGURA_BAJA</code>)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="contrato">Contrato</h2>
+<p><code>AgPlanOleada.Carril</code> = índice de banda; <code>Oleada</code> = 0 (bandas paralelas).
+<code>AgPlanOleadasResultado</code> expone <code>Particion</code>, <code>VentanaSugerida</code>, <code>PatronesRenormalizados</code>, <code>OcupacionPorcentaje</code>.</p>
+<h2 id="migración--rollback">Migración / rollback</h2>
+<p>Sin cambios de esquema. Rollback: <code>USAR_BANDAS_DIAS = false</code> y revertir <code>AgPlanificadorOleadas</code> a la rama de carriles.</p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/fexluis/COM-PDF-Merge/blob/refactor/academic-modularization/docs/articles/changes/2026-10-23-ag-oleadas-banda-dias.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          ESAP - ConversorPDF Doc
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

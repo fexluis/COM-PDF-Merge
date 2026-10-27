@@ -1,0 +1,763 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Core.Models.Empleado
+  commentId: T:ConversorPDF.XLL.Core.Models.Empleado
+  id: Empleado
+  parent: ConversorPDF.XLL.Core.Models
+  children:
+  - ConversorPDF.XLL.Core.Models.Empleado.#ctor
+  - ConversorPDF.XLL.Core.Models.Empleado.Categoria
+  - ConversorPDF.XLL.Core.Models.Empleado.Cedula
+  - ConversorPDF.XLL.Core.Models.Empleado.Contrato
+  - ConversorPDF.XLL.Core.Models.Empleado.Correo
+  - ConversorPDF.XLL.Core.Models.Empleado.Dependencia
+  - ConversorPDF.XLL.Core.Models.Empleado.EntidadBancaria
+  - ConversorPDF.XLL.Core.Models.Empleado.FechaNacimiento
+  - ConversorPDF.XLL.Core.Models.Empleado.NombreCompleto
+  - ConversorPDF.XLL.Core.Models.Empleado.NumeroCuenta
+  - ConversorPDF.XLL.Core.Models.Empleado.Rol
+  - ConversorPDF.XLL.Core.Models.Empleado.Salario
+  - ConversorPDF.XLL.Core.Models.Empleado.Telefono
+  - ConversorPDF.XLL.Core.Models.Empleado.TipoCuenta
+  langs:
+  - csharp
+  - vb
+  name: Empleado
+  nameWithType: Empleado
+  fullName: ConversorPDF.XLL.Core.Models.Empleado
+  type: Class
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Representa la información de un empleado o contratista extraída de la base de datos de Excel.
+  example: []
+  syntax:
+    content: public class Empleado
+    content.vb: Public Class Empleado
+  inheritance:
+  - System.Object
+  inheritedMembers:
+  - System.Object.ToString
+  - System.Object.Equals(System.Object)
+  - System.Object.Equals(System.Object,System.Object)
+  - System.Object.ReferenceEquals(System.Object,System.Object)
+  - System.Object.GetHashCode
+  - System.Object.GetType
+  - System.Object.MemberwiseClone
+- uid: ConversorPDF.XLL.Core.Models.Empleado.#ctor
+  commentId: M:ConversorPDF.XLL.Core.Models.Empleado.#ctor
+  id: '#ctor'
+  parent: ConversorPDF.XLL.Core.Models.Empleado
+  langs:
+  - csharp
+  - vb
+  name: Empleado()
+  nameWithType: Empleado.Empleado()
+  fullName: ConversorPDF.XLL.Core.Models.Empleado.Empleado()
+  type: Constructor
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  syntax:
+    content: public Empleado()
+    content.vb: Public Sub New()
+  overload: ConversorPDF.XLL.Core.Models.Empleado.#ctor*
+  nameWithType.vb: Empleado.New()
+  fullName.vb: ConversorPDF.XLL.Core.Models.Empleado.New()
+  name.vb: New()
+- uid: ConversorPDF.XLL.Core.Models.Empleado.Cedula
+  commentId: P:ConversorPDF.XLL.Core.Models.Empleado.Cedula
+  id: Cedula
+  parent: ConversorPDF.XLL.Core.Models.Empleado
+  langs:
+  - csharp
+  - vb
+  name: Cedula
+  nameWithType: Empleado.Cedula
+  fullName: ConversorPDF.XLL.Core.Models.Empleado.Cedula
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Documento de identidad del empleado.
+  example: []
+  syntax:
+    content: public string Cedula { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property Cedula As String
+  overload: ConversorPDF.XLL.Core.Models.Empleado.Cedula*
+- uid: ConversorPDF.XLL.Core.Models.Empleado.NombreCompleto
+  commentId: P:ConversorPDF.XLL.Core.Models.Empleado.NombreCompleto
+  id: NombreCompleto
+  parent: ConversorPDF.XLL.Core.Models.Empleado
+  langs:
+  - csharp
+  - vb
+  name: NombreCompleto
+  nameWithType: Empleado.NombreCompleto
+  fullName: ConversorPDF.XLL.Core.Models.Empleado.NombreCompleto
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Nombre completo del trabajador.
+  example: []
+  syntax:
+    content: public string NombreCompleto { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property NombreCompleto As String
+  overload: ConversorPDF.XLL.Core.Models.Empleado.NombreCompleto*
+- uid: ConversorPDF.XLL.Core.Models.Empleado.Salario
+  commentId: P:ConversorPDF.XLL.Core.Models.Empleado.Salario
+  id: Salario
+  parent: ConversorPDF.XLL.Core.Models.Empleado
+  langs:
+  - csharp
+  - vb
+  name: Salario
+  nameWithType: Empleado.Salario
+  fullName: ConversorPDF.XLL.Core.Models.Empleado.Salario
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Salario base para el cálculo de viáticos (puede ser decimal o double).
+  example: []
+  syntax:
+    content: public object Salario { get; set; }
+    parameters: []
+    return:
+      type: System.Object
+    content.vb: Public Property Salario As Object
+  overload: ConversorPDF.XLL.Core.Models.Empleado.Salario*
+- uid: ConversorPDF.XLL.Core.Models.Empleado.Rol
+  commentId: P:ConversorPDF.XLL.Core.Models.Empleado.Rol
+  id: Rol
+  parent: ConversorPDF.XLL.Core.Models.Empleado
+  langs:
+  - csharp
+  - vb
+  name: Rol
+  nameWithType: Empleado.Rol
+  fullName: ConversorPDF.XLL.Core.Models.Empleado.Rol
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: 'Cargo o rol desempeñado (ej: Profesional Universitario).'
+  example: []
+  syntax:
+    content: public string Rol { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property Rol As String
+  overload: ConversorPDF.XLL.Core.Models.Empleado.Rol*
+- uid: ConversorPDF.XLL.Core.Models.Empleado.Categoria
+  commentId: P:ConversorPDF.XLL.Core.Models.Empleado.Categoria
+  id: Categoria
+  parent: ConversorPDF.XLL.Core.Models.Empleado
+  langs:
+  - csharp
+  - vb
+  name: Categoria
+  nameWithType: Empleado.Categoria
+  fullName: ConversorPDF.XLL.Core.Models.Empleado.Categoria
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Nivel o categoría salarial.
+  example: []
+  syntax:
+    content: public string Categoria { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property Categoria As String
+  overload: ConversorPDF.XLL.Core.Models.Empleado.Categoria*
+- uid: ConversorPDF.XLL.Core.Models.Empleado.EntidadBancaria
+  commentId: P:ConversorPDF.XLL.Core.Models.Empleado.EntidadBancaria
+  id: EntidadBancaria
+  parent: ConversorPDF.XLL.Core.Models.Empleado
+  langs:
+  - csharp
+  - vb
+  name: EntidadBancaria
+  nameWithType: Empleado.EntidadBancaria
+  fullName: ConversorPDF.XLL.Core.Models.Empleado.EntidadBancaria
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Banco donde el empleado recibe sus pagos.
+  example: []
+  syntax:
+    content: public string EntidadBancaria { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property EntidadBancaria As String
+  overload: ConversorPDF.XLL.Core.Models.Empleado.EntidadBancaria*
+- uid: ConversorPDF.XLL.Core.Models.Empleado.NumeroCuenta
+  commentId: P:ConversorPDF.XLL.Core.Models.Empleado.NumeroCuenta
+  id: NumeroCuenta
+  parent: ConversorPDF.XLL.Core.Models.Empleado
+  langs:
+  - csharp
+  - vb
+  name: NumeroCuenta
+  nameWithType: Empleado.NumeroCuenta
+  fullName: ConversorPDF.XLL.Core.Models.Empleado.NumeroCuenta
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Número de cuenta bancaria.
+  example: []
+  syntax:
+    content: public string NumeroCuenta { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property NumeroCuenta As String
+  overload: ConversorPDF.XLL.Core.Models.Empleado.NumeroCuenta*
+- uid: ConversorPDF.XLL.Core.Models.Empleado.TipoCuenta
+  commentId: P:ConversorPDF.XLL.Core.Models.Empleado.TipoCuenta
+  id: TipoCuenta
+  parent: ConversorPDF.XLL.Core.Models.Empleado
+  langs:
+  - csharp
+  - vb
+  name: TipoCuenta
+  nameWithType: Empleado.TipoCuenta
+  fullName: ConversorPDF.XLL.Core.Models.Empleado.TipoCuenta
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Tipo de cuenta (Ahorros/Corriente).
+  example: []
+  syntax:
+    content: public string TipoCuenta { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property TipoCuenta As String
+  overload: ConversorPDF.XLL.Core.Models.Empleado.TipoCuenta*
+- uid: ConversorPDF.XLL.Core.Models.Empleado.Telefono
+  commentId: P:ConversorPDF.XLL.Core.Models.Empleado.Telefono
+  id: Telefono
+  parent: ConversorPDF.XLL.Core.Models.Empleado
+  langs:
+  - csharp
+  - vb
+  name: Telefono
+  nameWithType: Empleado.Telefono
+  fullName: ConversorPDF.XLL.Core.Models.Empleado.Telefono
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Número telefónico de contacto.
+  example: []
+  syntax:
+    content: public string Telefono { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property Telefono As String
+  overload: ConversorPDF.XLL.Core.Models.Empleado.Telefono*
+- uid: ConversorPDF.XLL.Core.Models.Empleado.Correo
+  commentId: P:ConversorPDF.XLL.Core.Models.Empleado.Correo
+  id: Correo
+  parent: ConversorPDF.XLL.Core.Models.Empleado
+  langs:
+  - csharp
+  - vb
+  name: Correo
+  nameWithType: Empleado.Correo
+  fullName: ConversorPDF.XLL.Core.Models.Empleado.Correo
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Dirección de correo electrónico institucional.
+  example: []
+  syntax:
+    content: public string Correo { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property Correo As String
+  overload: ConversorPDF.XLL.Core.Models.Empleado.Correo*
+- uid: ConversorPDF.XLL.Core.Models.Empleado.FechaNacimiento
+  commentId: P:ConversorPDF.XLL.Core.Models.Empleado.FechaNacimiento
+  id: FechaNacimiento
+  parent: ConversorPDF.XLL.Core.Models.Empleado
+  langs:
+  - csharp
+  - vb
+  name: FechaNacimiento
+  nameWithType: Empleado.FechaNacimiento
+  fullName: ConversorPDF.XLL.Core.Models.Empleado.FechaNacimiento
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Fecha de nacimiento del empleado.
+  example: []
+  syntax:
+    content: public object FechaNacimiento { get; set; }
+    parameters: []
+    return:
+      type: System.Object
+    content.vb: Public Property FechaNacimiento As Object
+  overload: ConversorPDF.XLL.Core.Models.Empleado.FechaNacimiento*
+- uid: ConversorPDF.XLL.Core.Models.Empleado.Contrato
+  commentId: P:ConversorPDF.XLL.Core.Models.Empleado.Contrato
+  id: Contrato
+  parent: ConversorPDF.XLL.Core.Models.Empleado
+  langs:
+  - csharp
+  - vb
+  name: Contrato
+  nameWithType: Empleado.Contrato
+  fullName: ConversorPDF.XLL.Core.Models.Empleado.Contrato
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Identificador del contrato vigente.
+  example: []
+  syntax:
+    content: public string Contrato { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property Contrato As String
+  overload: ConversorPDF.XLL.Core.Models.Empleado.Contrato*
+- uid: ConversorPDF.XLL.Core.Models.Empleado.Dependencia
+  commentId: P:ConversorPDF.XLL.Core.Models.Empleado.Dependencia
+  id: Dependencia
+  parent: ConversorPDF.XLL.Core.Models.Empleado
+  langs:
+  - csharp
+  - vb
+  name: Dependencia
+  nameWithType: Empleado.Dependencia
+  fullName: ConversorPDF.XLL.Core.Models.Empleado.Dependencia
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Dependencia o unidad administrativa a la que pertenece.
+  example: []
+  syntax:
+    content: public string Dependencia { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property Dependencia As String
+  overload: ConversorPDF.XLL.Core.Models.Empleado.Dependencia*
+references:
+- uid: ConversorPDF.XLL.Core.Models
+  commentId: N:ConversorPDF.XLL.Core.Models
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Core.Models
+  nameWithType: ConversorPDF.XLL.Core.Models
+  fullName: ConversorPDF.XLL.Core.Models
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Models
+    name: Models
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Models
+    name: Models
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.html
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+  nameWithType: object
+  fullName: object
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: System.Object.ToString
+  commentId: M:System.Object.ToString
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  name: ToString()
+  nameWithType: object.ToString()
+  fullName: object.ToString()
+  nameWithType.vb: Object.ToString()
+  fullName.vb: Object.ToString()
+  spec.csharp:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+- uid: System.Object.Equals(System.Object)
+  commentId: M:System.Object.Equals(System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  name: Equals(object)
+  nameWithType: object.Equals(object)
+  fullName: object.Equals(object)
+  nameWithType.vb: Object.Equals(Object)
+  fullName.vb: Object.Equals(Object)
+  name.vb: Equals(Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.Equals(System.Object,System.Object)
+  commentId: M:System.Object.Equals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  name: Equals(object, object)
+  nameWithType: object.Equals(object, object)
+  fullName: object.Equals(object, object)
+  nameWithType.vb: Object.Equals(Object, Object)
+  fullName.vb: Object.Equals(Object, Object)
+  name.vb: Equals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.ReferenceEquals(System.Object,System.Object)
+  commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  name: ReferenceEquals(object, object)
+  nameWithType: object.ReferenceEquals(object, object)
+  fullName: object.ReferenceEquals(object, object)
+  nameWithType.vb: Object.ReferenceEquals(Object, Object)
+  fullName.vb: Object.ReferenceEquals(Object, Object)
+  name.vb: ReferenceEquals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.GetHashCode
+  commentId: M:System.Object.GetHashCode
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  name: GetHashCode()
+  nameWithType: object.GetHashCode()
+  fullName: object.GetHashCode()
+  nameWithType.vb: Object.GetHashCode()
+  fullName.vb: Object.GetHashCode()
+  spec.csharp:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+- uid: System.Object.GetType
+  commentId: M:System.Object.GetType
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  name: GetType()
+  nameWithType: object.GetType()
+  fullName: object.GetType()
+  nameWithType.vb: Object.GetType()
+  fullName.vb: Object.GetType()
+  spec.csharp:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+- uid: System.Object.MemberwiseClone
+  commentId: M:System.Object.MemberwiseClone
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  name: MemberwiseClone()
+  nameWithType: object.MemberwiseClone()
+  fullName: object.MemberwiseClone()
+  nameWithType.vb: Object.MemberwiseClone()
+  fullName.vb: Object.MemberwiseClone()
+  spec.csharp:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: ConversorPDF.XLL.Core.Models.Empleado.#ctor*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.Empleado.#ctor
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.Empleado.html#ConversorPDF_XLL_Core_Models_Empleado__ctor
+  name: Empleado
+  nameWithType: Empleado.Empleado
+  fullName: ConversorPDF.XLL.Core.Models.Empleado.Empleado
+  nameWithType.vb: Empleado.New
+  fullName.vb: ConversorPDF.XLL.Core.Models.Empleado.New
+  name.vb: New
+- uid: ConversorPDF.XLL.Core.Models.Empleado.Cedula*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.Empleado.Cedula
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.Empleado.html#ConversorPDF_XLL_Core_Models_Empleado_Cedula
+  name: Cedula
+  nameWithType: Empleado.Cedula
+  fullName: ConversorPDF.XLL.Core.Models.Empleado.Cedula
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: ConversorPDF.XLL.Core.Models.Empleado.NombreCompleto*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.Empleado.NombreCompleto
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.Empleado.html#ConversorPDF_XLL_Core_Models_Empleado_NombreCompleto
+  name: NombreCompleto
+  nameWithType: Empleado.NombreCompleto
+  fullName: ConversorPDF.XLL.Core.Models.Empleado.NombreCompleto
+- uid: ConversorPDF.XLL.Core.Models.Empleado.Salario*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.Empleado.Salario
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.Empleado.html#ConversorPDF_XLL_Core_Models_Empleado_Salario
+  name: Salario
+  nameWithType: Empleado.Salario
+  fullName: ConversorPDF.XLL.Core.Models.Empleado.Salario
+- uid: ConversorPDF.XLL.Core.Models.Empleado.Rol*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.Empleado.Rol
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.Empleado.html#ConversorPDF_XLL_Core_Models_Empleado_Rol
+  name: Rol
+  nameWithType: Empleado.Rol
+  fullName: ConversorPDF.XLL.Core.Models.Empleado.Rol
+- uid: ConversorPDF.XLL.Core.Models.Empleado.Categoria*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.Empleado.Categoria
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.Empleado.html#ConversorPDF_XLL_Core_Models_Empleado_Categoria
+  name: Categoria
+  nameWithType: Empleado.Categoria
+  fullName: ConversorPDF.XLL.Core.Models.Empleado.Categoria
+- uid: ConversorPDF.XLL.Core.Models.Empleado.EntidadBancaria*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.Empleado.EntidadBancaria
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.Empleado.html#ConversorPDF_XLL_Core_Models_Empleado_EntidadBancaria
+  name: EntidadBancaria
+  nameWithType: Empleado.EntidadBancaria
+  fullName: ConversorPDF.XLL.Core.Models.Empleado.EntidadBancaria
+- uid: ConversorPDF.XLL.Core.Models.Empleado.NumeroCuenta*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.Empleado.NumeroCuenta
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.Empleado.html#ConversorPDF_XLL_Core_Models_Empleado_NumeroCuenta
+  name: NumeroCuenta
+  nameWithType: Empleado.NumeroCuenta
+  fullName: ConversorPDF.XLL.Core.Models.Empleado.NumeroCuenta
+- uid: ConversorPDF.XLL.Core.Models.Empleado.TipoCuenta*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.Empleado.TipoCuenta
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.Empleado.html#ConversorPDF_XLL_Core_Models_Empleado_TipoCuenta
+  name: TipoCuenta
+  nameWithType: Empleado.TipoCuenta
+  fullName: ConversorPDF.XLL.Core.Models.Empleado.TipoCuenta
+- uid: ConversorPDF.XLL.Core.Models.Empleado.Telefono*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.Empleado.Telefono
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.Empleado.html#ConversorPDF_XLL_Core_Models_Empleado_Telefono
+  name: Telefono
+  nameWithType: Empleado.Telefono
+  fullName: ConversorPDF.XLL.Core.Models.Empleado.Telefono
+- uid: ConversorPDF.XLL.Core.Models.Empleado.Correo*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.Empleado.Correo
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.Empleado.html#ConversorPDF_XLL_Core_Models_Empleado_Correo
+  name: Correo
+  nameWithType: Empleado.Correo
+  fullName: ConversorPDF.XLL.Core.Models.Empleado.Correo
+- uid: ConversorPDF.XLL.Core.Models.Empleado.FechaNacimiento*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.Empleado.FechaNacimiento
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.Empleado.html#ConversorPDF_XLL_Core_Models_Empleado_FechaNacimiento
+  name: FechaNacimiento
+  nameWithType: Empleado.FechaNacimiento
+  fullName: ConversorPDF.XLL.Core.Models.Empleado.FechaNacimiento
+- uid: ConversorPDF.XLL.Core.Models.Empleado.Contrato*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.Empleado.Contrato
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.Empleado.html#ConversorPDF_XLL_Core_Models_Empleado_Contrato
+  name: Contrato
+  nameWithType: Empleado.Contrato
+  fullName: ConversorPDF.XLL.Core.Models.Empleado.Contrato
+- uid: ConversorPDF.XLL.Core.Models.Empleado.Dependencia*
+  commentId: Overload:ConversorPDF.XLL.Core.Models.Empleado.Dependencia
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.Empleado.html#ConversorPDF_XLL_Core_Models_Empleado_Dependencia
+  name: Dependencia
+  nameWithType: Empleado.Dependencia
+  fullName: ConversorPDF.XLL.Core.Models.Empleado.Dependencia

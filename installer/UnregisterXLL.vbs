@@ -1,11 +1,11 @@
-' ===============================================
-' UnregisterXLL.vbs - Quita el registro de Excel
-' ===============================================
+' =============================================
+' UnregisterXLL.vbs - Custom Action para Excel 365
+' =============================================
 
-Dim shell, addinFileName, keyPath, i, keyName, val
+Dim shell, keyPath, i, keyName, existingVal
 
 Set shell = CreateObject("WScript.Shell")
-addinFileName = "ConversorPDF.xll"
+
 keyPath = "HKCU\Software\Microsoft\Office\16.0\Excel\Options"
 
 i = 0
@@ -17,23 +17,18 @@ Do
     End If
 
     On Error Resume Next
-    val = ""
-    val = shell.RegRead(keyPath & "\" & keyName)
-    
-    If Err.Number = 0 Then
-        ' Clave existe, verificar si contiene nuestro Add-in
-        If InStr(1, val, addinFileName, vbTextCompare) > 0 Then
-            ' Encontrado -> Borrar clave
-            shell.RegDelete keyPath & "\" & keyName
-            ' También borramos la configuración propia
-            shell.RegDelete "HKCU\Software\ESAP\ConversorPDF\"
-            Exit Do
-        End If
-    Else
-        ' No hay más claves OPEN correlativas
+    existingVal = shell.RegRead(keyPath & "\" & keyName)
+    If Err.Number <> 0 Then
+        On Error GoTo 0
         Exit Do
     End If
-    On Error Goto 0
-    
+    On Error GoTo 0
+
+    If InStr(1, existingVal, "conversorpdf", vbTextCompare) > 0 Then
+        On Error Resume Next
+        shell.RegDelete keyPath & "\" & keyName
+        On Error GoTo 0
+    End If
+
     i = i + 1
 Loop While i < 50

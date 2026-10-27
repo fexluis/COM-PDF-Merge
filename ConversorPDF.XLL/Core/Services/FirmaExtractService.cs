@@ -1,6 +1,7 @@
 using System;
 using ConversorPDF.XLL.Core.Interfaces;
 using ConversorPDF.XLL.Core.Models;
+using ConversorPDF.XLL.Core.Helpers;
 
 namespace ConversorPDF.XLL.Core.Services
 {
@@ -23,7 +24,7 @@ namespace ConversorPDF.XLL.Core.Services
                 extract.xIdentificacion = ws.Range["C22"].Value?.ToString() ?? "";
                 extract.xRP = ws.Range["AE16"].Value?.ToString() ?? "";
                 extract.xObjeto = ws.Range["C38"].Value?.ToString() ?? "";
-                extract.xCategoria = GetCategoria(extract.xObjeto);
+                extract.xCategoria = FirmaPDFsHelper.GetCategoria(extract.xObjeto);
             }
             else
             {
@@ -37,7 +38,7 @@ namespace ConversorPDF.XLL.Core.Services
                 if (rngObjeto != null)
                 {
                     extract.xObjeto = ws.Range["D" + rngObjeto.Row].Value?.ToString() ?? "";
-                    extract.xCategoria = GetCategoria(extract.xObjeto);
+                    extract.xCategoria = FirmaPDFsHelper.GetCategoria(extract.xObjeto);
                 }
                 else
                 {
@@ -46,7 +47,7 @@ namespace ConversorPDF.XLL.Core.Services
                 }
             }
 
-            extract.xUnifiedFileName = $"OB-{extract.xNumero}-{extract.xCategoria}-{SanitizarNombre(extract.xTercero)}";
+            extract.xUnifiedFileName = $"OB-{extract.xNumero}-{extract.xCategoria}-{FirmaPDFsHelper.SanitizarNombre(extract.xTercero)}";
             return extract;
         }
 
@@ -54,8 +55,6 @@ namespace ConversorPDF.XLL.Core.Services
         public ExtraerDatos OrdeDePagoData(dynamic ws)
         {
             var extract = new ExtraerDatos();
-            string prefijo = "";
-            string nombreOrden = "";
 
             if (ws.Range["X16"].Value != null)
             {
@@ -85,7 +84,7 @@ namespace ConversorPDF.XLL.Core.Services
                 extract.xUnifiedFileName = extract.xFechaStr + "_" + extract.xOP + "_" + extract.xOB + "_";
             }
 
-            extract.xUnifiedFileName = SanitizarNombre(extract.xUnifiedFileName);
+            extract.xUnifiedFileName = FirmaPDFsHelper.SanitizarNombre(extract.xUnifiedFileName);
             return extract;
         }
 
@@ -98,7 +97,7 @@ namespace ConversorPDF.XLL.Core.Services
             extract.xNumero = extract.xCDP;
             
             string prefijo = extract.xFechaStr.Replace("-", "") + "_CDP_" + extract.xCDP + "_";
-            extract.xUnifiedFileName = SanitizarNombre(prefijo);
+            extract.xUnifiedFileName = FirmaPDFsHelper.SanitizarNombre(prefijo);
             return extract;
         }
 
@@ -112,7 +111,7 @@ namespace ConversorPDF.XLL.Core.Services
             extract.xNumero = extract.xRP;
 
             string prefijo = extract.xFechaStr.Replace("-", "") + "_RP_" + extract.xRP + "_";
-            extract.xUnifiedFileName = SanitizarNombre(prefijo + extract.xTercero);
+            extract.xUnifiedFileName = FirmaPDFsHelper.SanitizarNombre(prefijo + extract.xTercero);
             return extract;
         }
 
@@ -125,44 +124,9 @@ namespace ConversorPDF.XLL.Core.Services
             extract.xTercero = ws.Range["A23"].Value?.ToString() ?? "";
 
             string prefijo = extract.xFechaStr.Replace("-", "") + "_V_" + extract.xNumero + "_";
-            extract.xUnifiedFileName = SanitizarNombre(prefijo + extract.xTercero);
+            extract.xUnifiedFileName = FirmaPDFsHelper.SanitizarNombre(prefijo + extract.xTercero);
             return extract;
         }
 
-        /// <summary>
-        /// Sanitiza el nombre de un archivo para que sea válido y siga un formato estandarizado. (Ported from FirmaPDFsHelper)
-        /// </summary>
-        private string SanitizarNombre(string nombre)
-        {
-            if (string.IsNullOrEmpty(nombre)) return "Archivo_" + DateTime.Now.Ticks;
-            string n = nombre.Replace("  ", " ").Replace("-", " ");
-            n = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(n.ToLower()).Replace(" ", "");
-            var partes = n.Split('_');
-            for (int i = 0; i < partes.Length; i++) if (partes[i] == "") partes[i] = "DESCONOCIDO";
-            n = string.Join("_", partes);
-            return n.Length > 30 ? n.Substring(0, 30) : n;
-        }
-
-        /// <summary>
-        /// Determina la categoría del documento basándose en palabras clave del objeto.
-        /// </summary>
-        /// <param name="objeto">Texto del objeto de la obligación.</param>
-        /// <returns>Código corto de categoría (VIA, HON, SSO, NOM, etc.).</returns>
-        private string GetCategoria(string objeto)
-        {
-            if (string.IsNullOrEmpty(objeto)) return "XXX";
-            string t = objeto.ToUpperInvariant();
-            if (t.Contains("VIAT")) return "VIA";
-            if (t.Contains("ARL") || t.Contains("RIESGO")) return "ARL";
-            if (t.Contains("HONOR")) return "HON";
-            if (t.Contains("SEGURIDA") || t.Contains("SOCIAL")) return "SSO";
-            if (t.Contains("NOMINA") || t.Contains("NÓMINA")) return "NOM";
-            if (t.Contains("CESANT")) return "FNA";
-            if (t.Contains("ARREND") || t.Contains("ARRIEND")) return "ARR";
-            if (t.Contains("SERVICIO") || t.Contains("PUBLICO") || t.Contains("PÚBLICO")) return "SPU";
-            if (t.Contains("ESTUDIANTE") || t.Contains("MONITOR") || t.Contains("PRACTICA") || t.Contains("ESTIMULO")) return "EST";
-            if (t.Contains("4X") || t.Contains("4 X") || t.Contains("X1000") || t.Contains("X 1000") || t.Contains("POR MIL")) return "4PM";
-            return "XXX";
-        }
     }
 }

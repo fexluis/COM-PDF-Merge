@@ -1,0 +1,56 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
+  commentId: N:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
+  id: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
+  children:
+  - ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.AcademicRepository
+  - ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.PeriodoLookupRepository
+  - ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.SedeLookupRepository
+  - ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.TerceroLookupRepository
+  - ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.VinculacionQueryRepository
+  langs:
+  - csharp
+  - vb
+  name: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
+  nameWithType: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
+  type: Namespace
+  assemblies:
+  - ConversorPDF.XLL
+references:
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.AcademicRepository
+  commentId: T:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.AcademicRepository
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.AcademicRepository.html
+  name: AcademicRepository
+  nameWithType: AcademicRepository
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.AcademicRepository
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.VinculacionQueryRepository
+  commentId: T:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.VinculacionQueryRepository
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.VinculacionQueryRepository.html
+  name: VinculacionQueryRepository
+  nameWithType: VinculacionQueryRepository
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.VinculacionQueryRepository
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.SedeLookupRepository
+  commentId: T:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.SedeLookupRepository
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.SedeLookupRepository.html
+  name: SedeLookupRepository
+  nameWithType: SedeLookupRepository
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.SedeLookupRepository
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.TerceroLookupRepository
+  commentId: T:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.TerceroLookupRepository
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.TerceroLookupRepository.html
+  name: TerceroLookupRepository
+  nameWithType: TerceroLookupRepository
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.TerceroLookupRepository
+- uid: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.PeriodoLookupRepository
+  commentId: T:ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.PeriodoLookupRepository
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.PeriodoLookupRepository.html
+  name: PeriodoLookupRepository
+  nameWithType: PeriodoLookupRepository
+  fullName: ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.PeriodoLookupRepository

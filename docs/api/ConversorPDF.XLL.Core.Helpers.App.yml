@@ -1,0 +1,1579 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Core.Helpers.App
+  commentId: T:ConversorPDF.XLL.Core.Helpers.App
+  id: App
+  parent: ConversorPDF.XLL.Core.Helpers
+  children:
+  - ConversorPDF.XLL.Core.Helpers.App.#ctor
+  - ConversorPDF.XLL.Core.Helpers.App.#ctor(ConversorPDF.XLL.Core.Interfaces.IUserService,ConversorPDF.XLL.Core.Interfaces.IPdfService,ConversorPDF.XLL.Core.Interfaces.IViaticosService,ConversorPDF.XLL.Core.Interfaces.IContadorService)
+  - ConversorPDF.XLL.Core.Helpers.App.APP_NAME
+  - ConversorPDF.XLL.Core.Helpers.App.APP_VERSION
+  - ConversorPDF.XLL.Core.Helpers.App.APP_VIGENCIA
+  - ConversorPDF.XLL.Core.Helpers.App.CapitalizarPalabras(System.String)
+  - ConversorPDF.XLL.Core.Helpers.App.CombinarArchivos(System.Object,System.String)
+  - ConversorPDF.XLL.Core.Helpers.App.ConfigurarPagina(System.Object,System.Boolean)
+  - ConversorPDF.XLL.Core.Helpers.App.ConvertirObligacionContador(System.Object)
+  - ConversorPDF.XLL.Core.Helpers.App.CrearArchivoBase64Temporal(System.String,System.String)
+  - ConversorPDF.XLL.Core.Helpers.App.DEFAULT_USER
+  - ConversorPDF.XLL.Core.Helpers.App.GenerarFirmaBase64Txt
+  - ConversorPDF.XLL.Core.Helpers.App.GetCurrentOfficeUser
+  - ConversorPDF.XLL.Core.Helpers.App.GetFirmaHelperUsuario
+  - ConversorPDF.XLL.Core.Helpers.App.GetFirmaUsuarioActual
+  - ConversorPDF.XLL.Core.Helpers.App.GetIdentification(System.String)
+  - ConversorPDF.XLL.Core.Helpers.App.GetOneDriveLocalPath(System.String)
+  - ConversorPDF.XLL.Core.Helpers.App.GetResourceImage(System.String)
+  - ConversorPDF.XLL.Core.Helpers.App.GetUserName
+  - ConversorPDF.XLL.Core.Helpers.App.UnificarObligacionContador(System.Object,System.String)
+  - ConversorPDF.XLL.Core.Helpers.App.Viaticos
+  langs:
+  - csharp
+  - vb
+  name: App
+  nameWithType: App
+  fullName: ConversorPDF.XLL.Core.Helpers.App
+  type: Class
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: >-
+      [ComVisible(true)]
+
+      [Guid("4F97F332-3B6C-4B6E-8B7C-5AF9F4EEA4C9")]
+
+      [ClassInterface(ClassInterfaceType.None)]
+
+      public class App : IApp
+    content.vb: >-
+      <ComVisible(True)>
+
+      <Guid("4F97F332-3B6C-4B6E-8B7C-5AF9F4EEA4C9")>
+
+      <ClassInterface(ClassInterfaceType.None)>
+
+      Public Class App Implements IApp
+  inheritance:
+  - System.Object
+  implements:
+  - ConversorPDF.XLL.Core.Interfaces.IApp
+  inheritedMembers:
+  - System.Object.ToString
+  - System.Object.Equals(System.Object)
+  - System.Object.Equals(System.Object,System.Object)
+  - System.Object.ReferenceEquals(System.Object,System.Object)
+  - System.Object.GetHashCode
+  - System.Object.GetType
+  - System.Object.MemberwiseClone
+  attributes:
+  - type: System.Runtime.InteropServices.ComVisibleAttribute
+    ctor: System.Runtime.InteropServices.ComVisibleAttribute.#ctor(System.Boolean)
+    arguments:
+    - type: System.Boolean
+      value: true
+  - type: System.Runtime.InteropServices.GuidAttribute
+    ctor: System.Runtime.InteropServices.GuidAttribute.#ctor(System.String)
+    arguments:
+    - type: System.String
+      value: 4F97F332-3B6C-4B6E-8B7C-5AF9F4EEA4C9
+  - type: System.Runtime.InteropServices.ClassInterfaceAttribute
+    ctor: System.Runtime.InteropServices.ClassInterfaceAttribute.#ctor(System.Runtime.InteropServices.ClassInterfaceType)
+    arguments:
+    - type: System.Runtime.InteropServices.ClassInterfaceType
+      value: 0
+- uid: ConversorPDF.XLL.Core.Helpers.App.APP_VERSION
+  commentId: F:ConversorPDF.XLL.Core.Helpers.App.APP_VERSION
+  id: APP_VERSION
+  parent: ConversorPDF.XLL.Core.Helpers.App
+  langs:
+  - csharp
+  - vb
+  name: APP_VERSION
+  nameWithType: App.APP_VERSION
+  fullName: ConversorPDF.XLL.Core.Helpers.App.APP_VERSION
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const string APP_VERSION = "1.2.52.1"
+    return:
+      type: System.String
+    content.vb: Public Const APP_VERSION As String = "1.2.52.1"
+- uid: ConversorPDF.XLL.Core.Helpers.App.APP_VIGENCIA
+  commentId: F:ConversorPDF.XLL.Core.Helpers.App.APP_VIGENCIA
+  id: APP_VIGENCIA
+  parent: ConversorPDF.XLL.Core.Helpers.App
+  langs:
+  - csharp
+  - vb
+  name: APP_VIGENCIA
+  nameWithType: App.APP_VIGENCIA
+  fullName: ConversorPDF.XLL.Core.Helpers.App.APP_VIGENCIA
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const string APP_VIGENCIA = "2026"
+    return:
+      type: System.String
+    content.vb: Public Const APP_VIGENCIA As String = "2026"
+- uid: ConversorPDF.XLL.Core.Helpers.App.APP_NAME
+  commentId: F:ConversorPDF.XLL.Core.Helpers.App.APP_NAME
+  id: APP_NAME
+  parent: ConversorPDF.XLL.Core.Helpers.App
+  langs:
+  - csharp
+  - vb
+  name: APP_NAME
+  nameWithType: App.APP_NAME
+  fullName: ConversorPDF.XLL.Core.Helpers.App.APP_NAME
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public const string APP_NAME = "ESAP - Conversor PDF v1.2.52.1"
+    return:
+      type: System.String
+    content.vb: Public Const APP_NAME As String = "ESAP - Conversor PDF v1.2.52.1"
+- uid: ConversorPDF.XLL.Core.Helpers.App.#ctor
+  commentId: M:ConversorPDF.XLL.Core.Helpers.App.#ctor
+  id: '#ctor'
+  parent: ConversorPDF.XLL.Core.Helpers.App
+  langs:
+  - csharp
+  - vb
+  name: App()
+  nameWithType: App.App()
+  fullName: ConversorPDF.XLL.Core.Helpers.App.App()
+  type: Constructor
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public App()
+    content.vb: Public Sub New()
+  overload: ConversorPDF.XLL.Core.Helpers.App.#ctor*
+  nameWithType.vb: App.New()
+  fullName.vb: ConversorPDF.XLL.Core.Helpers.App.New()
+  name.vb: New()
+- uid: ConversorPDF.XLL.Core.Helpers.App.#ctor(ConversorPDF.XLL.Core.Interfaces.IUserService,ConversorPDF.XLL.Core.Interfaces.IPdfService,ConversorPDF.XLL.Core.Interfaces.IViaticosService,ConversorPDF.XLL.Core.Interfaces.IContadorService)
+  commentId: M:ConversorPDF.XLL.Core.Helpers.App.#ctor(ConversorPDF.XLL.Core.Interfaces.IUserService,ConversorPDF.XLL.Core.Interfaces.IPdfService,ConversorPDF.XLL.Core.Interfaces.IViaticosService,ConversorPDF.XLL.Core.Interfaces.IContadorService)
+  id: '#ctor(ConversorPDF.XLL.Core.Interfaces.IUserService,ConversorPDF.XLL.Core.Interfaces.IPdfService,ConversorPDF.XLL.Core.Interfaces.IViaticosService,ConversorPDF.XLL.Core.Interfaces.IContadorService)'
+  parent: ConversorPDF.XLL.Core.Helpers.App
+  langs:
+  - csharp
+  - vb
+  name: App(IUserService, IPdfService, IViaticosService, IContadorService)
+  nameWithType: App.App(IUserService, IPdfService, IViaticosService, IContadorService)
+  fullName: ConversorPDF.XLL.Core.Helpers.App.App(ConversorPDF.XLL.Core.Interfaces.IUserService, ConversorPDF.XLL.Core.Interfaces.IPdfService, ConversorPDF.XLL.Core.Interfaces.IViaticosService, ConversorPDF.XLL.Core.Interfaces.IContadorService)
+  type: Constructor
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public App(IUserService userService, IPdfService pdfService, IViaticosService viaticosService, IContadorService contadorService)
+    parameters:
+    - id: userService
+      type: ConversorPDF.XLL.Core.Interfaces.IUserService
+    - id: pdfService
+      type: ConversorPDF.XLL.Core.Interfaces.IPdfService
+    - id: viaticosService
+      type: ConversorPDF.XLL.Core.Interfaces.IViaticosService
+    - id: contadorService
+      type: ConversorPDF.XLL.Core.Interfaces.IContadorService
+    content.vb: Public Sub New(userService As IUserService, pdfService As IPdfService, viaticosService As IViaticosService, contadorService As IContadorService)
+  overload: ConversorPDF.XLL.Core.Helpers.App.#ctor*
+  nameWithType.vb: App.New(IUserService, IPdfService, IViaticosService, IContadorService)
+  fullName.vb: ConversorPDF.XLL.Core.Helpers.App.New(ConversorPDF.XLL.Core.Interfaces.IUserService, ConversorPDF.XLL.Core.Interfaces.IPdfService, ConversorPDF.XLL.Core.Interfaces.IViaticosService, ConversorPDF.XLL.Core.Interfaces.IContadorService)
+  name.vb: New(IUserService, IPdfService, IViaticosService, IContadorService)
+- uid: ConversorPDF.XLL.Core.Helpers.App.GetUserName
+  commentId: M:ConversorPDF.XLL.Core.Helpers.App.GetUserName
+  id: GetUserName
+  parent: ConversorPDF.XLL.Core.Helpers.App
+  langs:
+  - csharp
+  - vb
+  name: GetUserName()
+  nameWithType: App.GetUserName()
+  fullName: ConversorPDF.XLL.Core.Helpers.App.GetUserName()
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  summary: Obtiene el nombre del usuario actual del sistema Windows.
+  example: []
+  syntax:
+    content: public string GetUserName()
+    return:
+      type: System.String
+      description: Nombre de usuario en mayúsculas.
+    content.vb: Public Function GetUserName() As String
+  overload: ConversorPDF.XLL.Core.Helpers.App.GetUserName*
+- uid: ConversorPDF.XLL.Core.Helpers.App.CapitalizarPalabras(System.String)
+  commentId: M:ConversorPDF.XLL.Core.Helpers.App.CapitalizarPalabras(System.String)
+  id: CapitalizarPalabras(System.String)
+  parent: ConversorPDF.XLL.Core.Helpers.App
+  langs:
+  - csharp
+  - vb
+  name: CapitalizarPalabras(string)
+  nameWithType: App.CapitalizarPalabras(string)
+  fullName: ConversorPDF.XLL.Core.Helpers.App.CapitalizarPalabras(string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  summary: Capitaliza la primera letra de cada palabra en una cadena.
+  example: []
+  syntax:
+    content: public static string CapitalizarPalabras(string texto)
+    parameters:
+    - id: texto
+      type: System.String
+      description: Texto original.
+    return:
+      type: System.String
+      description: Texto con formato Title Case.
+    content.vb: Public Shared Function CapitalizarPalabras(texto As String) As String
+  overload: ConversorPDF.XLL.Core.Helpers.App.CapitalizarPalabras*
+  nameWithType.vb: App.CapitalizarPalabras(String)
+  fullName.vb: ConversorPDF.XLL.Core.Helpers.App.CapitalizarPalabras(String)
+  name.vb: CapitalizarPalabras(String)
+- uid: ConversorPDF.XLL.Core.Helpers.App.CombinarArchivos(System.Object,System.String)
+  commentId: M:ConversorPDF.XLL.Core.Helpers.App.CombinarArchivos(System.Object,System.String)
+  id: CombinarArchivos(System.Object,System.String)
+  parent: ConversorPDF.XLL.Core.Helpers.App
+  langs:
+  - csharp
+  - vb
+  name: CombinarArchivos(object, string)
+  nameWithType: App.CombinarArchivos(object, string)
+  fullName: ConversorPDF.XLL.Core.Helpers.App.CombinarArchivos(object, string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  summary: Combina múltiples archivos PDF en uno solo.
+  example: []
+  syntax:
+    content: public void CombinarArchivos(object entradas, string salida)
+    parameters:
+    - id: entradas
+      type: System.Object
+      description: Array de rutas de archivos PDF de entrada.
+    - id: salida
+      type: System.String
+      description: Ruta del archivo PDF resultante.
+    content.vb: Public Sub CombinarArchivos(entradas As Object, salida As String)
+  overload: ConversorPDF.XLL.Core.Helpers.App.CombinarArchivos*
+  implements:
+  - ConversorPDF.XLL.Core.Interfaces.IApp.CombinarArchivos(System.Object,System.String)
+  nameWithType.vb: App.CombinarArchivos(Object, String)
+  fullName.vb: ConversorPDF.XLL.Core.Helpers.App.CombinarArchivos(Object, String)
+  name.vb: CombinarArchivos(Object, String)
+- uid: ConversorPDF.XLL.Core.Helpers.App.ConfigurarPagina(System.Object,System.Boolean)
+  commentId: M:ConversorPDF.XLL.Core.Helpers.App.ConfigurarPagina(System.Object,System.Boolean)
+  id: ConfigurarPagina(System.Object,System.Boolean)
+  parent: ConversorPDF.XLL.Core.Helpers.App
+  langs:
+  - csharp
+  - vb
+  name: ConfigurarPagina(dynamic, bool)
+  nameWithType: App.ConfigurarPagina(dynamic, bool)
+  fullName: ConversorPDF.XLL.Core.Helpers.App.ConfigurarPagina(dynamic, bool)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  summary: Configura los parámetros de página de una hoja de Excel para su correcta impresión a PDF.
+  example: []
+  syntax:
+    content: public static void ConfigurarPagina(dynamic ws, bool esVertical = false)
+    parameters:
+    - id: ws
+      type: dynamic
+      description: Objeto Worksheet de Excel.
+    - id: esVertical
+      type: System.Boolean
+      description: Si es verdadero, fuerza la orientación vertical.
+    content.vb: Public Shared Sub ConfigurarPagina(ws As Object, esVertical As Boolean = False)
+  overload: ConversorPDF.XLL.Core.Helpers.App.ConfigurarPagina*
+  nameWithType.vb: App.ConfigurarPagina(Object, Boolean)
+  fullName.vb: ConversorPDF.XLL.Core.Helpers.App.ConfigurarPagina(Object, Boolean)
+  name.vb: ConfigurarPagina(Object, Boolean)
+- uid: ConversorPDF.XLL.Core.Helpers.App.GetOneDriveLocalPath(System.String)
+  commentId: M:ConversorPDF.XLL.Core.Helpers.App.GetOneDriveLocalPath(System.String)
+  id: GetOneDriveLocalPath(System.String)
+  parent: ConversorPDF.XLL.Core.Helpers.App
+  langs:
+  - csharp
+  - vb
+  name: GetOneDriveLocalPath(string)
+  nameWithType: App.GetOneDriveLocalPath(string)
+  fullName: ConversorPDF.XLL.Core.Helpers.App.GetOneDriveLocalPath(string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  summary: Resuelve la ruta local de OneDrive para una ruta de servidor.
+  example: []
+  syntax:
+    content: public string GetOneDriveLocalPath(string path)
+    parameters:
+    - id: path
+      type: System.String
+    return:
+      type: System.String
+    content.vb: Public Function GetOneDriveLocalPath(path As String) As String
+  overload: ConversorPDF.XLL.Core.Helpers.App.GetOneDriveLocalPath*
+  implements:
+  - ConversorPDF.XLL.Core.Interfaces.IApp.GetOneDriveLocalPath(System.String)
+  nameWithType.vb: App.GetOneDriveLocalPath(String)
+  fullName.vb: ConversorPDF.XLL.Core.Helpers.App.GetOneDriveLocalPath(String)
+  name.vb: GetOneDriveLocalPath(String)
+- uid: ConversorPDF.XLL.Core.Helpers.App.GetCurrentOfficeUser
+  commentId: M:ConversorPDF.XLL.Core.Helpers.App.GetCurrentOfficeUser
+  id: GetCurrentOfficeUser
+  parent: ConversorPDF.XLL.Core.Helpers.App
+  langs:
+  - csharp
+  - vb
+  name: GetCurrentOfficeUser()
+  nameWithType: App.GetCurrentOfficeUser()
+  fullName: ConversorPDF.XLL.Core.Helpers.App.GetCurrentOfficeUser()
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  summary: Obtiene el nombre del usuario actual de Office.
+  example: []
+  syntax:
+    content: public string GetCurrentOfficeUser()
+    return:
+      type: System.String
+    content.vb: Public Function GetCurrentOfficeUser() As String
+  overload: ConversorPDF.XLL.Core.Helpers.App.GetCurrentOfficeUser*
+  implements:
+  - ConversorPDF.XLL.Core.Interfaces.IApp.GetCurrentOfficeUser
+- uid: ConversorPDF.XLL.Core.Helpers.App.GetFirmaHelperUsuario
+  commentId: M:ConversorPDF.XLL.Core.Helpers.App.GetFirmaHelperUsuario
+  id: GetFirmaHelperUsuario
+  parent: ConversorPDF.XLL.Core.Helpers.App
+  langs:
+  - csharp
+  - vb
+  name: GetFirmaHelperUsuario()
+  nameWithType: App.GetFirmaHelperUsuario()
+  fullName: ConversorPDF.XLL.Core.Helpers.App.GetFirmaHelperUsuario()
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  summary: Obtiene la firma del usuario desde la base de datos de firmas.
+  example: []
+  syntax:
+    content: public string GetFirmaHelperUsuario()
+    return:
+      type: System.String
+    content.vb: Public Function GetFirmaHelperUsuario() As String
+  overload: ConversorPDF.XLL.Core.Helpers.App.GetFirmaHelperUsuario*
+  implements:
+  - ConversorPDF.XLL.Core.Interfaces.IApp.GetFirmaHelperUsuario
+- uid: ConversorPDF.XLL.Core.Helpers.App.CrearArchivoBase64Temporal(System.String,System.String)
+  commentId: M:ConversorPDF.XLL.Core.Helpers.App.CrearArchivoBase64Temporal(System.String,System.String)
+  id: CrearArchivoBase64Temporal(System.String,System.String)
+  parent: ConversorPDF.XLL.Core.Helpers.App
+  langs:
+  - csharp
+  - vb
+  name: CrearArchivoBase64Temporal(string, string)
+  nameWithType: App.CrearArchivoBase64Temporal(string, string)
+  fullName: ConversorPDF.XLL.Core.Helpers.App.CrearArchivoBase64Temporal(string, string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  summary: Crea un archivo temporal a partir de una cadena en formato Base64.
+  example: []
+  syntax:
+    content: public string CrearArchivoBase64Temporal(string base64String, string nombreBase = "Imagen")
+    parameters:
+    - id: base64String
+      type: System.String
+      description: Contenido del archivo en Base64.
+    - id: nombreBase
+      type: System.String
+      description: Nombre base para el archivo temporal.
+    return:
+      type: System.String
+      description: Ruta absoluta al archivo creado.
+    content.vb: Public Function CrearArchivoBase64Temporal(base64String As String, nombreBase As String = "Imagen") As String
+  overload: ConversorPDF.XLL.Core.Helpers.App.CrearArchivoBase64Temporal*
+  implements:
+  - ConversorPDF.XLL.Core.Interfaces.IApp.CrearArchivoBase64Temporal(System.String,System.String)
+  nameWithType.vb: App.CrearArchivoBase64Temporal(String, String)
+  fullName.vb: ConversorPDF.XLL.Core.Helpers.App.CrearArchivoBase64Temporal(String, String)
+  name.vb: CrearArchivoBase64Temporal(String, String)
+- uid: ConversorPDF.XLL.Core.Helpers.App.GetFirmaUsuarioActual
+  commentId: M:ConversorPDF.XLL.Core.Helpers.App.GetFirmaUsuarioActual
+  id: GetFirmaUsuarioActual
+  parent: ConversorPDF.XLL.Core.Helpers.App
+  langs:
+  - csharp
+  - vb
+  name: GetFirmaUsuarioActual()
+  nameWithType: App.GetFirmaUsuarioActual()
+  fullName: ConversorPDF.XLL.Core.Helpers.App.GetFirmaUsuarioActual()
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  summary: Obtiene la firma (Base64) del usuario de Windows actual.
+  example: []
+  syntax:
+    content: public string GetFirmaUsuarioActual()
+    return:
+      type: System.String
+    content.vb: Public Function GetFirmaUsuarioActual() As String
+  overload: ConversorPDF.XLL.Core.Helpers.App.GetFirmaUsuarioActual*
+  implements:
+  - ConversorPDF.XLL.Core.Interfaces.IApp.GetFirmaUsuarioActual
+- uid: ConversorPDF.XLL.Core.Helpers.App.ConvertirObligacionContador(System.Object)
+  commentId: M:ConversorPDF.XLL.Core.Helpers.App.ConvertirObligacionContador(System.Object)
+  id: ConvertirObligacionContador(System.Object)
+  parent: ConversorPDF.XLL.Core.Helpers.App
+  langs:
+  - csharp
+  - vb
+  name: ConvertirObligacionContador(object)
+  nameWithType: App.ConvertirObligacionContador(object)
+  fullName: ConversorPDF.XLL.Core.Helpers.App.ConvertirObligacionContador(object)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  summary: Procesa las hojas del libro de Excel para firmar y guardar como PDF en el flujo de Obligaciones del Contador.
+  example: []
+  syntax:
+    content: public int ConvertirObligacionContador(object activeWorkbook)
+    parameters:
+    - id: activeWorkbook
+      type: System.Object
+      description: Libro de Excel activo.
+    return:
+      type: System.Int32
+      description: Cantidad de hojas procesadas.
+    content.vb: Public Function ConvertirObligacionContador(activeWorkbook As Object) As Integer
+  overload: ConversorPDF.XLL.Core.Helpers.App.ConvertirObligacionContador*
+  implements:
+  - ConversorPDF.XLL.Core.Interfaces.IApp.ConvertirObligacionContador(System.Object)
+  nameWithType.vb: App.ConvertirObligacionContador(Object)
+  fullName.vb: ConversorPDF.XLL.Core.Helpers.App.ConvertirObligacionContador(Object)
+  name.vb: ConvertirObligacionContador(Object)
+- uid: ConversorPDF.XLL.Core.Helpers.App.UnificarObligacionContador(System.Object,System.String)
+  commentId: M:ConversorPDF.XLL.Core.Helpers.App.UnificarObligacionContador(System.Object,System.String)
+  id: UnificarObligacionContador(System.Object,System.String)
+  parent: ConversorPDF.XLL.Core.Helpers.App
+  langs:
+  - csharp
+  - vb
+  name: UnificarObligacionContador(object, string)
+  nameWithType: App.UnificarObligacionContador(object, string)
+  fullName: ConversorPDF.XLL.Core.Helpers.App.UnificarObligacionContador(object, string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  summary: Unifica los documentos de obligación con sus soportes PDF.
+  example: []
+  syntax:
+    content: public int UnificarObligacionContador(object activeWorkbook, string docType)
+    parameters:
+    - id: activeWorkbook
+      type: System.Object
+    - id: docType
+      type: System.String
+    return:
+      type: System.Int32
+    content.vb: Public Function UnificarObligacionContador(activeWorkbook As Object, docType As String) As Integer
+  overload: ConversorPDF.XLL.Core.Helpers.App.UnificarObligacionContador*
+  implements:
+  - ConversorPDF.XLL.Core.Interfaces.IApp.UnificarObligacionContador(System.Object,System.String)
+  nameWithType.vb: App.UnificarObligacionContador(Object, String)
+  fullName.vb: ConversorPDF.XLL.Core.Helpers.App.UnificarObligacionContador(Object, String)
+  name.vb: UnificarObligacionContador(Object, String)
+- uid: ConversorPDF.XLL.Core.Helpers.App.GenerarFirmaBase64Txt
+  commentId: M:ConversorPDF.XLL.Core.Helpers.App.GenerarFirmaBase64Txt
+  id: GenerarFirmaBase64Txt
+  parent: ConversorPDF.XLL.Core.Helpers.App
+  langs:
+  - csharp
+  - vb
+  name: GenerarFirmaBase64Txt()
+  nameWithType: App.GenerarFirmaBase64Txt()
+  fullName: ConversorPDF.XLL.Core.Helpers.App.GenerarFirmaBase64Txt()
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  summary: Genera un archivo de texto con la firma en Base64 para depuración.
+  example: []
+  syntax:
+    content: public string GenerarFirmaBase64Txt()
+    return:
+      type: System.String
+    content.vb: Public Function GenerarFirmaBase64Txt() As String
+  overload: ConversorPDF.XLL.Core.Helpers.App.GenerarFirmaBase64Txt*
+  implements:
+  - ConversorPDF.XLL.Core.Interfaces.IApp.GenerarFirmaBase64Txt
+- uid: ConversorPDF.XLL.Core.Helpers.App.GetResourceImage(System.String)
+  commentId: M:ConversorPDF.XLL.Core.Helpers.App.GetResourceImage(System.String)
+  id: GetResourceImage(System.String)
+  parent: ConversorPDF.XLL.Core.Helpers.App
+  langs:
+  - csharp
+  - vb
+  name: GetResourceImage(string)
+  nameWithType: App.GetResourceImage(string)
+  fullName: ConversorPDF.XLL.Core.Helpers.App.GetResourceImage(string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public static Image GetResourceImage(string resourceName)
+    parameters:
+    - id: resourceName
+      type: System.String
+    return:
+      type: System.Drawing.Image
+    content.vb: Public Shared Function GetResourceImage(resourceName As String) As Image
+  overload: ConversorPDF.XLL.Core.Helpers.App.GetResourceImage*
+  nameWithType.vb: App.GetResourceImage(String)
+  fullName.vb: ConversorPDF.XLL.Core.Helpers.App.GetResourceImage(String)
+  name.vb: GetResourceImage(String)
+- uid: ConversorPDF.XLL.Core.Helpers.App.GetIdentification(System.String)
+  commentId: M:ConversorPDF.XLL.Core.Helpers.App.GetIdentification(System.String)
+  id: GetIdentification(System.String)
+  parent: ConversorPDF.XLL.Core.Helpers.App
+  langs:
+  - csharp
+  - vb
+  name: GetIdentification(string)
+  nameWithType: App.GetIdentification(string)
+  fullName: ConversorPDF.XLL.Core.Helpers.App.GetIdentification(string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  summary: Obtiene los datos de identificación vinculados al usuario.
+  example: []
+  syntax:
+    content: public UserIdentification GetIdentification(string username)
+    parameters:
+    - id: username
+      type: System.String
+    return:
+      type: ConversorPDF.XLL.Core.Models.UserIdentification
+    content.vb: Public Function GetIdentification(username As String) As UserIdentification
+  overload: ConversorPDF.XLL.Core.Helpers.App.GetIdentification*
+  implements:
+  - ConversorPDF.XLL.Core.Interfaces.IApp.GetIdentification(System.String)
+  nameWithType.vb: App.GetIdentification(String)
+  fullName.vb: ConversorPDF.XLL.Core.Helpers.App.GetIdentification(String)
+  name.vb: GetIdentification(String)
+- uid: ConversorPDF.XLL.Core.Helpers.App.Viaticos
+  commentId: P:ConversorPDF.XLL.Core.Helpers.App.Viaticos
+  id: Viaticos
+  parent: ConversorPDF.XLL.Core.Helpers.App
+  langs:
+  - csharp
+  - vb
+  name: Viaticos
+  nameWithType: App.Viaticos
+  fullName: ConversorPDF.XLL.Core.Helpers.App.Viaticos
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  summary: Acceso al servicio de procesamiento de viáticos.
+  example: []
+  syntax:
+    content: public IViaticosService Viaticos { get; }
+    parameters: []
+    return:
+      type: ConversorPDF.XLL.Core.Interfaces.IViaticosService
+    content.vb: Public ReadOnly Property Viaticos As IViaticosService
+  overload: ConversorPDF.XLL.Core.Helpers.App.Viaticos*
+- uid: ConversorPDF.XLL.Core.Helpers.App.DEFAULT_USER
+  commentId: P:ConversorPDF.XLL.Core.Helpers.App.DEFAULT_USER
+  id: DEFAULT_USER
+  parent: ConversorPDF.XLL.Core.Helpers.App
+  langs:
+  - csharp
+  - vb
+  name: DEFAULT_USER
+  nameWithType: App.DEFAULT_USER
+  fullName: ConversorPDF.XLL.Core.Helpers.App.DEFAULT_USER
+  type: Property
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Helpers
+  syntax:
+    content: public static string DEFAULT_USER { get; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Shared ReadOnly Property DEFAULT_USER As String
+  overload: ConversorPDF.XLL.Core.Helpers.App.DEFAULT_USER*
+references:
+- uid: ConversorPDF.XLL.Core.Helpers
+  commentId: N:ConversorPDF.XLL.Core.Helpers
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Core.Helpers
+  nameWithType: ConversorPDF.XLL.Core.Helpers
+  fullName: ConversorPDF.XLL.Core.Helpers
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Helpers
+    name: Helpers
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Helpers.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Helpers
+    name: Helpers
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Helpers.html
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+  nameWithType: object
+  fullName: object
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: ConversorPDF.XLL.Core.Interfaces.IApp
+  commentId: T:ConversorPDF.XLL.Core.Interfaces.IApp
+  parent: ConversorPDF.XLL.Core.Interfaces
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IApp.html
+  name: IApp
+  nameWithType: IApp
+  fullName: ConversorPDF.XLL.Core.Interfaces.IApp
+- uid: System.Object.ToString
+  commentId: M:System.Object.ToString
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  name: ToString()
+  nameWithType: object.ToString()
+  fullName: object.ToString()
+  nameWithType.vb: Object.ToString()
+  fullName.vb: Object.ToString()
+  spec.csharp:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+- uid: System.Object.Equals(System.Object)
+  commentId: M:System.Object.Equals(System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  name: Equals(object)
+  nameWithType: object.Equals(object)
+  fullName: object.Equals(object)
+  nameWithType.vb: Object.Equals(Object)
+  fullName.vb: Object.Equals(Object)
+  name.vb: Equals(Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.Equals(System.Object,System.Object)
+  commentId: M:System.Object.Equals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  name: Equals(object, object)
+  nameWithType: object.Equals(object, object)
+  fullName: object.Equals(object, object)
+  nameWithType.vb: Object.Equals(Object, Object)
+  fullName.vb: Object.Equals(Object, Object)
+  name.vb: Equals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.ReferenceEquals(System.Object,System.Object)
+  commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  name: ReferenceEquals(object, object)
+  nameWithType: object.ReferenceEquals(object, object)
+  fullName: object.ReferenceEquals(object, object)
+  nameWithType.vb: Object.ReferenceEquals(Object, Object)
+  fullName.vb: Object.ReferenceEquals(Object, Object)
+  name.vb: ReferenceEquals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.GetHashCode
+  commentId: M:System.Object.GetHashCode
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  name: GetHashCode()
+  nameWithType: object.GetHashCode()
+  fullName: object.GetHashCode()
+  nameWithType.vb: Object.GetHashCode()
+  fullName.vb: Object.GetHashCode()
+  spec.csharp:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+- uid: System.Object.GetType
+  commentId: M:System.Object.GetType
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  name: GetType()
+  nameWithType: object.GetType()
+  fullName: object.GetType()
+  nameWithType.vb: Object.GetType()
+  fullName.vb: Object.GetType()
+  spec.csharp:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+- uid: System.Object.MemberwiseClone
+  commentId: M:System.Object.MemberwiseClone
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  name: MemberwiseClone()
+  nameWithType: object.MemberwiseClone()
+  fullName: object.MemberwiseClone()
+  nameWithType.vb: Object.MemberwiseClone()
+  fullName.vb: Object.MemberwiseClone()
+  spec.csharp:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: ConversorPDF.XLL.Core.Interfaces
+  commentId: N:ConversorPDF.XLL.Core.Interfaces
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Core.Interfaces
+  nameWithType: ConversorPDF.XLL.Core.Interfaces
+  fullName: ConversorPDF.XLL.Core.Interfaces
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Interfaces
+    name: Interfaces
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Interfaces
+    name: Interfaces
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.html
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: ConversorPDF.XLL.Core.Helpers.App.#ctor*
+  commentId: Overload:ConversorPDF.XLL.Core.Helpers.App.#ctor
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.App.html#ConversorPDF_XLL_Core_Helpers_App__ctor
+  name: App
+  nameWithType: App.App
+  fullName: ConversorPDF.XLL.Core.Helpers.App.App
+  nameWithType.vb: App.New
+  fullName.vb: ConversorPDF.XLL.Core.Helpers.App.New
+  name.vb: New
+- uid: ConversorPDF.XLL.Core.Interfaces.IUserService
+  commentId: T:ConversorPDF.XLL.Core.Interfaces.IUserService
+  parent: ConversorPDF.XLL.Core.Interfaces
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IUserService.html
+  name: IUserService
+  nameWithType: IUserService
+  fullName: ConversorPDF.XLL.Core.Interfaces.IUserService
+- uid: ConversorPDF.XLL.Core.Interfaces.IPdfService
+  commentId: T:ConversorPDF.XLL.Core.Interfaces.IPdfService
+  parent: ConversorPDF.XLL.Core.Interfaces
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IPdfService.html
+  name: IPdfService
+  nameWithType: IPdfService
+  fullName: ConversorPDF.XLL.Core.Interfaces.IPdfService
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService
+  commentId: T:ConversorPDF.XLL.Core.Interfaces.IViaticosService
+  parent: ConversorPDF.XLL.Core.Interfaces
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosService.html
+  name: IViaticosService
+  nameWithType: IViaticosService
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosService
+- uid: ConversorPDF.XLL.Core.Interfaces.IContadorService
+  commentId: T:ConversorPDF.XLL.Core.Interfaces.IContadorService
+  parent: ConversorPDF.XLL.Core.Interfaces
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IContadorService.html
+  name: IContadorService
+  nameWithType: IContadorService
+  fullName: ConversorPDF.XLL.Core.Interfaces.IContadorService
+- uid: ConversorPDF.XLL.Core.Helpers.App.GetUserName*
+  commentId: Overload:ConversorPDF.XLL.Core.Helpers.App.GetUserName
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.App.html#ConversorPDF_XLL_Core_Helpers_App_GetUserName
+  name: GetUserName
+  nameWithType: App.GetUserName
+  fullName: ConversorPDF.XLL.Core.Helpers.App.GetUserName
+- uid: ConversorPDF.XLL.Core.Helpers.App.CapitalizarPalabras*
+  commentId: Overload:ConversorPDF.XLL.Core.Helpers.App.CapitalizarPalabras
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.App.html#ConversorPDF_XLL_Core_Helpers_App_CapitalizarPalabras_System_String_
+  name: CapitalizarPalabras
+  nameWithType: App.CapitalizarPalabras
+  fullName: ConversorPDF.XLL.Core.Helpers.App.CapitalizarPalabras
+- uid: ConversorPDF.XLL.Core.Helpers.App.CombinarArchivos*
+  commentId: Overload:ConversorPDF.XLL.Core.Helpers.App.CombinarArchivos
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.App.html#ConversorPDF_XLL_Core_Helpers_App_CombinarArchivos_System_Object_System_String_
+  name: CombinarArchivos
+  nameWithType: App.CombinarArchivos
+  fullName: ConversorPDF.XLL.Core.Helpers.App.CombinarArchivos
+- uid: ConversorPDF.XLL.Core.Interfaces.IApp.CombinarArchivos(System.Object,System.String)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IApp.CombinarArchivos(System.Object,System.String)
+  parent: ConversorPDF.XLL.Core.Interfaces.IApp
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IApp.html#ConversorPDF_XLL_Core_Interfaces_IApp_CombinarArchivos_System_Object_System_String_
+  name: CombinarArchivos(object, string)
+  nameWithType: IApp.CombinarArchivos(object, string)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IApp.CombinarArchivos(object, string)
+  nameWithType.vb: IApp.CombinarArchivos(Object, String)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IApp.CombinarArchivos(Object, String)
+  name.vb: CombinarArchivos(Object, String)
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IApp.CombinarArchivos(System.Object,System.String)
+    name: CombinarArchivos
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IApp.html#ConversorPDF_XLL_Core_Interfaces_IApp_CombinarArchivos_System_Object_System_String_
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IApp.CombinarArchivos(System.Object,System.String)
+    name: CombinarArchivos
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IApp.html#ConversorPDF_XLL_Core_Interfaces_IApp_CombinarArchivos_System_Object_System_String_
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+- uid: ConversorPDF.XLL.Core.Helpers.App.ConfigurarPagina*
+  commentId: Overload:ConversorPDF.XLL.Core.Helpers.App.ConfigurarPagina
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.App.html#ConversorPDF_XLL_Core_Helpers_App_ConfigurarPagina_System_Object_System_Boolean_
+  name: ConfigurarPagina
+  nameWithType: App.ConfigurarPagina
+  fullName: ConversorPDF.XLL.Core.Helpers.App.ConfigurarPagina
+- uid: dynamic
+  commentId: T:System.Object
+  isExternal: true
+  name: dynamic
+  nameWithType: dynamic
+  fullName: dynamic
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: System.Boolean
+  commentId: T:System.Boolean
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.boolean
+  name: bool
+  nameWithType: bool
+  fullName: bool
+  nameWithType.vb: Boolean
+  fullName.vb: Boolean
+  name.vb: Boolean
+- uid: ConversorPDF.XLL.Core.Helpers.App.GetOneDriveLocalPath*
+  commentId: Overload:ConversorPDF.XLL.Core.Helpers.App.GetOneDriveLocalPath
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.App.html#ConversorPDF_XLL_Core_Helpers_App_GetOneDriveLocalPath_System_String_
+  name: GetOneDriveLocalPath
+  nameWithType: App.GetOneDriveLocalPath
+  fullName: ConversorPDF.XLL.Core.Helpers.App.GetOneDriveLocalPath
+- uid: ConversorPDF.XLL.Core.Interfaces.IApp.GetOneDriveLocalPath(System.String)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IApp.GetOneDriveLocalPath(System.String)
+  parent: ConversorPDF.XLL.Core.Interfaces.IApp
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IApp.html#ConversorPDF_XLL_Core_Interfaces_IApp_GetOneDriveLocalPath_System_String_
+  name: GetOneDriveLocalPath(string)
+  nameWithType: IApp.GetOneDriveLocalPath(string)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IApp.GetOneDriveLocalPath(string)
+  nameWithType.vb: IApp.GetOneDriveLocalPath(String)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IApp.GetOneDriveLocalPath(String)
+  name.vb: GetOneDriveLocalPath(String)
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IApp.GetOneDriveLocalPath(System.String)
+    name: GetOneDriveLocalPath
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IApp.html#ConversorPDF_XLL_Core_Interfaces_IApp_GetOneDriveLocalPath_System_String_
+  - name: (
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IApp.GetOneDriveLocalPath(System.String)
+    name: GetOneDriveLocalPath
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IApp.html#ConversorPDF_XLL_Core_Interfaces_IApp_GetOneDriveLocalPath_System_String_
+  - name: (
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+- uid: ConversorPDF.XLL.Core.Helpers.App.GetCurrentOfficeUser*
+  commentId: Overload:ConversorPDF.XLL.Core.Helpers.App.GetCurrentOfficeUser
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.App.html#ConversorPDF_XLL_Core_Helpers_App_GetCurrentOfficeUser
+  name: GetCurrentOfficeUser
+  nameWithType: App.GetCurrentOfficeUser
+  fullName: ConversorPDF.XLL.Core.Helpers.App.GetCurrentOfficeUser
+- uid: ConversorPDF.XLL.Core.Interfaces.IApp.GetCurrentOfficeUser
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IApp.GetCurrentOfficeUser
+  parent: ConversorPDF.XLL.Core.Interfaces.IApp
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IApp.html#ConversorPDF_XLL_Core_Interfaces_IApp_GetCurrentOfficeUser
+  name: GetCurrentOfficeUser()
+  nameWithType: IApp.GetCurrentOfficeUser()
+  fullName: ConversorPDF.XLL.Core.Interfaces.IApp.GetCurrentOfficeUser()
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IApp.GetCurrentOfficeUser
+    name: GetCurrentOfficeUser
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IApp.html#ConversorPDF_XLL_Core_Interfaces_IApp_GetCurrentOfficeUser
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IApp.GetCurrentOfficeUser
+    name: GetCurrentOfficeUser
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IApp.html#ConversorPDF_XLL_Core_Interfaces_IApp_GetCurrentOfficeUser
+  - name: (
+  - name: )
+- uid: ConversorPDF.XLL.Core.Helpers.App.GetFirmaHelperUsuario*
+  commentId: Overload:ConversorPDF.XLL.Core.Helpers.App.GetFirmaHelperUsuario
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.App.html#ConversorPDF_XLL_Core_Helpers_App_GetFirmaHelperUsuario
+  name: GetFirmaHelperUsuario
+  nameWithType: App.GetFirmaHelperUsuario
+  fullName: ConversorPDF.XLL.Core.Helpers.App.GetFirmaHelperUsuario
+- uid: ConversorPDF.XLL.Core.Interfaces.IApp.GetFirmaHelperUsuario
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IApp.GetFirmaHelperUsuario
+  parent: ConversorPDF.XLL.Core.Interfaces.IApp
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IApp.html#ConversorPDF_XLL_Core_Interfaces_IApp_GetFirmaHelperUsuario
+  name: GetFirmaHelperUsuario()
+  nameWithType: IApp.GetFirmaHelperUsuario()
+  fullName: ConversorPDF.XLL.Core.Interfaces.IApp.GetFirmaHelperUsuario()
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IApp.GetFirmaHelperUsuario
+    name: GetFirmaHelperUsuario
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IApp.html#ConversorPDF_XLL_Core_Interfaces_IApp_GetFirmaHelperUsuario
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IApp.GetFirmaHelperUsuario
+    name: GetFirmaHelperUsuario
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IApp.html#ConversorPDF_XLL_Core_Interfaces_IApp_GetFirmaHelperUsuario
+  - name: (
+  - name: )
+- uid: ConversorPDF.XLL.Core.Helpers.App.CrearArchivoBase64Temporal*
+  commentId: Overload:ConversorPDF.XLL.Core.Helpers.App.CrearArchivoBase64Temporal
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.App.html#ConversorPDF_XLL_Core_Helpers_App_CrearArchivoBase64Temporal_System_String_System_String_
+  name: CrearArchivoBase64Temporal
+  nameWithType: App.CrearArchivoBase64Temporal
+  fullName: ConversorPDF.XLL.Core.Helpers.App.CrearArchivoBase64Temporal
+- uid: ConversorPDF.XLL.Core.Interfaces.IApp.CrearArchivoBase64Temporal(System.String,System.String)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IApp.CrearArchivoBase64Temporal(System.String,System.String)
+  parent: ConversorPDF.XLL.Core.Interfaces.IApp
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IApp.html#ConversorPDF_XLL_Core_Interfaces_IApp_CrearArchivoBase64Temporal_System_String_System_String_
+  name: CrearArchivoBase64Temporal(string, string)
+  nameWithType: IApp.CrearArchivoBase64Temporal(string, string)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IApp.CrearArchivoBase64Temporal(string, string)
+  nameWithType.vb: IApp.CrearArchivoBase64Temporal(String, String)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IApp.CrearArchivoBase64Temporal(String, String)
+  name.vb: CrearArchivoBase64Temporal(String, String)
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IApp.CrearArchivoBase64Temporal(System.String,System.String)
+    name: CrearArchivoBase64Temporal
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IApp.html#ConversorPDF_XLL_Core_Interfaces_IApp_CrearArchivoBase64Temporal_System_String_System_String_
+  - name: (
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IApp.CrearArchivoBase64Temporal(System.String,System.String)
+    name: CrearArchivoBase64Temporal
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IApp.html#ConversorPDF_XLL_Core_Interfaces_IApp_CrearArchivoBase64Temporal_System_String_System_String_
+  - name: (
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+- uid: ConversorPDF.XLL.Core.Helpers.App.GetFirmaUsuarioActual*
+  commentId: Overload:ConversorPDF.XLL.Core.Helpers.App.GetFirmaUsuarioActual
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.App.html#ConversorPDF_XLL_Core_Helpers_App_GetFirmaUsuarioActual
+  name: GetFirmaUsuarioActual
+  nameWithType: App.GetFirmaUsuarioActual
+  fullName: ConversorPDF.XLL.Core.Helpers.App.GetFirmaUsuarioActual
+- uid: ConversorPDF.XLL.Core.Interfaces.IApp.GetFirmaUsuarioActual
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IApp.GetFirmaUsuarioActual
+  parent: ConversorPDF.XLL.Core.Interfaces.IApp
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IApp.html#ConversorPDF_XLL_Core_Interfaces_IApp_GetFirmaUsuarioActual
+  name: GetFirmaUsuarioActual()
+  nameWithType: IApp.GetFirmaUsuarioActual()
+  fullName: ConversorPDF.XLL.Core.Interfaces.IApp.GetFirmaUsuarioActual()
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IApp.GetFirmaUsuarioActual
+    name: GetFirmaUsuarioActual
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IApp.html#ConversorPDF_XLL_Core_Interfaces_IApp_GetFirmaUsuarioActual
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IApp.GetFirmaUsuarioActual
+    name: GetFirmaUsuarioActual
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IApp.html#ConversorPDF_XLL_Core_Interfaces_IApp_GetFirmaUsuarioActual
+  - name: (
+  - name: )
+- uid: ConversorPDF.XLL.Core.Helpers.App.ConvertirObligacionContador*
+  commentId: Overload:ConversorPDF.XLL.Core.Helpers.App.ConvertirObligacionContador
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.App.html#ConversorPDF_XLL_Core_Helpers_App_ConvertirObligacionContador_System_Object_
+  name: ConvertirObligacionContador
+  nameWithType: App.ConvertirObligacionContador
+  fullName: ConversorPDF.XLL.Core.Helpers.App.ConvertirObligacionContador
+- uid: ConversorPDF.XLL.Core.Interfaces.IApp.ConvertirObligacionContador(System.Object)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IApp.ConvertirObligacionContador(System.Object)
+  parent: ConversorPDF.XLL.Core.Interfaces.IApp
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IApp.html#ConversorPDF_XLL_Core_Interfaces_IApp_ConvertirObligacionContador_System_Object_
+  name: ConvertirObligacionContador(object)
+  nameWithType: IApp.ConvertirObligacionContador(object)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IApp.ConvertirObligacionContador(object)
+  nameWithType.vb: IApp.ConvertirObligacionContador(Object)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IApp.ConvertirObligacionContador(Object)
+  name.vb: ConvertirObligacionContador(Object)
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IApp.ConvertirObligacionContador(System.Object)
+    name: ConvertirObligacionContador
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IApp.html#ConversorPDF_XLL_Core_Interfaces_IApp_ConvertirObligacionContador_System_Object_
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IApp.ConvertirObligacionContador(System.Object)
+    name: ConvertirObligacionContador
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IApp.html#ConversorPDF_XLL_Core_Interfaces_IApp_ConvertirObligacionContador_System_Object_
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Int32
+  commentId: T:System.Int32
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int
+  nameWithType: int
+  fullName: int
+  nameWithType.vb: Integer
+  fullName.vb: Integer
+  name.vb: Integer
+- uid: ConversorPDF.XLL.Core.Helpers.App.UnificarObligacionContador*
+  commentId: Overload:ConversorPDF.XLL.Core.Helpers.App.UnificarObligacionContador
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.App.html#ConversorPDF_XLL_Core_Helpers_App_UnificarObligacionContador_System_Object_System_String_
+  name: UnificarObligacionContador
+  nameWithType: App.UnificarObligacionContador
+  fullName: ConversorPDF.XLL.Core.Helpers.App.UnificarObligacionContador
+- uid: ConversorPDF.XLL.Core.Interfaces.IApp.UnificarObligacionContador(System.Object,System.String)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IApp.UnificarObligacionContador(System.Object,System.String)
+  parent: ConversorPDF.XLL.Core.Interfaces.IApp
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IApp.html#ConversorPDF_XLL_Core_Interfaces_IApp_UnificarObligacionContador_System_Object_System_String_
+  name: UnificarObligacionContador(object, string)
+  nameWithType: IApp.UnificarObligacionContador(object, string)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IApp.UnificarObligacionContador(object, string)
+  nameWithType.vb: IApp.UnificarObligacionContador(Object, String)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IApp.UnificarObligacionContador(Object, String)
+  name.vb: UnificarObligacionContador(Object, String)
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IApp.UnificarObligacionContador(System.Object,System.String)
+    name: UnificarObligacionContador
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IApp.html#ConversorPDF_XLL_Core_Interfaces_IApp_UnificarObligacionContador_System_Object_System_String_
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IApp.UnificarObligacionContador(System.Object,System.String)
+    name: UnificarObligacionContador
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IApp.html#ConversorPDF_XLL_Core_Interfaces_IApp_UnificarObligacionContador_System_Object_System_String_
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+- uid: ConversorPDF.XLL.Core.Helpers.App.GenerarFirmaBase64Txt*
+  commentId: Overload:ConversorPDF.XLL.Core.Helpers.App.GenerarFirmaBase64Txt
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.App.html#ConversorPDF_XLL_Core_Helpers_App_GenerarFirmaBase64Txt
+  name: GenerarFirmaBase64Txt
+  nameWithType: App.GenerarFirmaBase64Txt
+  fullName: ConversorPDF.XLL.Core.Helpers.App.GenerarFirmaBase64Txt
+- uid: ConversorPDF.XLL.Core.Interfaces.IApp.GenerarFirmaBase64Txt
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IApp.GenerarFirmaBase64Txt
+  parent: ConversorPDF.XLL.Core.Interfaces.IApp
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IApp.html#ConversorPDF_XLL_Core_Interfaces_IApp_GenerarFirmaBase64Txt
+  name: GenerarFirmaBase64Txt()
+  nameWithType: IApp.GenerarFirmaBase64Txt()
+  fullName: ConversorPDF.XLL.Core.Interfaces.IApp.GenerarFirmaBase64Txt()
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IApp.GenerarFirmaBase64Txt
+    name: GenerarFirmaBase64Txt
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IApp.html#ConversorPDF_XLL_Core_Interfaces_IApp_GenerarFirmaBase64Txt
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IApp.GenerarFirmaBase64Txt
+    name: GenerarFirmaBase64Txt
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IApp.html#ConversorPDF_XLL_Core_Interfaces_IApp_GenerarFirmaBase64Txt
+  - name: (
+  - name: )
+- uid: ConversorPDF.XLL.Core.Helpers.App.GetResourceImage*
+  commentId: Overload:ConversorPDF.XLL.Core.Helpers.App.GetResourceImage
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.App.html#ConversorPDF_XLL_Core_Helpers_App_GetResourceImage_System_String_
+  name: GetResourceImage
+  nameWithType: App.GetResourceImage
+  fullName: ConversorPDF.XLL.Core.Helpers.App.GetResourceImage
+- uid: System.Drawing.Image
+  commentId: T:System.Drawing.Image
+  parent: System.Drawing
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.drawing.image
+  name: Image
+  nameWithType: Image
+  fullName: System.Drawing.Image
+- uid: System.Drawing
+  commentId: N:System.Drawing
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System.Drawing
+  nameWithType: System.Drawing
+  fullName: System.Drawing
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Drawing
+    name: Drawing
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.drawing
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Drawing
+    name: Drawing
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.drawing
+- uid: ConversorPDF.XLL.Core.Helpers.App.GetIdentification*
+  commentId: Overload:ConversorPDF.XLL.Core.Helpers.App.GetIdentification
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.App.html#ConversorPDF_XLL_Core_Helpers_App_GetIdentification_System_String_
+  name: GetIdentification
+  nameWithType: App.GetIdentification
+  fullName: ConversorPDF.XLL.Core.Helpers.App.GetIdentification
+- uid: ConversorPDF.XLL.Core.Interfaces.IApp.GetIdentification(System.String)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IApp.GetIdentification(System.String)
+  parent: ConversorPDF.XLL.Core.Interfaces.IApp
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IApp.html#ConversorPDF_XLL_Core_Interfaces_IApp_GetIdentification_System_String_
+  name: GetIdentification(string)
+  nameWithType: IApp.GetIdentification(string)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IApp.GetIdentification(string)
+  nameWithType.vb: IApp.GetIdentification(String)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IApp.GetIdentification(String)
+  name.vb: GetIdentification(String)
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IApp.GetIdentification(System.String)
+    name: GetIdentification
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IApp.html#ConversorPDF_XLL_Core_Interfaces_IApp_GetIdentification_System_String_
+  - name: (
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IApp.GetIdentification(System.String)
+    name: GetIdentification
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IApp.html#ConversorPDF_XLL_Core_Interfaces_IApp_GetIdentification_System_String_
+  - name: (
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+- uid: ConversorPDF.XLL.Core.Models.UserIdentification
+  commentId: T:ConversorPDF.XLL.Core.Models.UserIdentification
+  parent: ConversorPDF.XLL.Core.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.UserIdentification.html
+  name: UserIdentification
+  nameWithType: UserIdentification
+  fullName: ConversorPDF.XLL.Core.Models.UserIdentification
+- uid: ConversorPDF.XLL.Core.Models
+  commentId: N:ConversorPDF.XLL.Core.Models
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Core.Models
+  nameWithType: ConversorPDF.XLL.Core.Models
+  fullName: ConversorPDF.XLL.Core.Models
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Models
+    name: Models
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Models
+    name: Models
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Models.html
+- uid: ConversorPDF.XLL.Core.Helpers.App.Viaticos*
+  commentId: Overload:ConversorPDF.XLL.Core.Helpers.App.Viaticos
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.App.html#ConversorPDF_XLL_Core_Helpers_App_Viaticos
+  name: Viaticos
+  nameWithType: App.Viaticos
+  fullName: ConversorPDF.XLL.Core.Helpers.App.Viaticos
+- uid: ConversorPDF.XLL.Core.Helpers.App.DEFAULT_USER*
+  commentId: Overload:ConversorPDF.XLL.Core.Helpers.App.DEFAULT_USER
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Helpers.App.html#ConversorPDF_XLL_Core_Helpers_App_DEFAULT_USER
+  name: DEFAULT_USER
+  nameWithType: App.DEFAULT_USER
+  fullName: ConversorPDF.XLL.Core.Helpers.App.DEFAULT_USER

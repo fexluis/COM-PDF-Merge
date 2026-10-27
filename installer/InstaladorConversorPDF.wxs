@@ -2,7 +2,7 @@
   <Package 
     Name="ConversorPDF XLL Add-in" 
     Language="1034" 
-    Version="1.2.45.17" 
+    Version="1.6.3.79" 
     Manufacturer="ESAP" 
     UpgradeCode="80babf47-af47-4518-a228-9258c54f8726"
     Scope="perUser">
@@ -24,6 +24,7 @@
       <Directory Id="MicrosoftFolder" Name="Microsoft">
         <Directory Id="AddInsFolder" Name="AddIns">
           <Directory Id="dir_x64" Name="x64" />
+          <Directory Id="dir_ExcelTemplates" Name="ExcelTemplates" />
         </Directory>
       </Directory>
     </StandardDirectory>
@@ -32,22 +33,134 @@
     <ComponentGroup Id="MainComponents" Directory="AddInsFolder">
       <Component Id="cmpXllFile" Guid="F6F2E07C-D3A3-4C10-9E11-2B2D3C4E5F60">
         <RegistryValue Root="HKCU" Key="Software\ESAP\ConversorPDF" Name="installed" Type="integer" Value="1" KeyPath="yes" />
-        <File Id="filXll" Name="ConversorPDF.xll" Source="..\ConversorPDF.XLL\bin\x64\Release\ConversorPDF.XLL-AddIn64-packed.xll" />
+        <File Id="filXll" Name="ConversorPDF.xll" Source="..\ConversorPDF.XLL\bin\x64\Release\ConversorPDF.XLL-AddIn64.xll" />
         <RemoveFile Id="PurgeOldXll" Name="ConversorPDF.XLL-AddIn64-packed.xll" On="install" />
-        <RemoveFile Id="PurgeXll" Name="ConversorPDF.xll" On="uninstall" />
-        <RemoveFolder Id="RemoveAddInsFolder" Directory="AddInsFolder" On="uninstall" />
-        <RemoveFolder Id="RemoveMicrosoftFolder" Directory="MicrosoftFolder" On="uninstall" />
+      </Component>
+
+      <Component Id="cmpDnaFile" Guid="BBA34CD5-908E-4659-ABDF-61CF2F57D1F8">
+        <File Id="filDna" Name="ConversorPDF.dna" KeyPath="yes" Source="..\ConversorPDF.XLL\bin\x64\Release\ConversorPDF.XLL-AddIn64.dna" />
       </Component>
 
       <Component Id="cmpSQLiteInterop" Guid="A2B3C4D5-E6F7-4890-ABCD-EF1234567891" Directory="dir_x64">
         <RegistryValue Root="HKCU" Key="Software\ESAP\ConversorPDF" Name="interop_installed" Type="integer" Value="1" KeyPath="yes" />
         <File Id="filSQLiteInterop" Name="SQLite.Interop.dll" Source="..\ConversorPDF.XLL\bin\x64\Release\x64\SQLite.Interop.dll" />
-        <RemoveFolder Id="RemoveX64Folder" Directory="dir_x64" On="uninstall" />
+      </Component>
+    </ComponentGroup>
+
+    <ComponentGroup Id="DllComponents" Directory="AddInsFolder">
+      <!-- Ensamblado principal del add-in -->
+      <Component Id="cmpXllDll" Guid="C2C00FB4-ED22-4242-9C31-7AD161A127AD">
+        <File Id="filXllDll" Name="ConversorPDF.XLL.dll" Source="..\ConversorPDF.XLL\bin\x64\Release\ConversorPDF.XLL.dll" />
+      </Component>
+
+      <!-- ExcelDna runtime (Requerido cuando ExcelDnaUnpack=true) -->
+      <Component Id="cmpManagedHost" Guid="406EC3EA-FBDC-484E-93A8-55B5B0FFEA1D">
+        <File Id="filManagedHost" Name="ExcelDna.ManagedHost.dll" Source="..\ConversorPDF.XLL\bin\x64\Release\ExcelDna.ManagedHost.dll" />
+      </Component>
+      
+      <Component Id="cmpExcelDnaIntegration" Guid="B37045BB-5976-48BF-BAA0-7C6088AE7397">
+        <File Id="filExcelDnaIntegration" Name="ExcelDna.Integration.dll" Source="..\ConversorPDF.XLL\bin\x64\Release\ExcelDna.Integration.dll" />
+      </Component>
+      
+      <Component Id="cmpExcelDnaLoader" Guid="C4D5E6F7-4890-ABCD-EF12-34567891A2B3">
+        <File Id="filExcelDnaLoader" Name="ExcelDna.Loader.dll" Source="..\ConversorPDF.XLL\bin\x64\Release\ExcelDna.Loader.dll" />
+      </Component>
+
+      <!-- PDF Libraries -->
+      <Component Id="cmpPdfSharp" Guid="3FF57C93-1B4B-4BDD-84C9-49C2AF1F342A">
+        <File Id="filPdfSharp" Name="PdfSharp.dll" Source="..\ConversorPDF.XLL\bin\x64\Release\PdfSharp.dll" />
+      </Component>
+      <Component Id="cmpPdfSharpCharting" Guid="6B0342D9-4696-4797-BBC4-899D4748CCCB">
+        <File Id="filPdfSharpCharting" Name="PdfSharp.Charting.dll" Source="..\ConversorPDF.XLL\bin\x64\Release\PdfSharp.Charting.dll" />
+      </Component>
+      <Component Id="cmpPdfPig" Guid="50BDDB6E-290D-40FB-AF87-E2AD5290B9A8">
+        <File Id="filPdfPig" Name="UglyToad.PdfPig.dll" Source="..\ConversorPDF.XLL\bin\x64\Release\UglyToad.PdfPig.dll" />
+      </Component>
+      <Component Id="cmpPdfPigCore" Guid="C78897CA-E6FA-4168-9897-6F60F42B3A4D">
+        <File Id="filPdfPigCore" Name="UglyToad.PdfPig.Core.dll" Source="..\ConversorPDF.XLL\bin\x64\Release\UglyToad.PdfPig.Core.dll" />
+      </Component>
+      <Component Id="cmpPdfPigDLA" Guid="BDE6D966-4861-4BAC-8555-E792E8B8A448">
+        <File Id="filPdfPigDLA" Name="UglyToad.PdfPig.DocumentLayoutAnalysis.dll" Source="..\ConversorPDF.XLL\bin\x64\Release\UglyToad.PdfPig.DocumentLayoutAnalysis.dll" />
+      </Component>
+      <Component Id="cmpPdfPigFonts" Guid="411221A3-EE8E-4000-8548-D34C101433A6">
+        <File Id="filPdfPigFonts" Name="UglyToad.PdfPig.Fonts.dll" Source="..\ConversorPDF.XLL\bin\x64\Release\UglyToad.PdfPig.Fonts.dll" />
+      </Component>
+      <Component Id="cmpPdfPigPkg" Guid="773344CA-B908-4E75-84DB-553685391462">
+        <File Id="filPdfPigPkg" Name="UglyToad.PdfPig.Package.dll" Source="..\ConversorPDF.XLL\bin\x64\Release\UglyToad.PdfPig.Package.dll" />
+      </Component>
+      <Component Id="cmpPdfPigTokenization" Guid="CD9CDC55-692E-46D4-9B06-AD4DA36629DA">
+        <File Id="filPdfPigTokenization" Name="UglyToad.PdfPig.Tokenization.dll" Source="..\ConversorPDF.XLL\bin\x64\Release\UglyToad.PdfPig.Tokenization.dll" />
+      </Component>
+      <Component Id="cmpPdfPigTokens" Guid="4B1C166A-17D4-4D1E-945A-01A861131E70">
+        <File Id="filPdfPigTokens" Name="UglyToad.PdfPig.Tokens.dll" Source="..\ConversorPDF.XLL\bin\x64\Release\UglyToad.PdfPig.Tokens.dll" />
+      </Component>
+
+      <!-- Infraestructura / polyfills -->
+      <Component Id="cmpSysReflection" Guid="33225E7E-0780-4A23-9BC3-F00D66AD07C9">
+        <File Id="filSysReflection" Name="System.Reflection.Metadata.dll" Source="..\ConversorPDF.XLL\bin\x64\Release\System.Reflection.Metadata.dll" />
+      </Component>
+      <Component Id="cmpSysCollections" Guid="DBFD8EA5-73CC-43B7-9D04-FE516DC27291">
+        <File Id="filSysCollections" Name="System.Collections.Immutable.dll" Source="..\ConversorPDF.XLL\bin\x64\Release\System.Collections.Immutable.dll" />
+      </Component>
+      <Component Id="cmpSysUnsafe" Guid="EDF4EF92-0C6F-4422-9417-E1CB1E76ED97">
+        <File Id="filSysUnsafe" Name="System.Runtime.CompilerServices.Unsafe.dll" Source="..\ConversorPDF.XLL\bin\x64\Release\System.Runtime.CompilerServices.Unsafe.dll" />
+      </Component>
+
+      <!-- SQLite + Dapper + CSharpFunctionalExtensions -->
+      <Component Id="cmpDapper" Guid="B1D8D42A-6C7B-4FF2-AC49-B60B666826BD">
+        <File Id="filDapper" Name="Dapper.dll" Source="..\ConversorPDF.XLL\bin\x64\Release\Dapper.dll" />
+      </Component>
+      <Component Id="cmpSQLite" Guid="6DBB02B7-F0B3-4F6B-BBB3-E23319EBD041">
+        <File Id="filSQLite" Name="System.Data.SQLite.dll" Source="..\ConversorPDF.XLL\bin\x64\Release\System.Data.SQLite.dll" />
+      </Component>
+      <Component Id="cmpCsharpFE" Guid="0C8A7F41-1153-487D-8DA1-F2B3E12D3A1F">
+        <File Id="filCsharpFE" Name="CSharpFunctionalExtensions.dll" Source="..\ConversorPDF.XLL\bin\x64\Release\CSharpFunctionalExtensions.dll" />
+      </Component>
+
+    </ComponentGroup>
+
+    <ComponentGroup Id="TemplateComponents" Directory="dir_ExcelTemplates">
+      <!-- 
+        Fase 722 (Blindaje Integral de Reemplazo): 
+        - File/@Id ("filTemplate1") se mantiene idéntico entre versiones para conservar trazabilidad y linaje MSI.
+        - RegistryValue con KeyPath="yes" en HKCU garantiza que el componente sea evaluado como 'Action: Local/Install'
+          en instalaciones per-user al actualizarse el valor [ProductVersion].
+        - DefaultVersion="1.6.3.79": Atribuye versión sintética tomada dinámicamente del ensamblado principal.
+          En Windows Installer (CostFinalize), un archivo con versión en el MSI SIEMPRE sobreescribe a un archivo de datos
+          sin versión (.xlsx) existente en disco, anulando la regla FA_NoOverwrite de archivos modificados por el usuario.
+        - RemoveFile On="install": Purga física del archivo existente en la fase RemoveFiles (3500) antes de InstallFiles (4000).
+      -->
+      <Component Id="cmpTemplate1" Guid="1E3C8A4B-9B2D-4C10-8E11-2B2D3C4E5F61">
+        <RegistryValue Root="HKCU" Key="Software\ESAP\ConversorPDF\Templates" Name="GF-FO-023" Type="string" Value="[ProductVersion]" KeyPath="yes" />
+        <File Id="filTemplate1" 
+              Name="GF-FO-023.xlsx" 
+              Source="..\ConversorPDF.XLL\ExcelTemplates\GF-FO-023.xlsx" 
+              DefaultVersion="1.6.3.79" />
+        <RemoveFile Id="PurgeOldTemplate1" Name="GF-FO-023.xlsx" On="install" />
+      </Component>
+
+      <!-- 
+        Fase 722 & 723 (Blindaje Integral de Reemplazo y Limpieza de Carpeta): 
+        - File/@Id ("filTemplate2") se mantiene idéntico entre versiones para conservar trazabilidad y linaje MSI.
+        - RegistryValue con KeyPath="yes" en HKCU garantiza la instalación activa del componente en per-user.
+        - DefaultVersion="1.6.3.79": Fuerza la sobreescritura incondicional de FV-FO-033.xlsx.
+        - RemoveFile On="install": Purga física previa en RemoveFiles (3500) antes de InstallFiles (4000).
+        - RemoveFolder On="uninstall": Elimina la subcarpeta dir_ExcelTemplates en la desinstalación si queda vacía.
+      -->
+      <Component Id="cmpTemplate2" Guid="1E3C8A4B-9B2D-4C10-8E11-2B2D3C4E5F62">
+        <RegistryValue Root="HKCU" Key="Software\ESAP\ConversorPDF\Templates" Name="FV-FO-033" Type="string" Value="[ProductVersion]" KeyPath="yes" />
+        <File Id="filTemplate2" 
+              Name="FV-FO-033.xlsx" 
+              Source="..\ConversorPDF.XLL\ExcelTemplates\FV-FO-033.xlsx" 
+              DefaultVersion="1.6.3.79" />
+        <RemoveFile Id="PurgeOldTemplate2" Name="FV-FO-033.xlsx" On="install" />
+        <RemoveFolder Id="RemoveExcelTemplatesFolder" Directory="dir_ExcelTemplates" On="uninstall" />
       </Component>
     </ComponentGroup>
 
     <!-- Binary del script VBS (Custom Action) -->
     <Binary Id="RegisterScript" SourceFile="RegisterXLL.vbs" />
+    <Binary Id="UnregisterScript" SourceFile="UnregisterXLL.vbs" />
 
     <!-- Custom Action que registra el XLL -->
     <CustomAction 
@@ -57,14 +170,33 @@
       Execute="immediate" 
       Return="check" />
 
+    <CustomAction
+      Id="UnregisterExcelXLL"
+      BinaryRef="UnregisterScript"
+      VBScriptCall=""
+      Execute="immediate"
+      Return="ignore" />
+
     <!-- Feature principal -->
     <Feature Id="MainFeature" Title="ConversorPDF Add-in" Level="1">
       <ComponentGroupRef Id="MainComponents" />
+      <ComponentGroupRef Id="DllComponents" />
+      <ComponentGroupRef Id="TemplateComponents" />
     </Feature>
+
+    <!-- Custom Action para limpiar opt-out de sync -->
+    <CustomAction Id="CleanupSyncOptOut"
+                  Directory="TARGETDIR"
+                  ExeCommand="cmd.exe /c if exist &quot;%LOCALAPPDATA%\ConversorPDF\Data\.sync_optout&quot; del /f /q &quot;%LOCALAPPDATA%\ConversorPDF\Data\.sync_optout&quot;"
+                  Execute="deferred"
+                  Impersonate="yes"
+                  Return="ignore" />
 
     <!-- Secuencia -->
     <InstallExecuteSequence>
       <Custom Action="RegisterExcelXLL" After="InstallFiles" Condition="NOT REMOVE" />
+      <Custom Action="UnregisterExcelXLL" Before="RemoveFiles" Condition="REMOVE" />
+      <Custom Action="CleanupSyncOptOut" Before="InstallFinalize" Condition="NOT REMOVE" />
     </InstallExecuteSequence>
 
   </Package>

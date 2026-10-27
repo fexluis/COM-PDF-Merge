@@ -14,7 +14,6 @@ namespace ConversorPDF.XLL.Core.Services
     /// </summary>
     public class ContadorService : IContadorService
     {
-        private const string PATH_OBLIGACIONES = @"\Obligaciones\";
         private readonly IUserService _userService;
         private readonly IPdfMetadataService _metadataService;
         private readonly IPdfService _pdfService;
@@ -50,145 +49,101 @@ namespace ConversorPDF.XLL.Core.Services
             string folderObligaciones = Path.Combine(localPath, "Obligaciones");
             if (!Directory.Exists(folderObligaciones)) Directory.CreateDirectory(folderObligaciones);
 
-            // Crear archivo temporal de firma
             string tempPath = Path.Combine(Path.GetTempPath(), $"Firma_{Guid.NewGuid():N}.png");
             try
             {
-                byte[] bytes = Convert.FromBase64String(userFirma);
-                File.WriteAllBytes(tempPath, bytes);
-            }
-            catch (Exception ex)
-            {
-                LoggerHelper.Error("No se pudo crear el archivo temporal con la firma.", ex);
-                throw new Exception("No se pudo crear el archivo temporal con la firma.");
-            }
-
-            dynamic excelApp = activeWorkbook.Application;
-            using (ExcelOptimizeHelper.Optimize(excelApp))
-            {
-                int filesCount = 0;
-                int totalSheets = activeWorkbook.Worksheets.Count;
-                int currentSheet = 0;
-
-                foreach (dynamic ws in activeWorkbook.Worksheets)
+                try
                 {
-                    currentSheet++;
-                    progressCallback?.Invoke(currentSheet, totalSheets);
+                    if (string.IsNullOrWhiteSpace(userFirma))
+                        throw new Exception("El usuario no tiene una firma configurada.");
 
-                    dynamic rngFirma = ws.Range["A1:BH300"].Find("FIRMA(S) RESPONSABLE(S)");
-                    string firmaPos = (rngFirma != null) ? "J" + (rngFirma.Row - 3) : "J57";
-
-                    var datos = _firmaExtractService.ObligacionData(ws);
-
-                    InsertarFirma(ws, firmaPos, tempPath);
-                    int rowNum = (rngFirma != null) ? (int)rngFirma.Row : 60;
-                    ConfigurarPagina(ws, rowNum, excelApp);
-
-                    string fileName = datos.xUnifiedFileName.Length > 60 ? datos.xUnifiedFileName.Substring(0, 60) : datos.xUnifiedFileName;
-                    string fullPdfPath = Path.Combine(folderObligaciones, fileName + ".pdf");
-
-                    try
-                    {
-                        ws.ExportAsFixedFormat(0, fullPdfPath);
-
-                        // Inyectar Metadatos
-                        DateTime? fechaParseada = null;
-                        if (DateTime.TryParse(datos.xFechaStr, out DateTime result)) fechaParseada = result;
-
-                        string fullUser = _userService.GetUsuarioWindows();
-                        var parts = fullUser.Split('\\');
-                        string cleanUser = parts.Length > 1 ? parts[1].ToUpper() : fullUser.ToUpper();
-
-                        _metadataService.GuardarMetadatos(fullPdfPath, new Metadata
-                        {
-                            Titulo = fileName,
-                            Autor = cleanUser,
-                            Asunto = datos.xObjeto,
-                            PalabrasClave = $"{datos.xIdentificacion}, {datos.xTercero}, {datos.xDep}",
-                            Fecha = fechaParseada,
-                            MetaDocumento = TipoMetadata.OB,
-                            RP = datos.xRP,
-                            OB = datos.xNumero,
-                            Tipo = datos.xCategoria
-                        });
-                    }
-                    catch (Exception ex)
-                    {
-                        LoggerHelper.Error($"Error exportando PDF o guardando metadatos: {fullPdfPath}", ex);
-                    }
-
-                    filesCount++;
+                    string cleanBase64 = FirmaPDFsHelper.LimpiarPrefijoBase64(userFirma);
+                    byte[] bytes = Convert.FromBase64String(cleanBase64);
+                    File.WriteAllBytes(tempPath, bytes);
+                }
+                catch (Exception ex)
+                {
+                    LoggerHelper.Error("No se pudo procesar la firma del usuario.", ex);
+                    throw new Exception("No se pudo procesar la firma del usuario. Verifique que esté correctamente configurada en la base de datos.");
                 }
 
-                if (File.Exists(tempPath)) try { File.Delete(tempPath); } catch { }
-                return filesCount;
-            }
-        }
-
-        /// <inheritdoc/>
-        public int UnificarObligacionContador(dynamic activeWorkbook, string docType, Action<int, int> progressCallback = null)
-        {
-            if (activeWorkbook == null) return 0;
-            dynamic activeSheet = activeWorkbook.ActiveSheet;
-            if (activeSheet.Range["B14"].Value?.ToString() != "REGISTRO PRESUPUESTAL DE OBLIGACION.") return 0;
-
-            string localPath = ObtenerRutaLocal(activeWorkbook);
-            if (string.IsNullOrEmpty(localPath)) return 0;
-
-            string pathObligaciones = Path.Combine(localPath, "Obligaciones");
-            string pathSoportes = Path.Combine(localPath, "S");
-            string pathUnificados = Path.Combine(localPath, "Unificados");
-
-            if (!Directory.Exists(pathSoportes) || Directory.GetFiles(pathSoportes, "*.pdf").Length == 0)
-            {
-                return 0; // El caller manejará el mensaje
-            }
-
-            if (!Directory.Exists(pathUnificados)) Directory.CreateDirectory(pathUnificados);
-
-            int filesCount = 0;
-            int totalSheets = activeWorkbook.Worksheets.Count;
-            int currentSheet = 0;
-
-            foreach (dynamic ws in activeWorkbook.Worksheets)
-            {
-                currentSheet++;
-                progressCallback?.Invoke(currentSheet, totalSheets);
-
-                var datos = _firmaExtractService.ObligacionData(ws);
-                string unifiedFileName = (datos.xUnifiedFileName.Length > 60 ? datos.xUnifiedFileName.Substring(0, 60) : datos.xUnifiedFileName) + ".pdf";
-
-                string targetFile = Path.Combine(pathObligaciones, unifiedFileName);
-                string outputPdfPath = Path.Combine(pathUnificados, unifiedFileName);
-
-                var matchSoportes = BuscarArchivosPDF(pathSoportes, datos.xNumero);
-                if (matchSoportes.Length > 0)
+                dynamic excelApp = activeWorkbook.Application;
+                using (ExcelOptimizeHelper.Optimize(excelApp))
                 {
-                    var lista = new System.Collections.Generic.List<string>();
-                    if (File.Exists(targetFile)) lista.Add(targetFile);
-                    lista.AddRange(matchSoportes);
+                    int filesCount = 0;
+                    int totalSheets = activeWorkbook.Worksheets.Count;
+                    int currentSheet = 0;
 
-                    try
+                    foreach (dynamic ws in activeWorkbook.Worksheets)
                     {
-                        _pdfService.CombinarPDFs(lista, outputPdfPath);
+                        currentSheet++;
+                        progressCallback?.Invoke(currentSheet, totalSheets);
+
+                        dynamic rngFirma = ws.Range["A1:BH300"].Find("FIRMA(S) RESPONSABLE(S)");
+                        string firmaPos = (rngFirma != null) ? "J" + (rngFirma.Row - 3) : "J57";
+
+                        var datos = _firmaExtractService.ObligacionData(ws);
+
+                        InsertarFirma(ws, firmaPos, tempPath);
+                        int rowNum = (rngFirma != null) ? (int)rngFirma.Row : 60;
+                        ConfigurarPagina(ws, rowNum, excelApp);
+
+                        string fileName = datos.xUnifiedFileName.Length > 60 ? datos.xUnifiedFileName.Substring(0, 60) : datos.xUnifiedFileName;
+                        string fullPdfPath = Path.Combine(folderObligaciones, fileName + ".pdf");
+
+                        try
+                        {
+                            ws.ExportAsFixedFormat(0, fullPdfPath);
+
+                            // Inyectar Metadatos
+                            DateTime? fechaParseada = null;
+                            if (DateTime.TryParse(datos.xFechaStr, out DateTime result)) fechaParseada = result;
+
+                            string fullUser = _userService.GetUsuarioWindows();
+                            var parts = fullUser.Split('\\');
+                            string cleanUser = parts.Length > 1 ? parts[1].ToUpper() : fullUser.ToUpper();
+
+                            _metadataService.GuardarMetadatos(fullPdfPath, new Metadata
+                            {
+                                Titulo = fileName,
+                                Autor = cleanUser,
+                                Asunto = datos.xObjeto,
+                                PalabrasClave = $"{datos.xIdentificacion}, {datos.xTercero}, {datos.xDep}",
+                                Fecha = fechaParseada,
+                                MetaDocumento = TipoMetadata.OB,
+                                RP = datos.xRP,
+                                OB = datos.xNumero,
+                                Tipo = datos.xCategoria
+                            });
+                        }
+                        catch (Exception ex)
+                        {
+                            LoggerHelper.Error($"Error exportando PDF o guardando metadatos: {fullPdfPath}", ex);
+                        }
+
                         filesCount++;
                     }
-                    catch (Exception ex)
-                    {
-                        LoggerHelper.Error($"Error unificando PDF: {outputPdfPath}", ex);
-                    }
+
+                    return filesCount;
                 }
             }
-            return filesCount;
+            finally
+            {
+                if (File.Exists(tempPath)) try { File.Delete(tempPath); } catch { }
+            }
         }
 
 
+        /// <summary>
+        /// Obtiene la ruta local sincronizada en OneDrive para el libro activo.
+        /// Decisión D-9: Se eliminó el parche hardcodeado de reemplazo de directorio.
+        /// </summary>
         private string ObtenerRutaLocal(dynamic activeWorkbook)
         {
             try
             {
                 string path = OneDriveHelper.GetOneDriveLocalPath(activeWorkbook.Path);
-                return path?.Replace(@"Escritorio\AÑO 2026 PAGADURIA\ALEX BOLETINES 2026", "_ALEX BOLETINES 2026") ?? "";
+                return path ?? "";
             }
             catch { return ""; }
         }
@@ -230,23 +185,6 @@ namespace ConversorPDF.XLL.Core.Services
             catch { }
         }
 
-        /// <summary>
-        /// Busca archivos PDF en un directorio que comiencen con una cadena específica.
-        /// </summary>
-        /// <param name="folder">Directorio de búsqueda.</param>
-        /// <param name="searchOrder">Prefijo de búsqueda (Número de obligación).</param>
-        /// <returns>Array de rutas absolutas de archivos encontrados.</returns>
-        private string[] BuscarArchivosPDF(string folder, string searchOrder)
-        {
-            if (!Directory.Exists(folder) || string.IsNullOrEmpty(searchOrder)) return new string[0];
-            try
-            {
-                var files = Directory.GetFiles(folder, "*.pdf");
-                var list = new System.Collections.Generic.List<string>();
-                foreach (var f in files) if (Path.GetFileName(f).Contains(searchOrder)) list.Add(f);
-                return list.ToArray();
-            }
-            catch { return new string[0]; }
-        }
+
     }
 }

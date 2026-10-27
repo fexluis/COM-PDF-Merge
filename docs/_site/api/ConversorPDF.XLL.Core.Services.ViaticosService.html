@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Class ViaticosService | ESAP - ConversorPDF </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Class ViaticosService | ESAP - ConversorPDF ">
+      
+      <meta name="description" content="Servicio fachada que coordina todas las operaciones relacionadas con vi&#225;ticos. Inyecta y utiliza repositorios y procesadores especializados para cada tarea.">
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="ManagedReference">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="ConversorPDF.XLL.Core.Services.ViaticosService">
+
+
+
+  <h1 id="ConversorPDF_XLL_Core_Services_ViaticosService" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService" class="text-break">
+Class ViaticosService  
+  </h1>
+
+  <div class="facts text-secondary">
+    <dl><dt>Namespace</dt><dd><a class="xref" href="ConversorPDF.html">ConversorPDF</a>.<a class="xref" href="ConversorPDF.XLL.html">XLL</a>.<a class="xref" href="ConversorPDF.XLL.Core.html">Core</a>.<a class="xref" href="ConversorPDF.XLL.Core.Services.html">Services</a></dd></dl>
+  <dl><dt>Assembly</dt><dd>ConversorPDF.XLL.dll</dd></dl>
+  </div>
+
+  <div class="markdown summary"><p>Servicio fachada que coordina todas las operaciones relacionadas con viáticos.
+Inyecta y utiliza repositorios y procesadores especializados para cada tarea.</p>
+</div>
+  <div class="markdown conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public class ViaticosService : IViaticosService</code></pre>
+  </div>
+
+
+
+
+  <dl class="typelist inheritance">
+    <dt>Inheritance</dt>
+    <dd>
+      <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></div>
+      <div><span class="xref">ViaticosService</span></div>
+    </dd>
+  </dl>
+
+  <dl class="typelist implements">
+    <dt>Implements</dt>
+    <dd>
+      <div><a class="xref" href="ConversorPDF.XLL.Core.Interfaces.IViaticosService.html">IViaticosService</a></div>
+    </dd>
+  </dl>
+
+
+  <dl class="typelist inheritedMembers">
+    <dt>Inherited Members</dt>
+    <dd>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.tostring">object.ToString()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)">object.Equals(object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)">object.Equals(object, object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.referenceequals">object.ReferenceEquals(object, object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.gethashcode">object.GetHashCode()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.gettype">object.GetType()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone">object.MemberwiseClone()</a>
+    </div>
+  </dd></dl>
+
+
+
+
+
+
+  <h2 class="section" id="constructors">Constructors
+</h2>
+
+
+  <a id="ConversorPDF_XLL_Core_Services_ViaticosService__ctor_" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.#ctor*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Services_ViaticosService__ctor_ConversorPDF_XLL_Core_Interfaces_IExcelRepository_ConversorPDF_XLL_Core_Interfaces_IUserService_ConversorPDF_XLL_Core_Interfaces_IViaticosRepository_ConversorPDF_XLL_Core_Interfaces_IViaticosIndividualProcessor_ConversorPDF_XLL_Core_Interfaces_IViaticosMasivoProcessor_ConversorPDF_XLL_Core_Interfaces_IViaticosCumplidosProcessor_ConversorPDF_XLL_Core_Interfaces_IViaticosGestionProcessor_" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.#ctor(ConversorPDF.XLL.Core.Interfaces.IExcelRepository,ConversorPDF.XLL.Core.Interfaces.IUserService,ConversorPDF.XLL.Core.Interfaces.IViaticosRepository,ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor,ConversorPDF.XLL.Core.Interfaces.IViaticosMasivoProcessor,ConversorPDF.XLL.Core.Interfaces.IViaticosCumplidosProcessor,ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor)">
+  ViaticosService(IExcelRepository, IUserService, IViaticosRepository, IViaticosIndividualProcessor, IViaticosMasivoProcessor, IViaticosCumplidosProcessor, IViaticosGestionProcessor)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>constructor con inyección de dependencias.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public ViaticosService(IExcelRepository excelRepository, IUserService userService, IViaticosRepository viaticosRepository, IViaticosIndividualProcessor individualProcessor, IViaticosMasivoProcessor masivoProcessor, IViaticosCumplidosProcessor cumplidosProcessor, IViaticosGestionProcessor gestionProcessor)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>excelRepository</code> <a class="xref" href="ConversorPDF.XLL.Core.Interfaces.IExcelRepository.html">IExcelRepository</a></dt>
+    <dd></dd>
+    <dt><code>userService</code> <a class="xref" href="ConversorPDF.XLL.Core.Interfaces.IUserService.html">IUserService</a></dt>
+    <dd></dd>
+    <dt><code>viaticosRepository</code> <a class="xref" href="ConversorPDF.XLL.Core.Interfaces.IViaticosRepository.html">IViaticosRepository</a></dt>
+    <dd></dd>
+    <dt><code>individualProcessor</code> <a class="xref" href="ConversorPDF.XLL.Core.Interfaces.IViaticosIndividualProcessor.html">IViaticosIndividualProcessor</a></dt>
+    <dd></dd>
+    <dt><code>masivoProcessor</code> <a class="xref" href="ConversorPDF.XLL.Core.Interfaces.IViaticosMasivoProcessor.html">IViaticosMasivoProcessor</a></dt>
+    <dd></dd>
+    <dt><code>cumplidosProcessor</code> <a class="xref" href="ConversorPDF.XLL.Core.Interfaces.IViaticosCumplidosProcessor.html">IViaticosCumplidosProcessor</a></dt>
+    <dd></dd>
+    <dt><code>gestionProcessor</code> <a class="xref" href="ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.html">IViaticosGestionProcessor</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <h2 class="section" id="methods">Methods
+</h2>
+
+
+  <a id="ConversorPDF_XLL_Core_Services_ViaticosService_ClearCache_" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.ClearCache*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Services_ViaticosService_ClearCache" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.ClearCache">
+  ClearCache()
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Limpia el caché interno de empleados y configuraciones.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void ClearCache()</code></pre>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Services_ViaticosService_FilaSeleccionadaSaveConfig_" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.FilaSeleccionadaSaveConfig*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Services_ViaticosService_FilaSeleccionadaSaveConfig_System_Object_System_Object_System_String_" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.FilaSeleccionadaSaveConfig(System.Object,System.Object,System.String)">
+  FilaSeleccionadaSaveConfig(object, object, string)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Guarda temporalmente la configuración de fechas y CDP en la hoja 'Config' para que los procesadores la utilicen.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void FilaSeleccionadaSaveConfig(object inicio, object fin, string cdp = null)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>inicio</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></dt>
+    <dd></dd>
+    <dt><code>fin</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></dt>
+    <dd></dd>
+    <dt><code>cdp</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Services_ViaticosService_GetAdvancedConfigRows_" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.GetAdvancedConfigRows*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Services_ViaticosService_GetAdvancedConfigRows" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.GetAdvancedConfigRows">
+  GetAdvancedConfigRows()
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Obtiene los datos de configuración avanzada de viáticos.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public object[,] GetAdvancedConfigRows()</code></pre>
+  </div>
+
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a>[,]</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Services_ViaticosService_GetCdpList_" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.GetCdpList*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Services_ViaticosService_GetCdpList" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.GetCdpList">
+  GetCdpList()
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Obtiene la lista cargada de CDPs válidos para la vigencia.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public List&lt;string&gt; GetCdpList()</code></pre>
+  </div>
+
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1">List</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Services_ViaticosService_GetConfig_" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.GetConfig*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Services_ViaticosService_GetConfig_System_Nullable_System_DateTime__System_Nullable_System_DateTime__System_String_" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.GetConfig(System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String)">
+  GetConfig(DateTime?, DateTime?, string)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Obtiene la configuración actual de viáticos.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public ViaticosConfig GetConfig(DateTime? start = null, DateTime? end = null, string cdp = null)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>start</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.datetime">DateTime</a>?</dt>
+    <dd></dd>
+    <dt><code>end</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.datetime">DateTime</a>?</dt>
+    <dd></dd>
+    <dt><code>cdp</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.ViaticosConfig.html">ViaticosConfig</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Services_ViaticosService_GetEmpleado_" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.GetEmpleado*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Services_ViaticosService_GetEmpleado_System_String_" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.GetEmpleado(System.String)">
+  GetEmpleado(string)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Busca y obtiene la información de un empleado por su cédula.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Empleado GetEmpleado(string cc)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>cc</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.Empleado.html">Empleado</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Services_ViaticosService_GetGlobalVariable_" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.GetGlobalVariable*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Services_ViaticosService_GetGlobalVariable_System_String_" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.GetGlobalVariable(System.String)">
+  GetGlobalVariable(string)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Obtiene una variable global de Excel.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public string GetGlobalVariable(string varName)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>varName</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Services_ViaticosService_GetSelectionConfig_" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.GetSelectionConfig*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Services_ViaticosService_GetSelectionConfig" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.GetSelectionConfig">
+  GetSelectionConfig()
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Recupera la configuración de selección del formulario (Rango de filas y CDP).</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public string[] GetSelectionConfig()</code></pre>
+  </div>
+
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>[]</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Services_ViaticosService_GetTableData_" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.GetTableData*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Services_ViaticosService_GetTableData_System_String_" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.GetTableData(System.String)">
+  GetTableData(string)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Acceso genérico a datos de tablas de Excel configuradas.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public object[,] GetTableData(string tableName)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>tableName</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a>[,]</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Services_ViaticosService_GetViajeFromRow_" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.GetViajeFromRow*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Services_ViaticosService_GetViajeFromRow_System_Object_0__0___System_Int32_" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.GetViajeFromRow(System.Object[0:,0:],System.Int32)">
+  GetViajeFromRow(object[,], int)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Extrae los datos de un viaje específico desde una fila de Excel.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Viaje GetViajeFromRow(object[,] data, int r)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>data</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a>[,]</dt>
+    <dd></dd>
+    <dt><code>r</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ConversorPDF.XLL.Core.Models.Viaje.html">Viaje</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Services_ViaticosService_ProcesarCumplidos_" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarCumplidos*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Services_ViaticosService_ProcesarCumplidos_System_Action_System_Int32_System_Int32__System_Action_" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarCumplidos(System.Action{System.Int32,System.Int32},System.Action)">
+  ProcesarCumplidos(Action&lt;int, int&gt;, Action)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Ejecuta la validación de cumplidos e informes de actividades.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public int ProcesarCumplidos(Action&lt;int, int&gt; progressCallback = null, Action onComplete = null)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>progressCallback</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.action-2">Action</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a>&gt;</dt>
+    <dd></dd>
+    <dt><code>onComplete</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.action">Action</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Services_ViaticosService_ProcesarFilaSeleccionada_" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarFilaSeleccionada*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Services_ViaticosService_ProcesarFilaSeleccionada_System_Action_System_Int32_System_Int32__" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarFilaSeleccionada(System.Action{System.Int32,System.Int32})">
+  ProcesarFilaSeleccionada(Action&lt;int, int&gt;)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Determina el tipo de procesamiento basado en la hoja activa de Excel y ejecuta el proceso para la fila seleccionada.
+Identifica si el usuario está en la hoja de CONSULTAS (cumplidos) o Programación (individual).</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public int ProcesarFilaSeleccionada(Action&lt;int, int&gt; progressCallback = null)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>progressCallback</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.action-2">Action</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Services_ViaticosService_ProcesarIndividual_" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarIndividual*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Services_ViaticosService_ProcesarIndividual_System_Action_System_Int32_System_Int32__System_Nullable_System_DateTime__System_Nullable_System_DateTime__System_String_" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarIndividual(System.Action{System.Int32,System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String)">
+  ProcesarIndividual(Action&lt;int, int&gt;, DateTime?, DateTime?, string)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Ejecuta el procesamiento de viáticos individuales.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public int ProcesarIndividual(Action&lt;int, int&gt; progressCallback = null, DateTime? inicio = null, DateTime? fin = null, string cdp = null)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>progressCallback</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.action-2">Action</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a>&gt;</dt>
+    <dd></dd>
+    <dt><code>inicio</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.datetime">DateTime</a>?</dt>
+    <dd></dd>
+    <dt><code>fin</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.datetime">DateTime</a>?</dt>
+    <dd></dd>
+    <dt><code>cdp</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Services_ViaticosService_ProcesarMasivo_" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarMasivo*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Services_ViaticosService_ProcesarMasivo_System_Action_System_Int32_System_Int32__" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.ProcesarMasivo(System.Action{System.Int32,System.Int32})">
+  ProcesarMasivo(Action&lt;int, int&gt;)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Ejecuta el procesamiento masivo de viáticos.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public int ProcesarMasivo(Action&lt;int, int&gt; progressCallback = null)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>progressCallback</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.action-2">Action</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Services_ViaticosService_RenombrarSolicitudes_" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.RenombrarSolicitudes*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Services_ViaticosService_RenombrarSolicitudes_System_Int32_System_Int32_" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.RenombrarSolicitudes(System.Int32,System.Int32)">
+  RenombrarSolicitudes(int, int)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Renombra archivos PDF de solicitudes basándose en el rango e información extraída.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void RenombrarSolicitudes(int inicio, int fin)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>inicio</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+    <dt><code>fin</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Services_ViaticosService_SaveAdvancedConfigRows_" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.SaveAdvancedConfigRows*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Services_ViaticosService_SaveAdvancedConfigRows_System_Object_0__0___" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.SaveAdvancedConfigRows(System.Object[0:,0:])">
+  SaveAdvancedConfigRows(object[,])
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Guarda los datos de configuración avanzada.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void SaveAdvancedConfigRows(object[,] data)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>data</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a>[,]</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Services_ViaticosService_SaveTableData_" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.SaveTableData*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Services_ViaticosService_SaveTableData_System_String_System_Object_0__0___" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.SaveTableData(System.String,System.Object[0:,0:])">
+  SaveTableData(string, object[,])
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Guarda datos en una tabla específica de Excel.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void SaveTableData(string tableName, object[,] data)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>tableName</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+    <dt><code>data</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a>[,]</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Services_ViaticosService_UnificarSolicitudes_" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.UnificarSolicitudes*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Services_ViaticosService_UnificarSolicitudes_System_Int32_System_Int32_" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.UnificarSolicitudes(System.Int32,System.Int32)">
+  UnificarSolicitudes(int, int)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Unifica los expedientes de viáticos en archivos únicos por comisionado.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public int UnificarSolicitudes(int inicio, int fin)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>inicio</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+    <dt><code>fin</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="ConversorPDF_XLL_Core_Services_ViaticosService_ValidarFormatoComisionado_" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.ValidarFormatoComisionado*"></a>
+
+  <h3 id="ConversorPDF_XLL_Core_Services_ViaticosService_ValidarFormatoComisionado_System_Object_" data-uid="ConversorPDF.XLL.Core.Services.ViaticosService.ValidarFormatoComisionado(System.Object)">
+  ValidarFormatoComisionado(dynamic)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Verifica si la hoja cumple con el formato estándar de viáticos.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool ValidarFormatoComisionado(dynamic sheet)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>sheet</code> <span class="xref">dynamic</span></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          ESAP - ConversorPDF Doc
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

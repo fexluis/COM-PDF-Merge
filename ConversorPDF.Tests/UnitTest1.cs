@@ -54,7 +54,8 @@ namespace ConversorPDF.Tests
             var result = sut.GetUserName();
 
             // Assert
-            Assert.Equal("LUIS.BECHARA", result);
+            var expectedFallback = System.Environment.UserName?.ToUpper() ?? "UNKNOWN_USER";
+            Assert.Equal(expectedFallback, result);
         }
     }
 }

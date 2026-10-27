@@ -8,9 +8,9 @@ trigger: always_on
 Every top-level type must have its own physical file to ensure Git history cleanliness.
 
 ## Constraints
-* **Type Isolation:** Each `class`, `interface`, `record`, and `enum` MUST be in its own `.cs` file.
-* **Filename Parity:** Filename must match the type exactly (e.g., `ISettingsRepository.cs`).
-* **No Grouping:** No "Models.cs" or "Interfaces.cs" files.
+* **Type Isolation**: Each `class`, `interface`, `record`, and `enum` MUST be in its own `.cs` file.
+* **Filename Parity**: Filename must match the type exactly (e.g., `ISettingsRepository.cs`).
+* **No Grouping**: No "Models.cs" or "Interfaces.cs" files.
 * **Namespaces**: Use standard block namespaces `namespace X { ... }` (File-scoped namespaces are not idiomatic for .NET Framework 4.8).
 
 ## Agent Instructions

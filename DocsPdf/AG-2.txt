@@ -1,0 +1,692 @@
+# ANÁLISIS DEL REQUERIMIENTO "VENTANA α ACOTADA AL SEMESTRE" + **PLAN DE DISEÑO CONSOLIDADO v7**
+
+> **Modo Plan.** Sólo análisis y diseño. **No se compiló, ejecutó ni modificó ningún archivo.** Se verificó el código antes de corregir. Queda a la espera de aprobación.
+
+---
+
+# PARTE A — ANÁLISIS del requerimiento
+
+## A.1 Qué se pide
+
+| Punto | Requerimiento |
+|---|---|
+| V1 | La **Ventana (α)** = rango de fechas en que se dicta la asignatura |
+| V2 | Debe estar **dentro** de *fecha de inicio del semestre* y *fecha de finalización máxima* |
+| V3 | Es un **parámetro de entrada del AG** |
+| V4 | Está **relacionada con `idperiodo`** |
+| V5 | **Todas** las asignaciones de los cursos deben caer dentro de ese rango |
+
+## A.2 Hallazgos verificados en el código (críticos)
+
+| # | Hallazgo | Evidencia | Consecuencia |
+|---|---|---|---|
+| **H1** | **`periodos` NO tiene fechas** | `periodos (idperiodo INTEGER PRIMARY KEY, periodo TEXT NOT NULL, activo INTEGER DEFAULT 0, subunidad TEXT DEFAULT '')`. Model `Periodo { IdPeriodo, PeriodoNombre, Activo }`. Ninguna migración (`MigrationV3_Periodos`, `V9_NewSchemaColumns`) agrega columnas de fecha | **`periodos` no puede ser la fuente** de la ventana |
+| **H2** | **`festivos` es el único calendario fechado por período** | `festivos (idfestivo, idperiodo, fechafestivoinicio, fechafestivofinal, detallefestivo, tipofestivo)`; `Festivo { DateTime FechaFestivoInicio, DateTime FechaFestivoFinal, TipoFestivo = "FESTIVO" }` | **Fuente primaria propuesta** (ya mapeada a `DateTime`, sin parseo de texto) |
+| **H3** | **Semántica de `tipofestivo`** | `'FESTIVO'` = feriado puntual del período · `'PRESENCIAL'` = *"rango de fechas del calendario semestral en que el docente se desplaza físicamente a la sede"* (comentario del propio `FormSesionesAcademicas`) | El **evelope de `PRESENCIAL`** representa el semestre; `FESTIVO` son exclusiones dentro de él |
+| **H4** | **`config` tiene período + fechas, pero es la ventana de viáticos, no el semestre** | `config (… id_periodo INTEGER NOT NULL, fecha_inicio TEXT, fecha_fin TEXT …)`; seed `… id_periodo = 2, fecha_inicio = '14/05/2026', fecha_fin = '21/05/2026'` (**1 semana**, formato `dd/MM/yyyy`) | Sirve como **fallback/override**, no como fuente principal (y su formato no es ISO) |
+| **H5** | **El formulario YA valida "Fuera de Período"** | `FormSesionesAcademicas.btnGuardar_Click` (L1016–1031): rechaza sesiones con `FechaSesion < dtpInicio \|\| > dtpFinal` con mensaje *"Fechas Fuera de Período"* | En **Modo AG**, si se siembran `dtpInicio/dtpFinal` con la ventana, **la validación de V5 se obtiene gratis** |
+| **H6** | **`GeneradorSesionesRecurrentes` NO excluye festivos** | Su `Generar(...)` recorre semanas y **no** recibe/consulta festivos; el salto de FESTIVO vive en el `while` de `btnGenerar_Click` (L795–808) | ⚠️ **Corrige mi v6**: "reutilizar el generador" era **incompleto** → hace falta un **expansor** que filtre festivos |
+| **H7** | **La lógica de viática está inline en el formulario** | L681–833: `esVirtual / esPresencial / esSemipresencial / esSedeIgualResidencia / estaEnRangoPresencial / rangosPresenciales` → `asignarViatica` | ⚠️ Debe **extraerse** a un servicio de Application reutilizable (regla del repo: *"No business logic inside WinForms code-behind"*) |
+| **H8** | **Cuando `fechaFin` supera 15/12 hay aviso suave** | `limiteDiciembre = new DateTime(anioActual, 12, 15)` (L644–650) | La ventana del semestre normalmente queda por debajo; se reutiliza como **advertencia** |
+
+## A.3 Dónde debe vivir la ventana del semestre (resolver con prioridad)
+
+`periodos` no tiene fechas (H1) ⇒ se necesita un **resolutor** con cascada y trazabilidad:
+
+| Prioridad | Fuente | Cálculo | `ventana_origen` |
+|---|---|---|---|
+| **1** | **`festivos` del `idperiodo`** (recomendada) | `semestre_inicio = MIN(fechafestivoinicio)`, `semestre_fin = MAX(fechafestivofinal)` considerando **`PRESENCIAL`** como semestre y validando que el *envelope total* (`FESTIVO`+`PRESENCIAL`) no lo desborde | `'FESTIVOS'` |
+| **2** | `config` del `id_periodo` (fallback) | `FechaInicio`/`FechaFin` **parseados en C#** (formato `dd/MM/yyyy`) y normalizados a ISO | `'CONFIG'` |
+| **3** | **Override manual** en la UI del Módulo S | Valor del usuario, **clamp** al envelope (P1); si lo excede ⇒ error de validación | `'MANUAL'` |
+| **0** | Ninguna fuente disponible | **Error bloqueante**: *"No hay calendario (PRESENCIAL) configurado para el período X. Configure Festivos/Rangos antes de ejecutar el AG."* | — |
+
+**Distinción clave (evita ambigüedad):**
+```
+VENTANA DEL SEMESTRE  [semestre_inicio, semestre_fin]   ← cota dura, derivada del idperiodo
+        └── VENTANA DEL AULA (α de entrada)  [aula_inicio, aula_fin]   ← sub-rango elegido por el usuario
+                 └── VENTANA POR ASIGNATURA  [gen.fecha_inicio, gen.fecha_fin]   ← decidida por el AG (R6)
+```
+
+## A.4 Correcciones que se derivan del requerimiento
+
+| # | Corrección |
+|---|---|
+| **C1** | **Nueva restricción dura `W1 / FUERA_DE_VENTANA`** (peso **120**) aplicada a `gen.fecha_inicio`, `gen.fecha_fin` y a toda sesión derivada (`ag_sesiones.fechasesion`), siempre contra la **ventana del aula** (y ésta contra la del semestre) |
+| **C2** | **`R6` se redefine "dentro de la ventana"**: la secuencia de ventanas por asignatura debe **encadenarse y caber** en `[aula_inicio, aula_fin]` |
+| **C3** | **Pre-flight de factibilidad** (`AgValidadorVentana`): `semanas_necesarias` (por asignatura y acumuladas según la política `max_asignaturas_semana` de R5/R6) vs `semanas_disponibles` (ciclos semanales con al menos un día de β no FESTIVO). Si no cabe ⇒ **INFACTIBLE**, se bloquea la corrida con mensaje accionable |
+| **C4** | **`AgExpansorSesiones`** (nuevo, corrige H6): itera `GeneradorSesionesRecurrentes.Generar(...)`, **descarta sesiones en rango `FESTIVO`** del `idperiodo`, **extiende la fecha fin** hasta cumplir `horas_objetivo` y **nunca** sale de `[aula_inicio, aula_fin]`; si agota la ventana ⇒ devuelve `Result.Failure` |
+| **C5** | **`CalculadoraViaticaSesion`** (nuevo, corrige H7): se **extrae** la regla `viática` del formulario a Application (puro, testeable) y la **reutilizan** el formulario y el AG → una sola fuente de verdad |
+| **C6** | **`AgPlanificadorTemporal`** recibe la ventana y **secuencia** las asignaturas dentro de ella (R6 + C3) |
+| **C7** | **Modo AG**: `FormSesionesAcademicas` siembra `dtpInicio/dtpFinal` con la ventana resuelta ⇒ la validación **existente** (H5) pasa a exigir V5 sin código nuevo |
+| **C8** | **Gate de promoción**: `AgValidadorVentana` rechaza promover si existe **cualquier** `ag_sesiones.fechasesion` fuera de la ventana (defensa en profundidad) |
+| **C9** | **Fitness**: `F3` incorpora *"cobertura temporal dentro de la ventana"*; `W1` entra en `F2`; se añade un término de **aprovechamiento de la ventana** (evitar huecos) |
+| **C10** | **Auditoría**: se persiste la ventana **resuelta** en `ag_aula` y la **efectiva** en `ag_corrida` (reproducibilidad con `semilla`) |
+| **C11** | **Aviso 15/12** (H8) reutilizado como advertencia no bloqueante en el Módulo S |
+
+## A.5 Corrección a mi propio v6 (autorrevisión honesta)
+
+> En v3→v6 afirmé: *"materializa α llamando `GeneradorSesionesRecurrentes.Generar(...)` **por cada día individual** … Se reutiliza el pipeline existente"*. Eso es **incompleto e inexacto**: el generador **no** excluye festivos (H6) ni calcula **viática** (H7), y ambos comportamientos viven hoy **inline en el formulario**. Por tanto la materialización del AG **no puede** limitarse a invocar el generador: requiere `AgExpansorSesiones` (C4) + `CalculadoraViaticaSesion` (C5). **Queda corregido en v7.**
+
+---
+
+# PARTE B — PLAN DE DISEÑO CONSOLIDADO **v7**
+
+## B.0 Changelog v6 → v7
+
+| Origen | Cambio |
+|---|---|
+| V1–V5 | **Ventana α como parámetro de entrada del AG**, acotada por la ventana del semestre (derivada del `idperiodo`) |
+| H1–H4 | **`AgResolutorVentanaSemestre`** con cascada `FESTIVOS → CONFIG → MANUAL` + error bloqueante si no hay calendario |
+| H6 | **`AgExpansorSesiones`** (filtra FESTIVO, extiende hasta cumplir horas, no sale de la ventana) — corrige la afirmación incompleta del v6 |
+| H7 | **`CalculadoraViaticaSesion`** extraída a Application (formulario + AG la comparten) |
+| C1 | Nueva violación dura **`FUERA_DE_VENTANA`** (peso 120) |
+| C2 | **R6** redefinida *dentro* de la ventana |
+| C3 | **Pre-flight de factibilidad** (`AgValidadorVentana`) |
+| C7 | Modo AG siembra `dtpInicio/dtpFinal` con la ventana ⇒ V5 validado por la validación existente |
+| C8 | Gate de promoción rechaza sesiones fuera de ventana |
+| C9 | `F3`/`F2` ajustados |
+| C10 | Nuevos campos de ventana en `ag_aula` y `ag_corrida` |
+| — | Se mantiene **todo** el v6 (Fases 21–41 evaluadas, V48=pool/V49=AG, PK 63 bits, recomputar `veces_asignada`, OX real + clonación, `OcupacionExterna`, salvedades remapeadas, no promover vacantes, días sin tilde, 12 archivos) |
+
+---
+
+## B.1 Contexto verificado en el repositorio
+
+| Elemento | Hallazgo |
+|---|---|
+| Solución | `ConversorPDF.XLL.csproj` (.NET Framework 4.8 + Excel-DNA + WinForms) · `ConversorPDF.Tests.csproj` |
+| Slice | `Academic\{Domain,Application,Infrastructure,UI}` |
+| Esquema base | `AcademicSchema.sql` — **v28** |
+| Migraciones | V2…V47 · registro **explícito** en `Core\Helpers\SqliteHelper.cs` → `BuildMigrator()` |
+| Orquestador | `pendingMigrations = Version > currentVersion` · `BASE_SCHEMA_VERSION = 28` · `BASE_TABLES[]` (21) |
+| CRDT | `CrdtTables[]` (17) · `tablesWithViews = {terceros, sedes, programas, asignaturas, vinculaciones, sesiones, periodos, terminales}` · `DropAllProblematicViews` (**filtro por contenido `sql LIKE`**) · restore **desde definiciones capturadas** · `ReplacePrimaryKeyWithNotNull` (**elimina AUTOINCREMENT**) · `RemoveForeignKeyConstraints` · `CheckNotNullWithoutDefault` |
+| `vinculaciones` física | Tras rebuild CRDT: `id INTEGER PRIMARY KEY NOT NULL` (**sin AUTOINCREMENT**), **sin FK** |
+| `periodos` | `idperiodo, periodo, activo, subunidad` — **sin fechas** |
+| `festivos` | `idfestivo, idperiodo, fechafestivoinicio, fechafestivofinal, detallefestivo, tipofestivo` (`FESTIVO`/`PRESENCIAL`); modelo con `DateTime` |
+| `config` | `id_periodo`, `fecha_inicio`, `fecha_fin` (**dd/MM/yyyy**) |
+| `dia_horas_semanales` | `"{DIA}\|{HORAS}\|{HORARIO}"`, días **sin tilde** en datos reales |
+| `cmbTipoTutoria` | `{"Presencial","Plataforma","Mixta"}` = `modalidadVinculacion` |
+| `vw_SesionesDetalle` | **no expone `IdAsignatura`**; días **con tilde**; `LEFT JOIN terceros` |
+| `SesionListItem` | **no tiene `IdAsignatura`**; sí `IdVinculacion`, `IdPrograma`, `IdSede`, `IdPeriodo`, `Semestre` |
+| Generador | `GeneradorSesionesRecurrentes` (días consecutivos, **no** filtra festivos, **no** calcula viática) |
+| `FranjaHoraria` | `struct { Inicio, Fin, SeSolapaCon() }` · `HorarioSesionParser.TryParse` (string→franja) |
+| Control β/γ | `UI\DayHoursDropdown` (días **sin tilde**, horas 1..8, exige `Horario`) |
+| Validación existente | `btnGuardar_Click` L1016–1031 → *"Fechas Fuera de Período"* |
+| Aviso existente | `limiteDiciembre = 15/12/año` (L644–650) |
+| Precedentes | permisos idempotentes (`MigrationV38`) · normalización de acentos (`NormalizeCityName`) · `MarkDirty` en `AcademicUnitOfWork.Commit()` y en `FormSesionesAcademicas` L1267 |
+| Reutilizable | `IAcademicRepository.GetAsignaturasByPrograma`, `GetVinculacionById`, `GetFestivos()` (→ `DateTime`) |
+| `FormTerceros` | `FormTerceros(Func<IDbConnection>)`; `dgvTerceros`, `pnlTop`, `pnlDetails`; **sin `TabControl`** |
+
+---
+
+## B.2 Arquitectura de datos (4 capas)
+
+```
+CAPA 0 — PRODUCCIÓN MAESTRA (CRDT)   terceros_asignaturas  [POOL P×C]
+CAPA 1 — ALGORITMO (memoria+auditoría)  ag_aula → ag_aula_asignatura → ag_corrida → ag_individuo ══► List<AgGen>
+                                        ag_bloque_horario · ag_gen · ag_violacion · ag_bitacora
+CAPA 2 — STAGING EDITABLE (espejo)      ag_vinculaciones → ag_sesiones (+ ag_vinculacion_gen,
+                                        ag_salvedades_conflictos, vw_AgVinculacionesDetalle/vw_AgSesionesDetalle)
+CAPA 3 — PRODUCCIÓN (sin cambios)       vinculaciones → sesiones + ag_promocion (+ upsert automático del pool)
+```
+
+---
+
+## B.3 **LA VENTANA α** (sección nueva, en detalle)
+
+### B.3.1 Modelo de ventanas (3 niveles)
+```
+[ VENTANA DEL SEMESTRE ]   semestre_inicio … semestre_fin        ← cota DURA, derivada del idperiodo
+      └── [ VENTANA DEL AULA ]   aula_inicio … aula_fin          ← PARÁMETRO DE ENTRADA del AG (V3)
+              └── [ VENTANA POR ASIGNATURA ]  gen.fecha_inicio … gen.fecha_fin   ← decidida por el AG (R6)
+```
+**Invariantes duros:**
+```
+IV1: aula_inicio >= semestre_inicio  ∧  aula_fin <= semestre_fin
+IV2: para TODO gen:  gen.fecha_inicio >= aula_inicio  ∧  gen.fecha_fin <= aula_fin
+IV3: para TODA sesión derivada:  aula_inicio <= fechasesion <= aula_fin
+IV4: ninguna sesión puede caer en un rango FESTIVO del idperiodo
+IV5: la cobertura acumulada (R5/R6) debe caber en [aula_inicio, aula_fin]
+```
+
+### B.3.2 `AgResolutorVentanaSemestre` (nuevo)
+```csharp
+/// Resuelve la ventana del semestre para un período.
+/// Prioridad: FESTIVOS(PRESENCIAL) → CONFIG → MANUAL (clamp) → ERROR.
+public interface IAgResolutorVentanaSemestre
+{
+    Result<VentanaSemestre> Resolver(int idPeriodo, string subunidad, CancellationToken ct);
+}
+public sealed class VentanaSemestre
+{
+    public DateTime Inicio { get; }
+    public DateTime Fin { get; }
+    public string Origen { get; }              // FESTIVOS | CONFIG | MANUAL
+    public IReadOnlyList<Festivo> Festivos { get; }         // para exclusión (IV4)
+    public IReadOnlyList<Festivo> RangosPresenciales { get; } // para viática (C5)
+}
+```
+| Caso | Resultado |
+|---|---|
+| Hay `PRESENCIAL` para el `idPeriodo` | `Inicio = MIN(fechafestivoinicio)`, `Fin = MAX(fechafestivofinal)` (se valida contra el envelope total para no cortar FESTIVOs externos) |
+| No hay `PRESENCIAL` pero sí `config.id_periodo` | Usa `config.fecha_inicio/fecha_fin`, **parseadas en C#** (dd/MM/yyyy) y normalizadas a ISO |
+| `aula_inicio/aula_fin` provistos por el usuario | Se respetan con **clamp** a la ventana del semestre; si los exceden ⇒ `Result.Failure` (mensaje con ambas ventanas) |
+| Nada disponible | `Result.Failure("No hay calendario (PRESENCIAL) para el período {idPeriodo}")` — **bloquea** la corrida |
+
+### B.3.3 `AgValidadorVentana` (nuevo) — pre-flight + post
+```csharp
+Result<InformeFactibilidad> ValidarPreFlight(AgContexto ctx);
+Result<InformeViolaciones>  ValidarPost(AgIndividuo individuo, AgContexto ctx);   // W1 por gen
+Result                        ValidarSesiones(IEnumerable<AgSesion>, AgContexto ctx); // IV3 (promoción)
+```
+**Cálculo de factibilidad (C3):**
+```text
+horas_semana(asignatura) = Σ horas de los bloques β×γ asignables por semana
+semanas_asignatura       = ceil(horas_objetivo / horas_semana)
+semanas_del_bloque       = max(semanas_asignatura de la pareja R5)      // política max_asignaturas_semana
+semanas_necesarias       = Σ semanas_del_bloque  (secuencia R6)
+semanas_disponibles      = nº de ciclos semanales en [aula_inicio, aula_fin]
+                           que contienen ≥1 día de β NO cubierto por FESTIVO
+SI semanas_necesarias > semanas_disponibles ⇒ INFACTIBLE (bloquea la corrida, mensaje accionable)
+```
+`InformeFactibilidad` expone: `SemanasDisponibles`, `SemanasNecesarias`, `AsignaturasQueNoCaben[]`, `DetallePorAsignatura[]`.
+
+### B.3.4 `AgExpansorSesiones` (nuevo, corrige H6)
+```csharp
+/// Expande el patrón semanal a sesiones fechadas (α) respetando la ventana y excluyendo FESTIVO.
+internal sealed class AgExpansorSesiones
+{
+    private readonly GeneradorSesionesRecurrentes _generador;      // reutilizado
+    private readonly CalculadoraViaticaSesion _viatica;            // C5
+    private readonly IAgResolutorVentanaSemestre _ventana;
+
+    public Result<IReadOnlyList<Sesion>> Expandir(AgVinculacionBorrador v, AgContexto ctx)
+    {
+        // 1. Llamar al generador por cada (día, bloque) del patrón semanal
+        // 2. DESCARTAR toda sesión cuya fecha caiga en un rango FESTIVO del idperiodo
+        // 3. Si no se alcanzan las horas_objetivo, extender la fecha límite (semana a semana)
+        //    SIN salir de [aula_inicio, aula_fin]; si se agota ⇒ Result.Failure
+        // 4. Computar Viatica con CalculadoraViaticaSesion (modalidad + PRESENCIAL + residencia↔sede)
+    }
+}
+```
+**Nunca** se delega el filtrado de festivos al generador (no lo hace).
+
+### B.3.5 `CalculadoraViaticaSesion` (nuevo, corrige H7)
+Extrae **literalmente** la regla hoy inline (`FormSesionesAcademicas` L681–833) para que formulario y AG compartan una única fuente:
+```csharp
+public static bool Calcular(string modalidad, bool esSedeIgualResidencia,
+                            DateTime fechaSesion, IReadOnlyList<Festivo> rangosPresenciales)
+{
+    if (modalidad == "Virtual" || esSedeIgualResidencia) return false;
+    if (modalidad == "Presencial") return true;
+    if (modalidad == "Semipresencial")
+        return rangosPresenciales.Any(f => fechaSesion.Date >= f.FechaFestivoInicio.Date
+                                        && fechaSesion.Date <= f.FechaFestivoFinal.Date);
+    return false;
+}
+```
+**Refactor recomendado (no invasivo):** el formulario pasa a **delegar** en este servicio (elimina lógica de negocio del code-behind, según `architecture-rules.md`).
+
+---
+
+## B.4 Uso de `idvinculacion` → pool Docente↔Asignatura
+
+`idvinculacion` es la **evidencia** de que `P` dictó `C` en `Pr`/`S`. Flujo:
+```
+FormVerVinculaciones · "Por Semestre" (o "Por Asignaturas")
+  → filtros del nodo (Programa/Semestre/Sede/Periodo)
+  → 1) SELECCIONA CLAVES (los filtros NO alteran el conteo)
+    2) por clave: COUNT(DISTINCT id) FROM vinculaciones
+                  WHERE idtercero=@T AND idprograma=@P AND idasignatura=@A
+                    AND COALESCE(semestre,'')=@S
+    3) UPSERT en terceros_asignaturas (no pisa prioridad/activo/origen/observaciones)
+  → AgAsignadorTercero → mejores cruces S+C+P → menos SIN_CANDIDATOS
+```
+Item individual: `GetVinculacionById(item.IdVinculacion)` sobre `modo.TablaVinculaciones` (Fase 30). Masivo: consulta de derivación (evita N+1).
+
+---
+
+## B.5 Tabla `terceros_asignaturas` (producción, **CRDT**)
+
+```sql
+CREATE TABLE IF NOT EXISTS terceros_asignaturas (
+    id                      INTEGER PRIMARY KEY NOT NULL,   -- PK única NOT NULL SIN AUTOINCREMENT
+    idtercero               INTEGER NOT NULL DEFAULT 0,
+    idprograma              INTEGER NOT NULL DEFAULT 0,
+    idasignatura            INTEGER NOT NULL DEFAULT 0,
+    semestre                TEXT    NOT NULL DEFAULT '',
+    activo                  INTEGER NOT NULL DEFAULT 1,
+    prioridad               INTEGER NOT NULL DEFAULT 0,
+    veces_asignada          INTEGER NOT NULL DEFAULT 0,
+    fecha_ultima_asignacion TEXT    NOT NULL DEFAULT '',     -- ISO yyyy-MM-dd (Fase 29)
+    origen                  TEXT    NOT NULL DEFAULT 'MANUAL', -- MANUAL | HISTORICO | AG_APROBADO
+    observaciones           TEXT    NOT NULL DEFAULT '',
+    subunidad               TEXT    NOT NULL DEFAULT '',
+    created_at              TEXT    NOT NULL DEFAULT '',
+    updated_at              TEXT    NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_tas_tercero    ON terceros_asignaturas(idtercero);
+CREATE INDEX IF NOT EXISTS idx_tas_asignatura ON terceros_asignaturas(idasignatura);
+CREATE INDEX IF NOT EXISTS idx_tas_programa   ON terceros_asignaturas(idprograma, semestre);
+```
+**PK determinista 63 bits (Fase 23)** → `long`, **sin sondeo**, colisión ⇒ error:
+```csharp
+public static long Calcular(int t, int p, int a, string s)
+{
+    var ci = System.Globalization.CultureInfo.InvariantCulture;
+    string k = string.Concat(t.ToString(ci), "|", p.ToString(ci), "|", a.ToString(ci), "|",
+                             (s ?? "").Trim().ToUpperInvariant());
+    unchecked
+    {
+        ulong h = 14695981039346656037UL;
+        foreach (char c in k) { h ^= c; h *= 1099511628211UL; }
+        return (long)(h & 0x7FFFFFFFFFFFFFFFUL);
+    }
+}
+```
+**Conformidad CRDT:** PK única NOT NULL sin AUTOINCREMENT · sin FK · sin UNIQUE · todo NOT NULL con DEFAULT · `subunidad` presente · sin vistas dependientes.
+
+---
+
+## B.6 Cuatro mecanismos de población del pool
+
+| Mecanismo | Disparador | Semántica |
+|---|---|---|
+| **M1 · Derivación histórica** | `MigrationV48.Up()` (backfill) · *"Sincronizar pool"* en `FormTerceros` · menú contextual en `FormVerVinculaciones` | Claves por filtro + **conteo global** (`COALESCE(semestre,'')`); fechas parseadas en C#; `origen='HISTORICO'`; idempotente |
+| **M2 · Captura automática** | **H1** `FormSesionesAcademicas.GuardarAsync` · **H2** `AgPromotorVinculaciones` · **H3** borrado | **Recomputa** (nunca `++`); recomputa también la clave anterior si cambió; H2 `origen='AG_APROBADO'` |
+| **M3 · Manual** | `FormTerceros` pestaña 2 + `FormTerceroAsignaturas` | `origen='MANUAL'`; `prioridad`/`activo` editables |
+| **M4 · Aprendizaje del AG** | Cada corrida aprobada | Pool creciente ⇒ `SIN_CANDIDATOS` ↓ |
+
+```sql
+-- UPSERT del backfill: preserva la intención manual
+INSERT INTO terceros_asignaturas
+    (id, idtercero, idprograma, idasignatura, semestre, activo, prioridad, veces_asignada,
+     fecha_ultima_asignacion, origen, observaciones, subunidad, created_at, updated_at)
+VALUES (@Id, @T, @P, @A, @S, 1, 0, @Veces, @Fecha, 'HISTORICO', '', @Sub, @Now, @Now)
+ON CONFLICT(id) DO UPDATE SET
+    veces_asignada = excluded.veces_asignada,
+    fecha_ultima_asignacion = excluded.fecha_ultima_asignacion,
+    updated_at = excluded.updated_at;
+    -- NO tocar: prioridad, activo, origen, observaciones
+```
+
+---
+
+## B.7 Impacto en el AG
+
+- **`ag_asignatura_tercero` ELIMINADA**; `AgAsignadorTercero` lee `ITerceroAsignaturaRepository`.
+- Requisito **duro**: departamento/subunidad ∈ requisitos; **blandos (F4)**: residencia↔sede (`terceros.residencia` ↔ `sedes.ciudad`), tipo/categoría, `prioridad`, `veces_asignada`.
+- **`SIN_CANDIDATOS`** ⇔ pool vacío ⇒ se resuelve con M1/M2/M3.
+- **`OcupacionExterna`** (desde `sesiones` + `ag_sesiones` aprobadas) alimenta R1/R7.
+- **`AgContexto` ahora incluye la ventana** (`VentanaSemestre`, `VentanaAula`, `Festivos`, `RangosPresenciales`, `Modalidad`, `ResidenciasPorTercero`).
+
+---
+
+## B.8 UI
+
+### B.8.1 `FormTerceros` — `TabControl` con 2 pestañas
+- `tabDatos` — *"Datos del Tercero"* (rehospeda `pnlTop`, `dgvTerceros`, `pnlDetails`).
+- `tabAsignaturas` — *"Asignaturas habilitadas"*: `dgvAsignaturasHabilitadas` (`Programa | Semestre | Asignatura | Activo | Prioridad | Veces asignada | Última asignación | Origen | Observaciones`) + toolbar (*Agregar*, *Editar*, *Eliminar*, **"Importar desde histórico"**, *Exportar*) + resumen.
+- **`tabAsignaturas.Enabled = _currentTercero != null && _currentTercero.Id > 0`** + carga perezosa (Fase 38).
+
+### B.8.2 `FormTerceroAsignaturas` — modal de alta/edición
+`FormTerceroAsignaturas(int idTercero, TerceroAsignatura fila, Func<IDbConnection> connectionFactory)`; cascada `cmbPrograma → cmbSemestre (I..X + "(todos)") → cmbAsignatura` (vía `GetAsignaturasByPrograma`); `chkActivo`, `numPrioridad`, `lblVecesAsignada`/`lblUltimaAsignacion` (read-only), `cmbOrigen` (read-only), `txtObservaciones`; **cambio de clave ⇒ `DELETE` + `INSERT`** (Fase 27).
+
+### B.8.3 `FormVerVinculaciones` — menú contextual
+*Habilitar esta combinación* · *Sincronizar pool del semestre* · *Ver asignaturas habilitadas del docente*. En Modo AG el pool se escribe **siempre** en producción.
+
+### B.8.4 Hooks
+**H1** `FormSesionesAcademicas.GuardarAsync` (dentro de la transacción; `MarkDirty()` lo hace la línea 1267 tras el `Commit`) · **H2** `AgPromotorVinculaciones` (con `MarkDirty()` garantizado) · **H3** borrado ⇒ recomputa.
+
+### B.8.5 **Módulo Aula/Salón (S) — con VENTANA**
+1. **Cascada:** `Periodo → Sede → Programa → Semestre (I–X) → Grupo (A–D/'') → Modalidad`.
+2. **VENTANA (nuevo, central):**
+   - Al elegir **Período**, se **resuelve** y se muestran **read-only**: `semestre_inicio … semestre_fin` + `Origen` (`FESTIVOS`/`CONFIG`/`MANUAL`).
+   - El usuario elige **`aula_inicio` / `aula_fin`** (dtp) **clampados** a la ventana del semestre; si intenta salir ⇒ error de validación (IV1).
+   - Botón *"Restablecer a ventana del semestre"*.
+   - Si **no hay calendario** para el período ⇒ el módulo queda **bloqueado** con mensaje accionable (enlace a `FormFestivos`).
+3. **C dependientes:** `idprograma + semestre` → grilla (`orden_curricular` = `num_nivel`, `horas_objetivo` = `int_horaria`, `creditos`, `requerida`).
+4. **Panel de factibilidad (nuevo, en caliente):** muestra por asignatura `horas_objetivo`, `horas_semana`, `semanas_necesarias` y la comparación con `semanas_disponibles` ⇒ semáforo (verde/ámbar/rojo) y **bloqueo** si es INFACTIBLE (C3).
+5. **Pool (P):** vista de `terceros_asignaturas` por asignatura + *"Sincronizar pool"*.
+6. **"Generar encabezado"** → persiste `ag_aula` (con `semestre_inicio/fin`, `ventana_origen`, `aula_inicio/fin`), `estado='LISTO'`.
+7. **Aviso 15/12** (H8) no bloqueante si `aula_fin` lo supera.
+8. **Acciones:** *Guardar*, *Marcar LISTO*, *Ir a Cruzamiento*, *Eliminar*.
+9. **NO** escribe en `vinculaciones` (es insumo).
+
+### B.8.6 **Módulo Cruzamiento (R)**
+| Bloque | Contenido |
+|---|---|
+| **A. Cabecera** | Selector `ag_aula` (`LISTO`) + resumen incl. **ventana del aula y del semestre** + nº C + semilla |
+| **B. β/γ** | `DayHoursDropdown` (días **sin tilde**) + `ag_bloque_horario` (γ) + `max_asignaturas_semana`=2 (R5) + `horas_bloque` (4/8) |
+| **C. Parámetros AG** | población · generaciones · tasas · torneo · umbral · estancamiento · **operador de cruce** · política de secuencia R6/R5 |
+| **D. Comandos** | *Validar factibilidad* (pre-flight) · *Ejecutar AG* (`Task.Run` + `ProgressManager` + `CancellationToken`) · *Ver evolución* (`ag_bitacora`) · *Materializar* (→ `ag_vinculaciones`/`ag_sesiones` vía `AgExpansorSesiones`) · *Abrir en modo AG →* · *Descartar* |
+| **E. Grilla de TUPLAS** | `Sede·Programa·Semestre·Grupo·Modalidad \| C \| P \| Día \| Franja \| Horas \| **FechaInicio** \| **FechaFin** \| Fitness \| Violaciones \| Vacante \| Estado`; **validación interactiva R1–R7 + `FUERA_DE_VENTANA`** (celda fuera de ventana ⇒ rojo + tooltip); filtros (vacantes / violaciones / asignatura / docente / día / **fuera de ventana**) |
+| **F. Grilla de INDIVIDUOS** | `Id·Generación·Fitness·Penalización·Violaciones duras·Vacantes·Estado·Es mejor` |
+| **G. Panel de VACANTES** | `SIN_CANDIDATOS` → *"Cargar pool"* · `SIN_DISPONIBILIDAD` → *"Mover franja"* · `NO_CUMPLE_REQUISITOS` → *"Revisar requisitos"* |
+| **H. Panel de VENTANA (nuevo)** | Línea de tiempo `semestre ▸ aula ▸ asignaturas` con huecos visibles; alertas de *"asignatura excede la ventana"* y *"no cabe"* |
+| **I. Estado** | `C cubiertas/total · Vacantes · Violaciones duras · Fuera de ventana · Semanas usadas/disponibles · Generación · Δ fitness · ms/gen` |
+| **J. Cierre** | `estado='APROBADA'` ⇒ habilita **"Promover"** (requiere `W1=0`) |
+
+**Ciclo de vida:** `ag_aula` BORRADOR→LISTO→EN_AG→APROBADO→PROMOVIDO · `ag_corrida` BORRADOR→(**VALIDADA**)→EJECUTANDO→COMPLETADA→APROBADA · `ag_individuo` EVALUADO→APTO→SELECCIONADO→MATERIALIZADO→MODIFICADO_MANUAL→APROBADO→PROMOVIDO · `ag_vinculaciones` BORRADOR_MATERIALIZADO→MODIFICADO→APROBADO→PROMOVIDO.
+
+---
+
+## B.9 Migraciones (V48 = pool, V49 = AG — Fase 21)
+
+| Migración | Contenido | CRDT |
+|---|---|---|
+| **`MigrationV48_AddTercerosAsignaturas.cs`** | Tabla `terceros_asignaturas` + **backfill en C#** (`TerceroAsignaturaKey`) | ✅ |
+| **`MigrationV49_AddAgHorariosTables.cs`** | **13** tablas `ag_*` (con campos de ventana) + **2** vistas `vw_Ag*` + seed γ (días sin tilde) + **seed idempotente de permisos** | ❌ |
+
+```csharp
+new MigrationV47_SeedTerminalesCanonicos(),
+new MigrationV48_AddTercerosAsignaturas(),     // pool — PRECEDE al AG
+new MigrationV49_AddAgHorariosTables()         // AG
+```
+```csharp
+// SyncInitializer → CrdtTables[]
+..., "terminales", "cdpDependencias", "permisos", "terceros_asignaturas"
+```
+```sql
+-- Permisos (patrón MigrationV38), dentro de V49
+UPDATE permisos
+SET opcionespermitidas = TRIM(opcionespermitidas) || ',AgHorariosAcademicos'
+WHERE perfil = 'Admin'
+  AND (',' || REPLACE(opcionespermitidas, ' ', '') || ',') NOT LIKE '%,AgHorariosAcademicos,%';
+```
+**Sin cambios:** `AcademicSchema.sql`, `BASE_SCHEMA_VERSION`, `BASE_TABLES[]`, `vinculaciones`, `sesiones`, `vw_VinculacionesDetalle`, `vw_SesionesDetalle`.
+
+---
+
+## B.10 Modelo AG (3 capas) y `AgIndividuo` ↔ `List<AgGen>`
+
+| Relación | Cardinalidad | Significado |
+|---|---|---|
+| `AgAula` → `AgAulaAsignatura` | 1 : N | C dependientes |
+| `AgAula` → `AgCorrida` | 1 : N | Corridas |
+| `AgCorrida` → `AgIndividuo` | 1 : N | Población |
+| **`AgIndividuo` → `AgGen`** | **1 : N** | **El cromosoma contiene N genes = N tuplas** |
+| `AgIndividuo` → `AgViolacion` | 1 : N | Descartes + regla (incl. `FUERA_DE_VENTANA`) |
+| `AgGen` ↔ `AgVinculacion` | N : M (`ag_vinculacion_gen`) | Agrupación por `(asignatura, docente, aula, ventana)` |
+| `AgVinculacion` → `AgSesion` | 1 : N | Expansión α (`AgExpansorSesiones`) |
+| `AgVinculacion` → `Vinculacion` | 1 : 1 | Promoción (copia con remapeo) |
+
+- **`AgGen`** = `(C, P, S, Día β, Hora γ, horas, **α: fecha_inicio/fecha_fin**, es_vacante, motivo_vacante)`.
+- **Clave de gen (Fase 35)** = `(idasignatura, dia_semana, idbloque_horario)` — **layout fijo** por corrida.
+- **Pipeline:** `List<AgGen>` → agrupar cabezas → `AgPlanificadorTemporal` (ventana + R6) → `AgExpansorSesiones` (festivos + `GeneradorSesionesRecurrentes` + `CalculadoraViaticaSesion`) → `ag_vinculaciones`/`ag_sesiones` → edición → `AgSincronizadorCorrecciones` → aprobación → **M2** → promoción.
+
+---
+
+## B.11 DDL consolidado del esquema AG (13 tablas + 2 vistas)
+
+```sql
+CREATE TABLE IF NOT EXISTS ag_aula (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, idperiodo INTEGER, idsede INTEGER, idprograma INTEGER,
+    semestre TEXT, grupo TEXT DEFAULT '', modalidadVinculacion TEXT,
+    -- VENTANAS (nuevo v7)
+    semestre_inicio TEXT, semestre_fin TEXT, ventana_origen TEXT,   -- FESTIVOS|CONFIG|MANUAL
+    fecha_inicio TEXT, fecha_fin TEXT,                              -- = aula_inicio / aula_fin (α de entrada)
+    aula_ref TEXT, estado TEXT DEFAULT 'BORRADOR', observaciones TEXT,
+    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP, subunidad TEXT DEFAULT '');
+CREATE INDEX IF NOT EXISTS idx_ag_aula_ref ON ag_aula(aula_ref);
+
+CREATE TABLE IF NOT EXISTS ag_aula_asignatura (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, idaula INTEGER NOT NULL, idasignatura INTEGER NOT NULL,
+    semestre_asignatura TEXT, orden_curricular INTEGER DEFAULT 0, horas_objetivo REAL DEFAULT 0,
+    creditos INTEGER DEFAULT 0, requerida INTEGER DEFAULT 1, activo INTEGER DEFAULT 1,
+    ventana_preferida_inicio TEXT DEFAULT '', ventana_preferida_fin TEXT DEFAULT '',  -- opcional
+    subunidad TEXT DEFAULT '');
+CREATE UNIQUE INDEX IF NOT EXISTS uq_ag_aula_asignatura ON ag_aula_asignatura(idaula, idasignatura);
+
+CREATE TABLE IF NOT EXISTS ag_bloque_horario (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, dia_semana INTEGER, orden INTEGER, hora_inicio TEXT,
+    hora_fin TEXT, etiqueta TEXT, horas REAL, activo INTEGER DEFAULT 1, subunidad TEXT DEFAULT '');
+-- SEED γ (SIN tilde): MARTES..VIERNES ord1 18:00-22:00 · SABADO ord1 08:00-12:00 + ord2 13:00-17:00 · DOMINGO ord1 08:00-12:00
+
+CREATE TABLE IF NOT EXISTS ag_corrida (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, idaula INTEGER NOT NULL, idperiodo INTEGER,
+    -- VENTANAS efectivas de la corrida (reproducibilidad)
+    semestre_inicio TEXT, semestre_fin TEXT, ventana_inicio TEXT, ventana_fin TEXT, ventana_origen TEXT,
+    dias_habilitados TEXT, bloques_json TEXT, max_asignaturas_semana INTEGER DEFAULT 2, horas_bloque REAL DEFAULT 4,
+    tamano_poblacion INTEGER DEFAULT 60, generaciones_max INTEGER DEFAULT 200, tasa_cruce REAL DEFAULT 0.85,
+    tasa_mutacion REAL DEFAULT 0.10, tamano_torneo INTEGER DEFAULT 3, umbral_fitness REAL DEFAULT 0,
+    estancamiento_max INTEGER DEFAULT 30, semilla INTEGER DEFAULT 0,
+    estado TEXT DEFAULT 'BORRADOR',   -- BORRADOR|VALIDADA|EJECUTANDO|COMPLETADA|APROBADA|DESCARTADA
+    semanas_disponibles INTEGER DEFAULT 0, semanas_necesarias INTEGER DEFAULT 0, factible INTEGER DEFAULT 0,
+    generaciones_ejecutadas INTEGER DEFAULT 0, fitness_mejor REAL DEFAULT 0,
+    idindividuo_mejor INTEGER, idindividuo_materializado INTEGER, usuario TEXT, huella_parametros TEXT,
+    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP, subunidad TEXT DEFAULT '');
+
+CREATE TABLE IF NOT EXISTS ag_individuo (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, idcorrida INTEGER NOT NULL, generacion INTEGER DEFAULT 0,
+    fitness REAL DEFAULT 0, penalizacion REAL DEFAULT 0, violaciones_duras INTEGER DEFAULT 0,
+    vacantes INTEGER DEFAULT 0, fuera_de_ventana INTEGER DEFAULT 0,
+    estado TEXT DEFAULT 'EVALUADO', es_materializado INTEGER DEFAULT 0, es_mejor INTEGER DEFAULT 0,
+    firma_hash TEXT, fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP, subunidad TEXT DEFAULT '');
+CREATE INDEX IF NOT EXISTS idx_ag_individuo_corrida ON ag_individuo(idcorrida, fitness DESC);
+
+CREATE TABLE IF NOT EXISTS ag_gen (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, idindividuo INTEGER NOT NULL, posicion INTEGER NOT NULL,
+    idaula INTEGER NOT NULL, aula_ref TEXT, idperiodo INTEGER, idsede INTEGER, idprograma INTEGER,
+    semestre TEXT, grupo TEXT, modalidad TEXT, idasignatura INTEGER, idtercero INTEGER NULL,
+    es_vacante INTEGER DEFAULT 0,
+    motivo_vacante TEXT DEFAULT '',   -- SIN_CANDIDATOS|SIN_DISPONIBILIDAD|NO_CUMPLE_REQUISITOS
+    dia_semana INTEGER, idbloque_horario INTEGER, horas REAL DEFAULT 4,
+    fecha_inicio TEXT, fecha_fin TEXT,                       -- VENTANA α de la asignatura
+    dentro_de_ventana INTEGER DEFAULT 1,                     -- W1 (denormalizado para consulta)
+    estado_gen TEXT DEFAULT 'OK',     -- OK|REPARADO|VACANTE|CONFLICTO|DESCARTADO|FUERA_VENTANA
+    subunidad TEXT DEFAULT '');
+CREATE INDEX IF NOT EXISTS idx_ag_gen_individuo ON ag_gen(idindividuo, posicion);
+CREATE INDEX IF NOT EXISTS idx_ag_gen_slot      ON ag_gen(idaula, dia_semana, idbloque_horario);
+CREATE INDEX IF NOT EXISTS idx_ag_gen_ventana   ON ag_gen(idaula, fecha_inicio, fecha_fin);
+
+CREATE TABLE IF NOT EXISTS ag_vinculaciones (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    idsede INTEGER, idtercero INTEGER, idprograma INTEGER, idperiodo INTEGER, grupo TEXT, semestre TEXT,
+    idasignatura INTEGER, total_horas INTEGER, dia_horas_semanales TEXT, fecha_inicio TEXT, fecha_fin TEXT,
+    modalidadVinculacion TEXT, subunidad TEXT DEFAULT '', isTerminalAereo INTEGER DEFAULT 0,
+    idTerminales INTEGER DEFAULT 0, gastoTerminalAerea REAL DEFAULT 0,
+    idaula INTEGER, idcorrida INTEGER, idindividuo INTEGER, fitness REAL DEFAULT 0,
+    vacante INTEGER DEFAULT 0, motivo_vacante TEXT DEFAULT '', estado_ag TEXT DEFAULT 'BORRADOR',
+    origen_ag INTEGER DEFAULT 1, modificado_por TEXT, fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP,
+    fecha_modificacion TEXT);
+CREATE INDEX IF NOT EXISTS idx_ag_vinc_corrida   ON ag_vinculaciones(idcorrida, estado_ag);
+CREATE INDEX IF NOT EXISTS idx_ag_vinc_individuo ON ag_vinculaciones(idindividuo);
+CREATE INDEX IF NOT EXISTS idx_ag_vinc_aula      ON ag_vinculaciones(idaula);
+
+CREATE TABLE IF NOT EXISTS ag_sesiones (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, idvinculacion INTEGER, idtercero INTEGER, fechasesion TEXT,
+    horariosesion TEXT, horas REAL, viatica INTEGER, subunidad TEXT DEFAULT '', idindividuo INTEGER,
+    idgen INTEGER NULL, origen_ag INTEGER DEFAULT 1, estado_ag TEXT DEFAULT 'BORRADOR',
+    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP);
+CREATE INDEX IF NOT EXISTS idx_ag_ses_vinc      ON ag_sesiones(idvinculacion);
+CREATE INDEX IF NOT EXISTS idx_ag_ses_fecha     ON ag_sesiones(fechasesion);
+CREATE INDEX IF NOT EXISTS idx_ag_ses_individuo ON ag_sesiones(idindividuo);
+
+CREATE TABLE IF NOT EXISTS ag_vinculacion_gen (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, idagvinculacion INTEGER NOT NULL, idgen INTEGER NOT NULL,
+    subunidad TEXT DEFAULT '');
+CREATE UNIQUE INDEX IF NOT EXISTS uq_ag_vinc_gen ON ag_vinculacion_gen(idagvinculacion, idgen);
+
+CREATE TABLE IF NOT EXISTS ag_violacion (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, idindividuo INTEGER NOT NULL,
+    regla TEXT,   -- R1..R7|BETA|GAMMA|SOLAPE|FUERA_DE_VENTANA|VACANTE|COBERTURA
+    idgen_a INTEGER, idgen_b INTEGER NULL, descripcion TEXT, peso REAL DEFAULT 0, subunidad TEXT DEFAULT '');
+CREATE INDEX IF NOT EXISTS idx_ag_violacion_individuo ON ag_violacion(idindividuo, regla);
+
+CREATE TABLE IF NOT EXISTS ag_salvedades_conflictos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, idsesion_a INTEGER NOT NULL, idsesion_b INTEGER NOT NULL,
+    idtercero INTEGER NOT NULL, idperiodo INTEGER, justificacion TEXT,
+    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP, subunidad TEXT DEFAULT '',
+    UNIQUE(idsesion_a, idsesion_b));
+
+CREATE TABLE IF NOT EXISTS ag_promocion (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, idaula INTEGER, idcorrida INTEGER, idindividuo INTEGER,
+    idagvinculacion INTEGER, idvinculacion INTEGER, idtercero INTEGER, idasignatura INTEGER,
+    fecha_inicio TEXT, fecha_fin TEXT, sesiones_count INTEGER DEFAULT 0, modo TEXT,
+    justificacion_vacante TEXT DEFAULT '', usuario TEXT,
+    fecha_promocion TEXT DEFAULT CURRENT_TIMESTAMP, subunidad TEXT DEFAULT '');
+
+CREATE TABLE IF NOT EXISTS ag_bitacora (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, idcorrida INTEGER, generacion INTEGER, mejor_fitness REAL,
+    promedio_fitness REAL, peor_fitness REAL, evaluados INTEGER, descartados INTEGER, vacantes INTEGER,
+    fuera_de_ventana INTEGER, duracion_ms INTEGER, fecha_registro TEXT DEFAULT CURRENT_TIMESTAMP);
+```
+**Vistas `vw_Ag*`**: mismos alias que las deterministas, **`LEFT JOIN terceros`** y `COALESCE(t.nombre,'(VACANTE)')` (Fase 32), + columnas `Ag*` al final.
+
+---
+
+## B.12 Modo AG (compatibilidad de los 3 formularios)
+
+`AgModoDatos { TablaVinculaciones, TablaSesiones, VistaVinculaciones, VistaSesiones, TablaSalvedades, EsModoAg }` con `Determinista` (default) y `Ag`.
+| Archivo | Cambio aditivo |
+|---|---|
+| `AcademicRepository` | +`AgModoDatos` (incluye `GetVinculacionById` → `_tablaVinculaciones`) |
+| `VinculacionQueryRepository` | +`AgModoDatos` (`FROM {_vistaSesiones}`) |
+| `SalvedadConflictoRepository` | +`AgModoDatos` |
+| `FormSesionesAcademicas` | +`AgModoDatos` + **siembra `dtpInicio/dtpFinal` con la ventana** (C7) + indicador "Modo AG" |
+| `FormVinculaciones` / `FormVerVinculaciones` | +`AgModoDatos` + indicador "Modo AG" |
+
+**Edición:** (1) sesión ⇒ los 3 Forms en Modo AG *(la validación "Fechas Fuera de Período" existente hace cumplir IV3 gratis)* · (2) tupla ⇒ Pestaña 2 de `AgFormGeneradorHorarios` · (3) `AgSincronizadorCorrecciones` (valida IV1–IV3 y recalcula).
+
+---
+
+## B.13 Algoritmo
+
+### Restricciones
+| Regla | Enunciado | Reparación | Peso | Tipo |
+|---|---|---|---|---|
+| **R1** | Docente no en dos lugares a la misma hora (incl. `OcupacionExterna`) | Elimina tupla + reasigna / Vacante | 100 | Dura |
+| **R2** | Aula no alberga dos cursos simultáneos | Muta franja/día | 80 | Dura |
+| **R3** | Mismo curso en días diferentes (si es diario) | Intercambia posiciones | 40 | Dura |
+| **R4** | Grupo sin dos C el mismo día, salvo sábado (2×4 h o 1×8 h) | Mueve a otro día / pareja sábado | 60 | Dura |
+| **R5** | Máx. 2 asignaturas semanales por grupo | Reagrupa por semanas | 50 | Dura |
+| **R6** | Finalizar las C de la 1.ª asignación antes de iniciar 1–2 nuevas — **dentro de la ventana** | Reordena ventanas α por `orden_curricular` | 70 | Dura |
+| **R7** | Tercero no en dos grupos a la misma fecha y hora (incl. producción) | Reasigna franja | 100 | Dura |
+| **W1 · `FUERA_DE_VENTANA`** | **α de la asignatura (y toda sesión derivada) fuera de `[aula_inicio, aula_fin]`** | **Replanifica la ventana / descarta la tupla** | **120** | **Dura** |
+| **BETA/GAMMA** | Día ∉ β / Bloque ∉ γ | Reasignar | 200 | Dura |
+| **SOLAPE** | Franjas solapadas en el mismo `aula_ref` | Reasignar franja | 90 | Dura |
+| **VACANTE** | Tupla sin docente | — | 100 | Blanda-fuerte |
+| **COBERTURA** | Asignatura requerida sin tupla | Inserta tupla | 150 | Dura |
+
+### Fitness `F = F1 − F2 + 2·F3 + F4 + 2·F5`
+**F1** cobertura de C · **F2** Σ violaciones (**fuente única: `Penalizacion = Σ Pesos`**, Fase 34, ahora incluye `W1`) · **F3** escalonado + R5/R6 + **cobertura temporal dentro de la ventana** (×2) · **F4** balance + afinidad del pool + residencia↔sede · **F5** preservación de bloques (×2).
+
+### Cruce (Fases 34, 35) — sin cambios respecto a v6
+```csharp
+if (p1.Genes.Count < 2) return Result.Success(new AgParHijos(p1.Clonar(), p2.Clonar()));
+int corte = _random.Siguiente(1, p1.Genes.Count);
+var h1 = HeredarOX(p1, p2, corte);   // clona; completa sin repetir (asignatura, día, bloque)
+var h2 = HeredarOX(p2, p1, corte);
+// reparación en cascada (alterno → Vacante con motivo); NO suma penalización aquí
+hijo.Violaciones.AddRange(_validador.Validar(hijo));   // R1..R7, BETA, GAMMA, SOLAPE, W1, VACANTE
+AgMetricas.Recalcular(hijo);                           // Penalizacion = Σ Pesos
+```
+**Mutación** 4 modos (β/γ, docente, swap, **ventana α**) → siempre `AgMetricas.Recalcular`. **Selección** torneo + elitismo. **Terminación** generaciones ∪ umbral ∪ estancamiento. **I/O** en memoria; se persiste seleccionado + descartados + `ag_bitacora`.
+
+---
+
+## B.14 Promoción (gate + copia con remapeo)
+1. **Gate:** `ag_aula='APROBADO'` ∧ `ag_corrida='APROBADA'` ∧ `factible=1` ∧ **`W1 = 0`** (C8) ∧ **no vacantes** por defecto (override `Admin` con `justificacion_vacante`).
+2. **`AcademicUnitOfWork` + `AcademicRepository.InsertVinculacion`/`InsertSesiones`** (`EnsureCrSqliteEnabled()` + un solo `MarkDirty()` en el commit).
+3. Mapa `mapaVinc[idag → idreal]` y **`mapaSesion[idsesion_ag → idsesion_real]`**.
+4. Copiar `ag_salvedades_conflictos` con ids remapeados, re-aplicando `min/max` + `INSERT OR IGNORE` (Fase 31).
+5. `INSERT ag_promocion (modo='COPIA_REMAPEO', justificacion_vacante=@j)`.
+6. **H2:** recomputar/upsert del pool con `origen='AG_APROBADO'`.
+7. **Fallback `REGENERACION`** (con `AgExpansorSesiones`) si `ag_sesiones` está vacío.
+8. **Re-promoción** idempotente vía `ag_promocion`.
+
+---
+
+## B.15 Naming
+`Ag` al inicio en el módulo AG (`AgHorariosAcademicos`, `AgFormGeneradorHorarios`, `AgScheduleRepository`, `IAgScheduleRepository`, `AgGenToAgVinculacionMapper`, `AgAulaToAgVinculacionMapper`, `AgVinculacionToVinculacionMapper`, `MigrationV49_AddAgHorariosTables`, **`AgResolutorVentanaSemestre`**, **`AgValidadorVentana`**, **`AgExpansorSesiones`**, **`AgMetricas`**).
+Pool de producción **sin** `Ag`: `TerceroAsignatura` · `TerceroAsignaturaKey` · `ITerceroAsignaturaRepository` · `TerceroAsignaturaRepository` · `TerceroAsignaturaSyncService` · `TerceroAsignaturaMapper` · `TerceroAsignaturaDto` · `FormTerceroAsignaturas` · `MigrationV48_AddTercerosAsignaturas` · `DiaSemanaNormalizador` · **`CalculadoraViaticaSesion`** · **`VentanaSemestre`**.
+**Eliminada:** `ag_asignatura_tercero`.
+
+---
+
+## B.16 Inventario de archivos
+
+**Nuevos AG:** `Domain\Models\Genetica\` (`AgAula`, `AgAulaAsignatura`, `AgBloqueHorario`, `AgCorrida`, `AgIndividuo`, `AgGen`, `AgVinculacion`, `AgSesion`, `AgViolacion`, `AgPromocion`, `AgBitacora`, `AgSalvedad`, `AgContexto`, `AgPesosFitness`, `AgResultadoCorrida`, `AgModoDatos`, `AgMotivoVacante`, **`VentanaSemestre`**, **`InformeFactibilidad`**) · `Enums\` (`AgEstadoAula/Corrida/Individuo/Gen/AgVinculacion`, `AgReglaViolacion` — ahora con `FueraDeVentana`, `AgOrigenVentana`) · `Interfaces\` (`IAgScheduleRepository`, `IAgSalvedadRepository`, **`IAgResolutorVentanaSemestre`**) · `Application\Services\Genetica\` (`AgFabricaIndividuos`, `AgEvaluadorAptitud`, `AgValidadorReglas`, **`AgValidadorVentana`**, **`AgResolutorVentanaSemestre`**, **`AgExpansorSesiones`**, `AgOperadorCruce`, `AgOperadorMutacion`, `AgOperadorSeleccion`, `AgPlanificadorTemporal`, `AgGeneradorHorarios`, `AgMaterializadorSesiones`, `AgAsignadorTercero`, `AgPromotorVinculaciones`, `AgSincronizadorCorrecciones`, `AgEncabezadoVinculacionFactory`, `AgMetricas`) · `Application\Services\` (**`CalculadoraViaticaSesion`**) · `Interfaces\` (`IAgScheduleService`, `IAgRandomProvider`) · `Mappers\` (`AgGenToAgVinculacionMapper`, `AgAulaToAgVinculacionMapper`, `AgVinculacionToVinculacionMapper`) · `DTOs\` (`AgResultadoDto`, `AgEncabezadoDto`, `AgConfiguracionDto`, `AgTuplaDto`, **`AgVentanaDto`**) · `Infrastructure` (`AgScheduleRepository.cs`, `AgSalvedadRepository.cs`, `EnsureAgViews`, `MigrationV49_AddAgHorariosTables.cs`) · `UI` (`AgFormGeneradorHorarios.cs`+Designer, `Genetica\AgResultadosGridBuilder.cs`, `Genetica\AgValidacionInteractiva.cs`).
+
+**Nuevos Pool (CRDT):** `TerceroAsignatura` · `TerceroAsignaturaKey` · `ITerceroAsignaturaRepository` · `ITerceroAsignaturaSyncService` · `TerceroAsignaturaSyncService` · `TerceroAsignaturaMapper` · `TerceroAsignaturaDto` · `FiltroPoolDto` · `TerceroAsignaturaRepository` · `MigrationV48_AddTercerosAsignaturas` · `FormTerceroAsignaturas`(+Designer) · `DiaSemanaNormalizador`.
+
+**Existentes modificados = 12** (Fase 41): `SqliteHelper.cs` · `SyncInitializer.cs` · `RibbonButtonId.cs` · `Ribbon.xml` · `RibbonController.cs` · `AcademicRepository.cs` · `VinculacionQueryRepository.cs` · `SalvedadConflictoRepository.cs` · `FormSesionesAcademicas.cs` *(incluye delegar en `CalculadoraViaticaSesion` y sembrar la ventana)* · `FormVinculaciones.cs` · `FormVerVinculaciones.cs` · `FormTerceros.cs`(+`Designer.cs`).
+**Sin cambios:** `AcademicSchema.sql`, `BASE_SCHEMA_VERSION`, `BASE_TABLES[]`, `vinculaciones`, `sesiones`, `vw_VinculacionesDetalle`, `vw_SesionesDetalle`.
+
+---
+
+## B.17 Plan de pruebas (TDD)
+
+**Unit:** `AgEvaluadorAptitudTests` (F1–F5; `Penalizacion` = Σ pesos; **W1 contabilizada una sola vez**) · `AgValidadorReglasTests` (R1–R7, sábado, β/γ, SOLAPE, **W1**) · **`AgResolutorVentanaSemestreTests`** (FESTIVOS → CONFIG → MANUAL; clamp; error sin calendario; parseo dd/MM/yyyy) · **`AgValidadorVentanaTests`** (IV1–IV5; factibilidad; acumulado R5/R6; mensajes) · **`AgExpansorSesionesTests`** (descarta FESTIVO; extiende hasta cumplir horas; **nunca sale de la ventana**; falla si se agota) · **`CalculadoraViaticaSesionTests`** (Presencial/Virtual/Semipresencial × sede=residencia × PRESENCIAL) · `AgOperadorCruceTests` (guard, OX sin duplicados, **no-aliasing**, Vacante con 3 motivos) · `AgOperadorMutacionTests` · `AgOperadorSeleccionTests` · `AgPlanificadorTemporalTests` (secuencia **dentro de la ventana**) · `AgGeneradorHorariosTests` · `AgMaterializadorSesionesTests` (formato `"{DIA}|{HORAS}|{HORARIO}"`, días sin tilde) · `AgAsignadorTerceroTests` · `AgOcupacionExternaTests` · `AgSincronizadorCorreccionesTests` · `AgModoDatosTests` · `TerceroAsignaturaKeyTests` · `TerceroAsignaturaSyncServiceTests` (recomputa) · `DiaSemanaNormalizadorTests` · `FormTerceroAsignaturasTests` · `AgPromotorVinculacionesTests`.
+
+**Integración:** `TercerosAsignaturasCrdtTests` · `TerceroAsignaturaDerivacionTests` · `TercerosAsignaturasBackfillTests` · `AgSchemaMigrationTests` (V49: 13 tablas + 2 vistas + seed γ + permiso) · **`AgVentanaSemestreIntegrationTests`** (resolución real contra `festivos`/`config` del seed) · `AgVistasTrasSyncTests` · `AgVistasCompatibilidadTests` · `AgModoAgCompatibilidadTests` · **`AgPromocionVentanaTests`** (rechaza sesiones fuera de ventana) · `AgPromocionIntegrationTests` · `AgFormsModoAgTests`.
+
+---
+
+## B.18 Plan de implementación por fases
+
+| Fase | Entregable | Prueba |
+|---|---|---|
+| **1** | `TerceroAsignatura` + `TerceroAsignaturaKey` (63 bits) + `DiaSemanaNormalizador` | `TerceroAsignaturaKeyTests`, `DiaSemanaNormalizadorTests` |
+| **2** | `ITerceroAsignaturaRepository` + `TerceroAsignaturaRepository` + `TerceroAsignaturaSyncService` | `TerceroAsignaturaSyncServiceTests` |
+| **3** | **`MigrationV48_AddTercerosAsignaturas`** + backfill C# + registro + `CrdtTables[]` | `TercerosAsignaturasCrdtTests`, `TerceroAsignaturaDerivacionTests`, `TercerosAsignaturasBackfillTests` |
+| **4** | `FormTerceroAsignaturas` | `FormTerceroAsignaturasTests` |
+| **5** | `FormTerceros` + `TabControl` | UI integration |
+| **6** | Hooks **H1/H3** + menú contextual en `FormVerVinculaciones` | integración |
+| **7** | **`VentanaSemestre` + `IAgResolutorVentanaSemestre` + `AgResolutorVentanaSemestre`** | `AgResolutorVentanaSemestreTests`, `AgVentanaSemestreIntegrationTests` |
+| **8** | **`CalculadoraViaticaSesion`** (+ refactor del formulario para delegar) | `CalculadoraViaticaSesionTests` |
+| **9** | Modelos/enums AG (incl. `AgModoDatos`, `VentanaSemestre`, `es_vacante`, `AgMetricas`) | compilación + mapeo |
+| **10** | `AgPesosFitness` + `AgEvaluadorAptitud` | `AgEvaluadorAptitudTests` |
+| **11** | `AgValidadorReglas` (R1–R7 + **W1**) | `AgValidadorReglasTests` |
+| **12** | **`AgValidadorVentana`** (pre-flight + post) | `AgValidadorVentanaTests` |
+| **13** | `IAgRandomProvider` + `AgFabricaIndividuos` (layout fijo) | `AgFabricaIndividuosTests` |
+| **14** | `AgOperadorCruce` (guard + `Clonar()` + OX + Vacante) | `AgOperadorCruceTests` |
+| **15** | `AgOperadorMutacion` + `AgOperadorSeleccion` | tests |
+| **16** | **`AgPlanificadorTemporal`** (ventana + R6) | `AgPlanificadorTemporalTests` |
+| **17** | **`AgExpansorSesiones`** (festivos + viática + ventana) | `AgExpansorSesionesTests` |
+| **18** | `AgContexto.OcupacionExterna` + `AgAsignadorTercero` + `AgGeneradorHorarios` | `AgOcupacionExternaTests`, `AgAsignadorTerceroTests`, `AgGeneradorHorariosTests` |
+| **19** | **`MigrationV49_AddAgHorariosTables`** + `vw_Ag*` + permiso + `EnsureAgViews()` | `AgSchemaMigrationTests`, `AgVistasTrasSyncTests`, `AgVistasCompatibilidadTests` |
+| **20** | `AgScheduleRepository` + `AgSalvedadRepository` | `AgScheduleRepositoryTests` |
+| **21** | Modo AG en repos + los 3 Forms (+ siembra de la ventana) | `AgModoAgCompatibilidadTests`, `AgFormsModoAgTests` |
+| **22** | `AgMaterializadorSesiones` + mappers | `AgMaterializadorSesionesTests` |
+| **23** | `AgSincronizadorCorrecciones` | `AgSincronizadorCorreccionesTests` |
+| **24** | `AgPromotorVinculaciones` (gate + ventana + remapeo + salvedades + pool) | `AgPromocionVentanaTests`, `AgPromocionIntegrationTests` |
+| **25** | `AgFormGeneradorHorarios` (2 pestañas + paneles de ventana/factibilidad) + Ribbon | UI integration |
+| **26** | Doc `docs/articles/changes/<fecha>-ag-horarios-academicos.md` | — |
+
+---
+
+## B.19 Decisiones y puntos abiertos
+
+### Resueltas
+E1 `TabControl` · E2 `FormTerceroAsignaturas` · E3 `terceros_asignaturas` · E4 eliminar `ag_asignatura_tercero` · V48=pool/V49=AG · PK 63 bits sin sondeo · recomputar `veces_asignada` · DELETE+INSERT al cambiar clave · conteo global · OX real + clonación profunda · `Penalizacion = Σ pesos` · `OcupacionExterna` · salvedades remapeadas · **no promover vacantes** · días sin tilde · fechas ISO · 12 archivos · `subunidad` fuera de la clave · **V1–V5: ventana α dentro del semestre, entrada del AG, ligada al `idperiodo`, aplicada a todas las asignaciones** · **`W1 FUERA_DE_VENTANA` como restricción dura** · **pre-flight de factibilidad bloqueante** · **`AgExpansorSesiones` con exclusión de FESTIVO** · **`CalculadoraViaticaSesion` compartida**.
+
+### Abiertas
+| # | Punto | Recomendación |
+|---|---|---|
+| 1 | **¿Qué `tipofestivo` define el *envelope* de la ventana del semestre?** | `PRESENCIAL` como semestre + validar contra el envelope total (`FESTIVO`+`PRESENCIAL`). **Confirmar con negocio** |
+| 2 | **¿`config` (ventana de viáticos) puede actuar como fallback de la ventana del semestre?** | Sólo si no hay `PRESENCIAL`; advertir en UI que la fuente fue `CONFIG` |
+| 3 | **Política de secuencia R5/R6** | `max_asignaturas_semana = 2` (parametrizable); define el cálculo acumulado de factibilidad |
+| 4 | **Override manual de la ventana** | Permitido con **clamp** y `ventana_origen='MANUAL'` (auditado) |
+| 5 | **Colisión de `id` multi-sede en `vinculaciones`/`sesiones`** (riesgo **pre-existente**) | Corto plazo: aceptar; medio plazo: `id` explícito por secuencia de subunidad |
+| 6 | **Utilitario de snapshot (`scripts\dump_schema.cs`)** | Decidir si se regenera `AcademicSchema.sql` ⇒ revisar `BASE_TABLES[]`/`BASE_SCHEMA_VERSION` |
+| 7 | **Umbral mínimo histórico del pool** | `>= 1` (configurable) |
+| 8 | **Materializar 1 o varios individuos** | El seleccionado (1 por defecto) |
+| 9 | **`AgFormEdicionTuplas` dedicado** | Diferir |
+
+---
+
+## B.20 Resumen ejecutivo v7
+
+- **Nuevo requisito incorporado:** la **Ventana α** es un **parámetro de entrada del AG** y queda **acotada** por la ventana del semestre derivada del **`idperiodo`**; **todas** las asignaciones y sesiones deben caer dentro (invariantes IV1–IV5).
+- **Hallazgo clave:** `periodos` **no tiene fechas** ⇒ la ventana se **resuelve** con cascada **`festivos (PRESENCIAL)` → `config` → override manual (clamp) → error bloqueante**, y se persiste para auditoría en `ag_aula`/`ag_corrida`.
+- **Dos correcciones a mi propio diseño (v6):** (a) **`GeneradorSesionesRecurrentes` no excluye festivos** ⇒ se añade **`AgExpansorSesiones`**; (b) **la viática estaba inline en el formulario** ⇒ se extrae **`CalculadoraViaticaSesion`** compartida (además cumple la regla de "sin lógica de negocio en code-behind").
+- **Garantía de cumplimiento:** restricción dura **`W1 FUERA_DE_VENTANA`** (peso 120) + **pre-flight de factibilidad bloqueante** + **gate de promoción** que rechaza sesiones fuera de ventana + **Modo AG** sembrando `dtpInicio/dtpFinal` con la ventana (reutiliza la validación *"Fechas Fuera de Período"* ya existente).
+- **UI:** el Módulo S muestra la ventana del semestre (read-only) y permite elegir el sub-rango del aula (clamp), con **panel de factibilidad semáforo**; el Módulo R añade **panel de ventana (línea de tiempo)** y filtro *"fuera de ventana"*.
+- **Se conserva íntegro el v6:** V48=pool (CRDT, PK 63 bits sin sondeo, recomputar `veces_asignada`), V49=AG, `FormTerceros` con `TabControl` + `FormTerceroAsignaturas`, 13 tablas AG + 2 vistas espejo, Modo AG en los 3 formularios, R1–R7 + `es_vacante` (3 motivos), cruce con **OX real y clonación profunda**, promoción por **copia con remapeo** que preserva correcciones y remapea salvedades, y **`vinculaciones`/`sesiones` intactas**.
+
+---
+
+Cuando apruebes el **v7** (y confirmes las decisiones de §B.19, en especial **#1 y #2**), **cambia a Act mode** y arranco por la **Fase 1** (`TerceroAsignatura` + `TerceroAsignaturaKey` 63 bits + `DiaSemanaNormalizador`), aplicando el ciclo atómico code→test→fix del skill `development-process`.

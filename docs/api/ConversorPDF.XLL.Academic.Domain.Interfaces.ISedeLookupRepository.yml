@@ -1,0 +1,272 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.ISedeLookupRepository
+  commentId: T:ConversorPDF.XLL.Academic.Domain.Interfaces.ISedeLookupRepository
+  id: ISedeLookupRepository
+  parent: ConversorPDF.XLL.Academic.Domain.Interfaces
+  children:
+  - ConversorPDF.XLL.Academic.Domain.Interfaces.ISedeLookupRepository.GetSedesLookupAsync(System.Threading.CancellationToken)
+  langs:
+  - csharp
+  - vb
+  name: ISedeLookupRepository
+  nameWithType: ISedeLookupRepository
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.ISedeLookupRepository
+  type: Interface
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Interfaces
+  syntax:
+    content: public interface ISedeLookupRepository
+    content.vb: Public Interface ISedeLookupRepository
+  derivedClasses:
+  - ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.SedeLookupRepository
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.ISedeLookupRepository.GetSedesLookupAsync(System.Threading.CancellationToken)
+  commentId: M:ConversorPDF.XLL.Academic.Domain.Interfaces.ISedeLookupRepository.GetSedesLookupAsync(System.Threading.CancellationToken)
+  id: GetSedesLookupAsync(System.Threading.CancellationToken)
+  parent: ConversorPDF.XLL.Academic.Domain.Interfaces.ISedeLookupRepository
+  langs:
+  - csharp
+  - vb
+  name: GetSedesLookupAsync(CancellationToken)
+  nameWithType: ISedeLookupRepository.GetSedesLookupAsync(CancellationToken)
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.ISedeLookupRepository.GetSedesLookupAsync(System.Threading.CancellationToken)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Academic.Domain.Interfaces
+  syntax:
+    content: Task<Result<IReadOnlyCollection<LookupItem>>> GetSedesLookupAsync(CancellationToken ct)
+    parameters:
+    - id: ct
+      type: System.Threading.CancellationToken
+    return:
+      type: System.Threading.Tasks.Task{CSharpFunctionalExtensions.Result{System.Collections.Generic.IReadOnlyCollection{ConversorPDF.XLL.Academic.Domain.Models.LookupItem}}}
+    content.vb: Function GetSedesLookupAsync(ct As CancellationToken) As Task(Of Result(Of IReadOnlyCollection(Of LookupItem)))
+  overload: ConversorPDF.XLL.Academic.Domain.Interfaces.ISedeLookupRepository.GetSedesLookupAsync*
+references:
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces
+  commentId: N:ConversorPDF.XLL.Academic.Domain.Interfaces
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Academic.Domain.Interfaces
+  nameWithType: ConversorPDF.XLL.Academic.Domain.Interfaces
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic
+    name: Academic
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Domain
+    name: Domain
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Domain.Interfaces
+    name: Interfaces
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Interfaces.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic
+    name: Academic
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Domain
+    name: Domain
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.html
+  - name: .
+  - uid: ConversorPDF.XLL.Academic.Domain.Interfaces
+    name: Interfaces
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Interfaces.html
+- uid: ConversorPDF.XLL.Academic.Domain.Interfaces.ISedeLookupRepository.GetSedesLookupAsync*
+  commentId: Overload:ConversorPDF.XLL.Academic.Domain.Interfaces.ISedeLookupRepository.GetSedesLookupAsync
+  isExternal: true
+  href: ConversorPDF.XLL.Academic.Domain.Interfaces.ISedeLookupRepository.html#ConversorPDF_XLL_Academic_Domain_Interfaces_ISedeLookupRepository_GetSedesLookupAsync_System_Threading_CancellationToken_
+  name: GetSedesLookupAsync
+  nameWithType: ISedeLookupRepository.GetSedesLookupAsync
+  fullName: ConversorPDF.XLL.Academic.Domain.Interfaces.ISedeLookupRepository.GetSedesLookupAsync
+- uid: System.Threading.CancellationToken
+  commentId: T:System.Threading.CancellationToken
+  parent: System.Threading
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken
+  name: CancellationToken
+  nameWithType: CancellationToken
+  fullName: System.Threading.CancellationToken
+- uid: System.Threading.Tasks.Task{CSharpFunctionalExtensions.Result{System.Collections.Generic.IReadOnlyCollection{ConversorPDF.XLL.Academic.Domain.Models.LookupItem}}}
+  commentId: T:System.Threading.Tasks.Task{CSharpFunctionalExtensions.Result{System.Collections.Generic.IReadOnlyCollection{ConversorPDF.XLL.Academic.Domain.Models.LookupItem}}}
+  parent: System.Threading.Tasks
+  definition: System.Threading.Tasks.Task`1
+  href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  name: Task<Result<IReadOnlyCollection<LookupItem>>>
+  nameWithType: Task<Result<IReadOnlyCollection<LookupItem>>>
+  fullName: System.Threading.Tasks.Task<CSharpFunctionalExtensions.Result<System.Collections.Generic.IReadOnlyCollection<ConversorPDF.XLL.Academic.Domain.Models.LookupItem>>>
+  nameWithType.vb: Task(Of Result(Of IReadOnlyCollection(Of LookupItem)))
+  fullName.vb: System.Threading.Tasks.Task(Of CSharpFunctionalExtensions.Result(Of System.Collections.Generic.IReadOnlyCollection(Of ConversorPDF.XLL.Academic.Domain.Models.LookupItem)))
+  name.vb: Task(Of Result(Of IReadOnlyCollection(Of LookupItem)))
+  spec.csharp:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: <
+  - uid: CSharpFunctionalExtensions.Result`1
+    name: Result
+    isExternal: true
+  - name: <
+  - uid: System.Collections.Generic.IReadOnlyCollection`1
+    name: IReadOnlyCollection
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlycollection-1
+  - name: <
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.LookupItem
+    name: LookupItem
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.LookupItem.html
+  - name: '>'
+  - name: '>'
+  - name: '>'
+  spec.vb:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: CSharpFunctionalExtensions.Result`1
+    name: Result
+    isExternal: true
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Collections.Generic.IReadOnlyCollection`1
+    name: IReadOnlyCollection
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlycollection-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: ConversorPDF.XLL.Academic.Domain.Models.LookupItem
+    name: LookupItem
+    isExternal: true
+    href: ConversorPDF.XLL.Academic.Domain.Models.LookupItem.html
+  - name: )
+  - name: )
+  - name: )
+- uid: System.Threading
+  commentId: N:System.Threading
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System.Threading
+  nameWithType: System.Threading
+  fullName: System.Threading
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Threading
+    name: Threading
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Threading
+    name: Threading
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading
+- uid: System.Threading.Tasks.Task`1
+  commentId: T:System.Threading.Tasks.Task`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  name: Task<TResult>
+  nameWithType: Task<TResult>
+  fullName: System.Threading.Tasks.Task<TResult>
+  nameWithType.vb: Task(Of TResult)
+  fullName.vb: System.Threading.Tasks.Task(Of TResult)
+  name.vb: Task(Of TResult)
+  spec.csharp:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: <
+  - name: TResult
+  - name: '>'
+  spec.vb:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: TResult
+  - name: )
+- uid: System.Threading.Tasks
+  commentId: N:System.Threading.Tasks
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System.Threading.Tasks
+  nameWithType: System.Threading.Tasks
+  fullName: System.Threading.Tasks
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Threading
+    name: Threading
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading
+  - name: .
+  - uid: System.Threading.Tasks
+    name: Tasks
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Threading
+    name: Threading
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading
+  - name: .
+  - uid: System.Threading.Tasks
+    name: Tasks
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks

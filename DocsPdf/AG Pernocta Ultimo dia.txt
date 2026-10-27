@@ -1,0 +1,78 @@
+Confirmado el patrón del proyecto: `using (var tx = conn.BeginTransaction()) { var repo = new AcademicRepository(conn, tx, modo: _modo); ... tx.Commit(); }`.
+
+---
+
+# ✅ PLAN FINAL CONSOLIDADO — Opción "Pernocta Último Día" en el menú contextual
+
+**Decisiones cerradas:** Regla A (cualquier sesión con flag ⇒ bloque +1 día) · Alcance **Opción A**: la opción se muestra **solo en PRODUCCIÓN** (`!_modo.EsModoAg`).
+
+**Ya implementado (no se toca):** `ViaticoBloque.TienePernoctaUltimoDia`/`FechaFinComision`/`DuracionTotal`, `MigrationV64_AddPernoctaUltimoDia`, `vw_SesionesDetalle`, `SesionListItem.IsPernoctaUltimoDia`, `Vinculacion.IsPernoctaUltimoDia`, persistencia en `AcademicRepository`, checkbox en `FormSesionesAcademicas`, `ViaticoBloquePernoctaTests.cs` y el rango del nodo con `FechaFinComision`.
+
+---
+
+## 1 · Repositorio (`AcademicRepository` + `IAcademicRepository`)
+- **1.1** `IAcademicRepository.cs` (L109): `SqliteResult<int> SetPernoctaUltimoDia(int idVinculacion, int valor);`
+- **1.2** Implementación espejo de `DeleteVinculacion`: `UPDATE {_modo.TablaVinculaciones} SET isPernoctaUltimoDia = @valor WHERE id = @id` + `EnsureCrSqliteEnabled()` + `NotifyMarkDirty()` cuando `rows > 0` + `try/catch` con `LoggerHelper.Error`.
+- **1.3** `ViaticoBloque`: propiedad `IReadOnlyList<int> IdsVinculacion` (distinct, >0) para que la lógica de alternancia sea testeable sin UI.
+
+## 2 · Menú contextual (`FormVerVinculaciones.ConfigurarMenuContextual`, L166)
+- Nuevo `itemPernocta` (`CheckOnClick = false`), insertado entre `itemImprimirViatico` y `sepPool`.
+- Reset `itemPernocta.Visible = false;` junto al resto (L195-202).
+- En la rama `Tag is ViaticoBloque bloque` (L227): visible solo si `_vistaActual == Viaticos && !_modo.EsModoAg`; `Checked = bloque.TienePernoctaUltimoDia`; texto dinámico `"🛏️ Quitar Pernocta Último Día"` / `"🛏️ Marcar Pernocta Último Día"`.
+
+## 3 · Handler `AlternarPernoctaUltimoDiaAsync()`
+1. Guardas sobre `_nodoSeleccionadoContextual?.Tag is ViaticoBloque`.
+2. `ids = bloque.IdsVinculacion` → se aplica a **todas** las vinculaciones del bloque (consistente con Regla A).
+3. `valorNuevo = bloque.TienePernoctaUltimoDia ? 0 : 1`.
+4. Cálculo del impacto recurrente (nº de bloques/docentes afectados) para el mensaje.
+5. Confirmación `MessageBox` Yes/No con el efecto `1,5 ⟷ 2,5 días`.
+6. Escritura transaccional con el patrón verificado del proyecto:
+```csharp
+using (var tx = _dbConnection.BeginTransaction())
+{
+    var repo = new AcademicRepository(_dbConnection, tx, modo: _modo);
+    foreach (var id in ids) { var r = repo.SetPernoctaUltimoDia(id, valorNuevo);
+        if (r.IsFailure) { tx.Rollback(); /* MessageBox error */ return; } }
+    tx.Commit();
+}
+```
+7. `PersistirCambiosAlVault();` (helper existente L459).
+8. Actualizar `_items` en memoria (`item.IsPernoctaUltimoDia = valorNuevo`) → imprescindible porque alimenta árbol, Timeline y exportación.
+9. `ConstruirArbol();` (patrón de `MarcarConflictoViableAsync`) preservando selección (`DocenteNombre` + `FechaMinima`).
+10. `LoggerHelper.Info` + `catch` con `MessageBox`, siguiendo la convención del formulario.
+
+## 4 · Marca visual del estado (L894)
+`textoBloque += bloque.TienePernoctaUltimoDia ? " | 🛏️ Pernocta último día" : ""` — sin tocar `ViaticoBloque.DisplayText` para no alterar Timeline/exportadores.
+*Opcional:* `await EjecutarConsultaAsync();` en `FormVinculaciones.btnVerVinculaciones_Click` tras cerrar el diálogo.
+
+## 5 · MODO AG
+Ítem oculto (`!_modo.EsModoAg`), sin migración V65. Se documenta como pendiente la extensión a `ag_vinculaciones`/`vw_AgSesionesDetalle`/`AgVinculacionToVinculacionMapper`.
+
+## 6 · Pruebas y validación
+- Extender `ConversorPDF.Tests/Academic/Domain/ViaticoBloquePernoctaTests.cs`: alternancia on/off (1,5 ⟷ 2,5; `FechaFinComision` 17 ⟷ 18/10), `IdsVinculacion` distinct multi-vinculación, recurrencia (dos bloques de la misma vinculación cambian juntos).
+- Test de repositorio de `SetPernoctaUltimoDia` (SQLite in-memory: 1→0 y 0→1, 0 filas si el id no existe, idempotencia).
+- `dotnet build` + `dotnet test` al final.
+
+
+En la vista de viáticos, incluir el ajuste de isPernoctaUltimoDia, mostrando la info actual y adicionar después de gasto de transporte, adicionar el día de la FechaMaxima y  la hora de clases + "Sin pernocta",  por ejemplo: cuando isPernoctaUltimoDia = 0 ... | Cierre: VIERNES 18:00 A 22:00 , cuando isPernoctaUltimoDia = 1 ... | Cierre: VIERNES 18:00 A 22:00 | Pernocta Ultimo Dia 
+
+Nivel 2 — Bloque de Viático - Texto / Formato: [FechaInicio] - [FechaFin] | [Duración] días | [Aéreo/Terrestre] | [CodRuta] | [Ruta] | $[ValorTransporte] | Cierre: [DIA + HORA] | [isPernoctaUltimoDia = 1 entonces "Pernocta Ultimo Dia" else ""]
+
+--------------------
+
+
+Decisión registrada: **`Color.DarkOrange`** y **conservar la llamada a `GetOrCreateCodigoTrayecto`** (el código se sigue pre-creando en BD; solo deja de mostrarse). Plan final consolidado:
+
+---
+
+# Plan Final — Formato y resaltado del Nivel 2 en la Vista Viáticos
+
+## Resultado objetivo (formato exacto)
+```
+📅 [FechaInicio] - [FechaFin] | [Duración] d | [Aéreo/Terrestre] | [Ruta] | $[ValorTransporte] | [DIA HORA] | [isPernoctaUltimoDia = 1 → "Pernocta Ultimo Dia" else ""]
+```
+- Se conserva `📅` y los separadores ` | ` · se elimina `[CodRuta]` y el fallback `SIN-COD` · se elimina el literal `Cierre: ` · `días` → `d`.
+- Fila de información (nodo Nivel 2) en **`Color.DarkOrange`** cuando `bloque.TienePernoctaUltimoDia == true` (`isPernoctaUltimoDia = 1`), si no `Color.DarkBlue`.
+- Salidas esperadas (`es-CO`):
+  - sin pernocta → `📅 16/10/2026 - 17/10/2026 | 1,5 d | Terrestre | POPAYÁN - EL ÁGUILA - POPAYÁN | $120.000 | SÁBADO 08:00 A 12:00 M`
+  - con pernocta → `📅 16/10/2026 - 18/10/2026 | 2,5 d | Terrestre | POPAYÁN - EL ÁGUILA - POPAYÁN | $120.000 | SÁBADO 08:00 A 12:00 M | Pernocta Ultimo Dia`

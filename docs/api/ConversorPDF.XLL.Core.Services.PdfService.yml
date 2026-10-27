@@ -1,0 +1,630 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Core.Services.PdfService
+  commentId: T:ConversorPDF.XLL.Core.Services.PdfService
+  id: PdfService
+  parent: ConversorPDF.XLL.Core.Services
+  children:
+  - ConversorPDF.XLL.Core.Services.PdfService.#ctor
+  - ConversorPDF.XLL.Core.Services.PdfService.CombinarPDFs(System.Collections.Generic.IEnumerable{System.String},System.String)
+  langs:
+  - csharp
+  - vb
+  name: PdfService
+  nameWithType: PdfService
+  fullName: ConversorPDF.XLL.Core.Services.PdfService
+  type: Class
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Services
+  summary: Servicio encargado de la manipulación de documentos PDF utilizando la librería PDFSharp.
+  example: []
+  syntax:
+    content: 'public class PdfService : IPdfService'
+    content.vb: Public Class PdfService Implements IPdfService
+  inheritance:
+  - System.Object
+  implements:
+  - ConversorPDF.XLL.Core.Interfaces.IPdfService
+  inheritedMembers:
+  - System.Object.ToString
+  - System.Object.Equals(System.Object)
+  - System.Object.Equals(System.Object,System.Object)
+  - System.Object.ReferenceEquals(System.Object,System.Object)
+  - System.Object.GetHashCode
+  - System.Object.GetType
+  - System.Object.MemberwiseClone
+- uid: ConversorPDF.XLL.Core.Services.PdfService.CombinarPDFs(System.Collections.Generic.IEnumerable{System.String},System.String)
+  commentId: M:ConversorPDF.XLL.Core.Services.PdfService.CombinarPDFs(System.Collections.Generic.IEnumerable{System.String},System.String)
+  id: CombinarPDFs(System.Collections.Generic.IEnumerable{System.String},System.String)
+  parent: ConversorPDF.XLL.Core.Services.PdfService
+  langs:
+  - csharp
+  - vb
+  name: CombinarPDFs(IEnumerable<string>, string)
+  nameWithType: PdfService.CombinarPDFs(IEnumerable<string>, string)
+  fullName: ConversorPDF.XLL.Core.Services.PdfService.CombinarPDFs(System.Collections.Generic.IEnumerable<string>, string)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Services
+  summary: >-
+    Combina una serie de archivos PDF existentes en un nuevo documento único.
+
+    Este proceso importa las páginas de cada archivo de origen de forma secuencial.
+  example: []
+  syntax:
+    content: public void CombinarPDFs(IEnumerable<string> archivos, string rutaSalida)
+    parameters:
+    - id: archivos
+      type: System.Collections.Generic.IEnumerable{System.String}
+      description: Colección de rutas completas a los archivos PDF de entrada.
+    - id: rutaSalida
+      type: System.String
+      description: Ruta absoluta donde se guardará el PDF resultante.
+    content.vb: Public Sub CombinarPDFs(archivos As IEnumerable(Of String), rutaSalida As String)
+  overload: ConversorPDF.XLL.Core.Services.PdfService.CombinarPDFs*
+  exceptions:
+  - type: System.InvalidOperationException
+    commentId: T:System.InvalidOperationException
+    description: Se lanza si no se agregan páginas al documento de salida (ej. si todos los archivos de origen son inválidos).
+  implements:
+  - ConversorPDF.XLL.Core.Interfaces.IPdfService.CombinarPDFs(System.Collections.Generic.IEnumerable{System.String},System.String)
+  nameWithType.vb: PdfService.CombinarPDFs(IEnumerable(Of String), String)
+  fullName.vb: ConversorPDF.XLL.Core.Services.PdfService.CombinarPDFs(System.Collections.Generic.IEnumerable(Of String), String)
+  name.vb: CombinarPDFs(IEnumerable(Of String), String)
+- uid: ConversorPDF.XLL.Core.Services.PdfService.#ctor
+  commentId: M:ConversorPDF.XLL.Core.Services.PdfService.#ctor
+  id: '#ctor'
+  parent: ConversorPDF.XLL.Core.Services.PdfService
+  langs:
+  - csharp
+  - vb
+  name: PdfService()
+  nameWithType: PdfService.PdfService()
+  fullName: ConversorPDF.XLL.Core.Services.PdfService.PdfService()
+  type: Constructor
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Services
+  syntax:
+    content: public PdfService()
+    content.vb: Public Sub New()
+  overload: ConversorPDF.XLL.Core.Services.PdfService.#ctor*
+  nameWithType.vb: PdfService.New()
+  fullName.vb: ConversorPDF.XLL.Core.Services.PdfService.New()
+  name.vb: New()
+references:
+- uid: ConversorPDF.XLL.Core.Services
+  commentId: N:ConversorPDF.XLL.Core.Services
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Core.Services
+  nameWithType: ConversorPDF.XLL.Core.Services
+  fullName: ConversorPDF.XLL.Core.Services
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Services
+    name: Services
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Services.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Services
+    name: Services
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Services.html
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+  nameWithType: object
+  fullName: object
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: ConversorPDF.XLL.Core.Interfaces.IPdfService
+  commentId: T:ConversorPDF.XLL.Core.Interfaces.IPdfService
+  parent: ConversorPDF.XLL.Core.Interfaces
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IPdfService.html
+  name: IPdfService
+  nameWithType: IPdfService
+  fullName: ConversorPDF.XLL.Core.Interfaces.IPdfService
+- uid: System.Object.ToString
+  commentId: M:System.Object.ToString
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  name: ToString()
+  nameWithType: object.ToString()
+  fullName: object.ToString()
+  nameWithType.vb: Object.ToString()
+  fullName.vb: Object.ToString()
+  spec.csharp:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+- uid: System.Object.Equals(System.Object)
+  commentId: M:System.Object.Equals(System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  name: Equals(object)
+  nameWithType: object.Equals(object)
+  fullName: object.Equals(object)
+  nameWithType.vb: Object.Equals(Object)
+  fullName.vb: Object.Equals(Object)
+  name.vb: Equals(Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.Equals(System.Object,System.Object)
+  commentId: M:System.Object.Equals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  name: Equals(object, object)
+  nameWithType: object.Equals(object, object)
+  fullName: object.Equals(object, object)
+  nameWithType.vb: Object.Equals(Object, Object)
+  fullName.vb: Object.Equals(Object, Object)
+  name.vb: Equals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.ReferenceEquals(System.Object,System.Object)
+  commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  name: ReferenceEquals(object, object)
+  nameWithType: object.ReferenceEquals(object, object)
+  fullName: object.ReferenceEquals(object, object)
+  nameWithType.vb: Object.ReferenceEquals(Object, Object)
+  fullName.vb: Object.ReferenceEquals(Object, Object)
+  name.vb: ReferenceEquals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.GetHashCode
+  commentId: M:System.Object.GetHashCode
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  name: GetHashCode()
+  nameWithType: object.GetHashCode()
+  fullName: object.GetHashCode()
+  nameWithType.vb: Object.GetHashCode()
+  fullName.vb: Object.GetHashCode()
+  spec.csharp:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+- uid: System.Object.GetType
+  commentId: M:System.Object.GetType
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  name: GetType()
+  nameWithType: object.GetType()
+  fullName: object.GetType()
+  nameWithType.vb: Object.GetType()
+  fullName.vb: Object.GetType()
+  spec.csharp:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+- uid: System.Object.MemberwiseClone
+  commentId: M:System.Object.MemberwiseClone
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  name: MemberwiseClone()
+  nameWithType: object.MemberwiseClone()
+  fullName: object.MemberwiseClone()
+  nameWithType.vb: Object.MemberwiseClone()
+  fullName.vb: Object.MemberwiseClone()
+  spec.csharp:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: ConversorPDF.XLL.Core.Interfaces
+  commentId: N:ConversorPDF.XLL.Core.Interfaces
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Core.Interfaces
+  nameWithType: ConversorPDF.XLL.Core.Interfaces
+  fullName: ConversorPDF.XLL.Core.Interfaces
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Interfaces
+    name: Interfaces
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Interfaces
+    name: Interfaces
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.html
+- uid: System.InvalidOperationException
+  commentId: T:System.InvalidOperationException
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.invalidoperationexception
+  name: InvalidOperationException
+  nameWithType: InvalidOperationException
+  fullName: System.InvalidOperationException
+- uid: ConversorPDF.XLL.Core.Services.PdfService.CombinarPDFs*
+  commentId: Overload:ConversorPDF.XLL.Core.Services.PdfService.CombinarPDFs
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Services.PdfService.html#ConversorPDF_XLL_Core_Services_PdfService_CombinarPDFs_System_Collections_Generic_IEnumerable_System_String__System_String_
+  name: CombinarPDFs
+  nameWithType: PdfService.CombinarPDFs
+  fullName: ConversorPDF.XLL.Core.Services.PdfService.CombinarPDFs
+- uid: ConversorPDF.XLL.Core.Interfaces.IPdfService.CombinarPDFs(System.Collections.Generic.IEnumerable{System.String},System.String)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IPdfService.CombinarPDFs(System.Collections.Generic.IEnumerable{System.String},System.String)
+  parent: ConversorPDF.XLL.Core.Interfaces.IPdfService
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IPdfService.html#ConversorPDF_XLL_Core_Interfaces_IPdfService_CombinarPDFs_System_Collections_Generic_IEnumerable_System_String__System_String_
+  name: CombinarPDFs(IEnumerable<string>, string)
+  nameWithType: IPdfService.CombinarPDFs(IEnumerable<string>, string)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IPdfService.CombinarPDFs(System.Collections.Generic.IEnumerable<string>, string)
+  nameWithType.vb: IPdfService.CombinarPDFs(IEnumerable(Of String), String)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IPdfService.CombinarPDFs(System.Collections.Generic.IEnumerable(Of String), String)
+  name.vb: CombinarPDFs(IEnumerable(Of String), String)
+  spec.csharp:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IPdfService.CombinarPDFs(System.Collections.Generic.IEnumerable{System.String},System.String)
+    name: CombinarPDFs
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IPdfService.html#ConversorPDF_XLL_Core_Interfaces_IPdfService_CombinarPDFs_System_Collections_Generic_IEnumerable_System_String__System_String_
+  - name: (
+  - uid: System.Collections.Generic.IEnumerable`1
+    name: IEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  - name: <
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: '>'
+  - name: ','
+  - name: " "
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+  spec.vb:
+  - uid: ConversorPDF.XLL.Core.Interfaces.IPdfService.CombinarPDFs(System.Collections.Generic.IEnumerable{System.String},System.String)
+    name: CombinarPDFs
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Interfaces.IPdfService.html#ConversorPDF_XLL_Core_Interfaces_IPdfService_CombinarPDFs_System_Collections_Generic_IEnumerable_System_String__System_String_
+  - name: (
+  - uid: System.Collections.Generic.IEnumerable`1
+    name: IEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+  - name: ','
+  - name: " "
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+- uid: System.Collections.Generic.IEnumerable{System.String}
+  commentId: T:System.Collections.Generic.IEnumerable{System.String}
+  parent: System.Collections.Generic
+  definition: System.Collections.Generic.IEnumerable`1
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  name: IEnumerable<string>
+  nameWithType: IEnumerable<string>
+  fullName: System.Collections.Generic.IEnumerable<string>
+  nameWithType.vb: IEnumerable(Of String)
+  fullName.vb: System.Collections.Generic.IEnumerable(Of String)
+  name.vb: IEnumerable(Of String)
+  spec.csharp:
+  - uid: System.Collections.Generic.IEnumerable`1
+    name: IEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  - name: <
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.IEnumerable`1
+    name: IEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: System.Collections.Generic.IEnumerable`1
+  commentId: T:System.Collections.Generic.IEnumerable`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  name: IEnumerable<T>
+  nameWithType: IEnumerable<T>
+  fullName: System.Collections.Generic.IEnumerable<T>
+  nameWithType.vb: IEnumerable(Of T)
+  fullName.vb: System.Collections.Generic.IEnumerable(Of T)
+  name.vb: IEnumerable(Of T)
+  spec.csharp:
+  - uid: System.Collections.Generic.IEnumerable`1
+    name: IEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.IEnumerable`1
+    name: IEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: System.Collections.Generic
+  commentId: N:System.Collections.Generic
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System.Collections.Generic
+  nameWithType: System.Collections.Generic
+  fullName: System.Collections.Generic
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Collections
+    name: Collections
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections
+  - name: .
+  - uid: System.Collections.Generic
+    name: Generic
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Collections
+    name: Collections
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections
+  - name: .
+  - uid: System.Collections.Generic
+    name: Generic
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic
+- uid: ConversorPDF.XLL.Core.Services.PdfService.#ctor*
+  commentId: Overload:ConversorPDF.XLL.Core.Services.PdfService.#ctor
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Services.PdfService.html#ConversorPDF_XLL_Core_Services_PdfService__ctor
+  name: PdfService
+  nameWithType: PdfService.PdfService
+  fullName: ConversorPDF.XLL.Core.Services.PdfService.PdfService
+  nameWithType.vb: PdfService.New
+  fullName.vb: ConversorPDF.XLL.Core.Services.PdfService.New
+  name.vb: New

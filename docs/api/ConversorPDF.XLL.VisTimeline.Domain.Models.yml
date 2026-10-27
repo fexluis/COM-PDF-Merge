@@ -1,0 +1,32 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.VisTimeline.Domain.Models
+  commentId: N:ConversorPDF.XLL.VisTimeline.Domain.Models
+  id: ConversorPDF.XLL.VisTimeline.Domain.Models
+  children:
+  - ConversorPDF.XLL.VisTimeline.Domain.Models.TimelineGroup
+  - ConversorPDF.XLL.VisTimeline.Domain.Models.TimelineItem
+  langs:
+  - csharp
+  - vb
+  name: ConversorPDF.XLL.VisTimeline.Domain.Models
+  nameWithType: ConversorPDF.XLL.VisTimeline.Domain.Models
+  fullName: ConversorPDF.XLL.VisTimeline.Domain.Models
+  type: Namespace
+  assemblies:
+  - ConversorPDF.XLL
+references:
+- uid: ConversorPDF.XLL.VisTimeline.Domain.Models.TimelineItem
+  commentId: T:ConversorPDF.XLL.VisTimeline.Domain.Models.TimelineItem
+  isExternal: true
+  href: ConversorPDF.XLL.VisTimeline.Domain.Models.TimelineItem.html
+  name: TimelineItem
+  nameWithType: TimelineItem
+  fullName: ConversorPDF.XLL.VisTimeline.Domain.Models.TimelineItem
+- uid: ConversorPDF.XLL.VisTimeline.Domain.Models.TimelineGroup
+  commentId: T:ConversorPDF.XLL.VisTimeline.Domain.Models.TimelineGroup
+  isExternal: true
+  href: ConversorPDF.XLL.VisTimeline.Domain.Models.TimelineGroup.html
+  name: TimelineGroup
+  nameWithType: TimelineGroup
+  fullName: ConversorPDF.XLL.VisTimeline.Domain.Models.TimelineGroup

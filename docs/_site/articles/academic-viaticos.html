@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Vi&#225;ticos Acad&#233;micos: Vistas Din&#225;micas y Detecci&#243;n de Conflictos | ESAP - ConversorPDF </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Vi&#225;ticos Acad&#233;micos: Vistas Din&#225;micas y Detecci&#243;n de Conflictos | ESAP - ConversorPDF ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/fexluis/COM-PDF-Merge/blob/refactor/academic-modularization/docs/articles/academic-viaticos.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="viáticos-académicos-vistas-dinámicas-y-detección-de-conflictos">Viáticos Académicos: Vistas Dinámicas y Detección de Conflictos</h1>
+
+<p>Este artículo describe la lógica de negocio y los componentes de UI implementados para la gestión de viáticos en el módulo académico.</p>
+<h2 id="1-el-modelo-de-agrupación-viaticobloque">1. El Modelo de Agrupación (ViaticoBloque)</h2>
+<p>Para facilitar la liquidación de viáticos, las sesiones individuales se agrupan en <strong>bloques</strong>. Un bloque representa un conjunto de sesiones que ocurren en días consecutivos o el mismo día para un docente en una sede específica.</p>
+<h3 id="algoritmo-de-agrupación">Algoritmo de Agrupación</h3>
+<p>El método <code>ViaticoBloque.AgruparConsecutivos</code> realiza el procesamiento:</p>
+<ol>
+<li>Filtra sesiones con fecha válida.</li>
+<li>Ordena cronológicamente.</li>
+<li>Agrupa sesiones si la fecha actual es menor o igual a <code>FechaUltima + 1 día</code>.</li>
+</ol>
+<h2 id="2-vistas-de-navegación">2. Vistas de Navegación</h2>
+<p>El formulario <code>FormViaticos</code> ofrece dos perspectivas para el análisis de datos:</p>
+<h3 id="vista-por-sedes-clásica">Vista Por Sedes (Clásica)</h3>
+<p>Estructura: <code>Docente → Sede → Bloque → Sesión</code>.
+Ideal para revisar la carga académica distribuida geográficamente.</p>
+<h3 id="vista-por-fechas-análisis-de-conflictos">Vista Por Fechas (Análisis de Conflictos)</h3>
+<p>Estructura: <code>Docente → Bloque (Cronológico) → Sesión</code>.
+Esta vista activa el motor de detección de conflictos para identificar solapamientos de agenda.</p>
+<h2 id="3-detección-de-conflictos-de-agenda">3. Detección de Conflictos de Agenda</h2>
+<p>El servicio <code>ViaticoConflictAnalyzer</code> es el encargado de identificar riesgos en la programación.</p>
+<h3 id="criterio-de-conflicto">Criterio de Conflicto</h3>
+<p>Se marca un bloque con un conflicto (⚠️) si se cumplen <strong>todas</strong> las siguientes condiciones:</p>
+<ul>
+<li>Pertenece al mismo docente.</li>
+<li>Ocurre en sedes <strong>distintas</strong>.</li>
+<li>Los intervalos de fechas se solapan: <code>InicioA &lt;= FinB AND InicioB &lt;= InicioA</code>.</li>
+</ul>
+<h3 id="feedback-visual">Feedback Visual</h3>
+<ul>
+<li><strong>Nodos del Árbol</strong>: Se muestran en color <code>DarkRed</code> con fondo <code>MistyRose</code>.</li>
+<li><strong>Tooltips</strong>: Al pasar el mouse sobre un conflicto, se despliega un detalle descriptivo:
+<blockquote>
+<p>⚠️ CONFLICTO DE FECHAS
+Este bloque en SEDE A se solapa con:
+📍 SEDE B (01/04/2026 → 03/04/2026)</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="4-exportación-a-excel-y-ruta-multi-sede">4. Exportación a Excel y Ruta Multi-Sede</h2>
+<p>El reporte generado incluye marcas de advertencia (<code>⚠️</code>) en la columna de sede para asegurar que el liquidador de viáticos identifique los conflictos incluso fuera de la aplicación.</p>
+<h3 id="integración-multi-sede-en-asignaturas">Integración Multi-Sede en Asignaturas</h3>
+<p>La exportación por asignaturas (<code>AsignaturasExcelExporter.cs</code>) incluye una lógica avanzada para distribuir los viajes globales de un docente. Ya que un bloque de viático puede abarcar múltiples asignaturas, el algoritmo distribuye los viajes de forma inteligente:</p>
+<ol>
+<li>Extrae los viáticos de forma <strong>global</strong> (ignorando la asignatura individual) utilizando <code>ViaticoBloque.AgruparConsecutivos</code>.</li>
+<li>Asigna bloques de 4 viajes consecutivos a las filas de las asignaturas que dicta el docente.</li>
+<li>Si el docente tiene más de 4 viajes, el algoritmo crea una <strong>Fila Duplicada</strong> debajo de su asignatura que contiene solo la información mínima (<code>N°</code>, <code>Territorial</code>, <code>CETAP</code>, <code>Materia</code>, <code>Identificación</code>) y coloca allí los viajes restantes para evitar duplicar cálculos salariales.</li>
+<li>Las columnas de ruta se ajustan dinámicamente para cada fila:
+<ul>
+<li><strong>Origen:</strong> Residencia del docente.</li>
+<li><strong>Destino:</strong> La última ciudad visitada en el conjunto de 4 viáticos de esa fila.</li>
+<li><strong>Escala:</strong> Las ciudades intermedias de la ruta.</li>
+</ul>
+</li>
+</ol>
+<h3 id="rango-de-fechas-de-comisión-y-regla-de-pernocta-en-último-día">Rango de Fechas de Comisión y Regla de Pernocta en Último Día</h3>
+<p>Al exportar las columnas de comisiones (<code>FECHA INICIO 1..8</code> / <code>FECHA FIN 1..8</code>) de la plantilla
+<code>FV-FO-033</code> mediante <code>AsignaturasExcelExporter</code>, el rango efectivo se calcula con
+<code>ViaticoBloqueFormatter.ObtenerRangoComision</code>. El mismo criterio (<code>FechaFinComision</code>) ya se aplica
+en <code>GF-FO-023</code> a través de <code>ViaticosIndividualExporter</code>.</p>
+<ul>
+<li><strong>Fecha Inicio:</strong> Corresponde a <code>FechaMinima</code> del bloque de viáticos.</li>
+<li><strong>Fecha Fin:</strong> Corresponde a <code>FechaFinComision</code> (<code>FechaMaxima</code> extendida en 1 día de regreso cuando cualquier sesión del bloque presenta <code>isPernoctaUltimoDia = 1</code>).</li>
+<li><strong>Cálculo en Plantilla:</strong> La plantilla institucional deduce los días de comisión a partir del rango (<code>INT(diff) + MOD</code>), por lo que reflejar la fecha real de retorno garantiza una liquidación exacta (ej. 2,5 días en vez de 1,5 días con pernocta).</li>
+</ul>
+<h3 id="formato-y-resaltado-del-nivel-2-en-la-vista-viáticos">Formato y Resaltado del Nivel 2 en la Vista Viáticos</h3>
+<p>En el TreeView de viáticos (<code>FormVerVinculaciones.cs</code>), el nodo de Nivel 2 (bloque de viático) presenta la información consolidada del viaje mediante <code>ViaticoBloqueFormatter.FormatearNodoNivel2</code>:</p>
+<ul>
+<li><strong>Estructura:</strong> <code>📅 [FechaInicio] - [FechaFin] | [Duración] d | [Aéreo/Terrestre] | [Ruta] | $[ValorTransporte] | [DIA HORA] | [Pernocta Ultimo Dia]</code></li>
+<li><strong>Semántica de Duración:</strong> Se utiliza la abreviatura <code>d</code> (ej. <code>1,5 d</code>, <code>2,5 d</code>).</li>
+<li><strong>Retiro de <code>Cierre:</code> y Código de Ruta solo en la vista:</strong> Se eliminó el prefijo redundante <code>Cierre:</code> y el código de trayecto (<code>[CodRuta]</code>/<code>SIN-COD</code>) de la cadena de visualización del nodo para mejorar la legibilidad. La pre-creación en base de datos (<code>GetOrCreateCodigoTrayecto</code>) se mantiene intacta y la exportación de <code>COD_RUTA</code> a la columna BL de la plantilla <code>FV-FO-033</code> vía <code>AsignaturasExcelExporter</code> continúa funcionando sin alteración.</li>
+<li><strong>Resaltado Visual:</strong> Si el bloque posee <code>TienePernoctaUltimoDia == true</code> (<code>isPernoctaUltimoDia = 1</code>), el nodo se resalta en color <code>Color.DarkOrange</code> con el sufijo <code>| Pernocta Ultimo Dia</code>; en caso contrario se dibuja en <code>Color.DarkBlue</code>.</li>
+</ul>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/fexluis/COM-PDF-Merge/blob/refactor/academic-modularization/docs/articles/academic-viaticos.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          ESAP - ConversorPDF Doc
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

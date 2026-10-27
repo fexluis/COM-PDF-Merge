@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Distribuci&#243;n de Vi&#225;ticos por Asignatura/Sede y Prevenci&#243;n de Desbordes en Plantilla Excel | ESAP - ConversorPDF </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Distribuci&#243;n de Vi&#225;ticos por Asignatura/Sede y Prevenci&#243;n de Desbordes en Plantilla Excel | ESAP - ConversorPDF ">
+      
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="../../toc.html">
+      <meta name="docfx:tocrel" content="../toc.html">
+      
+      <meta name="docfx:rel" content="../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/fexluis/COM-PDF-Merge/blob/refactor/academic-modularization/docs/articles/changes/2026-10-19-distribucion-viaticos-por-asignatura.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="distribución-de-viáticos-por-asignaturasede-y-prevención-de-desbordes-en-plantilla-excel">Distribución de Viáticos por Asignatura/Sede y Prevención de Desbordes en Plantilla Excel</h1>
+
+<p><strong>Fecha:</strong> 2026-10-19<br>
+<strong>Módulo:</strong> Académico (<code>ConversorPDF.XLL.Academic</code>)<br>
+<strong>Rondas:</strong> 143 (Fases 761 a 766), 144 (Fases 767 a 773), 145 (Fases 774 a 776), 146 (Fases 777 a 779) y 147 (Fases 780 a 782)</p>
+<h2 id="purpose">Purpose</h2>
+<p>Resolver el desacoplamiento en la exportación a Excel (<code>AsignaturasExcelExporter.cs</code>) donde los bloques de viáticos se asignaban mediante un recorrido plano secuencial (<code>bloquesGlobales.Skip(bloqueIndex).Take(8)</code>), provocando que los viáticos de una sede se imprimieran en la fila de otra sede y anulando el gasto de terminal aérea (<code>BQ</code>) en filas adicionales. Se implementa un motor de asignación determinista (<code>AsignaturaViaticoAllocator</code>) con reglas de negocio R1 a R7 que asigna cada comisión a la asignatura/sede/ventana correspondiente a su vinculación, preserva íntegros los bloques que cruzan múltiples sedes y restringe la generación de filas de continuación exclusivamente como último recurso ante saturación física. La Ronda 144 perfeccionó la distribución en dos pases (F768), propagó la saturación de fila 234 para evitar truncamiento en cascada (F767), blindó el parseo con hora y cultura <code>es-CO</code> (F769), diferenció avisos huérfanos sin inflar saturación (F770), completó la LLAVE (Y) con prestaciones en continuación (F771) y priorizó avisos críticos en UI (F772). La Ronda 145 subsanó el conflicto de identificador de bucle <code>CS0136</code> (F774), sincronizó las métricas de conteo de continuaciones y avisos de corte (F775), y desacopló la detección de capacidad máxima leyendo dinámicamente <code>T_Principal8</code> (F776). La Ronda 146 blindó la liberación de objetos COM en <code>ObtenerFilaMaximaPlantilla</code> (F777), condicionó el registro de advertencias a la escritura efectiva del plan (F778), y actualizó la documentación interna del exportador (F779). La Ronda 147 garantizó el registro inmediato de advertencias en <code>LoggerHelper</code> aun ante fallos de escritura COM (F780), precisó el alcance del texto de filas omitidas por corte de capacidad (F781), y completó la liberación de objetos COM intermedios (<code>coleccion</code> y <code>filas</code>) en <code>ObtenerFilaMaximaPlantilla</code> (F782).</p>
+<h2 id="changes">Changes</h2>
+<ol>
+<li><p><strong>Nuevo Servicio de Dominio (<code>AsignaturaViaticoAllocator.cs</code> y <code>AsignaturaViaticoFila.cs</code>, Fases 761, 768, 769, 770):</strong></p>
+<ul>
+<li>Implementa el algoritmo determinista de distribución con límite estricto de 8 comisiones por fila (<code>MaxBloquesPorFila = 8</code>).</li>
+<li><strong>Distribución en Dos Pases (Fase 768):</strong> El Pase 1 reserva con prioridad estricta los cupos para las asignaciones naturales (R1) de cada fila, evitando que bloques desbordados (R4) consuman cupos que requerirán bloques cronológicamente posteriores de la misma fila. El Pase 2 procesa pendientes aplicando R2, R4 y R5.</li>
+<li><strong>R1 (Fila natural):</strong> Asignación por correspondencia exacta de <code>IdVinculacion</code>.</li>
+<li><strong>R2 (Bloques multi-sede):</strong> Bloques que cruzan sedes o vinculaciones consecutivas se mantienen enteros (1 viaje, 1 transporte) y se asignan a la fila con más sesiones del bloque que tenga cupo; desempate por ventana <code>U</code> más temprana.</li>
+<li><strong>R3 (Límite por fila):</strong> Máximo 8 comisiones (columnas <code>AK–BG</code>).</li>
+<li><strong>R4 (Reasignación por saturación):</strong> Si la fila natural está llena, el bloque pasa a otra fila con cupo priorizando coincidencia de ventana temporal <code>[U, V]</code>, presencia de la sede en la ruta del bloque y cercanía a la fecha de inicio.</li>
+<li><strong>Distinción de advertencia sin vinculación (Fase 770):</strong> Si un bloque no coincide con ninguna vinculación (<code>candidatas.Count == 0</code>), se etiqueta <code>&quot;sin vinculación coincidente&quot;</code> y no se contabiliza en <code>UltimosBloquesReasignados</code>.</li>
+<li><strong>R5 (Fila de continuación como último recurso):</strong> Si ninguna fila tiene cupo, se crea una fila de continuación inmediatamente después de la fila base replicando datos de la asignatura con sus propias comisiones, ruta y tiquetes.</li>
+<li><strong>R6 (Validación temporal):</strong> Advertencia de auditoría si la fecha del bloque se encuentra fuera del rango <code>[U, V]</code> de la vinculación sin descartar el viático.</li>
+<li><strong>R7 (Invarianza total):</strong> Suma de bloques asignados igual a la totalidad de bloques calculados en la vista Viáticos.</li>
+<li><strong>Parseo robusto con hora y cultura es-CO (Fase 769):</strong> Inclusión de formatos con hora (<code>HH:mm:ss</code>) y uso explícito de <code>CultureInfo.GetCultureInfo(&quot;es-CO&quot;)</code> para cadenas con <code>/</code>, previniendo inversiones silenciosas de día y mes.</li>
+</ul>
+</li>
+<li><p><strong>Refactorización y Blindaje de Exportador Excel (<code>AsignaturasExcelExporter.cs</code>, Fases 762, 767, 771, 774, 775, 776, 777, 778, 779, 780, 781, 782):</strong></p>
+<ul>
+<li>Agrupación enriquecida por asignatura incluyendo la ventana temporal (<code>VinculacionFechaInicio</code>, <code>VinculacionFechaFin</code>) en la clave.</li>
+<li>Sustitución del ciclo plano <code>Skip/Take(8)</code> por la invocación a <code>AsignaturaViaticoAllocator.Distribuir</code>.</li>
+<li><strong>Trazabilidad asegurada ante fallos COM (Fase 780):</strong> Invocación inmediata a <code>LoggerHelper.Warning</code> para los avisos del docente antes de iniciar el bucle de escritura, manteniendo el diagnóstico disponible ante cualquier aborto de ejecución.</li>
+<li><strong>Claridad en aviso de capacidad (Fase 781):</strong> Texto informativo que delimita las filas omitidas al docente de corte y explicita que los docentes posteriores no fueron procesados.</li>
+<li><strong>Liberación exhaustiva de objetos COM (Fases 777, 782):</strong> Bloque <code>try/finally</code> en <code>ObtenerFilaMaximaPlantilla</code> con llamadas defensivas a <code>Marshal.ReleaseComObject</code> para <code>coleccion</code>, <code>tabla</code>, <code>rango</code> y <code>filas</code>.</li>
+<li><strong>Sincronización de métricas de plan completo (Fase 778):</strong> Agregación de <code>_ultimosAvisos</code> y <code>UltimosBloquesReasignados</code> postergada tras el bucle de filas y condicionada a <code>planCompleto == true</code>.</li>
+<li><strong>Actualización de documentación y bitácora (Fase 779):</strong> Actualizado el resumen XML doc de <code>Exportar</code> y corregido el identificador en la bitácora <code>walkthrough.md</code>.</li>
+<li><strong>Resolución de ámbito de variables CS0136 (Fase 774):</strong> Renombrado el identificador del bucle de filas a <code>indiceFila</code>, evitando colisiones de ámbito con los bucles internos <code>for (int i ...)</code> en comisiones y ruta.</li>
+<li><strong>Exactitud en métricas y corte por capacidad (Fase 775):</strong> Conteo de <code>UltimasFilasContinuacion</code> condicionado a la escritura efectiva tras el guard de capacidad e inclusión del docente de corte (<code>docenteCorte</code>) en el aviso consolidado. Actualizado el comentario obsoleto respecto a la replicación de datos en duplicados.</li>
+<li><strong>Detección dinámica de capacidad institucional (Fase 776):</strong> Método <code>ObtenerFilaMaximaPlantilla</code> que inspecciona <code>ws.ListObjects[&quot;T_Principal8&quot;]</code> con fallback a 234 (<code>FILA_MAXIMA_PLANTILLA_DEFAULT</code>).</li>
+<li><strong>Propagación de saturación física (Fase 767):</strong> La saturación interrumpe el bucle general de docentes y cuantifica las filas omitidas (<code>filasOmitidas</code>), evitando generar cientos de alertas repetitivas.</li>
+<li><strong>Completitud de LLAVE (Y) en continuación (Fase 771):</strong> Se escriben <code>Prestaciones</code> (columna X) y <code>PuntajeOcasionales</code> (columna Z) en filas duplicadas, garantizando la consistencia de la fórmula de auditoría <code>Y = CONCAT(VINCULACIÓN, CATEGORÍA, PRESTACIONES)</code>.</li>
+<li>Soporte en filas de continuación: emisión de <code>U</code>/<code>V</code> (columnas 21-22), <code>Grupo</code> (columna 11) y omisión intencional de horas (<code>L–O</code>) para no duplicar horas docente en fórmulas de Excel.</li>
+<li><strong>Corrección de anulación de tiquetes aéreos (Líneas 477-483 eliminadas):</strong> Se suprimió la sobreescritura incondicional de <code>RequiereTiquetesAereos = &quot;NO&quot;</code> y <code>TerminalAerea = SIN_TERMINAL</code> en filas duplicadas, permitiendo que las comisiones de continuación liquiden correctamente sus terminales aéreas en la columna <code>BQ</code>.</li>
+<li>Exposición de trazabilidad: propiedades <code>UltimosAvisos</code>, <code>UltimosBloquesReasignados</code> y <code>UltimasFilasContinuacion</code>.</li>
+</ul>
+</li>
+<li><p><strong>Retroalimentación en Interfaz de Usuario (<code>FormVerVinculaciones.cs</code>, Fases 763, 772):</strong></p>
+<ul>
+<li><strong>Priorización de avisos críticos (Fase 772):</strong> La ventana emergente busca en primer lugar avisos de <code>&quot;continuación&quot;</code>, <code>&quot;saturación&quot;</code> o <code>&quot;Capacidad&quot;</code> antes de recurrir al primer aviso genérico (evitando que avisos informativos R6 oculten alertas operativas críticas).</li>
+<li>Resumen cuantitativo: <code>&quot;Exportación finalizada. N bloques reasignados / M filas de continuación / K advertencias (ver log).&quot;</code> con icono <code>MessageBoxIcon.Warning</code> si hay advertencias.</li>
+</ul>
+</li>
+<li><p><strong>Registro en Proyecto de Compilación (<code>ConversorPDF.XLL.csproj</code>, Fase 764):</strong></p>
+<ul>
+<li>Inclusión explícita de <code>AsignaturaViaticoFila.cs</code> y <code>AsignaturaViaticoAllocator.cs</code> en el grupo de compilación del proyecto non-SDK.</li>
+</ul>
+</li>
+<li><p><strong>Suite de Pruebas Unitarias Automatizadas (<code>AsignaturaViaticoAllocatorTests.cs</code>, Fases 765, 773):</strong></p>
+<ul>
+<li>Cobertura exhaustiva ampliada a 11 escenarios:
+<ul>
+<li>Caso canónico 15 bloques en 4 sedes (4/6/2/3).</li>
+<li>Bloques multi-sede indivisibles (R2).</li>
+<li>Desborde con reasignación (R4).</li>
+<li>Desborde total con fila de continuación (R5).</li>
+<li>Invariante global de máximo 8 comisiones.</li>
+<li>Advertencias fuera de ventana (R6).</li>
+<li>Parseo multi-formato ISO y latino.</li>
+<li>Guardas de colecciones vacías.</li>
+<li><strong>Caso real dos Calis, Cartago y El Águila con ventanas solapadas (Fase 773):</strong> Validación exacta de 4/6/2/3 sin desbordes ni avisos espurios.</li>
+<li><strong>Bloque sin vinculación coincidente (Fase 773):</strong> Validación de aviso descriptivo sin alterar el contador de saturación.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<h2 id="how-to-use">How to use</h2>
+<ol>
+<li>En Excel, abrir el formulario <strong>Ver Vinculaciones</strong> desde la cinta institucional.</li>
+<li>Hacer clic en <strong>Exportar Asignaturas a Excel</strong>.</li>
+<li>El sistema distribuye automáticamente las comisiones en dos pases, garantizando la reserva de cupo para asignaciones naturales.</li>
+<li>Al finalizar, la ventana emergente resume el estado de la exportación destacando advertencias críticas de capacidad o continuación si se hubieran producido.</li>
+<li>Las columnas de ruta, gastos terrestres y terminales aéreas (<code>BQ</code>) reflejan exactamente los destinos y valores de las comisiones de cada fila.</li>
+</ol>
+<h2 id="test-coverage-fases-765-773">Test Coverage (Fases 765, 773)</h2>
+<ul>
+<li><code>AsignaturaViaticoAllocatorTests.cs</code>:
+<ul>
+<li><code>Ejemplo15Bloques4Sedes_AsignaPorVinculacion</code></li>
+<li><code>BloqueCruzaDosSedes_SeMantieneEnteroEnFilaConMasSesiones</code></li>
+<li><code>BloqueCruzaDosSedes_FilaMayoritariaLlena_UsaOtraVinculacionConCupo</code></li>
+<li><code>FilaNaturalLlena_ReasignaAOtraFilaConCupo</code></li>
+<li><code>TodasLasFilasLlenas_CreaFilaDeContinuacion</code></li>
+<li><code>NingunaFilaSuperaOchoComisiones</code></li>
+<li><code>BloqueFueraDeVentana_SeEscribeYAdvierte</code></li>
+<li><code>VentanaIsoYddMMyyyy_SeParseanAmbos</code></li>
+<li><code>SinAsignaturas_SinBloques_DevuelveVacio</code></li>
+<li><code>CasoRealDosCalisCartagoElAguila_15Bloques_RespetaVentanaYFila</code> (Fase 773)</li>
+<li><code>BloqueSinVinculacionCoincidente_AdvierteSinContarSaturacion</code> (Fase 773)</li>
+</ul>
+</li>
+</ul>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/fexluis/COM-PDF-Merge/blob/refactor/academic-modularization/docs/articles/changes/2026-10-19-distribucion-viaticos-por-asignatura.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          ESAP - ConversorPDF Doc
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

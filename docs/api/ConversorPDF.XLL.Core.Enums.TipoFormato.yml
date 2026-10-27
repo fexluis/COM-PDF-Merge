@@ -1,0 +1,144 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Core.Enums.TipoFormato
+  commentId: T:ConversorPDF.XLL.Core.Enums.TipoFormato
+  id: TipoFormato
+  parent: ConversorPDF.XLL.Core.Enums
+  children:
+  - ConversorPDF.XLL.Core.Enums.TipoFormato.Contratista
+  - ConversorPDF.XLL.Core.Enums.TipoFormato.DocenteCatedra
+  - ConversorPDF.XLL.Core.Enums.TipoFormato.Servidor
+  langs:
+  - csharp
+  - vb
+  name: TipoFormato
+  nameWithType: TipoFormato
+  fullName: ConversorPDF.XLL.Core.Enums.TipoFormato
+  type: Enum
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Enums
+  summary: >-
+    Clasifica los tipos de vinculación laboral de los comisionados.
+
+    Este valor determina qué hoja de Excel se utiliza como plantilla para la generación de PDFs.
+  example: []
+  syntax:
+    content: public enum TipoFormato
+    content.vb: Public Enum TipoFormato
+- uid: ConversorPDF.XLL.Core.Enums.TipoFormato.Contratista
+  commentId: F:ConversorPDF.XLL.Core.Enums.TipoFormato.Contratista
+  id: Contratista
+  parent: ConversorPDF.XLL.Core.Enums.TipoFormato
+  langs:
+  - csharp
+  - vb
+  name: Contratista
+  nameWithType: TipoFormato.Contratista
+  fullName: ConversorPDF.XLL.Core.Enums.TipoFormato.Contratista
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Enums
+  summary: Personal contratado por prestación de servicios (Formato Honorarios).
+  example: []
+  syntax:
+    content: Contratista = 1
+    return:
+      type: ConversorPDF.XLL.Core.Enums.TipoFormato
+- uid: ConversorPDF.XLL.Core.Enums.TipoFormato.Servidor
+  commentId: F:ConversorPDF.XLL.Core.Enums.TipoFormato.Servidor
+  id: Servidor
+  parent: ConversorPDF.XLL.Core.Enums.TipoFormato
+  langs:
+  - csharp
+  - vb
+  name: Servidor
+  nameWithType: TipoFormato.Servidor
+  fullName: ConversorPDF.XLL.Core.Enums.TipoFormato.Servidor
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Enums
+  summary: Personal vinculado a la planta global de la entidad.
+  example: []
+  syntax:
+    content: Servidor = 2
+    return:
+      type: ConversorPDF.XLL.Core.Enums.TipoFormato
+- uid: ConversorPDF.XLL.Core.Enums.TipoFormato.DocenteCatedra
+  commentId: F:ConversorPDF.XLL.Core.Enums.TipoFormato.DocenteCatedra
+  id: DocenteCatedra
+  parent: ConversorPDF.XLL.Core.Enums.TipoFormato
+  langs:
+  - csharp
+  - vb
+  name: DocenteCatedra
+  nameWithType: TipoFormato.DocenteCatedra
+  fullName: ConversorPDF.XLL.Core.Enums.TipoFormato.DocenteCatedra
+  type: Field
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Enums
+  summary: Docentes con vinculación especial por horas de cátedra.
+  example: []
+  syntax:
+    content: DocenteCatedra = 3
+    return:
+      type: ConversorPDF.XLL.Core.Enums.TipoFormato
+references:
+- uid: ConversorPDF.XLL.Core.Enums
+  commentId: N:ConversorPDF.XLL.Core.Enums
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.Core.Enums
+  nameWithType: ConversorPDF.XLL.Core.Enums
+  fullName: ConversorPDF.XLL.Core.Enums
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Enums
+    name: Enums
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Enums.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core
+    name: Core
+    isExternal: true
+    href: ConversorPDF.XLL.Core.html
+  - name: .
+  - uid: ConversorPDF.XLL.Core.Enums
+    name: Enums
+    isExternal: true
+    href: ConversorPDF.XLL.Core.Enums.html
+- uid: ConversorPDF.XLL.Core.Enums.TipoFormato
+  commentId: T:ConversorPDF.XLL.Core.Enums.TipoFormato
+  parent: ConversorPDF.XLL.Core.Enums
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Enums.TipoFormato.html
+  name: TipoFormato
+  nameWithType: TipoFormato
+  fullName: ConversorPDF.XLL.Core.Enums.TipoFormato

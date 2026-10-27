@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Sistema de Carriles Disjuntos y Oleadas Secuenciales en el Algoritmo Gen&#233;tico | ESAP - ConversorPDF </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Sistema de Carriles Disjuntos y Oleadas Secuenciales en el Algoritmo Gen&#233;tico | ESAP - ConversorPDF ">
+      
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="../../toc.html">
+      <meta name="docfx:tocrel" content="../toc.html">
+      
+      <meta name="docfx:rel" content="../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/fexluis/COM-PDF-Merge/blob/refactor/academic-modularization/docs/articles/changes/2026-10-22-ag-carriles-oleadas.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="sistema-de-carriles-disjuntos-y-oleadas-secuenciales-en-el-algoritmo-genético">Sistema de Carriles Disjuntos y Oleadas Secuenciales en el Algoritmo Genético</h1>
+
+<p><strong>Fecha:</strong> 2026-10-22<br>
+<strong>Módulo:</strong> Académico (<code>ConversorPDF.XLL.Academic</code>)<br>
+<strong>Ronda:</strong> 206 (Fases 1052 a 1065)</p>
+<h2 id="propósito">Propósito</h2>
+<p>Resolver de forma estructural e integral la viabilidad, calidad pedagógica y consistencia normativa de las mallas horarias generadas por el motor genético académico:</p>
+<ol>
+<li><strong>Persistencia de Decisiones de Selección (I1):</strong> Garantizar que las dimensiones elegidas en el árbol jerárquico (<code>Jornada</code>, <code>HorasDia</code>, <code>DiasVentana</code>) se persistan fielmente en <code>ag_aula</code> y <code>ag_aula_asignatura</code> (mediante operaciones <code>UPDATE</code> y <code>ON CONFLICT DO UPDATE</code>), eliminando inferencias tardías o discrepancias de configuración.</li>
+<li><strong>Carriles Disjuntos de 2 Días (I2, I3):</strong> Descomponer la ventana semanal <span class="math">\(\beta\)</span> en pares disjuntos de 2 días (ej. <code>MAR-VIE</code> <span class="math">\(\rightarrow\)</span> Carril 0: <code>[2,3]</code>, Carril 1: <code>[4,5]</code>), asignando cada asignatura mediante rotación modular <code>carril = idxAsignatura mod carriles</code>. En ventanas impares (ej. <code>VIE-DOM</code> <code>[5,6,7]</code>), el día residual no entra en rotación principal.</li>
+<li><strong>Oleadas Temporales Secuenciales (I4):</strong> Dividir el semestre en sub-ventanas temporales <code>[FechaInicio, FechaFin]</code> para cada carril mediante <code>oleada = idxAsignatura div carriles</code>. Las asignaturas de la misma cohorte que comparten un carril se encadenan en oleadas sucesivas sin solapamiento temporal.</li>
+<li><strong>Erradicación de Degradación Silenciosa a 1 Día:</strong> Eliminar el fallback que reducía una asignatura a un solo día cuando el planificador de patrón semanal fallaba, lo que multiplicaba sesiones en el mismo día o generaba sobrecargas. Ahora, ante un plan infactible, la asignatura se marca explícitamente como vacante con motivo <code>SIN_DISPONIBILIDAD</code>.</li>
+<li><strong>Erradicación de Clases de 8 Horas en Pregrado (D4/I6):</strong> Blindar la duración de sesiones a 4.0 horas en todos los programas de pregrado. Las clases de 8.0 horas quedan estrictamente reservadas para posgrados con <code>HorasDia == 8</code>. Se sembraron bloques de 4h faltantes mediante la migración V74 y se eliminaron todos los fallbacks no acotados de selección de bloques en la fábrica y en la mutación.</li>
+<li><strong>Adaptación de Restricciones R5 y R6:</strong>
+<ul>
+<li><strong>R5:</strong> La concurrencia de asignaturas se evalúa ahora por semana ISO contra la cantidad de carriles concurrentes del aula, permitiendo que una cohorte curse hasta <span class="math">\(N\)</span> asignaturas simultáneas si dispone de <span class="math">\(N\)</span> carriles paralelos.</li>
+<li><strong>R6:</strong> La secuencia temporal de asignaturas se evalúa agrupando por carril (<code>DiasPatron</code>), permitiendo que asignaturas en carriles disjuntos se dicten en paralelo en las mismas fechas sin marcar violaciones duras.</li>
+</ul>
+</li>
+<li><strong>Compuertas de Seguridad (I5, I8):</strong> Verificación matemática temprana de capacidad de ranuras en pre-vuelo (<code>I5</code>), y advertencia/bloqueo de seguridad al exportar o promover programaciones que presenten restricciones duras no resueltas (<code>HardViolations &gt; 0</code>).</li>
+</ol>
+<hr>
+<h2 id="cambios-por-componente">Cambios por Componente</h2>
+<h3 id="1-dominio-conversorpdfxllacademicdomainmodelsgenetica">1. Dominio (<code>ConversorPDF.XLL.Academic.Domain.Models.Genetica</code>)</h3>
+<ul>
+<li><strong><code>AgCarriles.cs</code>:</strong>
+<ul>
+<li>Clase estática interna (<code>internal static class</code>) para neutralizar colisiones de exportación de UDFs en Excel-DNA 1.8.0.</li>
+<li><code>Ventana(string diasVentana)</code>: Normalización y parseo seguro tanto de códigos canónicos (<code>&quot;MAR-VIE&quot;</code>) como de listas numéricas ISO (<code>&quot;2,3,4,5&quot;</code>).</li>
+<li><code>Cantidad(IReadOnlyList&lt;int&gt; ventana)</code>: Cálculo de carriles como <span class="math">\(\max(1, |\beta| / 2)\)</span>.</li>
+<li><code>Indice(int idxAsignatura, int carriles)</code>: Rotación modular <code>idxAsignatura % carriles</code>.</li>
+<li><code>DelCarril(IReadOnlyList&lt;int&gt; ventana, int idxAsignatura)</code>: Extracción de la sub-lista de 2 días correspondiente al carril rotado.</li>
+<li><code>Residual(IReadOnlyList&lt;int&gt; ventana)</code>: Identificación del día sobrante en ventanas impares.</li>
+</ul>
+</li>
+<li><strong><code>AgPlanOleada.cs</code>:</strong>
+<ul>
+<li>POCO inmutable (<code>internal sealed class</code>) con propiedades <code>IdAsignatura</code>, <code>Carril</code>, <code>Oleada</code>, <code>DiasPatron</code>, <code>FechaInicio</code>, <code>FechaFin</code>, <code>SemanasOleada</code>, <code>SesionesRequeridas</code> y <code>CapacidadRanuras</code>.</li>
+</ul>
+</li>
+</ul>
+<h3 id="2-aplicación-conversorpdfxllacademicapplication">2. Aplicación (<code>ConversorPDF.XLL.Academic.Application</code>)</h3>
+<ul>
+<li><strong><code>AgPlanificadorOleadas.cs</code>:</strong>
+<ul>
+<li>Servicio determinista para calcular rebanadas de semanas útiles en la ventana semestral, distribuir las semanas entre oleadas sucesivas y acotar las fechas <code>[FechaInicio, FechaFin]</code> de cada asignatura.</li>
+<li>Validación de capacidad de ranuras (Invariante I5) con retorno <code>Result.Failure</code> si el calendario no ofrece ranuras suficientes para las sesiones requeridas.</li>
+</ul>
+</li>
+<li><strong><code>AgSeleccionMapper.cs</code>:</strong>
+<ul>
+<li>Mapeador seguro entre <code>AgNodoArbolKey</code> y <code>AgContextoSeleccionDto</code>.</li>
+<li>Valida completitud de <code>Jornada</code> (no vacía), <code>HorasDia</code> (estrictamente 4 u 8) y <code>DiasVentana</code> (al menos un día ISO válido), conservando el código canónico (ej. <code>&quot;MAR-VIE&quot;</code>).</li>
+</ul>
+</li>
+<li><strong><code>AgPlanificadorPatronSemanal.cs</code>:</strong>
+<ul>
+<li><code>DiasKDe(...)</code>: Delegación a <code>AgCarriles.DelCarril</code> para asignación de días de carril.</li>
+<li>Normalización de patrones multi-día legados mayores a 2 días para preservar el invariante de 2 días por carril.</li>
+</ul>
+</li>
+<li><strong><code>AgValidadorVentana.cs</code>:</strong>
+<ul>
+<li>Validación obligatoria de dimensiones de decisión (<code>diasVentana</code>, <code>jornada</code>, <code>horasDia</code>) en cada aula activa.</li>
+<li>Verificación de factibilidad de capacidad total (I5) sumando ranuras requeridas vs disponibles en la ventana.</li>
+</ul>
+</li>
+<li><strong><code>AgValidadorReglas.cs</code>:</strong>
+<ul>
+<li><strong>R5:</strong> Verificación de concurrencia por semana ISO acotada a la cantidad de carriles del aula.</li>
+<li><strong>R6:</strong> Verificación de orden y solape agrupando asignaturas por carril (<code>DiasPatron</code>).</li>
+<li><strong>R11:</strong> Regla dura que penaliza genes cuya duración de sesión no corresponde a la requerida por el nivel académico (4h pregrado, 8h posgrado).</li>
+<li><strong>R13:</strong> Regla dura que penaliza solapamientos temporales entre asignaturas asignadas al mismo carril.</li>
+</ul>
+</li>
+<li><strong><code>AgOperadorMutacion.cs</code>:</strong>
+<ul>
+<li>Mutación acotada para respetar la duración esperada según nivel académico y mantener los genes dentro de los días de su carril asignado.</li>
+</ul>
+</li>
+<li><strong><code>AgExpansorSesiones.cs</code>:</strong>
+<ul>
+<li>Defensa en profundidad: verificación estricta de que la duración del bloque coincide con <code>AgUnidadesSemanales.HorasSesionAula</code>, retornando fallo temprano si difieren.</li>
+</ul>
+</li>
+<li><strong><code>AgFabricaIndividuos.cs</code>:</strong>
+<ul>
+<li>Ordenamiento canónico por <code>(OrdenCurricular, IdAsignatura)</code> para cada cohorte/aula.</li>
+<li>Integración pre-vuelo de <code>AgPlanificadorOleadas</code>: construcción de sub-ventanas y carriles antes de generar genes.</li>
+<li>Erradicación de la degradación silenciosa a 1 día: si el plan es infactible, el gen se crea con <code>EsVacante = 1</code> y motivo <code>SIN_DISPONIBILIDAD</code>.</li>
+<li>Filtro estricto de bloques por duración requerida <code>horasEfectivas</code>, eliminando cualquier fallback a bloques de 8h en pregrado.</li>
+</ul>
+</li>
+</ul>
+<h3 id="3-infraestructura-conversorpdfxllacademicinfrastructure">3. Infraestructura (<code>ConversorPDF.XLL.Academic.Infrastructure</code>)</h3>
+<ul>
+<li><strong><code>MigrationV74_SembrarBloques4hFaltantes.cs</code>:</strong>
+<ul>
+<li>Migración versión 74 que garantiza la existencia de bloques activos de 4.0h para los días 1 a 6 (Lunes a Sábado) en la tabla <code>ag_bloque_horario</code>.</li>
+<li>Registrada en <code>SqliteHelper.cs</code>.</li>
+</ul>
+</li>
+</ul>
+<h3 id="4-interfaz-de-usuario-conversorpdfxllacademicuiforms">4. Interfaz de Usuario (<code>ConversorPDF.XLL.Academic.UI.Forms</code>)</h3>
+<ul>
+<li><strong><code>AgFormGeneradorHorarios.cs</code>:</strong>
+<ul>
+<li><code>ObtenerCombinacionesSeleccionadas</code>: consumo de <code>AgSeleccionMapper.DesdeNodo</code> para validar las 3 dimensiones de selección del árbol.</li>
+<li><code>GenerarEncabezadosAulasAsync</code>:
+<ul>
+<li>Operación <code>UPDATE</code> sobre <code>ag_aula</code> para sincronizar <code>jornada</code>, <code>horas_dia</code> y <code>dias_ventana</code> cuando el aula ya existe en la base de datos.</li>
+<li>Consulta <code>sqlAsigs</code> con <code>COALESCE(aa.orden_curricular, 0) AS OrdenCurricular</code> y ordenamiento determinista <code>ORDER BY COALESCE(aa.orden_curricular, 0), a.id</code>.</li>
+<li>Inserción en <code>ag_aula_asignatura</code> mediante <code>ON CONFLICT(id_aula, id_asignatura) DO UPDATE SET dias_patron = ..., horas_objetivo = ...</code>.</li>
+<li>Asignación de <code>diasPatron</code> mediante <code>AgCarriles.DelCarril(ventanaIso, idxAulaAsig)</code>.</li>
+</ul>
+</li>
+<li><code>AsigSeedRow</code>: adición de propiedad <code>OrdenCurricular</code>.</li>
+<li><code>ExportarResultadosExcel</code> y <code>ExportarProyeccionEspejo</code>: compuerta de seguridad I8 que advierte al usuario si la solución activa contiene violaciones duras (<code>HardViolations &gt; 0</code>).</li>
+</ul>
+</li>
+</ul>
+<h3 id="5-suite-de-pruebas-unitarias-conversorpdftests">5. Suite de Pruebas Unitarias (<code>ConversorPDF.Tests</code>)</h3>
+<ul>
+<li><strong><code>AgCarrilesTests.cs</code> (T1 a T5):</strong> Cobertura exhaustiva de partición de carriles par/impar, días residuales y parseo de ventanas.</li>
+<li><strong><code>AgPlanificadorOleadasTests.cs</code> (T6 a T9):</strong> Cobertura de distribución de 4 asignaturas en 2 oleadas y 2 carriles en 16 semanas, fallo por capacidad insuficiente (I5), ventana vacía y lista vacía.</li>
+<li><strong><code>AgSeleccionMapperTests.cs</code> (T10 a T12):</strong> Cobertura de mapeo fiel de dimensiones, validación de horas/día (4 u 8), validación de ventana no vacía y jornada no vacía.</li>
+<li><strong><code>MigrationV74Tests.cs</code> (T13 a T14):</strong> Metadatos de migración V74 y verificación de siembra idempotente de bloques de 4h para días 1..6.</li>
+</ul>
+<hr>
+<h2 id="verificación-de-calidad-y-criterios-de-aceptación">Verificación de Calidad y Criterios de Aceptación</h2>
+<table>
+<thead>
+<tr>
+<th>Criterio</th>
+<th style="text-align: center;">Estado</th>
+<th>Observación</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>I1: Persistencia de ventana <span class="math">\(\beta\)</span></strong></td>
+<td style="text-align: center;">✅ CUMPLIDO</td>
+<td>Persistida en <code>ag_aula.dias_ventana</code> vía <code>UPDATE</code> / <code>AgAulaFactory</code>.</td>
+</tr>
+<tr>
+<td><strong>I2: Carril = par disjunto de 2 días</strong></td>
+<td style="text-align: center;">✅ CUMPLIDO</td>
+<td>Calculado por <code>AgCarriles.DelCarril</code> (<span class="math">\(\max(1, |\beta|/2)\)</span>).</td>
+</tr>
+<tr>
+<td><strong>I3: Rotación modular por orden curricular</strong></td>
+<td style="text-align: center;">✅ CUMPLIDO</td>
+<td>Orden <code>(OrdenCurricular, Id)</code> en <code>sqlAsigs</code>, fábrica y planificador.</td>
+</tr>
+<tr>
+<td><strong>I4: Oleadas temporales secuenciales</strong></td>
+<td style="text-align: center;">✅ CUMPLIDO</td>
+<td>Sub-ventanas no solapadas por carril mediante <code>AgPlanificadorOleadas</code>.</td>
+</tr>
+<tr>
+<td><strong>I5: Pre-vuelo de capacidad</strong></td>
+<td style="text-align: center;">✅ CUMPLIDO</td>
+<td>Validador comprueba ranuras suficientes contra demanda horaria.</td>
+</tr>
+<tr>
+<td><strong>I6: Duración de sesión según nivel</strong></td>
+<td style="text-align: center;">✅ CUMPLIDO</td>
+<td>4h obligatorias en pregrado (R11, fábrica, mutación, expansor).</td>
+</tr>
+<tr>
+<td><strong>I7: Sin degradación silenciosa</strong></td>
+<td style="text-align: center;">✅ CUMPLIDO</td>
+<td>Fallo de patrón se marca como vacante <code>SIN_DISPONIBILIDAD</code>.</td>
+</tr>
+<tr>
+<td><strong>I8: Compuerta de exportación y promoción</strong></td>
+<td style="text-align: center;">✅ CUMPLIDO</td>
+<td>Advertencia/bloqueo ante <code>HardViolations &gt; 0</code>.</td>
+</tr>
+<tr>
+<td><strong>Arquitectura Limpia &amp; .NET 4.8</strong></td>
+<td style="text-align: center;">✅ CUMPLIDO</td>
+<td>Tipos internos/sellados, C# 7.3, Single Type Per File, sin fuga de dependencias.</td>
+</tr>
+</tbody>
+</table>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/fexluis/COM-PDF-Merge/blob/refactor/academic-modularization/docs/articles/changes/2026-10-22-ag-carriles-oleadas.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          ESAP - ConversorPDF Doc
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

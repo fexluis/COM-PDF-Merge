@@ -1,28 +1,71 @@
 <DnaLibrary Name="ConversorPDF.XLL Add-In" RuntimeVersion="v4.0" CreateAndShowLog="true" xmlns="http://schemas.excel-dna.net/addin/2020/07/dnalibrary">
-  <ExternalLibrary Path="ConversorPDF.XLL.dll" ExplicitExports="false" LoadFromBytes="true" Pack="true" ComServer="true" />
+  <ExternalLibrary Path="ConversorPDF.XLL.dll" ExplicitExports="false" LoadFromBytes="false" Pack="false" ComServer="false" />
   
   <!-- Dependencias del proyecto COM consolidadas -->
   
   <!-- Librerías de PDF (PdfSharp y PdfPig con sus dependencias) -->
-  <Reference Path="PdfSharp.dll" Pack="true" />
-  <Reference Path="PdfSharp.Charting.dll" Pack="true" />
-  <Reference Path="UglyToad.PdfPig.dll" Pack="true" />
-  <Reference Path="UglyToad.PdfPig.Core.dll" Pack="true" />
-  <Reference Path="UglyToad.PdfPig.DocumentLayoutAnalysis.dll" Pack="true" />
-  <Reference Path="UglyToad.PdfPig.Fonts.dll" Pack="true" />
-  <Reference Path="UglyToad.PdfPig.Package.dll" Pack="true" />
-  <Reference Path="UglyToad.PdfPig.Tokenization.dll" Pack="true" />
-  <Reference Path="UglyToad.PdfPig.Tokens.dll" Pack="true" />
+  <Reference Path="PdfSharp.dll" Pack="false" />
+  <Reference Path="PdfSharp.Charting.dll" Pack="false" />
+  <Reference Path="UglyToad.PdfPig.dll" Pack="false" />
+  <Reference Path="UglyToad.PdfPig.Core.dll" Pack="false" />
+  <Reference Path="UglyToad.PdfPig.DocumentLayoutAnalysis.dll" Pack="false" />
+  <Reference Path="UglyToad.PdfPig.Fonts.dll" Pack="false" />
+  <Reference Path="UglyToad.PdfPig.Package.dll" Pack="false" />
+  <Reference Path="UglyToad.PdfPig.Tokenization.dll" Pack="false" />
+  <Reference Path="UglyToad.PdfPig.Tokens.dll" Pack="false" />
   
   <!-- Dependencias de sistema / infraestructura -->
-  <Reference Path="System.Buffers.dll" Pack="true" />
-  <Reference Path="System.Memory.dll" Pack="true" />
-  <Reference Path="System.Numerics.Vectors.dll" Pack="true" />
-  <Reference Path="System.Runtime.CompilerServices.Unsafe.dll" Pack="true" />
-  <Reference Path="System.Reflection.Metadata.dll" Pack="true" />
+  <Reference Path="System.Buffers.dll" Pack="false" />
+  <Reference Path="System.Memory.dll" Pack="false" />
+  <Reference Path="System.Numerics.Vectors.dll" Pack="false" />
+  <Reference Path="System.Reflection.Metadata.dll" Pack="false" />
+  <Reference Path="System.Collections.Immutable.dll" Pack="false" />
   
-  <!-- Dependencias para Sesiones Académicas (SQLite + Dapper) -->
-  <Reference Path="Dapper.dll" Pack="true" LoadFromBytes="false" />
-  <Reference Path="System.Data.SQLite.dll" Pack="true" LoadFromBytes="false" />
+  <!-- Dependencias para Sesiones Académicas (SQLite + Dapper + CSharpFunctionalExtensions) -->
+  <Reference Path="CSharpFunctionalExtensions.dll" Pack="false" />
+  <Reference Path="Dapper.dll" Pack="false" LoadFromBytes="false" />
+  <Reference Path="System.Data.SQLite.dll" Pack="false" LoadFromBytes="false" />
 
+  <CustomUI>
+    <customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui" onLoad="Ribbon_Load" loadImage="GetImage">
+        <ribbon> 
+        <!-- 
+        [WARNING] REGLA ESTRICTA DE FLUENT UI (OFFICE):
+        Los botones (<button>) que se encuentran dentro de un <menu> o <splitButton> 
+        NO SOPORTAN el atributo `getVisible`. 
+        Si agregas `getVisible` a un botón hijo de un menú, Excel rechazará todo el XML
+        silenciosamente y la cinta NO SE MOSTRARÁ. 
+        Para controlar visibilidad por botón, se debe usar <dynamicMenu>.
+        -->
+            <tabs> 
+            <tab idMso="TabHome">
+                <group id="customGroup" label="ESAP" insertAfterMso="GroupNumber">
+                    <!-- FASE 28: Retorno a splitButton puro delegando visibilidad total a C# -->
+                    <splitButton id="MySplitButton" size="large">
+                        <button id="Bt0" image="esap" label="PDF" onAction="ConvertirPDF" />                    
+                        <menu id="MyMenu">
+                            <button id="ConvertirObligacion" imageMso="ExportSharePointList" label="Convertir Obligación" onAction="OnConvertirObligacionContador" getVisible="GetButtonVisible" />
+                            <button id="UnificarOB" imageMso="ExportXmlFile" label="Unificar OB" onAction="UnificarObligacionContador" getVisible="GetButtonVisible" />
+                            <button id="UnificarOP" imageMso="PublishToPdfOrEdoc" label="Unificar OP" onAction="UnificarOrdenPago" getVisible="GetButtonVisible" />
+                            <button id="UnificarViaticos" imageMso="ExportTextFile" label="Unificar Viaticos" onAction="ViaticosUnificarSoportes" getVisible="GetButtonVisible" />
+                            <button id="MasivoViaticos" imageMso="BehindText" label="Masivo Viaticos" onAction="ProcesarViaticosMasivo" getVisible="GetButtonVisible" />
+                            <button id="GenerarCumplidos" imageMso="FileSaveAsExcelXlsb" label="Generar Cumplidos" onAction="ProcesarCumplidos" getVisible="GetButtonVisible" />
+                            <button id="GenerarFilaSeleccionada" imageMso="ObjectsAlignTop" label="Generar Fila Seleccionada" onAction="GenerarFilaSeleccionada" getVisible="GetButtonVisible" />
+                            <button id="GestionDocumental" imageMso="DatabaseRelationships" label="Gestion Documental" onAction="GestionDocumentalViaticos" getVisible="GetButtonVisible" />
+                            <button id="BuscarInformes" imageMso="WindowNew" label="Buscar Informes" onAction="BuscarInformes" getVisible="GetButtonVisible" />
+                            <button id="ProcesarFirma" imageMso="TableIndexes" label="Procesar Firma" onAction="GenerarFirmaBase64" getVisible="GetButtonVisible" />
+                            <button id="SesionesAcademicas" imageMso="TableIndexes" label="Sesiones Académicas" onAction="SesionesAcademicas" getVisible="GetButtonVisible" />
+                            <button id="Vinculaciones" imageMso="DatabaseRelationships" label="Ver Vinculaciones" onAction="VinculacionesAcademicas" getVisible="GetButtonVisible" />
+                            <button id="Metadatos" imageMso="TableIndexes" label="Metadatos" onAction="LeerMetadatos" getVisible="GetButtonVisible" />
+                            <button id="Backups" imageMso="ExportOdbcDatabase" label="Backups" onAction="BackupsAcademicas" getVisible="GetButtonVisible" />
+                            <button id="Usuario" imageMso="AccessTableContacts" label="Usuario" onAction="Office365UserManager" />
+                            <button id="Permisos" imageMso="Lock" label="Permisos" onAction="AbrirPermisos" getVisible="GetButtonVisible" />
+                        </menu>
+                    </splitButton>
+                    </group> 
+          </tab>
+        </tabs>
+        </ribbon>
+    </customUI>
+  </CustomUI>
 </DnaLibrary>

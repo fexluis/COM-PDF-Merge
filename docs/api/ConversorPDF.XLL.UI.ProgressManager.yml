@@ -1,0 +1,483 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.UI.ProgressManager
+  commentId: T:ConversorPDF.XLL.UI.ProgressManager
+  id: ProgressManager
+  parent: ConversorPDF.XLL.UI
+  children:
+  - ConversorPDF.XLL.UI.ProgressManager.#ctor(System.String,System.Double)
+  - ConversorPDF.XLL.UI.ProgressManager.AddProgress(System.Double)
+  - ConversorPDF.XLL.UI.ProgressManager.Close
+  - ConversorPDF.XLL.UI.ProgressManager.Dispose
+  langs:
+  - csharp
+  - vb
+  name: ProgressManager
+  nameWithType: ProgressManager
+  fullName: ConversorPDF.XLL.UI.ProgressManager
+  type: Class
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.UI
+  syntax:
+    content: 'public class ProgressManager : IDisposable'
+    content.vb: Public Class ProgressManager Implements IDisposable
+  inheritance:
+  - System.Object
+  implements:
+  - System.IDisposable
+  inheritedMembers:
+  - System.Object.ToString
+  - System.Object.Equals(System.Object)
+  - System.Object.Equals(System.Object,System.Object)
+  - System.Object.ReferenceEquals(System.Object,System.Object)
+  - System.Object.GetHashCode
+  - System.Object.GetType
+  - System.Object.MemberwiseClone
+- uid: ConversorPDF.XLL.UI.ProgressManager.#ctor(System.String,System.Double)
+  commentId: M:ConversorPDF.XLL.UI.ProgressManager.#ctor(System.String,System.Double)
+  id: '#ctor(System.String,System.Double)'
+  parent: ConversorPDF.XLL.UI.ProgressManager
+  langs:
+  - csharp
+  - vb
+  name: ProgressManager(string, double)
+  nameWithType: ProgressManager.ProgressManager(string, double)
+  fullName: ConversorPDF.XLL.UI.ProgressManager.ProgressManager(string, double)
+  type: Constructor
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.UI
+  syntax:
+    content: public ProgressManager(string title, double max = 100)
+    parameters:
+    - id: title
+      type: System.String
+    - id: max
+      type: System.Double
+    content.vb: Public Sub New(title As String, max As Double = 100)
+  overload: ConversorPDF.XLL.UI.ProgressManager.#ctor*
+  nameWithType.vb: ProgressManager.New(String, Double)
+  fullName.vb: ConversorPDF.XLL.UI.ProgressManager.New(String, Double)
+  name.vb: New(String, Double)
+- uid: ConversorPDF.XLL.UI.ProgressManager.AddProgress(System.Double)
+  commentId: M:ConversorPDF.XLL.UI.ProgressManager.AddProgress(System.Double)
+  id: AddProgress(System.Double)
+  parent: ConversorPDF.XLL.UI.ProgressManager
+  langs:
+  - csharp
+  - vb
+  name: AddProgress(double)
+  nameWithType: ProgressManager.AddProgress(double)
+  fullName: ConversorPDF.XLL.UI.ProgressManager.AddProgress(double)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.UI
+  syntax:
+    content: public void AddProgress(double inc = 1)
+    parameters:
+    - id: inc
+      type: System.Double
+    content.vb: Public Sub AddProgress(inc As Double = 1)
+  overload: ConversorPDF.XLL.UI.ProgressManager.AddProgress*
+  nameWithType.vb: ProgressManager.AddProgress(Double)
+  fullName.vb: ConversorPDF.XLL.UI.ProgressManager.AddProgress(Double)
+  name.vb: AddProgress(Double)
+- uid: ConversorPDF.XLL.UI.ProgressManager.Close
+  commentId: M:ConversorPDF.XLL.UI.ProgressManager.Close
+  id: Close
+  parent: ConversorPDF.XLL.UI.ProgressManager
+  langs:
+  - csharp
+  - vb
+  name: Close()
+  nameWithType: ProgressManager.Close()
+  fullName: ConversorPDF.XLL.UI.ProgressManager.Close()
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.UI
+  syntax:
+    content: public void Close()
+    content.vb: Public Sub Close()
+  overload: ConversorPDF.XLL.UI.ProgressManager.Close*
+- uid: ConversorPDF.XLL.UI.ProgressManager.Dispose
+  commentId: M:ConversorPDF.XLL.UI.ProgressManager.Dispose
+  id: Dispose
+  parent: ConversorPDF.XLL.UI.ProgressManager
+  langs:
+  - csharp
+  - vb
+  name: Dispose()
+  nameWithType: ProgressManager.Dispose()
+  fullName: ConversorPDF.XLL.UI.ProgressManager.Dispose()
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.UI
+  example: []
+  syntax:
+    content: public void Dispose()
+    content.vb: Public Sub Dispose()
+  overload: ConversorPDF.XLL.UI.ProgressManager.Dispose*
+  implements:
+  - System.IDisposable.Dispose
+references:
+- uid: ConversorPDF.XLL.UI
+  commentId: N:ConversorPDF.XLL.UI
+  isExternal: true
+  href: ConversorPDF.html
+  name: ConversorPDF.XLL.UI
+  nameWithType: ConversorPDF.XLL.UI
+  fullName: ConversorPDF.XLL.UI
+  spec.csharp:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.UI
+    name: UI
+    isExternal: true
+    href: ConversorPDF.XLL.UI.html
+  spec.vb:
+  - uid: ConversorPDF
+    name: ConversorPDF
+    isExternal: true
+    href: ConversorPDF.html
+  - name: .
+  - uid: ConversorPDF.XLL
+    name: XLL
+    isExternal: true
+    href: ConversorPDF.XLL.html
+  - name: .
+  - uid: ConversorPDF.XLL.UI
+    name: UI
+    isExternal: true
+    href: ConversorPDF.XLL.UI.html
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+  nameWithType: object
+  fullName: object
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: System.IDisposable
+  commentId: T:System.IDisposable
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.idisposable
+  name: IDisposable
+  nameWithType: IDisposable
+  fullName: System.IDisposable
+- uid: System.Object.ToString
+  commentId: M:System.Object.ToString
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  name: ToString()
+  nameWithType: object.ToString()
+  fullName: object.ToString()
+  nameWithType.vb: Object.ToString()
+  fullName.vb: Object.ToString()
+  spec.csharp:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+- uid: System.Object.Equals(System.Object)
+  commentId: M:System.Object.Equals(System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  name: Equals(object)
+  nameWithType: object.Equals(object)
+  fullName: object.Equals(object)
+  nameWithType.vb: Object.Equals(Object)
+  fullName.vb: Object.Equals(Object)
+  name.vb: Equals(Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.Equals(System.Object,System.Object)
+  commentId: M:System.Object.Equals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  name: Equals(object, object)
+  nameWithType: object.Equals(object, object)
+  fullName: object.Equals(object, object)
+  nameWithType.vb: Object.Equals(Object, Object)
+  fullName.vb: Object.Equals(Object, Object)
+  name.vb: Equals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.ReferenceEquals(System.Object,System.Object)
+  commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  name: ReferenceEquals(object, object)
+  nameWithType: object.ReferenceEquals(object, object)
+  fullName: object.ReferenceEquals(object, object)
+  nameWithType.vb: Object.ReferenceEquals(Object, Object)
+  fullName.vb: Object.ReferenceEquals(Object, Object)
+  name.vb: ReferenceEquals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.GetHashCode
+  commentId: M:System.Object.GetHashCode
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  name: GetHashCode()
+  nameWithType: object.GetHashCode()
+  fullName: object.GetHashCode()
+  nameWithType.vb: Object.GetHashCode()
+  fullName.vb: Object.GetHashCode()
+  spec.csharp:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+- uid: System.Object.GetType
+  commentId: M:System.Object.GetType
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  name: GetType()
+  nameWithType: object.GetType()
+  fullName: object.GetType()
+  nameWithType.vb: Object.GetType()
+  fullName.vb: Object.GetType()
+  spec.csharp:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+- uid: System.Object.MemberwiseClone
+  commentId: M:System.Object.MemberwiseClone
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  name: MemberwiseClone()
+  nameWithType: object.MemberwiseClone()
+  fullName: object.MemberwiseClone()
+  nameWithType.vb: Object.MemberwiseClone()
+  fullName.vb: Object.MemberwiseClone()
+  spec.csharp:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: ConversorPDF.XLL.UI.ProgressManager.#ctor*
+  commentId: Overload:ConversorPDF.XLL.UI.ProgressManager.#ctor
+  isExternal: true
+  href: ConversorPDF.XLL.UI.ProgressManager.html#ConversorPDF_XLL_UI_ProgressManager__ctor_System_String_System_Double_
+  name: ProgressManager
+  nameWithType: ProgressManager.ProgressManager
+  fullName: ConversorPDF.XLL.UI.ProgressManager.ProgressManager
+  nameWithType.vb: ProgressManager.New
+  fullName.vb: ConversorPDF.XLL.UI.ProgressManager.New
+  name.vb: New
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: System.Double
+  commentId: T:System.Double
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.double
+  name: double
+  nameWithType: double
+  fullName: double
+  nameWithType.vb: Double
+  fullName.vb: Double
+  name.vb: Double
+- uid: ConversorPDF.XLL.UI.ProgressManager.AddProgress*
+  commentId: Overload:ConversorPDF.XLL.UI.ProgressManager.AddProgress
+  isExternal: true
+  href: ConversorPDF.XLL.UI.ProgressManager.html#ConversorPDF_XLL_UI_ProgressManager_AddProgress_System_Double_
+  name: AddProgress
+  nameWithType: ProgressManager.AddProgress
+  fullName: ConversorPDF.XLL.UI.ProgressManager.AddProgress
+- uid: ConversorPDF.XLL.UI.ProgressManager.Close*
+  commentId: Overload:ConversorPDF.XLL.UI.ProgressManager.Close
+  isExternal: true
+  href: ConversorPDF.XLL.UI.ProgressManager.html#ConversorPDF_XLL_UI_ProgressManager_Close
+  name: Close
+  nameWithType: ProgressManager.Close
+  fullName: ConversorPDF.XLL.UI.ProgressManager.Close
+- uid: ConversorPDF.XLL.UI.ProgressManager.Dispose*
+  commentId: Overload:ConversorPDF.XLL.UI.ProgressManager.Dispose
+  isExternal: true
+  href: ConversorPDF.XLL.UI.ProgressManager.html#ConversorPDF_XLL_UI_ProgressManager_Dispose
+  name: Dispose
+  nameWithType: ProgressManager.Dispose
+  fullName: ConversorPDF.XLL.UI.ProgressManager.Dispose
+- uid: System.IDisposable.Dispose
+  commentId: M:System.IDisposable.Dispose
+  parent: System.IDisposable
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.idisposable.dispose
+  name: Dispose()
+  nameWithType: IDisposable.Dispose()
+  fullName: System.IDisposable.Dispose()
+  spec.csharp:
+  - uid: System.IDisposable.Dispose
+    name: Dispose
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.idisposable.dispose
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.IDisposable.Dispose
+    name: Dispose
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.idisposable.dispose
+  - name: (
+  - name: )
