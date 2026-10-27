@@ -1,6 +1,0 @@
-BuiltPdbOutput	C:\Users\luis.bechara\OneDrive - Escuela Superior de Administración Publica\Antigravity\_OK\ConversorPDFv1.2.51.0\installer\obj\x64\Release\InstaladorConversorPDF.wixpdb
-BuiltTargetOutput	C:\Users\luis.bechara\OneDrive - Escuela Superior de Administración Publica\Antigravity\_OK\ConversorPDFv1.2.51.0\installer\obj\x64\Release\InstaladorConversorPDF.msi
-Input	..\ConversorPDF.XLL\bin\x64\Release\ConversorPDF.XLL-AddIn64-packed.xll
-Input	..\ConversorPDF.XLL\bin\x64\Release\x64\SQLite.Interop.dll
-Input	RegisterXLL.vbs
-Intermediate	C:\Users\luis.bechara\OneDrive - Escuela Superior de Administración Publica\Antigravity\_OK\ConversorPDFv1.2.51.0\installer\obj\x64\Release\#cab1.cab

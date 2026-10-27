@@ -1,6 +1,0 @@
-C:\Users\usuario\Documents\trae_projects\COM-PDF-Merge\obj\Release\InstaladorConversorPDF.wixproj.CoreCompileInputs.cache
-C:\Users\usuario\Documents\trae_projects\COM-PDF-Merge\obj\Release\InstaladorConversorPDF.msi
-C:\Users\usuario\Documents\trae_projects\COM-PDF-Merge\obj\Release\InstaladorConversorPDF.wixpdb
-C:\Users\usuario\Documents\trae_projects\COM-PDF-Merge\obj\Release\InstaladorConversorPDF.wixproj.BindTracking-neutral.txt
-C:\Users\usuario\Documents\trae_projects\COM-PDF-Merge\bin\Release\InstaladorConversorPDF.msi
-C:\Users\usuario\Documents\trae_projects\COM-PDF-Merge\bin\Release\InstaladorConversorPDF.wixpdb

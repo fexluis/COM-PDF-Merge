@@ -1,19 +1,37 @@
 ## Build artifacts
-/ConversorPDF/bin/
-/ConversorPDF/obj/
-/ConversorPDF/bas/
+[Bb]in/
+[Oo]bj/
+ConversorPDF.XLL/bin/
+ConversorPDF.XLL/obj/
+ConversorPDF.Tests/bin/
+ConversorPDF.Tests/obj/
+installer/bin/
+installer/obj/
+TestResults/
+_evidence/
+_evidence/**
+_FIXES/
+_FIXES/**
 
 ## Distribution binaries (mantén los scripts .bat)
 /Dist/*.dll
 /Dist/*.pdb
 /Dist/*.tlb
 
-## Visual Studio / VS Code
+## Visual Studio / VS Code / IDE
 .vs/
 *.user
 *.suo
+*.userosscache
+*.sln.docstates
 
 ## OS files
 Thumbs.db
 *.DS_Store
 
+## Backups y temporales
+*.bak
+scratch/
+
+## graphify (desinstalado - no versionar artefactos del grafo)
+/graphify-out/
