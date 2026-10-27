@@ -376,7 +376,8 @@ namespace ConversorPDF.XLL.Core.Helpers
                 new MigrationV75_SembrarBloquesDomingo(),             // FASE 1188: sembrar bloques canónicos de domingo
                 new MigrationV76_SanearDimensionesAgAula(),           // FASE 1191: sanear dimensiones de decisión en ag_aula (I1)
                 new MigrationV77_AddPernoctaAgVinculaciones(),        // FASE 1279: columna isPernoctaUltimoDia en vinculaciones y ag_vinculaciones
-                new MigrationV78_AddAgFiltroSeleccion()               // FASE 1315 / 1390: ag_filtro_seleccion
+                new MigrationV78_AddAgFiltroSeleccion(),              // FASE 1315 / 1390: ag_filtro_seleccion
+                new MigrationV79_NormalizeUsuariosIds()               // Normalización determinista de usuarios y deduplicación
             };
             return new SchemaMigrator(migrations, new VaultPersister(), new LoggerAdapter());
         }

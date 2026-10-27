@@ -205,11 +205,14 @@ T9 (gate final + review)                                   [deps: T1..T8]
   - `ConversorPDF.XLL/ConversorPDF.XLL.csproj`
 - **description**: migración **idempotente** (versión 79; la máxima actual es V78) que: (1) hace copia de seguridad del vault (`*.bak`) antes de mutar; (2) deduplica por `LOWER(TRIM(nombreusuario))` conservando la fila más rica (firma > perfil no genérico > `updated_at` > `id`); (3) reescribe `id` a `usr_<lower(trim(nombreusuario))>` con `DELETE`+`INSERT` para que CR-SQLite genere tombstones propagables; (4) ejecuta `PRAGMA integrity_check` y registra el resultado. Log de filas normalizadas/eliminadas.
 - **validation**: `verify.ps1 -Mode Build` exit 0 + `UsuariosDuplicadosTests` verde sobre una DB migrada + `integrity_check` = `ok`.
-- **verification**: `powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Build`
-- **evidence**:
-- **status**: pending
-- **log**:
+- **evidence**: `_evidence/20261027-131208`
+- **status**: completed
+- **log**: Creada MigrationV79_NormalizeUsuariosIds (versión 79, aditiva) que realiza backup .bak antes de mutar, deduplica filas con la misma cuenta reteniendo la más rica (firma > perfil != 'Academica' > updated_at > id), reescribe IDs legacy a identificadores deterministas usr_<nombreusuario> mediante DELETE + INSERT para generar tombstones limpios en CR-SQLite, y ejecuta PRAGMA integrity_check. Registrada en SqliteHelper y csproj. Verificado con UsuariosDuplicadosTests (3 pasados, 0 fallos).
 - **files edited/created**:
+  - `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Migrations/MigrationV79_NormalizeUsuariosIds.cs`
+  - `ConversorPDF.XLL/Core/Helpers/SqliteHelper.cs`
+  - `ConversorPDF.XLL/ConversorPDF.XLL.csproj`
+  - `ConversorPDF.Tests/Integration/Usuarios/UsuariosDuplicadosTests.cs`
 
 ### T8: Dedupe idempotente tras el merge de sync (integrator, L0 Core/Sync)
 - **depends_on**: [T7]

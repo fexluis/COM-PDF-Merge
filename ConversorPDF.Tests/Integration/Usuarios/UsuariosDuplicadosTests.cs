@@ -85,6 +85,32 @@ namespace ConversorPDF.Tests.Integration.Usuarios
             result.Value.Should().Be("usr_pedroperez", "el ID del usuario debe ser determinista para evitar duplicaciones en CRDT");
         }
 
+        [Fact]
+        public void MigrationV79_WhenExecuted_ShouldDeduplicateAndNormalizeIds()
+        {
+            // Arrange: 2 filas para lbechara con GUIDs aleatorios, una sin firma y otra con firma
+            _connection.Execute(@"
+                INSERT INTO usuarios (id, nombre, nombreusuario, subunidad, perfil, activo, firma, updated_at)
+                VALUES ('guid_old_1111', 'Luis Bechara', 'lbechara', 'VALLE', 'Academica', 1, NULL, '2026-01-01 10:00:00');
+            ");
+            _connection.Execute(@"
+                INSERT INTO usuarios (id, nombre, nombreusuario, subunidad, perfil, activo, firma, updated_at)
+                VALUES ('guid_old_2222', 'Luis Bechara', 'lbechara', 'VALLE', 'Admin', 1, 'base64firmadata...', '2026-02-01 12:00:00');
+            ");
+
+            var migration = new ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV79_NormalizeUsuariosIds();
+
+            // Act
+            migration.Up(_connection);
+
+            // Assert
+            var rows = _connection.Query<Usuario>("SELECT * FROM usuarios;").ToList();
+            rows.Should().HaveCount(1, "la migración V79 debe haber eliminado el duplicado");
+            rows[0].Id.Should().Be("usr_lbechara", "la migración V79 debe haber normalizado el ID al formato usr_{nombreusuario}");
+            rows[0].Perfil.Should().Be("Admin");
+            rows[0].Firma.Should().Be("base64firmadata...");
+        }
+
         public void Dispose()
         {
             _connection?.Dispose();
