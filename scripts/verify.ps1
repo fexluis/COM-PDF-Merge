@@ -35,10 +35,21 @@ function Write-Step([string]$text, [string]$color = 'Cyan') {
     Write-Host $text -ForegroundColor $color
 }
 
+function Get-GitExe {
+    $cmd = Get-Command git -ErrorAction SilentlyContinue
+    if ($cmd) { return $cmd.Source }
+    $candidates = New-Object System.Collections.Generic.List[string]
+    if ($env:ProgramFiles) { $candidates.Add((Join-Path $env:ProgramFiles 'Git\cmd\git.exe')) }
+    if (${env:ProgramFiles(x86)}) { $candidates.Add((Join-Path ${env:ProgramFiles(x86)} 'Git\cmd\git.exe')) }
+    if ($env:LOCALAPPDATA) { $candidates.Add((Join-Path $env:LOCALAPPDATA 'Programs\Git\cmd\git.exe')) }
+    foreach ($c in $candidates) { if (Test-Path $c) { return $c } }
+    return $null
+}
+
 function Get-RepoHead([string]$root) {
-    $gitCmd = Get-Command git -ErrorAction SilentlyContinue
-    if ($gitCmd) {
-        $sha = (& git -C $root rev-parse --short HEAD 2>$null)
+    $git = Get-GitExe
+    if ($git) {
+        $sha = (& $git -C $root rev-parse --short HEAD 2>$null)
         if ($LASTEXITCODE -eq 0 -and $sha) { return ([string]$sha).Trim() }
     }
     $gitDir   = Join-Path $root '.git'
@@ -61,9 +72,9 @@ function Get-RepoHead([string]$root) {
 }
 
 function Get-RepoDirty([string]$root) {
-    $gitCmd = Get-Command git -ErrorAction SilentlyContinue
-    if (-not $gitCmd) { return 'unknown' }
-    $lines = @(& git -C $root status --porcelain 2>$null)
+    $git = Get-GitExe
+    if (-not $git) { return 'unknown' }
+    $lines = @(& $git -C $root status --porcelain 2>$null)
     if ($LASTEXITCODE -ne 0) { return 'unknown' }
     return $lines.Count
 }
