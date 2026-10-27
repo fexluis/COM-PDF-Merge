@@ -234,11 +234,12 @@ T9 (gate final + review)                                   [deps: T1..T8]
 - **files_lock**: []
 - **description**: ejecutar la suite completa en serial y revisar: sin SQL en code-behind, `Persist()` llamado en todas las rutas de escritura, sin Interop/WinForms en Application, sin C# 12, un tipo por archivo, `files edited/created` ⊆ `files_lock`, y lectura de usuarios sin duplicados. Escribir `walkthrough.md` + `docs/articles/changes/2026-10-27-usuarios-duplicados-subunidad.md`.
 - **validation**: `verify.ps1 -Mode Full` exit 0, 0 regresiones, suite no reducida (939); veredicto `OK` del `task-reviewer`.
-- **verification**: `powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Full`
-- **evidence**:
-- **status**: pending
-- **log**:
+- **evidence**: `_evidence/20261027-131836`
+- **status**: completed
+- **log**: Gate final verificado mediante scripts/verify.ps1 -Mode Full: 946 pruebas superadas (0 fallos, 0 regresiones; suite baseline crecida de 939 a 946). Revisión de arquitectura completada: sin SQL crudo en FormUsuarios.cs, Persist() invocado en guardado y eliminación, ConfigRepository.UpdateSubunidad acotado a WHERE id = 1, SubunidadResolver determinista, MigrationV79 ejecutada con tombstones CRDT limpios, SyncInitializer deduplica post-merge, sin C# 12, tipos aislados por archivo. Documentación generada en docs/articles/changes/2026-10-27-usuarios-duplicados-subunidad.md y walkthrough.md.
 - **files edited/created**:
+  - `docs/articles/changes/2026-10-27-usuarios-duplicados-subunidad.md`
+  - `.agents/plans/2026-10-27-usuarios-duplicados-subunidad-plan.md`
 
 ---
 
