@@ -64,6 +64,29 @@ namespace ConversorPDF.Tests.Unit.Usuarios
             result.Value.Should().Be("VALLE", "debe resolver la subunidad de la fila activa con updated_at más reciente");
         }
 
+        [Fact]
+        public void Resolve_WhenDuplicateUsersWithNullUpdatedAt_ShouldSelectRowWithNonNullUpdatedAt()
+        {
+            string currentUser = Environment.UserName;
+
+            // Fila con updated_at NULL y CAUCA
+            _connection.Execute(@"
+                INSERT INTO usuarios (id, nombre, nombreusuario, subunidad, activo, updated_at)
+                VALUES ('usr_null', 'Usuario Test', @User, 'CAUCA', 1, NULL);
+            ", new { User = currentUser });
+
+            // Fila con updated_at no nulo y NARINO
+            _connection.Execute(@"
+                INSERT INTO usuarios (id, nombre, nombreusuario, subunidad, activo, updated_at)
+                VALUES ('usr_valid', 'Usuario Test', @User, 'NARINO', 1, '2026-01-15 10:00:00');
+            ", new { User = currentUser });
+
+            var result = _resolver.Resolve(_connection);
+
+            result.IsSuccess.Should().BeTrue();
+            result.Value.Should().Be("NARINO");
+        }
+
         public void Dispose()
         {
             _connection?.Dispose();

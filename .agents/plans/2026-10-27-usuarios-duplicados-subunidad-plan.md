@@ -175,10 +175,12 @@ T9 (gate final + review)                                   [deps: T1..T8]
 - **description**: añadir `ORDER BY activo DESC, updated_at DESC, id ASC` al `SELECT ... LIMIT 1` de `usuarios` y registrar en log los candidatos cuando haya más de uno (`WARNING` con `id|subunidad|updated_at`). Mantener el fallback a `config` y el comportamiento con tabla ausente.
 - **validation**: `SubunidadResolverTests` GREEN (incluye caso con duplicados y con `updated_at` nulo).
 - **verification**: `powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "FullyQualifiedName~SubunidadResolverTests"`
-- **evidence**:
-- **status**: pending
-- **log**:
+- **evidence**: `_evidence/20261027-130735`
+- **status**: Completed
+- **log**: Actualizado SubunidadResolver con ordenamiento determinista ORDER BY activo DESC, updated_at DESC, id ASC y logging de advertencia estructurado con id|subunidad|updated_at cuando existen múltiples registros para el usuario. SubunidadResolverTests en VERDE (2 pasados, 0 fallos).
 - **files edited/created**:
+  - `ConversorPDF.XLL/Core/Sync/SubunidadResolver.cs`
+  - `ConversorPDF.Tests/Unit/Usuarios/SubunidadResolverTests.cs`
 
 ### T6: Mover usuario entre vaults al cambiar de subunidad (implementer, condicional a T2)
 - **depends_on**: [T2, T3, T5]

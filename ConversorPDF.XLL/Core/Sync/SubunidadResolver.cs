@@ -46,7 +46,14 @@ namespace ConversorPDF.XLL.Core.Sync
             FROM   usuarios
             WHERE  LOWER(nombreusuario) = LOWER(@UserName)
               AND  activo = 1
+            ORDER BY activo DESC, updated_at DESC, id ASC
             LIMIT 1;";
+
+        private const string SqlGetCandidatos = @"
+            SELECT id, subunidad, updated_at
+            FROM   usuarios
+            WHERE  LOWER(nombreusuario) = LOWER(@UserName)
+            ORDER BY activo DESC, updated_at DESC, id ASC;";
 
         /// <summary>
         /// SQL para verificar si la tabla usuarios existe en la DB actual.
@@ -109,6 +116,16 @@ namespace ConversorPDF.XLL.Core.Sync
                 }
 
                 // Paso 2: Buscar el usuario actual en la tabla usuarios
+                var candidatos = connection.Query(
+                    SqlGetCandidatos,
+                    new { UserName = currentUser }).ToList();
+
+                if (candidatos.Count > 1)
+                {
+                    string candInfo = string.Join("; ", candidatos.Select(c => $"{c.id}|{c.subunidad}|{c.updated_at}"));
+                    LoggerHelper.Warning($"[SubunidadResolver] Múltiples registros encontrados para usuario '{currentUser}': {candInfo}. Seleccionando el más reciente por updated_at.");
+                }
+
                 string subunidad = connection.QueryFirstOrDefault<string>(
                     SqlGetSubunidad,
                     new { UserName = currentUser });
