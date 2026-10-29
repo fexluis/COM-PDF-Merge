@@ -5,7 +5,9 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using ConversorPDF.XLL.Academic.Application.Services;
 using ConversorPDF.XLL.Academic.Domain.Models;
+using ConversorPDF.XLL.Academic.Infrastructure.Persistence;
 using ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context;
 using ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories;
 using ConversorPDF.XLL.Core.Helpers;
@@ -458,46 +460,62 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
                     LoggerHelper.Info($"[FormUsuarios] UpdateUsuario retornó SUCCESS para ID: {u.Id}");
                 }
                 
-                // Fase 6 y Fase 4: Actualizar config y requerir reinicio si el usuario actual cambió su subunidad
+                // MUV: Mover usuario entre vaults al cambiar de subunidad
                 bool subunidadCambiada = !string.Equals(subunidadAnterior, u.Subunidad, StringComparison.OrdinalIgnoreCase);
+                bool requiereReinicio = false;
 
-                if (string.Equals(u.NombreUsuario, Environment.UserName, StringComparison.OrdinalIgnoreCase)
-                    || string.Equals(nombreAnterior, Environment.UserName, StringComparison.OrdinalIgnoreCase))
+                if (subunidadCambiada)
                 {
-                    var configRepo = new ConfigRepository(db);
-                    var configResult = configRepo.UpdateSubunidad(u.Subunidad);
-                    if (configResult.IsFailure)
+                    var moverService = new MoverUsuarioSubunidadService(new UsuarioVaultMover(), new ConfigRepository(db));
+                    string usuarioActualComparar = Environment.UserName;
+                    if (string.Equals(nombreAnterior, Environment.UserName, StringComparison.OrdinalIgnoreCase))
                     {
-                        MessageBox.Show($"Error al actualizar la configuración: {configResult.Error}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        usuarioActualComparar = u.NombreUsuario;
+                    }
+
+                    var moverResult = moverService.Mover(u, u.Subunidad, usuarioActualComparar);
+                    if (moverResult.IsFailure)
+                    {
+                        MessageBox.Show($"Error al mover el usuario entre vaults: {moverResult.Error}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         return;
                     }
-                    
-                    var persistResult = _session.Persist();
-                    if (persistResult.IsFailure)
+
+                    requiereReinicio = moverResult.Value.RequiereReinicio;
+
+                    // D8: Si se actualizó config para el usuario actual, refrescar FormConfig si está abierto
+                    if (moverResult.Value.ConfigActualizada)
                     {
-                        MessageBox.Show($"Error al persistir la base de datos: {persistResult.Error}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        return;
-                    }
-                                             
-                    if (nombreModificado || subunidadCambiada)
-                    {
-                        MessageBox.Show("Ha cambiado su subunidad principal o nombre de usuario.\n\n" +
-                            "Para aplicar los cambios y cargar la base de datos correcta, todas las ventanas " +
-                            "actuales se cerrarán. Debe reiniciar Excel por completo antes de continuar.", 
-                            "Reinicio Requerido", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        this.DialogResult = DialogResult.Abort;
-                        this.Close();
-                        return;
+                        foreach (Form openForm in System.Windows.Forms.Application.OpenForms)
+                        {
+                            if (openForm is FormConfig formConfig)
+                            {
+                                formConfig.RecargarConfiguracion();
+                            }
+                        }
                     }
                 }
-                else
+                else if (nombreModificado && (string.Equals(u.NombreUsuario, Environment.UserName, StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(nombreAnterior, Environment.UserName, StringComparison.OrdinalIgnoreCase)))
                 {
-                    var persistResult = _session.Persist();
-                    if (persistResult.IsFailure)
-                    {
-                        MessageBox.Show($"Error al persistir la base de datos: {persistResult.Error}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        return;
-                    }
+                    requiereReinicio = true;
+                }
+
+                var persistResult = _session.Persist();
+                if (persistResult.IsFailure)
+                {
+                    MessageBox.Show($"Error al persistir la base de datos: {persistResult.Error}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                if (requiereReinicio)
+                {
+                    MessageBox.Show("Ha cambiado su subunidad principal o nombre de usuario.\n\n" +
+                        "Para aplicar los cambios y cargar la base de datos correcta, todas las ventanas " +
+                        "actuales se cerrarán. Debe reiniciar Excel por completo antes de continuar.", 
+                        "Reinicio Requerido", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    this.DialogResult = DialogResult.Abort;
+                    this.Close();
+                    return;
                 }
                 
                 MessageBox.Show("Usuario guardado correctamente.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);

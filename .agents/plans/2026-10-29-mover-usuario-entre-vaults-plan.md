@@ -258,10 +258,12 @@ T1 (integrator, L0: contratos + esqueletos + csproj)
   - Sin SQL nuevo en el code-behind: solo composición manual (igual que `new ConfigRepository(db)` ya existente) y mensajes.
 - **validation**: `Full` exit 0 sin regresiones; `grep` de `UPDATE config`/`Execute(` en `FormUsuarios.cs` sin nuevas apariciones; `RecargarConfiguracion` existe y es invocado.
 - **verification**: `powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "FullyQualifiedName~Usuarios"`
-- **evidence**: (la llena build-verifier)
-- **status**: pending
-- **log**:
+- **evidence**: `_evidence/20261029-110002`
+- **status**: completed
+- **log**: Cableado MoverUsuarioSubunidadService en FormUsuarios.btnGuardar con persistencia secuencial (destino primero, luego sesión de origen), reinicio requerido condicional a usuario actual, y recarga de FormConfig abierto vía RecargarConfiguracion(). 25 tests de Usuarios superados.
 - **files edited/created**:
+  - `ConversorPDF.XLL/Academic/UI/Forms/FormUsuarios.cs`
+  - `ConversorPDF.XLL/Academic/UI/Forms/FormConfig.cs`
 
 
 ### T6: Gate final, revisión de arquitectura y documentación (build-verifier + task-reviewer)

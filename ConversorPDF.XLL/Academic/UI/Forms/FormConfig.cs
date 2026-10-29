@@ -77,6 +77,14 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             this.panel1.Invalidate();
         }
 
+        /// <summary>
+        /// Recarga la configuración y los combos de la interfaz si el formulario está abierto.
+        /// </summary>
+        public void RecargarConfiguracion()
+        {
+            CargarConfiguracion();
+        }
+
         private void CargarConfiguracion()
         {
             var db = _context.Open();
