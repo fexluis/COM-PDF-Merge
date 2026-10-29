@@ -83,3 +83,58 @@ Este directorio contiene los planes de ejecución para características, refacto
 6. **Prohibiciones**: push/merge, C# 12, tocar L0 sin integrator, saltar tests.
 7. **Entregables esperados**: Plan con ledger completo + commits locales + directorio `_evidence/`.
 ```
+
+---
+
+## 5. Plantilla Oficial de Cierre (Fase C)
+
+La Fase C la ejecuta Cline y **no acepta el ledger del orquestador tal cual**: re-verifica en disco, valida invariantes y solo entonces sella el plan como `closed`.
+
+### 5.1 Runbook (C0 → C6)
+
+```powershell
+git status --porcelain                                                   # C0: debe estar VACIO
+Get-Content .agents\plans\<plan>.md | Select-String 'status:'            # C0: todos los T<n> en done
+powershell -ExecutionPolicy Bypass -File scripts\verify.ps1 -Mode Full   # C1: exit 0 y TOTAL >= baseline
+git log --oneline <base>..HEAD                                           # C2: un commit por tarea
+git log --oneline origin/refactor/<slug>..HEAD                           # C4: los commits locales NO se publicaron
+```
+
+Exit codes de `scripts\verify.ps1`: `0` OK · `1` build falló · `2` tests fallaron / infraestructura · `3` regresión vs baseline, `SUITE_SHRUNK` o `NO_BASELINE` · `4` tooling o workspace inválido.
+
+Invariantes de arquitectura (esperado: 0 resultados):
+
+```powershell
+Select-String -Path ConversorPDF.XLL\Academic\Application\**\*.cs -Pattern 'Excel\.|Microsoft\.Office|DataGridView'
+Select-String -Path ConversorPDF.XLL\Academic\**\*.cs -Pattern 'new \[\]|DateTime\.Now|\.Result\b|\.Wait\(\)'
+```
+
+### 5.2 Tabla de decisión
+
+| verify Full | Leases | Arquitectura | Acción |
+|---|---|---|---|
+| exit 0 y `TOTAL >= baseline` | OK | OK | **Sellar** `closed` |
+| exit 0 | violación de lease | cualquiera | plan `T-fix` |
+| exit 0 | OK | hallazgo de arquitectura | plan `T-fix` |
+| exit 3 (`SUITE_SHRUNK` / regresión) | cualquiera | cualquiera | plan `T-fix` |
+| exit 1, 2 o 4 | — | — | `BLOCKED`: reportar al humano |
+
+### 5.3 Bloque de cierre a añadir al plan
+
+```markdown
+## Cierre (Fase C) — YYYY-MM-DD
+- **verify Full**: exit 0 · TOTAL <medido> / PASSED <n> / FAILED 0 (baseline <N>)
+- **HEAD**: <sha> · **Rama**: refactor/<slug>
+- **Evidencia**: _evidence/<timestamp>/summary.md
+- **Leases**: 0 archivos fuera de files_lock en <n> commits
+- **Arquitectura**: greps de 5.1 sin resultados
+- **Publicación**: sin push (origin/<slug> sin cambios)
+- **Docs**: docs/articles/changes/YYYY-MM-DD-<slug>.md + walkthrough.md
+- **Desviaciones**: <ninguna | Ruling: ...>
+```
+
+El único cambio en la cabecera es `**Estado**: closed`. Ciclo de vida: `draft` → `approved` → `executing` (Fase B) → `closed` (Fase C).
+
+### 5.4 Regla de oro (si hay correcciones)
+
+Si la re-verificación encuentra hallazgos, **no se reabre el plan original** (dos escritores sobre el ledger). Se crea `.agents/plans/<YYYY-MM-DD>-<slug>-fix-plan.md` con tareas `T-fix` que referencian el original. Precedente: `2026-10-27-usuarios-duplicados-subunidad-plan.md` §12 y su plan `-fix`.
