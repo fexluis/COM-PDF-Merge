@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Correccion posterior: provision de usuario al conmutar de vault | ESAP - ConversorPDF </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Correccion posterior: provision de usuario al conmutar de vault | ESAP - ConversorPDF ">
+      
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="../../toc.html">
+      <meta name="docfx:tocrel" content="../toc.html">
+      
+      <meta name="docfx:rel" content="../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/fexluis/COM-PDF-Merge/blob/refactor/academic-modularization/docs/articles/changes/2026-10-27-usuarios-duplicados-subunidad-fix.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="correccion-posterior-provision-de-usuario-al-conmutar-de-vault">Correccion posterior: provision de usuario al conmutar de vault</h1>
+
+<p><strong>Fecha</strong>: 2026-10-27 · <strong>Origen</strong>: auditoria independiente del plan <code>2026-10-27-usuarios-duplicados-subunidad-plan.md</code>
+<strong>Ruling vigente</strong>: <code>R-20261027-T6-02</code> (supersede a <code>R-20261027-T6-01</code>)</p>
+<h2 id="proposito">Proposito</h2>
+<p>La verificacion independiente detecto que el cambio de subunidad <strong>seguia perdiendose al conmutar de vault</strong>:
+<code>SyncContext.ResolveSubunidadWithDialog</code> cambiaba de <code>.db.enc</code> al arrancar sin provisionar la fila del usuario en el
+vault destino. Si el vault destino ya existia, su fila semilla conservaba la subunidad anterior y el arranque volvia
+al vault de origen (sintoma: &quot;guardo la subunidad, cierro Excel y al abrir no persiste&quot;).</p>
+<h2 id="cambios">Cambios</h2>
+<ol>
+<li><strong><code>ConversorPDF.XLL/Core/Sync/UsuarioVaultProvisioner.cs</code></strong> (nuevo)
+<ul>
+<li>Elimina duplicados legacy de la misma cuenta (sobrevive la identidad determinista <code>usr_&lt;nombreusuario&gt;</code>).</li>
+<li>Upsert idempotente con la subunidad resuelta; no pisa el nombre si llega vacio.</li>
+</ul>
+</li>
+<li><strong><code>ConversorPDF.XLL/Core/Sync/SyncContext.cs</code></strong>
+<ul>
+<li>Provisiona la fila del usuario en el vault destino tanto al registrarse como al <strong>conmutar</strong> (<code>vaultChanged</code>).</li>
+<li>Antes solo insertaba en el camino de registro y con <code>id</code> aleatorio (<code>INSERT OR IGNORE</code> sin <code>id</code>).</li>
+</ul>
+</li>
+<li><strong><code>AcademicRepository.UpdateUsuario</code></strong>
+<ul>
+<li>Sella <code>updated_at = datetime('now')</code>; el criterio &quot;mas reciente&quot; del dedupe era inerte porque nunca cambiaba.</li>
+</ul>
+</li>
+<li><strong><code>AcademicRepository.GetUsuarios</code></strong> y <strong><code>SyncInitializer.DeduplicateUsuarios</code></strong>
+<ul>
+<li>Priorizan <code>substr(id, 1, 4) = 'usr_'</code> para que un duplicado legacy con <code>updated_at</code> mas nuevo no resucite un id GUID.</li>
+</ul>
+</li>
+</ol>
+<h2 id="tests">Tests</h2>
+<table>
+<thead>
+<tr>
+<th>Archivo</th>
+<th>Casos</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ConversorPDF.Tests/Integration/Usuarios/UsuarioVaultProvisionerTests.cs</code></td>
+<td>semilla con subunidad vieja, fila con id legacy, alta nueva con id determinista, idempotencia</td>
+</tr>
+<tr>
+<td><code>ConversorPDF.Tests/Integration/Usuarios/UsuariosRegresionTests.cs</code></td>
+<td><code>updated_at</code> se actualiza al guardar; <code>GetUsuarios</code> prefiere el id determinista</td>
+</tr>
+</tbody>
+</table>
+<p>Resultado: <code>verify.ps1 -Mode Fast -Filter &quot;FullyQualifiedName~Usuarios&quot;</code> -&gt; <strong>13/13 PASS</strong>; <code>Full</code> sin regresiones.</p>
+<h2 id="cobertura-declarada">Cobertura declarada</h2>
+<p>El <em>provisioner</em> esta cubierto por tests. La invocacion desde <code>SyncContext</code> (metodo modal que abre
+<code>FormRegistroSubunidad</code>) se valida por revision de codigo, no por test E2E automatizado.</p>
+<h2 id="nota-sobre-el-documento-anterior">Nota sobre el documento anterior</h2>
+<p><code>docs/articles/changes/2026-10-27-usuarios-duplicados-subunidad.md</code> afirmaba resolver los dos defectos. Con esta
+correccion, el segundo (persistencia del cambio de subunidad a traves de la conmutacion de vault) queda cubierto.</p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/fexluis/COM-PDF-Merge/blob/refactor/academic-modularization/docs/articles/changes/2026-10-27-usuarios-duplicados-subunidad-fix.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          ESAP - ConversorPDF Doc
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

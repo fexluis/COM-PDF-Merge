@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Movimiento de Usuarios entre Vaults al Cambiar de Subunidad (MUV) | ESAP - ConversorPDF </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Movimiento de Usuarios entre Vaults al Cambiar de Subunidad (MUV) | ESAP - ConversorPDF ">
+      
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="../../toc.html">
+      <meta name="docfx:tocrel" content="../toc.html">
+      
+      <meta name="docfx:rel" content="../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/fexluis/COM-PDF-Merge/blob/refactor/academic-modularization/docs/articles/changes/2026-10-29-mover-usuario-entre-vaults.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="movimiento-de-usuarios-entre-vaults-al-cambiar-de-subunidad-muv">Movimiento de Usuarios entre Vaults al Cambiar de Subunidad (MUV)</h1>
+
+<h2 id="purpose">Purpose</h2>
+<p>Este cambio implementa el movimiento físico y atómico de usuarios entre vaults territoriales (<code>AcademicData_&lt;SUBUNIDAD&gt;.db.enc</code>) cuando se modifica su subunidad en Gestión de Usuarios (<code>FormUsuarios</code>), saldando la deuda técnica pendiente y garantizando:</p>
+<ol>
+<li><strong>Existencia física en el vault destino</strong>: El usuario editado (sea el usuario actual o un tercero) queda inmediatamente registrado en <code>AcademicData_&lt;DESTINO&gt;.db.enc</code> preservando su perfil, estado activo y firma digital.</li>
+<li><strong>Preservación CRDT sin tombstones destructivos (R-MUV-01)</strong>: El movimiento se ejecuta con <code>UPDATE</code> en el origen y <code>UPSERT</code> en el destino, prohibiendo terminantemente sentencias <code>DELETE FROM usuarios</code> que generarían tombstones propagables y borrarían la fila en réplicas de OneDrive.</li>
+<li><strong>Coherencia de configuración del dispositivo (R-MUV-02)</strong>: La tabla <code>config.subunidad</code> (id=1) representa la configuración física del dispositivo y <strong>solo</strong> se actualiza cuando el usuario modificado coincide con el usuario de Windows actual (<code>Environment.UserName</code>).</li>
+<li><strong>Recarga de interfaz en vivo (D8)</strong>: Si <code>FormConfig</code> se encuentra abierto simultáneamente, su combo de subunidad se refresca de inmediato mediante <code>RecargarConfiguracion()</code>.</li>
+</ol>
+<h2 id="changes">Changes</h2>
+<ol>
+<li><p><strong><code>ConversorPDF.XLL/Academic/Application/Interfaces/IUsuarioVaultMover.cs</code></strong>:</p>
+<ul>
+<li>Puerto de infraestructura desacoplado para ejecutar el movimiento físico hacia vaults destino.</li>
+</ul>
+</li>
+<li><p><strong><code>ConversorPDF.XLL/Academic/Application/Interfaces/IMoverUsuarioSubunidadService.cs</code></strong>:</p>
+<ul>
+<li>Contrato enriquecido: <code>Result&lt;MovimientoUsuarioResultado&gt; Mover(Usuario usuario, string subunidadDestino, string usuarioActual)</code>.</li>
+</ul>
+</li>
+<li><p><strong><code>ConversorPDF.XLL/Academic/Application/DTOs/</code></strong>:</p>
+<ul>
+<li><code>MovimientoVaultResultado</code>: Detalle técnico de la operación de persistencia física en el vault destino (<code>SubunidadDestino</code>, <code>RutaVaultDestino</code>, <code>Insertado</code>, <code>Actualizado</code>).</li>
+<li><code>MovimientoUsuarioResultado</code>: Resultado de negocio para la capa UI (<code>UsuarioId</code>, <code>SubunidadDestino</code>, <code>ConfigActualizada</code>, <code>RequiereReinicio</code>).</li>
+</ul>
+</li>
+<li><p><strong><code>ConversorPDF.XLL/Academic/Application/Services/MoverUsuarioSubunidadService.cs</code></strong>:</p>
+<ul>
+<li>Orquestador de la lógica de aplicación sin dependencias de infraestructura ni UI. Aplica guardas de dominio, delega en <code>IUsuarioVaultMover</code> y encapsula la regla de actualización de <code>IConfigRepository</code> exclusivamente para el usuario actual.</li>
+</ul>
+</li>
+<li><p><strong><code>ConversorPDF.XLL/Academic/Infrastructure/Persistence/UsuarioVaultMover.cs</code></strong>:</p>
+<ul>
+<li>Implementación de <code>IUsuarioVaultMover</code>.</li>
+<li><code>UpsertEnVault</code>: Sentencia <code>INSERT ... ON CONFLICT(id) DO UPDATE</code> con normalización determinista <code>usr_&lt;nombreusuario&gt;</code>, preservando perfil, activo, firma y actualizando <code>updated_at</code>.</li>
+<li>Persistencia segura: Extrae los bytes desencriptados del archivo temporal mediante <code>EncryptedSQLiteContext.LeerBytesConRetrySync</code>, cifra y persiste con <code>SqliteHelper.UpdateVaultDirectly</code> y marca los cambios persistidos.</li>
+<li>Constructor <code>internal</code> con delegados inyectables para soportar pruebas automatizadas sin tocar vaults en producción.</li>
+</ul>
+</li>
+<li><p><strong><code>ConversorPDF.XLL/Academic/UI/Forms/FormConfig.cs</code></strong>:</p>
+<ul>
+<li>Añade el método público <code>RecargarConfiguracion()</code> para recargar los datos y combos en caliente si el formulario está instanciado.</li>
+</ul>
+</li>
+<li><p><strong><code>ConversorPDF.XLL/Academic/UI/Forms/FormUsuarios.cs</code></strong>:</p>
+<ul>
+<li>En <code>btnGuardar</code>, ante un cambio de subunidad se compone e invoca <code>MoverUsuarioSubunidadService</code>.</li>
+<li>Persistencia en orden estricto: primero se persiste el vault destino, luego se persiste el vault de origen mediante <code>_session.Persist()</code>.</li>
+<li>Si se actualizó la configuración del usuario actual, busca instancias abiertas de <code>FormConfig</code> y solicita su recarga.</li>
+</ul>
+</li>
+<li><p><strong><code>ConversorPDF.XLL/ConversorPDF.XLL.csproj</code></strong>:</p>
+<ul>
+<li>Registro de los nuevos contratos, DTOs e infraestructura en el proyecto.</li>
+</ul>
+</li>
+</ol>
+<h2 id="how-to-use">How to use</h2>
+<ol>
+<li>En Excel, pestaña <strong>Conversor PDF</strong>, abrir <strong>Gestión de Usuarios</strong>.</li>
+<li>Seleccionar cualquier usuario (propio o de un tercero) y cambiar el valor de <strong>Subunidad</strong>.</li>
+<li>Hacer clic en <strong>Guardar</strong>:
+<ul>
+<li>Si se editó a un <strong>tercero</strong>: el usuario se inserta/actualiza en el vault destino de esa subunidad (<code>AcademicData_&lt;DESTINO&gt;.db.enc</code>) y la grilla de origen se persiste. La configuración del dispositivo no cambia.</li>
+<li>Si se editó al <strong>usuario actual</strong>: además del movimiento de vault, se actualiza <code>config.subunidad</code>, <code>FormConfig</code> (si está abierto) se actualiza de inmediato y el sistema solicita el reinicio de Excel para conmutar al nuevo vault maestro.</li>
+</ul>
+</li>
+</ol>
+<h2 id="test-coverage">Test coverage</h2>
+<ul>
+<li><strong>Unit (<code>ConversorPDF.Tests/Unit/Usuarios/MoverUsuarioSubunidadServiceTests.cs</code>)</strong>:
+<ul>
+<li><code>Mover_WhenUsuarioNoEsElActual_ShouldNotTouchConfig</code></li>
+<li><code>Mover_WhenUsuarioEsElActual_ShouldUpdateConfigAndRequireRestart</code></li>
+<li><code>Mover_WhenVaultMoverFalla_ShouldPropagateFailureAndNotTouchConfig</code></li>
+<li><code>Mover_WhenSubunidadDestinoVacia_ShouldFail</code> (Theory)</li>
+<li><code>Mover_WhenUsuarioIdVacio_ShouldFail</code></li>
+</ul>
+</li>
+<li><strong>Integration SQL (<code>ConversorPDF.Tests/Integration/Usuarios/UsuarioVaultMoverTests.cs</code>)</strong>:
+<ul>
+<li><code>Mover_WhenUsuarioExisteEnOrigen_ShouldPreservePerfilActivoYFirma</code></li>
+<li><code>Mover_WhenSeInvocaDosVeces_ShouldSerIdempotente</code></li>
+<li><code>Mover_WhenUsuarioNoExisteEnDestino_ShouldInsertarConIdDeterminista</code></li>
+</ul>
+</li>
+<li><strong>E2E Vaults Cifrados (<code>ConversorPDF.Tests/Integration/Usuarios/MoverUsuarioEntreVaultsE2ETests.cs</code>)</strong>:
+<ul>
+<li><code>Mover_WhenCambiaSubunidad_ShouldPersistirFilaEnVaultDestinoYReabrirla</code></li>
+<li><code>Mover_WhenRutaDestinoIgualAOrigen_ShouldSerNoOpSinPerdida</code></li>
+</ul>
+</li>
+<li><strong>Suite Completa (<code>scripts/verify.ps1 -Mode Full</code>)</strong>:
+<ul>
+<li><strong>TOTAL: 964 pruebas aprobadas</strong>, 0 errores, 0 regresiones (Baseline: 952 pruebas).</li>
+</ul>
+</li>
+</ul>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/fexluis/COM-PDF-Merge/blob/refactor/academic-modularization/docs/articles/changes/2026-10-29-mover-usuario-entre-vaults.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          ESAP - ConversorPDF Doc
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

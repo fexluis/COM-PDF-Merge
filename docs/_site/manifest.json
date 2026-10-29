@@ -2283,6 +2283,76 @@
     },
     {
       "type": "Conceptual",
+      "source_relative_path": "articles/changes/2026-10-25-ag-catalogo-programas-posgrado.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/changes/2026-10-25-ag-catalogo-programas-posgrado.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/changes/2026-10-25-ag-resumen-programas.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/changes/2026-10-25-ag-resumen-programas.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/changes/2026-10-25-ag-terceros-territoriales.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/changes/2026-10-25-ag-terceros-territoriales.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/changes/2026-10-25-tercero-asignaturas-catalogo-programas.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/changes/2026-10-25-tercero-asignaturas-catalogo-programas.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/changes/2026-10-27-usuarios-duplicados-subunidad-fix.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/changes/2026-10-27-usuarios-duplicados-subunidad-fix.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/changes/2026-10-27-usuarios-duplicados-subunidad.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/changes/2026-10-27-usuarios-duplicados-subunidad.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/changes/2026-10-29-mover-usuario-entre-vaults.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/changes/2026-10-29-mover-usuario-entre-vaults.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
       "source_relative_path": "articles/changes/2026-ag-horarios-academicos.md",
       "output": {
         ".html": {

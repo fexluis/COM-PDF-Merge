@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Normalizaci&#243;n de Identidades de Usuarios, Persistencia del Vault y Resoluci&#243;n Determinista de Subunidad | ESAP - ConversorPDF </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Normalizaci&#243;n de Identidades de Usuarios, Persistencia del Vault y Resoluci&#243;n Determinista de Subunidad | ESAP - ConversorPDF ">
+      
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="../../toc.html">
+      <meta name="docfx:tocrel" content="../toc.html">
+      
+      <meta name="docfx:rel" content="../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/fexluis/COM-PDF-Merge/blob/refactor/academic-modularization/docs/articles/changes/2026-10-27-usuarios-duplicados-subunidad.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="normalización-de-identidades-de-usuarios-persistencia-del-vault-y-resolución-determinista-de-subunidad">Normalización de Identidades de Usuarios, Persistencia del Vault y Resolución Determinista de Subunidad</h1>
+
+<h2 id="purpose">Purpose</h2>
+<p>Este cambio resuelve dos defectos críticos reportados en la gestión de usuarios y cambio de subunidad territorial:</p>
+<ol>
+<li><strong>Filas duplicadas en Gestión de Usuarios</strong>: En el grid de usuarios aparecían filas duplicadas para un mismo <code>nombreusuario</code> debido a inserciones históricas con identificadores GUID pseudoaleatorios (<code>randomblob(16)</code>), duplicación de semillas y fusiones de réplicas en OneDrive vía CR-SQLite.</li>
+<li><strong>Pérdida del cambio de subunidad al reiniciar Excel</strong>: Cuando un usuario cambiaba su subunidad territorial en <code>FormUsuarios</code> y guardaba, el cambio no persistía tras reiniciar Excel porque el formulario ejecutaba sentencias SQL directas sobre la base de datos temporal sin vaciar el WAL ni re-encriptar/persistir el vault <code>.db.enc</code> en disco. Adicionalmente, el fallback en <code>config</code> ejecutaba sentencias <code>UPDATE config</code> sin filtrar por <code>WHERE id = 1</code>, arriesgando mutaciones masivas.</li>
+</ol>
+<h2 id="changes">Changes</h2>
+<ol>
+<li><p><strong><code>ConversorPDF.XLL/Academic/Infrastructure/Context/AcademicDbSession.cs</code></strong>:</p>
+<ul>
+<li>Incorpora el método <code>Persist()</code> que ejecuta un checkpoint de truncado de WAL (<code>PRAGMA wal_checkpoint(TRUNCATE);</code>), extrae los bytes desencriptados de la base temporal con reintentos y solicita a <code>EncryptedSQLiteContext</code> la re-encriptación y persistencia atómica en disco (<code>ReEncryptAndPersist</code>).</li>
+</ul>
+</li>
+<li><p><strong><code>ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/ConfigRepository.cs</code></strong> e <strong><code>IConfigRepository.cs</code></strong>:</p>
+<ul>
+<li>Añade el método <code>UpdateSubunidad(string subunidad)</code> que actualiza exclusivamente el registro canónico de configuración (<code>UPDATE config SET subunidad = @Subunidad WHERE id = 1;</code>).</li>
+<li>Añade sobrecarga de constructor <code>ConfigRepository(IDbConnection db)</code> para soportar invocación directa con conexiones activas.</li>
+</ul>
+</li>
+<li><p><strong><code>ConversorPDF.XLL/Academic/UI/Forms/FormUsuarios.cs</code></strong>:</p>
+<ul>
+<li>Inyección de dependencias de <code>AcademicDbSession</code> en el constructor.</li>
+<li>Eliminación de todas las sentencias SQL crudas en el code-behind (<code>db.Execute(&quot;UPDATE config...&quot;)</code>).</li>
+<li>Uso de <code>IConfigRepository</code> para mutar la subunidad del usuario actual.</li>
+<li>Invocación de <code>_session.Persist()</code> en los eventos de guardado y eliminación para asegurar que todos los cambios se graben en el vault encriptado <code>.db.enc</code>.</li>
+<li>Normalización de identificadores a formato determinista <code>usr_&lt;nombreusuario&gt;</code>.</li>
+</ul>
+</li>
+<li><p><strong><code>ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AcademicRepository.cs</code></strong>:</p>
+<ul>
+<li><code>GetUsuarios()</code>: Deduplica las filas leídas mediante <code>ROW_NUMBER() OVER (PARTITION BY LOWER(TRIM(nombreusuario)) ORDER BY ...)</code> filtrando <code>rn = 1</code>, conservando siempre la fila con datos más ricos (firma &gt; perfil != 'Academica' &gt; updated_at DESC &gt; id ASC).</li>
+<li><code>InsertUsuario()</code>: Asigna identificadores deterministas <code>usr_&lt;lower(trim(nombreusuario))&gt;</code>.</li>
+</ul>
+</li>
+<li><p><strong><code>ConversorPDF.XLL/Academic/Infrastructure/Persistence/Sql/usuarios.sql</code></strong>:</p>
+<ul>
+<li>Semillas actualizadas con identificadores deterministas (<code>usr_usuario</code>, <code>usr_luis.bechara</code>, <code>usr_henry.castillo</code>, etc.).</li>
+</ul>
+</li>
+<li><p><strong><code>ConversorPDF.XLL/Core/Sync/SubunidadResolver.cs</code></strong>:</p>
+<ul>
+<li>Ordenamiento determinista <code>ORDER BY activo DESC, updated_at DESC, id ASC LIMIT 1</code>.</li>
+<li>Logging estructurado con identificadores y subunidades candidatas cuando existen múltiples registros.</li>
+<li>Coherencia en el fallback de la tabla <code>config</code>.</li>
+</ul>
+</li>
+<li><p><strong><code>ConversorPDF.XLL/Academic/Infrastructure/Persistence/Migrations/MigrationV79_NormalizeUsuariosIds.cs</code></strong>:</p>
+<ul>
+<li>Migración V79 idempotente (aditiva).</li>
+<li>Crea copia de seguridad <code>.bak</code> antes de mutar.</li>
+<li>Deduplica filas conservando el registro más rico.</li>
+<li>Normaliza identificadores legacy a <code>usr_&lt;nombreusuario&gt;</code> usando <code>DELETE</code> + <code>INSERT</code> para preservar tombstones y relojes CR-SQLite.</li>
+<li>Ejecuta <code>PRAGMA integrity_check</code>.</li>
+</ul>
+</li>
+<li><p><strong><code>ConversorPDF.XLL/Core/Sync/SyncInitializer.cs</code></strong>:</p>
+<ul>
+<li>Incorpora el método idempotente <code>DeduplicateUsuarios(IDbConnection)</code>.</li>
+<li>Se ejecuta en <code>EnableAllCrdts</code> inmediatamente después de la comprobación de esquemas y antes de regenerar o autosanar triggers CRDT, previniendo que pulls remotos reintroduzcan duplicados.</li>
+</ul>
+</li>
+<li><p><strong><code>ConversorPDF.XLL/Academic/Application/Services/MoverUsuarioSubunidadService.cs</code></strong>:</p>
+<ul>
+<li>Formalizado con Ruling R-20261027-T6-01: la conmutación entre vaults es gestionada de forma natural por <code>SyncContext.ResolveSubunidadWithDialog</code> en el ciclo de arranque a partir del vault persistido.</li>
+</ul>
+</li>
+<li><p><strong><code>Ribbon/RibbonController.cs</code></strong>:</p>
+<ul>
+<li>Actualizado el call-site de instanciación de <code>FormUsuarios</code> inyectando <code>session</code>.</li>
+</ul>
+</li>
+</ol>
+<h2 id="how-to-use">How to use</h2>
+<ol>
+<li>En la pestaña de ribbon, abrir <strong>Gestión de Usuarios</strong>.</li>
+<li>La grilla mostrará una única fila por usuario sin registros repetidos.</li>
+<li>Al seleccionar un usuario y cambiar su subunidad territorial en el combo:
+<ul>
+<li>Al pulsar <strong>Guardar</strong>, el sistema actualiza la fila, la configuración global y persiste de inmediato el vault en disco.</li>
+<li>El mensaje confirmará la actualización y advertirá de reiniciar Excel si se modificó el usuario actual.</li>
+</ul>
+</li>
+<li>Al cerrar y reabrir Excel:
+<ul>
+<li><code>SyncContext</code> detecta la nueva subunidad del usuario y conmuta limpiamente al vault de la subunidad seleccionada.</li>
+</ul>
+</li>
+</ol>
+<h2 id="test-coverage">Test coverage</h2>
+<ul>
+<li><code>ConversorPDF.Tests.Integration.Usuarios.UsuariosPersistenciaTests</code>: Verificación E2E de ciclo de vida del vault, persistencia de <code>config.subunidad</code> y reapertura del contexto encriptado en disco.</li>
+<li><code>ConversorPDF.Tests.Integration.Usuarios.UsuariosDuplicadosTests</code>:
+<ul>
+<li><code>GetUsuarios_WhenDuplicateUsersExist_ShouldReturnSingleUserWithRichestData</code>: Deduplicación en lectura conservando firma y rol.</li>
+<li><code>InsertUsuario_WhenDeterministicId_ShouldUseUsrPrefixAndLowerUsername</code>: Generación de identidad determinista.</li>
+<li><code>MigrationV79_WhenExecuted_ShouldDeduplicateAndNormalizeIds</code>: Migración V79 sobre base de datos migrada.</li>
+<li><code>DeduplicateUsuarios_WhenPullReintroducesDuplicate_ShouldRetainRichestRow</code>: Deduplicación post-merge de sync.</li>
+</ul>
+</li>
+<li><code>ConversorPDF.Tests.Unit.Usuarios.SubunidadResolverTests</code>: Resolución determinista con registros múltiples y nulos en <code>updated_at</code>.</li>
+<li><strong>Suite completa</strong>: 946 pruebas superadas (0 fallos).</li>
+</ul>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/fexluis/COM-PDF-Merge/blob/refactor/academic-modularization/docs/articles/changes/2026-10-27-usuarios-duplicados-subunidad.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          ESAP - ConversorPDF Doc
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

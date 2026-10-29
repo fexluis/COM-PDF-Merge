@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>AgFormTerceros multi-territorial y cat&#225;logo can&#243;nico de territoriales — Fase 1471 | ESAP - ConversorPDF </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="AgFormTerceros multi-territorial y cat&#225;logo can&#243;nico de territoriales — Fase 1471 | ESAP - ConversorPDF ">
+      
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="../../toc.html">
+      <meta name="docfx:tocrel" content="../toc.html">
+      
+      <meta name="docfx:rel" content="../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/fexluis/COM-PDF-Merge/blob/refactor/academic-modularization/docs/articles/changes/2026-10-25-ag-terceros-territoriales.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="agformterceros-multi-territorial-y-catálogo-canónico-de-territoriales--fase-1471">AgFormTerceros multi-territorial y catálogo canónico de territoriales — Fase 1471</h1>
+
+<h2 id="purpose">Purpose</h2>
+<p>En el generador de horarios por Algoritmo Genético, <code>AgFormTerceros</code> aplicaba el filtro de subunidad activa directamente en la consulta de carga a la tabla <code>terceros</code> (<code>subunidad = @Sub OR subunidad = '' OR subunidad IS NULL</code>), restringiendo artificialmente la lista visible (por ejemplo, en la territorial VALLE solo se mostraban 93 de los 199 terceros activos). Además, el combo de territoriales se alimentaba de valores crudos de <code>terceros.departamento</code> sin contemplar asignaciones compuestas (<code>BOLIVAR,VALLE</code>), sin consultar la tabla institucional <code>territoriales</code> y sin permitir filtrar por <code>subunidad</code>.</p>
+<p>Esta fase amplía <code>AgFormTerceros</code> para cargar el padrón completo de terceros (multi-territorial), introduce el servicio <code>AgTerritorialCatalog</code>, añade la columna «Territorial» a la grilla y discrimina las habilitaciones locales de las habilitaciones en otras subunidades, manteniendo intacto el pool de generación del AG.</p>
+<h2 id="changes">Changes</h2>
+<ol>
+<li><strong><code>Academic/Application/Services/AgTerritorialCatalog.cs</code></strong> (nuevo):
+<ul>
+<li>Separa cadenas compuestas delimitadas por comas.</li>
+<li>Construye la lista canónica y unificada para el combo territorial combinando el catálogo oficial (<code>territoriales.subunidad</code>) y los valores presentes en terceros (<code>departamento</code> y <code>subunidad</code>).</li>
+</ul>
+</li>
+<li><strong><code>Academic/Application/DTOs/AgTerceroSeleccionDto.cs</code></strong>:
+<ul>
+<li>Incorpora <code>HabilitacionesLocales</code> y <code>HabilitacionesOtras</code>.</li>
+<li>Adapta <code>TotalHabilitaciones</code> y <code>TieneAsignaturasHabilitadas</code> manteniendo compatibilidad binaria y semántica (únicamente se consideran habilitadas aquellas asignaturas de la subunidad activa).</li>
+</ul>
+</li>
+<li><strong><code>Academic/Application/Services/AgTerceroFiltro.cs</code></strong>:
+<ul>
+<li>Filtrado territorial contra <code>Departamento</code> y <code>Subunidad</code> reconociendo valores compuestos.</li>
+<li>Soporte para la constante <code>AgTerritorialCatalog.Todas</code>.</li>
+<li>Búsqueda textual incluyendo <code>Subunidad</code> y <code>Departamento</code>.</li>
+<li><code>soloHabilitadas</code> evalúa <code>TieneAsignaturasHabilitadas</code> (habilitación local).</li>
+</ul>
+</li>
+<li><strong><code>Academic/UI/Forms/AgFormTerceros.cs</code></strong>:
+<ul>
+<li><code>OnLoad</code>: adapta la etiqueta del checkbox para indicar explícitamente la subunidad activa (<code>Solo asignaturas habilitadas en {subActiva}</code>).</li>
+<li><code>CargarDatosAsync</code>: carga todos los terceros activos (excluyendo VACANTE y cédula 1111111111); calcula habilitaciones locales y de otras territoriales mediante dos consultas agrupadas indexadas; puebla el combo mediante <code>AgTerritorialCatalog.Construir</code>.</li>
+<li><code>ActualizarConteo</code>: muestra el desglose de <code>habilitados locales</code> y <code>solo en otras</code>.</li>
+<li>Traza en log (<code>LoggerHelper.Warning</code>) al presionar Aceptar si existen docentes seleccionados sin habilitación en la territorial activa.</li>
+</ul>
+</li>
+<li><strong><code>Academic/UI/Forms/AgFormTerceros.Designer.cs</code></strong>:
+<ul>
+<li>Agrega columna <code>colTerritorial</code> enlazada a <code>Subunidad</code> (120 px, solo lectura).</li>
+</ul>
+</li>
+<li><strong><code>ConversorPDF.XLL.csproj</code></strong>:
+<ul>
+<li>Registro de <code>AgTerritorialCatalog.cs</code>.</li>
+</ul>
+</li>
+</ol>
+<h2 id="how-to-use">How to use</h2>
+<ol>
+<li>En el Generador de Horarios AG, pulsar el botón «Terceros».</li>
+<li>La grilla mostrará los 199 terceros activos.</li>
+<li>El combo «Territorial» contiene las 17 subunidades oficiales más la opción <code>TODAS LAS TERRITORIALES</code>.</li>
+<li>Al seleccionar una territorial (p. ej. <code>VALLE</code> o <code>BOLIVAR</code>), docentes con asignación compuesta como <code>BOLIVAR,VALLE</code> aparecerán en ambas opciones.</li>
+<li>Activar «Solo asignaturas habilitadas en VALLE» para acotar a los docentes con habilitaciones activas en la subunidad local.</li>
+<li>La columna «Territorial» muestra la subunidad correspondiente de cada tercero.</li>
+</ol>
+<div class="NOTE">
+<h5>Note</h5>
+<p>El pool de generación del algoritmo genético continúa estrictamente acotado a la subunidad activa en <code>AgFormGeneradorHorarios</code> (L912-936). Seleccionar terceros de otra territorial que no tengan habilitación local no los incorporará al pool de cruce del AG y se reportará en el log como advertencia informativa.</p>
+</div>
+<h2 id="test-coverage">Test coverage</h2>
+<ul>
+<li><code>ConversorPDF.Tests.Academic.Application.Services.AgTerritorialCatalogTests</code> (5 casos: separación, vacíos, unión sin duplicados, normalización).</li>
+<li><code>ConversorPDF.Tests.Academic.Application.Services.AgTerceroFiltroTests</code> (4 nuevos casos: subunidades compuestas, Todas, coincidencia en subunidad, exclusión de solo otras).</li>
+<li><code>ConversorPDF.Tests.Academic.Application.DTOs.AgTerceroSeleccionDtoTests</code> (3 casos: propiedades locales, otras y total).</li>
+</ul>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/fexluis/COM-PDF-Merge/blob/refactor/academic-modularization/docs/articles/changes/2026-10-25-ag-terceros-territoriales.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          ESAP - ConversorPDF Doc
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

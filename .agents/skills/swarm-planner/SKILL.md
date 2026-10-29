@@ -117,7 +117,7 @@ Contenido mínimo del handoff:
 
 ### 3.8 Self-Review: checklist de 13 puntos
 
-Antes de ceder el turno, evalúa el plan contra estos 12 puntos y **corrige lo que falle**:
+Antes de ceder el turno, evalúa el plan contra estos 13 puntos y **corrige lo que falle**:
 
 | # | Punto |
 |---|---|
@@ -133,6 +133,7 @@ Antes de ceder el turno, evalúa el plan contra estos 12 puntos y **corrige lo q
 | 10 | El context pack usado tiene ≤ 400 líneas |
 | 11 | Criterio de aceptación global definido |
 | 12 | Riesgos con mitigación |
+| 13 | `numbering:` en el envelope y fila `reserved` añadida a `REGISTRY.md` |
 
 Registra el resultado dentro del plan (tabla idéntica + nota de correcciones aplicadas).
 
@@ -158,6 +159,31 @@ Contexto: [breve]
 ```
 
 Si el veredicto es `BLOCKED` con retroalimentación accionable, revisa el plan **antes** de ceder. Un plan `BLOCKED` no se ejecuta.
+
+### 3.10 Reserva de numeración (Ronda/Wave · Fase/Task)
+
+`.clinerules/workflows/Ronda.md` numera las revisiones como `Ronda {n}` / `Fase {n}`; los planes swarm usan `Wave {n}` / `T{n}`. Es el **mismo objeto** con dos vocabularios, y la numeración es **global y monótona**: vive en [`plans/REGISTRY.md`](../../plans/REGISTRY.md) (contrato en [`plan-contract.md`](references/plan-contract.md) §7).
+
+Procedimiento obligatorio al crear el plan:
+
+1. **Leer contadores** (§2 del registro):
+
+   ```powershell
+   $reg   = Get-Content .agents\plans\REGISTRY.md -Raw
+   $ronda = [int]([regex]::Match($reg, '\|\s*`ronda`\s*\|\s*(\d+)\s*\|').Groups[1].Value)
+   $fase  = [int]([regex]::Match($reg, '\|\s*`fase`\s*\|\s*(\d+)\s*\|').Groups[1].Value)
+   "$ronda / $fase"   # siguiente = $ronda+1 / $fase+1
+   ```
+
+2. **Calcular la reserva**: `W` olas ⇒ `ronda_base = ronda + 1`, rango `[ronda_base, ronda_base + W - 1]`; `N` tareas ⇒ `fase_base = fase + 1`, rango `[fase_base, fase_base + N - 1]`.
+3. **Declarar en el envelope** el bloque `numbering:` y, en cada tarea, `- **fase**: <n>` (§4).
+4. **Añadir la fila `reserved`** en §3 del registro: `R-00x`, fecha, archivo del plan, `Wave 1..W → Ronda a–b`, `T1..TN → Fase c–d`, `verify: pendiente`, `HEAD` actual.
+5. **No tocar §2** (contadores): se actualizan al cerrar, en la Fase C (`swarm-verify`), con el último número **usado**.
+6. **Re-planificación**: conserva los números ya reservados. Solo se amplía el rango si se **añaden** tareas al final; nunca se compacta ni se reordena.
+7. **Plan de fix** (`<fecha>-<slug>-fix-plan.md`): rango **nuevo** + referencia explícita a la fila y a las `Fase {n}` que corrige.
+8. **Olas reales ≠ previstas**: la Fase B puede serializar más olas por colisión de leases; el cierre ajusta el rango al alza y anota la desviación (`LEASE-SERIALIZED`).
+
+Un plan sin bloque `numbering:` ni fila en el registro es **`BLOCKED`** en la Fase C: no hay forma de sellar la numeración.
 
 ## 4. Plan Template
 
