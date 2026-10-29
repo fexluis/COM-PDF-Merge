@@ -155,10 +155,17 @@ T1 (integrator, L0: contratos + esqueletos + csproj)
   - Registrar los 4 archivos nuevos en `<Compile Include>` **sin duplicar** (evitar CS2002) y un tipo por archivo.
 - **validation**: `verify.ps1 -Mode Build` exit 0 y `grep` de los 4 archivos nuevos en el `.csproj` (exactamente 1 vez cada uno).
 - **verification**: `powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Build`
-- **evidence**: (la llena build-verifier)
-- **status**: pending
-- **log**:
+- **evidence**: `_evidence/20261029-104821`
+- **status**: completed
+- **log**: Contratos IUsuarioVaultMover, ampliación de IMoverUsuarioSubunidadService, DTOs MovimientoVaultResultado y MovimientoUsuarioResultado, esqueletos de MoverUsuarioSubunidadService y UsuarioVaultMover creados y registrados en ConversorPDF.XLL.csproj. Compilación en verde sin errores (verify.ps1 -Mode Build exit 0).
 - **files edited/created**:
+  - `ConversorPDF.XLL/Academic/Application/Interfaces/IUsuarioVaultMover.cs`
+  - `ConversorPDF.XLL/Academic/Application/Interfaces/IMoverUsuarioSubunidadService.cs`
+  - `ConversorPDF.XLL/Academic/Application/DTOs/MovimientoVaultResultado.cs`
+  - `ConversorPDF.XLL/Academic/Application/DTOs/MovimientoUsuarioResultado.cs`
+  - `ConversorPDF.XLL/Academic/Application/Services/MoverUsuarioSubunidadService.cs`
+  - `ConversorPDF.XLL/Academic/Infrastructure/Persistence/UsuarioVaultMover.cs`
+  - `ConversorPDF.XLL/ConversorPDF.XLL.csproj`
 
 ### T2: RED — movimiento, orquestación y FormConfig (tdd-red-writer)
 - **id**: T2

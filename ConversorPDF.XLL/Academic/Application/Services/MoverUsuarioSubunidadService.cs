@@ -1,23 +1,25 @@
+using ConversorPDF.XLL.Academic.Application.DTOs;
 using ConversorPDF.XLL.Academic.Application.Interfaces;
+using ConversorPDF.XLL.Academic.Domain.Interfaces;
+using ConversorPDF.XLL.Academic.Domain.Models;
 using CSharpFunctionalExtensions;
 
 namespace ConversorPDF.XLL.Academic.Application.Services
 {
-    /// <summary>
-    /// Servicio de transición de usuario entre subunidades territoriales.
-    /// Ruling R-20261027-T6-01: La transición física de vault se realiza en el ciclo de arranque
-    /// por SyncContext.ResolveSubunidadWithDialog a partir de la subunidad persistida en usuarios y config.
-    /// </summary>
     public class MoverUsuarioSubunidadService : IMoverUsuarioSubunidadService
     {
-        public Result Mover(string usuarioId, string subunidadDestino)
-        {
-            if (string.IsNullOrWhiteSpace(usuarioId) || string.IsNullOrWhiteSpace(subunidadDestino))
-            {
-                return Result.Failure("Identificador de usuario y subunidad destino son requeridos.");
-            }
+        private readonly IUsuarioVaultMover _vaultMover;
+        private readonly IConfigRepository _configRepository;
 
-            return Result.Success();
+        public MoverUsuarioSubunidadService(IUsuarioVaultMover vaultMover, IConfigRepository configRepository)
+        {
+            _vaultMover = vaultMover;
+            _configRepository = configRepository;
+        }
+
+        public Result<MovimientoUsuarioResultado> Mover(Usuario usuario, string subunidadDestino, string usuarioActual)
+        {
+            return Result.Failure<MovimientoUsuarioResultado>("Mover usuario no implementado");
         }
     }
 }

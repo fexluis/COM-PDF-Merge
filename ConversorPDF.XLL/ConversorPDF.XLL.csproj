@@ -351,7 +351,11 @@
     <Compile Include="Academic\Application\Interfaces\IGastosTerrestresService.cs" />
     <Compile Include="Academic\Application\Services\GastosTerrestresService.cs" />
     <Compile Include="Academic\Application\Interfaces\IMoverUsuarioSubunidadService.cs" />
+    <Compile Include="Academic\Application\Interfaces\IUsuarioVaultMover.cs" />
+    <Compile Include="Academic\Application\DTOs\MovimientoVaultResultado.cs" />
+    <Compile Include="Academic\Application\DTOs\MovimientoUsuarioResultado.cs" />
     <Compile Include="Academic\Application\Services\MoverUsuarioSubunidadService.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\UsuarioVaultMover.cs" />
     <Compile Include="Academic\Domain\Interfaces\IGastosTerrestresRepository.cs" />
     <Compile Include="Academic\Domain\Interfaces\IConfigRepository.cs" />
     <Compile Include="Academic\Domain\Interfaces\ITerminalRepository.cs" />
