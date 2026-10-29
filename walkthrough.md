@@ -1,3 +1,22 @@
+# Walkthrough — Movimiento de Usuarios entre Vaults al Cambiar de Subunidad (MUV)
+
+**Fecha:** 2026-10-29  
+**Plan:** `.agents/plans/2026-10-29-mover-usuario-entre-vaults-plan.md`  
+**Estado:** COMPLETED  
+**Verificación Full:** 964 de 964 pruebas superadas (0 fallos, 0 regresiones vs baseline de 952).
+
+## Resumen de la Ejecución
+
+Se completó la implementación y verificación de las 6 tareas del plan MUV:
+1. **T1 (integrator, L0):** Definición de contratos `IUsuarioVaultMover`, ampliación de `IMoverUsuarioSubunidadService`, DTOs `MovimientoVaultResultado` y `MovimientoUsuarioResultado`, esqueletos e inclusión en `ConversorPDF.XLL.csproj`.
+2. **T2 (tdd-red-writer):** Suite de 12 pruebas automatizadas en `ConversorPDF.Tests` (Unit, Integration SQL en `:memory:` y E2E con dos vaults reales cifrados). Estado RED certificado (fallos controlados por esqueletos con Failure).
+3. **T3 (implementer):** Implementación de `UsuarioVaultMover` con `UpsertEnVault` idempotente (`ON CONFLICT(id) DO UPDATE`), persistencia atómica en el vault destino (`AcademicData_<DESTINO>.db.enc`) y preservación estricta de perfil, activo y firma. 5 tests en verde.
+4. **T4 (implementer):** Implementación de `MoverUsuarioSubunidadService` con la política R-MUV-02: `config.subunidad` se actualiza exclusivamente cuando el usuario editado es el usuario actual de Windows. 7 unit tests en verde.
+5. **T5 (implementer):** Cableado en `FormUsuarios.btnGuardar` con persistencia secuencial (primero destino, luego origen) y recarga en caliente de `FormConfig` mediante `RecargarConfiguracion()`.
+6. **T6 (build-verifier + task-reviewer):** Verificación Full de 964 tests aprobados, auditoría de arquitectura (0 `System.Data` en `Application`, 0 `DELETE FROM usuarios`, 0 C# 12) y generación de documentación técnica en `docs/articles/changes/2026-10-29-mover-usuario-entre-vaults.md`.
+
+---
+
 # Walkthrough — Generación de Documentación Técnica y Empaquetado Release 1.6.3.52
 
 ## Resumen de Ejecución

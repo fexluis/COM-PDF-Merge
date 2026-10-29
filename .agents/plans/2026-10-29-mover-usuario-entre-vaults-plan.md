@@ -279,10 +279,12 @@ T1 (integrator, L0: contratos + esqueletos + csproj)
   - Documentar en `docs/articles/changes/2026-10-29-mover-usuario-entre-vaults.md` (Purpose · Changes · How to use · Test coverage) y `walkthrough.md`.
 - **validation**: `verify.ps1 -Mode Full` exit 0 con `TOTAL >= 952`; veredicto `OK` del `task-reviewer`; los 5 AC de §9 documentados como verificados o manuales.
 - **verification**: `powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Full`
-- **evidence**: (la llena build-verifier)
-- **status**: pending
-- **log**:
+- **evidence**: `_evidence/20261029-110127`
+- **status**: completed
+- **log**: Gate final superado con 964 tests aprobados (TOTAL >= 952 baseline, 0 errores, 0 regresiones). Revisión task-reviewer de 2 etapas OK (AC1-AC5 conformes, sin System.Data en Application, sin DELETE en flujo, un tipo por archivo, C# 12 ausente). Documentación técnica generada en docs/articles/changes/2026-10-29-mover-usuario-entre-vaults.md y actualizada en walkthrough.md.
 - **files edited/created**:
+  - `docs/articles/changes/2026-10-29-mover-usuario-entre-vaults.md`
+  - `walkthrough.md`
 
 ---
 
