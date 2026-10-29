@@ -192,10 +192,13 @@ T1 (integrator, L0: contratos + esqueletos + csproj)
   - xUnit + FluentAssertions 6.12; nombres `{Accion}_When_{Condicion}_Should_{Resultado}`; **sin** borrar filas para probar el movimiento (R-MUV-01).
 - **validation**: compilan y fallan **por la razón prevista** (`Failure("no implementado")` o aserción concreta), nunca por error de compilación.
 - **verification**: `powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "FullyQualifiedName~MoverUsuarioSubunidadServiceTests|FullyQualifiedName~UsuarioVaultMoverTests|FullyQualifiedName~MoverUsuarioEntreVaultsE2ETests"`
-- **evidence**: (la llena build-verifier)
-- **status**: pending
-- **log**:
+- **evidence**: `_evidence/20261029-105218`
+- **status**: completed
+- **log**: Fase RED certificada. 12 pruebas ejecutadas (Unit, Integration SQL y E2E), 4 casos pasaron (guards vacíos), 8 fallaron por la razón esperada (esqueletos devuelven Failure de no implementado). Compilación correcta.
 - **files edited/created**:
+  - `ConversorPDF.Tests/Unit/Usuarios/MoverUsuarioSubunidadServiceTests.cs`
+  - `ConversorPDF.Tests/Integration/Usuarios/UsuarioVaultMoverTests.cs`
+  - `ConversorPDF.Tests/Integration/Usuarios/MoverUsuarioEntreVaultsE2ETests.cs`
 
 
 

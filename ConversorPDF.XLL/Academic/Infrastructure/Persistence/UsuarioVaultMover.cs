@@ -36,5 +36,10 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence
         {
             return Result.Failure<MovimientoVaultResultado>("Mover entre vaults no implementado");
         }
+
+        internal static Result<MovimientoVaultResultado> UpsertEnVault(System.Data.IDbConnection connection, Usuario usuario, string subunidadDestino)
+        {
+            return Result.Failure<MovimientoVaultResultado>("Upsert en vault no implementado");
+        }
     }
 }
