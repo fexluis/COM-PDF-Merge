@@ -20,6 +20,26 @@ Fuentes de verdad:
 - Contrato del plan: [`plan-contract.md`](../swarm-planner/references/plan-contract.md)
 - Runbook, plantillas y bloque de cierre: [`plans/README.md`](../../plans/README.md) §5
 - Leases y concurrencia: [`parallel-work.md`](../../rules/parallel-work.md)
+- **Numeración global (Ronda/Wave · Fase/Task)**: [`plans/REGISTRY.md`](../../plans/REGISTRY.md)
+
+---
+
+## 0. Numeración: `Ronda ≡ Wave`, `Fase ≡ Task`
+
+La revisión por rondas (`.clinerules/workflows/Ronda.md`) y los planes swarm describen el mismo objeto con dos vocabularios. Toda salida de esta fase usa **ambos**, con el número global del registro:
+
+| `Ronda.md` / artefactos de revisión | Plan swarm | Nivel |
+|---|---|---|
+| `Ronda {n}: {título}` | `Wave {n}` (parallel execution group) | Grupo paralelo (una ola = una ronda) |
+| `Fase {n}: {título}` | `T{n}: {Nombre}` | Tarea atómica |
+| `| Fase | Severidad | Archivo | Líneas |` | Tabla de hallazgos de `audit-tasks.ps1` | Reporte |
+
+Reglas:
+
+1. El plan trae `numbering:` en el envelope (`ronda_base`, `fase_base`) y cada tarea su campo `- **fase**: <n>`.
+2. Si faltan, se resuelven con la fila del plan en [`REGISTRY.md`](../../plans/REGISTRY.md) §3; si el plan es `pre-registro`, se reporta `Fase = T{k}` **sin inventar** números globales.
+3. `Wave k` del plan ⇔ `Ronda = ronda_base + k - 1`; `T{k}` ⇔ `Fase = fase_base + k - 1`, salvo que el plan declare `- **fase**` explícito (manda el campo).
+4. Cerrar el plan incluye **cerrar su fila** en el registro (§C2.5).
 
 ---
 
@@ -60,6 +80,79 @@ powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Full
 
 Evidencia: `_evidence/<stamp>/summary.md` — se enlaza por ruta y **no se commitea**.
 
+## 3.1 C1.5 — Auditoría exhaustiva de código por tarea (errores de ejecución)
+
+`verify.ps1` certifica que **compila** y que la suite **pasa**; no ve errores de ejecución silenciosos (deadlocks STA, Interop en capas limpias, SQL destructivo, migraciones duplicadas, tests debilitados, `INSERT` posicional…). Esta pasada cubre el objetivo de `Ronda.md` («detect errors and potential runtime failures») y se ejecuta **por tarea**, no por plan.
+
+### 3.1.1 Pasada determinista (obligatoria)
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/audit-tasks.ps1 -Plan .agents/plans/<plan>.md
+# subconjunto por ola/tarea:
+powershell -ExecutionPolicy Bypass -File scripts/audit-tasks.ps1 -Plan .agents/plans/<plan>.md -Tasks T3,T4
+```
+
+| exit | Significado | Veredicto |
+|---|---|---|
+| `0` | sin hallazgos `Compilation`/`Runtime`/`Logic` (puede haber `Warning`) | continuar a C2 |
+| `3` | ≥1 hallazgo bloqueante | `FIX_PLAN` |
+| `4` | entrada inválida (plan sin `files_lock`) | `BLOCKED` |
+
+Evidencia: `_evidence/<stamp>-audit/audit.md` (no se commitea). El script audita los archivos declarados en `files_lock` + `files edited/created` de cada `T<n>` y emite la tabla `| Fase | Task | Severidad | Archivo | Líneas | Detector | Hallazgo |`, ya lista para pegar como `Fase {n}` en `Ronda.md`.
+
+| Detector | Severidad | Qué detecta |
+|---|---|---|
+| `FS-01` | Compilation | archivo declarado en el plan que no existe en disco (deriva plan/disco) |
+| `AR-01` | Compilation | Interop/WinForms/`System.Data`/PdfSharp/`System.Drawing` en `Application`/`Domain` |
+| `CA-01`/`CA-02` | Compilation / Warning | C# 12 (collection expressions, primary constructors) en net48 |
+| `MIG-01` | Compilation | dos `MigrationV<n>.cs` con el mismo correlativo (`__SchemaVersion` ambiguo) |
+| `RT-01`/`RT-02` | Runtime | `.Result` / `.Wait()` (deadlock en hilo STA) |
+| `RT-03` | Runtime | `async void` (excepción no observable) |
+| `RT-04` | Runtime | `catch { }` vacío (excepción tragada, estado inconsistente) |
+| `RT-06` | Runtime | `Application.DoEvents` / `Thread.Sleep` (reentrancy, UI congelada) |
+| `LN-01` | Runtime | `MessageBox` en capa limpia |
+| `LG-05` | Runtime | `First()`/`Single()` sobre secuencia vacía |
+| `LG-01`/`LG-02` | Logic / Warning | `DateTime.Now|Today` (falta `IDateTimeProvider`) |
+| `LG-03`/`LG-04` | Logic | `SELECT *`, `INSERT` sin lista de columnas (desincronía posicional) |
+| `LG-06` | Logic | `DELETE FROM` sobre tabla de `CrdtTables` (tombstone replicado) |
+| `TH-01` | Logic | test `Ignore`/`Skip`/`Inconclusive` (suite debilitada) |
+| `TH-02` | Warning | assert tautológico |
+| `RT-05`/`RT-07`/`RT-08`/`WR-01` | Warning | `SqliteConnection` sin `Dispose`, restauración COM, `GridReader`, `Console.Write` |
+
+Los `Warning` no bloquean el sellado, pero **se listan** en el acta de cierre y en `Ronda {n}`.
+
+### 3.1.2 Revisión semántica por tarea (manual, no delegable)
+
+Para cada `T<n>` lee el archivo **en disco** (nunca el ledger) y confirma en este orden:
+
+1. **Aplicación real**: la corrección de `description`/`validation` está en las líneas que el plan declara, con la lógica exacta (guards, mensajes, ramas de error).
+2. **Columnas y esquema**: toda columna/tabla citada en SQL existe en el esquema final (`**/Migrations/` + `__SchemaVersion`); ninguna fue renombrada o eliminada.
+3. **Orden de operaciones**: no se asigna un campo/DTO estático antes de terminar de leer el `GridReader`; el commit va después de la última escritura.
+4. **Atomicidad**: transacción en `using` con rollback; qué queda inconsistente si la excepción ocurre a mitad (caché, `config`, vault origen vs destino).
+5. **Idempotencia**: repetir la operación (upsert, `EnsureUsuarioEnVault`, migración) no duplica filas ni versiones.
+6. **STA/COM**: ningún `await`/`.Result` nuevo en el hilo de Excel; estado COM (`ScreenUpdating`, `DisplayAlerts`, `EnableEvents`) restaurado en `finally`.
+7. **Nulabilidad**: `First/Single`, `Convert.ToInt32`, `int.Parse`, `(string)range.Value2` sobre datos de Excel vacíos o celdas `null`.
+8. **Efectos colaterales de UI**: mensajes obsoletos, combos `Enabled = false`, formularios abiertos con datos viejos.
+9. **Higiene de tests**: el diff de `ConversorPDF.Tests` no relaja asserts ni reduce casos; el test nuevo falla por la razón prevista.
+10. **Desincronía plan/ejecución**: `files edited/created` ⊆ `files_lock` y coincide con `git show --name-only` del commit `T<n>`.
+
+### 3.1.3 Formato del hallazgo (compatible con `Ronda.md`)
+
+```markdown
+### Fase {n} (T{k}): {título del defecto}
+- **Ubicación**: `<archivo>:<líneas>`
+- **Problema**:
+- **Causa raíz**:
+- **Severidad**: Compilation | Runtime | Logic | Warning
+- **Corrección**: ```csharp / ```sql
+- **Origen**: audit-tasks (`RT-01`) | revisión manual §3.1.2 punto {i}
+- **Riesgo de rotura**:
+```
+
+`{n}` es siempre el número **global** de [`REGISTRY.md`](../../plans/REGISTRY.md); la `T{k}` va entre paréntesis para trazabilidad.
+
+---
+
 ## 4. C2 — Auditoría de leases
 
 ```powershell
@@ -70,7 +163,33 @@ foreach ($c in (git rev-list "$base..HEAD")) {
 
 Regla: para cada commit `T<n>: ...`, los archivos tocados deben ser subconjunto de `files_lock(T<n>)` ∪ `{.agents/plans/<plan>.md}`. Cualquier archivo adicional ⇒ `LEASE-VIOLATION` ⇒ `FIX_PLAN`.
 
-## 5. C3 — Invariantes de arquitectura
+## 5. C2.5 — Validación de numeración y cierre de la fila del registro
+
+Antes de sellar, comprueba que la numeración global es coherente y única:
+
+```powershell
+Get-Content .agents\plans\REGISTRY.md | Select-String '^\| `(ronda|fase)`'
+Get-Content .agents\plans\<plan>.md | Select-String 'fase:|ronda_base|fase_base'
+Get-Content .agents\plans\<plan>.md | Select-String '^\| \d+ \|'      # tabla de olas
+```
+
+| Comprobación | Fallo |
+|---|---|
+| Existe una fila del plan en `REGISTRY.md` §3 | `NUMBERING_MISSING` ⇒ `BLOCKED` |
+| `- **fase**:` de cada `T<n>` cae dentro del rango reservado y no se repite | `NUMBERING-CONFLICT` ⇒ `FIX_PLAN` |
+| `ronda_base` + olas realizadas ≤ siguiente `ronda` libre | `NUMBERING-CONFLICT` |
+| Nº de olas reales ≠ reservadas (por `LEASE-SERIALIZED`) | ajustar al alza en la fila; anotar la desviación en el acta |
+
+Acciones al sellar (sólo Fase C):
+
+1. `reserved|executing` → `closed` en la fila del plan.
+2. Escribir `verify`, `HEAD` y el **rango real** de olas/tareas.
+3. Actualizar §2 (`ronda`, `fase`) con el último número **efectivamente usado**, no el reservado.
+4. Nunca reutilizar ni reciclar números de un plan `abandoned`.
+
+---
+
+## 6. C3 — Invariantes de arquitectura
 
 ```powershell
 Select-String -Path ConversorPDF.XLL\Academic\Application\**\*.cs -Pattern 'Excel\.|Microsoft\.Office|DataGridView'
