@@ -237,10 +237,11 @@ T1 (integrator, L0: contratos + esqueletos + csproj)
   - Sin `System.Data`, sin WinForms, sin Interop: solo `Result` y los dos puertos (regla de capas).
 - **validation**: `MoverUsuarioSubunidadServiceTests` en verde (5 casos), incluido `Mover_WhenUsuarioNoEsElActual_ShouldNotTouchConfig`.
 - **verification**: `powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "FullyQualifiedName~MoverUsuarioSubunidadServiceTests"`
-- **evidence**: (la llena build-verifier)
-- **status**: pending
-- **log**:
+- **evidence**: `_evidence/20261029-105657`
+- **status**: completed
+- **log**: Implementado MoverUsuarioSubunidadService con política R-MUV-02 (config.subunidad solo se actualiza si el editado es el usuario actual de Windows), validación de negocio y delegación en IUsuarioVaultMover. 7 unit tests en verde.
 - **files edited/created**:
+  - `ConversorPDF.XLL/Academic/Application/Services/MoverUsuarioSubunidadService.cs`
 
 ### T5: Cablear el formulario y recargar FormConfig (implementer)
 - **id**: T5
