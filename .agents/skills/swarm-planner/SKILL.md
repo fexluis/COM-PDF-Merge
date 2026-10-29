@@ -221,6 +221,13 @@ Bloque literal alineado 1:1 con `references/plan-contract.md`. Copiar y rellenar
   - Plan en estado irrecuperable (más de 3 rondas de fix fallidas)
 - ledger_owner: swarm-parallel-task
 - no_push: true
+- numbering:
+  - registry: .agents/plans/REGISTRY.md
+  - registry_row: <R-00x>
+  - ronda_base: <n>          # Wave 1 = Ronda <n>
+  - fase_base: <n>           # T1 = Fase <n>
+  - waves: <W>
+  - tasks: <N>
 
 ## Dependency graph
 T1 ── T3 ───┐
@@ -231,6 +238,7 @@ T2 ── T4 ───┘
 
 ### T1: <Nombre>
 - **id**: T1
+- **fase**: <fase_base>
 - **depends_on**: []
 - **location**: <ruta o carpeta>
 - **files_lock**: [<archivos exactos>]
@@ -269,10 +277,10 @@ T2 ── T4 ───┘
 - **files edited/created**: (lo llena el orquestador)
 
 ## Parallel execution groups
-| Wave | Tasks | Can start when |
-|---|---|---|
-| 1 | T1, T2 | Inmediato (leases disjuntos) |
-| 2 | T3 | T1 y T2 completados |
+| Wave | Ronda | Tasks | Can start when |
+|---|---|---|---|
+| 1 | <ronda_base> | T1, T2 | Inmediato (leases disjuntos) |
+| 2 | <ronda_base + 1> | T3 | T1 y T2 completados |
 
 ## Testing strategy
 - <qué se prueba y con qué comando>
@@ -285,6 +293,7 @@ T2 ── T4 ───┘
 
 - **No implementar**: esta skill solo crea el plan; el código lo escriben `swarm-parallel-task` o `executing-plans-local`.
 - **No escribir el plan en la raíz** del repositorio: solo `.agents/plans/`.
+- **No reutilizar números** de `Ronda`/`Fase`: la reserva se hace en `REGISTRY.md` y es append-only; nunca se bajan los contadores ni se compactan rangos.
 - **No asignar Lease L0** a `implementer` ni a `tdd-red-writer`.
 - **No inventar el `TOTAL` del baseline**: se mide con `scripts/verify.ps1 -Mode Full`; un `TOTAL` menor que el baseline es `SUITE_SHRUNK` (exit 3), no un éxito.
 - **No planificar ejecución sobre OneDrive**: `scripts/preflight.ps1` devuelve 3; usar `-AllowOneDrive` solo con aviso explícito en el ledger.

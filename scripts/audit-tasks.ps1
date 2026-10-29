@@ -182,7 +182,7 @@ function Test-Kind([string]$kind, [string]$rel) {
 }
 
 # --- 4. Ejecucion de detectores -----------------------------------------
-$stamp = (Get-Date).ToString('yyyyMMdd-HHmmss')
+$stamp = (Get-Date).ToString('yyyyMMdd-HHmmss-fff')
 $evDir = Join-Path $repo (Join-Path $EvidenceRoot ($stamp + '-audit'))
 New-Item -ItemType Directory -Force -Path $evDir | Out-Null
 $reportPath = Join-Path $evDir 'audit.md'

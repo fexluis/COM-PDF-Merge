@@ -36,6 +36,15 @@ Ejecuta la totalidad de la suite del workspace, genera el archivo TRX y contrast
 powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Full
 ```
 
+### 1.4 Auditoría de Código por Tarea (Audit Gate)
+Complementa a `verify.ps1`: no compila, solo analiza el código de las tareas de un plan con detectores deterministas de fallos de ejecución (bloqueos STA, Interop en capas limpias, SQL destructivo en tablas CRDT, migraciones duplicadas, tests debilitados…):
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/audit-tasks.ps1 -Plan .agents\plans\<plan>.md [-Tasks T1,T2]
+```
+Exit codes: `0` sin hallazgos bloqueantes (puede haber `Warning`) | `3` ≥1 hallazgo `Compilation`/`Runtime`/`Logic` | `4` entrada inválida.
+
+Evidencia: `_evidence/<timestamp>-audit/audit.md` con la tabla `| Fase | Task | Severidad | Archivo | Líneas |`. Es obligatorio en la Fase C (`swarm-verify`) y recomendado en la revisión por rondas (`.clinerules/workflows/Ronda.md`).
+
 ---
 
 ## 2. Contrato de Evidencia RED -> GREEN

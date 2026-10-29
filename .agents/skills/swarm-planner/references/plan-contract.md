@@ -7,6 +7,7 @@ Este documento especifica el formato obligatorio que todo plan generado por `swa
 ## 1. Reglas Generales de Almacenamiento
 - **Ubicación obligatoria**: Todo plan DEBE guardarse en `.agents/plans/<YYYY-MM-DD>-<slug>-plan.md`.
 - **Prohibido**: Jamás escribir archivos de plan en la raíz del repositorio (`/`).
+- **Numeración global**: la reserva de `Ronda` (=`Wave`) y `Fase` (=`T<n>`) DEBE registrarse en `.agents/plans/REGISTRY.md` (ver §7). Sin esa fila el plan no puede sellarse.
 
 ---
 
@@ -46,6 +47,13 @@ Todo plan debe comenzar con el bloque YAML/Markdown de envelope de ejecución:
   - Plan en estado irrecuperable (más de 3 rondas de fix fallidas)
 - ledger_owner: swarm-parallel-task
 - no_push: true
+- numbering:
+  - registry: .agents/plans/REGISTRY.md
+  - registry_row: <R-00x>
+  - ronda_base: <n>          # Wave 1 = Ronda <n>
+  - fase_base: <n>           # T1 = Fase <n>
+  - waves: <W>               # Ronda <ronda_base>..<ronda_base+W-1>
+  - tasks: <N>               # Fase <fase_base>..<fase_base+N-1>
 ```
 
 ---
@@ -69,17 +77,29 @@ Cada tarea (T1..Tn) debe declarar explícitamente:
 Si un revisor (`task-reviewer`) rechaza una tarea o surge una ambigüedad, el orquestador tiene un tope de **3 rondas de fix**. Si persiste la diferencia, el orquestador emite un `Ruling` formal:
 `Ruling: <decisión tomada> — <justificación técnica> — <costo estimado si la decisión es errónea>`.
 
+### Campo Adicional: `fase` (numeración global obligatoria con registro)
+Si el plan tiene fila en `REGISTRY.md`, cada tarea declara su número global de `Fase` justo después de `id`:
+
+```markdown
+### T3: <Nombre>
+- **id**: T3
+- **fase**: 1422
+- **depends_on**: [T1, T2]
+```
+
+`fase` = `Fase {n}` de `.clinerules/workflows/Ronda.md`. Es el número con el que se reportan los hallazgos (`Fase 1422 (T3)`) y con el que se numera el plan de fix. Debe caer dentro del rango `fase_base..fase_base+tasks-1` reservado en el envelope y no repetirse.
+
 ---
 
 ## 4. Estructura de Olas (Waves) y Grupos Paralelos
 
-El plan debe incluir la tabla de olas:
+El plan debe incluir la tabla de olas (una `Wave` = una `Ronda` de `Ronda.md`):
 ```markdown
 ## Parallel execution groups
-| Wave | Tasks | Can start when |
-|---|---|---|
-| 1 | T1, T2 | Inmediato (leases disjuntos) |
-| 2 | T3 (L0) | T1 y T2 completados |
+| Wave | Ronda | Tasks | Can start when |
+|---|---|---|---|
+| 1 | 259 | T1, T2 | Inmediato (leases disjuntos) |
+| 2 | 260 | T3 (L0) | T1 y T2 completados |
 ```
 Regla de oro: Si dos tareas comparten prefijo en `files_lock`, deben colocarse en olas diferentes o marcarse como serializadas.
 
@@ -93,3 +113,22 @@ Regla de oro: Si dos tareas comparten prefijo en `files_lock`, deben colocarse e
 4. **La evidencia no se commitea.** `_evidence/` esta en `.gitignore`; se enlaza por ruta en el ledger y se commitean solo el plan y los archivos del `files_lock`.
 5. **Workspace verificado, no asumido.** `scripts/preflight.ps1` debe devolver `0` antes de la primera ola. Verifica tamano del arbol (`min_xll_cs`/`min_tests_cs`), presencia del slice y coherencia baseline/arbol.
 6. **El workspace debe provenir del arbol real.** Un `git clone` solo trae HEAD: si el working tree tiene cambios sin commitear, el clon es un snapshot incompleto y todo el baseline sera invalido.
+
+---
+
+## 7. Registro de numeración (Ronda ⇔ Wave · Fase ⇔ Task)
+
+Los planes swarm y `.clinerules/workflows/Ronda.md` describen el mismo objeto con dos vocabularios:
+
+| `Ronda.md` / `implementation_plan.md` / `walkthrough.md` | Plan swarm | Nivel |
+|---|---|---|
+| `Ronda {n}: {título}` | `Wave {n}` (parallel execution group) | Grupo paralelo |
+| `Fase {n}: {título}` | `T{n}: {Nombre}` | Tarea atómica |
+
+La numeración es **global, monótona y append-only**; su fuente única es `.agents/plans/REGISTRY.md`:
+
+1. **Reserva (Fase A, `swarm-planner`)**: leer `ronda`/`fase` de §2, reservar `ronda+1..ronda+W` y `fase+1..fase+N`, declararlos en el bloque `numbering:` del envelope, añadir `- **fase**: <n>` a cada tarea y una fila `reserved` en §3.
+2. **Ejecución (Fase B, `swarm-parallel-task`)**: no renumera. Si serializa olas por colisión de leases, lo registra (`LEASE-SERIALIZED`) y el cierre ajusta el rango al alza.
+3. **Cierre (Fase C, `swarm-verify`)**: valida que cada `fase` cae en el rango reservado y no se repite, cierra la fila (`closed`), actualiza contadores con el último número **usado** y lo refleja en el bloque `## Cierre (Fase C)`.
+4. **Plan de fix**: rango nuevo + referencia a las `Fase {n}` corregidas. Un plan `abandoned` no libera sus números.
+5. **Prohibido**: inventar contadores, reciclar números o numerar hallazgos sin fila previa en el registro.

@@ -204,7 +204,9 @@ Get-ChildItem -Path ConversorPDF.XLL\Academic -Recurse -Filter *.cs |
   Select-String -Pattern 'new \[\]|DateTime\.Now|\.Result\b|\.Wait\(\)|async void|catch\s*\{\s*\}'
 ```
 
-Esperado: **0 resultados**. Interop en capas limpias, o `DateTime.Now` / `.Result` / `.Wait()` / `catch {}` en el slice ⇒ `FIX_PLAN`. `scripts/audit-tasks.ps1` (C1.5) ejecuta estos mismos patrones ya acotados a los archivos de cada tarea: si C3 y C1.5 discrepan, manda C1.5 y C3 se reporta como deuda fuera del lease.
+Esperado: **0 resultados nuevos respecto a `base`**. Interop/WinForms/`System.Data` en capas limpias, o `DateTime.Now` / `.Result` / `.Wait()` / `catch {}` introducidos por el plan ⇒ `FIX_PLAN`.
+
+`scripts/audit-tasks.ps1` (C1.5) aplica estos mismos patrones acotados a los archivos de cada tarea, así que **la autoridad sobre el código del plan es C1.5**. La deuda preexistente fuera del `files_lock` no bloquea el sellado: se reporta como observación en el acta (hoy: 5 `using System.Data;` en `Academic/Application/Services/**`; las menciones de `DataGridView` en comentarios XML no cuentan).
 
 ## 7. C4 — Publicación y documentación
 

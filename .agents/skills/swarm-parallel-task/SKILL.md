@@ -41,6 +41,7 @@ Eres el **Orquestador Central** de la ejecución del plan en ConversorPDF. Tu fu
    - Acción: Mover una de las tareas a una ola posterior y registrar en el log:
      `LEASE-SERIALIZED T<m> <- T<n> (motivo: colisión en <ruta>)`.
 3. Respetar el límite global: `max_parallel_writers: 2`.
+4. **No renumerar**: `Wave`/`Ronda` y `T<n>`/`Fase` vienen fijados por el bloque `numbering:` del envelope y el campo `- **fase**:` de cada tarea (reserva en [`.agents/plans/REGISTRY.md`](../../plans/REGISTRY.md)). Si una tarea cambia de ola, anótalo con `LEASE-SERIALIZED`; el rango definitivo lo ajusta la Fase C.
 
 ### Paso 4: Estrategia `integrator-first` (Para tipos nuevos)
 Si una tarea de la ola introduce nuevas clases, interfaces o tipos en C#:
