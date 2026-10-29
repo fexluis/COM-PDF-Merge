@@ -217,10 +217,11 @@ T1 (integrator, L0: contratos + esqueletos + csproj)
   - Todo error se envuelve en `Result.Failure` con contexto (sin excepciones hacia la UI).
 - **validation**: `UsuarioVaultMoverTests` y `MoverUsuarioEntreVaultsE2ETests` en verde; `Full` sin regresiones.
 - **verification**: `powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "FullyQualifiedName~UsuarioVaultMoverTests|FullyQualifiedName~MoverUsuarioEntreVaultsE2ETests"`
-- **evidence**: (la llena build-verifier)
-- **status**: pending
-- **log**:
+- **evidence**: `_evidence/20261029-105529`
+- **status**: completed
+- **log**: Implementado UsuarioVaultMover con UpsertEnVault idempotente preservando perfil, activo y firma. Persistencia atómica de bytes y re-apertura en destino validadas con 5 tests en verde (3 integration + 2 E2E).
 - **files edited/created**:
+  - `ConversorPDF.XLL/Academic/Infrastructure/Persistence/UsuarioVaultMover.cs`
 
 ### T4: Implementar la orquestación y la política de config (implementer)
 - **id**: T4
