@@ -14,6 +14,7 @@ Crea planes de implementación con dependencias explícitas, optimizados para ej
 ## 1. Propósito y autoridad del contrato
 
 - **Salida obligatoria**: `.agents/plans/<YYYY-MM-DD>-<slug>-plan.md` + `.agents/plans/<YYYY-MM-DD>-<slug>-handoff.md`.
+- **Numeración global**: [`plans/REGISTRY.md`](../../plans/REGISTRY.md) — reserva de `Ronda` (=`Wave`) y `Fase` (=`T<n>`). Sin fila en el registro, el plan no es ejecutable por la Fase C.
 - **Fuente única de verdad**: [`references/plan-contract.md`](references/plan-contract.md). Ante conflicto con este documento, **manda el contrato**.
 - **Reglas siempre activas**: [`.agents/rules/parallel-work.md`](../../rules/parallel-work.md) — leases L0/L1/L2, `max_parallel_writers: 2` y gate serializado. No son negociables.
 - **Consumidores del plan**: `swarm-parallel-task` (orquestador con subagentes) o `executing-plans-local` (fallback secuencial cuando no hay `invoke_subagent`).
@@ -26,7 +27,7 @@ Crea planes de implementación con dependencias explícitas, optimizados para ej
 4. **Explicit Dependencies**: cada tarea declara de qué depende, habilitando el máximo paralelismo.
 5. **Atomic Tasks**: cada tarea es ejecutable de forma independiente por un único agente.
 6. **Disjoint Leases**: dos tareas de la misma ola nunca comparten archivos ni prefijos en `files_lock`.
-7. **Review Before Yield**: autoevaluación de 12 puntos (§3.8) y revisión con `plan-reviewer` (§3.9) antes de finalizar.
+7. **Review Before Yield**: autoevaluación de 13 puntos (§3.8) y revisión con `plan-reviewer` (§3.9) antes de finalizar.
 
 ## 3. Process
 
@@ -76,6 +77,8 @@ Cada tarea DEBE declarar los 11 campos de `references/plan-contract.md` §3, en 
 | `log` | Registro de ejecución que escribe el orquestador |
 | `files edited/created` | Archivos finales modificados, verificados contra `files_lock` |
 
+**Campo adicional `fase` (numeración global)**: obligatorio si el plan tiene fila en `REGISTRY.md`. Se declara como `- **fase**: <n>` justo después de `- **id**:` y equivale a la `Fase {n}` de `.clinerules/workflows/Ronda.md`. La tabla de olas lleva además una columna `Ronda` (§3.10).
+
 **Caminos calientes (Lease L0)** — asignables SOLO al rol `integrator`, serializado y una tarea a la vez:
 
 - `ConversorPDF.XLL/ConversorPDF.XLL.csproj`
@@ -112,7 +115,7 @@ Contenido mínimo del handoff:
 6. Prohibiciones (push/merge, C# 12, tocar L0 sin `integrator`, saltar tests).
 7. Entregables esperados (ledger completo, commits locales, `_evidence/`).
 
-### 3.8 Self-Review: checklist de 12 puntos
+### 3.8 Self-Review: checklist de 13 puntos
 
 Antes de ceder el turno, evalúa el plan contra estos 12 puntos y **corrige lo que falle**:
 

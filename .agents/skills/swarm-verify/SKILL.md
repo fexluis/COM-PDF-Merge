@@ -1,8 +1,9 @@
 ---
 name: swarm-verify
 description: >
-  [EXPLICIT INVOCATION ONLY] Cierra un plan swarm (Fase C): re-verifica en disco, audita
-  leases e invariantes de arquitectura y sella el plan como closed. Nunca reabre el plan.
+  [EXPLICIT INVOCATION ONLY] Cierra un plan swarm (Fase C): re-verifica en disco, audita el código
+  de cada Task con detectores de fallos de ejecución, valida leases, numeración (Ronda/Wave ·
+  Fase/Task) e invariantes de arquitectura, y sella el plan como closed. Nunca reabre el plan.
 metadata:
   invocation: explicit-only
 ---
@@ -60,6 +61,7 @@ Si el plan está en `draft` (Fase A), `approved` (Fase B pendiente) o ya `closed
 ```powershell
 git status --porcelain                                                                          # debe estar VACIO
 powershell -ExecutionPolicy Bypass -File scripts/preflight.ps1 -Workspace <ws> -Plan <plan>      # exit 0
+Test-Path scripts\audit-tasks.ps1                                                               # debe ser True (C1.5)
 ```
 
 Un working tree sucio invalida el ledger (no se puede atribuir cada cambio a una tarea). En OneDrive `preflight.ps1` devuelve `3`: usar `-AllowOneDrive` sólo con aviso explícito en el acta de cierre.
@@ -192,13 +194,19 @@ Acciones al sellar (sólo Fase C):
 ## 6. C3 — Invariantes de arquitectura
 
 ```powershell
-Select-String -Path ConversorPDF.XLL\Academic\Application\**\*.cs -Pattern 'Excel\.|Microsoft\.Office|DataGridView'
-Select-String -Path ConversorPDF.XLL\Academic\**\*.cs -Pattern 'new \[\]|DateTime\.Now|\.Result\b|\.Wait\(\)'
+# Capas limpias: Application + Domain de cada slice (mismo criterio que AR-01)
+Get-ChildItem -Path ConversorPDF.XLL\Academic -Recurse -Filter *.cs |
+  Where-Object { $_.FullName -match '\\(Application|Domain)\\' } |
+  Select-String -Pattern 'Excel\.|Microsoft\.Office|DataGridView|System\.Windows\.Forms|System\.Data'
+
+# Riesgos de runtime en el slice
+Get-ChildItem -Path ConversorPDF.XLL\Academic -Recurse -Filter *.cs |
+  Select-String -Pattern 'new \[\]|DateTime\.Now|\.Result\b|\.Wait\(\)|async void|catch\s*\{\s*\}'
 ```
 
-Esperado: **0 resultados**. Interop en capas limpias, o `DateTime.Now` / `.Result` / `.Wait()` en el slice ⇒ `FIX_PLAN`.
+Esperado: **0 resultados**. Interop en capas limpias, o `DateTime.Now` / `.Result` / `.Wait()` / `catch {}` en el slice ⇒ `FIX_PLAN`. `scripts/audit-tasks.ps1` (C1.5) ejecuta estos mismos patrones ya acotados a los archivos de cada tarea: si C3 y C1.5 discrepan, manda C1.5 y C3 se reporta como deuda fuera del lease.
 
-## 6. C4 — Publicación y documentación
+## 7. C4 — Publicación y documentación
 
 ```powershell
 git log --oneline origin/refactor/<slug>..HEAD      # los commits DEBEN seguir sin publicar
@@ -209,36 +217,50 @@ Artefactos exigidos por `development-process` (Finalization):
 - `docs/articles/changes/<YYYY-MM-DD>-<slug>.md` (Purpose · Changes · How to use · Test coverage)
 - `walkthrough.md`
 
-## 7. C5 — Sellado
+## 8. C5 — Sellado
 
 1. En la cabecera, `**Estado**: executing` → `closed` (único cambio sobre el ledger de Fase B).
-2. Añadir el bloque `## Cierre (Fase C)` con la plantilla literal de [`plans/README.md`](../../plans/README.md) §5.3: `verify Full`, `HEAD`, evidencia, leases, arquitectura, publicación, docs y desviaciones.
+2. Añadir el bloque `## Cierre (Fase C)` con la plantilla literal de [`plans/README.md`](../../plans/README.md) §5.3: `verify Full`, `HEAD`, evidencia, leases, arquitectura, publicación, docs y desviaciones. Añade dos líneas obligatorias:
+   - `- **Auditoría de código**: audit-tasks exit <0|3> · <n> archivos · <n> hallazgos (<w> warnings) · _evidence/<stamp>-audit/audit.md`
+   - `- **Numeración**: Ronda <r0>–<r1> (Wave 1..<w>) · Fase <f0>–<f1> (T1..<n>) · REGISTRY.md fila <R-xxx>`
 3. Registrar el veredicto y la lista de commits auditados.
+4. Cerrar la fila de [`REGISTRY.md`](../../plans/REGISTRY.md) (§C2.5).
 
 Ciclo de vida del estado: `draft` → `approved` → `executing` → **`closed`**.
 
-## 8. C6 — Commit local (sin push)
+## 9. C6 — Commit local (sin push)
 
 ```powershell
-git add -- .agents/plans/<plan>.md walkthrough.md docs/articles/changes/<fecha>-<slug>.md
+git add -- .agents/plans/<plan>.md .agents/plans/REGISTRY.md walkthrough.md docs/articles/changes/<fecha>-<slug>.md
 git diff --cached --name-only        # auditar: solo esos archivos
 git commit -m "docs(fase-c): cierre <slug> — verify Full exit 0, 0 regresiones"
 ```
 
-## 9. Contrato de salida
+`REGISTRY.md` entra en el commit de cierre porque es el historial de numeración; `_evidence/**` no.
+
+## 10. Contrato de salida
 
 Responde con:
 
 - **Veredicto**: `SELLADO` | `FIX_PLAN` | `BLOCKED`
 - **Evidencia**: exit code de `verify.ps1`, `TOTAL` medido vs baseline, `HEAD`, archivos commiteados
-- **Hallazgos**: numerados, con la `T<n>` afectada y el riesgo de rotura
+- **Auditoría de código**: exit de `audit-tasks.ps1`, nº de archivos y de hallazgos por tarea
+- **Hallazgos**: numerados como `Fase {n} (T{k})`, severidad `Compilation|Runtime|Logic|Warning`, ubicación `<archivo>:<líneas>` y riesgo de rotura
+- **Tabla resumen** (`Ronda.md`):
+
+  | Fase | Task | Severidad | Archivo | Líneas |
+  |---|---|---|---|---|
+
+- **Numeración**: `Ronda <rango>` / `Fase <rango>` y estado de la fila en `REGISTRY.md`
 - **Si procede**: ruta del `<YYYY-MM-DD>-<slug>-fix-plan.md` creado
 
-## 10. Prohibiciones
+## 11. Prohibiciones
 
 - **No reabrir** el plan cuando hay hallazgos: dos escritores sobre el ledger. Se crea `<YYYY-MM-DD>-<slug>-fix-plan.md` (precedente: `2026-10-27-usuarios-duplicados-subunidad-plan.md` §12).
 - **No push, merge ni publish.**
-- **No aceptar el ledger** sin re-ejecutar `verify.ps1 -Mode Full` en disco.
+- **No aceptar el ledger** sin re-ejecutar `verify.ps1 -Mode Full` **y** `audit-tasks.ps1` en disco.
+- **No aceptar** «el revisor ya lo miró»: sin `audit-tasks.ps1` ejecutado no hay veredicto (`BLOCKED`).
 - **No commitear** `_evidence/**` ni archivos fuera del acta de cierre.
-- **No sellar** con exit `1`, `2`, `3` ni `4`.
+- **No sellar** con exit `1`, `2`, `3` ni `4` de `verify.ps1`, ni con exit `3`/`4` de `audit-tasks.ps1`.
+- **No inventar** números de `Ronda`/`Fase`: si el plan no está en `REGISTRY.md`, se reporta con `T{k}` y se abre incidencia de numeración.
 
