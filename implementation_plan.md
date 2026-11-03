@@ -7751,3 +7751,247 @@ Sin registros `<Compile Include=...>` en `ConversorPDF.XLL.csproj`.
 
 
 
+
+
+---
+
+## Ronda 264: Corregir RenombrarSolicitudes y rango #YY (Fases 1426–1431)
+
+## Contexto y Diagnóstico
+- **Fase 1426 (T6)**: `ConversorPDF.Tests/Core/Processors/ViaticosGestionProcessorTests.cs` no importaba `System.Linq`, impidiendo la compilación de `Select`.
+- **Fase 1427 (T1)**: `TryParseLimite` en `ViaticoNumeroComision.cs` trataba cualquier límite que no terminara en el sufijo vigente como consecutivo del año actual, desvirtuando límites de años anteriores (ej. `12625`).
+- **Fase 1428 (T1)**: Rama con `return false` en `EnRango` contradecía la regla "límite no interpretable ⇒ sin filtro".
+- **Fase 1429 (T1)**: Año de vigencia literal `2026` duplicado sin desacoplar de `App.APP_VIGENCIA`.
+- **Fase 1430 (T2/T5)**: Falta de feedback al usuario en `BtnUnificar_Click` y `MessageBox` bloqueantes en capa Core (`ViaticosGestionProcessor`).
+- **Fase 1431 (T7/T8)**: Numeración global desfasada, artefactos sin registrar y YAML docfx desactualizado.
+
+## Cambios Aplicados
+1. Importación de `System.Linq` en `ViaticosGestionProcessorTests.cs`.
+2. Detección precisa de formatos `#YY` en `TryParseLimite` (`sLimite.Length >= 3 && (sLimite.EndsWith(vigenciaSuffix) || sLimite.Length >= 5)`).
+3. Fallback `return true` (sin filtro) en `EnRango` ante límites no interpretables.
+4. Definición de `AnioVigenciaPorDefecto = 2026` y pruebas con año dinámico derivado de `App.APP_VIGENCIA`.
+5. Feedback en `FormGestionDocumental.BtnUnificar_Click` y remoción de `MessageBox` en capa `Core`.
+6. Regeneración de `docs/api/ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.yml` y actualización de `.agents/plans/REGISTRY.md` a Ronda 264 / Fase 1431.
+
+
+---
+
+## Ronda 265: Correcciones Ronda 264 y desacople total de WinForms (Fases 1432–1436)
+
+## Contexto y Diagnóstico
+- **Fase 1432 (T2/T5)**: Presencia residual de `MessageBox` y `using System.Windows.Forms;` en `ViaticosGestionProcessor.cs`. Ausencia de retorno numérico y falta de aviso ante excepciones.
+- **Fase 1433 (T5)**: Retorno `0` al fallar `UnificarSolicitudes` enmascaraba errores reales como "sin resultados".
+- **Fase 1434 (T7)**: Tests de `EnRango` mantenían valores literales anclados a `26`.
+- **Fase 1435 (T8)**: DocFX `IViaticosGestionProcessor.yml` requería actualización al nuevo retorno `int` de `RenombrarSolicitudes`.
+- **Fase 1436 (T8)**: Inexistencia de archivo de plan para R-002 y estado sin sellar en `REGISTRY.md`.
+
+## Cambios Aplicados
+1. Firma de `RenombrarSolicitudes` actualizada a `int` (`-1` error, `0` vacía, `>0` éxito) en `IViaticosGestionProcessor`, `IViaticosService`, `ViaticosService` y `ViaticosGestionProcessor`.
+2. Remoción total de `using System.Windows.Forms;` y llamadas `MessageBox` en `ViaticosGestionProcessor.cs`.
+3. Retorno `-1` en caso de error en `UnificarSolicitudes` y manejo en `FormGestionDocumental.cs` y `RibbonController.cs`.
+4. Dinamización de valores de prueba en `ViaticoNumeroComisionTests.cs` mediante `AnioVigenciaActual % 100`.
+5. Esquema docfx actualizado en `docs/api/ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.yml`.
+6. Creación formal del plan `.agents/plans/2026-10-30-gestion-documental-rango-yy-plan.md` y sincronización en `.agents/plans/REGISTRY.md` a Ronda 265 / Fase 1436 con HEAD `3bb7b18`.
+
+---
+
+## Ronda 266: Procesador base, interfaces, servicio y formulario UI (Fases 1437–1438)
+
+## Contexto y Diagnóstico
+- **Fase 1437 (T1)**: `RenombrarSolicitudes` solo procesaba la carpeta raíz ignorando la subcarpeta `Solicitudes` donde residen los PDFs de comisiones. `Estandarizar` renombraba cualquier archivo del directorio (no solo `*.pdf`). Ausencia de contadores detallados y catálogo de motivos.
+- **Fase 1438 (T2)**: El formulario `FormGestionDocumental` emitía falsamente el mensaje "No se encontraron comisiones para el rango indicado" cuando el conteo de renombrados era 0 pese a existir registros coincidentes en `CONSULTAS`. Falta de exposición de desglose detallado en interfaces y servicio.
+
+## Cambios Aplicados
+1. Creación de `ResultadoRenombrado.cs` y `MotivoRenombrado.cs` bajo `ConversorPDF.XLL.Core.Models` e inclusión en `ConversorPDF.XLL.csproj`.
+2. Escaneo dual de carpeta raíz y subcarpeta `Solicitudes` mediante helper `CarpetasDeSolicitudes`, restricción de `Estandarizar` a `*.pdf`, trazabilidad `Debug` por archivo y resumen `[RENOMBRAR]`.
+3. Adición de `RenombrarSolicitudesConDetalle` en `IViaticosGestionProcessor`, `IViaticosService` y `ViaticosService`.
+4. Reemplazo del manejador `BtnRenombrar_Click` en `FormGestionDocumental` con desglose explícito de comisiones en rango, PDFs examinados, renombrados, colisiones, ambiguos, sin comisión y errores.
+
+---
+
+## Ronda 267: Deduplicación N0–N3 y FindCC endurecido (Fases 1439–1440)
+
+## Contexto y Diagnóstico
+- **Fase 1439 (T3)**: Filas duplicadas con cédula idéntica en `CONSULTAS` generaban ambigüedad artificial y forzaban lectura OCR innecesaria. Carencia de normalización de espacios (`Trim`) en lectura de comisiones.
+- **Fase 1440 (T4)**: `FindCC` capturaba números de rubro presupuestal (`0505023`) u otros códigos institucionales mediante expresiones regulares genéricas, causando falsos positivos de asignación.
+
+## Cambios Aplicados
+1. Pipeline de 4 niveles en `ViaticosGestionProcessor`: N0 (deduplicación por `Num, CC`), N1 (metadatos internos), N2 (OCR validado), N3 (ambigua sin modificar).
+2. Sanitización con `Trim()` en lectura de columnas de comisión y cédula en `GetSolicitudes`, y helper `NormalizarDocumento`.
+3. Sobrecarga de `FindCC(string f, ICollection<string> cedulasCandidatas)` restringiendo el match exclusivamente al conjunto de cédulas válidas para la comisión.
+
+---
+
+## Ronda 268: Pruebas de regresión, documentación y cierre R-003 (Fases 1441–1442)
+
+## Contexto y Diagnóstico
+- **Fase 1441 (T5)**: Necesidad de validar la no-regresión de la carpeta `Solicitudes`, dedupe sin OCR, OCR con comisiones compartidas, rechazo de rubros ajenos, detección de colisiones y manejo de prefijos inválidos.
+- **Fase 1442 (T6)**: Sincronización de documentación técnica, bitácora de cambios, esquema DocFX y cierre formal del registro `R-003`.
+
+## Cambios Aplicados
+1. 7 pruebas unitarias nuevas en `ViaticosGestionProcessorTests.cs` cubriendo todos los escenarios del flujo de renombrado y su invariante de balance.
+2. Actualización de `docs/articles/gestion-documental.md` con política N0–N3, catálogo de motivos y requisitos de `CONSULTAS`.
+3. Creación de bitácora `docs/articles/changes/2026-10-31-gestion-documental-carpeta-y-desambiguacion.md`.
+4. Actualización de `docs/api/ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.yml`.
+5. Cierre de fila `R-003` en `.agents/plans/REGISTRY.md` con contadores actualizados a Ronda 268 y Fase 1442.
+
+---
+
+## Ronda 269: Revisión de la implementación Ronda 266–268 (Fases 1443–1450)
+
+## Contexto y Diagnóstico
+- **Fase 1443**: Fila `R-003` cerrada con `verify = aprobado` sin ejecución previa de `scripts/verify.ps1 -Mode Full` debido a la restricción del Paso 6 (no compilar/ejecutar en `/ronda-review`).
+- **Fase 1444**: Re-ejecución con `Renombrados == 0` y `YaCorrectos > 0` arrojaba advertencia de "no se renombró ningún archivo... verifique carpeta Solicitudes" (falso negativo de idempotencia).
+- **Fase 1445**: Filas en `CONSULTAS` con cédula vacía producían candidatos incompletos y riesgo de generar nombres de destino malformados.
+- **Fase 1446**: `Estandarizar` mutaba nombres sin dejar traza en logs `Debug`/`Warning`.
+- **Fase 1447**: Clave de `r.Detalle` usaba únicamente el nombre de archivo, causando colisiones entre archivos de raíz y subcarpeta `Solicitudes`.
+- **Fase 1448**: Patrón 2 de `FindCC` no toleraba comas de miles en cédulas ni acotaba longitud (6–11 dígitos).
+- **Fase 1449**: Encabezados inconsistentes en bitácora y ausencia de `RenombrarSolicitudesConDetalle` en `IViaticosService.yml`.
+- **Fase 1450**: Criterio fijo 231 obsoleto frente al universo ampliado de 419 PDFs en `Solicitudes`.
+
+## Cambios Aplicados
+1. `REGISTRY.md`: Columna `verify` en `R-003` ajustada a `pendiente (gate Full)` para reflejar fielmente el estado pre-compilación.
+2. `FormGestionDocumental.cs`: Añadida rama `else if (r.YaCorrectos > 0)` informando estado sin cambios cuando los archivos ya son conformes.
+3. `ViaticosGestionProcessor.cs`: Filtro `!string.IsNullOrEmpty(cc)` en `GetSolicitudes`; guarda en `RenombrarFila` retornando `Ambigua` si faltan CC o Nom; trazas en `Estandarizar`; clave discriminada `carpeta/archivo` en `r.Detalle`; regex y acotamiento de longitud en `FindCC`.
+4. `implementation_plan.md`: Normalizados encabezados a `## Ronda`.
+5. `IViaticosService.yml`: Declarado miembro `RenombrarSolicitudesConDetalle`.
+6. Plan `2026-10-31-…-fix-plan.md` §10: Invariante obligatoria formalizada como criterio rector de aceptación.
+
+---
+
+## Ronda 270: Verificación de los parches 1443–1450 (regresiones y cierres) (Fases 1451–1456)
+
+## Contexto y Diagnóstico
+- **Fase 1451**: `REGISTRY.md` mantenía estado `closed` en `R-003` pese a que `verify` estaba en `pendiente (gate Full)`.
+- **Fase 1452**: En `GetSolicitudes`, el descarte de filas sin cédula no emitía traza de advertencia ni contabilizaba `sinCedula` en el resumen de `CONSULTAS`.
+- **Fase 1453**: En `RenombrarFila`, la guarda posterior devolvía `Ambigua` cuando faltaba nombre, distorsionando la métrica de ambigüedad.
+- **Fase 1454**: `Path.GetFileName(carpeta)` devolvía cadena vacía si la carpeta terminaba con separador de directorios, degradando la clave de `r.Detalle`.
+- **Fase 1455**: Rama `YaCorrectos > 0` en `FormGestionDocumental.cs` omitía el desglose de pendientes (sin comisión, ambiguos, colisiones, prefijo inválido).
+- **Fase 1456**: Inconsistencia de encabezados `# Ronda 264` y `# Ronda 265` en `implementation_plan.md` y referencia pendiente en `IViaticosService.yml`.
+
+## Cambios Aplicados
+1. `REGISTRY.md`: Estado de `R-003` ajustado a `executing` con `verify = pendiente (gate Full)`.
+2. `ViaticosGestionProcessor.cs`: Contador `sinCedula` y traza `LoggerHelper.Warning` por fila en `GetSolicitudes`; filtrado en N0 descartando candidatos sin `CC` o `Nom` con retorno de `SinComision`; normalización de carpeta con `TrimEnd` para `r.Detalle`.
+3. `FormGestionDocumental.cs`: Desglose completo de archivos pendientes en la rama `YaCorrectos > 0`.
+4. `implementation_plan.md`: Normalizados encabezados `# Ronda 264:` y `# Ronda 265:` a nivel `## Ronda`.
+5. `IViaticosService.yml`: Añadida referencia completa a `ResultadoRenombrado`.
+
+---
+
+## Ronda 271: Verificación de parches 1451–1456 y desfases de trazabilidad (Fases 1457–1460)
+
+## Contexto y Diagnóstico
+- **Fase 1457**: Descarte de filas por `Nom` vacío en N0 enmascaraba registros incompletos como `SIN_COMISION_EN_CONSULTAS`; avisos warning por fila en `GetSolicitudes` inundaban el log.
+- **Fase 1458**: Contadores de §2 en `REGISTRY.md` permanecían desfasados en Ronda 268 / Fase 1442 con riesgo de reutilización indebida de identificadores globales.
+- **Fase 1459**: La rama final de `FormGestionDocumental.cs` diagnosticaba de forma estática "Verifique carpeta Solicitudes" ignorando la causa real por ausencia de filas en `CONSULTAS`.
+- **Fase 1460**: Ausencia física de los archivos DocFX `.yml` para `ResultadoRenombrado` y `MotivoRenombrado` bajo `docs/api/`.
+
+## Cambios Aplicados
+1. `ViaticosGestionProcessor.cs`: Agregado motivo `MotivoRenombrado.SinDatos`, contador `r.SinDatos` en resumen y bucle; agrupación de warning en `GetSolicitudes` a un único resumen de advertencia; separación en N0 entre comisiones inexistentes (`SinComision`) e incompletas (`SinDatos`).
+2. `ResultadoRenombrado.cs` y `MotivoRenombrado.cs`: Incorporada propiedad y constante `SinDatos`.
+3. `REGISTRY.md`: Contadores globales actualizados a Ronda 271 y Fase 1460.
+4. `FormGestionDocumental.cs`: Desglose dinámico de causales en la rama `else` distinguiendo comisiones faltantes en `CONSULTAS` de problemas de nomenclatura de archivos.
+5. `docs/api/`: Creados `ConversorPDF.XLL.Core.Models.ResultadoRenombrado.yml` y `ConversorPDF.XLL.Core.Models.MotivoRenombrado.yml`, y registrados en `ConversorPDF.XLL.Core.Models.yml`.
+
+---
+
+## Ronda 272: Incremento de versión a 1.6.3.83 e instalador Wix (Fase 1461)
+
+## Contexto y Diagnóstico
+- **Fase 1461**: Incremento oficial de versión de producto a `1.6.3.83` tras la consolidación de la política de desambiguación N0–N3, soporte dual para la subcarpeta `Solicitudes`, modelos de auditoría y correcciones defensivas de gestión documental.
+
+## Cambios Aplicados
+1. `App.cs`: `APP_VERSION` actualizado a `"1.6.3.83"`.
+2. `ConversorPDF.XLL.csproj`: Propiedades `<Version>`, `<AssemblyVersion>` y `<FileVersion>` actualizadas a `1.6.3.83`.
+3. `InstaladorConversorPDF.wxs`: Atributos `Version` del paquete y `DefaultVersion` de componentes de plantillas (`GF-FO-023.xlsx` y `FV-FO-033.xlsx`) actualizados a `1.6.3.83`.
+4. `REGISTRY.md`: Contadores globales actualizados a Ronda 272 y Fase 1461.
+
+
+---
+
+## Ronda 276: Revisión del bump a 1.6.3.83 (Ronda 272 / Fase 1461) y reserva de R-005 (Fases 1468–1472)
+
+## Contexto y Diagnóstico
+- **Fase 1468**: La versión 1.6.3.83 se elevó antes de cerrar formalmente `R-003` con gate y antes de implementar `R-005`. Se adopta la decisión de fijar 1.6.3.83 como versión objetivo sin empaquetar MSI hasta certificar gate verde.
+- **Fase 1469**: `DefaultVersion="1.6.3.83"` en `filTemplate1` y `filTemplate2` forzaba purga incondicional de plantillas no modificadas. Se preserva `DefaultVersion="1.6.3.82"` en `InstaladorConversorPDF.wxs`.
+- **Fase 1470**: Ronda 272 / Fase 1461 carecía de fila en `REGISTRY.md` §3. Se añade formalmente la fila `R-004` (mantenimiento bump).
+- **Fase 1471**: La reserva 273–275 / 1462–1467 existía solo en memoria/chat. Se formaliza en `REGISTRY.md` como fila `R-005` (`reserved`).
+- **Fase 1472**: Deriva documental en el plan de fix de gestión documental (`2026-10-31-...-fix-plan.md`) y ausencia de bitácora para 1.6.3.83.
+
+## Cambios Aplicados
+1. `InstaladorConversorPDF.wxs`: `DefaultVersion` de `filTemplate1` y `filTemplate2` fijado en `"1.6.3.82"` con comentarios explicativos para evitar purgas innecesarias.
+2. `REGISTRY.md`: Añadida fila `R-004` (`closed`) para el bump de versión y fila `R-005` (`reserved`) para `2026-11-01-verificacion-solicitudes-plan.md`; contadores actualizados a Ronda 276 y Fase 1472.
+3. `2026-10-31-gestion-documental-carpeta-solicitudes-fix-plan.md`: Actualizada tabla de partida (§0) y tarea de cierre (§8) registrando el bump a 1.6.3.83 y la prohibición de generar MSI antes del gate.
+4. `docs/articles/changes/2026-10-31-version-1.6.3.83.md`: Creada bitácora oficial de cambios para la versión 1.6.3.83.
+
+
+---
+
+## Ronda 277: Verificación de parches 1468–1472 (bump 1.6.3.83 / WiX / registro) (Fases 1473–1476)
+
+## Contexto y Diagnóstico
+- **Fase 1473**: En `installer/InstaladorConversorPDF.wxs`, `<RemoveFile On="install">` anulaba el beneficio de restaurar `DefaultVersion="1.6.3.82"`, eliminando el archivo local en cada actualización.
+- **Fase 1474**: La fila `R-005` en `REGISTRY.md` carecía de plan materializado en disco (`2026-11-01-verificacion-solicitudes-plan.md`).
+- **Fase 1475**: La fila `R-004` en `REGISTRY.md` figuraba erróneamente como `closed` con `verify = pendiente` y `HEAD` desfasado.
+- **Fase 1476**: Redacción incondicional en bitácora de versión 1.6.3.83 y referencia cruzada a R-004 en títulos de Ronda 276.
+
+## Cambios Aplicados
+1. `installer/InstaladorConversorPDF.wxs`: Cambiado `On="install"` a `On="uninstall"` en `PurgeOldTemplate1` y `PurgeOldTemplate2`, preservando las plantillas de usuario durante actualizaciones.
+2. `.agents/plans/2026-11-01-verificacion-solicitudes-plan.md`: Creado el plan formal en disco con bloque `numbering:` (R-005, ronda_base 273, fase_base 1462, 3 waves, 6 tasks), `files_lock` y criterios v2.
+3. `.agents/plans/REGISTRY.md`: Fila `R-004` ajustada a estado `executing` con `verify = pendiente (gate conjunto)` y `HEAD = pendiente`. Fila `R-005` con fecha sincronizada. Contadores actualizados a Ronda 277 y Fase 1476.
+4. `docs/articles/changes/2026-10-31-version-1.6.3.83.md`: Redactado alcance en calidad de condicionado a gate verde de R-003+R-005 e incorporada documentación del cambio en `RemoveFile`.
+5. `implementation_plan.md` y `walkthrough.md`: Normalizados títulos de Ronda 276 referenciando la reserva de R-005.
+
+
+---
+
+## Ronda 278: Revisión del plan R-005 y verificación de 1473–1476 (Fases 1477–1482)
+
+## Contexto y Diagnóstico
+- **Fase 1477**: En T3, el plan referenciaba controles inexistentes (`txtComisionInicial`/`txtComisionFinal`). Los controles reales en `FormGestionDocumental.Designer.cs` son `txtViaticoInicial` y `txtViaticoFinal`, requiriendo suscribir `Load += FormGestionDocumental_Load`.
+- **Fase 1478**: D-2/T2 redactaban "raíz de OneDrive" con riesgo de barrido masivo en vigencias ajenas. Se acota a la carpeta del libro (`folder`) y subcarpeta `Solicitudes` vía `CarpetasDeSolicitudes(folder)`.
+- **Fase 1479**: El plan `2026-11-01-verificacion-solicitudes-plan.md` omitía campos contractuales obligatorios (envelope con baseline 952, verify, hot paths L0, parallel execution groups, y 11 campos por tarea).
+- **Fase 1480**: T6 declaraba sellar R-003 sin auditar ni registrar formalmente la deuda de Fases 1457–1460, ni declarar la condición de aborto si el gate falla.
+- **Fase 1481**: T2 listaba columna `F` (inexistente en reglas) y omitía columna `C` (`CONSULTAS_ESTADO = 3`).
+- **Fase 1482**: Fechas y descripciones de `R-004` y `R-005` desincronizadas en `REGISTRY.md`.
+
+## Cambios Aplicados
+1. `.agents/plans/2026-11-01-verificacion-solicitudes-plan.md`: Reescrito bajo el contrato formal completo de swarm (envelope, tabla de olas, 11 campos obligatorios por tarea T1–T6, controles reales `txtViaticoInicial`/`txtViaticoFinal`, suscripción `Load`, búsqueda acotada por `CarpetasDeSolicitudes`, columnas B, C, H, J de `ConstantsHelper` y auditoría de deuda de 1457–1460 previo al cierre).
+2. `.agents/plans/REGISTRY.md`: Fechas y notas normalizadas en §3 (`R-004` con nota de mantenimiento sin plan; `R-005` con fecha `2026-11-01`). Contadores globales de §2 actualizados a Ronda 278 y Fase 1482.
+
+
+---
+
+## Ronda 279: Revisión de Ronda 278 (Fases 1477–1482) y cobertura funcional de R-005 (Fases 1483–1487)
+
+## Contexto y Diagnóstico
+- **Fase 1483**: `VerificarSolicitudesPresentes` no limpia marcas erróneas en H si `(B, J)` existe y `H` tiene `SIN SOLICITUD` o `FALTA SOLICITUD`, perpetuando las 2 filas reportadas.
+- **Fase 1484**: Los 14 archivos con contenido idéntico al destino en `Solicitudes` retornan `Colision` en vez de moverse a `Solicitudes\_Duplicados\`.
+- **Fase 1485**: Los 2 archivos con prefijo de 6 dígitos (`202426`, `202626`) quedan como `PREFIJO_INVALIDO` a pesar de tener candidato único y coincidencia de nombre en `CONSULTAS` (`20426`, `20626`).
+- **Fase 1486**: Comparaciones literales de estado en columnas C y H sin normalización (`Trim().ToUpperInvariant()`) ni contemplación de variantes (`FALTA SOLICITUD`).
+- **Fase 1487**: Falta de política explícita para 13 filas con marcas operativas (`ERROR`, `SIN INFORME`, `DUPLICADA`), con riesgo de sobrescritura indebida por `SIN SOLICITUD`.
+
+## Cambios Aplicados / Especificados
+1. `ViaticosGestionProcessor.cs`: Limpieza de marca errónea con `SetCellValue(ws, "H" + i, string.Empty)`, incremento de `r.CeldasLimpiadas++` y guardado condicional si `CeldasEscritas + CeldasLimpiadas > 0`.
+2. `ViaticosGestionProcessor.cs`: Función `MismoContenido(file, destino)` (longitud + lectura secuencial byte a byte), traslado a subcarpeta `_Duplicados` con sufijo hex determinista si colisiona, y exclusión de escaneo recursivo.
+3. `ViaticosGestionProcessor.cs`: Normalización determinista de prefijos de 6 dígitos que inician en "20" a comisiones de 5 dígitos con validación por token de nombre (`CoincideNombre`).
+4. `ViaticosGestionProcessor.cs`: Helper estático `Norm(s)` para comparaciones invariantes a cultura y espacios en celdas de estado/informe.
+5. `ViaticosGestionProcessor.cs`: Regla D-5b para preservar marcas operativas distintas de vacías/faltantes y sumar a `OmitidasOtrasMarcas`.
+6. `.agents/plans/REGISTRY.md`: Asignación formal de rango 1483–1487 para materializar R-006 (`_Duplicados` + auditoría de H).
+
+## Ronda 279: Duplicados en `_Duplicados` y auditoría de INFORME (Fases 1483–1487)
+
+### Contexto y Diagnóstico
+- La corrida del 31/10 14:03 devolvió `renombrados=0 · yaCorrectos=381 · colisiones=14 · sinComision=28 · sinDatos=0 · ambiguos=0 · prefijoInvalido=11`.
+- Las 14 “colisiones” eran duplicados exactos; 2 prefijos de 6 dígitos correspondían a comisiones existentes; 2 filas tenían `SIN SOLICITUD` con archivo presente.
+
+### Cambios Aplicados
+1. `Fase 1483`: `App.FolderNames.DUPLICADOS`, `MotivoRenombrado.Duplicado`, `ResultadoRenombrado.Duplicados`, `MismoContenido` y movimiento a `Solicitudes\_Duplicados`.
+2. `Fase 1484`: `EstadoComision`, `ResultadoVerificacionSolicitudes`, `RangoSolicitudes`, `SaveActiveWorkbook` y `VerificarSolicitudesPresentes` (protección VERIFICADO/REINTEGRO, estados terminales, limpieza de marcas, `SIN SOLICITUD`, guardado condicional).
+3. `Fase 1485`: `Norm`, `EsMarcaFaltante`, `SinAcentos`/`CoincideNombre` y remapeo de prefijos de 6 dígitos.
+4. `Fase 1486`: 12 pruebas nuevas (21 en la clase).
+5. `Fase 1487`: documentación y cierre `R-006`; `R-005` → `abandoned`.
+
+### Verificación
+- `verify.ps1 -Mode Fast -Filter ViaticosGestionProcessorTests` → 21/21 PASS.
+- `verify.ps1 -Mode Full` → exit 0, 999 pruebas, 0 fallos (baseline 952).

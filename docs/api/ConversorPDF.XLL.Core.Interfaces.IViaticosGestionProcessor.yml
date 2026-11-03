@@ -5,8 +5,9 @@ items:
   id: IViaticosGestionProcessor
   parent: ConversorPDF.XLL.Core.Interfaces
   children:
-  - ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.RenombrarSolicitudes(System.String)
-  - ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.UnificarSolicitudes(System.String)
+  - ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.RenombrarSolicitudes(System.String,System.Int32,System.Int32)
+  - ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.RenombrarSolicitudesConDetalle(System.String,System.Int32,System.Int32)
+  - ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.UnificarSolicitudes(System.String,System.Int32,System.Int32)
   langs:
   - csharp
   - vb
@@ -22,63 +23,114 @@ items:
   syntax:
     content: public interface IViaticosGestionProcessor
     content.vb: Public Interface IViaticosGestionProcessor
-- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.RenombrarSolicitudes(System.String)
-  commentId: M:ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.RenombrarSolicitudes(System.String)
-  id: RenombrarSolicitudes(System.String)
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.RenombrarSolicitudes(System.String,System.Int32,System.Int32)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.RenombrarSolicitudes(System.String,System.Int32,System.Int32)
+  id: RenombrarSolicitudes(System.String,System.Int32,System.Int32)
   parent: ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor
   langs:
   - csharp
   - vb
-  name: RenombrarSolicitudes(string)
-  nameWithType: IViaticosGestionProcessor.RenombrarSolicitudes(string)
-  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.RenombrarSolicitudes(string)
+  name: RenombrarSolicitudes(string, int, int)
+  nameWithType: IViaticosGestionProcessor.RenombrarSolicitudes(string, int, int)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.RenombrarSolicitudes(string, int, int)
   type: Method
   assemblies:
   - ConversorPDF.XLL
   namespace: ConversorPDF.XLL.Core.Interfaces
-  summary: Renombra archivos PDF de solicitudes en una carpeta basándose en los datos de la hoja de CONSULTAS y validación por OCR de la cédula.
+  summary: Renombra archivos PDF de solicitudes en una carpeta basándose en los datos de la hoja de CONSULTAS y validación por OCR de la cédula, aplicando opcionalmente filtro por rango de comisiones.
   example: []
   syntax:
-    content: void RenombrarSolicitudes(string folder)
+    content: int RenombrarSolicitudes(string folder, int inicio, int fin)
     parameters:
     - id: folder
       type: System.String
       description: Ruta de la carpeta que contiene los archivos PDF a renombrar.
-    content.vb: Sub RenombrarSolicitudes(folder As String)
+    - id: inicio
+      type: System.Int32
+      description: Número de viático inicial del rango (0 para sin filtro).
+    - id: fin
+      type: System.Int32
+      description: Número de viático final del rango (0 para sin filtro).
+    return:
+      type: System.Int32
+      description: Cantidad de archivos renombrados con éxito, o -1 en caso de error.
+    content.vb: Function RenombrarSolicitudes(folder As String, inicio As Integer, fin As Integer) As Integer
   overload: ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.RenombrarSolicitudes*
-  nameWithType.vb: IViaticosGestionProcessor.RenombrarSolicitudes(String)
-  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.RenombrarSolicitudes(String)
-  name.vb: RenombrarSolicitudes(String)
-- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.UnificarSolicitudes(System.String)
-  commentId: M:ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.UnificarSolicitudes(System.String)
-  id: UnificarSolicitudes(System.String)
+  nameWithType.vb: IViaticosGestionProcessor.RenombrarSolicitudes(String, Integer, Integer)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.RenombrarSolicitudes(String, Integer, Integer)
+  name.vb: RenombrarSolicitudes(String, Integer, Integer)
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.RenombrarSolicitudesConDetalle(System.String,System.Int32,System.Int32)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.RenombrarSolicitudesConDetalle(System.String,System.Int32,System.Int32)
+  id: RenombrarSolicitudesConDetalle(System.String,System.Int32,System.Int32)
   parent: ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor
   langs:
   - csharp
   - vb
-  name: UnificarSolicitudes(string)
-  nameWithType: IViaticosGestionProcessor.UnificarSolicitudes(string)
-  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.UnificarSolicitudes(string)
+  name: RenombrarSolicitudesConDetalle(string, int, int)
+  nameWithType: IViaticosGestionProcessor.RenombrarSolicitudesConDetalle(string, int, int)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.RenombrarSolicitudesConDetalle(string, int, int)
   type: Method
   assemblies:
   - ConversorPDF.XLL
   namespace: ConversorPDF.XLL.Core.Interfaces
-  summary: Une los diferentes componentes de un expediente de viáticos (Solicitud, Resolución, RP, CDP, Verificado) en un único archivo PDF por cada hoja del libro.
+  summary: Renombra las solicitudes devolviendo el desglose completo (carpetas, motivos y contadores).
   example: []
   syntax:
-    content: int UnificarSolicitudes(string folder)
+    content: ResultadoRenombrado RenombrarSolicitudesConDetalle(string folder, int inicio, int fin)
+    parameters:
+    - id: folder
+      type: System.String
+      description: Ruta de la carpeta raíz del libro (se procesa también la subcarpeta Solicitudes).
+    - id: inicio
+      type: System.Int32
+      description: Número de viático inicial del rango (0 para sin filtro).
+    - id: fin
+      type: System.Int32
+      description: Número de viático final del rango (0 para sin filtro).
+    return:
+      type: ConversorPDF.XLL.Core.Models.ResultadoRenombrado
+      description: Resultado con contadores y motivo por archivo; nunca null.
+    content.vb: Function RenombrarSolicitudesConDetalle(folder As String, inicio As Integer, fin As Integer) As ResultadoRenombrado
+  overload: ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.RenombrarSolicitudesConDetalle*
+  nameWithType.vb: IViaticosGestionProcessor.RenombrarSolicitudesConDetalle(String, Integer, Integer)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.RenombrarSolicitudesConDetalle(String, Integer, Integer)
+  name.vb: RenombrarSolicitudesConDetalle(String, Integer, Integer)
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.UnificarSolicitudes(System.String,System.Int32,System.Int32)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.UnificarSolicitudes(System.String,System.Int32,System.Int32)
+  id: UnificarSolicitudes(System.String,System.Int32,System.Int32)
+  parent: ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor
+  langs:
+  - csharp
+  - vb
+  name: UnificarSolicitudes(string, int, int)
+  nameWithType: IViaticosGestionProcessor.UnificarSolicitudes(string, int, int)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.UnificarSolicitudes(string, int, int)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Une los diferentes componentes de un expediente de viáticos (Solicitud, Resolución, RP, CDP, Verificado) en un único archivo PDF por cada hoja del libro, aplicando opcionalmente filtro por rango de comisiones.
+  example: []
+  syntax:
+    content: int UnificarSolicitudes(string folder, int inicio, int fin)
     parameters:
     - id: folder
       type: System.String
       description: Ruta base donde se encuentran las subcarpetas de documentos (Solicitudes, RPs, CDPs, etc.).
+    - id: inicio
+      type: System.Int32
+      description: Número de viático inicial del rango (0 para sin filtro).
+    - id: fin
+      type: System.Int32
+      description: Número de viático final del rango (0 para sin filtro).
     return:
       type: System.Int32
-      description: Cantidad de expedientes unificados con éxito.
-    content.vb: Function UnificarSolicitudes(folder As String) As Integer
+      description: Cantidad de expedientes unificados con éxito, o -1 en caso de error.
+    content.vb: Function UnificarSolicitudes(folder As String, inicio As Integer, fin As Integer) As Integer
   overload: ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.UnificarSolicitudes*
-  nameWithType.vb: IViaticosGestionProcessor.UnificarSolicitudes(String)
-  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.UnificarSolicitudes(String)
-  name.vb: UnificarSolicitudes(String)
+  nameWithType.vb: IViaticosGestionProcessor.UnificarSolicitudes(String, Integer, Integer)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.UnificarSolicitudes(String, Integer, Integer)
+  name.vb: UnificarSolicitudes(String, Integer, Integer)
 references:
 - uid: ConversorPDF.XLL.Core.Interfaces
   commentId: N:ConversorPDF.XLL.Core.Interfaces
@@ -130,7 +182,7 @@ references:
 - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.RenombrarSolicitudes*
   commentId: Overload:ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.RenombrarSolicitudes
   isExternal: true
-  href: ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.html#ConversorPDF_XLL_Core_Interfaces_IViaticosGestionProcessor_RenombrarSolicitudes_System_String_
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.html#ConversorPDF_XLL_Core_Interfaces_IViaticosGestionProcessor_RenombrarSolicitudes_System_String_System_Int32_System_Int32_
   name: RenombrarSolicitudes
   nameWithType: IViaticosGestionProcessor.RenombrarSolicitudes
   fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.RenombrarSolicitudes
@@ -145,20 +197,6 @@ references:
   nameWithType.vb: String
   fullName.vb: String
   name.vb: String
-- uid: System
-  commentId: N:System
-  isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/system
-  name: System
-  nameWithType: System
-  fullName: System
-- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.UnificarSolicitudes*
-  commentId: Overload:ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.UnificarSolicitudes
-  isExternal: true
-  href: ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.html#ConversorPDF_XLL_Core_Interfaces_IViaticosGestionProcessor_UnificarSolicitudes_System_String_
-  name: UnificarSolicitudes
-  nameWithType: IViaticosGestionProcessor.UnificarSolicitudes
-  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.UnificarSolicitudes
 - uid: System.Int32
   commentId: T:System.Int32
   parent: System
@@ -170,3 +208,17 @@ references:
   nameWithType.vb: Integer
   fullName.vb: Integer
   name.vb: Integer
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.UnificarSolicitudes*
+  commentId: Overload:ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.UnificarSolicitudes
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.html#ConversorPDF_XLL_Core_Interfaces_IViaticosGestionProcessor_UnificarSolicitudes_System_String_System_Int32_System_Int32_
+  name: UnificarSolicitudes
+  nameWithType: IViaticosGestionProcessor.UnificarSolicitudes
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.UnificarSolicitudes

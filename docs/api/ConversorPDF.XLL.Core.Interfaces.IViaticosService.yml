@@ -20,6 +20,7 @@ items:
   - ConversorPDF.XLL.Core.Interfaces.IViaticosService.ProcesarIndividual(System.Action{System.Int32,System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String)
   - ConversorPDF.XLL.Core.Interfaces.IViaticosService.ProcesarMasivo(System.Action{System.Int32,System.Int32})
   - ConversorPDF.XLL.Core.Interfaces.IViaticosService.RenombrarSolicitudes(System.Int32,System.Int32)
+  - ConversorPDF.XLL.Core.Interfaces.IViaticosService.RenombrarSolicitudesConDetalle(System.Int32,System.Int32)
   - ConversorPDF.XLL.Core.Interfaces.IViaticosService.SaveAdvancedConfigRows(System.Object[0:,0:])
   - ConversorPDF.XLL.Core.Interfaces.IViaticosService.SaveTableData(System.String,System.Object[0:,0:])
   - ConversorPDF.XLL.Core.Interfaces.IViaticosService.UnificarSolicitudes(System.Int32,System.Int32)
@@ -282,6 +283,36 @@ items:
   nameWithType.vb: IViaticosService.RenombrarSolicitudes(Integer, Integer)
   fullName.vb: ConversorPDF.XLL.Core.Interfaces.IViaticosService.RenombrarSolicitudes(Integer, Integer)
   name.vb: RenombrarSolicitudes(Integer, Integer)
+- uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.RenombrarSolicitudesConDetalle(System.Int32,System.Int32)
+  commentId: M:ConversorPDF.XLL.Core.Interfaces.IViaticosService.RenombrarSolicitudesConDetalle(System.Int32,System.Int32)
+  id: RenombrarSolicitudesConDetalle(System.Int32,System.Int32)
+  parent: ConversorPDF.XLL.Core.Interfaces.IViaticosService
+  langs:
+  - csharp
+  - vb
+  name: RenombrarSolicitudesConDetalle(int, int)
+  nameWithType: IViaticosService.RenombrarSolicitudesConDetalle(int, int)
+  fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosService.RenombrarSolicitudesConDetalle(int, int)
+  type: Method
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Interfaces
+  summary: Renombra solicitudes devolviendo el desglose completo del proceso.
+  example: []
+  syntax:
+    content: ResultadoRenombrado RenombrarSolicitudesConDetalle(int inicio, int fin)
+    parameters:
+    - id: inicio
+      type: System.Int32
+    - id: fin
+      type: System.Int32
+    return:
+      type: ConversorPDF.XLL.Core.Models.ResultadoRenombrado
+    content.vb: Function RenombrarSolicitudesConDetalle(inicio As Integer, fin As Integer) As ResultadoRenombrado
+  overload: ConversorPDF.XLL.Core.Interfaces.IViaticosService.RenombrarSolicitudesConDetalle*
+  nameWithType.vb: IViaticosService.RenombrarSolicitudesConDetalle(Integer, Integer)
+  fullName.vb: ConversorPDF.XLL.Core.Interfaces.IViaticosService.RenombrarSolicitudesConDetalle(Integer, Integer)
+  name.vb: RenombrarSolicitudesConDetalle(Integer, Integer)
 - uid: ConversorPDF.XLL.Core.Interfaces.IViaticosService.UnificarSolicitudes(System.Int32,System.Int32)
   commentId: M:ConversorPDF.XLL.Core.Interfaces.IViaticosService.UnificarSolicitudes(System.Int32,System.Int32)
   id: UnificarSolicitudes(System.Int32,System.Int32)
@@ -1166,3 +1197,11 @@ references:
   name: SaveTableData
   nameWithType: IViaticosService.SaveTableData
   fullName: ConversorPDF.XLL.Core.Interfaces.IViaticosService.SaveTableData
+- uid: ConversorPDF.XLL.Core.Models.ResultadoRenombrado
+  commentId: T:ConversorPDF.XLL.Core.Models.ResultadoRenombrado
+  parent: ConversorPDF.XLL.Core.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.ResultadoRenombrado.html
+  name: ResultadoRenombrado
+  nameWithType: ResultadoRenombrado
+  fullName: ConversorPDF.XLL.Core.Models.ResultadoRenombrado

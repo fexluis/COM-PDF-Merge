@@ -7,6 +7,7 @@ using ConversorPDF.XLL.Core.Helpers;
 using ConversorPDF.XLL.Core.Enums;
 using System.Collections.Generic;
 using ConversorPDF.XLL.Core.Models;
+
 namespace ConversorPDF.XLL.Core.Interfaces
 {
     /// <summary>
@@ -37,9 +38,20 @@ namespace ConversorPDF.XLL.Core.Interfaces
         int ProcesarFilaSeleccionada(Action<int, int> progressCallback = null);
         
         /// <summary> Renombra archivos PDF de solicitudes basándose en el rango e información extraída. </summary>
-        void RenombrarSolicitudes(int inicio, int fin);
+        /// <returns> Cantidad de archivos renombrados con éxito, o -1 en caso de error. </returns>
+        int RenombrarSolicitudes(int inicio, int fin);
+
+        /// <summary> Renombra solicitudes devolviendo el desglose completo del proceso. </summary>
+        ResultadoRenombrado RenombrarSolicitudesConDetalle(int inicio, int fin);
+
+        /// <summary> Obtiene el primer y último registro de la columna B de CONSULTAS. </summary>
+        RangoSolicitudes ObtenerRangoSolicitudes();
+
+        /// <summary> Verifica la presencia física de las solicitudes y marca INFORME = SIN SOLICITUD. </summary>
+        ResultadoVerificacionSolicitudes VerificarSolicitudesPresentes(int inicio, int fin);
         
         /// <summary> Unifica los expedientes de viáticos en archivos únicos por comisionado. </summary>
+        /// <returns> Cantidad de expedientes unificados con éxito, o -1 en caso de error. </returns>
         int UnificarSolicitudes(int inicio, int fin);
         
         /// <summary> Limpia el caché interno de empleados y configuraciones. </summary>
@@ -71,5 +83,28 @@ namespace ConversorPDF.XLL.Core.Interfaces
         
         /// <summary> Guarda datos en una tabla específica de Excel. </summary>
         void SaveTableData(string tableName, object[,] data);
+
+        /// <summary>
+        /// Obtiene la carpeta de informes del libro activo (&lt;carpeta del libro&gt;\Informes).
+        /// </summary>
+        /// <returns>Ruta absoluta, o cadena vacía si no pudo resolverse.</returns>
+        string ObtenerCarpetaInformes();
+
+        /// <summary>
+        /// Ejecuta el proceso "Buscar Informes": renombrado al estándar, unificación de parejas
+        /// INF + CUM y, opcionalmente, la auditoría de la columna INFORME de CONSULTAS.
+        /// </summary>
+        /// <param name="inicio">Solicitud inicial del rango (0 = sin filtro).</param>
+        /// <param name="fin">Solicitud final del rango (0 = sin filtro).</param>
+        /// <param name="unificarParejas">True para unificar parejas INF + CUM.</param>
+        /// <param name="auditarConsultas">True para escribir la columna INFORME.</param>
+        /// <param name="simular">True para calcular sin modificar archivos ni Excel.</param>
+        /// <param name="carpetaRaiz">Carpeta de informes a procesar; si es null se usa la del libro.</param>
+        /// <param name="progress">Callback opcional de progreso (porcentaje 0-100).</param>
+        /// <returns>Resultado combinado con contadores y detalle.</returns>
+        ResultadoBusquedaInformes ProcesarInformes(int inicio, int fin, bool unificarParejas,
+                                                   bool auditarConsultas, bool simular,
+                                                   string carpetaRaiz = null,
+                                                   Action<int, int> progress = null);
     }
 }

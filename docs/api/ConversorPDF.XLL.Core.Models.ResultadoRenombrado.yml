@@ -1,0 +1,53 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Core.Models.ResultadoRenombrado
+  commentId: T:ConversorPDF.XLL.Core.Models.ResultadoRenombrado
+  id: ResultadoRenombrado
+  parent: ConversorPDF.XLL.Core.Models
+  children:
+  - ConversorPDF.XLL.Core.Models.ResultadoRenombrado.#ctor
+  - ConversorPDF.XLL.Core.Models.ResultadoRenombrado.CarpetaRaiz
+  - ConversorPDF.XLL.Core.Models.ResultadoRenombrado.CarpetasProcesadas
+  - ConversorPDF.XLL.Core.Models.ResultadoRenombrado.Error
+  - ConversorPDF.XLL.Core.Models.ResultadoRenombrado.HayError
+  - ConversorPDF.XLL.Core.Models.ResultadoRenombrado.ComisionesEnRango
+  - ConversorPDF.XLL.Core.Models.ResultadoRenombrado.PdfsExaminados
+  - ConversorPDF.XLL.Core.Models.ResultadoRenombrado.Renombrados
+  - ConversorPDF.XLL.Core.Models.ResultadoRenombrado.YaCorrectos
+  - ConversorPDF.XLL.Core.Models.ResultadoRenombrado.Colisiones
+  - ConversorPDF.XLL.Core.Models.ResultadoRenombrado.Ambiguos
+  - ConversorPDF.XLL.Core.Models.ResultadoRenombrado.SinComision
+  - ConversorPDF.XLL.Core.Models.ResultadoRenombrado.SinDatos
+  - ConversorPDF.XLL.Core.Models.ResultadoRenombrado.PrefijoInvalido
+  - ConversorPDF.XLL.Core.Models.ResultadoRenombrado.ErroresIo
+  - ConversorPDF.XLL.Core.Models.ResultadoRenombrado.Detalle
+  langs:
+  - csharp
+  - vb
+  name: ResultadoRenombrado
+  nameWithType: ResultadoRenombrado
+  fullName: ConversorPDF.XLL.Core.Models.ResultadoRenombrado
+  type: Class
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Resultado detallado del renombrado de solicitudes de viáticos.
+  example: []
+  syntax:
+    content: public class ResultadoRenombrado
+    content.vb: Public Class ResultadoRenombrado
+  inheritance:
+  - System.Object
+references:
+- uid: ConversorPDF.XLL.Core.Models
+  commentId: N:ConversorPDF.XLL.Core.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.html
+  name: ConversorPDF.XLL.Core.Models
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+

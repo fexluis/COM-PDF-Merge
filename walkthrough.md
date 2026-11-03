@@ -8316,3 +8316,281 @@ Se completó la implementación y verificación de las 6 tareas del plan MUV:
 
 
 
+
+
+---
+
+## Ronda 264: Corregir RenombrarSolicitudes y rango #YY (Fases 1426–1431)
+
+### Hallazgos y Acciones Ejecutadas
+- **Fase 1426 (T6)**: Agregado `using System.Linq;` en `ConversorPDF.Tests/Core/Processors/ViaticosGestionProcessorTests.cs`.
+- **Fase 1427 (T1)**: Corregido `TryParseLimite` en `ViaticoNumeroComision.cs` para admitir números de años anteriores con longitud >= 5 o sufijo de vigencia sin invertir años pasados.
+- **Fase 1428 (T1)**: Sustituido retorno contradictorio en `EnRango` para procesar sin filtro ante límites no interpretables (`return true`).
+- **Fase 1429 (T1)**: Desacoplado año de vigencia con `AnioVigenciaPorDefecto` y pruebas dinamizadas contra `App.APP_VIGENCIA`.
+- **Fase 1430 (T2/T5)**: Delegado feedback UI al formulario `FormGestionDocumental.BtnUnificar_Click` y retirados `MessageBox` bloqueantes del procesador en capa Core.
+- **Fase 1431 (T7/T8)**: Actualizado `docs/api/ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.yml` y sincronizados contadores de `.agents/plans/REGISTRY.md` (Ronda 264 / Fase 1431).
+
+### Verificación de Principios (Ronda 264)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1426 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1427 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1428 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1429 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1430 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1431 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+
+
+---
+
+## Ronda 265: Correcciones Ronda 264 y desacople total de WinForms (Fases 1432–1436)
+
+### Hallazgos y Acciones Ejecutadas
+- **Fase 1432 (T2/T5)**: `RenombrarSolicitudes` modificado para retornar `int` (conteo o `-1` en error); `ViaticosGestionProcessor` despojado de `System.Windows.Forms` y `MessageBox`; `FormGestionDocumental` asume feedback visual de éxito, lista vacía y error.
+- **Fase 1433 (T5)**: `UnificarSolicitudes` retorna `-1` en excepciones/directorio inexistente; `FormGestionDocumental` y `RibbonController` distinguen error (`-1`) de ausencia de expedientes (`0`).
+- **Fase 1434 (T7)**: Dinamizados los valores en asserts de `EnRango` en `ViaticoNumeroComisionTests.cs` mediante `AnioVigenciaActual % 100` y `(AnioVigenciaActual - 1) % 100`.
+- **Fase 1435 (T8)**: Actualizado `docs/api/ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.yml` reflejando retorno `System.Int32` en `RenombrarSolicitudes`.
+- **Fase 1436 (T8)**: Creado plan `.agents/plans/2026-10-30-gestion-documental-rango-yy-plan.md` y actualizada fila R-002 en `REGISTRY.md` con contadores actualizados (Ronda 265 / Fase 1436).
+
+### Verificación de Principios (Ronda 265)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1432 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1433 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1434 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1435 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1436 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+
+---
+
+## Ronda 266: Procesador base, interfaces, servicio y formulario UI (Fases 1437–1438)
+
+### Hallazgos y Acciones Ejecutadas
+- **Fase 1437 (T1)**: Creados `ResultadoRenombrado.cs` y `MotivoRenombrado.cs` bajo `ConversorPDF.XLL/Core/Models/` y añadidos a `ConversorPDF.XLL.csproj`. En `ViaticosGestionProcessor.cs`, se implementó `CarpetasDeSolicitudes` para escanear raíz y subcarpeta `Solicitudes`, se restringió `Estandarizar` a `*.pdf`, se añadieron contadores estructurados y se preservó `RenombrarSolicitudes` como fachada sobre `RenombrarSolicitudesConDetalle`.
+- **Fase 1438 (T2)**: Declarado `RenombrarSolicitudesConDetalle` en `IViaticosGestionProcessor` e `IViaticosService`, implementado en `ViaticosService` y conectado a `FormGestionDocumental.BtnRenombrar_Click`, sustituyendo el mensaje falso de "sin comisiones" por el reporte fiel con desglose de examinados, renombrados, colisiones y motivos.
+
+### Verificación de Principios (Ronda 266)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1437 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1438 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+
+---
+
+## Ronda 267: Deduplicación N0–N3 y FindCC endurecido (Fases 1439–1440)
+
+### Hallazgos y Acciones Ejecutadas
+- **Fase 1439 (T3)**: `GetSolicitudes` sanitizado con `Trim()`. `RenombrarFila` migrado a política N0 (agrupación y deduplicación por número y cédula normalizada), N1 (metadatos de PDF), N2 (OCR validado) y N3 (ambigua sin modificar). Creados helpers `IdentificarPorMetadatos`, `IdentificarPorOcr` y `NormalizarDocumento`.
+- **Fase 1440 (T4)**: `FindCC` actualizado a firma con `ICollection<string> cedulasCandidatas`, restringiendo las coincidencias al conjunto de cédulas válidas para la comisión y eliminando falsos positivos provocados por rubros presupuestales (ej. `0505023`).
+
+### Verificación de Principios (Ronda 267)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1439 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1440 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+
+---
+
+## Ronda 268: Pruebas de regresión, documentación y cierre R-003 (Fases 1441–1442)
+
+### Hallazgos y Acciones Ejecutadas
+- **Fase 1441 (T5)**: 7 pruebas unitarias nuevas agregadas a `ConversorPDF.Tests/Core/Processors/ViaticosGestionProcessorTests.cs` validando subcarpeta `Solicitudes`, dedupe idéntico sin OCR, OCR con comisiones compartidas, rechazo de texto ajeno, detección de colisión sin sobrescritura, prefijos no numéricos y control de errores I/O.
+- **Fase 1442 (T6)**: Actualizado `docs/articles/gestion-documental.md` con política N0–N3 y tabla de motivos; creada bitácora `docs/articles/changes/2026-10-31-gestion-documental-carpeta-y-desambiguacion.md`; sincronizado `docs/api/ConversorPDF.XLL.Core.Interfaces.IViaticosGestionProcessor.yml`; cerrada fila `R-003` en `REGISTRY.md` con contadores actualizados (Ronda 268 / Fase 1442).
+
+### Verificación de Principios (Ronda 268)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1441 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1442 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+
+---
+
+## Ronda 269: Revisión de la implementación Ronda 266–268 (Fases 1443–1450)
+
+### Hallazgos y Acciones Ejecutadas
+- **Fase 1443**: Columna `verify` en `REGISTRY.md` fila R-003 ajustada a `pendiente (gate Full)` para reflejar que la suite física no fue ejecutada bajo el paso restrictivo de `/ronda-review`.
+- **Fase 1444**: Manejador `BtnRenombrar_Click` en `FormGestionDocumental.cs` actualizado con rama `else if (r.YaCorrectos > 0)` para feedback fiel en re-ejecuciones sin cambios.
+- **Fase 1445**: En `ViaticosGestionProcessor.cs`, `GetSolicitudes` descarta registros con cédula vacía; en `RenombrarFila` se valida no-nulidad de `CC` y `Nom` antes de renombrar devolviendo `Ambigua` si faltan.
+- **Fase 1446**: En `ViaticosGestionProcessor.Estandarizar` se agregaron trazas `LoggerHelper.Debug` ante renombrados y `LoggerHelper.Warning` ante excepciones.
+- **Fase 1447**: `r.Detalle` almacena claves compuestas `Path.GetFileName(carpeta) + "/" + Path.GetFileName(file)` para evitar sobreescritura entre raíz y `Solicitudes`.
+- **Fase 1448**: Regex de `FindCC` ampliado con `(?<!\d)\d[\d\.,\s]{4,18}\d(?!\d)` filtrando longitudes entre 6 y 11 dígitos, tolerando comas de miles y evitando falsos ambiguos.
+- **Fase 1449**: Unificados encabezados `## Ronda` en `implementation_plan.md` y agregado `RenombrarSolicitudesConDetalle` en `docs/api/ConversorPDF.XLL.Core.Interfaces.IViaticosService.yml`.
+- **Fase 1450**: §10 de `.agents/plans/2026-10-31-gestion-documental-carpeta-solicitudes-fix-plan.md` actualizado consagrando la invariante de balance como criterio rector de aceptación.
+
+### Verificación de Principios (Ronda 269)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1443 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1444 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1445 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1446 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1447 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1448 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1449 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1450 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+
+---
+
+## Ronda 270: Verificación de los parches 1443–1450 (regresiones y cierres) (Fases 1451–1456)
+
+### Hallazgos y Acciones Ejecutadas
+- **Fase 1451**: `REGISTRY.md` fila `R-003` actualizado de `closed` a `executing` con `verify = pendiente (gate Full)` para preservar la integridad del contrato de certificación.
+- **Fase 1452**: En `ViaticosGestionProcessor.GetSolicitudes` se implementó contador `sinCedula` y emisión de trazas `LoggerHelper.Warning` por cada fila omitida, reportándose en el resumen de `CONSULTAS`.
+- **Fase 1453**: En `ViaticosGestionProcessor.RenombrarFila`, la validación de no-vacíos se movió a N0 con `Where(!string.IsNullOrWhiteSpace(c.CC) && !string.IsNullOrWhiteSpace(c.Nom))` retornando `SinComision`, removiendo la guarda inadecuada que clasificaba como `Ambigua`.
+- **Fase 1454**: Normalizada la clave de `r.Detalle` mediante `Path.GetFileName(carpeta.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))` para evitar cadenas vacías ante separadores finales.
+- **Fase 1455**: `FormGestionDocumental.cs` actualizado para incluir el desglose de archivos pendientes (sin comisión, ambiguos, colisiones, prefijo inválido) en la rama `YaCorrectos > 0`.
+- **Fase 1456**: Normalizados encabezados a `## Ronda` en `implementation_plan.md` y sincronizada referencia de tipo `ResultadoRenombrado` en `IViaticosService.yml`.
+
+### Verificación de Principios (Ronda 270)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1451 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1452 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1453 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1454 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1455 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1456 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+
+---
+
+## Ronda 271: Verificación de parches 1451–1456 y desfases de trazabilidad (Fases 1457–1460)
+
+### Hallazgos y Acciones Ejecutadas
+- **Fase 1457**: Creado `MotivoRenombrado.SinDatos` ("SIN_DATOS_EN_CONSULTAS") y propiedad `SinDatos` en `ResultadoRenombrado`. En `ViaticosGestionProcessor.RenombrarFila`, N0 separa comisiones inexistentes (`SinComision`) de comisiones existentes incompletas (`SinDatos`). En `GetSolicitudes`, se agrupó la advertencia por filas sin cédula en un único aviso para prevenir saturación de logs.
+- **Fase 1458**: Actualizados contadores en §2 de `.agents/plans/REGISTRY.md` a Ronda 271 y Fase 1460 (siguiente 272 / 1461), restableciendo la sincronía append-only.
+- **Fase 1459**: Actualizado `FormGestionDocumental.BtnRenombrar_Click` en la rama `else` para diagnosticar dinámicamente si el motivo principal es la falta de comisiones en `CONSULTAS` o errores de nomenclatura en archivos.
+- **Fase 1460**: Creados los esquemas de API DocFX `docs/api/ConversorPDF.XLL.Core.Models.ResultadoRenombrado.yml` y `ConversorPDF.XLL.Core.Models.MotivoRenombrado.yml`, y registrados en `ConversorPDF.XLL.Core.Models.yml`.
+
+### Verificación de Principios (Ronda 271)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1457 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1458 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1459 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1460 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+
+---
+
+## Ronda 272: Incremento de versión a 1.6.3.83 e instalador Wix (Fase 1461)
+
+### Hallazgos y Acciones Ejecutadas
+- **Fase 1461**: Actualizada la versión global del producto a `1.6.3.83` en `ConversorPDF.XLL/Core/Helpers/App.cs` (`APP_VERSION`), `ConversorPDF.XLL/ConversorPDF.XLL.csproj` (`Version`, `AssemblyVersion`, `FileVersion`) e `installer/InstaladorConversorPDF.wxs` (`Version` de Package y `DefaultVersion` de plantillas `filTemplate1` y `filTemplate2`). Sincronizados contadores en §2 de `.agents/plans/REGISTRY.md` a Ronda 272 y Fase 1461.
+
+### Verificación de Principios (Ronda 272)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1461 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+
+
+---
+
+## Ronda 276: Revisión del bump a 1.6.3.83 (Ronda 272 / Fase 1461) y reserva de R-005 (Fases 1468–1472)
+
+### Hallazgos y Acciones Ejecutadas
+- **Fase 1468**: Se fija 1.6.3.83 como versión objetivo compartida de R-003 y R-005, prohibiendo la generación y publicación del instalador MSI antes de certificar gate verde para ambas capacidades.
+- **Fase 1469**: En `installer/InstaladorConversorPDF.wxs`, se preserva `DefaultVersion="1.6.3.82"` en componentes `filTemplate1` (`GF-FO-023.xlsx`) y `filTemplate2` (`FV-FO-033.xlsx`), evitando purgas y sobrescrituras innecesarias de archivos locales del usuario en releases sin alteraciones de plantillas.
+- **Fase 1470**: Añadida la fila `R-004` en `REGISTRY.md` §3 formalizando la tarea de mantenimiento del bump a 1.6.3.83 en estado `closed` con `verify = pendiente`.
+- **Fase 1471**: Registrada la fila `R-005` en `REGISTRY.md` §3 para el plan `2026-11-01-verificacion-solicitudes-plan.md` en estado `reserved` (`Wave 1..3` → `Ronda 273–275`, `T1..T6` → `Fase 1462–1467`), y contadores de §2 actualizados a Ronda 276 y Fase 1472.
+- **Fase 1472**: Actualizada la versión de partida y notas de empaquetado en `.agents/plans/2026-10-31-gestion-documental-carpeta-solicitudes-fix-plan.md` (líneas 50 y 903), y generada la bitácora `docs/articles/changes/2026-10-31-version-1.6.3.83.md`.
+
+### Verificación de Principios (Ronda 276)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1468 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1469 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1470 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1471 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1472 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+
+
+---
+
+## Ronda 277: Verificación de parches 1468–1472 (bump 1.6.3.83 / WiX / registro) (Fases 1473–1476)
+
+### Hallazgos y Acciones Ejecutadas
+- **Fase 1473**: En `installer/InstaladorConversorPDF.wxs`, se cambió `On="install"` a `On="uninstall"` en `PurgeOldTemplate1` (`GF-FO-023.xlsx`) y `PurgeOldTemplate2` (`FV-FO-033.xlsx`), asegurando que las plantillas locales del usuario no se purguen durante actualizaciones de versión.
+- **Fase 1474**: Creado físicamente en disco el plan `.agents/plans/2026-11-01-verificacion-solicitudes-plan.md` con bloque `numbering:` (R-005, ronda_base 273, fase_base 1462, 3 waves, 6 tasks), `files_lock` y criterios v2, dejando la reserva en estado plenamente ejecutable.
+- **Fase 1475**: En `.agents/plans/REGISTRY.md`, fila `R-004` corregida de `closed` a `executing` con `verify = pendiente (gate conjunto)` y `HEAD = pendiente`, condicionando su cierre definitivo al pase exitoso del gate de build y pruebas.
+- **Fase 1476**: En `docs/articles/changes/2026-10-31-version-1.6.3.83.md`, el alcance de 1.6.3.83 fue redactado en términos condicionales a la certificación de gate de R-003+R-005. Sincronizados títulos en `implementation_plan.md` y `walkthrough.md`.
+
+### Verificación de Principios (Ronda 277)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1473 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1474 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1475 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1476 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+
+
+---
+
+## Ronda 278: Revisión del plan R-005 y verificación de 1473–1476 (Fases 1477–1482)
+
+### Hallazgos y Acciones Ejecutadas
+- **Fase 1477**: Corregidos en T3 del plan los nombres de controles a `txtViaticoInicial` y `txtViaticoFinal`, especificando la suscripción a `this.Load += FormGestionDocumental_Load` en el constructor de `FormGestionDocumental`.
+- **Fase 1478**: Acotado el alcance de búsqueda en D-2 y T2 a `folder` (carpeta del libro de Excel) y subcarpeta `Solicitudes` mediante el helper existente `CarpetasDeSolicitudes(folder)`, prohibiendo explícitamente el recorrido del árbol de OneDrive.
+- **Fase 1479**: Reescrito `.agents/plans/2026-11-01-verificacion-solicitudes-plan.md` completando el envelope de ejecución (`baseline: 952`, `verify`, `hot_paths_L0`, `stop_conditions`), tabla de olas y los 11 campos obligatorios por tarea (T1–T6).
+- **Fase 1480**: En T6 del plan se estipula auditar y registrar el estado de las fases 1457–1460 en R-003 antes del sellado, y se define explícitamente que ante fallo del gate las filas permanecen en `executing` y abren ronda de fix.
+- **Fase 1481**: Corregidas columnas de lectura en T2 a `CONSULTAS_NUMERO_COMISION` (B=2), `CONSULTAS_ESTADO` (C=3), `CONSULTAS_INFORME` (H=8) y `CONSULTAS_CEDULA` (J=10), retirando la referencia a columna F.
+- **Fase 1482**: En `.agents/plans/REGISTRY.md`, normalizada fecha de `R-005` a `2026-11-01` y descripción de `R-004` como `(mantenimiento sin plan: bump 1.6.3.83)`. Contadores de §2 actualizados a Ronda 278 y Fase 1482.
+
+### Verificación de Principios (Ronda 278)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1477 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1478 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1479 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1480 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1481 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1482 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+
+
+---
+
+## Ronda 279: Revisión de Ronda 278 (Fases 1477–1482) y cobertura funcional de R-005 (Fases 1483–1487)
+
+### Hallazgos y Acciones Ejecutadas
+- **Fase 1483**: Aceptada corrección de marcas erróneas en H (`SIN SOLICITUD`/`FALTA SOLICITUD` cuando existe archivo físico) con limpieza de celda, contador `CeldasLimpiadas` y guardado condicional.
+- **Fase 1484**: Aceptada política de `_Duplicados` mediante `MismoContenido` para desahogar los 14 archivos con colisión idéntica a `Solicitudes\_Duplicados\` con desambiguación guid hex.
+- **Fase 1485**: Aceptada normalización de prefijos de 6 dígitos que inician en "20" con validación de coincidencia por token de nombre en `CONSULTAS`.
+- **Fase 1486**: Aceptada normalización obligatoria con `Norm()` (`Trim().ToUpperInvariant()`) en lectura y evaluación de columnas C y H.
+- **Fase 1487**: Aceptada preservación de marcas operativas (`ERROR`, `SIN INFORME`, `DUPLICADA`) vía regla D-5b para evitar su sobrescritura.
+
+### Verificación de Principios (Ronda 279)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1483 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1484 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1485 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1486 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+| F1487 | [X] Sí | [X] Sí | [X] Sí | Sí | Sí |
+
+## Ronda 279: Duplicados en `_Duplicados` y auditoría de INFORME (Fases 1483–1487)
+
+### Contexto y Diagnóstico
+- La corrida del 31/10 14:03 devolvió `renombrados=0 · yaCorrectos=381 · colisiones=14 · sinComision=28 · sinDatos=0 · ambiguos=0 · prefijoInvalido=11`.
+- Las 14 “colisiones” eran duplicados exactos; 2 prefijos de 6 dígitos correspondían a comisiones existentes; 2 filas tenían `SIN SOLICITUD` con archivo presente.
+
+### Cambios Aplicados
+1. `Fase 1483`: `App.FolderNames.DUPLICADOS`, `MotivoRenombrado.Duplicado`, `ResultadoRenombrado.Duplicados`, `MismoContenido` y movimiento a `Solicitudes\_Duplicados`.
+2. `Fase 1484`: `EstadoComision`, `ResultadoVerificacionSolicitudes`, `RangoSolicitudes`, `SaveActiveWorkbook` y `VerificarSolicitudesPresentes` (protección VERIFICADO/REINTEGRO, estados terminales, limpieza de marcas, `SIN SOLICITUD`, guardado condicional).
+3. `Fase 1485`: `Norm`, `EsMarcaFaltante`, `SinAcentos`/`CoincideNombre` y remapeo de prefijos de 6 dígitos.
+4. `Fase 1486`: 12 pruebas nuevas (21 en la clase).
+5. `Fase 1487`: documentación y cierre `R-006`; `R-005` → `abandoned`.
+
+### Verificación
+- `verify.ps1 -Mode Fast -Filter ViaticosGestionProcessorTests` → 21/21 PASS.
+- `verify.ps1 -Mode Full` → exit 0, 999 pruebas, 0 fallos (baseline 952).

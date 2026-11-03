@@ -103,6 +103,17 @@ namespace ConversorPDF.XLL.Core.Helpers
         public const string SHEET_CONFIG = "Config";
         public const string SHEET_DEPENDENCIAS = "Dependencias";
 
+        /// <summary>
+        /// Carpetas (dentro de \Informes) donde se validan y unifican parejas INF + CUM.
+        /// </summary>
+        public static readonly string[] INFORMES_CARPETAS_ESPECIALES =
+        {
+            "Academica",
+            "Capacitacion",
+            "Direccion",
+            "Fortalecimiento"
+        };
+
         public const string THEME_PATH = @"C:\Program Files\Microsoft Office\root\Document Themes 16\Theme Colors\Office 2013 - 2022.xml";
 
         public static string GetTemplate(TipoFormato type)

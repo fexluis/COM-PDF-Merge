@@ -5,8 +5,10 @@ using ConversorPDF.XLL.Core.Interfaces;
 using ConversorPDF.XLL.Core.Helpers;
 using ConversorPDF.XLL.Core.Enums;
 using System.Collections.Generic;
+using System.IO;
 using ConversorPDF.XLL.Core.Models;
 using ConversorPDF.XLL.Core.Repositories;
+
 namespace ConversorPDF.XLL.Core.Services
 {
     /// <summary>
@@ -22,6 +24,7 @@ namespace ConversorPDF.XLL.Core.Services
         private readonly IViaticosMasivoProcessor _masivoProcessor;
         private readonly IViaticosCumplidosProcessor _cumplidosProcessor;
         private readonly IViaticosGestionProcessor _gestionProcessor;
+        private readonly IBusquedaInformesProcessor _busquedaInformesProcessor;
 
         /// <summary> constructor con inyección de dependencias. </summary>
         public ViaticosService(
@@ -31,7 +34,8 @@ namespace ConversorPDF.XLL.Core.Services
             IViaticosIndividualProcessor individualProcessor,
             IViaticosMasivoProcessor masivoProcessor,
             IViaticosCumplidosProcessor cumplidosProcessor,
-            IViaticosGestionProcessor gestionProcessor)
+            IViaticosGestionProcessor gestionProcessor,
+            IBusquedaInformesProcessor busquedaInformesProcessor)
         {
             _excelRepository = excelRepository;
             _userService = userService;
@@ -40,6 +44,7 @@ namespace ConversorPDF.XLL.Core.Services
             _masivoProcessor = masivoProcessor;
             _cumplidosProcessor = cumplidosProcessor;
             _gestionProcessor = gestionProcessor;
+            _busquedaInformesProcessor = busquedaInformesProcessor;
         }
 
         /// <inheritdoc/>
@@ -103,12 +108,24 @@ namespace ConversorPDF.XLL.Core.Services
         }
 
         /// <inheritdoc/>
-        public void RenombrarSolicitudes(int inicio, int fin)
-            => _gestionProcessor.RenombrarSolicitudes(_excelRepository.GetOneDriveFolderPath());
+        public int RenombrarSolicitudes(int inicio, int fin)
+            => _gestionProcessor.RenombrarSolicitudes(_excelRepository.GetOneDriveFolderPath(), inicio, fin);
+
+        /// <inheritdoc/>
+        public ResultadoRenombrado RenombrarSolicitudesConDetalle(int inicio, int fin)
+            => _gestionProcessor.RenombrarSolicitudesConDetalle(_excelRepository.GetOneDriveFolderPath(), inicio, fin);
+
+        /// <inheritdoc/>
+        public RangoSolicitudes ObtenerRangoSolicitudes()
+            => _gestionProcessor.ObtenerRangoSolicitudes();
+
+        /// <inheritdoc/>
+        public ResultadoVerificacionSolicitudes VerificarSolicitudesPresentes(int inicio, int fin)
+            => _gestionProcessor.VerificarSolicitudesPresentes(_excelRepository.GetOneDriveFolderPath(), inicio, fin);
 
         /// <inheritdoc/>
         public int UnificarSolicitudes(int inicio, int fin)
-            => _gestionProcessor.UnificarSolicitudes(_excelRepository.GetOneDriveFolderPath());
+            => _gestionProcessor.UnificarSolicitudes(_excelRepository.GetOneDriveFolderPath(), inicio, fin);
 
         /// <inheritdoc/>
         public bool ValidarFormatoComisionado(dynamic sheet) => _viaticosRepository.ValidarFormatoComisionado(sheet);
@@ -158,5 +175,58 @@ namespace ConversorPDF.XLL.Core.Services
 
         /// <inheritdoc/>
         public void SaveTableData(string tableName, object[,] data) => _excelRepository.SetTableData(tableName, data);
+
+        /// <inheritdoc/>
+        public string ObtenerCarpetaInformes()
+        {
+            string carpetaLibro = _excelRepository.GetOneDriveFolderPath();
+            if (string.IsNullOrWhiteSpace(carpetaLibro)) return string.Empty;
+
+            return Path.Combine(carpetaLibro, App.FolderNames.INFORMES);
+        }
+
+        /// <inheritdoc/>
+        public ResultadoBusquedaInformes ProcesarInformes(int inicio, int fin, bool unificarParejas,
+                                                           bool auditarConsultas, bool simular,
+                                                           string carpetaRaiz = null,
+                                                           Action<int, int> progress = null)
+        {
+            string carpeta = string.IsNullOrWhiteSpace(carpetaRaiz) ? ObtenerCarpetaInformes() : carpetaRaiz;
+
+            // El progreso se normaliza a 0-100: 50 % para el renombrado y 50 % para la auditoría.
+            Action<int, int> progresoRenombrado = null;
+            Action<int, int> progresoAuditoria = null;
+
+            if (progress != null)
+            {
+                double techoRenombrado = auditarConsultas ? 50.0 : 100.0;
+
+                progresoRenombrado = (actual, total) =>
+                {
+                    double porcentaje = total <= 0 ? 0 : techoRenombrado * actual / total;
+                    progress((int)porcentaje, 100);
+                };
+
+                progresoAuditoria = (actual, total) =>
+                {
+                    double porcentaje = total <= 0
+                        ? techoRenombrado
+                        : techoRenombrado + (100.0 - techoRenombrado) * actual / total;
+                    progress((int)porcentaje, 100);
+                };
+            }
+
+            var resultado = _busquedaInformesProcessor.RenombrarYUnificar(
+                carpeta, inicio, fin, unificarParejas, simular, progresoRenombrado);
+
+            if (!resultado.HayError && auditarConsultas)
+            {
+                var auditoria = _busquedaInformesProcessor.AuditarConsultas(
+                    carpeta, inicio, fin, simular, progresoAuditoria);
+                resultado.Absorber(auditoria);
+            }
+
+            return resultado;
+        }
     }
 }

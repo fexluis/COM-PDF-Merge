@@ -7,6 +7,8 @@ items:
   - ConversorPDF.XLL.Core.Models.Empleado
   - ConversorPDF.XLL.Core.Models.ExtraerDatos
   - ConversorPDF.XLL.Core.Models.Metadata
+  - ConversorPDF.XLL.Core.Models.MotivoRenombrado
+  - ConversorPDF.XLL.Core.Models.ResultadoRenombrado
   - ConversorPDF.XLL.Core.Models.SqliteResult
   - ConversorPDF.XLL.Core.Models.SqliteResult`1
   - ConversorPDF.XLL.Core.Models.UserIdentification

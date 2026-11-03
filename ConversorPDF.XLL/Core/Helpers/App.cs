@@ -43,6 +43,8 @@ namespace ConversorPDF.XLL.Core.Helpers
             var userSvc = new UserService();
             var viatRepo = new ViaticosRepository(excelRepo);
             var metadataSvc = new PdfMetadataService();
+            var pdfSvc = new PdfService();
+            var pdfToTexto = new PdfToTextoHelper();
             
             return new ViaticosService(
                 excelRepo, 
@@ -51,7 +53,8 @@ namespace ConversorPDF.XLL.Core.Helpers
                 new ViaticosIndividualProcessor(excelRepo, viatRepo, userSvc, metadataSvc),
                 new ViaticosMasivoProcessor(excelRepo, viatRepo),
                 new ViaticosCumplidosProcessor(excelRepo, viatRepo, userSvc, metadataSvc),
-                new ViaticosGestionProcessor(excelRepo, viatRepo, new PdfToTextoHelper(), metadataSvc)
+                new ViaticosGestionProcessor(excelRepo, viatRepo, pdfToTexto, metadataSvc),
+                new BusquedaInformesProcessor(excelRepo, pdfToTexto, pdfSvc)
             );
         }
 
@@ -69,7 +72,7 @@ namespace ConversorPDF.XLL.Core.Helpers
         public IViaticosService Viaticos => _viaticosService;
 
 
-        public const string APP_VERSION = "1.6.3.81";
+        public const string APP_VERSION = "1.6.3.86";
         public const string APP_VIGENCIA = "2026";
         public const string APP_NAME = "ESAP - Conversor PDF v" + APP_VERSION;
         private static string _defaultUserCache;
@@ -122,9 +125,26 @@ namespace ConversorPDF.XLL.Core.Helpers
             public const string AUTORIZADOS = "Autorizados";
             public const string SOLICITUDES = "Solicitudes";
             /// <summary>
+            /// Subcarpeta (dentro de Solicitudes) donde se archivan los PDF duplicados
+            /// cuyo nombre destino ya existía con contenido idéntico.
+            /// </summary>
+            public const string DUPLICADOS = "_Duplicados";
+            /// <summary>
             /// Carpeta histórica donde se archivan los boletines de Orden de Pago unificados.
             /// </summary>
             public const string OrdenesDePago = "OrdenesDePago";
+            /// <summary>
+            /// Carpeta de datos del proceso "Buscar Informes" (&lt;carpeta del libro&gt;\Informes).
+            /// </summary>
+            public const string INFORMES = "Informes";
+            /// <summary>
+            /// Subcarpeta de informes ya auditados y verificados.
+            /// </summary>
+            public const string INFORMES_VERIFICADOS = "VERIFICADOS";
+            /// <summary>
+            /// Subcarpeta donde se archivan los PDF duplicados exactos del proceso de informes.
+            /// </summary>
+            public const string INFORMES_DUPLICADOS = "_Duplicados";
         }
 
         /// <summary>

@@ -635,11 +635,16 @@ namespace ConversorPDF.XLL
                         $"Unificación completada: {count} archivo(s) procesados.",
                         App.APP_NAME, MessageBoxButtons.OK,
                         MessageBoxIcon.Information);
-                else
+                else if (count == 0)
                     MessageBox.Show(
                         "No se encontraron archivos para unificar.",
                         App.APP_NAME, MessageBoxButtons.OK,
                         MessageBoxIcon.Warning);
+                else
+                    MessageBox.Show(
+                        "Ocurrio un error al unificar viaticos. Consulte el registro de eventos.",
+                        App.APP_NAME, MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
             }
             catch (ViaticosFormatException ex)
             {
@@ -949,9 +954,65 @@ namespace ConversorPDF.XLL
         // ------------------------------------------------------------------
         // Botón: Buscar Informes
         // ------------------------------------------------------------------
+        /// <summary>
+        /// Abre el formulario de búsqueda de informes (renombrado, unificación INF + CUM y
+        /// auditoría de la columna INFORME de CONSULTAS).
+        /// </summary>
+        /// <param name="control">Referencia al botón del Ribbon que dispara la acción.</param>
         public void BuscarInformes(IRibbonControl control)
         {
-            MessageBox.Show("Función Buscar Informes (Próximamente)", App.APP_NAME, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            LoggerHelper.Info("Iniciando BuscarInformes desde el Ribbon");
+
+            try
+            {
+                DatabaseBootstrapper.EnsureInitialized();
+            }
+            catch (Exception exInit)
+            {
+                LoggerHelper.Error("[BuscarInformes] Error al inicializar la BD", exInit);
+                MessageBox.Show($"No se pudo inicializar la base de datos.\n{exInit.Message}",
+                    App.APP_NAME, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            if (!HasPermission(RibbonButtonId.BuscarInformes))
+            {
+                MessageBox.Show("No tiene permisos para esta función.", App.APP_NAME,
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                dynamic excelApp = ExcelDnaUtil.Application;
+                dynamic wb = excelApp.ActiveWorkbook;
+                if (wb == null)
+                {
+                    MessageBox.Show("No hay un libro activo.", App.APP_NAME,
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                dynamic ws = wb.ActiveSheet;
+                if (ws == null || !string.Equals((string)ws.Name, ConstantsHelper.SHEET_CONSULTAS, StringComparison.OrdinalIgnoreCase))
+                {
+                    MessageBox.Show("Seleccione la hoja CONSULTAS para buscar los informes.",
+                        App.APP_NAME, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                var app = new App();
+                using (var form = new ConversorPDF.XLL.FormProgramador.FormBuscarInformes(wb, app.Viaticos))
+                {
+                    form.ShowDialog();
+                }
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error("ERROR en BuscarInformes (Ribbon)", ex);
+                MessageBox.Show($"Error al abrir Buscar Informes: {ex.Message}",
+                    App.APP_NAME, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         // ------------------------------------------------------------------

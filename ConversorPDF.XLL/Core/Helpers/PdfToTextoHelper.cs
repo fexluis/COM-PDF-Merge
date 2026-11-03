@@ -52,6 +52,29 @@ namespace ConversorPDF.XLL.Core.Helpers
             }
         }
 
+        /// <summary>
+        /// Obtiene la cantidad de páginas del PDF usando PdfPig.
+        /// </summary>
+        /// <param name="rutaPdf">Ruta completa del archivo PDF.</param>
+        /// <returns>Número de páginas, o 0 si el archivo no existe o no pudo abrirse.</returns>
+        public int ContarPaginas(string rutaPdf)
+        {
+            try
+            {
+                if (!System.IO.File.Exists(rutaPdf)) return 0;
+
+                using (PdfDocument document = PdfDocument.Open(rutaPdf))
+                {
+                    return document.NumberOfPages;
+                }
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error($"Error contando páginas de {rutaPdf}", ex);
+                return 0;
+            }
+        }
+
         public string ExtraerTextoPagina(string rutaPdf, int numeroPagina)
         {
             try

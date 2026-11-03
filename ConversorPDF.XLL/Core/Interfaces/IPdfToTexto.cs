@@ -20,6 +20,9 @@ namespace ConversorPDF.XLL.Core.Interfaces
         /// <summary> Extrae todo el texto contenido en el archivo PDF. </summary>
         string ExtraerTodoTexto(string rutaPdf);
 
+        /// <summary> Obtiene la cantidad de páginas del PDF (0 si no pudo abrirse). </summary>
+        int ContarPaginas(string rutaPdf);
+
         /// <summary> Extrae el texto de una página específica (1-based index). </summary>
         string ExtraerTextoPagina(string rutaPdf, int numeroPagina);
 

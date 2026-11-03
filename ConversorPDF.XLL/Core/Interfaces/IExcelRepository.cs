@@ -59,6 +59,9 @@ namespace ConversorPDF.XLL.Core.Interfaces
         /// <summary> Recupera el valor de una variable global almacenada en el entorno de Excel. </summary>
         string GetGlobalVariable(string varName);
         
+        /// <summary> Guarda el libro activo en su ubicación original. </summary>
+        void SaveActiveWorkbook();
+
         /// <summary> Obtiene la ruta de la carpeta de OneDrive configurada. </summary>
         string GetOneDriveFolderPath();
         

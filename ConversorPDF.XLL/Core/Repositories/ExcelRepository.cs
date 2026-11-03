@@ -112,6 +112,9 @@ namespace ConversorPDF.XLL.Core.Repositories
 
         public void DisplayAlerts(bool enabled) => _excelApp.DisplayAlerts = enabled;
 
+        /// <summary> Guarda el libro activo en su ubicación original. </summary>
+        public void SaveActiveWorkbook() => GetActiveWorkbook().Save();
+
         public string GetGlobalVariable(string varName)
         {
             try

@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 258 | 259 | 2026-10-29 |
-| `fase` | 1419 | 1420 | 2026-10-29 |
+| `ronda` | 281 | 282 | 2026-10-31 |
+| `fase` | 1487 | 1488 | 2026-10-31 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -36,6 +36,11 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | # | Fecha | Plan | Waves (Ronda) | Tasks (Fase) | Estado | verify | HEAD |
 |---|---|---|---|---|---|---|---|
 | R-001 | 2026-10-29 | `2026-10-29-mover-usuario-entre-vaults-plan.md` | `Wave 1..5` → `Ronda 259–263` | `T1..T6` → `Fase 1420–1425` | reserved | pendiente | `f83b20b` |
+| R-002 | 2026-10-30 | `2026-10-30-gestion-documental-rango-yy-plan.md` | `Wave 1..2` → `Ronda 264–265` | `T1..T11` → `Fase 1426–1436` | closed | pendiente | `3bb7b18` |
+| R-003 | 2026-10-31 | `2026-10-31-gestion-documental-carpeta-solicitudes-fix-plan.md` | `Wave 1..3` → `Ronda 266–268` | `T1..T6` → `Fase 1437–1442` | executing | pendiente (gate Full) | `3bb7b18` |
+| R-004 | 2026-10-31 | `(mantenimiento sin plan: bump 1.6.3.83)` | `Wave 272` → `Ronda 272` | `T1` → `Fase 1461` | executing | pendiente (gate conjunto) | pendiente |
+| R-005 | 2026-11-01 | `2026-11-01-verificacion-solicitudes-plan.md` | `Wave 1..3` → `Ronda 273–275` | `T1..T6` → `Fase 1462–1467` | abandoned | — | pendiente |
+| R-006 | 2026-10-31 | `2026-10-31-duplicados-y-auditoria-informe-plan.md` | `Wave 1..3` → `Ronda 279–281` | `T1..T5` → `Fase 1483–1487` | closed | 0 (Full, 999 tests) | sin commit |
 
 Estados: `reserved` (Fase A) · `executing` (Fase B) · `closed` (Fase C, sellado) · `abandoned` (plan descartado: los números **no** se reciclan).
 

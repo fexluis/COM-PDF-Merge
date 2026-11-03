@@ -17,9 +17,9 @@
     <ExcelDnaCreate64BitAddIn>true</ExcelDnaCreate64BitAddIn>
     <!-- Excluir dependencias que no existen en .NET 4.8 y no deben empaquetarse -->
     <ExcelDnaExcludedDependencies>Microsoft.Bcl.HashCode.dll</ExcelDnaExcludedDependencies>
-    <Version>1.6.3.81</Version>
-    <AssemblyVersion>1.6.3.81</AssemblyVersion>
-    <FileVersion>1.6.3.81</FileVersion>
+    <Version>1.6.3.86</Version>
+    <AssemblyVersion>1.6.3.86</AssemblyVersion>
+    <FileVersion>1.6.3.86</FileVersion>
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <Import Project="obj\ConversorPDF.XLL.csproj.nuget.g.props" Condition="Exists('obj\ConversorPDF.XLL.csproj.nuget.g.props')" />
@@ -215,6 +215,28 @@
     <Compile Include="Core\Models\ViaticoRow.cs" />
     <Compile Include="Core\Models\ViaticosFormatException.cs" />
     <Compile Include="Core\Models\ExtraerDatos.cs" />
+    <Compile Include="Core\Models\ResultadoRenombrado.cs" />
+    <Compile Include="Core\Models\MotivoRenombrado.cs" />
+    <Compile Include="Core\Models\EstadoComision.cs" />
+    <Compile Include="Core\Models\ResultadoVerificacionSolicitudes.cs" />
+    <Compile Include="Core\Models\RangoSolicitudes.cs" />
+    <Compile Include="Core\Models\InformeTipo.cs" />
+    <Compile Include="Core\Models\InformeSolicitud.cs" />
+    <Compile Include="Core\Models\InformePdf.cs" />
+    <Compile Include="Core\Models\MotivoInforme.cs" />
+    <Compile Include="Core\Models\ConfianzaCedula.cs" />
+    <Compile Include="Core\Models\ResultadoCedulaPdf.cs" />
+    <Compile Include="Core\Models\ResultadoBusquedaInformes.cs" />
+    <Compile Include="Core\Helpers\InformeNombreHelper.cs" />
+    <Compile Include="Core\Helpers\InformeTextoHelper.cs" />
+    <Compile Include="Core\Interfaces\IBusquedaInformesProcessor.cs" />
+    <Compile Include="Core\Processors\BusquedaInformesProcessor.cs" />
+    <Compile Include="FormProgramador\FormBuscarInformes.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormProgramador\FormBuscarInformes.Designer.cs">
+      <DependentUpon>FormBuscarInformes.cs</DependentUpon>
+    </Compile>
     <Compile Include="Core\Interfaces\IExcelRepository.cs" />
     <Compile Include="Core\Repositories\ExcelRepository.cs" />
     <Compile Include="Core\Interfaces\IViaticosRepository.cs" />
@@ -251,6 +273,7 @@
     <Compile Include="Academic\Application\Services\AcademicDateSyncService.cs" />
     <Compile Include="Academic\Application\Interfaces\IAcademicDateSyncService.cs" />
     <Compile Include="Core\Helpers\ViaticosHelper.cs" />
+    <Compile Include="Core\Helpers\ViaticoNumeroComision.cs" />
     <Compile Include="Core\Helpers\ExcelOptimizeHelper.cs" />
     <Compile Include="Core\Helpers\ExcelAppStateHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

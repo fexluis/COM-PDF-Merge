@@ -1,0 +1,45 @@
+### YamlMime:ManagedReference
+items:
+- uid: ConversorPDF.XLL.Core.Models.MotivoRenombrado
+  commentId: T:ConversorPDF.XLL.Core.Models.MotivoRenombrado
+  id: MotivoRenombrado
+  parent: ConversorPDF.XLL.Core.Models
+  children:
+  - ConversorPDF.XLL.Core.Models.MotivoRenombrado.Ambigua
+  - ConversorPDF.XLL.Core.Models.MotivoRenombrado.Colision
+  - ConversorPDF.XLL.Core.Models.MotivoRenombrado.ErrorIo
+  - ConversorPDF.XLL.Core.Models.MotivoRenombrado.PrefijoInvalido
+  - ConversorPDF.XLL.Core.Models.MotivoRenombrado.Renombrado
+  - ConversorPDF.XLL.Core.Models.MotivoRenombrado.SinComision
+  - ConversorPDF.XLL.Core.Models.MotivoRenombrado.SinDatos
+  - ConversorPDF.XLL.Core.Models.MotivoRenombrado.YaCorrecto
+  langs:
+  - csharp
+  - vb
+  name: MotivoRenombrado
+  nameWithType: MotivoRenombrado
+  fullName: ConversorPDF.XLL.Core.Models.MotivoRenombrado
+  type: Class
+  assemblies:
+  - ConversorPDF.XLL
+  namespace: ConversorPDF.XLL.Core.Models
+  summary: Motivos posibles del resultado del renombrado de un PDF.
+  example: []
+  syntax:
+    content: public static class MotivoRenombrado
+    content.vb: Public Module MotivoRenombrado
+  inheritance:
+  - System.Object
+references:
+- uid: ConversorPDF.XLL.Core.Models
+  commentId: N:ConversorPDF.XLL.Core.Models
+  isExternal: true
+  href: ConversorPDF.XLL.Core.Models.html
+  name: ConversorPDF.XLL.Core.Models
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+

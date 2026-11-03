@@ -1,3 +1,8 @@
+---
+name: development-process
+description: Core unit testing, development cycles, and vertical slice architecture guidelines for ConversorPDF (.NET 4.8 / Excel-DNA).
+---
+
 # Unit Tests & Development Skill (Desktop / Excel-DNA)
 
 ## Core Principles
