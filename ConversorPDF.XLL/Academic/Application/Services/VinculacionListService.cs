@@ -6,6 +6,7 @@ using ConversorPDF.XLL.Academic.Application.DTOs;
 using ConversorPDF.XLL.Academic.Application.Interfaces;
 using ConversorPDF.XLL.Academic.Domain.Interfaces;
 using ConversorPDF.XLL.Academic.Domain.Models;
+using ConversorPDF.XLL.Academic.Domain.Models.Genetica;
 using CSharpFunctionalExtensions;
 
 namespace ConversorPDF.XLL.Academic.Application.Services
@@ -97,6 +98,50 @@ namespace ConversorPDF.XLL.Academic.Application.Services
             {
                 return Result.Failure<(IReadOnlyCollection<LookupItem>, IReadOnlyCollection<LookupItem>, IReadOnlyCollection<LookupItem>, IReadOnlyCollection<LookupItem>)>($"Error al cargar catálogos: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// Obtiene las corridas del staging y las prepara para el ComboBox: antepone el comodín
+        /// y puebla las etiquetas en la capa Application (Fase 1490), manteniendo
+        /// Infrastructure libre de dependencias hacia Application.
+        /// </summary>
+        public async Task<Result<IReadOnlyCollection<CorridaStagingItem>>> GetCorridasStagingAsync(
+            int? idPeriodo,
+            int? idPrograma,
+            string subunidad,
+            CancellationToken ct)
+        {
+            var resultado = await _queryRepository.GetCorridasStagingAsync(idPeriodo, idPrograma, subunidad, ct);
+            if (resultado.IsFailure) return resultado;
+
+            return Result.Success<IReadOnlyCollection<CorridaStagingItem>>(
+                AgCorridaSelector.PrepararParaCombo(resultado.Value));
+        }
+
+        /// <summary>
+        /// Traduce el DTO de filtros de la UI a los parámetros primitivos del repositorio
+        /// y delega el resumen de diagnóstico (Fases 1490/1493).
+        /// </summary>
+        public Task<Result<AgStagingResumen>> GetResumenStagingAsync(
+            long idCorrida,
+            VinculacionFilterDto filtros,
+            CancellationToken ct)
+        {
+            var f = filtros ?? new VinculacionFilterDto();
+
+            return _queryRepository.GetResumenStagingAsync(
+                idCorrida,
+                f.IdSede,
+                f.IdTercero,
+                f.IdPeriodo,
+                f.IdPrograma,
+                f.ModalidadPrograma,
+                f.Subunidad,
+                f.Semestre,
+                f.SoloViaticas,
+                f.FechaDesde,
+                f.FechaHasta,
+                ct);
         }
     }
 }

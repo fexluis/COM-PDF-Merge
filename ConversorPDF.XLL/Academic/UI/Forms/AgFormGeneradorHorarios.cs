@@ -2708,7 +2708,9 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 var programaRepo = new ProgramaLookupRepository(_connectionFactory);
                 var listService = new VinculacionListService(queryRepo, sedeRepo, terceroRepo, periodoRepo, programaRepo);
 
-                using (var f = new FormVinculaciones(listService, sedeRepo, terceroRepo, _connectionFactory, ExcelDnaUtil.Application, modo))
+                using (var f = new FormVinculaciones(listService, sedeRepo, terceroRepo, _connectionFactory,
+                                                     ExcelDnaUtil.Application, modo,
+                                                     _idCorridaCargada > 0 ? _idCorridaCargada : (long?)null))
                 {
                     f.ShowDialog(this);
                 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using ConversorPDF.XLL.Academic.Domain.Models;
+using ConversorPDF.XLL.Academic.Domain.Models.Genetica;
 using CSharpFunctionalExtensions;
 
 namespace ConversorPDF.XLL.Academic.Domain.Interfaces
@@ -61,5 +62,38 @@ namespace ConversorPDF.XLL.Academic.Domain.Interfaces
             int offset,
             CancellationToken ct,
             long? idCorrida);
+
+        /// <summary>
+        /// Obtiene las corridas del staging AG con su volumen de vinculaciones y sesiones (Fase 1489).
+        /// Incluye corridas sin staging materializado y staging huérfano sin cabecera en ag_corrida.
+        /// </summary>
+        /// <param name="idPeriodo">Filtro opcional por período.</param>
+        /// <param name="idPrograma">Filtro opcional por programa.</param>
+        /// <param name="subunidad">Filtro opcional por territorial (comparación tolerante).</param>
+        /// <param name="ct">Token de cancelación.</param>
+        Task<Result<IReadOnlyCollection<CorridaStagingItem>>> GetCorridasStagingAsync(
+            int? idPeriodo,
+            int? idPrograma,
+            string subunidad,
+            CancellationToken ct);
+
+        /// <summary>
+        /// Construye el resumen de diagnóstico del staging de una corrida (Fases 1489/1499).
+        /// Separa lo que contiene la corrida (sin filtros) de lo que devuelve la consulta con filtros.
+        /// Recibe parámetros primitivos para no invertir la dependencia Domain -> Application.
+        /// </summary>
+        Task<Result<AgStagingResumen>> GetResumenStagingAsync(
+            long idCorrida,
+            int? idSede,
+            int? idTercero,
+            int? idPeriodo,
+            int? idPrograma,
+            string modalidadPrograma,
+            string subunidad,
+            string semestre,
+            bool soloViaticas,
+            DateTime? fechaDesde,
+            DateTime? fechaHasta,
+            CancellationToken ct);
     }
 }

@@ -8594,3 +8594,143 @@ Se completó la implementación y verificación de las 6 tareas del plan MUV:
 ### Verificación
 - `verify.ps1 -Mode Fast -Filter ViaticosGestionProcessorTests` → 21/21 PASS.
 - `verify.ps1 -Mode Full` → exit 0, 999 pruebas, 0 fallos (baseline 952).
+
+
+---
+
+## Ronda 282: Contratos de Arquitectura y Repositorio para Corridas en Staging AG (Fases 1488–1490)
+
+### Hallazgos y Acciones Especificadas
+- **Fase 1488 (T1)**: ESPECIFICADA (no implementada) — Creación de tipos limpios `CorridaStagingItem`, `AgStagingResumen`, `AgCorridaSelector`, `AgFiltrosPolicy` y su registro en `ConversorPDF.XLL.csproj`.
+- **Fase 1489 (T2)**: ESPECIFICADA (no implementada) — Consulta SQL `UNION ALL` en `VinculacionQueryRepository` para reflejar fielmente corridas normales y huérfanas con staging, además de `GetResumenStagingAsync`.
+- **Fase 1490 (T3)**: ESPECIFICADA (no implementada) — Extracción de `BuildWhere` estático para garantizar paridad estricta entre filas listadas y contadores de status.
+
+### Verificación de Principios (Ronda 282)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1488 | [ ] Pendiente | [ ] Pendiente | [ ] Pendiente | Pendiente | — |
+| F1489 | [ ] Pendiente | [ ] Pendiente | [ ] Pendiente | Pendiente | — |
+| F1490 | [ ] Pendiente | [ ] Pendiente | [ ] Pendiente | Pendiente | — |
+
+---
+
+## Ronda 283: UI FormVinculaciones, Filtros Desacoplados y Layout Robusto (Fases 1491–1494)
+
+### Hallazgos y Acciones Especificadas
+- **Fase 1491 (T4)**: ESPECIFICADA (no implementada) — Desactivación de preselección forzada de periodo y subunidad de `config` cuando `EsModoAg == true`.
+- **Fase 1492 (T5)**: ESPECIFICADA (no implementada) — Eliminación de SQL crudo en `FormVinculaciones` y sustitución por `AgCorridaSelector` con preservación de selección.
+- **Fase 1493 (T6)**: ESPECIFICADA (no implementada) — Eliminación de `ExecuteScalarAsync` y adición de `btnAjustarFiltrosCorrida` para sincronización instantánea de filtros con la corrida.
+- **Fase 1494 (T7)**: ESPECIFICADA (no implementada) — Ajuste de altura de `pnlFilters` a 105 px y reubicación en fila 3 para prevenir solapes en DPI escalado, junto al enlace en `AgFormGeneradorHorarios.cs`.
+
+### Verificación de Principios (Ronda 283)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1491 | [ ] Pendiente | [ ] Pendiente | [ ] Pendiente | Pendiente | — |
+| F1492 | [ ] Pendiente | [ ] Pendiente | [ ] Pendiente | Pendiente | — |
+| F1493 | [ ] Pendiente | [ ] Pendiente | [ ] Pendiente | Pendiente | — |
+| F1494 | [ ] Pendiente | [ ] Pendiente | [ ] Pendiente | Pendiente | — |
+
+---
+
+## Ronda 284: Suite de Pruebas RED→GREEN y Sello de Calidad (Fase 1495)
+
+### Hallazgos y Acciones Especificadas
+- **Fase 1495 (T8)**: ESPECIFICADA (no implementada) — Suite de pruebas exhaustivas (unitarias e integración en memoria) cubriendo desambiguación, selección inicial, formateo y consistencia de filtros.
+
+### Verificación de Principios (Ronda 284)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1495 | [ ] Pendiente | [ ] Pendiente | [ ] Pendiente | Pendiente | — |
+
+---
+
+## Ronda 285: Falso positivo de certificación y defectos de contrato en R-007 (Fases 1496–1503)
+
+### Hallazgos y Acciones Ejecutadas
+- **Fase 1496**: Revertido falso positivo de certificación de Fases 1488–1495 en `walkthrough.md`, `implementation_plan.md` y contadores de `REGISTRY.md` §2 (`281 / 1487`, siguiente `282 / 1488`, `R-007` en `reserved`). Tareas T2–T5 del plan reestablecidas a `pending`.
+- **Fase 1497**: Corregido contrato de `CorridaStagingItem` en el plan: `TieneStaging => TotalSesiones > 0;` (propiedad de expresión) y `Etiqueta { get; set; }` para permitir asignación por el selector.
+- **Fase 1498**: Resuelta dependencia invertida y colisión de lease T2/T3: extracción de `BuildWhere` estático trasladada a T2 (primero); T3 acotada a delegación en `IVinculacionListService` / `VinculacionListService` con `depends_on: [T2]`.
+- **Fase 1499**: Desacopladas consultas de `GetResumenStagingAsync`: consulta A para descriptores reales de corrida (`PeriodosCorrida`, `SubunidadesCorrida`, `SesionesCorrida`, `VincCorrida` sin filtros UI) y consulta B para `SesionesConFiltros` con `BuildWhere`.
+- **Fase 1500**: Añadido manejo de centinela `idCorridaVal <= 0` en T6 para `-- Todas las corridas --`, evitando reporte erróneo de corrida #0.
+- **Fase 1501**: Erradicado riesgo de `async void` en `DropDown` de `cmbCorrida` (T5): delegado `(s, e) => _ = CargarCorridasSafeAsync()` con captura de excepciones para proteger el hilo STA de Excel.
+- **Fase 1502**: Asegurado layout en T7 con `pnlFilters.MinimumSize = new Size(0, 105);` y anclajes explícitos para escalas DPI 100/125/150 %.
+- **Fase 1503**: Incorporada tabla formal de olas (`Wave 1..3` → `Ronda 282..284`) y campo obligatorio `- **fase**:` (1488..1495) en cada tarea T1..T8 del plan.
+
+### Verificación de Principios (Ronda 285)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1496 | [X] Sí | [X] Sí | [X] Sí | Sí | `REGISTRY.md`, docs sincronizados |
+| F1497 | [X] Sí | [X] Sí | [X] Sí | Sí | Plan corregido |
+| F1498 | [X] Sí | [X] Sí | [X] Sí | Sí | Plan corregido |
+| F1499 | [X] Sí | [X] Sí | [X] Sí | Sí | Plan corregido |
+| F1500 | [X] Sí | [X] Sí | [X] Sí | Sí | Plan corregido |
+| F1501 | [X] Sí | [X] Sí | [X] Sí | Sí | Plan corregido |
+| F1502 | [X] Sí | [X] Sí | [X] Sí | Sí | Plan corregido |
+| F1503 | [X] Sí | [X] Sí | [X] Sí | Sí | Plan corregido |
+
+
+---
+
+## Ronda 286: Sincronización de numeración y frontera de capa en R-007 (Fases 1504–1509)
+
+### Hallazgos y Acciones Ejecutadas
+- **Fase 1504**: Actualizada numeración en `REGISTRY.md` (§2 `ronda 285/286`, `fase 1503/1504`) y formalizada fila `R-008` (`closed`) protegiendo el rango 1496–1503 contra reutilización.
+- **Fase 1505**: Reubicados `CorridaStagingItem` y `AgStagingResumen` en `Academic.Domain.Models.Genetica`, respetando la frontera de capa limpia.
+- **Fase 1506**: Incorporada subconsulta de `ProgramasCorrida` en la Consulta A de `GetResumenStagingAsync`.
+- **Fase 1507**: Ajustado orden determinista y separador `', '` en `PeriodosCorrida`.
+- **Fase 1508**: Establecida población obligatoria de `Etiqueta` en `GetCorridasStagingAsync` en origen de datos.
+- **Fase 1509**: Explicitados anclajes `Top | Left` y ancho fijo 320 px en controles de corrida para DPI 100/125/150 %.
+
+### Verificación de Principios (Ronda 286)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1504 | [X] Sí | [X] Sí | [X] Sí | Sí | `REGISTRY.md` sincronizado |
+| F1505 | [X] Sí | [X] Sí | [X] Sí | Sí | Plan corregido |
+| F1506 | [X] Sí | [X] Sí | [X] Sí | Sí | Plan corregido |
+| F1507 | [X] Sí | [X] Sí | [X] Sí | Sí | Plan corregido |
+| F1508 | [X] Sí | [X] Sí | [X] Sí | Sí | Plan corregido |
+| F1509 | [X] Sí | [X] Sí | [X] Sí | Sí | Plan corregido |
+
+
+---
+
+## Ronda 287: Reincidencia de numeración y frontera de capa limpia en R-007 (Fases 1510–1514)
+
+### Hallazgos y Acciones Ejecutadas
+- **Fase 1510**: Asignadas y cerradas filas `R-009` (1504–1509) y `R-010` (1510–1514) en `REGISTRY.md`, elevando contadores a `287 / 1514` (siguiente `288 / 1515`).
+- **Fase 1511**: Reubicada la población de `Etiqueta` en `VinculacionListService` (capa Application), erradicando la dependencia `Infrastructure -> Application`.
+- **Fase 1512**: Consulta A actualizada con `LEFT JOIN` a programas y fallback `PROG {id}`.
+- **Fase 1513**: Normalizado `GROUP_CONCAT` de `SubunidadesCorrida` con orden determinista y separador `', '`.
+- **Fase 1514**: Restaurados los `.doc` ajenos a R-007 y des-staged el índice Git para prevenir mezclas de versiones.
+
+### Verificación de Principios (Ronda 287)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1510 | [X] Sí | [X] Sí | [X] Sí | Sí | `REGISTRY.md` sincronizado |
+| F1511 | [X] Sí | [X] Sí | [X] Sí | Sí | Plan corregido |
+| F1512 | [X] Sí | [X] Sí | [X] Sí | Sí | Plan corregido |
+| F1513 | [X] Sí | [X] Sí | [X] Sí | Sí | Plan corregido |
+| F1514 | [X] Sí | [X] Sí | [X] Sí | Sí | Índice Git limpio |
+
+
+---
+
+## Ronda 288: Integridad de artefactos ajenos al plan y determinismo de agregación (Fases 1515–1516)
+
+### Hallazgos y Acciones Ejecutadas
+- **Fase 1515**: Confirmada paridad de bytes de `.doc` con HEAD. Declarada regla estricta de no tocar archivos fuera de `files_lock`.
+- **Fase 1516**: Especificada normalización determinista en C# (`Distinct().OrderBy()`) para campos agregados del resumen de staging en el plan.
+- **Sincronización REGISTRY**: Fila `R-011` sellada (`closed`), contadores §2 elevados a `288 / 1516` (siguiente `289 / 1517`).
+
+### Verificación de Principios (Ronda 288)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1515 | [X] Sí | [X] Sí | [X] Sí | Sí | Contenido idéntico a HEAD |
+| F1516 | [X] Sí | [X] Sí | [X] Sí | Sí | Plan especificado |

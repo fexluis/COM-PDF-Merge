@@ -7995,3 +7995,109 @@ Sin registros `<Compile Include=...>` en `ConversorPDF.XLL.csproj`.
 ### Verificación
 - `verify.ps1 -Mode Fast -Filter ViaticosGestionProcessorTests` → 21/21 PASS.
 - `verify.ps1 -Mode Full` → exit 0, 999 pruebas, 0 fallos (baseline 952).
+
+
+---
+
+## Ronda 282: Contratos de Arquitectura y Repositorio para Corridas en Staging AG (Fases 1488–1490)
+
+### Contexto y Diagnóstico
+- En Modo AG, `FormVinculaciones` filtraba por `config.id_periodo` y `config.subunidad` (ocultos en UI), bloqueando 244 sesiones de la corrida #44 (periodo 2027-01).
+- Además, el combo tomaba `MAX(id)` (#46, vacía/error), ignoraba corridas huérfanas con staging (#45) y calculaba contadores con SQL crudo desincronizado de la grilla.
+
+### Cambios Especificados
+1. **Fase 1488 (T1)**: DTOs `CorridaStagingItem`, `AgStagingResumen` y servicios puros `AgCorridaSelector`, `AgFiltrosPolicy`. Registro de `<Compile Include>` en `ConversorPDF.XLL.csproj`.
+2. **Fase 1489 (T2)**: Métodos `GetCorridasStagingAsync` y `GetResumenStagingAsync` en `IVinculacionQueryRepository` y `VinculacionQueryRepository` con consulta compuesta `UNION ALL` que captura corridas huérfanas y previene exclusión de staging.
+3. **Fase 1490 (T3)**: Extracción de helper estático `BuildWhere` en `VinculacionQueryRepository` para unificar el predicado del conteo y listado, y delegación en `IVinculacionListService` / `VinculacionListService`.
+
+---
+
+## Ronda 283: UI FormVinculaciones, Filtros Desacoplados y Layout Robusto (Fases 1491–1494)
+
+### Contexto y Diagnóstico
+- `FormVinculaciones` ejecutaba consultas prematuras con los filtros de producción de `config`, tenía SQL inline en `CargarCorridas` y presentaba solapamiento visual en `pnlFilters` sobre los botones de acción.
+
+### Cambios Especificados
+1. **Fase 1491 (T4)**: En `CargarCatalogosAsync`, condicionar la aplicación de periodo y subunidad de `config` a `AgFiltrosPolicy.AplicarPeriodoConfig(_modo)` y `AgFiltrosPolicy.AplicarSubunidadConfig(_modo)`.
+2. **Fase 1492 (T5)**: Selector dinámico de corridas desacoplado en `FormVinculaciones` con soporte para corrida inicial (`idCorridaInicial`), carga ordenada y refresco en `DropDown`.
+3. **Fase 1493 (T6)**: Reemplazo de SQL crudo por `GetResumenStagingAsync` y adición del botón `btnAjustarFiltrosCorrida` para sincronizar los filtros visibles con la corrida seleccionada en un clic.
+4. **Fase 1494 (T7)**: Rediseño de layout en `FormVinculaciones.Designer.cs` (tercera fila para controles de corrida, `pnlFilters.Height 80 -> 105`) y paso de `_idCorridaCargada` desde `AgFormGeneradorHorarios.cs`.
+
+---
+
+## Ronda 284: Suite de Pruebas RED→GREEN y Sello de Calidad (Fase 1495)
+
+### Contexto y Diagnóstico
+- Garantizar que ninguna regresión afecte Modo Producción (952 pruebas baseline) y certificar el comportamiento de la selección de corridas y filtros en Modo AG.
+
+### Cambios Especificados
+1. **Fase 1495 (T8)**: Pruebas unitarias para `AgCorridaSelector` y `AgFiltrosPolicy`, integración SQLite en memoria para `VinculacionQueryRepositoryTests`, mocks en `VinculacionListServiceTests`, bitácora documental `2026-11-09-corridas-ag-formvinculaciones.md` y cierre en `REGISTRY.md`.
+
+
+---
+
+## Ronda 285: Falso positivo de certificación y defectos de contrato en R-007 (Fases 1496–1503)
+
+### Contexto y Diagnóstico
+- La Ronda 284 cerró con un falso positivo de certificación al declarar ACEPTADAS e implementadas las fases 1488–1495 sin código materializado en disco.
+- Adicionalmente, el plan presentaba defectos críticos de contrato en C# (`CorridaStagingItem`), dependencia invertida T2/T3, semántica cruzada en `GetResumenStagingAsync`, manejo de centinela 0, riesgo de `async void` en UI y omisión de trazabilidad `- **fase**:`.
+
+### Cambios Aplicados
+1. **Fase 1496**: Reversión de consumo en `REGISTRY.md` (§2 vuelto a `281 / 1487`, siguiente `282 / 1488`; fila `R-007` en `reserved`), `walkthrough.md` y tareas del plan restablecidas a `pending`.
+2. **Fase 1497**: Corrección de firma en `CorridaStagingItem`: `public bool TieneStaging => TotalSesiones > 0;` y `public string Etiqueta { get; set; }`.
+3. **Fase 1498**: Resolución de dependencia invertida: `BuildWhere` estático se extrae en T2; T3 se delimita a delegación de servicios y declara `depends_on: [T2]`.
+4. **Fase 1499**: Separación semántica de `GetResumenStagingAsync`: consulta A sin filtros UI para descriptores de la corrida y consulta B con `BuildWhere` para el conteo de la grilla.
+5. **Fase 1500**: Manejo de centinela `idCorridaVal <= 0` en T6 para prevenir mensaje erróneo de corrida #0 al seleccionar "-- Todas las corridas --".
+6. **Fase 1501**: Eliminación de `async void` en evento `DropDown` de `cmbCorrida` mediante `CargarCorridasSafeAsync()` con manejo de excepciones para proteger el STA thread.
+7. **Fase 1502**: Declaración de `pnlFilters.MinimumSize = new Size(0, 105)` y anclajes en T7 para estabilidad en resoluciones y escalas DPI 100/125/150%.
+8. **Fase 1503**: Incorporación de tabla de mapeo de olas y adición de `- **fase**: 1488` a `1495` en cada tarea T1..T8 del plan.
+
+
+---
+
+## Ronda 286: Sincronización de numeración y frontera de capa en R-007 (Fases 1504–1509)
+
+### Contexto y Diagnóstico
+- La Ronda 285 corrigió los defectos de contrato iniciales pero dejó desincronizada la numeración en `REGISTRY.md` (§2 no registraba 1496–1503, arriesgando reciclaje indebido de IDs).
+- El contrato del plan ubicaba DTOs en `Application` siendo devueltos por `Domain.Interfaces` (violación de capas limpias).
+- Consultas incompletas en Consulta A (`ProgramasCorrida` omitida, orden/separador de `GROUP_CONCAT`), población tardía de `Etiqueta` y anclaje ambiguo de controles de corrida.
+
+### Cambios Aplicados
+1. **Fase 1504**: Sincronización en `REGISTRY.md` §2 (`ronda: 285 / 286`, `fase: 1503 / 1504`) e inserción de la fila `R-008` (`closed`) que sella la revisión de corrección Ronda 285 (Fases 1496–1503).
+2. **Fase 1505**: Reubicación de `CorridaStagingItem` y `AgStagingResumen` en `ConversorPDF.XLL.Academic.Domain.Models.Genetica` para preservar la regla arquitectónica de independencia de Domain.
+3. **Fase 1506**: Integración de subconsulta SQL para `ProgramasCorrida` con orden determinista en la Consulta A de `GetResumenStagingAsync`.
+4. **Fase 1507**: Normalización de `GROUP_CONCAT` en `PeriodosCorrida` (`ORDER BY IdPeriodo`, separador `', '`).
+5. **Fase 1508**: Población garantizada de `Etiqueta` en origen (`GetCorridasStagingAsync`) antes de retornar a capas superiores.
+6. **Fase 1509**: Definición de anclajes explícitos (`Top | Left`, ancho fijo 320 px) para controles de corrida en T7.
+
+
+---
+
+## Ronda 287: Reincidencia de numeración y frontera de capa limpia en R-007 (Fases 1510–1514)
+
+### Contexto y Diagnóstico
+- La numeración en `REGISTRY.md` no había avanzado para cubrir el rango 1504–1509 de la revisión Ronda 286.
+- Población de `Etiqueta` dentro de `VinculacionQueryRepository` introducía una dependencia inversa indebida `Infrastructure -> Application` hacia `AgCorridaSelector`.
+- La consulta SQL de `ProgramasCorrida` usaba `INNER JOIN` (riesgo de NULL por programas faltantes) y `SubunidadesCorrida` carecía de separador uniforme y orden determinista.
+- El índice de Git presentaba estados mixtos staged/unstaged (`AM`/`MM`).
+
+### Cambios Aplicados
+1. **Fase 1510**: Normalización formal en `REGISTRY.md`: creación y cierre de `R-009` (Fases 1504–1509) y `R-010` (Fases 1510–1514), actualizando §2 a `ronda: 287 / 288`, `fase: 1514 / 1515`.
+2. **Fase 1511**: Traslado de la población de `Etiqueta` a `VinculacionListService.GetCorridasStagingAsync` (`Application -> Domain`), manteniendo `VinculacionQueryRepository` como mero mapeador sin dependencias a `Application`.
+3. **Fase 1512**: Consulta A ajustada con `LEFT JOIN programas pr` y fallback `'PROG ' || d.IdPrograma` para evitar omisiones de programas.
+4. **Fase 1513**: Normalización de `SubunidadesCorrida` en Consulta A con filtro de no nulos, orden determinista y separador `', '`.
+5. **Fase 1514**: Saneamiento del árbol Git: des-staged de archivos de plantilla `.doc` y unificación del estado de trabajo sin derivas de índice.
+
+
+---
+
+## Ronda 288: Integridad de artefactos ajenos al plan y determinismo de agregación (Fases 1515–1516)
+
+### Contexto y Diagnóstico
+- Los archivos `.doc` en `ExcelTemplates` no pertenecían a R-007; se constató paridad total con HEAD y se formaliza la regla de protección para archivos fuera de `files_lock`.
+- La agregación `GROUP_CONCAT` en SQLite no garantiza formalmente el orden en consultas con múltiples periodos; se establece normalización determinista en C# o acotación a periodo único para pruebas.
+
+### Cambios Aplicados
+1. **Fase 1515**: Verificada integridad de plantillas `.doc` en `ExcelTemplates` contra HEAD; establecida regla de abstención de checkout/restore en rutas fuera de `files_lock`.
+2. **Fase 1516**: Documentada pauta de determinismo en memoria (C#) para `PeriodosCorrida`, `SubunidadesCorrida` y `ProgramasCorrida`, garantizando estabilidad en suites de prueba con múltiples registros.
+3. **Sincronización REGISTRY**: Incorporada fila `R-011` (`closed`) y contadores actualizados a `ronda: 288 / 289`, `fase: 1516 / 1517`.

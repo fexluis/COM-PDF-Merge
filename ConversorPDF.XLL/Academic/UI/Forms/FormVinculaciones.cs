@@ -10,8 +10,10 @@ using System.Reflection;
 using System.Text;
 using ConversorPDF.XLL.Academic.Application.DTOs;
 using ConversorPDF.XLL.Academic.Application.Interfaces;
+using ConversorPDF.XLL.Academic.Application.Services;
 using ConversorPDF.XLL.Academic.Domain.Interfaces;
 using ConversorPDF.XLL.Academic.Domain.Models;
+using ConversorPDF.XLL.Academic.Domain.Models.Genetica;
 using ConversorPDF.XLL.Core.Helpers;
 using ConversorPDF.XLL.UI;
 using CSharpFunctionalExtensions;
@@ -35,6 +37,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
         private readonly IDbConnection _currentConnection;
         private readonly dynamic _excelApp;
         private readonly AgModoDatos _modo;
+        private readonly long? _idCorridaInicial;
         private Label lblModo;
         private Label lblCorrida;
         private ComboBox cmbCorrida;
@@ -52,7 +55,8 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             ITerceroLookupRepository terceroLookup,
             Func<IDbConnection> dbFactory,
             dynamic excelApp,
-            AgModoDatos modo = null)
+            AgModoDatos modo = null,
+            long? idCorridaInicial = null)
         {
             InitializeComponent();
             _listService = listService;
@@ -61,6 +65,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             _dbFactory = dbFactory;
             _excelApp = excelApp;
             _modo = modo ?? AgModoDatos.Determinista;
+            _idCorridaInicial = idCorridaInicial;
 
             if (_modo.EsModoAg)
             {
@@ -115,49 +120,15 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
                 lblModo.Font = new Font(this.Font, FontStyle.Bold);
                 this.Text = _modo.EsModoAg ? "Vinculaciones Académicas — MODO AG" : "Vinculaciones Académicas";
 
-                // Fase 457: En Modo AG, agregar selector dinámico de corrida para filtrar staging fielmente
-                if (_modo.EsModoAg && cmbCorrida == null)
-                {
-                    lblCorrida = new Label
-                    {
-                        Text = "Corrida:",
-                        AutoSize = true,
-                        Location = new Point(pnlFilters.Width - 365, 10),
-                        Anchor = AnchorStyles.Top | AnchorStyles.Right
-                    };
-                    cmbCorrida = new ComboBox
-                    {
-                        DropDownStyle = ComboBoxStyle.DropDownList,
-                        Width = 175,
-                        Location = new Point(pnlFilters.Width - 310, 7),
-                        Anchor = AnchorStyles.Top | AnchorStyles.Right
-                    };
-                    pnlFilters.Controls.Add(lblCorrida);
-                    pnlFilters.Controls.Add(cmbCorrida);
-
-                    cmbCorrida.SelectedIndexChanged += async (sCorr, eCorr) =>
-                    {
-                        if (!_isUpdatingFilters) await EjecutarConsultaAsync();
-                    };
-
-                    try
-                    {
-                        var corridas = (await _currentConnection.QueryAsync<LookupItem>(
-                            "SELECT id AS Id, ('Corrida #' || id || ' (' || COALESCE(fecha_inicio_corrida, '') || ')') AS DisplayName FROM ag_corrida ORDER BY id DESC")).ToList();
-                        cmbCorrida.Items.Clear();
-                        cmbCorrida.Items.Add(new LookupItem { Id = 0, DisplayName = "-- Todas las corridas --" });
-                        foreach (var c in corridas) cmbCorrida.Items.Add(c);
-                        if (cmbCorrida.Items.Count > 1) cmbCorrida.SelectedIndex = 1; // Default: última corrida
-                        else cmbCorrida.SelectedIndex = 0;
-                    }
-                    catch (Exception exCorr)
-                    {
-                        LoggerHelper.Warning($"[FormVinculaciones] Error al cargar corridas de AG: {exCorr.Message}");
-                    }
-                }
+                // Fase 1492: el selector de corrida vive en el Designer (fila 3, bajo Semestre y Tercero)
+                ConfigurarSelectorCorrida();
 
                 SetupSyncIndicatorUI();
+
+                // Fase 1492: catálogos → corridas → una sola consulta inicial (con todos los filtros ya resueltos)
                 await CargarCatalogosAsync();
+                await CargarCorridasAsync();
+                await EjecutarConsultaSeguraAsync();
             };
             
             cmbTerritoriales.SelectedIndexChanged += (s, e) => {
@@ -167,6 +138,135 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             cmbSede.SelectedIndexChanged += (s, e) => {
                 if (!_isUpdatingFilters) FiltrarTerceros();
             };
+        }
+
+        /// <summary>
+        /// Configura el selector de corridas (fila 3 del panel de filtros). En PRODUCCIÓN queda oculto
+        /// y el panel recupera su altura original (Fases 1492/1494).
+        /// </summary>
+        private void ConfigurarSelectorCorrida()
+        {
+            bool esModoAg = _modo.EsModoAg;
+
+            pnlFilters.Height = esModoAg ? 104 : 80;
+            lblCorrida.Visible = esModoAg;
+            cmbCorrida.Visible = esModoAg;
+            btnAjustarFiltrosCorrida.Visible = esModoAg;
+
+            if (!esModoAg) return;
+
+            cmbCorrida.DisplayMember = nameof(CorridaStagingItem.Etiqueta);
+            cmbCorrida.ValueMember = nameof(CorridaStagingItem.IdCorrida);
+
+            cmbCorrida.SelectedIndexChanged += (s, e) =>
+            {
+                if (!_isUpdatingFilters) _ = EjecutarConsultaSeguraAsync();
+            };
+
+            // Refresco sin reabrir el formulario (sin async void sobre el hilo STA de Excel)
+            cmbCorrida.DropDown += (s, e) => _ = CargarCorridasSafeAsync();
+
+            btnAjustarFiltrosCorrida.Click += (s, e) => _ = AjustarFiltrosALaCorridaAsync();
+        }
+
+        /// <summary>
+        /// Carga (o recarga) el selector de corridas desde el servicio de aplicación,
+        /// preservando la selección actual cuando corresponde (Fase 1492).
+        /// </summary>
+        private async Task CargarCorridasAsync(bool preservarSeleccion = false)
+        {
+            if (!_modo.EsModoAg || cmbCorrida == null) return;
+
+            long idActual = (cmbCorrida.SelectedItem as CorridaStagingItem)?.IdCorrida ?? 0;
+
+            var resultado = await _listService.GetCorridasStagingAsync(null, null, null, _cts.Token);
+            if (resultado.IsFailure)
+            {
+                LoggerHelper.Warning($"[FormVinculaciones] No se pudieron cargar las corridas AG: {resultado.Error}");
+                return;
+            }
+
+            var items = resultado.Value.ToList();
+            var seleccion = preservarSeleccion && idActual > 0
+                ? items.FirstOrDefault(c => c.IdCorrida == idActual)
+                : null;
+
+            _isUpdatingFilters = true;
+            try
+            {
+                cmbCorrida.Items.Clear();
+                foreach (var item in items) cmbCorrida.Items.Add(item);
+
+                var elegido = seleccion ?? AgCorridaSelector.ResolverSeleccionInicial(items, _idCorridaInicial);
+                var indice = elegido != null ? items.IndexOf(elegido) : -1;
+                cmbCorrida.SelectedIndex = indice >= 0 ? indice : (cmbCorrida.Items.Count > 0 ? 0 : -1);
+            }
+            finally
+            {
+                _isUpdatingFilters = false;
+            }
+        }
+
+        private async Task CargarCorridasSafeAsync()
+        {
+            try { await CargarCorridasAsync(preservarSeleccion: true); }
+            catch (OperationCanceledException) { }
+            catch (Exception ex) { LoggerHelper.Warning($"[FormVinculaciones] Error al refrescar corridas: {ex.Message}"); }
+        }
+
+        private async Task EjecutarConsultaSeguraAsync()
+        {
+            try { await EjecutarConsultaAsync(); }
+            catch (OperationCanceledException) { }
+            catch (Exception ex) { LoggerHelper.Warning($"[FormVinculaciones] Error al ejecutar la consulta: {ex.Message}"); }
+        }
+
+        /// <summary>
+        /// Fase 1493: sincroniza los filtros visibles (período, territorial y programa)
+        /// con los valores reales de la corrida seleccionada y relanza la consulta.
+        /// </summary>
+        private async Task AjustarFiltrosALaCorridaAsync()
+        {
+            if (!(cmbCorrida?.SelectedItem is CorridaStagingItem corrida) || corrida.IdCorrida <= 0)
+            {
+                lblStatus.Text = $"{_syncStatusText}Seleccione una corrida para ajustar los filtros.";
+                return;
+            }
+
+            _isUpdatingFilters = true;
+            try
+            {
+                SeleccionarEnCombo(cmbPeriodo, i => i.Id == corrida.IdPeriodo);
+                SeleccionarEnCombo(cmbTerritoriales, i => string.Equals(
+                    (i.Subunidad ?? string.Empty).Trim(),
+                    (corrida.Subunidad ?? string.Empty).Trim(),
+                    StringComparison.OrdinalIgnoreCase));
+
+                FiltrarSedesYTerceros();
+
+                SeleccionarEnCombo(cmbProgramas, i => i.Id == corrida.IdPrograma);
+            }
+            finally
+            {
+                _isUpdatingFilters = false;
+            }
+
+            await EjecutarConsultaSeguraAsync();
+        }
+
+        private static void SeleccionarEnCombo(ComboBox combo, Func<LookupItem, bool> criterio)
+        {
+            if (combo == null || criterio == null) return;
+
+            foreach (var item in combo.Items)
+            {
+                var lookup = item as LookupItem;
+                if (lookup != null && criterio(lookup))
+                {
+                    combo.SelectedItem = lookup;
+                    return;
+                }
+            }
         }
 
         protected override void Dispose(bool disposing)
@@ -334,36 +434,52 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
                 // prematuros de eventos en cascada; FiltrarSedesYTerceros() se llama una sola vez al final.
                 try
                 {
-                    var targetIdObj = _currentConnection.ExecuteScalar("SELECT id_periodo FROM config WHERE id = 1");
-                    var subunidadConfig = _currentConnection.QueryFirstOrDefault<string>("SELECT subunidad FROM config WHERE id = 1");
+                    // Fase 1491: en MODO AG la corrida es la fuente de verdad; los filtros ocultos de
+                    // config (período/territorial) no deben aplicarse o esconden sesiones de otras vigencias.
+                    bool aplicarPeriodo = AgFiltrosPolicy.AplicarPeriodoConfig(_modo);
+                    bool aplicarSubunidad = AgFiltrosPolicy.AplicarSubunidadConfig(_modo);
 
                     _isUpdatingFilters = true;
                     try
                     {
-                        if (targetIdObj != null && targetIdObj != DBNull.Value)
+                        if (aplicarPeriodo || aplicarSubunidad)
                         {
-                            int targetId = Convert.ToInt32(targetIdObj);
-                            if (targetId > 0)
+                            object targetIdObj = aplicarPeriodo
+                                ? _currentConnection.ExecuteScalar("SELECT id_periodo FROM config WHERE id = 1")
+                                : null;
+
+                            string subunidadConfig = aplicarSubunidad
+                                ? _currentConnection.QueryFirstOrDefault<string>("SELECT subunidad FROM config WHERE id = 1")
+                                : null;
+
+                            if (targetIdObj != null && targetIdObj != DBNull.Value)
                             {
-                                foreach (var item in cmbPeriodo.Items)
+                                int targetId = Convert.ToInt32(targetIdObj);
+                                if (targetId > 0)
                                 {
-                                    if (item is LookupItem pItem && pItem.Id == targetId)
+                                    foreach (var item in cmbPeriodo.Items)
                                     {
-                                        cmbPeriodo.SelectedItem = pItem;
-                                        break;
+                                        if (item is LookupItem pItem && pItem.Id == targetId)
+                                        {
+                                            cmbPeriodo.SelectedItem = pItem;
+                                            break;
+                                        }
                                     }
                                 }
                             }
-                        }
 
-                        if (!string.IsNullOrEmpty(subunidadConfig))
-                        {
-                            foreach (var item in cmbTerritoriales.Items)
+                            if (!string.IsNullOrEmpty(subunidadConfig))
                             {
-                                if (item is LookupItem tItem && tItem.Subunidad == subunidadConfig)
+                                foreach (var item in cmbTerritoriales.Items)
                                 {
-                                    cmbTerritoriales.SelectedItem = tItem;
-                                    break;
+                                    if (item is LookupItem tItem && string.Equals(
+                                            (tItem.Subunidad ?? string.Empty).Trim(),
+                                            subunidadConfig.Trim(),
+                                            StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        cmbTerritoriales.SelectedItem = tItem;
+                                        break;
+                                    }
                                 }
                             }
                         }
@@ -373,7 +489,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
                         _isUpdatingFilters = false;
                     }
 
-                    // Refiltrar una sola vez con ambos valores ya establecidos
+                    // Repoblar sedes/terceros (con o sin valores preseleccionados de config)
                     FiltrarSedesYTerceros();
                 }
                 catch (Exception exConfig)
@@ -434,9 +550,9 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             }
 
             long? idCorridaFiltro = null;
-            if (_modo.EsModoAg && cmbCorrida?.SelectedItem is LookupItem corridaItem && corridaItem.Id > 0)
+            if (_modo.EsModoAg && cmbCorrida?.SelectedItem is CorridaStagingItem corridaItem && corridaItem.IdCorrida > 0)
             {
-                idCorridaFiltro = corridaItem.Id;
+                idCorridaFiltro = corridaItem.IdCorrida;
             }
 
             var filtros = new VinculacionFilterDto
@@ -470,28 +586,54 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
                 _bsSesiones.DataSource = new List<SesionListItem>(result.Value);
                 _bsSesiones.ResetBindings(false);
 
-                // Fase 457 / Fase 469: En Modo AG, reportar conteo conjunto de vinculaciones y sesiones de la corrida
+                // Fase 1493: diagnóstico accionable del staging (misma fuente de verdad que la grilla)
                 if (_modo.EsModoAg)
                 {
                     long idCorridaVal = idCorridaFiltro ?? 0;
-                    int vincCount = await _currentConnection.ExecuteScalarAsync<int>(
-                        "SELECT COUNT(*) FROM ag_vinculaciones WHERE (@idCorrida = 0 OR id_corrida = @idCorrida) AND estado = 0",
-                        new { idCorrida = idCorridaVal });
 
-                    if (result.Value.Count == 0 && vincCount > 0)
+                    if (idCorridaVal <= 0)
                     {
-                        int totalSesStaging = await _currentConnection.ExecuteScalarAsync<int>(
-                            "SELECT COUNT(*) FROM ag_sesiones s JOIN ag_vinculaciones v ON s.idvinculacion = v.id WHERE (@idCorrida = 0 OR v.id_corrida = @idCorrida) AND v.estado = 0",
-                            new { idCorrida = idCorridaVal });
-                        if (totalSesStaging > 0)
+                        lblStatus.Text = $"{_syncStatusText}Mostrando todas las corridas ({result.Value.Count} sesiones). Seleccione una corrida para ver su diagnóstico.";
+                    }
+                    else
+                    {
+                        var resumenRes = await _listService.GetResumenStagingAsync(idCorridaVal, filtros, _cts.Token);
+
+                        if (resumenRes.IsFailure)
                         {
-                            LoggerHelper.Warning($"[FormVinculaciones] Modo AG: Existen {totalSesStaging} sesiones en staging pero la consulta devolvió 0 filas. Verifique los filtros activos o la vista vw_AgSesionesDetalle.");
-                            lblStatus.Text = $"{_syncStatusText}Aviso: Hay {totalSesStaging} sesiones en staging pero 0 coinciden con filtros (corrida #{idCorridaVal}).";
-                            return;
+                            LoggerHelper.Warning($"[FormVinculaciones] No se pudo construir el resumen de staging: {resumenRes.Error}");
+                            lblStatus.Text = $"{_syncStatusText}Se encontraron {result.Value.Count} sesiones (corrida #{idCorridaVal}).";
+                        }
+                        else
+                        {
+                            var r = resumenRes.Value;
+                            string periodoUi = (cmbPeriodo.SelectedItem as LookupItem)?.DisplayName ?? "todos";
+                            string subunidadUi = (cmbTerritoriales.SelectedItem as LookupItem)?.Subunidad ?? "todas";
+
+                            if (r.SesionesCorrida > 0 && r.SesionesConFiltros == 0)
+                            {
+                                LoggerHelper.Warning(
+                                    $"[FormVinculaciones] Corrida #{idCorridaVal} con {r.SesionesCorrida} sesiones en staging " +
+                                    $"({r.PeriodosCorrida} / {r.SubunidadesCorrida}) pero 0 coinciden con los filtros activos " +
+                                    $"(periodo {periodoUi}, territorial {subunidadUi}).");
+
+                                lblStatus.Text =
+                                    $"{_syncStatusText}La corrida #{idCorridaVal} tiene {r.SesionesCorrida} sesiones del período " +
+                                    $"{r.PeriodosCorrida} ({r.SubunidadesCorrida}), pero los filtros activos (período {periodoUi}, " +
+                                    $"territorial {subunidadUi}) dejan 0. Use «Ajustar filtros».";
+                            }
+                            else if (r.SesionesCorrida == 0)
+                            {
+                                lblStatus.Text = $"{_syncStatusText}La corrida #{idCorridaVal} no tiene sesiones en staging. Ejecute el AG o elija otra corrida.";
+                            }
+                            else
+                            {
+                                lblStatus.Text =
+                                    $"{_syncStatusText}Se encontraron {r.VincCorrida} vinculaciones / {result.Value.Count} sesiones " +
+                                    $"(corrida #{idCorridaVal} · {r.PeriodosCorrida} · {r.SubunidadesCorrida}).";
+                            }
                         }
                     }
-
-                    lblStatus.Text = $"{_syncStatusText}Se encontraron {vincCount} vinculaciones / {result.Value.Count} sesiones (corrida #{idCorridaVal}).";
                 }
                 else
                 {

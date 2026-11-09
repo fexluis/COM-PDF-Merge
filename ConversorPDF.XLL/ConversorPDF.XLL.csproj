@@ -270,6 +270,8 @@
     <Compile Include="Academic\Infrastructure\Persistence\Repositories\AcademicRepository.cs" />
     <Compile Include="Academic\Application\Services\GeneradorSesionesRecurrentes.cs" />
     <Compile Include="Academic\Application\Services\VinculacionListService.cs" />
+    <Compile Include="Academic\Application\Services\AgCorridaSelector.cs" />
+    <Compile Include="Academic\Application\Services\AgFiltrosPolicy.cs" />
     <Compile Include="Academic\Application\Services\AcademicDateSyncService.cs" />
     <Compile Include="Academic\Application\Interfaces\IAcademicDateSyncService.cs" />
     <Compile Include="Core\Helpers\ViaticosHelper.cs" />
@@ -549,6 +551,8 @@
     <Compile Include="Academic\Domain\Models\Genetica\AgAulaAsignatura.cs" />
     <Compile Include="Academic\Domain\Models\Genetica\AgBloqueHorario.cs" />
     <Compile Include="Academic\Domain\Models\Genetica\AgCorrida.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\CorridaStagingItem.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\AgStagingResumen.cs" />
     <Compile Include="Academic\Domain\Models\Genetica\AgIndividuo.cs" />
     <Compile Include="Academic\Domain\Models\Genetica\AgGen.cs" />
     <Compile Include="Academic\Domain\Models\Genetica\AgVinculacion.cs" />

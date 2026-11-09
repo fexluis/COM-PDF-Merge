@@ -32,6 +32,9 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             this.dtpFechaInicio = new System.Windows.Forms.DateTimePicker();
             this.cmbTerritoriales = new System.Windows.Forms.ComboBox();
             this.cmbPeriodo = new System.Windows.Forms.ComboBox();
+            this.lblCorrida = new System.Windows.Forms.Label();
+            this.cmbCorrida = new System.Windows.Forms.ComboBox();
+            this.btnAjustarFiltrosCorrida = new System.Windows.Forms.Button();
 
             this.dgvVinculaciones = new System.Windows.Forms.DataGridView();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
@@ -75,10 +78,14 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             this.pnlFilters.Controls.Add(this.dtpFechaInicio);
             this.pnlFilters.Controls.Add(this.cmbTerritoriales);
             this.pnlFilters.Controls.Add(this.cmbPeriodo);
+            this.pnlFilters.Controls.Add(this.lblCorrida);
+            this.pnlFilters.Controls.Add(this.cmbCorrida);
+            this.pnlFilters.Controls.Add(this.btnAjustarFiltrosCorrida);
             this.pnlFilters.Dock = System.Windows.Forms.DockStyle.Top;
             this.pnlFilters.Location = new System.Drawing.Point(0, 24);
             this.pnlFilters.Name = "pnlFilters";
-            this.pnlFilters.Size = new System.Drawing.Size(anchuraForm, 80);
+            this.pnlFilters.MinimumSize = new System.Drawing.Size(0, 104);
+            this.pnlFilters.Size = new System.Drawing.Size(anchuraForm, 104);
             this.pnlFilters.TabIndex = 0;
 
             // btnVerVinculaciones
@@ -246,6 +253,34 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             this.cmbPeriodo.Size = new System.Drawing.Size(10, 21);
             this.cmbPeriodo.Visible = false;
 
+            // lblCorrida (fila 3 · visible solo en MODO AG)
+            this.lblCorrida.AutoSize = true;
+            this.lblCorrida.Location = new System.Drawing.Point(12, 78);
+            this.lblCorrida.Name = "lblCorrida";
+            this.lblCorrida.Size = new System.Drawing.Size(46, 13);
+            this.lblCorrida.TabIndex = 25;
+            this.lblCorrida.Text = "Corrida:";
+            this.lblCorrida.Visible = false;
+
+            // cmbCorrida (fila 3 · bajo Semestre y Tercero)
+            this.cmbCorrida.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbCorrida.FormattingEnabled = true;
+            this.cmbCorrida.Location = new System.Drawing.Point(75, 75);
+            this.cmbCorrida.Name = "cmbCorrida";
+            this.cmbCorrida.Size = new System.Drawing.Size(505, 21);
+            this.cmbCorrida.DropDownWidth = 640;
+            this.cmbCorrida.TabIndex = 26;
+            this.cmbCorrida.Visible = false;
+
+            // btnAjustarFiltrosCorrida (fila 3 · antes del carril de botones x=760)
+            this.btnAjustarFiltrosCorrida.Location = new System.Drawing.Point(585, 74);
+            this.btnAjustarFiltrosCorrida.Name = "btnAjustarFiltrosCorrida";
+            this.btnAjustarFiltrosCorrida.Size = new System.Drawing.Size(170, 23);
+            this.btnAjustarFiltrosCorrida.TabIndex = 27;
+            this.btnAjustarFiltrosCorrida.Text = "Ajustar filtros";
+            this.btnAjustarFiltrosCorrida.UseVisualStyleBackColor = true;
+            this.btnAjustarFiltrosCorrida.Visible = false;
+
             // dgvVinculaciones
             this.dgvVinculaciones.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvVinculaciones.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -393,6 +428,9 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
         // Retenidos ocultos
         private System.Windows.Forms.ComboBox cmbTerritoriales;
         private System.Windows.Forms.ComboBox cmbPeriodo;
+
+        // Selector de corridas (MODO AG · fila 3)
+        private System.Windows.Forms.Button btnAjustarFiltrosCorrida;
 
         private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.ToolStripMenuItem sedesAcadémicasToolStripMenuItem;
