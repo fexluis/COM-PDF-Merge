@@ -42,5 +42,12 @@ namespace ConversorPDF.XLL.Academic.Application.Interfaces
             long idCorrida,
             VinculacionFilterDto filtros,
             CancellationToken ct);
+
+        /// <summary>
+        /// Elimina el staging de la corrida indicada (solo MODO AG) y devuelve los conteos borrados (Fase 1517).
+        /// </summary>
+        Task<Result<(int Sesiones, int Vinculaciones)>> EliminarCorridaStagingAsync(
+            long idCorrida,
+            CancellationToken ct);
     }
 }

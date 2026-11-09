@@ -46,7 +46,7 @@ Prueba del defecto sobre `vw_AgSesionesDetalle`:
 | 1491 | En MODO AG no se aplican período/territorial de `config`; comparación `UPPER(TRIM(...))` para subunidad |
 | 1492 | Selector en el **Designer** (fila 3), `idCorridaInicial` desde el Módulo R, refresco en `DropDown` sin `async void`, una sola consulta inicial |
 | 1493 | Mensaje accionable + botón **«Ajustar filtros»**; guardia para «Todas las corridas» |
-| 1494 | `pnlFilters` 80→104 px, controles en fila 3 (`12,78` / `75,75` w505 / `585,74` w170), anclajes `Top|Left`; Producción conserva 80 px y sin controles |
+| 1494 | `pnlFilters` 80→104 px, controles en fila 3 (`12,78` / `75,75` w505 / `585,74` w170 / `765,74` w140); etiqueta **MODO AG (staging)** alineada al extremo derecho de la fila 3; Producción conserva 80 px y oculta los controles de corrida |
 | 1495 | 23 pruebas nuevas (selector, política, integración con fixture real, delegación) |
 
 ### Etiqueta del combo
@@ -79,3 +79,24 @@ Fast ~Vinculacion                             → 37 superadas / 0 con error
 Fast ~AgCorridaSelectorTests|~AgFiltrosPolicy → 14 superadas / 0 con error
 scripts/verify.ps1 -Mode Full                 → ver _evidence/
 ```
+
+## 7. Eliminación de corridas (Fase 1516)
+
+El botón **«Eliminar corrida»** (solo MODO AG, junto a «Ajustar filtros») borra el staging de la corrida seleccionada:
+
+- Confirmación previa con período, programa, territorial y conteos; aviso extra si coincide con `_idCorridaInicial` (la cargada en el Módulo R).
+- No actúa sobre el ítem «Todas las corridas» (sentinel `IdCorrida = 0`).
+- `EliminarCorridaStagingAsync` es transaccional y borra en orden: `ag_vinculacion_gen` → `ag_sesiones` → `ag_salvedades_conflictos` → `ag_vinculaciones` → `ag_violacion` → `ag_bitacora` → `ag_promocion` → `ag_gen` → `ag_individuo` → `ag_corrida`.
+- Las tablas opcionales se omiten si el vault no las tiene (consulta a `sqlite_master`), por lo que funciona en vaults legados.
+- Rechaza ids inválidos y corridas inexistentes (`"La corrida #N no existe en el staging."`).
+- Tras eliminar: recarga el combo y relanza la consulta; el estado informa los conteos borrados.
+- Las tablas `ag_*` **no** están en `SyncInitializer.CrdtTables`, así que el borrado no genera tombstones de producción.
+
+## 8. Layout final de la fila 3
+
+```
+Corrida: [12,78]  cmbCorrida [75,75 · 505]  «Ajustar filtros» [585,74 · 170]  «Eliminar corrida» [765,74 · 140]  MODO AG (staging) (rojo, borde derecho)
+```
+
+`pnlFilters.MinimumSize = (0, 104)`; en Producción la altura vuelve a 80 px, los tres controles de corrida se ocultan y la etiqueta regresa a `(derecha, 10)`.
+

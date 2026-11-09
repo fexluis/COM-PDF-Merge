@@ -472,5 +472,123 @@ WHERE IdCorrida = @idCorrida;";
             return total > 0;
         }
 
+        private static Task<int> EjecutarAsync(IDbConnection db, IDbTransaction trans, CancellationToken ct, string sql, long idCorrida)
+        {
+            return db.ExecuteAsync(new CommandDefinition(sql, new { idCorrida }, trans, cancellationToken: ct));
+        }
+
+
+        /// <summary>
+        /// Elimina el staging completo de una corrida (Fases 1516/1517) en una sola transacción.
+        /// Las tablas opcionales se omiten si el vault no las tiene.
+        /// </summary>
+        public async Task<Result<(int Sesiones, int Vinculaciones)>> EliminarCorridaStagingAsync(
+            long idCorrida,
+            CancellationToken ct)
+        {
+            if (idCorrida <= 0)
+                return Result.Failure<(int, int)>("Corrida inválida (id <= 0).");
+
+            try
+            {
+                var db = _connectionFactory();
+                if (db == null)
+                    return Result.Failure<(int, int)>("La factory de conexiones retornó null.");
+
+                if (db.State != ConnectionState.Open) db.Open();
+                ct.ThrowIfCancellationRequested();
+
+                if (!await ExisteTablaAsync(db, "ag_vinculaciones", ct))
+                    return Result.Failure<(int, int)>("La base de datos no tiene staging AG (falta ag_vinculaciones).");
+
+                bool tieneCorrida = await ExisteTablaAsync(db, "ag_corrida", ct);
+                bool tieneVincGen = await ExisteTablaAsync(db, "ag_vinculacion_gen", ct);
+                bool tieneSalv = await ExisteTablaAsync(db, "ag_salvedades_conflictos", ct);
+                bool tieneViol = await ExisteTablaAsync(db, "ag_violacion", ct);
+                bool tieneBit = await ExisteTablaAsync(db, "ag_bitacora", ct);
+                bool tieneProm = await ExisteTablaAsync(db, "ag_promocion", ct);
+                bool tieneGen = await ExisteTablaAsync(db, "ag_gen", ct);
+                bool tieneInd = await ExisteTablaAsync(db, "ag_individuo", ct);
+
+                int totalVinc = await db.ExecuteScalarAsync<int>(new CommandDefinition(
+                    "SELECT COUNT(*) FROM ag_vinculaciones WHERE id_corrida = @idCorrida",
+                    new { idCorrida }, cancellationToken: ct));
+
+                int totalSes = await db.ExecuteScalarAsync<int>(new CommandDefinition(
+                    "SELECT COUNT(*) FROM ag_sesiones WHERE idvinculacion IN (SELECT id FROM ag_vinculaciones WHERE id_corrida = @idCorrida)",
+                    new { idCorrida }, cancellationToken: ct));
+
+                bool existeCabecera = tieneCorrida && await db.ExecuteScalarAsync<int>(new CommandDefinition(
+                    "SELECT COUNT(*) FROM ag_corrida WHERE id = @idCorrida",
+                    new { idCorrida }, cancellationToken: ct)) > 0;
+
+                if (totalVinc == 0 && !existeCabecera)
+                    return Result.Failure<(int, int)>($"La corrida #{idCorrida} no existe en el staging.");
+
+                using (var trans = db.BeginTransaction())
+                {
+                    try
+                    {
+                        if (tieneVincGen)
+                            await EjecutarAsync(db, trans, ct,
+                                "DELETE FROM ag_vinculacion_gen WHERE idagvinculacion IN (SELECT id FROM ag_vinculaciones WHERE id_corrida = @idCorrida)", idCorrida);
+
+                        await EjecutarAsync(db, trans, ct,
+                            "DELETE FROM ag_sesiones WHERE idvinculacion IN (SELECT id FROM ag_vinculaciones WHERE id_corrida = @idCorrida)", idCorrida);
+
+                        if (tieneSalv)
+                            await EjecutarAsync(db, trans, ct,
+                                "DELETE FROM ag_salvedades_conflictos WHERE id_corrida = @idCorrida", idCorrida);
+
+                        await EjecutarAsync(db, trans, ct,
+                            "DELETE FROM ag_vinculaciones WHERE id_corrida = @idCorrida", idCorrida);
+
+                        if (tieneViol && tieneInd)
+                            await EjecutarAsync(db, trans, ct,
+                                "DELETE FROM ag_violacion WHERE id_individuo IN (SELECT id FROM ag_individuo WHERE id_corrida = @idCorrida)", idCorrida);
+
+                        if (tieneBit)
+                            await EjecutarAsync(db, trans, ct,
+                                "DELETE FROM ag_bitacora WHERE id_corrida = @idCorrida", idCorrida);
+
+                        if (tieneProm)
+                            await EjecutarAsync(db, trans, ct,
+                                "DELETE FROM ag_promocion WHERE id_corrida = @idCorrida", idCorrida);
+
+                        if (tieneGen && tieneInd)
+                            await EjecutarAsync(db, trans, ct,
+                                "DELETE FROM ag_gen WHERE id_individuo IN (SELECT id FROM ag_individuo WHERE id_corrida = @idCorrida)", idCorrida);
+
+                        if (tieneInd)
+                            await EjecutarAsync(db, trans, ct,
+                                "DELETE FROM ag_individuo WHERE id_corrida = @idCorrida", idCorrida);
+
+                        if (tieneCorrida)
+                            await EjecutarAsync(db, trans, ct,
+                                "DELETE FROM ag_corrida WHERE id = @idCorrida", idCorrida);
+
+                        trans.Commit();
+                    }
+                    catch
+                    {
+                        try { trans.Rollback(); } catch { }
+                        throw;
+                    }
+                }
+
+                LoggerHelper.Info($"[VinculacionQueryRepository] Corrida #{idCorrida} eliminada: {totalVinc} vinc / {totalSes} ses.");
+                return Result.Success<(int Sesiones, int Vinculaciones)>((totalSes, totalVinc));
+            }
+            catch (OperationCanceledException)
+            {
+                return Result.Failure<(int, int)>("Operación cancelada.");
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error("[VinculacionQueryRepository] Error en EliminarCorridaStagingAsync", ex);
+                return Result.Failure<(int, int)>("Error al eliminar la corrida: " + ex.Message);
+            }
+        }
+
     }
 }

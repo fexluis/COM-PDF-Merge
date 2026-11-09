@@ -219,6 +219,45 @@ namespace ConversorPDF.Tests.Integration.Academic
             sinPeriodo.Value.Should().HaveCount(3);
         }
 
+        [Fact]
+        public async Task EliminarCorridaStagingAsync_BorraSoloLaCorridaIndicada()
+        {
+            var res = await _repo.EliminarCorridaStagingAsync(44, CancellationToken.None);
+
+            res.IsSuccess.Should().BeTrue(res.IsFailure ? res.Error : string.Empty);
+            res.Value.Vinculaciones.Should().Be(2);
+            res.Value.Sesiones.Should().Be(3);
+
+            // La corrida #44 desaparece de staging y de su cabecera
+            _conn.ExecuteScalar<int>("SELECT COUNT(*) FROM ag_vinculaciones WHERE id_corrida = 44").Should().Be(0);
+            _conn.ExecuteScalar<int>("SELECT COUNT(*) FROM ag_corrida WHERE id = 44").Should().Be(0);
+            _conn.ExecuteScalar<int>("SELECT COUNT(*) FROM ag_sesiones WHERE idvinculacion IN (100, 101)").Should().Be(0);
+
+            // El resto de corridas permanece intacto
+            _conn.ExecuteScalar<int>("SELECT COUNT(*) FROM ag_corrida WHERE id IN (46, 37, 1)").Should().Be(3);
+            _conn.ExecuteScalar<int>("SELECT COUNT(*) FROM ag_sesiones WHERE idvinculacion IN (102, 103)").Should().Be(2);
+        }
+
+        [Fact]
+        public async Task EliminarCorridaStagingAsync_CorridaInexistente_DevuelveFallo()
+        {
+            var res = await _repo.EliminarCorridaStagingAsync(9999, CancellationToken.None);
+
+            res.IsFailure.Should().BeTrue();
+            res.Error.Should().Contain("no existe");
+        }
+
+        [Fact]
+        public async Task EliminarCorridaStagingAsync_CorridaSinStaging_BorraSoloLaCabecera()
+        {
+            var res = await _repo.EliminarCorridaStagingAsync(46, CancellationToken.None);
+
+            res.IsSuccess.Should().BeTrue(res.IsFailure ? res.Error : string.Empty);
+            res.Value.Sesiones.Should().Be(0);
+            res.Value.Vinculaciones.Should().Be(0);
+            _conn.ExecuteScalar<int>("SELECT COUNT(*) FROM ag_corrida WHERE id = 46").Should().Be(0);
+        }
+
         public void Dispose()
         {
             _conn?.Dispose();

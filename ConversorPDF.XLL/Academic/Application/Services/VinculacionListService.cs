@@ -143,5 +143,15 @@ namespace ConversorPDF.XLL.Academic.Application.Services
                 f.FechaHasta,
                 ct);
         }
+
+        /// <summary>
+        /// Elimina el staging de la corrida indicada delegando en el repositorio (Fase 1517).
+        /// </summary>
+        public Task<Result<(int Sesiones, int Vinculaciones)>> EliminarCorridaStagingAsync(
+            long idCorrida,
+            CancellationToken ct)
+        {
+            return _queryRepository.EliminarCorridaStagingAsync(idCorrida, ct);
+        }
     }
 }

@@ -38,8 +38,6 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
         private readonly dynamic _excelApp;
         private readonly AgModoDatos _modo;
         private readonly long? _idCorridaInicial;
-        private Label lblModo;
-        private Label lblCorrida;
         private ComboBox cmbCorrida;
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
         private readonly BindingSource _bsSesiones = new BindingSource();
@@ -105,19 +103,10 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             // Configuración inicial de UI
             ConfigurarGrid();
             this.Load += async (s, e) => {
-                if (lblModo == null)
-                {
-                    lblModo = new Label
-                    {
-                        AutoSize = true,
-                        Location = new Point(pnlFilters.Width - 180, 10),
-                        Anchor = AnchorStyles.Top | AnchorStyles.Right
-                    };
-                    pnlFilters.Controls.Add(lblModo);
-                }
                 lblModo.Text = _modo.EsModoAg ? "MODO AG (staging)" : "PRODUCCIÓN";
                 lblModo.ForeColor = _modo.EsModoAg ? Color.OrangeRed : Color.DimGray;
                 lblModo.Font = new Font(this.Font, FontStyle.Bold);
+                ReposicionarEtiquetaModo();
                 this.Text = _modo.EsModoAg ? "Vinculaciones Académicas — MODO AG" : "Vinculaciones Académicas";
 
                 // Fase 1492: el selector de corrida vive en el Designer (fila 3, bajo Semestre y Tercero)
@@ -130,6 +119,9 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
                 await CargarCorridasAsync();
                 await EjecutarConsultaSeguraAsync();
             };
+
+            // La etiqueta de modo se mantiene anclada a la derecha al redimensionar
+            pnlFilters.Resize += (s, e) => ReposicionarEtiquetaModo();
             
             cmbTerritoriales.SelectedIndexChanged += (s, e) => {
                 if (!_isUpdatingFilters) FiltrarSedesYTerceros();
@@ -152,6 +144,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             lblCorrida.Visible = esModoAg;
             cmbCorrida.Visible = esModoAg;
             btnAjustarFiltrosCorrida.Visible = esModoAg;
+            btnEliminarCorrida.Visible = esModoAg;
 
             if (!esModoAg) return;
 
@@ -167,6 +160,87 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             cmbCorrida.DropDown += (s, e) => _ = CargarCorridasSafeAsync();
 
             btnAjustarFiltrosCorrida.Click += (s, e) => _ = AjustarFiltrosALaCorridaAsync();
+            btnEliminarCorrida.Click += (s, e) => _ = EliminarCorridaSeleccionadaAsync();
+        }
+
+        /// <summary>
+        /// Ubica la etiqueta de modo arriba a la derecha (Producción) o en la fila 3 (MODO AG),
+        /// manteniéndola anclada al borde derecho del panel de filtros.
+        /// </summary>
+        private void ReposicionarEtiquetaModo()
+        {
+            if (lblModo == null || pnlFilters == null) return;
+
+            int margen = 12;
+            int y = _modo.EsModoAg ? 78 : 10;
+            int x = Math.Max(margen, pnlFilters.ClientSize.Width - lblModo.Width - margen);
+            lblModo.Location = new Point(x, y);
+        }
+
+        /// <summary>
+        /// Elimina el staging de la corrida seleccionada (solo MODO AG), previa confirmación explícita.
+        /// Borra vinculaciones, sesiones, genes, individuos, bitácoras, violaciones, promociones,
+        /// salvedades y la cabecera en ag_corrida (Fases 1516/1517).
+        /// </summary>
+        private async Task EliminarCorridaSeleccionadaAsync()
+        {
+            if (!_modo.EsModoAg) return;
+
+            if (!(cmbCorrida?.SelectedItem is CorridaStagingItem corrida) || corrida.IdCorrida <= 0)
+            {
+                lblStatus.Text = $"{_syncStatusText}Seleccione una corrida concreta (no «Todas las corridas») para eliminarla.";
+                return;
+            }
+
+            string advertenciaExtra = corrida.IdCorrida == _idCorridaInicial
+                ? "\n\nATENCIÓN: es la corrida cargada en el Módulo R; sus resultados en pantalla dejarán de estar disponibles."
+                : string.Empty;
+
+            string mensaje =
+                $"¿Eliminar la corrida #{corrida.IdCorrida}?\n\n" +
+                $"{corrida.PeriodoNombre} · {corrida.ProgramaNombre} · {corrida.Subunidad}\n" +
+                $"Se borrarán {corrida.TotalVinculaciones} vinculaciones y {corrida.TotalSesiones} sesiones de staging." +
+                advertenciaExtra +
+                "\n\nEsta acción no se puede deshacer.";
+
+            if (MessageBox.Show(this, mensaje, "Eliminar corrida de staging",
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) != DialogResult.Yes)
+            {
+                return;
+            }
+
+            btnEliminarCorrida.Enabled = false;
+            try
+            {
+                var resultado = await _listService.EliminarCorridaStagingAsync(corrida.IdCorrida, _cts.Token);
+                if (resultado.IsFailure)
+                {
+                    LoggerHelper.Error($"[FormVinculaciones] No se pudo eliminar la corrida #{corrida.IdCorrida}: {resultado.Error}");
+                    MessageBox.Show(this, $"No se pudo eliminar la corrida #{corrida.IdCorrida}:\n{resultado.Error}",
+                        "Eliminar corrida", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                LoggerHelper.Info(
+                    $"[FormVinculaciones] Corrida #{corrida.IdCorrida} eliminada del staging " +
+                    $"({resultado.Value.Sesiones} sesiones / {resultado.Value.Vinculaciones} vinculaciones).");
+
+                await CargarCorridasAsync();
+                await EjecutarConsultaSeguraAsync();
+
+                lblStatus.Text = $"{_syncStatusText}Corrida #{corrida.IdCorrida} eliminada ({resultado.Value.Sesiones} sesiones / {resultado.Value.Vinculaciones} vinculaciones).";
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error($"[FormVinculaciones] Error al eliminar la corrida #{corrida.IdCorrida}", ex);
+                MessageBox.Show(this, $"Error al eliminar la corrida:\n{ex.Message}", "Eliminar corrida",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                btnEliminarCorrida.Enabled = true;
+            }
         }
 
         /// <summary>

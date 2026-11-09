@@ -121,5 +121,28 @@ namespace ConversorPDF.Tests.Unit.Academic
                 r => r.GetResumenStagingAsync(44, 1, null, 2, null, null, "VALLE", null, false, null, null, It.IsAny<CancellationToken>()),
                 Times.Once);
         }
+
+        [Fact]
+        public async Task EliminarCorridaStagingAsync_DelegaEnRepositorio()
+        {
+            _queryRepoMock
+                .Setup(r => r.EliminarCorridaStagingAsync(44, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Result.Success<(int Sesiones, int Vinculaciones)>((3, 2)));
+
+            var service = new VinculacionListService(
+                _queryRepoMock.Object, _sedeRepoMock.Object,
+                _terceroRepoMock.Object, _periodoRepoMock.Object,
+                _programaRepoMock.Object);
+
+            var res = await service.EliminarCorridaStagingAsync(44, CancellationToken.None);
+
+            res.IsSuccess.Should().BeTrue();
+            res.Value.Sesiones.Should().Be(3);
+            res.Value.Vinculaciones.Should().Be(2);
+
+            _queryRepoMock.Verify(
+                r => r.EliminarCorridaStagingAsync(44, It.IsAny<CancellationToken>()),
+                Times.Once);
+        }
     }
 }

@@ -25,7 +25,7 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
 | `ronda` | 288 | 289 | 2026-11-09 |
-| `fase` | 1516 | 1517 | 2026-11-09 |
+| `fase` | 1517 | 1518 | 2026-11-09 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -41,7 +41,7 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-004 | 2026-10-31 | `(mantenimiento sin plan: bump 1.6.3.83)` | `Wave 272` → `Ronda 272` | `T1` → `Fase 1461` | executing | pendiente (gate conjunto) | pendiente |
 | R-005 | 2026-11-01 | `2026-11-01-verificacion-solicitudes-plan.md` | `Wave 1..3` → `Ronda 273–275` | `T1..T6` → `Fase 1462–1467` | abandoned | — | pendiente |
 | R-006 | 2026-10-31 | `2026-10-31-duplicados-y-auditoria-informe-plan.md` | `Wave 1..3` → `Ronda 279–281` | `T1..T5` → `Fase 1483–1487` | closed | 0 (Full, 999 tests) | sin commit |
-| R-007 | 2026-11-09 | `2026-11-09-corridas-ag-formvinculaciones-plan.md` | `Wave 1..3` → `Ronda 282–284` | `T1..T8` → `Fase 1488–1495` | executing | PASS (Full 1064) | pendiente |
+| R-007 | 2026-11-09 | `2026-11-09-corridas-ag-formvinculaciones-plan.md` | `Wave 1..3` → `Ronda 282–284` | `T1..T8` → `Fase 1488–1495` · `T9..T10` → `Fase 1516–1517` | executing | PASS (Full 1064) | pendiente |
 | R-008 | 2026-11-09 | `(revisión manual Ronda 285 — correcciones R-007)` | `Wave —` | `Fase 1496–1503` | closed | — | pendiente |
 | R-009 | 2026-11-09 | `(revisión manual Ronda 286 — Fases 1504–1509)` | `Wave —` | `Fase 1504–1509` | closed | — | pendiente |
 | R-010 | 2026-11-09 | `(revisión manual Ronda 287 — Fases 1510–1514)` | `Wave —` | `Fase 1510–1514` | closed | — | pendiente |

@@ -35,6 +35,8 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             this.lblCorrida = new System.Windows.Forms.Label();
             this.cmbCorrida = new System.Windows.Forms.ComboBox();
             this.btnAjustarFiltrosCorrida = new System.Windows.Forms.Button();
+            this.btnEliminarCorrida = new System.Windows.Forms.Button();
+            this.lblModo = new System.Windows.Forms.Label();
 
             this.dgvVinculaciones = new System.Windows.Forms.DataGridView();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
@@ -81,6 +83,8 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             this.pnlFilters.Controls.Add(this.lblCorrida);
             this.pnlFilters.Controls.Add(this.cmbCorrida);
             this.pnlFilters.Controls.Add(this.btnAjustarFiltrosCorrida);
+            this.pnlFilters.Controls.Add(this.btnEliminarCorrida);
+            this.pnlFilters.Controls.Add(this.lblModo);
             this.pnlFilters.Dock = System.Windows.Forms.DockStyle.Top;
             this.pnlFilters.Location = new System.Drawing.Point(0, 24);
             this.pnlFilters.Name = "pnlFilters";
@@ -281,6 +285,24 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             this.btnAjustarFiltrosCorrida.UseVisualStyleBackColor = true;
             this.btnAjustarFiltrosCorrida.Visible = false;
 
+            // btnEliminarCorrida (fila 3 · junto a "Ajustar filtros")
+            this.btnEliminarCorrida.Location = new System.Drawing.Point(765, 74);
+            this.btnEliminarCorrida.Name = "btnEliminarCorrida";
+            this.btnEliminarCorrida.Size = new System.Drawing.Size(140, 23);
+            this.btnEliminarCorrida.TabIndex = 28;
+            this.btnEliminarCorrida.Text = "Eliminar corrida";
+            this.btnEliminarCorrida.UseVisualStyleBackColor = true;
+            this.btnEliminarCorrida.Visible = false;
+
+            // lblModo (etiqueta de modo · fila 3 en AG, esquina superior en Producción)
+            this.lblModo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblModo.AutoSize = true;
+            this.lblModo.Location = new System.Drawing.Point(920, 78);
+            this.lblModo.Name = "lblModo";
+            this.lblModo.Size = new System.Drawing.Size(60, 13);
+            this.lblModo.TabIndex = 29;
+            this.lblModo.Text = "MODO AG (staging)";
+
             // dgvVinculaciones
             this.dgvVinculaciones.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvVinculaciones.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -431,6 +453,9 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
 
         // Selector de corridas (MODO AG · fila 3)
         private System.Windows.Forms.Button btnAjustarFiltrosCorrida;
+        private System.Windows.Forms.Button btnEliminarCorrida;
+        private System.Windows.Forms.Label lblCorrida;
+        private System.Windows.Forms.Label lblModo;
 
         private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.ToolStripMenuItem sedesAcadémicasToolStripMenuItem;

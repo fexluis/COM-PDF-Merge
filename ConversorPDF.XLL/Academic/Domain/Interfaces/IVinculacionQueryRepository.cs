@@ -95,5 +95,15 @@ namespace ConversorPDF.XLL.Academic.Domain.Interfaces
             DateTime? fechaDesde,
             DateTime? fechaHasta,
             CancellationToken ct);
+
+        /// <summary>
+        /// Elimina el staging completo de una corrida (vinculaciones, sesiones, genealogía,
+        /// individuos, bitácoras, violaciones, promociones, salvedades y cabecera en ag_corrida).
+        /// Operación transaccional e irreversible (Fases 1516/1517).
+        /// </summary>
+        /// <returns>Conteos de sesiones y vinculaciones eliminadas.</returns>
+        Task<Result<(int Sesiones, int Vinculaciones)>> EliminarCorridaStagingAsync(
+            long idCorrida,
+            CancellationToken ct);
     }
 }

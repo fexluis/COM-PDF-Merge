@@ -405,6 +405,24 @@ public static class AgFiltrosPolicy
 
 ---
 
+### T9 · Fase 1516 — Eliminación de la corrida seleccionada *(implementer, L1)*
+- **fase**: 1516
+- **depends_on**: [T2, T3]
+- **files_lock**: `Academic/UI/Forms/FormVinculaciones.cs`, `Academic/UI/Forms/FormVinculaciones.Designer.cs`, `Academic/Application/Interfaces/IVinculacionListService.cs`, `Academic/Application/Services/VinculacionListService.cs`, `Academic/Domain/Interfaces/IVinculacionQueryRepository.cs`, `Academic/Infrastructure/Persistence/Repositories/VinculacionQueryRepository.cs`, `ConversorPDF.Tests/Integration/Academic/VinculacionQueryRepositoryAgStagingTests.cs`, `ConversorPDF.Tests/Unit/Academic/VinculacionListServiceTests.cs`
+- **description**: botón `btnEliminarCorrida` junto a «Ajustar filtros»; `EliminarCorridaStagingAsync` transaccional (vinculacion_gen → sesiones → salvedades → vinculaciones → violacion → bitacora → promocion → gen → individuo → corrida), tolerante a tablas ausentes; confirmación con conteos y recarga del combo.
+- **validation**: borra solo la corrida indicada; ignora inexistentes; borra cabecera de corrida sin staging.
+- **verification**: `scripts/verify.ps1 -Mode Fast -Filter "FullyQualifiedName~Vinculacion"` · **evidence**: `_evidence/20261109-144151` · **status**: done
+
+### T10 · Fase 1517 — Etiqueta de modo en la fila 3 *(implementer, L1)*
+- **fase**: 1517
+- **depends_on**: [T9]
+- **files_lock**: `Academic/UI/Forms/FormVinculaciones.cs`, `Academic/UI/Forms/FormVinculaciones.Designer.cs`
+- **description**: `lblModo` pasa al Designer con `Anchor = Top|Right`; en MODO AG se ubica en la fila 3 (`y = 78`) al extremo derecho; en Producción vuelve a `y = 10`. `ReposicionarEtiquetaModo()` se ejecuta en `Load` y en `pnlFilters.Resize`.
+- **validation**: sin solape con «Eliminar corrida» a 100/125/150 % DPI; Producción sin cambios visuales.
+- **verification**: `scripts/verify.ps1 -Mode Build` · **status**: done
+
+---
+
 ## 2. Criterios de aceptación (verificables sobre el vault real)
 
 | # | Escenario | Esperado |
