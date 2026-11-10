@@ -54,3 +54,26 @@ AgPromotorVinculaciones (transacción): vinculaciones/sesiones de producción + 
 ## 6. Fuera de alcance
 
 Retención de corridas, cambios en `FormVinculaciones`, migraciones de esquema.
+
+
+## 7. Ajuste de layout y robustez del botón Promover (Fases 1522–1523)
+
+**Layout de `pnlHeaderResultados`** (956 px de ancho, verificado sin solapes):
+
+| Control | x | ancho | fin |
+|---|---|---|---|
+| `lblVacantes` | 355 | 85 | 440 |
+| **`lblCargarCorridas`** "Cargar corridas:" | 444 | 95 (real 90) | 534 |
+| **`cmbCargarCorridas`** | 545 | 185 | 730 |
+| `btnPromoverProduccion` | 740 | 200 | 940 |
+
+El combo pasa de `195×32` a **`185×25`** (con altura 32 el texto se dibujaba desalineado y parecía duplicado).
+
+**Diagnóstico del botón Promover.** Con datos reales: #44 tiene `id_individuo_optimo = 30` y 48 genes, pero `estado = 2 (Completada)` e `id_aula = 0`. La promoción exige estado **Aprobada**, por lo que rechazaba el intento. Cambios:
+
+1. `Enabled` se **recalcula** tras cada carga (`ind != null && HardViolations == 0`), sin heredar el estado del AG.
+2. Cada compuerta deja traza en el log: inicio (corrida/individuo/HARD/vacantes), estado real, aula y error del promotor.
+3. El mensaje de compuerta indica el estado actual y señala el botón «✅ Aprobar corrida».
+4. `AprobarCorridaYAulaAsync` valida el resultado de `UpdateCorridaAsync` (antes se ignoraba) y `AprobarCorridaDesdeModuloRAsync` **verifica el estado final**, habilitando la promoción solo si quedó en `Aprobada`.
+
+Flujo esperado sobre #44: selector → cargar (244 sesiones) → **✅ Aprobar corrida** (`ag_corrida.estado = 5`, aulas → 4) → **🚀 Promover** (gate de aula omitido por `id_aula = 0`).

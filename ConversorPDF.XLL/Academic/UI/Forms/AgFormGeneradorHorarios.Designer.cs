@@ -93,6 +93,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             this.lblHardViolaciones = new System.Windows.Forms.Label();
             this.lblMejorFitness = new System.Windows.Forms.Label();
             this.cmbCargarCorridas = new System.Windows.Forms.ComboBox();
+            this.lblCargarCorridas = new System.Windows.Forms.Label();
             this.btnPromoverProduccion = new System.Windows.Forms.Button();
             this.splitContainerResultados = new System.Windows.Forms.SplitContainer();
             this.dgvHorariosGenerados = new System.Windows.Forms.DataGridView();
@@ -982,6 +983,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             // pnlHeaderResultados
             // 
             this.pnlHeaderResultados.Controls.Add(this.cmbCargarCorridas);
+            this.pnlHeaderResultados.Controls.Add(this.lblCargarCorridas);
             this.pnlHeaderResultados.Controls.Add(this.btnPromoverProduccion);
             this.pnlHeaderResultados.Controls.Add(this.lblVacantes);
             this.pnlHeaderResultados.Controls.Add(this.lblHardViolaciones);
@@ -1030,10 +1032,20 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             this.cmbCargarCorridas.DropDownWidth = 430;
             this.cmbCargarCorridas.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.cmbCargarCorridas.FormattingEnabled = true;
-            this.cmbCargarCorridas.Location = new System.Drawing.Point(535, 10);
+            this.cmbCargarCorridas.Location = new System.Drawing.Point(545, 14);
             this.cmbCargarCorridas.Name = "cmbCargarCorridas";
-            this.cmbCargarCorridas.Size = new System.Drawing.Size(195, 32);
-            this.cmbCargarCorridas.TabIndex = 3;
+            this.cmbCargarCorridas.Size = new System.Drawing.Size(185, 25);
+            this.cmbCargarCorridas.TabIndex = 4;
+            // 
+            // lblCargarCorridas
+            // 
+            this.lblCargarCorridas.AutoSize = true;
+            this.lblCargarCorridas.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.lblCargarCorridas.Location = new System.Drawing.Point(444, 18);
+            this.lblCargarCorridas.Name = "lblCargarCorridas";
+            this.lblCargarCorridas.Size = new System.Drawing.Size(95, 15);
+            this.lblCargarCorridas.TabIndex = 3;
+            this.lblCargarCorridas.Text = "Cargar corridas:";
             // 
             // btnPromoverProduccion
             // 
@@ -1333,6 +1345,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
         private System.Windows.Forms.Label lblAgModo;
         private System.Windows.Forms.Panel pnlHeaderResultados;
         private System.Windows.Forms.ComboBox cmbCargarCorridas;
+        private System.Windows.Forms.Label lblCargarCorridas;
         private System.Windows.Forms.Button btnPromoverProduccion;
         private System.Windows.Forms.Button btnAprobarCorrida;
         private System.Windows.Forms.Label lblHardViolaciones;

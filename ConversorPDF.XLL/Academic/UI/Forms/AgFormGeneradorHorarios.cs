@@ -2263,6 +2263,9 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
 
                 var ind = _ultimoResultado?.MejorIndividuo;
                 btnAprobarCorrida.Enabled = ind != null && ind.Id > 0;
+                // Fase 1522: el estado del botón se recalcula tras cada carga (antes quedaba heredado del AG)
+                btnPromoverProduccion.Enabled = ind != null && ind.HardViolations == 0;
+                LoggerHelper.Info($"[AG] Corrida #{corrida.IdCorrida} cargada: individuo #{ind?.Id ?? 0}, HARD={ind?.HardViolations ?? 0}, promover={btnPromoverProduccion.Enabled}.");
                 Log($"[AG] Corrida #{corrida.IdCorrida} cargada desde el selector ({corrida.TotalSesiones} sesiones en staging).");
             }
             catch (OperationCanceledException) { }
@@ -2304,7 +2307,24 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             try
             {
                 await AprobarCorridaYAulaAsync();
-                Log($"[AG] Corrida #{idCorrida} aprobada formalmente (aulas en estado Aprobado).");
+
+                // Fase 1522: verificar el estado real tras la aprobación y habilitar la promoción
+                var verif = await _scheduleRepository.GetCorridaByIdAsync(idCorrida, CancellationToken.None);
+                if (verif.IsSuccess && verif.Value.Estado == AgEstadoCorrida.Aprobada)
+                {
+                    Log($"[AG] Corrida #{idCorrida} aprobada formalmente (aulas en estado Aprobado).");
+                    LoggerHelper.Info($"[AG] Corrida #{idCorrida} aprobada (estado Aprobada). Promoción habilitada.");
+
+                    var indActual = _ultimoResultado?.MejorIndividuo;
+                    btnPromoverProduccion.Enabled = indActual != null && indActual.HardViolations == 0;
+                }
+                else
+                {
+                    string detalle = verif.IsFailure ? verif.Error : verif.Value.Estado.ToString();
+                    LoggerHelper.Warning($"[AG] La corrida #{idCorrida} no quedó aprobada tras AprobarCorridaYAulaAsync (estado: {detalle}).");
+                    MessageBox.Show(this, $"La corrida no quedó aprobada (estado: {detalle}).\nRevise el log para más detalle.",
+                        "Aprobar corrida", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
             }
             catch (Exception ex)
             {
@@ -2331,6 +2351,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             var traza = CrearTraza("PromoverProduccion");
             traza.Inicio($"Corrida={_ultimoResultado.IdCorrida}, Individuo={ind.Id}");
             traza.Paso("P10_PromoverAProduccion", "Promoción de soluciones desde staging hacia tablas de producción");
+            LoggerHelper.Info($"[AG] Promover: corrida #{_ultimoResultado.IdCorrida}, individuo #{ind.Id}, HARD={ind.HardViolations}, vacantes={ind.Vacantes}.");
 
             // Fase 1520 (G3): sin individuo óptimo persistido no hay nada que promover
             if (ind.Id <= 0)
@@ -2384,9 +2405,14 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 var corridaRes = await _scheduleRepository.GetCorridaByIdAsync(_ultimoResultado.IdCorrida, CancellationToken.None);
                 if (corridaRes.IsFailure || corridaRes.Value.Estado != AgEstadoCorrida.Aprobada)
                 {
+                    string estadoActual = corridaRes.IsFailure ? $"error: {corridaRes.Error}" : corridaRes.Value.Estado.ToString();
+                    LoggerHelper.Warning($"[AG] Promoción bloqueada: corrida #{_ultimoResultado.IdCorrida} en estado {estadoActual} (requiere Aprobada).");
                     traza.Fallo("P10_ValidarEstadoCorrida", null, AgCausaFallo.Ninguna);
-                    traza.Fin(false, "Corrida no aprobada formalmente");
-                    MessageBox.Show("Debe aprobar formalmente la corrida y el aula antes de promover a producción.", "Compuerta de Seguridad", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    traza.Fin(false, $"Corrida no aprobada formalmente ({estadoActual})");
+                    MessageBox.Show(
+                        $"La corrida #{_ultimoResultado.IdCorrida} no está aprobada (estado: {estadoActual}).\n\n" +
+                        "Use el botón «✅ Aprobar corrida» y vuelva a intentar la promoción.",
+                        "Compuerta de Seguridad", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
@@ -2395,6 +2421,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     var aulaRes = await _scheduleRepository.GetAulaByIdAsync(corridaRes.Value.IdAula, CancellationToken.None);
                     if (aulaRes.IsFailure || (aulaRes.Value.Estado != AgEstadoAula.Aprobado && aulaRes.Value.Estado != AgEstadoAula.Disponible))
                     {
+                        LoggerHelper.Warning($"[AG] Promoción bloqueada: aula #{corridaRes.Value.IdAula} no aprobada.");
                         traza.Fallo("P10_ValidarEstadoAula", null, AgCausaFallo.Ninguna);
                         traza.Fin(false, "Aula no aprobada");
                         MessageBox.Show("El aula asociada debe estar aprobada para permitir la promoción.", "Compuerta de Seguridad", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -2409,6 +2436,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 if (resProm.IsSuccess)
                 {
                     var p = resProm.Value;
+                    LoggerHelper.Info($"[AG] Promoción exitosa: corrida #{_ultimoResultado.IdCorrida} → {p.TotalVinculaciones} vinculaciones / {p.TotalSesiones} sesiones (registro #{p.Id}).");
                     traza.Dato("VinculacionesPromovidas", p.TotalVinculaciones);
                     traza.Dato("SesionesPromovidas", p.TotalSesiones);
                     traza.Resultado(true, $"Promoción exitosa: {p.TotalVinculaciones} vinculaciones, {p.TotalSesiones} sesiones");
@@ -2424,8 +2452,8 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 {
                     traza.Fallo("P10_PromoverAProduccionAsync", new Exception(resProm.Error), AgCausaFallo.ExcepcionNoControlada);
                     traza.Fin(false, resProm.Error);
+                    LoggerHelper.Error($"[AG] Promoción fallida (corrida #{_ultimoResultado.IdCorrida}, individuo #{ind.Id}): {resProm.Error}");
                     MessageBox.Show($"Error durante la promoción: {resProm.Error}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    btnPromoverProduccion.Enabled = true;
                 }
             }
             catch (Exception ex)
@@ -2747,7 +2775,15 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 {
                     var corrida = corridaRes.Value;
                     corrida.Estado = AgEstadoCorrida.Aprobada;
-                    await _scheduleRepository.UpdateCorridaAsync(corrida, CancellationToken.None);
+                    var updRes = await _scheduleRepository.UpdateCorridaAsync(corrida, CancellationToken.None);
+                    if (updRes.IsFailure)
+                    {
+                        LoggerHelper.Error($"[AG] No se pudo aprobar la corrida #{corrida.Id}: {updRes.Error}");
+                        MessageBox.Show(this, $"No se pudo aprobar la corrida #{corrida.Id}:\n{updRes.Error}",
+                            "Aprobar corrida", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+                    LoggerHelper.Info($"[AG] Corrida #{corrida.Id} marcada como Aprobada en ag_corrida.");
 
                     using (var db = _connectionFactory())
                     {
