@@ -1983,13 +1983,22 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             traza.Paso("P09_CargarResultados", $"Fitness={ind.Fitness:F4}, HardViolations={ind.HardViolations}, SoftViolations={ind.SoftViolations:F2}");
 
             lblMejorFitness.Text = $"Aptitud (Fitness): {ind.Fitness:F4}";
-            // Fase 460 / Fase 471: Contador fiel de violaciones HARD y SOFT alineado 1:1 con dgvViolaciones
+            // Fase 1524: el detalle (ag_violacion) puede no estar materializado; el escalar persistido manda
             var viols = ind.Violaciones ?? new List<AgViolacion>();
-            int hardCount = viols.Count(v => v.EsDura);
-            int softCount = viols.Count(v => !v.EsDura);
-            int totalViol = viols.Count;
-            lblHardViolaciones.Text = $"Violaciones: {totalViol} (HARD {hardCount}, SOFT {softCount})";
+            int hardDetalle = viols.Count(v => v.EsDura);
+            int softDetalle = viols.Count(v => !v.EsDura);
+            int hardCount = Math.Max(ind.HardViolations, hardDetalle);
+            int softCount = Math.Max((int)Math.Round(ind.SoftViolations), softDetalle);
+            int totalViol = hardCount + softCount;
+            string sufijoSinDetalle = (hardCount + softCount) > viols.Count ? " · detalle no disponible" : string.Empty;
+            lblHardViolaciones.Text = $"Violaciones: {totalViol} (HARD {hardCount}, SOFT {softCount}){sufijoSinDetalle}";
             lblHardViolaciones.ForeColor = hardCount == 0 ? Color.DarkGreen : Color.DarkRed;
+            if (sufijoSinDetalle.Length > 0)
+            {
+                LoggerHelper.Warning(
+                    $"[AG] Corrida #{idCorrida}: hard_violations={ind.HardViolations}, soft={ind.SoftViolations} " +
+                    $"pero solo {viols.Count} violación(es) en ag_violacion. El detalle no quedó persistido.");
+            }
 
             // Fase 320: Métrica y visualización de Vacantes
             lblVacantes.Text = $"Vacantes: {ind.Vacantes}";
@@ -2366,9 +2375,15 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
 
             if (ind.HardViolations > 0)
             {
-                traza.Resultado(false, "Bloqueado por violaciones duras activas");
+                LoggerHelper.Warning($"[AG] Promoción bloqueada: individuo #{ind.Id} registra {ind.HardViolations} violación(es) HARD (requiere 0).");
+                traza.Resultado(false, $"Bloqueado por {ind.HardViolations} violaciones duras activas");
                 traza.Fin(false, "No se puede promover con restricciones HARD");
-                MessageBox.Show("No se puede promover a producción una solución con violaciones duras activas.", "Compuerta de Seguridad", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(
+                    $"No se puede promover a producción: la solución registra {ind.HardViolations} violación(es) HARD.\n\n" +
+                    "Corrija la programación y vuelva a ejecutar el AG.\n" +
+                    "Si el panel «Violaciones de Reglas» aparece vacío, el detalle no quedó persistido en ag_violacion; " +
+                    "una nueva corrida lo regenerará.",
+                    "Compuerta de Seguridad", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 

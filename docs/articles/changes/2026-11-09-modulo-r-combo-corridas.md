@@ -77,3 +77,27 @@ El combo pasa de `195×32` a **`185×25`** (con altura 32 el texto se dibujaba d
 4. `AprobarCorridaYAulaAsync` valida el resultado de `UpdateCorridaAsync` (antes se ignoraba) y `AprobarCorridaDesdeModuloRAsync` **verifica el estado final**, habilitando la promoción solo si quedó en `Aprobada`.
 
 Flujo esperado sobre #44: selector → cargar (244 sesiones) → **✅ Aprobar corrida** (`ag_corrida.estado = 5`, aulas → 4) → **🚀 Promover** (gate de aula omitido por `id_aula = 0`).
+
+
+## 8. Violaciones HARD: contador persistido vs detalle materializado (Fases 1524–1525)
+
+**Síntoma:** el log mostraba `Corrida #44 cargada: individuo #30, HARD=148, promover=False`, mientras la cabecera indicaba `Violaciones: 0 (HARD 0, SOFT 0)`.
+
+**Causa (datos reales):**
+
+| Tabla | Valor |
+|---|---|
+| `ag_individuo` #30 (corrida #44) | `hard_violations = 148`, `soft_violations = 0` |
+| `ag_violacion` (individuo 30) | **0 filas** (las 138 filas existentes son del individuo #1) |
+
+- La cabecera contaba sólo la **lista** `ind.Violaciones` (0) → mostraba HARD 0.
+- El gate de promoción usa el **escalar** `ind.HardViolations` (148) → bloqueaba.
+- Origen del detalle vacío: `AgValidadorReglas` fijaba `HardViolations = faltantes` y hacía `return` **sin registrar** las violaciones cuando el cromosoma no tenía genes.
+
+**Correcciones:**
+
+1. **Cabecera honesta:** `HARD = max(hard_violations, detalle)` con sufijo `· detalle no disponible` y `LoggerHelper.Warning` cuando el escalar supera el detalle.
+2. **Gate explicado:** el mensaje indica el número de violaciones HARD y advierte que, si el panel aparece vacío, el detalle no se persistió.
+3. **Validador:** al no haber genes se registra una violación HARD por asignatura faltante (antes sólo el contador), de modo que `ag_violacion` queda poblado en nuevas corridas.
+
+**Consecuencia operativa:** la corrida #44 **no es promovible** (148 violaciones HARD, compuerta de diseño). Debe corregirse la programación y volver a ejecutar el AG para obtener HARD 0.

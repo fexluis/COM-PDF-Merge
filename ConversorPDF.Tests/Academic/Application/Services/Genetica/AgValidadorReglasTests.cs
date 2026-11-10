@@ -766,5 +766,27 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             individuo.Violaciones.Should().NotContain(v => v.Regla == AgReglaViolacion.R14_BloqueSolapadoPorIntervalo && v.EsDura);
             individuo.HardViolations.Should().Be(0);
         }
+
+        [Fact]
+        public void Evaluar_SinGenes_RegistraDetalleDeViolaciones()
+        {
+            // Fase 1525: antes sólo se guardaba el contador y ag_violacion quedaba vacío
+            var contexto = new AgContexto
+            {
+                Asignaturas = new List<Asignatura>
+                {
+                    new Asignatura { Id = 1, Nombre = "MATEMATICAS" },
+                    new Asignatura { Id = 2, Nombre = "ESTADISTICA" }
+                }
+            };
+
+            var individuo = new AgIndividuo();
+
+            _sut.Evaluar(individuo, contexto);
+
+            individuo.HardViolations.Should().Be(2);
+            individuo.Violaciones.Should().HaveCount(2, "el detalle debe quedar disponible para persistirse");
+            individuo.Violaciones.Should().OnlyContain(v => v.EsDura);
+        }
     }
 }

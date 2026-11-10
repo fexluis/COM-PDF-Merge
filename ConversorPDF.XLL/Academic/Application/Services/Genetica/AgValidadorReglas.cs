@@ -29,6 +29,20 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             if (genes == null || genes.Count == 0)
             {
                 int faltantes = contexto.Asignaturas != null ? contexto.Asignaturas.Count : 0;
+
+                // Fase 1525: registrar el detalle de las asignaturas faltantes (antes sólo se guardaba el contador,
+                // por lo que ag_violacion quedaba vacío y la UI mostraba HARD 0 con hard_violations > 0).
+                if (contexto.Asignaturas != null)
+                {
+                    foreach (var asig in contexto.Asignaturas)
+                    {
+                        individuo.Violaciones.Add(new AgViolacion(
+                            AgReglaViolacion.R5_HabilitacionDocentePool,
+                            esDura: true,
+                            mensaje: $"La asignatura requerida '{asig.Nombre}' (Id={asig.Id}) no se encuentra programada en el cromosoma."));
+                    }
+                }
+
                 individuo.HardViolations = faltantes;
                 individuo.SoftViolations = 0;
                 individuo.Estado = faltantes == 0 ? AgEstadoIndividuo.Factible : AgEstadoIndividuo.Infactible;
