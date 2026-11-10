@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 291 | 292 | 2026-11-09 |
-| `fase` | 1525 | 1526 | 2026-11-09 |
+| `ronda` | 292 | 293 | 2026-11-09 |
+| `fase` | 1529 | 1530 | 2026-11-09 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -49,6 +49,7 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-013 | 2026-11-09 | `(fix de R-012: layout del selector y robustez de la promoción)` | `Wave —` | `Fase 1522–1523` | closed | PASS (Full 1070) | pendiente |
 | R-014 | 2026-11-09 | `(fix de R-012: coherencia de violaciones HARD)` | `Wave —` | `Fase 1524–1525` | closed | PASS (Full 1071) | pendiente |
 | R-011 | 2026-11-09 | `(revisión manual Ronda 288 — Fases 1515–1516)` | `Wave —` | `Fase 1515–1516` | closed | — | pendiente |
+| R-015 | 2026-11-09 | `(fix de R-014: recálculo manual de violaciones y resaltado en vista por fechas)` | `Wave —` | `Fase 1526–1529` | closed | PASS (Full) | pendiente |
 
 Estados: `reserved` (Fase A) · `executing` (Fase B) · `closed` (Fase C, sellado) · `abandoned` (plan descartado: los números **no** se reciclan).
 

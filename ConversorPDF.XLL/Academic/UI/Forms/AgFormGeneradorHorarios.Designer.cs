@@ -88,6 +88,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             this.btnAgVerVinculaciones = new System.Windows.Forms.Button();
             this.btnAgSesiones = new System.Windows.Forms.Button();
             this.btnAprobarCorrida = new System.Windows.Forms.Button();
+            this.btnRecalcularViolaciones = new System.Windows.Forms.Button();
             this.lblAgModo = new System.Windows.Forms.Label();
             this.pnlHeaderResultados = new System.Windows.Forms.Panel();
             this.lblHardViolaciones = new System.Windows.Forms.Label();
@@ -917,14 +918,14 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             this.pnlAgModo.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(248)))), ((int)(((byte)(240)))));
             this.pnlAgModo.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.pnlAgModo.Controls.Add(this.lblAgModo);
-            this.pnlAgModo.Controls.Add(this.btnAprobarCorrida);
+            this.pnlAgModo.Controls.Add(this.btnRecalcularViolaciones);
             this.pnlAgModo.Controls.Add(this.btnAgSesiones);
             this.pnlAgModo.Controls.Add(this.btnAgVerVinculaciones);
             this.pnlAgModo.Controls.Add(this.btnAgVinculaciones);
             this.pnlAgModo.Dock = System.Windows.Forms.DockStyle.Top;
             this.pnlAgModo.Location = new System.Drawing.Point(10, 60);
             this.pnlAgModo.Name = "pnlAgModo";
-            this.pnlAgModo.Size = new System.Drawing.Size(956, 38);
+            this.pnlAgModo.Size = new System.Drawing.Size(956, 66);
             this.pnlAgModo.TabIndex = 2;
             // 
             // btnAgVinculaciones
@@ -968,15 +969,26 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             this.btnAprobarCorrida.Text = "✅ Aprobar corrida";
             this.btnAprobarCorrida.UseVisualStyleBackColor = true;
             // 
+            // 
+            // btnRecalcularViolaciones
+            // 
+            this.btnRecalcularViolaciones.Enabled = false;
+            this.btnRecalcularViolaciones.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnRecalcularViolaciones.Location = new System.Drawing.Point(10, 34);
+            this.btnRecalcularViolaciones.Name = "btnRecalcularViolaciones";
+            this.btnRecalcularViolaciones.Size = new System.Drawing.Size(200, 28);
+            this.btnRecalcularViolaciones.TabIndex = 4;
+            this.btnRecalcularViolaciones.Text = "🔁 Recalcular violaciones";
+            this.btnRecalcularViolaciones.UseVisualStyleBackColor = true;
             // lblAgModo
             // 
             this.lblAgModo.AutoEllipsis = true;
             this.lblAgModo.AutoSize = false;
             this.lblAgModo.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblAgModo.ForeColor = System.Drawing.Color.OrangeRed;
-            this.lblAgModo.Location = new System.Drawing.Point(670, 10);
+            this.lblAgModo.Location = new System.Drawing.Point(220, 40);
             this.lblAgModo.Name = "lblAgModo";
-            this.lblAgModo.Size = new System.Drawing.Size(276, 15);
+            this.lblAgModo.Size = new System.Drawing.Size(726, 15);
             this.lblAgModo.TabIndex = 3;
             this.lblAgModo.Text = "Modo AG · staging: ag_vinculaciones / ag_sesiones";
             // 
@@ -1348,6 +1360,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
         private System.Windows.Forms.Label lblCargarCorridas;
         private System.Windows.Forms.Button btnPromoverProduccion;
         private System.Windows.Forms.Button btnAprobarCorrida;
+        private System.Windows.Forms.Button btnRecalcularViolaciones;
         private System.Windows.Forms.Label lblHardViolaciones;
         private System.Windows.Forms.Label lblMejorFitness;
         private System.Windows.Forms.Label lblVacantes;

@@ -991,5 +991,71 @@ WHERE id_corrida IN (SELECT id FROM ag_corrida WHERE idperiodo = @idPeriodo AND 
                 return Result.Failure($"Error al limpiar staging por período/programa: {ex.Message}");
             }
         }
+        public async Task<Result> ReemplazarViolacionesAsync(long idIndividuo, IReadOnlyCollection<AgViolacion> violaciones, int hardViolations, double softViolations, AgEstadoIndividuo estado, long idCorrida, CancellationToken ct)
+        {
+            try
+            {
+                using (var db = _connectionFactory())
+                {
+                    if (db.State != ConnectionState.Open) db.Open();
+
+                    using (var trans = db.BeginTransaction())
+                    {
+                        await db.ExecuteAsync(new CommandDefinition(
+                            "DELETE FROM ag_violacion WHERE id_individuo = @IdIndividuo;",
+                            new { IdIndividuo = idIndividuo }, trans, cancellationToken: ct));
+
+                        if (violaciones != null && violaciones.Count > 0)
+                        {
+                            const string sqlViol = @"
+INSERT INTO ag_violacion (id_individuo, id_gen, regla, es_dura, mensaje, detalle_json, subunidad)
+VALUES (@IdIndividuo, @IdGen, @Regla, @EsDura, @Mensaje, @DetalleJson, @Subunidad);";
+
+                            foreach (var v in violaciones)
+                            {
+                                ct.ThrowIfCancellationRequested();
+                                var violParam = new
+                                {
+                                    IdIndividuo = idIndividuo,
+                                    v.IdGen,
+                                    Regla = v.Regla.ToString(),
+                                    v.EsDura,
+                                    Mensaje = v.Mensaje ?? string.Empty,
+                                    DetalleJson = v.DetalleJson ?? "{}",
+                                    Subunidad = v.Subunidad ?? string.Empty
+                                };
+                                await db.ExecuteAsync(new CommandDefinition(sqlViol, violParam, trans, cancellationToken: ct));
+                            }
+                        }
+
+                        await db.ExecuteAsync(new CommandDefinition(
+                            "UPDATE ag_individuo SET hard_violations = @Hard, soft_violations = @Soft, estado = @Estado WHERE id = @IdIndividuo;",
+                            new { Hard = hardViolations, Soft = softViolations, Estado = (int)estado, IdIndividuo = idIndividuo },
+                            trans, cancellationToken: ct));
+
+                        if (idCorrida > 0)
+                        {
+                            await db.ExecuteAsync(new CommandDefinition(
+                                "UPDATE ag_corrida SET hard_violations = @Hard, soft_violations = @Soft WHERE id = @IdCorrida;",
+                                new { Hard = hardViolations, Soft = softViolations, IdCorrida = idCorrida },
+                                trans, cancellationToken: ct));
+                        }
+
+                        trans.Commit();
+                        NotifyMarkDirty();
+                        LoggerHelper.Info($"[AG-Recalculo] individuo={idIndividuo} corrida={idCorrida} hard={hardViolations} soft={softViolations} violaciones={(violaciones == null ? 0 : violaciones.Count)}");
+                        return Result.Success();
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                return Result.Failure("Operación cancelada.");
+            }
+            catch (Exception ex)
+            {
+                return Result.Failure($"Error al reemplazar violaciones: {ex.Message}");
+            }
+        }
     }
 }

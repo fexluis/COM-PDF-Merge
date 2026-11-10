@@ -36,6 +36,9 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
         private readonly ISalvedadConflictoRepository _salvedadRepository;
         private IReadOnlyCollection<SalvedadConflicto> _salvedades;
         private Dictionary<int, EstadoConflicto> _estadoSesiones;
+        private readonly Dictionary<int, List<ViolacionSesionInfo>> _violacionesPorSesion;
+        private int _totalViolacionesHard;
+        private int _sesionesConViolacionHard;
         private ContextMenuStrip _contextMenu;
         private TreeNode _nodoSeleccionadoContextual;
         private readonly ITrayectoEncoderService _trayectoEncoderService;
@@ -56,6 +59,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             _salvedadRepository = new SalvedadConflictoRepository(_dbConnection, modo: _modo);
             _salvedades = new List<SalvedadConflicto>().AsReadOnly();
             _estadoSesiones = new Dictionary<int, EstadoConflicto>();
+            _violacionesPorSesion = new Dictionary<int, List<ViolacionSesionInfo>>();
 
             if (_modo.EsModoAg)
             {
@@ -137,6 +141,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
 
                 CargarTerceros(); // Llamada síncrona
                 await CargarSalvedadesAsync();
+                await CargarViolacionesAsync();
                 ConstruirArbol();
             }
             catch (Exception ex)
@@ -509,6 +514,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
                 {
                     PersistirCambiosAlVault();
                     await CargarSalvedadesAsync();
+                    await CargarViolacionesAsync();
                     ConstruirArbol();
                 }
             }
@@ -553,6 +559,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
                 {
                     PersistirCambiosAlVault();
                     await CargarSalvedadesAsync();
+                    await CargarViolacionesAsync();
                     ConstruirArbol();
                 }
             }
@@ -802,6 +809,76 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             ExpandirHastaNivel(1);
         }
 
+        /// <summary>
+        /// Carga el detalle persistido en ag_violacion para la corrida mostrada y lo indexa por sesión
+        /// (Fase 1529). El detalle lo genera el AG o el botón «Recalcular violaciones» del Módulo R.
+        /// </summary>
+        private async Task CargarViolacionesAsync()
+        {
+            _violacionesPorSesion.Clear();
+            _totalViolacionesHard = 0;
+            _sesionesConViolacionHard = 0;
+
+            try
+            {
+                long idCorrida = _items.Select(i => i.IdCorrida).FirstOrDefault(id => id > 0);
+                if (idCorrida <= 0) return;
+
+                const string sql = @"
+SELECT s.id AS IdSesion, v.regla AS Regla, v.es_dura AS EsDura, v.mensaje AS Mensaje
+FROM ag_violacion v
+INNER JOIN ag_sesiones s ON s.idgen = v.id_gen AND s.idindividuo = v.id_individuo
+INNER JOIN ag_vinculaciones av ON av.id = s.idvinculacion
+WHERE av.id_corrida = @IdCorrida
+ORDER BY v.es_dura DESC, v.regla;";
+
+                var conn = UnwrapSqlite(_dbConnection);
+                if (conn == null) return;
+
+                var filas = (await conn.QueryAsync(new CommandDefinition(sql, new { IdCorrida = idCorrida }))).ToList();
+                if (filas.Count == 0)
+                {
+                    LoggerHelper.Info($"[FormVerVinculaciones] Corrida #{idCorrida} sin detalle en ag_violacion; use «Recalcular violaciones» en el Módulo R.");
+                    return;
+                }
+
+                foreach (var fila in filas)
+                {
+                    int idSesion = Convert.ToInt32(fila.IdSesion);
+                    if (!_violacionesPorSesion.TryGetValue(idSesion, out var lista))
+                    {
+                        lista = new List<ViolacionSesionInfo>();
+                        _violacionesPorSesion[idSesion] = lista;
+                    }
+
+                    bool esDura = Convert.ToInt32(fila.EsDura) == 1;
+                    lista.Add(new ViolacionSesionInfo
+                    {
+                        Regla = fila.Regla?.ToString() ?? "?",
+                        EsDura = esDura,
+                        Mensaje = fila.Mensaje?.ToString() ?? string.Empty
+                    });
+
+                    if (esDura) _totalViolacionesHard++;
+                }
+
+                _sesionesConViolacionHard = _violacionesPorSesion.Count(kv => kv.Value.Any(v => v.EsDura));
+                LoggerHelper.Info($"[FormVerVinculaciones] Corrida #{idCorrida}: {filas.Count} violaciones ({_totalViolacionesHard} HARD) en {_sesionesConViolacionHard} sesiones.");
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Warning($"[FormVerVinculaciones] No se pudo cargar el detalle de violaciones: {ex.Message}");
+            }
+        }
+
+        /// <summary>Detalle de una violación asociada a una sesión (proyección de ag_violacion).</summary>
+        private sealed class ViolacionSesionInfo
+        {
+            public string Regla { get; set; }
+            public bool EsDura { get; set; }
+            public string Mensaje { get; set; }
+        }
+
         private void ConstruirArbolPorFechas()
         {
             treeVinculaciones.Nodes.Clear();
@@ -894,6 +971,19 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
                             break;
                     }
 
+                    var violacionesSesion = _violacionesPorSesion.TryGetValue(sesion.IdSesion, out var vlSes) ? vlSes : null;
+                    bool tieneViolacionHard = violacionesSesion != null && violacionesSesion.Any(v => v.EsDura);
+                    if (tieneViolacionHard)
+                    {
+                        backColor = Color.FromArgb(255, 205, 210);
+                        foreColor = Color.Firebrick;
+                        prefijo = "⛔ ";
+                    }
+
+                    string sufijoViolacion = tieneViolacionHard
+                        ? " | ⛔ " + string.Join(", ", violacionesSesion.Where(v => v.EsDura).Select(v => v.Regla).Distinct())
+                        : "";
+
                     string fecha = sesion.FechaSesion.Value.ToString("dd/MM/yyyy");
                     string diaSemana = (sesion.DiaSemana?.ToUpper() ?? "S/D").PadRight(9);
                     string sede = (sesion.SedeCiudad?.ToUpper() ?? "SIN SEDE").PadRight(20);
@@ -901,11 +991,11 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
                     string sufijoPlataforma = esPlataforma ? " | 🌐 Plataforma" : "";
 
                     var nodoSesion = new TreeNode(
-                        $"{prefijo}• {fecha} | {sesion.Horas}h | {diaSemana} | {sede} | {semestre} | {sesion.AsignaturaNombre} | {sesion.HorarioSesion}{sufijoPlataforma}")
+                        $"{prefijo}• {fecha} | {sesion.Horas}h | {diaSemana} | {sede} | {semestre} | {sesion.AsignaturaNombre} | {sesion.HorarioSesion}{sufijoPlataforma}{sufijoViolacion}")
                     {
                         ForeColor = foreColor,
                         BackColor = backColor,
-                        NodeFont = (estado == EstadoConflicto.ConflictoReal || estado == EstadoConflicto.RevisarViabilidad) ? _boldFont : _regularFont,
+                        NodeFont = (estado == EstadoConflicto.ConflictoReal || estado == EstadoConflicto.RevisarViabilidad || tieneViolacionHard) ? _boldFont : _regularFont,
                         Tag = sesion
                     };
 
@@ -916,6 +1006,15 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
                     else if (estado == EstadoConflicto.Salvado)
                     {
                         nodoSesion.ToolTipText = "✅ Viabilidad de traslado confirmada manualmente.";
+                    }
+
+                    if (tieneViolacionHard)
+                    {
+                        string detalleViolacion = string.Join("\n", violacionesSesion.Select(v =>
+                            $"{(v.EsDura ? "HARD" : "SOFT")} {v.Regla}: {v.Mensaje}"));
+                        nodoSesion.ToolTipText = string.IsNullOrWhiteSpace(nodoSesion.ToolTipText)
+                            ? detalleViolacion
+                            : detalleViolacion + "\n\n" + nodoSesion.ToolTipText;
                     }
 
                     nodoDocente.Nodes.Add(nodoSesion);
@@ -942,6 +1041,11 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             {
                 lblTotal.Text = $"✓ Sin conflictos";
                 lblTotal.ForeColor = Color.DarkGreen;
+            }
+            if (_totalViolacionesHard > 0)
+            {
+                lblTotal.Text = $"⛔ Violaciones HARD: {_totalViolacionesHard} en {_sesionesConViolacionHard} sesiones | " + lblTotal.Text;
+                lblTotal.ForeColor = Color.DarkRed;
             }
             ExpandirHastaNivel(0);
         }

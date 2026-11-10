@@ -597,6 +597,9 @@
     <Compile Include="Academic\Application\Services\Genetica\AgGeneradorHorarios.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgMaterializadorSesiones.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgPromotorVinculaciones.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgRecalculoViolacionesService.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\IAgRecalculoViolacionesService.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\AgRecalculoResultado.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgDiagnosticoTraza.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgEsquemaDiagnostico.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgFormatoAsignatura.cs" />

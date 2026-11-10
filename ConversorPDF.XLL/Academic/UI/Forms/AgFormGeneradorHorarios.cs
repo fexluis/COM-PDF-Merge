@@ -398,6 +398,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             cmbCargarCorridas.SelectedIndexChanged += async (s, e) => await CargarCorridaDesdeComboAsync();
             cmbCargarCorridas.DropDown += (s, e) => RefrescarComboCorridasSeguro();
             btnAprobarCorrida.Click += async (s, e) => await AprobarCorridaDesdeModuloRAsync();
+            btnRecalcularViolaciones.Click += async (s, e) => await RecalcularViolacionesDesdeModuloRAsync();
 
             // Eventos Modo AG (Staging) desde Módulo R (Fases 297, 298, 299)
             btnAgVinculaciones.Click += async (s, e) => await AbrirVinculacionesModoAgAsync();
@@ -2262,6 +2263,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     _idCorridaCargada = 0;
                     _ultimoResultado = null;
                     btnAprobarCorrida.Enabled = false;
+                    btnRecalcularViolaciones.Enabled = false;
                     btnPromoverProduccion.Enabled = false;
                     lblAgModo.Text = "Modo AG · staging: ag_vinculaciones / ag_sesiones";
                     Log($"[AG] La corrida #{corrida.IdCorrida} no se pudo cargar (sin sesiones materializadas o error de lectura).");
@@ -2272,6 +2274,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
 
                 var ind = _ultimoResultado?.MejorIndividuo;
                 btnAprobarCorrida.Enabled = ind != null && ind.Id > 0;
+                btnRecalcularViolaciones.Enabled = ind != null && ind.Id > 0;
                 // Fase 1522: el estado del botón se recalcula tras cada carga (antes quedaba heredado del AG)
                 btnPromoverProduccion.Enabled = ind != null && ind.HardViolations == 0;
                 LoggerHelper.Info($"[AG] Corrida #{corrida.IdCorrida} cargada: individuo #{ind?.Id ?? 0}, HARD={ind?.HardViolations ?? 0}, promover={btnPromoverProduccion.Enabled}.");
@@ -2287,6 +2290,87 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             finally
             {
                 Cursor = Cursors.Default;
+            }
+        }
+
+        /// <summary>
+        /// Recalcula las violaciones de la corrida cargada reutilizando el contexto del AG y persiste
+        /// el desglose en ag_violacion (Fase 1527). No vuelve a ejecutar el algoritmo genetico.
+        /// </summary>
+        private async Task RecalcularViolacionesDesdeModuloRAsync()
+        {
+            long idCorrida = _ultimoResultado?.IdCorrida ?? _idCorridaCargada;
+            if (idCorrida <= 0)
+            {
+                MessageBox.Show(this, "Cargue una corrida en el selector antes de recalcular sus violaciones.",
+                    "Recalcular violaciones", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            if (MessageBox.Show(this,
+                    $"¿Recalcular las violaciones de la corrida #{idCorrida}?\n\nSe reevalúa la solución guardada con el contexto actual del AG y se reemplaza el detalle persistido en ag_violacion. No se vuelve a ejecutar el algoritmo genético.",
+                    "Recalcular violaciones", MessageBoxButtons.YesNo, MessageBoxIcon.Question,
+                    MessageBoxDefaultButton.Button1) != DialogResult.Yes)
+            {
+                return;
+            }
+
+            btnRecalcularViolaciones.Enabled = false;
+            var cursorPrevio = Cursor;
+            Cursor = Cursors.WaitCursor;
+            try
+            {
+                if (_contextoActual == null)
+                {
+                    var ctxRes = await ConstruirContextoAsync(CancellationToken.None);
+                    if (ctxRes.IsFailure)
+                    {
+                        MessageBox.Show(this,
+                            "No se pudo reconstruir el contexto del AG para recalcular:\n" + ctxRes.Error +
+                            "\n\nVerifique el período, el programa, el semestre y las aulas del árbol.",
+                            "Recalcular violaciones", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+                    _contextoActual = ctxRes.Value;
+                }
+
+                var servicio = new AgRecalculoViolacionesService(_scheduleRepository, new AgValidadorReglas());
+                var res = await servicio.RecalcularAsync(idCorrida, _contextoActual, CancellationToken.None);
+                if (res.IsFailure)
+                {
+                    LoggerHelper.Warning($"[AG-Recalculo] corrida #{idCorrida} no recalculada: {res.Error}");
+                    MessageBox.Show(this, "No se pudieron recalcular las violaciones:\n" + res.Error,
+                        "Recalcular violaciones", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                var r = res.Value;
+                LoggerHelper.Info($"[AG-Recalculo] corrida #{idCorrida}: HARD={r.Hard} SOFT={r.Soft:0.##} genes={r.GenesEvaluados} asignaturas={r.AsignaturasContexto} · {r.ResumenPorRegla}");
+                Log($"[AG-Recalculo] corrida #{idCorrida} · HARD={r.Hard} SOFT={r.Soft:0.##} · {r.ResumenPorRegla}");
+
+                await CargarModuloResultadosAsync(idCorrida);
+                var ind = _ultimoResultado?.MejorIndividuo;
+                btnPromoverProduccion.Enabled = ind != null && ind.HardViolations == 0;
+
+                MessageBox.Show(this,
+                    $"Recálculo completado para la corrida #{idCorrida}.\n\n" +
+                    $"Violaciones HARD: {r.Hard}\nViolaciones SOFT: {r.Soft:0.##}\n" +
+                    $"Genes evaluados: {r.GenesEvaluados} · asignaturas en contexto: {r.AsignaturasContexto}\n\n" +
+                    $"Desglose: {r.ResumenPorRegla}\n\n" +
+                    "El detalle quedó persistido en ag_violacion y es el que verá la vista por fechas.",
+                    "Recalcular violaciones", MessageBoxButtons.OK,
+                    r.Hard == 0 ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error($"[AG-Recalculo] Error al recalcular violaciones de la corrida #{idCorrida}", ex);
+                MessageBox.Show(this, "Error al recalcular las violaciones:\n" + ex.Message,
+                    "Recalcular violaciones", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                Cursor = cursorPrevio;
+                btnRecalcularViolaciones.Enabled = true;
             }
         }
 
