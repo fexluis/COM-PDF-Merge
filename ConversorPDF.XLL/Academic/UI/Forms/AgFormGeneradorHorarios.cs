@@ -62,6 +62,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
         private AgContexto _contextoActual;
         private AgResultadoCorrida _ultimoResultado;
         private long _idCorridaCargada;
+        private bool _actualizandoComboCorridas;
         private VentanaSemestre _ventanaResuelta;
         private bool _isUpdatingTreeChecks = false;
         private bool _restaurandoPerfil = false;
@@ -263,6 +264,9 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
                 if (_suprimirAutoFiltro) return;
                 _filtroArbolDesactualizado = true;
                 ActualizarResumenFiltros();
+
+                // Fase 1519: el selector de corridas depende del período/programa seleccionados
+                RefrescarComboCorridasSeguro();
             };
             cmbPeriodos.SeleccionCambiada += onSeleccion;
             cmbSedes.SeleccionCambiada += onSeleccion;
@@ -389,7 +393,11 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             btnEjecutarAG.Click += async (s, e) => await IniciarOptimizacionAsync();
             btnCancelar.Click += (s, e) => CancelarOptimizacion();
             btnPromoverProduccion.Click += async (s, e) => await PromoverAProduccionAsync();
-            btnCargarUltimaOptimizacion.Click += async (s, e) => await CargarUltimaOptimizacionAsync();
+
+            // Fase 1519: el botón "Cargar última optimización" se sustituye por un selector de corridas
+            cmbCargarCorridas.SelectedIndexChanged += async (s, e) => await CargarCorridaDesdeComboAsync();
+            cmbCargarCorridas.DropDown += (s, e) => RefrescarComboCorridasSeguro();
+            btnAprobarCorrida.Click += async (s, e) => await AprobarCorridaDesdeModuloRAsync();
 
             // Eventos Modo AG (Staging) desde Módulo R (Fases 297, 298, 299)
             btnAgVinculaciones.Click += async (s, e) => await AbrirVinculacionesModoAgAsync();
@@ -2160,60 +2168,153 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
         }
 
         /// <summary>
-        /// Carga la última optimización registrada para el periodo y programa seleccionados (Fase 1281, ajuste Fase 1284/1289/1291).
-        /// Resuelve la corrida más reciente en ag_corrida y delega la rehidratación de grid, métricas y vacantes
-        /// en CargarModuloResultadosAsync (staging: ag_sesiones + ag_vinculaciones).
+        /// Refresca el selector de corridas del Módulo R (Fase 1519): lista las corridas del período,
+        /// programa y territorial activos con su volumen de staging y preselecciona la corrida cargada.
+        /// Sustituye a «Cargar última optimización».
         /// </summary>
-        private async Task CargarUltimaOptimizacionAsync()
+        private async Task RefrescarComboCorridasAsync()
         {
+            if (cmbCargarCorridas == null) return;
+
             try
             {
                 var periodo = cmbPeriodos.Primario<Periodo>() ?? (cmbPeriodos.SelectedItem as Periodo);
                 var programa = cmbProgramas.Primario<Programa>() ?? (cmbProgramas.SelectedItem as Programa);
 
-                if (periodo == null || programa == null)
-                {
-                    MessageBox.Show(this, "Seleccione un periodo y un programa para cargar la última optimización.",
-                                    "Cargar última optimización", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return;
-                }
-
-                int idPeriodo = periodo.Id;
-                int idPrograma = programa.Id;
+                int? idPeriodo = periodo != null && periodo.Id > 0 ? (int?)periodo.Id : null;
+                int? idPrograma = programa != null && programa.Id > 0 ? (int?)programa.Id : null;
                 string subunidad = string.IsNullOrWhiteSpace(SyncContext.ActiveSubunidad) ? null : SyncContext.ActiveSubunidad;
 
-                var corridaResult = await _scheduleRepository.GetUltimaCorridaAsync(idPeriodo, idPrograma, subunidad, CancellationToken.None);
-                if (corridaResult.IsFailure || corridaResult.Value == null)
+                var repo = new VinculacionQueryRepository(_connectionFactory, AgModoDatos.Ag);
+                var res = await repo.GetCorridasStagingAsync(idPeriodo, idPrograma, subunidad, CancellationToken.None);
+
+                _actualizandoComboCorridas = true;
+                try
                 {
-                    MessageBox.Show(this, $"No hay corridas registradas para el periodo '{periodo.Nombre}' y programa '{programa.NombrePrograma}'.",
-                                    "Cargar última optimización", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return;
+                    cmbCargarCorridas.Items.Clear();
+
+                    if (res.IsFailure)
+                    {
+                        cmbCargarCorridas.Items.Add("— error al leer corridas —");
+                        cmbCargarCorridas.SelectedIndex = 0;
+                        LoggerHelper.Warning($"[AgFormGeneradorHorarios] No se pudieron listar corridas AG: {res.Error}");
+                        return;
+                    }
+
+                    var items = res.Value.Where(c => c.IdCorrida > 0).ToList();
+                    foreach (var it in items) it.Etiqueta = AgCorridaSelector.FormatearEtiqueta(it);
+
+                    if (items.Count == 0)
+                    {
+                        cmbCargarCorridas.Items.Add("— sin corridas para el período/programa —");
+                        cmbCargarCorridas.SelectedIndex = 0;
+                        return;
+                    }
+
+                    cmbCargarCorridas.DisplayMember = nameof(CorridaStagingItem.Etiqueta);
+                    cmbCargarCorridas.ValueMember = nameof(CorridaStagingItem.IdCorrida);
+                    foreach (var it in items) cmbCargarCorridas.Items.Add(it);
+
+                    var elegido = AgCorridaSelector.ResolverSeleccionInicial(
+                        items, _idCorridaCargada > 0 ? _idCorridaCargada : (long?)null);
+                    int idx = elegido != null ? items.IndexOf(elegido) : 0;
+                    cmbCargarCorridas.SelectedIndex = idx >= 0 ? idx : 0;
                 }
+                finally
+                {
+                    _actualizandoComboCorridas = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Warning($"[AgFormGeneradorHorarios] Error al refrescar el selector de corridas: {ex.Message}");
+            }
+        }
 
-                var corrida = corridaResult.Value;
-                _ultimoResultado = null; // Fuerza rehidratación limpia desde SQLite (Fase 1284)
-                bool cargada = await CargarModuloResultadosAsync(corrida.Id);
+        private void RefrescarComboCorridasSeguro() => _ = RefrescarComboCorridasAsync();
 
-                // Fase 1285 / Fase 1289: Saneamiento de estado si CargarModuloResultadosAsync aborta o falla
+        /// <summary>
+        /// Carga en el Módulo R la corrida elegida en el selector (Fase 1519), rehidratando grid,
+        /// métricas, vacantes y aprobando/habilitando la promoción según corresponda.
+        /// </summary>
+        private async Task CargarCorridaDesdeComboAsync()
+        {
+            if (_actualizandoComboCorridas) return;
+            if (!(cmbCargarCorridas?.SelectedItem is CorridaStagingItem corrida) || corrida.IdCorrida <= 0) return;
+
+            try
+            {
+                Cursor = Cursors.WaitCursor;
+                _ultimoResultado = null;   // Fase 1284: rehidratación limpia desde SQLite
+                bool cargada = await CargarModuloResultadosAsync(corrida.IdCorrida);
+
                 if (!cargada)
                 {
                     _idCorridaCargada = 0;
                     _ultimoResultado = null;
+                    btnAprobarCorrida.Enabled = false;
+                    btnPromoverProduccion.Enabled = false;
                     lblAgModo.Text = "Modo AG · staging: ag_vinculaciones / ag_sesiones";
-                    lblHardViolaciones.ForeColor = Color.DarkGreen;
-                    lblVacantes.ForeColor = Color.DarkGreen;
-                    MessageBox.Show(this, $"No se pudo cargar la corrida #{corrida.Id} (sin sesiones materializadas o error de lectura). Revise el log.",
-                                    "Cargar última optimización", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    Log($"[AG] La corrida #{corrida.IdCorrida} no se pudo cargar (sin sesiones materializadas o error de lectura).");
                     return;
                 }
 
-                lblAgModo.Text = $"Modo AG · corrida #{corrida.Id} · {AgModoDatos.Ag.VistaSesionesDetalle}";
-                Log($"[AG] Última optimización cargada (Corrida #{corrida.Id}, Fitness {corrida.MejorFitness:F4}, Hard {corrida.HardViolations}, Vacantes {corrida.Vacantes}).");
+                lblAgModo.Text = $"Modo AG · corrida #{corrida.IdCorrida} · {AgModoDatos.Ag.VistaSesionesDetalle}";
+
+                var ind = _ultimoResultado?.MejorIndividuo;
+                btnAprobarCorrida.Enabled = ind != null && ind.Id > 0;
+                Log($"[AG] Corrida #{corrida.IdCorrida} cargada desde el selector ({corrida.TotalSesiones} sesiones en staging).");
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error($"[AgFormGeneradorHorarios] Error al cargar la corrida #{corrida.IdCorrida} desde el selector", ex);
+                MessageBox.Show(this, $"No se pudo cargar la corrida #{corrida.IdCorrida}:\n{ex.Message}",
+                    "Cargar corrida", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                Cursor = Cursors.Default;
+            }
+        }
+
+        /// <summary>
+        /// Aprueba formalmente la corrida cargada y sus aulas para habilitar la compuerta de
+        /// promoción a producción (Fase 1520). Reutiliza <see cref="AprobarCorridaYAulaAsync"/>.
+        /// </summary>
+        private async Task AprobarCorridaDesdeModuloRAsync()
+        {
+            long idCorrida = _ultimoResultado?.IdCorrida ?? _idCorridaCargada;
+            if (idCorrida <= 0)
+            {
+                MessageBox.Show(this, "Cargue una optimización en el selector antes de aprobarla.",
+                    "Aprobar corrida", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            if (MessageBox.Show(this,
+                    $"¿Aprobar formalmente la corrida #{idCorrida} y sus aulas?\n\nEsto habilita la promoción a producción.",
+                    "Aprobar corrida", MessageBoxButtons.YesNo, MessageBoxIcon.Question,
+                    MessageBoxDefaultButton.Button1) != DialogResult.Yes)
+            {
+                return;
+            }
+
+            btnAprobarCorrida.Enabled = false;
+            try
+            {
+                await AprobarCorridaYAulaAsync();
+                Log($"[AG] Corrida #{idCorrida} aprobada formalmente (aulas en estado Aprobado).");
             }
             catch (Exception ex)
             {
-                LoggerHelper.Error("[AgFormGeneradorHorarios] Error al cargar última optimización", ex);
-                MessageBox.Show(this, $"Error al cargar la última optimización: {ex.Message}", "Cargar última optimización", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                LoggerHelper.Error($"[AgFormGeneradorHorarios] Error al aprobar la corrida #{idCorrida}", ex);
+                MessageBox.Show(this, $"No se pudo aprobar la corrida:\n{ex.Message}",
+                    "Aprobar corrida", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                btnAprobarCorrida.Enabled = true;
             }
         }
 
@@ -2230,6 +2331,17 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             var traza = CrearTraza("PromoverProduccion");
             traza.Inicio($"Corrida={_ultimoResultado.IdCorrida}, Individuo={ind.Id}");
             traza.Paso("P10_PromoverAProduccion", "Promoción de soluciones desde staging hacia tablas de producción");
+
+            // Fase 1520 (G3): sin individuo óptimo persistido no hay nada que promover
+            if (ind.Id <= 0)
+            {
+                traza.Resultado(false, "Individuo óptimo sin registro en ag_individuo");
+                traza.Fin(false, "Individuo no rehidratado");
+                MessageBox.Show(
+                    $"La corrida #{_ultimoResultado.IdCorrida} no tiene individuo óptimo registrado.\n\nVuelva a ejecutar el AG o cargue otra corrida.",
+                    "Compuerta de Seguridad", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
 
             if (ind.HardViolations > 0)
             {
@@ -2264,7 +2376,6 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
 
             if (confirm != DialogResult.Yes) return;
 
-            btnPromoverProduccion.Enabled = false;
             this.Cursor = Cursors.WaitCursor;
 
             try
@@ -2290,6 +2401,9 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                         return;
                     }
                 }
+
+                // Fase 1520 (G4): deshabilitar sólo cuando la promoción realmente arranca
+                btnPromoverProduccion.Enabled = false;
 
                 var resProm = await _promotor.PromoverAProduccionAsync(_ultimoResultado.IdCorrida, ind.Id, Environment.UserName, justificacionVacante, CancellationToken.None);
                 if (resProm.IsSuccess)
@@ -2320,11 +2434,12 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 traza.Fin(false, ex.Message);
                 LoggerHelper.Error("[AgFormGeneradorHorarios] Error en promoción", ex);
                 MessageBox.Show($"Ocurrió un error inesperado: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                btnPromoverProduccion.Enabled = true;
             }
             finally
             {
                 this.Cursor = Cursors.Default;
+                // Fase 1520 (G4): el botón sólo se re-habilita si la solución sigue siendo promovible
+                btnPromoverProduccion.Enabled = ind.HardViolations == 0;
             }
         }
 

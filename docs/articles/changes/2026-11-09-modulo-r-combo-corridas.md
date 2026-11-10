@@ -1,0 +1,56 @@
+# Módulo R: selector de corridas y reparación de la promoción a producción
+
+**Fecha:** 2026-11-09 · **Plan:** `.agents/plans/2026-11-09-modulo-r-combo-corridas-plan.md` (R-011) · **Fases:** 1518–1521
+
+---
+
+## 1. Cambios de interfaz
+
+| Antes | Ahora |
+|---|---|
+| `btnCargarUltimaOptimizacion` — "Cargar última optimización" `(535,10) 195×32` | **`cmbCargarCorridas`** `(535,10) 195×32`, `DropDownWidth = 430` |
+| Sin acción de aprobación visible | **`btnAprobarCorrida`** — "✅ Aprobar corrida" en `pnlAgModo` `(510,4) 150×28` |
+| `lblAgModo` en `(520,10)` AutoSize | `lblAgModo` en `(670,10)`, `AutoSize = false`, `Width = 276`, `AutoEllipsis` |
+
+**Etiqueta del combo:** `#44 · 2027-01 · APT-53 · VALLE · 244 ses` · sin staging: `… · (sin sesiones) · Error`.
+Se lista con `GetCorridasStagingAsync(período, programa, subunidad activa)` (mismo criterio que el botón anterior) y se preselecciona con `AgCorridaSelector.ResolverSeleccionInicial(items, _idCorridaCargada)`. Se refresca al abrir el desplegable y al cambiar período/programa. Sin corridas ⇒ `— sin corridas para el período/programa —` sin disparar carga.
+
+## 2. Diagnóstico de "Promover a Producción" (estaba roto)
+
+| # | Defecto | Evidencia |
+|---|---|---|
+| **G1** | `AprobarCorridaYAulaAsync()` existía pero **no se invocaba** desde ninguna parte → la corrida quedaba en `Completada (2)` y el gate `Estado != Aprobada` siempre rechazaba | `grep AprobarCorridaYAulaAsync` → solo definición. Vault real: #44, #1, #37 en estado 2; #46 en 4; ninguna en 5 |
+| **G2** | El servicio exigía aula válida **sin** tolerar `id_aula = 0` (el formulario sí lo toleraba) | `GetAulaByIdAsync(0)` → `Result.Failure("Aula no encontrada.")`; vault real: #44 y #1 tienen `id_aula = 0` |
+| **G3** | `ind.Id` se usaba sin validar | corridas sin `id_individuo_optimo` → *"No se encontró el individuo 0"* |
+| **G4** | El botón se deshabilitaba antes de las compuertas y no se restauraba al rechazar | `Enabled = false` + `return` sin re-habilitar |
+
+## 3. Correcciones
+
+1. **G1:** `btnAprobarCorrida` → confirmación → `AprobarCorridaYAulaAsync()` (corrida a `Aprobada`, aulas referenciadas a `Aprobado`). Se habilita solo cuando hay corrida cargada e individuo con `Id > 0`.
+2. **G2:** `AgPromotorVinculaciones` omite el gate de aula cuando `IdAula <= 0`, dejando `LoggerHelper.Warning` (paridad con el formulario).
+3. **G3:** validación explícita de `ind.Id > 0` con mensaje accionable antes de cualquier escritura.
+4. **G4:** el botón se deshabilita al iniciar la promoción y se restaura en `finally` según `HardViolations == 0`.
+
+## 4. Flujo resultante
+
+```
+Selector de corridas → cargar (#44, 244 sesiones)
+        ↓
+✅ Aprobar corrida  → ag_corrida.estado = 5 · ag_aula.estado = 4
+        ↓
+🚀 Promover a Producción → valida HARD (0) → valida estado (5) → omite aula si id_aula = 0
+        ↓
+AgPromotorVinculaciones (transacción): vinculaciones/sesiones de producción + ag_promocion
+```
+
+## 5. Verificación
+
+| Gate | Resultado |
+|---|---|
+| `-Mode Build` | 0 errores |
+| `-Mode Fast ~AgPromotorVinculaciones` | 5/5 (incluye `WhenCorridaHasNoAula_SkipsAulaGate` y `WhenCorridaHasAulaNotApproved_ShouldReturnFailure`) |
+| `-Mode Full` | ver `_evidence/<stamp>/summary.md` |
+
+## 6. Fuera de alcance
+
+Retención de corridas, cambios en `FormVinculaciones`, migraciones de esquema.

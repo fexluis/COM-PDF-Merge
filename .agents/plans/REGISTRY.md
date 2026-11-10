@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 288 | 289 | 2026-11-09 |
-| `fase` | 1517 | 1518 | 2026-11-09 |
+| `ronda` | 289 | 290 | 2026-11-09 |
+| `fase` | 1521 | 1522 | 2026-11-09 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -45,6 +45,7 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-008 | 2026-11-09 | `(revisión manual Ronda 285 — correcciones R-007)` | `Wave —` | `Fase 1496–1503` | closed | — | pendiente |
 | R-009 | 2026-11-09 | `(revisión manual Ronda 286 — Fases 1504–1509)` | `Wave —` | `Fase 1504–1509` | closed | — | pendiente |
 | R-010 | 2026-11-09 | `(revisión manual Ronda 287 — Fases 1510–1514)` | `Wave —` | `Fase 1510–1514` | closed | — | pendiente |
+| R-012 | 2026-11-09 | `2026-11-09-modulo-r-combo-corridas-plan.md` | `Wave 1` → `Ronda 289` | `T11..T14` → `Fase 1518–1521` | closed | PASS (Full 1070) | pendiente |
 | R-011 | 2026-11-09 | `(revisión manual Ronda 288 — Fases 1515–1516)` | `Wave —` | `Fase 1515–1516` | closed | — | pendiente |
 
 Estados: `reserved` (Fase A) · `executing` (Fase B) · `closed` (Fase C, sellado) · `abandoned` (plan descartado: los números **no** se reciclan).

@@ -60,10 +60,18 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     return Result.Failure<AgPromocion>($"La corrida {idCorrida} no está APROBADA (estado: {corridaRes.Value.Estado}).");
                 }
 
-                var aulaRes = await _scheduleRepository.GetAulaByIdAsync(corridaRes.Value.IdAula, ct);
-                if (aulaRes.IsFailure || (aulaRes.Value.Estado != AgEstadoAula.Disponible && aulaRes.Value.Estado != AgEstadoAula.Aprobado))
+                // Fase 1520 (G2): las corridas sin aula asociada (id_aula = 0) no deben bloquear la promoción
+                if (corridaRes.Value.IdAula > 0)
                 {
-                    return Result.Failure<AgPromocion>("El Aula/Salón no está en estado APROBADO/DISPONIBLE.");
+                    var aulaRes = await _scheduleRepository.GetAulaByIdAsync(corridaRes.Value.IdAula, ct);
+                    if (aulaRes.IsFailure || (aulaRes.Value.Estado != AgEstadoAula.Disponible && aulaRes.Value.Estado != AgEstadoAula.Aprobado))
+                    {
+                        return Result.Failure<AgPromocion>("El Aula/Salón no está en estado APROBADO/DISPONIBLE.");
+                    }
+                }
+                else
+                {
+                    LoggerHelper.Warning($"[AgPromotorVinculaciones] Corrida {idCorrida} sin aula asociada (id_aula=0): se omite el gate de aula.");
                 }
 
                 var indResult = await _scheduleRepository.GetIndividuoByIdAsync(idIndividuo, ct);

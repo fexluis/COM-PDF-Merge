@@ -87,11 +87,12 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             this.btnAgVinculaciones = new System.Windows.Forms.Button();
             this.btnAgVerVinculaciones = new System.Windows.Forms.Button();
             this.btnAgSesiones = new System.Windows.Forms.Button();
+            this.btnAprobarCorrida = new System.Windows.Forms.Button();
             this.lblAgModo = new System.Windows.Forms.Label();
             this.pnlHeaderResultados = new System.Windows.Forms.Panel();
             this.lblHardViolaciones = new System.Windows.Forms.Label();
             this.lblMejorFitness = new System.Windows.Forms.Label();
-            this.btnCargarUltimaOptimizacion = new System.Windows.Forms.Button();
+            this.cmbCargarCorridas = new System.Windows.Forms.ComboBox();
             this.btnPromoverProduccion = new System.Windows.Forms.Button();
             this.splitContainerResultados = new System.Windows.Forms.SplitContainer();
             this.dgvHorariosGenerados = new System.Windows.Forms.DataGridView();
@@ -915,6 +916,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             this.pnlAgModo.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(248)))), ((int)(((byte)(240)))));
             this.pnlAgModo.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.pnlAgModo.Controls.Add(this.lblAgModo);
+            this.pnlAgModo.Controls.Add(this.btnAprobarCorrida);
             this.pnlAgModo.Controls.Add(this.btnAgSesiones);
             this.pnlAgModo.Controls.Add(this.btnAgVerVinculaciones);
             this.pnlAgModo.Controls.Add(this.btnAgVinculaciones);
@@ -954,20 +956,32 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             this.btnAgSesiones.Text = "✏️ Sesión (AG)";
             this.btnAgSesiones.UseVisualStyleBackColor = true;
             // 
+            // btnAprobarCorrida
+            // 
+            this.btnAprobarCorrida.Enabled = false;
+            this.btnAprobarCorrida.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnAprobarCorrida.Location = new System.Drawing.Point(510, 4);
+            this.btnAprobarCorrida.Name = "btnAprobarCorrida";
+            this.btnAprobarCorrida.Size = new System.Drawing.Size(150, 28);
+            this.btnAprobarCorrida.TabIndex = 3;
+            this.btnAprobarCorrida.Text = "✅ Aprobar corrida";
+            this.btnAprobarCorrida.UseVisualStyleBackColor = true;
+            // 
             // lblAgModo
             // 
-            this.lblAgModo.AutoSize = true;
+            this.lblAgModo.AutoEllipsis = true;
+            this.lblAgModo.AutoSize = false;
             this.lblAgModo.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblAgModo.ForeColor = System.Drawing.Color.OrangeRed;
-            this.lblAgModo.Location = new System.Drawing.Point(520, 10);
+            this.lblAgModo.Location = new System.Drawing.Point(670, 10);
             this.lblAgModo.Name = "lblAgModo";
-            this.lblAgModo.Size = new System.Drawing.Size(280, 15);
+            this.lblAgModo.Size = new System.Drawing.Size(276, 15);
             this.lblAgModo.TabIndex = 3;
             this.lblAgModo.Text = "Modo AG · staging: ag_vinculaciones / ag_sesiones";
             // 
             // pnlHeaderResultados
             // 
-            this.pnlHeaderResultados.Controls.Add(this.btnCargarUltimaOptimizacion);
+            this.pnlHeaderResultados.Controls.Add(this.cmbCargarCorridas);
             this.pnlHeaderResultados.Controls.Add(this.btnPromoverProduccion);
             this.pnlHeaderResultados.Controls.Add(this.lblVacantes);
             this.pnlHeaderResultados.Controls.Add(this.lblHardViolaciones);
@@ -1010,15 +1024,16 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             this.lblVacantes.TabIndex = 4;
             this.lblVacantes.Text = "Vacantes: 0";
             // 
-            // btnCargarUltimaOptimizacion
+            // cmbCargarCorridas
             // 
-            this.btnCargarUltimaOptimizacion.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.btnCargarUltimaOptimizacion.Location = new System.Drawing.Point(535, 10);
-            this.btnCargarUltimaOptimizacion.Name = "btnCargarUltimaOptimizacion";
-            this.btnCargarUltimaOptimizacion.Size = new System.Drawing.Size(195, 32);
-            this.btnCargarUltimaOptimizacion.TabIndex = 3;
-            this.btnCargarUltimaOptimizacion.Text = "Cargar última optimización";
-            this.btnCargarUltimaOptimizacion.UseVisualStyleBackColor = true;
+            this.cmbCargarCorridas.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbCargarCorridas.DropDownWidth = 430;
+            this.cmbCargarCorridas.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.cmbCargarCorridas.FormattingEnabled = true;
+            this.cmbCargarCorridas.Location = new System.Drawing.Point(535, 10);
+            this.cmbCargarCorridas.Name = "cmbCargarCorridas";
+            this.cmbCargarCorridas.Size = new System.Drawing.Size(195, 32);
+            this.cmbCargarCorridas.TabIndex = 3;
             // 
             // btnPromoverProduccion
             // 
@@ -1317,8 +1332,9 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
         private System.Windows.Forms.Button btnAgSesiones;
         private System.Windows.Forms.Label lblAgModo;
         private System.Windows.Forms.Panel pnlHeaderResultados;
-        private System.Windows.Forms.Button btnCargarUltimaOptimizacion;
+        private System.Windows.Forms.ComboBox cmbCargarCorridas;
         private System.Windows.Forms.Button btnPromoverProduccion;
+        private System.Windows.Forms.Button btnAprobarCorrida;
         private System.Windows.Forms.Label lblHardViolaciones;
         private System.Windows.Forms.Label lblMejorFitness;
         private System.Windows.Forms.Label lblVacantes;
