@@ -63,6 +63,8 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
         private AgResultadoCorrida _ultimoResultado;
         private long _idCorridaCargada;
         private bool _actualizandoComboCorridas;
+        private bool _refrescandoComboCorridas;
+        private string _claveFiltroCorridas = string.Empty; // Fase 1544: cache de filtros para evitar reconsultas en DropDown
         private VentanaSemestre _ventanaResuelta;
         private bool _isUpdatingTreeChecks = false;
         private bool _restaurandoPerfil = false;
@@ -396,7 +398,12 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
 
             // Fase 1519: el botón "Cargar última optimización" se sustituye por un selector de corridas
             cmbCargarCorridas.SelectedIndexChanged += async (s, e) => await CargarCorridaDesdeComboAsync();
-            cmbCargarCorridas.DropDown += (s, e) => RefrescarComboCorridasSeguro();
+            // Fase 1544: no reconsultar si los filtros no han cambiado y ya hay ítems cargados
+            cmbCargarCorridas.DropDown += (s, e) =>
+            {
+                if (cmbCargarCorridas.Items.Count > 0 && ClaveFiltroCorridas() == _claveFiltroCorridas) return;
+                RefrescarComboCorridasSeguro();
+            };
             btnAprobarCorrida.Click += async (s, e) => await AprobarCorridaDesdeModuloRAsync();
             btnRecalcularViolaciones.Click += async (s, e) => await RecalcularViolacionesDesdeModuloRAsync();
 
@@ -561,9 +568,9 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             }
         }
 
-        private async Task ActualizarVentanaSemestralAsync()
+        private async Task ActualizarVentanaSemestralAsync(Periodo periodoObjetivo = null)
         {
-            var periodoSel = cmbPeriodos.Primario<Periodo>() ?? (cmbPeriodos.SelectedItem as Periodo);
+            var periodoSel = periodoObjetivo ?? cmbPeriodos.Primario<Periodo>() ?? (cmbPeriodos.SelectedItem as Periodo);
             if (periodoSel == null) return;
 
             var traza = CrearTraza("VentanaSemestral");
@@ -638,10 +645,15 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
         /// Construye el contexto de ejecución del algoritmo genético cargando aulas, bloques, asignaturas
         /// y pool docente. Incorpora fallback defensivo (Fase 274) cuando la tabla asignaturas almacena el
         /// semestre con formato alterno (ej. números arábigos vs números romanos).
+        /// Permite forzar período, programa y subunidad para recálculo de corridas ampliadas (Fase 1546).
         /// </summary>
         /// <param name="ct">Token de cancelación.</param>
+        /// <param name="idPeriodoForzado">Período específico de la corrida a evaluar (opcional).</param>
+        /// <param name="idProgramaForzado">Programa específico de la corrida a evaluar (opcional).</param>
+        /// <param name="subunidadForzada">Subunidad territorial específica de la corrida (opcional).</param>
         /// <returns>Instancia de <see cref="AgContexto"/> con índices de ejecución construidos.</returns>
-        private async Task<Result<AgContexto>> ConstruirContextoAsync(CancellationToken ct)
+        private async Task<Result<AgContexto>> ConstruirContextoAsync(
+            CancellationToken ct, int? idPeriodoForzado = null, int? idProgramaForzado = null, string subunidadForzada = null)
         {
             var periodoSel = cmbPeriodos.Primario<Periodo>() ?? (cmbPeriodos.SelectedItem as Periodo);
             var programaSel = cmbProgramas.Primario<Programa>() ?? (cmbProgramas.SelectedItem as Programa);
@@ -674,6 +686,16 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
                 if (sTree != null) sedeSel = sTree;
             }
 
+            // Fase 1546: forzar período y programa de la corrida a recalcular cuando se indiquen
+            if (idPeriodoForzado.HasValue && idPeriodoForzado.Value > 0)
+            {
+                periodoSel = _periodos.FirstOrDefault(p => p.Id == idPeriodoForzado.Value) ?? periodoSel;
+            }
+            if (idProgramaForzado.HasValue && idProgramaForzado.Value > 0)
+            {
+                programaSel = _programas.FirstOrDefault(p => p.Id == idProgramaForzado.Value) ?? programaSel;
+            }
+
             if (periodoSel == null || programaSel == null || sedeSel == null)
             {
                 return Result.Failure<AgContexto>("Debe seleccionar Periodo, Programa y Sede (en el árbol o en los selectores).");
@@ -682,7 +704,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             // Fase 445: Asegurar sincronización de la ventana con el período objetivo seleccionado
             if (_ventanaResuelta == null || _ventanaResuelta.IdPeriodo != periodoSel.Id)
             {
-                await ActualizarVentanaSemestralAsync();
+                await ActualizarVentanaSemestralAsync(periodoSel);
             }
 
             // Fase 445: El activo no filtra; solo informa
@@ -703,7 +725,10 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
                 if (db.State != ConnectionState.Open) db.Open();
                 ct.ThrowIfCancellationRequested();
 
-                string sub = SyncContext.ActiveSubunidad ?? string.Empty;
+                // Fase 1546: respetar subunidad forzada de la corrida si se provee
+                string sub = string.IsNullOrWhiteSpace(subunidadForzada)
+                    ? (SyncContext.ActiveSubunidad ?? string.Empty)
+                    : subunidadForzada;
 
                 // Fases 454 & 477: Extraer semestres distintos de todas las combinaciones seleccionadas
                 var semestresCombinaciones = combinaciones
@@ -1934,8 +1959,9 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
         }
 
         /// <summary>
-        /// Carga y visualiza los resultados de la corrida especificada en la pestaña Módulo R (Fases 217, 222, 314 y Fase 1289).
-        /// Si no existe un resultado en memoria viva (p. ej. tras reabrir Excel), rehidrata el individuo óptimo desde persistencia.
+        /// Carga y visualiza los resultados de la corrida especificada en la pestaña Módulo R (Fases 217, 222, 314, 1289 y 1557).
+        /// Carga primero el grid de sesiones de staging y, si la corrida cuenta con individuo óptimo persistido,
+        /// materializa sus métricas y violaciones. Si es staging sin resultado AG, muestra sesiones en modo solo lectura.
         /// </summary>
         /// <param name="idCorrida">Identificador de la corrida a visualizar.</param>
         /// <returns>True si la corrida se cargó y materializó exitosamente; false si abortó por falta de datos o error de staging.</returns>
@@ -1976,7 +2002,25 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 }
             }
 
-            if (_ultimoResultado?.MejorIndividuo == null) return false;
+            // Fase 1557: Cargar siempre el grid de sesiones antes de evaluar la existencia del individuo óptimo
+            if (!await CargarGridStagingAsync(idCorrida))
+            {
+                return false;   // error de lectura o staging vacío (ya limpian estado)
+            }
+
+            if (_ultimoResultado?.MejorIndividuo == null)
+            {
+                // Fase 1557: staging sin resultado AG; mostrar sesiones y no simular métricas
+                lblMejorFitness.Text = "Aptitud (Fitness): —";
+                lblHardViolaciones.Text = "Restricciones Hard: — (sin resultado AG)";
+                lblVacantes.Text = "Vacantes: —";
+                btnRecalcularViolaciones.Enabled = false;
+                btnPromoverProduccion.Enabled = false;
+                lblAgModo.Text = $"Modo AG · corrida #{idCorrida} · staging sin resultado AG (solo lectura)";
+                LoggerHelper.Warning(
+                    $"[AG] La corrida #{idCorrida} tiene staging pero no cabecera en ag_corrida ni individuo óptimo persistido.");
+                return true;   // el grid ya está cargado con las sesiones
+            }
 
             var ind = _ultimoResultado.MejorIndividuo;
             var traza = CrearTraza("CargarResultados");
@@ -2006,6 +2050,21 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             lblVacantes.ForeColor = ind.Vacantes == 0 ? Color.DarkGreen : Color.DarkOrange;
 
             btnPromoverProduccion.Enabled = ind.HardViolations == 0;
+            // Fase 1531: Habilitar recálculo de violaciones si la corrida tiene individuo persistido (cubre ruta AG y rehidratación)
+            btnRecalcularViolaciones.Enabled = ind.Id > 0;
+            return true;
+        }
+
+        /// <summary>
+        /// Carga en las grillas de resultados las sesiones de staging y violaciones de la corrida (Fases 217, 222 y 1557).
+        /// Extraído en Fase 1557 para permitir visualizar corridas que posean sesiones materializadas aunque carezcan de individuo óptimo.
+        /// </summary>
+        /// <param name="idCorrida">Identificador de la corrida a cargar.</param>
+        /// <returns>True si el staging contenía sesiones y se enlazaron con éxito; false si hubo error o estaba vacío.</returns>
+        private async Task<bool> CargarGridStagingAsync(long idCorrida)
+        {
+            var traza = CrearTraza("CargarGridStaging");
+            traza.Inicio($"idCorrida={idCorrida}");
 
             // Cargar Grid de Horarios Staging (Fases 217 y 222: 16 columnas auditables)
             var sesionesResult = await _scheduleRepository.GetSesionesStagingAsync(idCorrida, CancellationToken.None);
@@ -2016,7 +2075,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
 
             traza.Conteo("SesionesStaging", sesionesResult.IsSuccess ? sesionesResult.Value.Count : 0);
             traza.Conteo("VinculacionesStaging", vincsDict.Count);
-            traza.Conteo("Violaciones", ind.Violaciones?.Count ?? 0, 0);
+            traza.Conteo("Violaciones", _ultimoResultado?.MejorIndividuo?.Violaciones?.Count ?? 0, 0);
 
             if (sesionesResult.IsFailure)
             {
@@ -2030,6 +2089,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 lblHardViolaciones.Text = "Restricciones Hard: —";
                 lblVacantes.Text = "Vacantes: —";
                 btnPromoverProduccion.Enabled = false;
+                btnRecalcularViolaciones.Enabled = false; // Fase 1539: deshabilitar recálculo ante error de staging
                 return false;
             }
 
@@ -2043,8 +2103,19 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 lblHardViolaciones.Text = "Restricciones Hard: —";
                 lblVacantes.Text = "Vacantes: —";
                 btnPromoverProduccion.Enabled = false;
+                btnRecalcularViolaciones.Enabled = false; // Fase 1539: deshabilitar recálculo ante staging vacío
                 Log($"[AVISO] La corrida #{idCorrida} no tiene sesiones materializadas en staging. No se muestran métricas para evitar datos obsoletos.");
                 return false;
+            }
+
+            // Diagnóstico de individuo huérfano (Fase 1557): si no hay resultado AG, auditar si las sesiones referencian individuos
+            if (_ultimoResultado?.MejorIndividuo == null)
+            {
+                var inds = sesionesResult.Value.Select(s => s.IdIndividuo).Where(i => i > 0).Distinct().ToList();
+                if (inds.Count > 0)
+                {
+                    LoggerHelper.Warning($"[AG] Corrida #{idCorrida}: staging referencia individuo(s) [{string.Join(", ", inds)}] sin fila en ag_individuo.");
+                }
             }
 
             if (sesionesResult.IsSuccess)
@@ -2161,8 +2232,25 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 FiltrarYMostrarVacantes();
             }
 
+            // Fase 1559: Si el individuo en memoria o rehidratado no tiene violaciones cargadas, consultarlas desde ag_violacion
+            var indActual = _ultimoResultado?.MejorIndividuo;
+            if (indActual != null && indActual.Id > 0 &&
+                (indActual.Violaciones == null || indActual.Violaciones.Count == 0))
+            {
+                var violRes = await _scheduleRepository.GetViolacionesByIndividuoAsync(indActual.Id, CancellationToken.None);
+                if (violRes.IsSuccess && violRes.Value.Count > 0)
+                {
+                    indActual.Violaciones = violRes.Value.ToList();
+                }
+            }
+
+            if (indActual == null)
+            {
+                Log("[AG] Corrida sin resultado AG: no hay violaciones persistidas que mostrar.");
+            }
+
             // Cargar Grid de Violaciones (Fase 460: ordenado por EsDura descendente, luego por Regla)
-            var violaciones = (_ultimoResultado.MejorIndividuo.Violaciones ?? new List<AgViolacion>())
+            var violaciones = (_ultimoResultado?.MejorIndividuo?.Violaciones ?? new List<AgViolacion>())
                 .OrderByDescending(v => v.EsDura)
                 .ThenBy(v => v.Regla.ToString())
                 .Select(v => new
@@ -2178,13 +2266,15 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
         }
 
         /// <summary>
-        /// Refresca el selector de corridas del Módulo R (Fase 1519): lista las corridas del período,
+        /// Refresca el selector de corridas del Módulo R (Fase 1519, 1542, 1543): lista las corridas del período,
         /// programa y territorial activos con su volumen de staging y preselecciona la corrida cargada.
-        /// Sustituye a «Cargar última optimización».
+        /// Aplica cascada tolerante de filtros para no dejar vacío el selector si hay staging en la territorial.
+        /// Protegido con guarda de reentrada _refrescandoComboCorridas (Fase 1556) para evitar cargas concurrentes.
         /// </summary>
         private async Task RefrescarComboCorridasAsync()
         {
-            if (cmbCargarCorridas == null) return;
+            if (cmbCargarCorridas == null || _refrescandoComboCorridas) return;
+            _refrescandoComboCorridas = true;
 
             try
             {
@@ -2196,30 +2286,61 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 string subunidad = string.IsNullOrWhiteSpace(SyncContext.ActiveSubunidad) ? null : SyncContext.ActiveSubunidad;
 
                 var repo = new VinculacionQueryRepository(_connectionFactory, AgModoDatos.Ag);
-                var res = await repo.GetCorridasStagingAsync(idPeriodo, idPrograma, subunidad, CancellationToken.None);
+                var items = new List<CorridaStagingItem>();
+                string error = null;
+                bool ampliado = false;
+
+                // Fase 1542: cascada tolerante (período+programa -> período sin programa -> sin período ni programa)
+                foreach (var (fPeriodo, fPrograma) in AgCorridaSelector.CascadaFiltros(idPeriodo, idPrograma))
+                {
+                    var intento = await repo.GetCorridasStagingAsync(fPeriodo, fPrograma, subunidad, CancellationToken.None);
+                    if (intento.IsFailure) { error = intento.Error; break; }
+
+                    items = intento.Value.Where(c => c.IdCorrida > 0).ToList();
+                    if (items.Count > 0)
+                    {
+                        ampliado = fPeriodo != idPeriodo || fPrograma != idPrograma;
+                        break;
+                    }
+                }
 
                 _actualizandoComboCorridas = true;
                 try
                 {
+                    // Fase 1543: limpiar enlace de datos antes de manipular Items
+                    cmbCargarCorridas.DisplayMember = string.Empty;
+                    cmbCargarCorridas.ValueMember = string.Empty;
                     cmbCargarCorridas.Items.Clear();
+                    cmbCargarCorridas.SelectedIndex = -1;
+                    cmbCargarCorridas.Text = string.Empty;
 
-                    if (res.IsFailure)
+                    if (error != null)
                     {
-                        cmbCargarCorridas.Items.Add("— error al leer corridas —");
-                        cmbCargarCorridas.SelectedIndex = 0;
-                        LoggerHelper.Warning($"[AgFormGeneradorHorarios] No se pudieron listar corridas AG: {res.Error}");
+                        if (_idCorridaCargada <= 0)
+                            lblAgModo.Text = "Modo AG · no se pudieron leer las corridas de staging";
+                        LoggerHelper.Warning($"[AgFormGeneradorHorarios] No se pudieron listar corridas AG: {error}");
                         return;
                     }
-
-                    var items = res.Value.Where(c => c.IdCorrida > 0).ToList();
-                    foreach (var it in items) it.Etiqueta = AgCorridaSelector.FormatearEtiqueta(it);
 
                     if (items.Count == 0)
                     {
-                        cmbCargarCorridas.Items.Add("— sin corridas para el período/programa —");
-                        cmbCargarCorridas.SelectedIndex = 0;
+                        // Fase 1545-bis: cachear clave para no repetir consultas en aperturas consecutivas
+                        _claveFiltroCorridas = ClaveFiltroCorridas();
+                        if (_idCorridaCargada <= 0)
+                        {
+                            lblAgModo.Text = $"Modo AG · sin corridas en staging (período #{idPeriodo?.ToString() ?? "todos"}, programa #{idPrograma?.ToString() ?? "todos"}, territorial {subunidad ?? "todas"})";
+                            btnAprobarCorrida.Enabled = false;
+                            btnRecalcularViolaciones.Enabled = false;
+                            btnPromoverProduccion.Enabled = false;
+                        }
+                        Log("[AG] No hay corridas de staging para los filtros activos.");
                         return;
                     }
+
+                    if (ampliado && _idCorridaCargada <= 0)
+                        lblAgModo.Text = "Modo AG · corridas ampliadas (sin filtro período/programa)";
+
+                    foreach (var it in items) it.Etiqueta = AgCorridaSelector.FormatearEtiqueta(it);
 
                     cmbCargarCorridas.DisplayMember = nameof(CorridaStagingItem.Etiqueta);
                     cmbCargarCorridas.ValueMember = nameof(CorridaStagingItem.IdCorrida);
@@ -2234,11 +2355,36 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 {
                     _actualizandoComboCorridas = false;
                 }
+
+                // Fase 1554: la selección programática no dispara la carga dentro de _actualizandoComboCorridas; forzarla explícitamente
+                if (cmbCargarCorridas.SelectedItem is CorridaStagingItem elegida &&
+                    elegida.IdCorrida > 0 &&
+                    elegida.IdCorrida != _idCorridaCargada)
+                {
+                    await CargarCorridaDesdeComboAsync();
+                }
+
+                // Fase 1544: registrar clave de filtros exitosa
+                _claveFiltroCorridas = ClaveFiltroCorridas();
             }
             catch (Exception ex)
             {
                 LoggerHelper.Warning($"[AgFormGeneradorHorarios] Error al refrescar el selector de corridas: {ex.Message}");
             }
+            finally
+            {
+                _refrescandoComboCorridas = false;
+            }
+        }
+
+        /// <summary>
+        /// Clave que identifica la combinación de filtros actuales del selector de corridas (Fase 1544).
+        /// </summary>
+        private string ClaveFiltroCorridas()
+        {
+            var p = (cmbPeriodos.Primario<Periodo>() ?? cmbPeriodos.SelectedItem as Periodo)?.Id ?? 0;
+            var g = (cmbProgramas.Primario<Programa>() ?? cmbProgramas.SelectedItem as Programa)?.Id ?? 0;
+            return $"{p}|{g}|{SyncContext.ActiveSubunidad}";
         }
 
         private void RefrescarComboCorridasSeguro() => _ = RefrescarComboCorridasAsync();
@@ -2265,6 +2411,12 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     btnAprobarCorrida.Enabled = false;
                     btnRecalcularViolaciones.Enabled = false;
                     btnPromoverProduccion.Enabled = false;
+                    // Fase 1555: no dejar métricas ni grids de la corrida previa cuando la carga no se completa
+                    lblMejorFitness.Text = "Aptitud (Fitness): —";
+                    lblHardViolaciones.Text = "Restricciones Hard: —";
+                    lblVacantes.Text = "Vacantes: —";
+                    dgvHorariosGenerados.DataSource = null;
+                    dgvViolaciones.DataSource = null;
                     lblAgModo.Text = "Modo AG · staging: ag_vinculaciones / ag_sesiones";
                     Log($"[AG] La corrida #{corrida.IdCorrida} no se pudo cargar (sin sesiones materializadas o error de lectura).");
                     return;
@@ -2320,9 +2472,33 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             Cursor = Cursors.WaitCursor;
             try
             {
-                if (_contextoActual == null)
+                var corridaRes = await _scheduleRepository.GetCorridaByIdAsync(idCorrida, CancellationToken.None);
+                if (corridaRes.IsFailure)
                 {
-                    var ctxRes = await ConstruirContextoAsync(CancellationToken.None);
+                    MessageBox.Show(this, $"No se pudo consultar la corrida #{idCorrida}:\n{corridaRes.Error}",
+                        "Recalcular violaciones", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                var corrida = corridaRes.Value;
+                // Fase 1550: advertencia explícita ante corridas sin cabecera en ag_corrida (huérfanas)
+                if (corrida.IdPeriodo <= 0 || corrida.IdPrograma <= 0)
+                {
+                    MessageBox.Show(this,
+                        $"La corrida #{idCorrida} no tiene cabecera en ag_corrida (período/programa). " +
+                        "Registre la corrida o recálculela desde el AG.",
+                        "Recalcular violaciones", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                // Fase 1546: reconstruir contexto forzando período, programa y subunidad de la corrida si no coincide
+                if (_contextoActual == null ||
+                    _contextoActual.IdPeriodo != corrida.IdPeriodo ||
+                    _contextoActual.IdPrograma != corrida.IdPrograma)
+                {
+                    _contextoActual = null;
+                    var ctxRes = await ConstruirContextoAsync(
+                        CancellationToken.None, corrida.IdPeriodo, corrida.IdPrograma, corrida.Subunidad);
                     if (ctxRes.IsFailure)
                     {
                         MessageBox.Show(this,
@@ -2348,8 +2524,28 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 LoggerHelper.Info($"[AG-Recalculo] corrida #{idCorrida}: HARD={r.Hard} SOFT={r.Soft:0.##} genes={r.GenesEvaluados} asignaturas={r.AsignaturasContexto} · {r.ResumenPorRegla}");
                 Log($"[AG-Recalculo] corrida #{idCorrida} · HARD={r.Hard} SOFT={r.Soft:0.##} · {r.ResumenPorRegla}");
 
+                // Fase 1530: Forzar rehidratación de _ultimoResultado desde SQLite para reflejar el recálculo
+                _ultimoResultado = null;
                 await CargarModuloResultadosAsync(idCorrida);
                 var ind = _ultimoResultado?.MejorIndividuo;
+
+                // Fase 1537 & Fase 1548: reflejar siempre en el panel el detalle recién persistido (ind puede ser null si staging quedó vacío)
+                var violacionesLista = r.Violaciones?.ToList() ?? new List<AgViolacion>();
+                if (ind != null)
+                {
+                    ind.Violaciones = violacionesLista;
+                }
+                dgvViolaciones.DataSource = violacionesLista
+                    .OrderByDescending(v => v.EsDura)
+                    .ThenBy(v => v.Regla.ToString())
+                    .Select(v => new
+                    {
+                        Tipo = v.EsDura ? "HARD (Bloqueante)" : "SOFT (Ponderada)",
+                        Regla = v.Regla.ToString(),
+                        Mensaje = v.Mensaje
+                    }).ToList();
+                dgvViolaciones.Refresh();
+
                 btnPromoverProduccion.Enabled = ind != null && ind.HardViolations == 0;
 
                 MessageBox.Show(this,
@@ -2370,7 +2566,8 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             finally
             {
                 Cursor = cursorPrevio;
-                btnRecalcularViolaciones.Enabled = true;
+                // Fase 1547: no reactivar incondicionalmente; respetar guardas si no hay individuo óptimo
+                btnRecalcularViolaciones.Enabled = _ultimoResultado?.MejorIndividuo?.Id > 0;
             }
         }
 

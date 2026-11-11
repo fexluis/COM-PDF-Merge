@@ -19,6 +19,26 @@ namespace ConversorPDF.XLL.Academic.Application.Services
         private const string Separador = " · ";
 
         /// <summary>
+        /// Cascada tolerante de filtros del selector del Módulo R (Fase 1542).
+        /// Intenta: 1) período + programa; 2) período sin programa; 3) sin período ni programa.
+        /// La territorial no entra en la cascada: se aplica siempre que exista.
+        /// </summary>
+        public static IReadOnlyList<(int? IdPeriodo, int? IdPrograma)> CascadaFiltros(int? idPeriodo, int? idPrograma)
+        {
+            var intentos = new List<(int? IdPeriodo, int? IdPrograma)>();
+            void Agregar(int? p, int? pr)
+            {
+                if (!intentos.Contains((p, pr))) intentos.Add((p, pr));
+            }
+
+            Agregar(idPeriodo, idPrograma);
+            if (idPrograma.HasValue) Agregar(idPeriodo, null);
+            Agregar(null, null);   // último recurso: sin filtro período/programa (territorial aparte)
+
+            return intentos.AsReadOnly();
+        }
+
+        /// <summary>
         /// Construye la etiqueta mostrada en el ComboBox:
         /// <c>#44 · 2027-01 · ADMÓN. PÚBLICA TERRITORIAL · VALLE · 244 ses</c>.
         /// Los campos vacíos se omiten para no dejar separadores huérfanos.
@@ -42,6 +62,12 @@ namespace ConversorPDF.XLL.Academic.Application.Services
 
             var sufijoEstado = DescribirEstado(corrida.EstadoCorrida);
             if (!string.IsNullOrEmpty(sufijoEstado)) partes.Add(sufijoEstado);
+
+            // Fase 1558: advertir en la etiqueta cuando la corrida carece de resultado genético persistido
+            if (corrida.IdCorrida > 0 && !corrida.TieneIndividuoOptimo)
+            {
+                partes.Add("sin resultado AG");
+            }
 
             return string.Join(Separador, partes);
         }

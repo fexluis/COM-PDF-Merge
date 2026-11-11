@@ -549,6 +549,37 @@ VALUES (@IdIndividuo, @IdGen, @Regla, @EsDura, @Mensaje, @DetalleJson, @Subunida
             }
         }
 
+        public async Task<Result<IReadOnlyCollection<AgViolacion>>> GetViolacionesByIndividuoAsync(long idIndividuo, CancellationToken ct)
+        {
+            try
+            {
+                using (var db = _connectionFactory())
+                {
+                    if (db.State != ConnectionState.Open) db.Open();
+
+                    const string sql = @"
+SELECT id AS Id, id_individuo AS IdIndividuo, id_gen AS IdGen, regla AS Regla,
+       es_dura AS EsDura, mensaje AS Mensaje, detalle_json AS DetalleJson, subunidad AS Subunidad
+FROM ag_violacion
+WHERE id_individuo = @idIndividuo
+ORDER BY es_dura DESC, regla;";
+
+                    var items = (await db.QueryAsync<AgViolacion>(
+                        new CommandDefinition(sql, new { idIndividuo }, cancellationToken: ct))).ToList();
+                    return Result.Success<IReadOnlyCollection<AgViolacion>>(items.AsReadOnly());
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                return Result.Failure<IReadOnlyCollection<AgViolacion>>("Operación cancelada.");
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error($"[AgScheduleRepository] Error obteniendo violaciones de individuo {idIndividuo}", ex);
+                return Result.Failure<IReadOnlyCollection<AgViolacion>>("Error: " + ex.Message);
+            }
+        }
+
         public async Task<Result<IReadOnlyCollection<AgIndividuo>>> GetIndividuosByCorridaAsync(long idCorrida, CancellationToken ct)
         {
             try

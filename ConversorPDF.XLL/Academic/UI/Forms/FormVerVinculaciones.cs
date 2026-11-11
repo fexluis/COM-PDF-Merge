@@ -811,7 +811,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
 
         /// <summary>
         /// Carga el detalle persistido en ag_violacion para la corrida mostrada y lo indexa por sesión
-        /// (Fase 1529). El detalle lo genera el AG o el botón «Recalcular violaciones» del Módulo R.
+        /// (Fase 1529, Fase 1535). Solo aplica en Modo AG (staging) y soporta múltiples corridas (IN @IdCorridas).
         /// </summary>
         private async Task CargarViolacionesAsync()
         {
@@ -819,26 +819,30 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             _totalViolacionesHard = 0;
             _sesionesConViolacionHard = 0;
 
+            // Fase 1535: En modo Producción no existe ag_violacion ni staging de AG
+            if (!_modo.EsModoAg) return;
+
             try
             {
-                long idCorrida = _items.Select(i => i.IdCorrida).FirstOrDefault(id => id > 0);
-                if (idCorrida <= 0) return;
+                var idsCorrida = _items.Select(i => i.IdCorrida).Where(id => id > 0).Distinct().ToList();
+                if (idsCorrida.Count == 0) return;
 
                 const string sql = @"
 SELECT s.id AS IdSesion, v.regla AS Regla, v.es_dura AS EsDura, v.mensaje AS Mensaje
 FROM ag_violacion v
 INNER JOIN ag_sesiones s ON s.idgen = v.id_gen AND s.idindividuo = v.id_individuo
 INNER JOIN ag_vinculaciones av ON av.id = s.idvinculacion
-WHERE av.id_corrida = @IdCorrida
+WHERE av.id_corrida IN @IdCorridas
 ORDER BY v.es_dura DESC, v.regla;";
 
                 var conn = UnwrapSqlite(_dbConnection);
                 if (conn == null) return;
 
-                var filas = (await conn.QueryAsync(new CommandDefinition(sql, new { IdCorrida = idCorrida }))).ToList();
+                var filas = (await conn.QueryAsync(new CommandDefinition(sql, new { IdCorridas = idsCorrida }))).ToList();
                 if (filas.Count == 0)
                 {
-                    LoggerHelper.Info($"[FormVerVinculaciones] Corrida #{idCorrida} sin detalle en ag_violacion; use «Recalcular violaciones» en el Módulo R.");
+                    string corridasTexto = string.Join(", ", idsCorrida);
+                    LoggerHelper.Info($"[FormVerVinculaciones] Corrida(s) #{corridasTexto} sin detalle en ag_violacion; use «Recalcular violaciones» en el Módulo R.");
                     return;
                 }
 
@@ -863,7 +867,8 @@ ORDER BY v.es_dura DESC, v.regla;";
                 }
 
                 _sesionesConViolacionHard = _violacionesPorSesion.Count(kv => kv.Value.Any(v => v.EsDura));
-                LoggerHelper.Info($"[FormVerVinculaciones] Corrida #{idCorrida}: {filas.Count} violaciones ({_totalViolacionesHard} HARD) en {_sesionesConViolacionHard} sesiones.");
+                string corridasReporte = string.Join(", ", idsCorrida);
+                LoggerHelper.Info($"[FormVerVinculaciones] Corrida(s) #{corridasReporte}: {filas.Count} violaciones ({_totalViolacionesHard} HARD) en {_sesionesConViolacionHard} sesiones.");
             }
             catch (Exception ex)
             {

@@ -14,7 +14,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services
     {
         private static CorridaStagingItem Corrida(
             long id, int idPeriodo, string periodo, int idPrograma, string programa,
-            string subunidad, int sesiones, int estado = 0)
+            string subunidad, int sesiones, int estado = 0, long? idIndividuoOptimo = 1)
         {
             return new CorridaStagingItem
             {
@@ -27,7 +27,8 @@ namespace ConversorPDF.Tests.Academic.Application.Services
                 FechaInicioCorrida = "2026-11-09 09:31:00",
                 EstadoCorrida = estado,
                 TotalVinculaciones = sesiones,
-                TotalSesiones = sesiones
+                TotalSesiones = sesiones,
+                IdIndividuoOptimo = idIndividuoOptimo
             };
         }
 
@@ -107,9 +108,18 @@ namespace ConversorPDF.Tests.Academic.Application.Services
         public void FormatearEtiqueta_CamposVacios_NoDejaSeparadoresHuerfanos()
         {
             var etiqueta = AgCorridaSelector.FormatearEtiqueta(
-                new CorridaStagingItem { IdCorrida = 7, TotalSesiones = 3 });
+                new CorridaStagingItem { IdCorrida = 7, TotalSesiones = 3, IdIndividuoOptimo = 1 });
 
             etiqueta.Should().Be("#7 · 3 ses");
+        }
+
+        [Fact]
+        public void FormatearEtiqueta_SinIndividuoOptimo_AgregaSufijoSinResultadoAG()
+        {
+            var etiqueta = AgCorridaSelector.FormatearEtiqueta(
+                Corrida(48, 3, "2027-01", 1, "ADMINISTRACION PUBLICA TERRITORIAL", "VALLE", 180, estado: 0, idIndividuoOptimo: null));
+
+            etiqueta.Should().Be("#48 · 2027-01 · ADMINISTRACION PUBLICA TERRITORIAL · VALLE · 180 ses · sin resultado AG");
         }
 
         [Fact]
@@ -131,6 +141,51 @@ namespace ConversorPDF.Tests.Academic.Application.Services
 
             items.Should().HaveCount(1);
             items[0].IdCorrida.Should().Be(0);
+        }
+
+        private static readonly (int? IdPeriodo, int? IdPrograma)[] EsperadoPeriodoYPrograma =
+        {
+            (2, 1), (2, null), (null, null)
+        };
+
+        [Fact]
+        public void CascadaFiltros_ConPeriodoYPrograma_DevuelveTresIntentos()
+        {
+            AgCorridaSelector.CascadaFiltros(2, 1).Should().Equal(EsperadoPeriodoYPrograma);
+        }
+
+        [Fact]
+        public void CascadaFiltros_SinPrograma_DevuelveDosIntentos()
+        {
+            AgCorridaSelector.CascadaFiltros(2, null)
+                .Should().Equal(new (int?, int?)[] { (2, null), (null, null) });
+        }
+
+        [Fact]
+        public void CascadaFiltros_SinPeriodo_DevuelveDosIntentos()
+        {
+            AgCorridaSelector.CascadaFiltros(null, 5)
+                .Should().Equal(new (int?, int?)[] { (null, 5), (null, null) });
+        }
+
+        [Fact]
+        public void CascadaFiltros_TodoNulo_DevuelveUnIntento()
+        {
+            var unico = AgCorridaSelector.CascadaFiltros(null, null).Should().ContainSingle().Subject;
+            unico.IdPeriodo.Should().BeNull();
+            unico.IdPrograma.Should().BeNull();
+        }
+
+        [Theory]
+        [InlineData(2, 1)]
+        [InlineData(2, null)]
+        [InlineData(null, 5)]
+        [InlineData(null, null)]
+        public void CascadaFiltros_SiempreTerminaAmplio(int? idPeriodo, int? idPrograma)
+        {
+            var ultimo = AgCorridaSelector.CascadaFiltros(idPeriodo, idPrograma).Last();
+            ultimo.IdPeriodo.Should().BeNull();
+            ultimo.IdPrograma.Should().BeNull();
         }
     }
 }

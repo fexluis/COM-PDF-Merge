@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 292 | 293 | 2026-11-09 |
-| `fase` | 1529 | 1530 | 2026-11-09 |
+| `ronda` | 306 | 307 | 2026-11-11 |
+| `fase` | 1562 | 1563 | 2026-11-11 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -50,6 +50,19 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-014 | 2026-11-09 | `(fix de R-012: coherencia de violaciones HARD)` | `Wave —` | `Fase 1524–1525` | closed | PASS (Full 1071) | pendiente |
 | R-011 | 2026-11-09 | `(revisión manual Ronda 288 — Fases 1515–1516)` | `Wave —` | `Fase 1515–1516` | closed | — | pendiente |
 | R-015 | 2026-11-09 | `(fix de R-014: recálculo manual de violaciones y resaltado en vista por fechas)` | `Wave —` | `Fase 1526–1529` | closed | PASS (Full) | pendiente |
+| R-016 | 2026-11-10 | `(revisión manual Ronda 293 — Fases 1530–1536)` | `Wave —` | `Fase 1530–1536` | closed | — | pendiente |
+| R-017 | 2026-11-10 | `(revisión manual Ronda 294 — Fases 1537–1540)` | `Wave —` | `Fase 1537–1540` | closed | — | pendiente |
+| R-018 | 2026-11-10 | `(revisión manual Ronda 295 — Fase 1541)` | `Wave —` | `Fase 1541` | closed | — | pendiente |
+| R-019 | 2026-11-10 | `(revisión manual Ronda 296 — Fases 1542–1544)` | `Wave —` | `Fase 1542–1544` | closed | — | pendiente |
+| R-020 | 2026-11-10 | `(revisión manual Ronda 297 — Fases 1545–1548)` | `Wave —` | `Fase 1545–1548` | closed | — | pendiente |
+| R-021 | 2026-11-10 | `(revisión manual Ronda 298 — Fases 1549–1550)` | `Wave —` | `Fase 1549–1550` | closed | — | pendiente |
+| R-022 | 2026-11-10 | `(revisión manual Ronda 299 — Fase 1551)` | `Wave —` | `Fase 1551` | closed | — | pendiente |
+| R-023 | 2026-11-10 | `(revisión manual Ronda 300 — Fases 1552–1553)` | `Wave —` | `Fase 1552–1553` | closed | — | pendiente |
+| R-024 | 2026-11-11 | `(revisión manual Ronda 302 — Fases 1554–1555)` | `Wave 301` | `Fase 1554–1555` | closed | — | pendiente |
+| R-025 | 2026-11-11 | `(revisión manual Ronda 303 — Fase 1556)` | `Wave 302` | `Fase 1556` | closed | — | pendiente |
+| R-026 | 2026-11-11 | `(revisión manual Ronda 304 — Fases 1557–1558)` | `Wave 304` | `Fase 1557–1558` | closed | — | pendiente |
+| R-027 | 2026-11-11 | `(revisión manual Ronda 305 — Fase 1559)` | `Wave 305` | `Fase 1559` | closed | — | pendiente |
+| R-028 | 2026-11-11 | `(revisión manual Ronda 306 — Fase 1562)` | `Wave 306` | `Fase 1562` | closed | — | pendiente |
 
 Estados: `reserved` (Fase A) · `executing` (Fase B) · `closed` (Fase C, sellado) · `abandoned` (plan descartado: los números **no** se reciclan).
 

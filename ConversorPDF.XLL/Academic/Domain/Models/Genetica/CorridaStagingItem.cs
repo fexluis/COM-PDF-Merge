@@ -41,6 +41,17 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
         public bool TieneStaging => TotalSesiones > 0;
 
         /// <summary>
+        /// Identificador del individuo óptimo registrado en ag_corrida (Fase 1558).
+        /// Si es nulo o &lt;= 0, la corrida carece de resultado genético persistido.
+        /// </summary>
+        public long? IdIndividuoOptimo { get; set; }
+
+        /// <summary>
+        /// Indica si la corrida cuenta con individuo óptimo persistido en ag_corrida (Fase 1558).
+        /// </summary>
+        public bool TieneIndividuoOptimo => IdIndividuoOptimo.HasValue && IdIndividuoOptimo.Value > 0;
+
+        /// <summary>
         /// Texto mostrado en el ComboBox. No se mapea por Dapper:
         /// la puebla <c>AgCorridaSelector</c> (ver <c>VinculacionListService</c>).
         /// </summary>

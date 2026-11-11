@@ -237,7 +237,8 @@ SELECT c2.id AS IdCorrida,
        COALESCE(c2.fecha_inicio_corrida, '') AS FechaInicioCorrida,
        COALESCE(c2.estado, 0) AS EstadoCorrida,
        0 AS TotalVinculaciones,
-       0 AS TotalSesiones
+       0 AS TotalSesiones,
+       COALESCE(c2.id_individuo_optimo, 0) AS IdIndividuoOptimo
 FROM ag_corrida c2
 LEFT JOIN periodos  pe2 ON pe2.idperiodo = c2.idperiodo
 LEFT JOIN programas pr2 ON pr2.id = c2.idprograma
@@ -257,7 +258,8 @@ SELECT v.id_corrida AS IdCorrida,
        COALESCE(MAX(c.fecha_inicio_corrida), '') AS FechaInicioCorrida,
        COALESCE(MAX(c.estado), 0) AS EstadoCorrida,
        COUNT(DISTINCT v.id) AS TotalVinculaciones,
-       COUNT(s.id) AS TotalSesiones
+       COUNT(s.id) AS TotalSesiones,
+       COALESCE(MAX(c.id_individuo_optimo), 0) AS IdIndividuoOptimo
 FROM ag_vinculaciones v
 LEFT JOIN ag_sesiones  s  ON s.idvinculacion = v.id
 LEFT JOIN ag_corrida   c  ON c.id = v.id_corrida

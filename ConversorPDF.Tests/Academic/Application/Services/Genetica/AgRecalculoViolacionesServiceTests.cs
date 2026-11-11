@@ -18,10 +18,10 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
     {
         private static AgContexto ContextoVacio() => new AgContexto
         {
-            Aulas = new List<AgAula>(),
+            Aulas = new List<AgAula> { new AgAula { Id = 30, Nombre = "AULA 30" } },
             Bloques = new List<AgBloqueHorario>(),
-            Asignaturas = new List<Asignatura>(),
-            Docentes = new List<Tercero>(),
+            Asignaturas = new List<Asignatura> { new Asignatura { Id = 10, Nombre = "ASIGNATURA 10" } },
+            Docentes = new List<Tercero> { new Tercero { Id = 20, Nombre = "DOCENTE 20" } },
             Sedes = new List<Sede>(),
             Programas = new List<Programa>(),
             PoolDocentes = new List<TerceroAsignatura>(),
@@ -142,6 +142,187 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
 
             res.IsFailure.Should().BeTrue();
             res.Error.Should().Contain("genes");
+        }
+
+        [Fact]
+        public async Task RecalcularAsync_ContextoNoCorrespondeACorrida_DevuelveFallo()
+        {
+            // Fase 1532: rechazar si el período o programa del contexto no coincide con la corrida
+            var mockRepo = new Mock<IAgScheduleRepository>();
+            mockRepo.Setup(r => r.GetCorridaByIdAsync(44, It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(Result.Success(new AgCorrida { Id = 44, IdPeriodo = 2, IdPrograma = 10, IdIndividuoOptimo = 7 }));
+
+            var sut = new AgRecalculoViolacionesService(mockRepo.Object, Mock.Of<IAgValidadorReglas>());
+            var ctx = ContextoVacio();
+            ctx.IdPeriodo = 1; // Discrepante
+            ctx.IdPrograma = 10;
+
+            var res = await sut.RecalcularAsync(44, ctx, CancellationToken.None);
+
+            res.IsFailure.Should().BeTrue();
+            res.Error.Should().Contain("no corresponde a la corrida");
+        }
+
+        [Fact]
+        public async Task RecalcularAsync_ContextoIncompleto_DevuelveFallo()
+        {
+            // Fase 1533 & Fase 1540: no lanzar NRE si alguna colección requerida (Aulas, Bloques, Festivos, etc.) es null
+            var mockRepo = new Mock<IAgScheduleRepository>();
+            mockRepo.Setup(r => r.GetCorridaByIdAsync(44, It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(Result.Success(new AgCorrida { Id = 44, IdPeriodo = 0, IdPrograma = 0, IdIndividuoOptimo = 7 }));
+            mockRepo.Setup(r => r.GetIndividuoByIdAsync(7, It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(Result.Success(IndividuoConGen()));
+
+            var sut = new AgRecalculoViolacionesService(mockRepo.Object, Mock.Of<IAgValidadorReglas>());
+            var ctx = ContextoVacio();
+            ctx.Aulas = null; // Incompleto
+
+            var res = await sut.RecalcularAsync(44, ctx, CancellationToken.None);
+
+            res.IsFailure.Should().BeTrue();
+            res.Error.Should().Contain("incompleto");
+
+            // Fase 1540: Festivos es null
+            var ctxFestivosNull = ContextoVacio();
+            ctxFestivosNull.Festivos = null;
+            var resFestivos = await sut.RecalcularAsync(44, ctxFestivosNull, CancellationToken.None);
+            resFestivos.IsFailure.Should().BeTrue();
+            resFestivos.Error.Should().Contain("incompleto");
+        }
+
+        [Fact]
+        public async Task RecalcularAsync_SubunidadUnilateral_NoBloqueaRecalculo()
+        {
+            // Fase 1538: si el contexto no tiene subunidad pero la corrida sí, se tolera
+            var mockRepo = new Mock<IAgScheduleRepository>();
+            mockRepo.Setup(r => r.GetCorridaByIdAsync(44, It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(Result.Success(new AgCorrida { Id = 44, IdPeriodo = 0, IdPrograma = 0, Subunidad = "VALLE", IdIndividuoOptimo = 7 }));
+            mockRepo.Setup(r => r.GetIndividuoByIdAsync(7, It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(Result.Success(IndividuoConGen()));
+            mockRepo.Setup(r => r.ReemplazarViolacionesAsync(
+                        It.IsAny<long>(), It.IsAny<IReadOnlyCollection<AgViolacion>>(),
+                        It.IsAny<int>(), It.IsAny<double>(), It.IsAny<AgEstadoIndividuo>(),
+                        It.IsAny<long>(), It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(Result.Success());
+
+            var sut = new AgRecalculoViolacionesService(mockRepo.Object, Mock.Of<IAgValidadorReglas>());
+            var ctx = ContextoVacio();
+            ctx.Subunidad = string.Empty; // Contexto sin subunidad
+
+            var res = await sut.RecalcularAsync(44, ctx, CancellationToken.None);
+
+            res.IsSuccess.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task RecalcularAsync_PreservaIdCorridaPrevioDelContexto()
+        {
+            // Fase 1534: restaurar IdCorrida del contexto en el bloque finally
+            var mockRepo = new Mock<IAgScheduleRepository>();
+            var mockValidador = new Mock<IAgValidadorReglas>();
+
+            mockRepo.Setup(r => r.GetCorridaByIdAsync(44, It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(Result.Success(new AgCorrida { Id = 44, IdPeriodo = 0, IdPrograma = 0, IdIndividuoOptimo = 7 }));
+            mockRepo.Setup(r => r.GetIndividuoByIdAsync(7, It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(Result.Success(IndividuoConGen()));
+            mockRepo.Setup(r => r.ReemplazarViolacionesAsync(
+                        It.IsAny<long>(), It.IsAny<IReadOnlyCollection<AgViolacion>>(),
+                        It.IsAny<int>(), It.IsAny<double>(), It.IsAny<AgEstadoIndividuo>(),
+                        It.IsAny<long>(), It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(Result.Success());
+
+            long idCorridaDuranteEvaluacion = -1;
+            mockValidador.Setup(v => v.Evaluar(It.IsAny<AgIndividuo>(), It.IsAny<AgContexto>()))
+                         .Callback<AgIndividuo, AgContexto>((ind, ctx) =>
+                         {
+                             idCorridaDuranteEvaluacion = ctx.IdCorrida;
+                         });
+
+            var sut = new AgRecalculoViolacionesService(mockRepo.Object, mockValidador.Object);
+            var contexto = ContextoVacio();
+            contexto.IdCorrida = 999;
+
+            var res = await sut.RecalcularAsync(44, contexto, CancellationToken.None);
+
+            res.IsSuccess.Should().BeTrue();
+            idCorridaDuranteEvaluacion.Should().Be(44);
+            contexto.IdCorrida.Should().Be(999);
+        }
+
+        [Fact]
+        public async Task RecalcularAsync_ContextoNoCubreAulasDeLaCorrida_DevuelveFallo()
+        {
+            // Fase 1549: si el contexto no contiene las aulas de los genes de la corrida, rechazar
+            var mockRepo = new Mock<IAgScheduleRepository>();
+            mockRepo.Setup(r => r.GetCorridaByIdAsync(44, It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(Result.Success(new AgCorrida { Id = 44, IdPeriodo = 0, IdPrograma = 0, IdIndividuoOptimo = 7 }));
+            mockRepo.Setup(r => r.GetIndividuoByIdAsync(7, It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(Result.Success(new AgIndividuo
+                    {
+                        Id = 7,
+                        IdCorrida = 44,
+                        Genes = new List<AgGen> { new AgGen { Id = 1, IdAula = 99 } }
+                    }));
+
+            var sut = new AgRecalculoViolacionesService(mockRepo.Object, Mock.Of<IAgValidadorReglas>());
+            var ctx = ContextoVacio(); // Contiene aula 30, pero no aula 99
+
+            var res = await sut.RecalcularAsync(44, ctx, CancellationToken.None);
+
+            res.IsFailure.Should().BeTrue();
+            res.Error.Should().Contain("no cubre");
+        }
+
+        [Fact]
+        public async Task RecalcularAsync_ContextoSinAsignaturasDeLaCorrida_DevuelveFallo()
+        {
+            // Fase 1551: aula cubierta, asignatura ausente -> rechazar
+            var mockRepo = new Mock<IAgScheduleRepository>();
+            mockRepo.Setup(r => r.GetCorridaByIdAsync(44, It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(Result.Success(new AgCorrida { Id = 44, IdPeriodo = 0, IdPrograma = 0, IdIndividuoOptimo = 7 }));
+            mockRepo.Setup(r => r.GetIndividuoByIdAsync(7, It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(Result.Success(new AgIndividuo
+                    {
+                        Id = 7,
+                        IdCorrida = 44,
+                        Genes = new List<AgGen> { new AgGen { Id = 1, IdAula = 30, IdAsignatura = 77, IdTercero = 0 } }
+                    }));
+
+            var sut = new AgRecalculoViolacionesService(mockRepo.Object, Mock.Of<IAgValidadorReglas>());
+            var ctx = ContextoVacio();   // aula 30 presente; Asignatura 77 ausente (contiene 10)
+
+            var res = await sut.RecalcularAsync(44, ctx, CancellationToken.None);
+
+            res.IsFailure.Should().BeTrue();
+            res.Error.Should().Contain("asignatura");
+        }
+
+        [Fact]
+        public async Task RecalcularAsync_DocenteAusenteDelContexto_NoBloqueaRecalculo()
+        {
+            // Fase 1552: los docentes ausentes no condicionan las violaciones y no deben bloquear el recálculo
+            var mockRepo = new Mock<IAgScheduleRepository>();
+            mockRepo.Setup(r => r.GetCorridaByIdAsync(44, It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(Result.Success(new AgCorrida { Id = 44, IdPeriodo = 0, IdPrograma = 0, IdIndividuoOptimo = 7 }));
+            mockRepo.Setup(r => r.GetIndividuoByIdAsync(7, It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(Result.Success(new AgIndividuo
+                    {
+                        Id = 7,
+                        IdCorrida = 44,
+                        Genes = new List<AgGen> { new AgGen { Id = 1, IdAula = 30, IdAsignatura = 10, IdTercero = 999 } }
+                    }));
+            mockRepo.Setup(r => r.ReemplazarViolacionesAsync(
+                        It.IsAny<long>(), It.IsAny<IReadOnlyCollection<AgViolacion>>(),
+                        It.IsAny<int>(), It.IsAny<double>(), It.IsAny<AgEstadoIndividuo>(),
+                        It.IsAny<long>(), It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(Result.Success());
+
+            var sut = new AgRecalculoViolacionesService(mockRepo.Object, Mock.Of<IAgValidadorReglas>());
+            var ctx = ContextoVacio();   // aula 30 presente, asignatura 10 presente, docente 999 ausente
+
+            var res = await sut.RecalcularAsync(44, ctx, CancellationToken.None);
+
+            res.IsSuccess.Should().BeTrue();
         }
     }
 }

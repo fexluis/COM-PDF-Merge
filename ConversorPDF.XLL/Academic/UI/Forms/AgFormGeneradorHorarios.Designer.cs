@@ -1003,7 +1003,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             this.pnlHeaderResultados.Dock = System.Windows.Forms.DockStyle.Top;
             this.pnlHeaderResultados.Location = new System.Drawing.Point(10, 10);
             this.pnlHeaderResultados.Name = "pnlHeaderResultados";
-            this.pnlHeaderResultados.Size = new System.Drawing.Size(956, 50);
+            this.pnlHeaderResultados.Size = new System.Drawing.Size(1100, 50);
             this.pnlHeaderResultados.TabIndex = 0;
             // 
             // lblHardViolaciones
@@ -1041,12 +1041,12 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             // cmbCargarCorridas
             // 
             this.cmbCargarCorridas.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbCargarCorridas.DropDownWidth = 430;
+            this.cmbCargarCorridas.DropDownWidth = 480;
             this.cmbCargarCorridas.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.cmbCargarCorridas.FormattingEnabled = true;
             this.cmbCargarCorridas.Location = new System.Drawing.Point(545, 14);
             this.cmbCargarCorridas.Name = "cmbCargarCorridas";
-            this.cmbCargarCorridas.Size = new System.Drawing.Size(185, 25);
+            this.cmbCargarCorridas.Size = new System.Drawing.Size(330, 25);
             this.cmbCargarCorridas.TabIndex = 4;
             // 
             // lblCargarCorridas
@@ -1061,11 +1061,12 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             // 
             // btnPromoverProduccion
             // 
+            this.btnPromoverProduccion.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnPromoverProduccion.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(123)))), ((int)(((byte)(255)))));
             this.btnPromoverProduccion.Enabled = false;
             this.btnPromoverProduccion.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             this.btnPromoverProduccion.ForeColor = System.Drawing.Color.White;
-            this.btnPromoverProduccion.Location = new System.Drawing.Point(740, 10);
+            this.btnPromoverProduccion.Location = new System.Drawing.Point(890, 10);
             this.btnPromoverProduccion.Name = "btnPromoverProduccion";
             this.btnPromoverProduccion.Size = new System.Drawing.Size(200, 32);
             this.btnPromoverProduccion.TabIndex = 2;

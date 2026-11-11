@@ -8101,3 +8101,275 @@ Sin registros `<Compile Include=...>` en `ConversorPDF.XLL.csproj`.
 1. **Fase 1515**: Verificada integridad de plantillas `.doc` en `ExcelTemplates` contra HEAD; establecida regla de abstención de checkout/restore en rutas fuera de `files_lock`.
 2. **Fase 1516**: Documentada pauta de determinismo en memoria (C#) para `PeriodosCorrida`, `SubunidadesCorrida` y `ProgramasCorrida`, garantizando estabilidad en suites de prueba con múltiples registros.
 3. **Sincronización REGISTRY**: Incorporada fila `R-011` (`closed`) y contadores actualizados a `ronda: 288 / 289`, `fase: 1516 / 1517`.
+
+
+---
+
+## Ronda 293: Correcciones de Robustez y Coherencia en Recálculo y Vista por Fechas (Fases 1530–1536)
+
+### Contexto y Diagnóstico
+Revisión manual exhaustiva sobre la entrega R-015 (HEAD `e53d2f5`) detectó 6 hallazgos críticos de coherencia en UI, lógica de validador y visualización de violaciones:
+1. **Fase 1530**: Al recalcular en el Módulo R, `_ultimoResultado` retenía en memoria la instancia previa de `MejorIndividuo`, provocando que `CargarModuloResultadosAsync` omitiera la rehidratación desde SQLite y los labels mantuvieran violaciones obsoletas.
+2. **Fase 1531**: El botón `btnRecalcularViolaciones` solo se habilitaba en la carga por combo (`CargarCorridaDesdeComboAsync`); tras ejecutar el AG directamente en la sesión viva, permanecía en `Enabled = false`.
+3. **Fase 1532**: `AgRecalculoViolacionesService` no validaba que el contexto en memoria (`IdPeriodo`, `IdPrograma`, `Subunidad`) coincidiera con la corrida que se pretendía recalcular, arriesgando sobreescritura de violaciones con datos ajenos.
+4. **Fase 1533**: `ConstruirIndices()` en `AgContexto` carecía de validación de colecciones requeridas no nulas (`Aulas`, `Bloques`, `Asignaturas`, `Docentes`, `Sedes`, `PoolDocentes`), arriesgando `NullReferenceException`.
+5. **Fase 1534**: Mutación de `contexto.IdCorrida = idCorrida` sobre la instancia compartida del llamador sin bloque `try/finally` para restaurar el valor previo.
+6. **Fase 1535**: En `FormVerVinculaciones.cs`, `CargarViolacionesAsync` ejecutaba queries a `ag_violacion` aún en modo Producción, y seleccionaba únicamente `FirstOrDefault(id => id > 0)`, omitiendo el resaltado cuando la vista agrupaba múltiples corridas.
+7. **Fase 1536**: Suite de pruebas unitarias (`AgRecalculoViolacionesServiceTests`) actualizada con cobertura explícita para rechazo por contexto ajeno (1532), contexto incompleto (1533) y preservación de `IdCorrida` previo (1534).
+
+### Cambios Aplicados
+1. **Fase 1530 (`AgFormGeneradorHorarios.cs`)**: Asignación `_ultimoResultado = null;` inmediatamente antes de `await CargarModuloResultadosAsync(idCorrida);` forzando la rehidratación fidedigna de las violaciones recalculadas.
+2. **Fase 1531 (`AgFormGeneradorHorarios.cs`)**: En `CargarModuloResultadosAsync`, asignación `btnRecalcularViolaciones.Enabled = ind.Id > 0;` garantizando disponibilidad del botón tanto desde la ejecución directa del AG como tras rehidratar desde persistencia.
+3. **Fase 1532 (`AgRecalculoViolacionesService.cs`)**: Guardas de coherencia entre `contexto` y `corrida` (`IdPeriodo`, `IdPrograma`, `Subunidad`), retornando `Result.Failure` explicativo si difieren.
+4. **Fase 1533 (`AgRecalculoViolacionesService.cs`)**: Validación previa de colecciones no nulas en `contexto` antes de disparar `ConstruirIndices()`, retornando fallo claro de negocio.
+5. **Fase 1534 (`AgRecalculoViolacionesService.cs`)**: Manejo con variable `idCorridaPrevio` y bloque `try/finally` para salvaguardar y restaurar el `IdCorrida` del contexto compartido.
+6. **Fase 1535 (`FormVerVinculaciones.cs`)**: Guarda inmediata `if (!_modo.EsModoAg) return;` y consulta SQL adaptada con `IN @IdCorridas` soportando `Distinct().ToList()` de todas las corridas visibles.
+7. **Fase 1536 (`AgRecalculoViolacionesServiceTests.cs`)**: Tres pruebas unitarias añadidas (`RecalcularAsync_ContextoNoCorrespondeACorrida_DevuelveFallo`, `RecalcularAsync_ContextoIncompleto_DevuelveFallo`, `RecalcularAsync_PreservaIdCorridaPrevioDelContexto`).
+8. **Sincronización REGISTRY**: Incorporada fila `R-016` (`closed`) y actualizados contadores a `ronda: 293 / 294`, `fase: 1536 / 1537`.
+
+
+---
+
+## Ronda 294: Refinamiento de Coherencia en Recálculo y Vista por Fechas (Fases 1537–1540)
+
+### Contexto y Diagnóstico
+Revisión manual sobre la ronda 293 identificó 4 defectos adicionales:
+1. **Fase 1537**: Tras forzar rehidratación (`_ultimoResultado = null`), `GetIndividuoByIdAsync` no carga la colección de violaciones, dejando `dgvViolaciones` vacío en la UI aunque las métricas escalares estuvieran actualizadas.
+2. **Fase 1538**: La comprobación estricta de `Subunidad` rechazaba recálculos legítimos cuando la sesión arrancaba sin sync (`contexto.Subunidad = ""` o nulo) y la corrida tenía una territorial fijada.
+3. **Fase 1539**: `btnRecalcularViolaciones` se habilitaba antes de verificar staging; ante fallo de lectura o conteo 0 de sesiones, `btnPromoverProduccion` se deshabilitaba pero `btnRecalcularViolaciones` permanecía activo.
+4. **Fase 1540**: `AgContexto.ConstruirIndices()` itera sobre `Festivos` sin null-check y requiere `AulaAsignaturas`; F1533 no validaba estas dos colecciones, permitiendo potenciales `NullReferenceException`.
+
+### Cambios Aplicados
+1. **Fase 1537 (`AgFormGeneradorHorarios.cs`)**: Asignación de `ind.Violaciones` y enlace a `dgvViolaciones.DataSource` inmediatamente después de `CargarModuloResultadosAsync` para reflejar el detalle recalculado devuelto por el servicio.
+2. **Fase 1538 (`AgRecalculoViolacionesService.cs`)**: Comparación condicional de territorial: solo evalúa coincidencia si ambos lados (`contexto` y `corrida`) aportan un valor no vacío.
+3. **Fase 1539 (`AgFormGeneradorHorarios.cs`)**: En `CargarModuloResultadosAsync`, deshabilitación explícita `btnRecalcularViolaciones.Enabled = false;` en los retornos tempranos de `sesionesResult.IsFailure` y `sesionesResult.Value.Count == 0`.
+4. **Fase 1540 (`AgRecalculoViolacionesService.cs` y tests)**: Validación añadida para `contexto.Festivos == null || contexto.AulaAsignaturas == null` en guardas previas del servicio y prueba unitaria en `AgRecalculoViolacionesServiceTests.cs`.
+5. **Sincronización REGISTRY**: Incorporada fila `R-017` (`closed`) y actualizados contadores a `ronda: 294 / 295`, `fase: 1540 / 1541`.
+
+
+---
+
+## Ronda 295: Deshabilitación Defensiva del Recálculo sin Individuo Óptimo (Fase 1541)
+
+### Contexto y Diagnóstico
+En `AgFormGeneradorHorarios.cs`, la salida temprana `if (_ultimoResultado?.MejorIndividuo == null) return false;` (línea 1979) no desactivaba `btnRecalcularViolaciones`. Si una corrida previa había habilitado el botón y luego se cargaba una corrida sin individuo óptimo en base de datos, el botón permanecía en `Enabled = true`, provocando al presionarlo una excepción de negocio ("no tiene individuo óptimo persistido").
+
+### Cambios Aplicados
+1. **Fase 1541 (`AgFormGeneradorHorarios.cs:1979-1984`)**: Bloque explícito `{ btnRecalcularViolaciones.Enabled = false; btnPromoverProduccion.Enabled = false; return false; }` ante ausencia de individuo óptimo.
+2. **Sincronización REGISTRY**: Incorporada fila `R-018` (`closed`) y actualizados contadores a `ronda: 295 / 296`, `fase: 1541 / 1542`.
+
+
+---
+
+## Ronda 296: Selector de Corridas del Módulo R: Filtro Tolerante y Estado Vacío Saneado (Fases 1542–1544)
+
+### Contexto y Diagnóstico
+En el vault real:
+- `ag_corrida`: corrida #1 (período 2 · programa 1 · VALLE · 18 vinc).
+- `ag_vinculaciones`: corrida #48 (período 3 · programa 2 · VALLE · 15 vinc, sin cabecera).
+- `config/ActiveSubunidad`: período 2 · VALLE.
+
+`VinculacionQueryRepository.GetCorridasStagingAsync` aplica igualdad estricta en `idperiodo`, `idprograma` y `UPPER(TRIM(subunidad))`. El Módulo R le pasaba los tres; con `período 2 · programa 1` no encontraba la corrida #48, resultando en 0 filas y combo con un ítem de tipo string (`Items.Add("— sin corridas … —")`), provocando recorte visual y selección no tipada.
+
+1. **Fase 1542**: Un solo intento estricto de filtro período+programa dejaba el selector vacío aunque existieran corridas con staging en la territorial.
+2. **Fase 1543**: Estado vacío o de error insertaba cadenas `string` en `cmbCargarCorridas.Items` conservando `DisplayMember`/`ValueMember` tipados.
+3. **Fase 1544**: El evento `cmbCargarCorridas.DropDown` reconsultaba SQLite y limpiaba `Items` en cada apertura del desplegable aunque los filtros no hubieran cambiado.
+
+### Cambios Aplicados
+1. **Fase 1542 (`AgCorridaSelector.cs` y `AgFormGeneradorHorarios.cs`)**:
+   - `AgCorridaSelector.CascadaFiltros(idPeriodo, idPrograma)`: función pura que retorna cascada tolerante `(p, pr)`, `(p, null)` y `(null, null)` incondicional (deduplicada). La territorial se mantiene fija.
+   - En `AgFormGeneradorHorarios.RefrescarComboCorridasAsync`: iteración sobre la cascada con salida anticipada al primer intento no vacío, marcando `ampliado = true` si se relajaron filtros.
+2. **Fase 1543 (`AgFormGeneradorHorarios.cs`)**:
+   - Limpieza previa de enlace de datos (`DisplayMember = string.Empty`, `ValueMember = string.Empty`, `Items.Clear()`, `SelectedIndex = -1`, `Text = string.Empty`).
+   - Si `error != null` o `items.Count == 0`, no se agregan strings a `Items`; se actualiza `lblAgModo` y se desactivan botones defensivamente solo si `_idCorridaCargada <= 0`. Si `ampliado` y `_idCorridaCargada <= 0`, se notifica en `lblAgModo`.
+   - `DisplayMember` y `ValueMember` se asignan solo cuando `items.Count > 0` antes de poblar `Items`.
+3. **Fase 1544 (`AgFormGeneradorHorarios.cs`)**:
+   - Campo `_claveFiltroCorridas` y método `ClaveFiltroCorridas()` para cachear la combinación `Periodo|Programa|Subunidad`.
+   - En `cmbCargarCorridas.DropDown`: omisión de reconsulta si `Items.Count > 0` y la clave de filtros coincide con `_claveFiltroCorridas`. Asignación de `_claveFiltroCorridas` al término del refresco exitoso.
+4. **Pruebas (`AgCorridaSelectorTests.cs`)**:
+   - 4 tests unitarios de cascada (`ConPeriodoYPrograma_DevuelveTresIntentos`, `SinPrograma_DevuelveDosIntentos`, `SinPeriodo_DevuelveDosIntentos`, `TodoNulo_DevuelveUnIntento`) y 1 theory `SiempreTerminaAmplio`.
+5. **Sincronización REGISTRY**:
+   - Fila `R-019` (`closed`) y contadores actualizados a `ronda: 296 / 297`, `fase: 1544 / 1545`.
+
+
+---
+
+## Ronda 297: Tipado de Asserts en Tests y Contexto de Corrida en Recálculo (Fases 1545–1548)
+
+### Contexto y Diagnóstico
+Revisión manual sobre la entrega R-019 (Ronda 296) identificó 4 defectos:
+1. **Fase 1545 (Compilation)**: FluentAssertions 6.12 carece de sobrecarga `Should().Be()` para `ValueTuple` y resuelve a `ObjectAssertions.Be(object)`. Los literales con `null` carecían de tipo natural provocando error de compilación `CS8716`, y `(2, 1)` boxeaba `(int, int)` que no igualaba a `(int?, int?)`.
+2. **Fase 1546 (Logic)**: Al auto-cargar una corrida ampliada (ej. #48 de período 3/programa 2 con combos en período 2/programa 1), «Recalcular violaciones» reconstruía `_contextoActual` usando los combos de la UI, siendo rechazado por la guarda de `AgRecalculoViolacionesService` (F1532) por discordancia de contexto.
+3. **Fase 1547 (Warning)**: El bloque `finally` de `RecalcularViolacionesDesdeModuloRAsync` re-habilitaba incondicionalmente `btnRecalcularViolaciones.Enabled = true`, contradiciendo las guardas de F1539/F1541 para corridas sin individuo óptimo persistido.
+4. **Fase 1548 (Warning)**: La actualización de `dgvViolaciones` estaba supeditada a `ind != null`; si el individuo rehidratado era nulo tras el recálculo (ej. staging vacío), la grilla retenía violaciones obsoletas.
+5. **Fase 1545-bis (Warning)**: En `RefrescarComboCorridasAsync`, la salida temprana por `items.Count == 0` no fijaba `_claveFiltroCorridas`, repitiendo las 3 consultas en cada desplegado subsiguiente.
+
+### Cambios Aplicados
+1. **Fase 1545 (`AgCorridaSelectorTests.cs`)**:
+   - Uso de arrays tipados explícitamente `(int?, int?)[]` (`EsperadoPeriodoYPrograma`, etc.) con `.Should().Equal()`, evitando inferencia a `object`.
+   - Extracción de `.Subject` y `.Last()` con aserciones escalares sobre `IdPeriodo` e `IdPrograma`.
+2. **Fase 1546 (`AgFormGeneradorHorarios.cs`)**:
+   - Parámetros opcionales en `ConstruirContextoAsync(ct, idPeriodoForzado, idProgramaForzado, subunidadForzada)`.
+   - Consulta previa de la corrida mediante `_scheduleRepository.GetCorridaByIdAsync(idCorrida)` antes de evaluar `_contextoActual`. Si el contexto difiere en período o programa, se reconstruye forzando los metadatos de la corrida.
+   - Sincronización de `ActualizarVentanaSemestralAsync(periodoSel)` con el período forzado.
+3. **Fase 1547 (`AgFormGeneradorHorarios.cs`)**:
+   - En el `finally` de `RecalcularViolacionesDesdeModuloRAsync`, asignación condicional: `btnRecalcularViolaciones.Enabled = _ultimoResultado?.MejorIndividuo?.Id > 0;`.
+4. **Fase 1548 (`AgFormGeneradorHorarios.cs`)**:
+   - Asignación y refresco de `dgvViolaciones.DataSource` fuera del bloque condicional `if (ind != null)`, garantizando limpieza y coherencia del panel.
+5. **Fase 1545-bis (`AgFormGeneradorHorarios.cs`)**:
+   - Asignación `_claveFiltroCorridas = ClaveFiltroCorridas();` en la salida temprana de `items.Count == 0`.
+6. **Sincronización REGISTRY**:
+   - Fila `R-020` (`closed`) y contadores actualizados a `ronda: 297 / 298`, `fase: 1548 / 1549`.
+
+
+---
+
+## Ronda 298: Guardas de Cobertura de Aulas y Validación de Cabecera en Recálculo (Fases 1549–1550)
+
+### Contexto y Diagnóstico
+Revisión manual sobre la entrega R-020 (Ronda 297) detectó 2 riesgos críticos:
+1. **Fase 1549 (Logic)**: Al reconstruir el contexto forzando período y programa de la corrida, la selección de sede y cohortes sigue dependiendo de `cmbSedes`/árbol. Si la corrida pertenece a otra sede/cohorte, el contexto no contiene sus aulas. Como `AgValidadorReglas` omite evaluar genes cuyas aulas no están en `AulasPorId`, `individuo.Violaciones` resultaba vacío o parcial, persistiendo `hard_violations = 0` y habilitando indebidamente la promoción a producción.
+2. **Fase 1550 (Warning)**: Para corridas huérfanas en staging sin cabecera en `ag_corrida` (`IdPeriodo <= 0` o `IdPrograma <= 0`), la reconstrucción ignoraba los valores forzados en silencio y fallaba con un mensaje genérico de error de contexto.
+
+### Cambios Aplicados
+1. **Fase 1549 (`AgRecalculoViolacionesService.cs` y tests)**:
+   - Guarda explícita que extrae `aulasFaltantes` comparando las aulas con `IdAula > 0` de los genes del individuo contra `contexto.AulasPorId`.
+   - Si existen aulas faltantes, retorna `Result.Failure` explicativo indicando los IDs ausentes y requiriendo seleccionar la sede/cohortes correspondientes para evitar corrupción de `ag_violacion`.
+   - Suite de pruebas actualizada: `AgRecalculoViolacionesServiceTests.cs` incorpora `RecalcularAsync_ContextoNoCubreAulasDeLaCorrida_DevuelveFallo` y fixtures con cobertura de aulas base.
+2. **Fase 1550 (`AgFormGeneradorHorarios.cs`)**:
+   - Validación temprana previa a la reconstrucción del contexto: si `corrida.IdPeriodo <= 0 || corrida.IdPrograma <= 0`, muestra advertencia clara informando que la corrida carece de cabecera en `ag_corrida`.
+3. **Sincronización REGISTRY**:
+   - Fila `R-021` (`closed`) y contadores actualizados a `ronda: 298 / 299`, `fase: 1550 / 1551`.
+
+
+---
+
+## Ronda 299: Cobertura Integral de Contexto (Aulas, Asignaturas y Docentes) en Recálculo (Fase 1551)
+
+### Contexto y Diagnóstico
+Revisión manual sobre la entrega R-021 (Ronda 298) detectó:
+1. **Fase 1551 (Logic)**: La guarda F1549 comparaba exclusivamente `AulasPorId`. `AgValidadorReglas` omite igualmente la evaluación de reglas si la asignatura o el docente no están presentes en `contexto.AsignaturasPorId` o `contexto.DocentesPorId`. Si el contexto reconstruido cubre las aulas pero no las asignaturas o docentes de los genes (desfase de árbol de cohortes), las violaciones quedaban parciales y `ReemplazarViolacionesAsync` persistía métricas disminuidas.
+
+### Cambios Aplicados
+1. **Fase 1551 (`AgRecalculoViolacionesService.cs` y tests)**:
+   - Ampliada la guarda de cobertura para calcular `asignaturasFaltantes` (`IdAsignatura > 0` vs `AsignaturasPorId`) y `docentesFaltantes` (`IdTercero > 0` vs `DocentesPorId`).
+   - Si cualquiera de los tres conjuntos tiene elementos, aborta con `Result.Failure` descriptivo indicando las cantidades e IDs faltantes.
+   - Fixture de tests actualizado con asignaturas y docentes base en `ContextoVacio()`, y agregado test `RecalcularAsync_ContextoSinAsignaturasDeLaCorrida_DevuelveFallo`.
+2. **Sincronización REGISTRY**:
+   - Fila `R-022` (`closed`) y contadores actualizados a `ronda: 299 / 300`, `fase: 1551 / 1552`.
+
+
+---
+
+## Ronda 300: Ajuste de Guarda de Cobertura en Recálculo a Ejes Activos del Validador (Fases 1552–1553)
+
+### Contexto y Diagnóstico
+Revisión manual sobre la entrega R-022 (Ronda 299) identificó:
+1. **Fase 1552 (Logic)**: `AgValidadorReglas` no consulta `DocentesPorId` en ninguna de sus reglas (0 referencias). Por consiguiente, verificar `docentesFaltantes` no aportaba protección alguna frente a violaciones omitidas, y provocaba el rechazo injustificado de recálculos legítimos cuando la corrida contenía docentes no registrados en el contexto actual (docentes interinstitucionales, de otra sede o fuera del pool).
+2. **Fase 1553 (Warning)**: Comentario obsoleto en cabecera de la guarda que mencionaba docentes pese a haber sido excluidos en F1552.
+
+### Cambios Aplicados
+1. **Fase 1552 (`AgRecalculoViolacionesService.cs` y tests)**:
+   - Removida la comprobación de `docentesFaltantes` de la guarda bloqueante en `AgRecalculoViolacionesService.cs`, restringiendo la validación estricta a los dos ejes efectivamente consultados por las reglas (`AulasPorId` y `AsignaturasPorId`).
+   - Agregada prueba unitaria `RecalcularAsync_DocenteAusenteDelContexto_NoBloqueaRecalculo` en `AgRecalculoViolacionesServiceTests.cs`.
+2. **Fase 1553 (`AgRecalculoViolacionesService.cs`)**:
+   - Comentario alineado con la regla activa: «abortar si el contexto no cubre las aulas o asignaturas de la corrida».
+3. **Sincronización REGISTRY**:
+   - Fila `R-023` (`closed`) y contadores actualizados a `ronda: 300 / 301`, `fase: 1553 / 1554`.
+
+
+---
+
+## Ronda 302: La selección programática del selector de corridas nunca dispara la carga (Fases 1554–1555)
+
+### Contexto y Diagnóstico
+Revisión manual de la integración 1542–1552 contra las capturas de ejecución (Wave 301):
+1. **Fase 1554 (Logic)**: `_actualizandoComboCorridas` descarta la carga de la corrida preseleccionada. El refresco del combo fija `SelectedIndex` dentro del bloque con `_actualizandoComboCorridas = true`; el handler `SelectedIndexChanged` retorna inmediatamente por guard (`:2329`) y no existía carga posterior tras el `finally`. Al haber un único ítem en el combo (`#48`), el usuario no puede forzar un cambio de selección manual y la corrida nunca se carga en el Módulo R.
+2. **Fase 1555 (Warning)**: Métricas y grids obsoletos en Módulo R cuando la carga no se completa. Si la carga falla o es rechazada, `lblAptitud`, `lblHardViolaciones`, `lblVacantes`, `dgvHorariosGenerados` y `dgvViolaciones` mantenían los valores de una corrida previa o estado no representativo (p. ej. `1.000 / 0 / 0`).
+
+### Cambios Aplicados
+1. **Fase 1554 (`AgFormGeneradorHorarios.cs`)**:
+   - Forzada la invocación explícita `await CargarCorridaDesdeComboAsync();` inmediatamente después del bloque `try-finally` que libera `_actualizandoComboCorridas = false`, siempre que `cmbCargarCorridas.SelectedItem` sea un `CorridaStagingItem` válido con `IdCorrida != _idCorridaCargada`.
+2. **Fase 1555 (`AgFormGeneradorHorarios.cs`)**:
+   - En la guarda `if (!cargada)` de `CargarCorridaDesdeComboAsync`, limpiar explícitamente etiquetas de métricas a sus valores neutrales (`—`) y desvincular los data sources de `dgvHorariosGenerados` y `dgvViolaciones`.
+3. **Sincronización REGISTRY**:
+   - Fila `R-024` (`closed`) y contadores actualizados a `ronda: 302 / 303`, `fase: 1555 / 1556`.
+
+
+---
+
+## Ronda 303: Guarda de Reentrada en RefrescarComboCorridasAsync (Fase 1556)
+
+### Contexto y Diagnóstico
+Revisión manual sobre la entrega Wave 302 / Ronda 302 (Fases 1554–1555):
+1. **Fase 1556 (Logic)**: `RefrescarComboCorridasAsync` carecía de una guarda de ejecución concurrente. El refresco del selector se dispara desde dos vías asíncronas sin serialización: en la carga inicial (`AgFormGeneradorHorarios.cs:270`) y en cada evento `DropDown` (`:404`). Si el usuario interactúa con el combo mientras aún corre la carga inicial, ambas ejecuciones manipulaban concurrentemente los ítems de `cmbCargarCorridas` y, tras la incorporación de la Fase 1554, ambas detonaban `CargarCorridaDesdeComboAsync` en paralelo, generando una condición de carrera que podía dejar las colecciones de `dgvHorariosGenerados`, `dgvViolaciones` y `_idCorridaCargada` desalineadas.
+
+### Cambios Aplicados
+1. **Fase 1556 (`AgFormGeneradorHorarios.cs`)**:
+   - Declarado el campo `private bool _refrescandoComboCorridas;`.
+   - Agregada guarda al inicio de `RefrescarComboCorridasAsync`: `if (cmbCargarCorridas == null || _refrescandoComboCorridas) return;` con asignación `_refrescandoComboCorridas = true;`.
+   - Reestructurado el manejo de excepciones para incorporar un bloque `finally { _refrescandoComboCorridas = false; }` que garantiza la liberación de la guarda en cualquier camino de salida o error.
+2. **Sincronización REGISTRY**:
+   - Fila `R-025` (`closed`) y contadores actualizados a `ronda: 303 / 304`, `fase: 1556 / 1557`.
+
+
+---
+
+## Ronda 304: Carga del Staging Sin Individuo Óptimo y Advertencia en Selector (Fases 1557–1558)
+
+### Contexto y Diagnóstico
+Revisión manual y diagnóstico con datos reales de vault (#48 con 180 sesiones en staging pero sin cabecera en `ag_corrida` ni fila en `ag_individuo`):
+1. **Fase 1557 (Logic)**: En `CargarModuloResultadosAsync`, el early-return por falta de `MejorIndividuo` ocurría antes de consultar `GetSesionesStagingAsync`. Corridas con staging materializado pero sin resultado AG (o staging huérfano) retornaban `false`, limpiando grids y abortando la visualización.
+2. **Fase 1558 (Warning)**: El selector de corridas (`AgCorridaSelector.FormatearEtiqueta`) no indicaba si una corrida disponía o no de resultado genético persistido, induciendo al usuario a esperar violaciones y métricas inexistentes.
+
+### Cambios Aplicados
+1. **Fase 1557 (`AgFormGeneradorHorarios.cs`)**:
+   - Extraído el método `private async Task<bool> CargarGridStagingAsync(long idCorrida)` para desacoplar la carga de grillas de la rehidratación del individuo óptimo.
+   - En `CargarModuloResultadosAsync`, se invoca `CargarGridStagingAsync` en primer orden.
+   - Si `_ultimoResultado?.MejorIndividuo == null`, se fija el estado visual de "staging sin resultado AG (solo lectura)", se deshabilitan botones de acción/promoción/recálculo, y se retorna `true` permitiendo inspeccionar las sesiones materializadas en `dgvHorariosGenerados`.
+   - Agregada traza de diagnóstico en `CargarGridStagingAsync` que advierte si las sesiones referencian `IdIndividuo` huérfanos sin correspondencia en `ag_individuo`.
+2. **Fase 1558 (`CorridaStagingItem.cs`, `VinculacionQueryRepository.cs`, `AgCorridaSelector.cs`, `AgCorridaSelectorTests.cs`)**:
+   - Agregada propiedad `IdIndividuoOptimo` y getter `TieneIndividuoOptimo` a `CorridaStagingItem`.
+   - En `VinculacionQueryRepository.GetCorridasStagingAsync`, proyectado `COALESCE(MAX(c.id_individuo_optimo), 0) AS IdIndividuoOptimo` (y en la rama UNION sin staging).
+   - En `AgCorridaSelector.FormatearEtiqueta`, si `corrida.IdCorrida > 0 && !corrida.TieneIndividuoOptimo`, se añade la indicación `"sin resultado AG"`.
+   - Pruebas unitarias actualizadas en `AgCorridaSelectorTests.cs` validando el formateo de etiquetas con y sin resultado AG.
+3. **Sincronización REGISTRY**:
+   - Fila `R-026` (`closed`) y contadores actualizados a `ronda: 304 / 305`, `fase: 1558 / 1559`.
+
+
+---
+
+## Ronda 305: Hidratación de ag_violacion al Rehidratar la Corrida en Módulo R (Fase 1559)
+
+### Contexto y Diagnóstico
+Revisión manual y diagnóstico del panel «Violaciones de Reglas» al seleccionar corridas en Módulo R:
+1. **Fase 1559 (Logic)**: `dgvViolaciones` se alimenta únicamente desde `_ultimoResultado.MejorIndividuo.Violaciones`. Al rehidratar una corrida con resultado existente (como `#1` con 46 violaciones en SQLite), `GetIndividuoByIdAsync` solo recuperaba columnas de individuo y genes en `ag_gen`, omitiendo la lectura de `ag_violacion`. Como consecuencia, el panel de violaciones permanecía vacío salvo que el usuario ejecutara manualmente «Recalcular violaciones». Además, `IAgScheduleRepository` no exponía método lector para `ag_violacion`.
+
+### Cambios Aplicados
+1. **Fase 1559 (`IAgScheduleRepository.cs`, `AgScheduleRepository.cs`, `AgFormGeneradorHorarios.cs`, `AgScheduleRepositoryNullGuardTests.cs`)**:
+   - Agregado a `IAgScheduleRepository` el método `Task<Result<IReadOnlyCollection<AgViolacion>>> GetViolacionesByIndividuoAsync(long idIndividuo, CancellationToken ct);`.
+   - Implementado `GetViolacionesByIndividuoAsync` en `AgScheduleRepository` consultando `ag_violacion` filtrado por `id_individuo` y ordenado por `es_dura DESC, regla`.
+   - En `AgFormGeneradorHorarios.CargarGridStagingAsync`, si `indActual.Id > 0` y su colección `Violaciones` está vacía o nula, invocar `GetViolacionesByIndividuoAsync` y asignarla a `indActual.Violaciones` antes de mapear hacia `dgvViolaciones`.
+   - Añadido log explicativo ante corridas sin resultado AG: `[AG] Corrida sin resultado AG: no hay violaciones persistidas que mostrar.`.
+   - Corregido cierre accidental de llave detectado en `AgFormGeneradorHorarios.cs:2250`.
+   - Agregada prueba unitaria `GetViolacionesByIndividuoAsync_WhenViolationsExist_ReturnsOrderedByEsDuraDescAndRegla` en `AgScheduleRepositoryNullGuardTests.cs`.
+2. **Sincronización REGISTRY**:
+   - Fila `R-027` (`closed`) y contadores actualizados a `ronda: 305 / 306`, `fase: 1559 / 1560`.
+
+
+---
+
+## Ronda 306: Ajuste de Layout en Módulo R y Separación de Botón Promover (Fase 1562)
+
+### Contexto y Diagnóstico
+Revisión manual del layout del panel superior `pnlHeaderResultados` en Módulo R:
+1. **Fase 1562 (GUI / Layout)**: `cmbCargarCorridas` poseía un ancho fijo de 185 px que truncaba visualmente las etiquetas descriptivas de las corridas (`#48 · 2027-01 · APT-52 · VALLE · 180 ses`). Además, `btnPromoverProduccion` estaba ubicado en posición fija `Location = (740, 10)` sin propiedad `Anchor`, provocando que en un contenedor de 1100 px quedara pegado al combo y fuera solapado por el desplegable del selector (`DropDownWidth = 430`).
+
+### Cambios Aplicados
+1. **Fase 1562 (`AgFormGeneradorHorarios.Designer.cs`)**:
+   - Dimensionado de diseño de `pnlHeaderResultados.Size` actualizado a `(1100, 50)`.
+   - Ampliado el ancho desplegable `cmbCargarCorridas.DropDownWidth = 480`.
+   - Ampliado el control `cmbCargarCorridas.Size` de 185 a 330 px (`Size = (330, 25)`), cubriendo de X=545 a X=875.
+   - Reubicado `btnPromoverProduccion` a `Location = (890, 10)` y configurado `Anchor = Top | Right`, garantizando 15 px de separación mínima en resolución base y anclaje al borde derecho al maximizar.
+2. **Sincronización REGISTRY**:
+   - Fila `R-028` (`closed`) y contadores actualizados a `ronda: 306 / 307`, `fase: 1562 / 1563`.

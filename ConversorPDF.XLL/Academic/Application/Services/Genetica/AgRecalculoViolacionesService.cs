@@ -38,6 +38,21 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             if (!corrida.IdIndividuoOptimo.HasValue || corrida.IdIndividuoOptimo.Value <= 0)
                 return Result.Failure<AgRecalculoResultado>("La corrida no tiene individuo óptimo persistido; ejecute el AG antes de recalcular.");
 
+            // Fase 1532: el contexto debe corresponder a la corrida (evita sobrescribir con datos ajenos)
+            if (contexto.IdPeriodo != corrida.IdPeriodo || contexto.IdPrograma != corrida.IdPrograma)
+                return Result.Failure<AgRecalculoResultado>(
+                    $"El contexto del AG no corresponde a la corrida #{idCorrida}: " +
+                    $"contexto={contexto.IdPeriodo}/{contexto.IdPrograma}, corrida={corrida.IdPeriodo}/{corrida.IdPrograma}. " +
+                    "Seleccione el período y programa de la corrida y vuelva a intentarlo.");
+
+            // Fase 1538: solo comparar cuando ambos lados aportan subunidad (evita bloquear sesiones sin sync)
+            bool contextoConSubunidad = !string.IsNullOrWhiteSpace(contexto.Subunidad);
+            bool corridaConSubunidad = !string.IsNullOrWhiteSpace(corrida.Subunidad);
+            if (contextoConSubunidad && corridaConSubunidad &&
+                !string.Equals(contexto.Subunidad.Trim(), corrida.Subunidad.Trim(), System.StringComparison.OrdinalIgnoreCase))
+                return Result.Failure<AgRecalculoResultado>(
+                    $"La territorial del contexto ('{contexto.Subunidad}') no coincide con la de la corrida ('{corrida.Subunidad}').");
+
             var indRes = await _scheduleRepository.GetIndividuoByIdAsync(corrida.IdIndividuoOptimo.Value, ct);
             if (indRes.IsFailure)
                 return Result.Failure<AgRecalculoResultado>("No se pudo leer el individuo óptimo: " + indRes.Error);
@@ -46,11 +61,54 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             if (individuo.Genes == null || individuo.Genes.Count == 0)
                 return Result.Failure<AgRecalculoResultado>("El individuo óptimo no tiene genes persistidos; no es posible recalcular.");
 
-            contexto.IdCorrida = idCorrida;
-            if (contexto.AulasPorId == null || contexto.AulasPorId.Count == 0)
-                contexto.ConstruirIndices();
+            // Fase 1533 & Fase 1540: Validar que las colecciones requeridas del contexto estén instanciadas antes de ConstruirIndices
+            if (contexto.Aulas == null || contexto.Bloques == null || contexto.Asignaturas == null ||
+                contexto.Docentes == null || contexto.Sedes == null || contexto.PoolDocentes == null ||
+                contexto.Festivos == null || contexto.AulaAsignaturas == null)
+                return Result.Failure<AgRecalculoResultado>(
+                    "El contexto del AG está incompleto (aulas/bloques/asignaturas/docentes/sedes/pool/festivos). Reconstruya el contexto y reintente.");
 
-            _validador.Evaluar(individuo, contexto);
+            // Fase 1534: Preservar IdCorrida previo del contexto para no mutar el estado compartido del llamador
+            long idCorridaPrevio = contexto.IdCorrida;
+            contexto.IdCorrida = idCorrida;
+            try
+            {
+                if (contexto.AulasPorId == null || contexto.AulasPorId.Count == 0)
+                    contexto.ConstruirIndices();
+
+                // Fase 1549, 1551 & 1553: abortar si el contexto no cubre las aulas o asignaturas de la corrida
+                var aulasFaltantes = individuo.Genes
+                    .Where(g => g.IdAula > 0)
+                    .Select(g => g.IdAula)
+                    .Distinct()
+                    .Where(id => contexto.AulasPorId == null || !contexto.AulasPorId.ContainsKey(id))
+                    .ToList();
+
+                var asignaturasFaltantes = individuo.Genes
+                    .Where(g => g.IdAsignatura > 0)
+                    .Select(g => g.IdAsignatura)
+                    .Distinct()
+                    .Where(id => contexto.AsignaturasPorId == null || !contexto.AsignaturasPorId.ContainsKey(id))
+                    .ToList();
+
+                // Fase 1549, 1551 & 1552: solo aulas y asignaturas condicionan la evaluación
+                // (AgValidadorReglas usa AulasPorId y AsignaturasPorId). Los docentes no participan
+                // en el cálculo de violaciones: exigirlos rechazaría recálculos legítimos.
+                if (aulasFaltantes.Count > 0 || asignaturasFaltantes.Count > 0)
+                    return Result.Failure<AgRecalculoResultado>(
+                        "El contexto reconstruido no cubre la corrida: " +
+                        $"{aulasFaltantes.Count} aula(s), {asignaturasFaltantes.Count} asignatura(s) ausentes " +
+                        $"(aulas: {string.Join(", ", aulasFaltantes.Take(5))}; " +
+                        $"asignaturas: {string.Join(", ", asignaturasFaltantes.Take(5))}). " +
+                        "Seleccione la sede y las cohortes de la corrida antes de recalcular; " +
+                        "de lo contrario se persistirían violaciones incompletas.");
+
+                _validador.Evaluar(individuo, contexto);
+            }
+            finally
+            {
+                contexto.IdCorrida = idCorridaPrevio;
+            }
 
             var violaciones = individuo.Violaciones ?? new List<AgViolacion>();
             var porRegla = violaciones

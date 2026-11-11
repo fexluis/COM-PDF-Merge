@@ -49,6 +49,17 @@ namespace ConversorPDF.Tests.Academic.Infrastructure.Persistence
                         parametros_json TEXT NOT NULL DEFAULT '{}',
                         subunidad TEXT NOT NULL DEFAULT ''
                     );
+
+                    CREATE TABLE ag_violacion (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        id_individuo INTEGER NOT NULL,
+                        id_gen INTEGER NULL,
+                        regla INTEGER NOT NULL,
+                        es_dura INTEGER NOT NULL DEFAULT 1,
+                        mensaje TEXT NOT NULL DEFAULT '',
+                        detalle_json TEXT NOT NULL DEFAULT '{}',
+                        subunidad TEXT NOT NULL DEFAULT ''
+                    );
                 ");
             }
         }
@@ -111,6 +122,44 @@ namespace ConversorPDF.Tests.Academic.Infrastructure.Persistence
                 ((string)row.parametros_json).Should().Be("{}");
                 ((string)row.subunidad).Should().Be(string.Empty);
             }
+        }
+
+        [Fact]
+        public async Task GetViolacionesByIndividuoAsync_WhenViolationsExist_ReturnsOrderedByEsDuraDescAndRegla()
+        {
+            // Arrange
+            using (var conn = new SQLiteConnection(_connectionString))
+            {
+                conn.Open();
+                conn.Execute(@"
+                    INSERT INTO ag_violacion (id_individuo, id_gen, regla, es_dura, mensaje, detalle_json, subunidad)
+                    VALUES (1, 10, 3, 0, 'Violación Soft 1', '{}', 'VALLE');
+
+                    INSERT INTO ag_violacion (id_individuo, id_gen, regla, es_dura, mensaje, detalle_json, subunidad)
+                    VALUES (1, 11, 1, 1, 'Violación Hard 1', '{}', 'VALLE');
+
+                    INSERT INTO ag_violacion (id_individuo, id_gen, regla, es_dura, mensaje, detalle_json, subunidad)
+                    VALUES (2, 20, 1, 1, 'Violación Otro Individuo', '{}', 'VALLE');
+                ");
+            }
+
+            var repo = new AgScheduleRepository(() => new SQLiteConnection(_connectionString));
+
+            // Act
+            var result = await repo.GetViolacionesByIndividuoAsync(1, CancellationToken.None);
+
+            // Assert
+            result.IsSuccess.Should().BeTrue();
+            result.Value.Should().HaveCount(2);
+
+            var lista = result.Value.ToList();
+            lista[0].EsDura.Should().BeTrue();
+            lista[0].Mensaje.Should().Be("Violación Hard 1");
+            lista[0].Regla.Should().Be((AgReglaViolacion)1);
+
+            lista[1].EsDura.Should().BeFalse();
+            lista[1].Mensaje.Should().Be("Violación Soft 1");
+            lista[1].Regla.Should().Be((AgReglaViolacion)3);
         }
     }
 }
