@@ -9270,3 +9270,215 @@ Se completó la implementación y verificación de las 6 tareas del plan MUV:
 | Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
 |---|---|---|---|---|---|
 | F1562 | [X] Sí | [X] Sí | [X] Sí | Sí | `AgFormGeneradorHorarios.Designer.cs:1006,1044,1049,1064,1069` |
+
+---
+
+## Ronda 307: Purga sin huérfanos y reparación de corridas del AG (Fases 1563–1566)
+
+### Evaluación Crítica de las Fases
+
+#### 1. Fase 1563 — Purga anclada a `id_corrida`
+- **Estado:** ACEPTADA
+- **Hallazgo:**
+  - *Diagnóstico Crítico:* `LimpiarStagingAsync(idPeriodo, idPrograma)` borraba `ag_corrida`, `ag_individuo`,
+    `ag_violacion`, `ag_bitacora` y `ag_promocion` por el par de la cabecera, pero `ag_vinculaciones`,
+    `ag_sesiones` y `ag_gen` por el par almacenado en cada fila. Cuando el programa del combo difiere del
+    programa de la asignatura (APT-53 vs APT-52) el staging sobrevive sin cabecera.
+  - *Causa Raíz:* Purga basada en columnas denormalizadas en lugar de la clave `id_corrida`.
+  - *Impacto Confirmado:* Corrida #48 con 180 sesiones visibles, sin violaciones y sin promoción posible.
+  - *Evidencia:* `log_20261110.txt:346`, `ag_vinculaciones(idprograma=2)` vs `[Purga] idPrograma=1`.
+- **Acción Aplicada:** `idsDel = ag_corrida ∪ ag_vinculaciones` por el par solicitado; todos los borrados por
+  `id_corrida IN @idsDel`; limpieza de genes/violaciones de individuos referenciados por el staging; invariante
+  post-purga con `LoggerHelper.Error`; guardas `TablaExiste`.
+- **Archivo Afectado:** `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgScheduleRepository.cs`
+
+#### 2. Fase 1564 — Fallar rápido en el flujo de ejecución
+- **Estado:** ACEPTADA
+- **Hallazgo:**
+  - *Diagnóstico Crítico:* `UpdateCorridaAsync` ejecutaba un `UPDATE` sin comprobar filas afectadas: si la
+    corrida había sido purgada, el flujo continuaba y materializaba staging sin cabecera.
+  - *Causa Raíz:* Ausencia de verificación de `rowcount` y de los resultados de persistencia en el orquestador.
+- **Acción Aplicada:** `UpdateCorridaAsync` devuelve `Failure` con 0 filas; `EjecutarOptimizacionAsync` aborta
+  antes de materializar; log del conteo real de `ag_violacion` tras `SaveIndividuoAsync`.
+- **Archivos Afectados:** `AgScheduleRepository.cs`, `AgFormGeneradorHorarios.cs`
+
+#### 3. Fase 1565 — Observabilidad y feedback en el Módulo R
+- **Estado:** ACEPTADA
+- **Hallazgo:**
+  - *Diagnóstico Crítico:* `CargarModuloResultadosAsync` descartaba `corridaRes.Error` y anunciaba «sin cabecera»
+    incluso ante errores de lectura; `PromoverAProduccionAsync` retornaba en silencio cuando no había individuo,
+    percibiéndose como «promover no funciona».
+- **Acción Aplicada:** registro del error real, tres estados diferenciados (huérfana / sin individuo / error),
+  habilitación de «Recalcular violaciones» como vía de reparación y mensaje explicativo en la promoción.
+- **Archivo Afectado:** `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
+
+#### 4. Fase 1566 — Reparación de la corrida huérfana sin re-ejecutar el AG
+- **Estado:** ACEPTADA
+- **Hallazgo:**
+  - *Diagnóstico Crítico:* Con 30 genes intactos en `ag_gen`, la corrida era recuperable, pero no existía
+    ninguna ruta para reconstruir `ag_corrida`/`ag_individuo` con los ids que referencia el staging.
+- **Acción Aplicada:** nuevos métodos de repositorio (`GetGenesByIndividuoAsync`, `DetectarCorridaHuerfanaAsync`,
+  `ReinsertarCabeceraHuerfanaAsync`), DTOs `AgCorridaHuerfana`/`AgReparacionCorridaResultado` y
+  `AgReparacionCorridaService` (valida cobertura del contexto antes de escribir, evalúa con el evaluador real y
+  persiste `ag_violacion`). Se invoca desde el botón existente «Recalcular violaciones».
+- **Archivos Afectados:** `IAgScheduleRepository.cs`, `AgScheduleRepository.cs`, `AgCorridaHuerfana.cs`,
+  `AgReparacionCorridaResultado.cs`, `IAgReparacionCorridaService.cs`, `AgReparacionCorridaService.cs`,
+  `AgFormGeneradorHorarios.cs`, `ConversorPDF.XLL.csproj`
+
+#### 5. Fase 1567 — Nombre de la regla en el detalle de violaciones
+- **Estado:** ACEPTADA
+- **Hallazgo:**
+  - *Diagnóstico Crítico:* `ag_violacion.regla` está declarada `INTEGER` en el vault, pero el código persiste el
+    **nombre** de la regla. Al leer, System.Data.SQLite aplica la afinidad de la columna y devuelve `0`, por lo que
+    el panel mostraba «regla 0» y la vista por fechas perdía el identificador de la regla.
+  - *Causa Raíz:* ausencia de `CAST` en los dos lectores (`GetViolacionesByIndividuoAsync` y
+    `FormVerVinculaciones.CargarViolacionesAsync`).
+  - *Impacto Confirmado:* el detalle de violaciones quedaba ilegible para auditoría incluso con las filas presentes.
+  - *Evidencia:* copia real del vault — `typeof(regla)='text'` con `'R1_SuperposicionDocente'` leído como `0`.
+- **Acción Aplicada:** `CAST(regla AS TEXT)` en ambos lectores y prueba de regresión con la columna declarada
+  `INTEGER`. Verificado con arnés end-to-end sobre copia del vault real.
+- **Archivos Afectados:** `AgScheduleRepository.cs`, `FormVerVinculaciones.cs`,
+  `ConversorPDF.Tests/Integration/Academic/AgScheduleRepositoryHuerfanasTests.cs`
+
+### Verificación de Principios (Ronda 307)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1563 | [X] Sí | [X] Sí | [X] Sí | Sí | `AgScheduleRepository.cs:963-1113`, `AgScheduleRepositoryHuerfanasTests.cs:186-268` |
+| F1564 | [X] Sí | [X] Sí | [X] Sí | Sí | `AgScheduleRepository.cs:335-345`, `AgFormGeneradorHorarios.cs:1829-1893` |
+| F1565 | [X] Sí | [X] Sí | [X] Sí | Sí | `AgFormGeneradorHorarios.cs:2017-2099`, `:2506-2510`, `:2809-2821` |
+| F1566 | [X] Sí | [X] Sí | [X] Sí | Sí | `AgReparacionCorridaService.cs:1-230`, `AgScheduleRepository.cs:1120-1278`, `AgReparacionCorridaServiceTests.cs` |
+| F1567 | [X] Sí | [X] Sí | [X] Sí | Sí | `AgScheduleRepository.cs:574-580`, `FormVerVinculaciones.cs:830-836`, `AgScheduleRepositoryHuerfanasTests.cs:372-397` |
+
+### Nota operativa
+La reparación devuelve la visibilidad de las violaciones y la posibilidad de aprobar la corrida; la promoción
+sigue exigiendo `HARD = 0` (`AgPromotorVinculaciones:85-88`). La corrida #48 (HARD=95) requerirá corregir la
+programación y volver a ejecutar el AG.
+
+---
+
+## Ronda 308: Validador de Reglas AG y Oleadas Temporales (Fases 1568–1574)
+
+### Evaluación Crítica de las Fases
+
+#### 1. Fase 1568 — Helper de Solape Temporal `AgVentanaSolape`
+- **Estado:** ACEPTADA
+- **Hallazgo:**
+  - *Diagnóstico Crítico:* La detección de solapes se realizaba puramente a nivel de bloque horario y día de semana. Faltaba una utilidad pura y universal para determinar si dos ventanas de fechas se intersecan, manteniendo una semántica conservadora ante fechas nulas.
+- **Acción Aplicada:** Implementado `AgVentanaSolape` con `SeSolapan` y `AgruparPorSolape`, registrado en `.csproj` con 5 pruebas unitarias.
+- **Archivos Afectados:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgVentanaSolape.cs`, `ConversorPDF.XLL.csproj`, `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgVentanaSolapeTests.cs`.
+
+#### 2. Fase 1569 — Reglas R1, R2, R3, R4 y R14 conscientes de ventanas de fechas
+- **Estado:** ACEPTADA
+- **Hallazgo:**
+  - *Diagnóstico Crítico:* En el caso real #48, se reportaban 101 infracciones HARD porque múltiples asignaturas modulares en oleadas consecutivas comparten la misma aula, bloque y día.
+- **Acción Aplicada:** En `AgValidadorReglas.cs`, se filtran colisiones en R1 (docente), R2 (aula), R3 (grupo), R4 (dos asignaturas mismo día y franja) y R14 (solape de intervalo horario) invocando `AgVentanaSolape.SeSolapan`.
+- **Archivos Afectados:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgValidadorReglas.cs`, `AgValidadorReglasTests.cs`.
+
+#### 3. Fase 1570 — R5 Concurrencia de asignaturas evaluada por día real continuo
+- **Estado:** ACEPTADA
+- **Hallazgo:**
+  - *Diagnóstico Crítico:* La agrupación por semanas ISO cortaba artificialmente asignaturas que empezaban o terminaban a mitad de semana, penalizando erróneamente oleadas válidas.
+- **Acción Aplicada:** Se sustituyó la lógica de semanas ISO por un recorrido continuo día por día sobre el intervalo de la cohorte contra `maxCarriles`, emitiendo una infracción consolidada por tramo contiguo.
+- **Archivos Afectados:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgValidadorReglas.cs`, `AgValidadorReglasTests.cs`.
+
+#### 4. Fase 1571 — Aulas con Estado Aprobado permitidas en R4
+- **Estado:** ACEPTADA
+- **Hallazgo:**
+  - *Diagnóstico Crítico:* Un aula en estado `Aprobado` era rechazada en R4 de compatibilidad, cuando representa un aula formalmente validada y apta para asignación.
+- **Acción Aplicada:** R4 admite tanto `AgEstadoAula.Disponible` como `AgEstadoAula.Aprobado`.
+- **Archivos Afectados:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgValidadorReglas.cs`, `AgValidadorReglasTests.cs`.
+
+#### 5. Fase 1572 — Asignaturas requeridas acotadas al alcance de las aulas cubiertas
+- **Estado:** ACEPTADA
+- **Hallazgo:**
+  - *Diagnóstico Crítico:* Asignaturas pertenecientes a aulas no contempladas en la optimización eran marcadas como faltantes si no aparecían en el cromosoma.
+- **Acción Aplicada:** Acotada la exigencia a asignaturas mapeadas en `contexto.AulaAsignaturas` para las aulas presentes en la corrida.
+- **Archivos Afectados:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgValidadorReglas.cs`, `AgValidadorReglasTests.cs`.
+
+#### 6. Fase 1573 — Pruebas de integración para escenarios de oleadas
+- **Estado:** ACEPTADA
+- **Hallazgo:**
+  - *Diagnóstico Crítico:* Se requería validar de extremo a extremo los casos reales inspirados en la corrida #48 (Sábados dos bloques, Jueves 3 asignaturas, Viernes misma aula, etc.).
+- **Acción Aplicada:** Creada la suite `AgValidadorReglasOleadasTests.cs` con 6 pruebas integradas.
+- **Archivos Afectados:** `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgValidadorReglasOleadasTests.cs`.
+
+#### 7. Fase 1574 — Verificación general y documentación
+- **Estado:** ACEPTADA
+- **Acción Aplicada:** Verificación con `scripts/verify.ps1 -Mode Fast` (1123/1123 PASS), generación de artículo técnico en `docs/articles/changes/2026-11-11-validador-oleadas.md`, y sellado de fila R-030 en `REGISTRY.md`.
+- **Verificación sobre datos reales (#48):** se ejecutó el validador corregido contra los 30 genes reales del individuo #33 reconstruyendo el contexto desde el vault ⇒ **HARD = 0, SOFT = 0, 0 filas**; los 101/125 HARD previos eran falsos positivos. Se confirmó además que `ag_gen.dias_patron` está poblado (`"4,5"` / `"6"`) y que R6/R13 agrupan correctamente por carril.
+- **Corrección del fixture:** `AgValidadorReglasOleadasTests` usaba `Franja = "M"/"T"` (contrato canónico: `MANANA`/`TARDE`), provocando un fallo espurio de `R11_DuracionSesionInvalida`; corregido y con diagnóstico de violaciones en las aserciones.
+
+
+---
+
+### Verificación de Principios (Ronda 308)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1568 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgVentanaSolape.cs:1-68`, `AgVentanaSolapeTests.cs:1-55` |
+| F1569 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgValidadorReglas.cs:105-190, 240-330`, `AgValidadorReglasTests.cs` |
+| F1570 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgValidadorReglas.cs:382-455`, `AgValidadorReglasTests.cs:630-670` |
+| F1571 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgValidadorReglas.cs:495-502`, `AgValidadorReglasTests.cs:672-690` |
+| F1572 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgValidadorReglas.cs:52-73`, `AgValidadorReglasTests.cs:692-720` |
+| F1573 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgValidadorReglasOleadasTests.cs:1-342` (6/6 PASS) |
+| F1574 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `REGISTRY.md`, `2026-11-11-validador-oleadas.md`, `verify.ps1` (1123 PASS) |
+
+
+
+---
+
+## Ronda 309: Contexto Homónimo y Anclaje de Filtros en el Módulo R (Fases 1575–1578)
+
+### Evaluación Crítica de las Fases
+
+#### 1. Fase 1575 — Respetar el programa de la corrida en `ConstruirContextoAsync`
+- **Estado:** ACEPTADA
+- **Hallazgo:**
+  - *Diagnóstico Crítico:* la resolución de homónimos (Fases 446/477) sustituía el programa **forzado** de la corrida
+    (APT-52, id 2) por el homónimo con más asignaturas del semestre (APT-53, id 1). El contexto quedaba en `3/1`
+    frente a una corrida `3/2`, por lo que `AgRecalculoViolacionesService` (Fase 1532) abortaba y el validador nuevo
+    nunca se ejecutaba. El panel seguía mostrando 125 HARD / 101 filas persistidas el 11/11 a las 14:18 con el
+    validador antiguo (**no era una regresión**).
+  - *Causa Raíz:* el override de homónimos se aplicaba después del forzado y sin excepción.
+- **Acción Aplicada:** con `idProgramaForzado > 0` se omite la resolución de homónimos; `ProgramasAlcance` se fija al
+  programa de la corrida; traza `ProgramaHomonimoOmitido`.
+- **Archivo Afectado:** `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
+
+#### 2. Fase 1576 — Detalle staging anclado a la corrida
+- **Estado:** ACEPTADA
+- **Hallazgo:** `AbrirDetalleSesionesModoAgAsync` filtraba `vw_AgSesionesDetalle` con
+  `ProgramasAlcance/IdPrograma` del árbol (1) mientras el staging de la corrida es programa (2) ⇒ «No se encontraron
+  sesiones registradas…».
+- **Acción Aplicada:** si hay corrida cargada, período y programa se leen de `ag_corrida`; log con los filtros usados.
+- **Archivo Afectado:** `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
+
+#### 3. Fase 1577 — Guarda de coherencia de contexto en la reparación
+- **Estado:** ACEPTADA
+- **Hallazgo:** `AgReparacionCorridaService` no comparaba el período/programa del contexto con los del staging; la
+  reparación inicial evaluó con el pensum del programa homónimo y persistió violaciones falsas.
+- **Acción Aplicada:** rechazo previo a cualquier escritura cuando `contexto.IdPeriodo/IdPrograma` no coincide con la
+  corrida, con mensaje accionable que cita ambos pares.
+- **Archivo Afectado:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgReparacionCorridaService.cs`
+
+#### 4. Fase 1578 — Verificación y cierre
+- **Estado:** ACEPTADA
+- **Acción Aplicada:** test `RepararAsync_ConContextoDeOtroPrograma_FallaSinEscribir`; suite **1124/1124 PASS**;
+  recálculo real sobre copia del vault (`RecalcularAsync(48, contexto 3/2)`): **125 → 0 HARD** y **101 → 0 filas**;
+  artículo `docs/articles/changes/2026-11-11-contexto-homonimo-modulo-r.md`.
+- **Archivos Afectados:** `AgReparacionCorridaServiceTests.cs`, documentación y registro.
+
+### Verificación de Principios (Ronda 309)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1575 | [X] Sí | [X] Sí | [X] Sí | Sí | `AgFormGeneradorHorarios.cs:750-786, 792-798` |
+| F1576 | [X] Sí | [X] Sí | [X] Sí | Sí | `AgFormGeneradorHorarios.cs:3404-3423` |
+| F1577 | [X] Sí | [X] Sí | [X] Sí | Sí | `AgReparacionCorridaService.cs:55-62` |
+| F1578 | [X] Sí | [X] Sí | [X] Sí | Sí | `AgReparacionCorridaServiceTests.cs` · arnés 125→0 · suite 1124 |
+
+### Nota operativa
+Tras desplegar el build, en el Módulo R: seleccionar `#48` → **«Recalcular violaciones»** (esperado `HARD 0`) →
+**«Aprobar corrida»** → **«Promover a producción»**. El HARD 125 que se veía antes era dato persistido, no una
+evaluación nueva.
+

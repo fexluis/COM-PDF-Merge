@@ -49,13 +49,19 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 return;
             }
 
-            // --- Cobertura de asignaturas requeridas ---
+            // --- Cobertura de asignaturas requeridas (Fase 1572: acotada al alcance de las aulas cubiertas) ---
             if (contexto.Asignaturas != null && contexto.Asignaturas.Count > 0)
             {
+                var aulasCubiertas = new HashSet<int>(genes.Where(g => g.IdAula > 0).Select(g => g.IdAula));
+                var plan = contexto.AulaAsignaturas ?? new List<AgAulaAsignatura>();
                 var idsAsignadas = new HashSet<int>(genes.Select(g => g.IdAsignatura));
+
                 foreach (var asig in contexto.Asignaturas)
                 {
-                    if (!idsAsignadas.Contains(asig.Id))
+                    bool exigida = plan.Count == 0
+                        || plan.Any(aa => aulasCubiertas.Contains(aa.IdAula) && aa.IdAsignatura == asig.Id);
+
+                    if (exigida && !idsAsignadas.Contains(asig.Id))
                     {
                         individuo.Violaciones.Add(new AgViolacion(
                             AgReglaViolacion.R5_HabilitacionDocentePool,
@@ -90,10 +96,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     }
                 }
 
-                // --- R4: Compatibilidad Aula ---
+                // --- R4: Compatibilidad Aula (Fase 1571: acepta Disponible y Aprobado) ---
                 if (gen.IdAula > 0 && contexto.AulasPorId.TryGetValue(gen.IdAula, out var aula))
                 {
-                    if (aula.Estado != AgEstadoAula.Disponible)
+                    bool aulaUsable = aula.Estado == AgEstadoAula.Disponible || aula.Estado == AgEstadoAula.Aprobado;
+                    if (!aulaUsable)
                     {
                         individuo.Violaciones.Add(new AgViolacion(
                             AgReglaViolacion.R4_CompatibilidadAula,
@@ -262,45 +269,57 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 }
             }
 
-            // --- Evaluar colisiones R1 (Docente) ---
+            // --- Evaluar colisiones R1 (Docente) (Fase 1569: respeta oleadas por solape temporal) ---
             foreach (var kvp in docenteBloques)
             {
-                if (kvp.Value.Count > 1)
+                var clusters = AgVentanaSolape.AgruparPorSolape(kvp.Value, g => g.FechaInicioEstimada, g => g.FechaFinEstimada);
+                foreach (var cluster in clusters)
                 {
-                    int cruces = kvp.Value.Count - 1;
-                    hardCount += cruces;
-                    individuo.Violaciones.Add(new AgViolacion(
-                        AgReglaViolacion.R1_SuperposicionDocente,
-                        esDura: true,
-                        mensaje: $"El docente tiene {kvp.Value.Count} asignaturas asignadas simultáneamente en el bloque {kvp.Value[0].IdBloqueHorario}."));
+                    if (cluster.Count > 1)
+                    {
+                        int cruces = cluster.Count - 1;
+                        hardCount += cruces;
+                        individuo.Violaciones.Add(new AgViolacion(
+                            AgReglaViolacion.R1_SuperposicionDocente,
+                            esDura: true,
+                            mensaje: $"El docente tiene {cluster.Count} asignaturas asignadas simultáneamente en el bloque {cluster[0].IdBloqueHorario}."));
+                    }
                 }
             }
 
-            // --- Evaluar colisiones R2 (Aula) ---
+            // --- Evaluar colisiones R2 (Aula) (Fase 1569: respeta oleadas por solape temporal) ---
             foreach (var kvp in aulaBloques)
             {
-                if (kvp.Value.Count > 1)
+                var clusters = AgVentanaSolape.AgruparPorSolape(kvp.Value, g => g.FechaInicioEstimada, g => g.FechaFinEstimada);
+                foreach (var cluster in clusters)
                 {
-                    int cruces = kvp.Value.Count - 1;
-                    hardCount += cruces;
-                    individuo.Violaciones.Add(new AgViolacion(
-                        AgReglaViolacion.R2_SuperposicionAula,
-                        esDura: true,
-                        mensaje: $"El aula {kvp.Value[0].IdAula} está asignada a {kvp.Value.Count} cursos en el mismo bloque horario {kvp.Value[0].IdBloqueHorario}."));
+                    if (cluster.Count > 1)
+                    {
+                        int cruces = cluster.Count - 1;
+                        hardCount += cruces;
+                        individuo.Violaciones.Add(new AgViolacion(
+                            AgReglaViolacion.R2_SuperposicionAula,
+                            esDura: true,
+                            mensaje: $"El aula {cluster[0].IdAula} está asignada a {cluster.Count} cursos en el mismo bloque horario {cluster[0].IdBloqueHorario}."));
+                    }
                 }
             }
 
-            // --- Evaluar colisiones R3 (Grupo) ---
+            // --- Evaluar colisiones R3 (Grupo) (Fase 1569: respeta oleadas por solape temporal) ---
             foreach (var kvp in grupoBloques)
             {
-                if (kvp.Value.Count > 1)
+                var clusters = AgVentanaSolape.AgruparPorSolape(kvp.Value, g => g.FechaInicioEstimada, g => g.FechaFinEstimada);
+                foreach (var cluster in clusters)
                 {
-                    int cruces = kvp.Value.Count - 1;
-                    hardCount += cruces;
-                    individuo.Violaciones.Add(new AgViolacion(
-                        AgReglaViolacion.R3_SuperposicionGrupo,
-                        esDura: true,
-                        mensaje: $"El grupo tiene {kvp.Value.Count} clases en simultáneo en el bloque horario {kvp.Value[0].IdBloqueHorario}."));
+                    if (cluster.Count > 1)
+                    {
+                        int cruces = cluster.Count - 1;
+                        hardCount += cruces;
+                        individuo.Violaciones.Add(new AgViolacion(
+                            AgReglaViolacion.R3_SuperposicionGrupo,
+                            esDura: true,
+                            mensaje: $"El grupo tiene {cluster.Count} clases en simultáneo en el bloque horario {cluster[0].IdBloqueHorario}."));
+                    }
                 }
             }
 
@@ -315,7 +334,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 return $"{g.IdSede}|{g.IdPrograma}|{sem}|{(g.Grupo ?? string.Empty).Trim()}";
             }
 
-            // --- R4: Unicidad por (Cohorte, Día, Franja) y tope de bloques diarios (Fase 1162) ---
+            // --- R4: Unicidad por (Cohorte, Día, Franja) y tope de bloques diarios (Fase 1162 / Fase 1569) ---
             string FranjaDe(AgGen g) =>
                 (contexto.BloquesPorId != null && g.IdBloqueHorario > 0
                  && contexto.BloquesPorId.TryGetValue(g.IdBloqueHorario, out var b) && b != null)
@@ -324,32 +343,43 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             var porGrupoDiaFranja = genes.Where(g => g.EsVacante == 0)
                                          .GroupBy(g => new { Cohorte = Cohorte(g), g.DiaSemana, Franja = FranjaDe(g) });
 
-            foreach (var gdf in porGrupoDiaFranja.Where(x => x.Count() > 1))
+            foreach (var gdf in porGrupoDiaFranja)
             {
-                hardCount += (gdf.Count() - 1);
-                individuo.Violaciones.Add(new AgViolacion(
-                    AgReglaViolacion.R4_DosAsignaturasMismoDia,
-                    esDura: true,
-                    mensaje: $"La cohorte '{gdf.Key.Cohorte}' tiene {gdf.Count()} asignaturas el día {gdf.Key.DiaSemana} en la misma franja '{gdf.Key.Franja}'."));
+                var clusters = AgVentanaSolape.AgruparPorSolape(gdf, g => g.FechaInicioEstimada, g => g.FechaFinEstimada);
+                foreach (var cluster in clusters)
+                {
+                    if (cluster.Count > 1)
+                    {
+                        hardCount += (cluster.Count - 1);
+                        individuo.Violaciones.Add(new AgViolacion(
+                            AgReglaViolacion.R4_DosAsignaturasMismoDia,
+                            esDura: true,
+                            mensaje: $"La cohorte '{gdf.Key.Cohorte}' tiene {cluster.Count} asignaturas el día {gdf.Key.DiaSemana} en la misma franja '{gdf.Key.Franja}'."));
+                    }
+                }
             }
 
-            // Tope por día: 2 en SÁBADO (M+T si 4h), 1 en el resto (Fase 1162 / Fase 1175)
+            // Tope por día: 2 en SÁBADO (M+T si 4h), 1 en el resto (Fase 1162 / Fase 1175 / Fase 1569: solo cuenta franjas con solape temporal)
             foreach (var gd in genes.Where(g => g.EsVacante == 0).GroupBy(g => new { Cohorte = Cohorte(g), g.DiaSemana }))
             {
                 int tope = gd.Key.DiaSemana == 6 ? 2 : 1;
-                var franjas = gd.Select(FranjaDe).Distinct().ToList();
-                if (franjas.Count > tope)
+                var clustersSolape = AgVentanaSolape.AgruparPorSolape(gd, g => g.FechaInicioEstimada, g => g.FechaFinEstimada);
+                foreach (var cluster in clustersSolape)
                 {
-                    hardCount++;
-                    individuo.Violaciones.Add(new AgViolacion(
-                        AgReglaViolacion.R4_DosAsignaturasMismoDia,
-                        esDura: true,
-                        mensaje: $"La cohorte '{gd.Key.Cohorte}' tiene {franjas.Count} bloques el día {gd.Key.DiaSemana} ({string.Join("/", franjas)}); tope {tope}."));
+                    var franjas = cluster.Select(FranjaDe).Distinct().ToList();
+                    if (franjas.Count > tope)
+                    {
+                        hardCount++;
+                        individuo.Violaciones.Add(new AgViolacion(
+                            AgReglaViolacion.R4_DosAsignaturasMismoDia,
+                            esDura: true,
+                            mensaje: $"La cohorte '{gd.Key.Cohorte}' tiene {franjas.Count} bloques el día {gd.Key.DiaSemana} ({string.Join("/", franjas)}); tope {tope}."));
+                    }
                 }
             }
 
 
-            // --- R5: Máximo de asignaturas activas concurrentes por semana ISO por cohorte (Fase 1056 / Fase 1087 / Fase 1167) ---
+            // --- R5: Máximo de asignaturas activas concurrentes por cohorte por día real (Fase 1056 / Fase 1087 / Fase 1167 / Fase 1570) ---
             var porGrupo = genes.Where(g => g.EsVacante == 0).GroupBy(x => Cohorte(x));
             foreach (var g in porGrupo)
             {
@@ -361,37 +391,65 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     .DefaultIfEmpty(2)
                     .Max();
 
-                // Mapear semanas activas por asignatura
+                // Mapear intervalos [min(FechaInicioEstimada), max(FechaFinEstimada)] por asignatura
                 var asigsConFechas = g.Where(x => x.FechaInicioEstimada.HasValue && x.FechaFinEstimada.HasValue)
                                       .GroupBy(x => x.IdAsignatura)
+                                      .Select(grp => new
+                                      {
+                                          IdAsignatura = grp.Key,
+                                          Ini = grp.Min(x => x.FechaInicioEstimada.Value.Date),
+                                          Fin = grp.Max(x => x.FechaFinEstimada.Value.Date)
+                                      })
                                       .ToList();
 
-                var semanasAsig = new Dictionary<int, HashSet<int>>();
-                foreach (var asigGrp in asigsConFechas)
+                if (asigsConFechas.Count > 0)
                 {
-                    var fIni = asigGrp.Min(x => x.FechaInicioEstimada.Value);
-                    var fFin = asigGrp.Max(x => x.FechaFinEstimada.Value);
-                    var semanas = new HashSet<int>();
-                    for (var d = fIni.Date; d <= fFin.Date; d = d.AddDays(7))
-                    {
-                        semanas.Add(AgSemanaIso.Clave(d));
-                    }
-                    semanas.Add(AgSemanaIso.Clave(fFin.Date));
-                    semanasAsig[asigGrp.Key] = semanas;
-                }
+                    var minGlobal = asigsConFechas.Min(x => x.Ini);
+                    var maxGlobal = asigsConFechas.Max(x => x.Fin);
 
-                // Evaluar concurrencia por cada semana ISO activa
-                var todasSemanas = semanasAsig.Values.SelectMany(s => s).Distinct().ToList();
-                foreach (var sem in todasSemanas)
-                {
-                    int concurrentes = semanasAsig.Count(kvp => kvp.Value.Contains(sem));
-                    if (concurrentes > maxCarriles)
+                    DateTime? tramoIni = null;
+                    DateTime? tramoFin = null;
+                    int maxSobrecargaTramo = 0;
+
+                    for (var dia = minGlobal; dia <= maxGlobal; dia = dia.AddDays(1))
                     {
-                        hardCount += (concurrentes - maxCarriles);
+                        int activas = asigsConFechas.Count(a => a.Ini <= dia && dia <= a.Fin);
+                        if (activas > maxCarriles)
+                        {
+                            if (!tramoIni.HasValue)
+                            {
+                                tramoIni = dia;
+                                maxSobrecargaTramo = activas;
+                            }
+                            else if (activas > maxSobrecargaTramo)
+                            {
+                                maxSobrecargaTramo = activas;
+                            }
+                            tramoFin = dia;
+                        }
+                        else
+                        {
+                            if (tramoIni.HasValue)
+                            {
+                                hardCount++;
+                                individuo.Violaciones.Add(new AgViolacion(
+                                    AgReglaViolacion.R5_MaxAsignaturasSemana,
+                                    esDura: true,
+                                    mensaje: $"La cohorte '{g.Key}' tiene {maxSobrecargaTramo} asignaturas concurrentes entre {tramoIni.Value:yyyy-MM-dd} y {tramoFin.Value:yyyy-MM-dd} (máximo permitido: {maxCarriles} carriles)."));
+                                tramoIni = null;
+                                tramoFin = null;
+                                maxSobrecargaTramo = 0;
+                            }
+                        }
+                    }
+
+                    if (tramoIni.HasValue)
+                    {
+                        hardCount++;
                         individuo.Violaciones.Add(new AgViolacion(
                             AgReglaViolacion.R5_MaxAsignaturasSemana,
                             esDura: true,
-                            mensaje: $"La cohorte '{g.Key}' tiene {concurrentes} asignaturas activas en la semana ISO {sem} (máximo permitido: {maxCarriles} carriles)."));
+                            mensaje: $"La cohorte '{g.Key}' tiene {maxSobrecargaTramo} asignaturas concurrentes entre {tramoIni.Value:yyyy-MM-dd} y {tramoFin.Value:yyyy-MM-dd} (máximo permitido: {maxCarriles} carriles)."));
                     }
                 }
             }
@@ -686,7 +744,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 
                             if (!mismoRecurso) continue;
 
-                            if (AgBloqueSolape.SeSolapan(b1, b2))
+                            // Fase 1569: el mismo bloque ya lo cubren R1/R2/R3; además validar solape temporal entre ventanas
+                            if (g1.IdBloqueHorario != g2.IdBloqueHorario
+                                && AgBloqueSolape.SeSolapan(b1, b2)
+                                && AgVentanaSolape.SeSolapan(g1.FechaInicioEstimada, g1.FechaFinEstimada,
+                                                             g2.FechaInicioEstimada, g2.FechaFinEstimada))
                             {
                                 hardCount++;
                                 individuo.Violaciones.Add(new AgViolacion(

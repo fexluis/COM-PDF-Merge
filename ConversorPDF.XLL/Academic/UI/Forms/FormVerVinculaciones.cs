@@ -827,8 +827,11 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
                 var idsCorrida = _items.Select(i => i.IdCorrida).Where(id => id > 0).Distinct().ToList();
                 if (idsCorrida.Count == 0) return;
 
+                // Fase 1567: ag_violacion.regla está declarada INTEGER pero almacena el nombre de la regla;
+                // sin CAST el proveedor devuelve 0 y la vista por fechas perdía el identificador de la regla.
+
                 const string sql = @"
-SELECT s.id AS IdSesion, v.regla AS Regla, v.es_dura AS EsDura, v.mensaje AS Mensaje
+SELECT s.id AS IdSesion, CAST(v.regla AS TEXT) AS Regla, v.es_dura AS EsDura, v.mensaje AS Mensaje
 FROM ag_violacion v
 INNER JOIN ag_sesiones s ON s.idgen = v.id_gen AND s.idindividuo = v.id_individuo
 INNER JOIN ag_vinculaciones av ON av.id = s.idvinculacion

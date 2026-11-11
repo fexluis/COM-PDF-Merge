@@ -41,7 +41,7 @@ namespace ConversorPDF.Tests.Integration.Academic
 
                 CREATE TABLE ag_corrida (
                     id INTEGER PRIMARY KEY, idperiodo INTEGER, idprograma INTEGER, subunidad TEXT,
-                    fecha_inicio_corrida TEXT, estado INTEGER);
+                    fecha_inicio_corrida TEXT, estado INTEGER, id_individuo_optimo INTEGER);
 
                 CREATE TABLE ag_vinculaciones (
                     id INTEGER PRIMARY KEY, id_corrida INTEGER, idperiodo INTEGER, idprograma INTEGER,

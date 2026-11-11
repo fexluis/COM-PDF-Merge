@@ -332,7 +332,18 @@ WHERE id = @Id;";
                         corrida.Id
                     };
 
-                    await db.ExecuteAsync(new CommandDefinition(sql, param, cancellationToken: ct));
+                    int filasAfectadas = await db.ExecuteAsync(new CommandDefinition(sql, param, cancellationToken: ct));
+                    if (filasAfectadas <= 0)
+                    {
+                        // Fase 1564: un UPDATE sobre una corrida inexistente era un no-op silencioso.
+                        // Si la corrida fue purgada o eliminada, el flujo continuaba como si hubiera persistido
+                        // (y el Módulo R quedaba luego con staging huérfano sin cabecera).
+                        LoggerHelper.Warning(
+                            $"[AgScheduleRepository] UpdateCorridaAsync no encontró la corrida #{corrida.Id} (0 filas afectadas).");
+                        return Result.Failure(
+                            $"La corrida #{corrida.Id} ya no existe en ag_corrida (fue purgada o eliminada).");
+                    }
+
                     NotifyMarkDirty();
                     return Result.Success();
                 }
@@ -532,7 +543,10 @@ VALUES (@IdIndividuo, @IdGen, @Regla, @EsDura, @Mensaje, @DetalleJson, @Subunida
 
                     if (ind == null) return Result.Failure<AgIndividuo>("Individuo no encontrado.");
 
-                    string sqlGenes = "SELECT id as Id, id_individuo as IdIndividuo, idperiodo as IdPeriodo, idasignatura as IdAsignatura, idprograma as IdPrograma, idsede as IdSede, semestre as Semestre, grupo as Grupo, idtercero as IdTercero, id_aula as IdAula, id_bloque_horario as IdBloqueHorario, dia_semana as DiaSemana, horas_semanales as HorasSemanales, total_horas_asignatura as TotalHorasAsignatura, fecha_inicio_estimada as FechaInicioEstimada, fecha_fin_estimada as FechaFinEstimada, es_fijo as EsFijo, es_vacante as EsVacante, motivo_vacante as MotivoVacante, dentro_de_ventana as DentroDeVentana, estado as Estado, subunidad as Subunidad, indice_dia_patron as IndiceDiaPatron, patron_semanal as PatronSemanal, dias_patron as DiasPatron, clave_grupo as ClaveGrupo, horas_gen as HorasGen FROM ag_gen WHERE id_individuo = @idIndividuo";
+                    // Fase 1566: tolerar fechas vacías en genes legados ('' no es convertible a DateTime? y
+                    // abortaría la rehidratación justo después de reparar una corrida huérfana).
+
+                    string sqlGenes = "SELECT id as Id, id_individuo as IdIndividuo, idperiodo as IdPeriodo, idasignatura as IdAsignatura, idprograma as IdPrograma, idsede as IdSede, semestre as Semestre, grupo as Grupo, idtercero as IdTercero, id_aula as IdAula, id_bloque_horario as IdBloqueHorario, dia_semana as DiaSemana, horas_semanales as HorasSemanales, total_horas_asignatura as TotalHorasAsignatura, NULLIF(TRIM(fecha_inicio_estimada), '') as FechaInicioEstimada, NULLIF(TRIM(fecha_fin_estimada), '') as FechaFinEstimada, es_fijo as EsFijo, es_vacante as EsVacante, motivo_vacante as MotivoVacante, dentro_de_ventana as DentroDeVentana, estado as Estado, subunidad as Subunidad, indice_dia_patron as IndiceDiaPatron, patron_semanal as PatronSemanal, dias_patron as DiasPatron, clave_grupo as ClaveGrupo, horas_gen as HorasGen FROM ag_gen WHERE id_individuo = @idIndividuo";
                     ind.Genes = (await db.QueryAsync<AgGen>(new CommandDefinition(sqlGenes, new { idIndividuo }, cancellationToken: ct))).ToList();
 
                     return Result.Success(ind);
@@ -557,8 +571,12 @@ VALUES (@IdIndividuo, @IdGen, @Regla, @EsDura, @Mensaje, @DetalleJson, @Subunida
                 {
                     if (db.State != ConnectionState.Open) db.Open();
 
+                    // Fase 1567: la columna ag_violacion.regla está declarada INTEGER en el vault, pero se
+                    // persiste el NOMBRE de la regla como texto. Sin CAST el proveedor devuelve 0 y el panel
+                    // mostraba "regla 0". El CAST preserva el nombre y Dapper lo mapea al enum AgReglaViolacion.
+
                     const string sql = @"
-SELECT id AS Id, id_individuo AS IdIndividuo, id_gen AS IdGen, regla AS Regla,
+SELECT id AS Id, id_individuo AS IdIndividuo, id_gen AS IdGen, CAST(regla AS TEXT) AS Regla,
        es_dura AS EsDura, mensaje AS Mensaje, detalle_json AS DetalleJson, subunidad AS Subunidad
 FROM ag_violacion
 WHERE id_individuo = @idIndividuo
@@ -949,64 +967,155 @@ WHERE idvinculacion IN (SELECT id FROM ag_vinculaciones WHERE id_corrida = @idCo
                         // Fase 510: Logging de auditoría de purga
                         int v0 = await db.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM ag_vinculaciones;", transaction: trans);
                         int s0 = await db.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM ag_sesiones;", transaction: trans);
-                        int g0 = await db.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM ag_gen;", transaction: trans);
+                        bool hayGen = TablaExiste(db, trans, "ag_gen");
+                        bool hayIndividuo = TablaExiste(db, trans, "ag_individuo");
+                        int g0 = hayGen ? await db.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM ag_gen;", transaction: trans) : 0;
                         int c0 = await db.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM ag_corrida;", transaction: trans);
-                        var idsDel = (await db.QueryAsync<int>("SELECT id FROM ag_corrida WHERE idperiodo = @idPeriodo AND idprograma = @idPrograma;", new { idPeriodo, idPrograma }, trans)).ToList();
 
-                        string sqlDelGenVinc = @"
-DELETE FROM ag_vinculacion_gen 
-WHERE idagvinculacion IN (SELECT id FROM ag_vinculaciones WHERE idperiodo = @idPeriodo AND idprograma = @idPrograma);";
-                        await db.ExecuteAsync(new CommandDefinition(sqlDelGenVinc, new { idPeriodo, idPrograma }, trans, cancellationToken: ct));
+                        // Fase 1563: la purga se ancla a los identificadores de corrida, no al par
+                        // (idperiodo, idprograma) denormalizado en cada tabla.
+                        // Motivo: AgFabricaIndividuos estampa ag_gen/ag_vinculaciones con el programa de la
+                        // ASIGNATURA, que puede diferir del programa elegido en el formulario (caso real:
+                        // programas APT-53 id=1 y APT-52 id=2 con el mismo nombre). Purgar la cabecera por un
+                        // par y el staging por otro dejaba corridas huérfanas: sin ag_corrida ni ag_individuo
+                        // (por tanto sin violaciones y sin promoción) pero con 180 sesiones visibles en el Módulo R.
+                        var idsCabecera = (await db.QueryAsync<long>(new CommandDefinition(
+                            "SELECT id FROM ag_corrida WHERE idperiodo = @idPeriodo AND idprograma = @idPrograma;",
+                            new { idPeriodo, idPrograma }, trans, cancellationToken: ct))).ToList();
 
-                        string sqlDelSes = @"
-DELETE FROM ag_sesiones 
-WHERE idvinculacion IN (SELECT id FROM ag_vinculaciones WHERE idperiodo = @idPeriodo AND idprograma = @idPrograma);";
-                        await db.ExecuteAsync(new CommandDefinition(sqlDelSes, new { idPeriodo, idPrograma }, trans, cancellationToken: ct));
+                        var idsStaging = (await db.QueryAsync<long>(new CommandDefinition(
+                            "SELECT DISTINCT id_corrida FROM ag_vinculaciones WHERE idperiodo = @idPeriodo AND idprograma = @idPrograma;",
+                            new { idPeriodo, idPrograma }, trans, cancellationToken: ct))).ToList();
 
-                        string sqlDelSalv = @"
-DELETE FROM ag_salvedades_conflictos 
-WHERE id_corrida IN (SELECT DISTINCT id_corrida FROM ag_vinculaciones WHERE idperiodo = @idPeriodo AND idprograma = @idPrograma);";
-                        await db.ExecuteAsync(new CommandDefinition(sqlDelSalv, new { idPeriodo, idPrograma }, trans, cancellationToken: ct));
+                        var idsDel = idsCabecera
+                            .Concat(idsStaging)
+                            .Where(id => id > 0)
+                            .Distinct()
+                            .ToList();
 
-                        string sqlDelVinc = "DELETE FROM ag_vinculaciones WHERE idperiodo = @idPeriodo AND idprograma = @idPrograma;";
-                        await db.ExecuteAsync(new CommandDefinition(sqlDelVinc, new { idPeriodo, idPrograma }, trans, cancellationToken: ct));
+                        if (idsDel.Count > 0)
+                        {
+                            var paramIds = new { Ids = idsDel };
 
-                        string sqlDelGen = "DELETE FROM ag_gen WHERE idperiodo = @idPeriodo AND idprograma = @idPrograma;";
-                        await db.ExecuteAsync(new CommandDefinition(sqlDelGen, new { idPeriodo, idPrograma }, trans, cancellationToken: ct));
+                            // Fase 1563: individuos referenciados por el staging purgado. Se capturan antes de borrar
+                            // ag_vinculaciones para poder limpiar también sus genes/violaciones huérfanos.
+                            var idsIndStaging = (await db.QueryAsync<long>(new CommandDefinition(
+                                "SELECT DISTINCT id_individuo FROM ag_vinculaciones WHERE id_corrida IN @Ids AND id_individuo > 0;",
+                                paramIds, trans, cancellationToken: ct))).ToList();
 
-                        // Fase 504: Purgar violaciones, bitácoras y promociones antes de individuos y corridas
-                        string sqlDelViol = @"
-DELETE FROM ag_violacion 
-WHERE id_individuo IN (
-    SELECT id FROM ag_individuo WHERE id_corrida IN (
-        SELECT id FROM ag_corrida WHERE idperiodo = @idPeriodo AND idprograma = @idPrograma));";
-                        await db.ExecuteAsync(new CommandDefinition(sqlDelViol, new { idPeriodo, idPrograma }, trans, cancellationToken: ct));
 
-                        string sqlDelBit = @"
-DELETE FROM ag_bitacora 
-WHERE id_corrida IN (SELECT id FROM ag_corrida WHERE idperiodo = @idPeriodo AND idprograma = @idPrograma);";
-                        await db.ExecuteAsync(new CommandDefinition(sqlDelBit, new { idPeriodo, idPrograma }, trans, cancellationToken: ct));
+                            if (TablaExiste(db, trans, "ag_vinculacion_gen"))
+                            {
+                                await db.ExecuteAsync(new CommandDefinition(
+                                    "DELETE FROM ag_vinculacion_gen WHERE idagvinculacion IN (SELECT id FROM ag_vinculaciones WHERE id_corrida IN @Ids);",
+                                    paramIds, trans, cancellationToken: ct));
+                            }
 
-                        string sqlDelProm = @"
-DELETE FROM ag_promocion 
-WHERE id_corrida IN (SELECT id FROM ag_corrida WHERE idperiodo = @idPeriodo AND idprograma = @idPrograma);";
-                        await db.ExecuteAsync(new CommandDefinition(sqlDelProm, new { idPeriodo, idPrograma }, trans, cancellationToken: ct));
+                            await db.ExecuteAsync(new CommandDefinition(
+                                "DELETE FROM ag_sesiones WHERE idvinculacion IN (SELECT id FROM ag_vinculaciones WHERE id_corrida IN @Ids);",
+                                paramIds, trans, cancellationToken: ct));
 
-                        // Fase 500: purgar individuos y corridas del período/programa
-                        string sqlDelInd = @"
-DELETE FROM ag_individuo 
-WHERE id_corrida IN (SELECT id FROM ag_corrida WHERE idperiodo = @idPeriodo AND idprograma = @idPrograma);";
-                        await db.ExecuteAsync(new CommandDefinition(sqlDelInd, new { idPeriodo, idPrograma }, trans, cancellationToken: ct));
+                            if (TablaExiste(db, trans, "ag_salvedades_conflictos"))
+                            {
+                                await db.ExecuteAsync(new CommandDefinition(
+                                    "DELETE FROM ag_salvedades_conflictos WHERE id_corrida IN @Ids;",
+                                    paramIds, trans, cancellationToken: ct));
+                            }
 
-                        string sqlDelCor = "DELETE FROM ag_corrida WHERE idperiodo = @idPeriodo AND idprograma = @idPrograma;";
-                        await db.ExecuteAsync(new CommandDefinition(sqlDelCor, new { idPeriodo, idPrograma }, trans, cancellationToken: ct));
+                            await db.ExecuteAsync(new CommandDefinition(
+                                "DELETE FROM ag_vinculaciones WHERE id_corrida IN @Ids;",
+                                paramIds, trans, cancellationToken: ct));
+
+                            // Fase 504: metadatos genéticos antes de individuos y corridas
+                            if (hayIndividuo && TablaExiste(db, trans, "ag_violacion"))
+                            {
+                                await db.ExecuteAsync(new CommandDefinition(
+                                    "DELETE FROM ag_violacion WHERE id_individuo IN (SELECT id FROM ag_individuo WHERE id_corrida IN @Ids);",
+                                    paramIds, trans, cancellationToken: ct));
+                            }
+
+                            if (TablaExiste(db, trans, "ag_bitacora"))
+                            {
+                                await db.ExecuteAsync(new CommandDefinition(
+                                    "DELETE FROM ag_bitacora WHERE id_corrida IN @Ids;",
+                                    paramIds, trans, cancellationToken: ct));
+                            }
+
+                            if (TablaExiste(db, trans, "ag_promocion"))
+                            {
+                                await db.ExecuteAsync(new CommandDefinition(
+                                    "DELETE FROM ag_promocion WHERE id_corrida IN @Ids;",
+                                    paramIds, trans, cancellationToken: ct));
+                            }
+
+                            if (hayGen && hayIndividuo)
+                            {
+                                await db.ExecuteAsync(new CommandDefinition(
+                                    "DELETE FROM ag_gen WHERE id_individuo IN (SELECT id FROM ag_individuo WHERE id_corrida IN @Ids);",
+                                    paramIds, trans, cancellationToken: ct));
+                            }
+                            // Fase 1563: limpieza de genes/violaciones de individuos referenciados por el staging
+                            // purgado aunque su fila en ag_individuo ya no exista (huérfanos de purgas anteriores).
+                            if (idsIndStaging.Count > 0)
+                            {
+                                var paramInd = new { IdsInd = idsIndStaging };
+
+                                if (hayGen)
+                                {
+                                    await db.ExecuteAsync(new CommandDefinition(
+                                        "DELETE FROM ag_gen WHERE id_individuo IN @IdsInd;",
+                                        paramInd, trans, cancellationToken: ct));
+                                }
+
+                                if (TablaExiste(db, trans, "ag_violacion"))
+                                {
+                                    await db.ExecuteAsync(new CommandDefinition(
+                                        "DELETE FROM ag_violacion WHERE id_individuo IN @IdsInd;",
+                                        paramInd, trans, cancellationToken: ct));
+                                }
+                            }
+
+
+
+                            if (hayIndividuo)
+                            {
+                                await db.ExecuteAsync(new CommandDefinition(
+                                    "DELETE FROM ag_individuo WHERE id_corrida IN @Ids;",
+                                    paramIds, trans, cancellationToken: ct));
+                            }
+
+                            await db.ExecuteAsync(new CommandDefinition(
+                                "DELETE FROM ag_corrida WHERE id IN @Ids;",
+                                paramIds, trans, cancellationToken: ct));
+                        }
 
                         int v1 = await db.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM ag_vinculaciones;", transaction: trans);
                         int s1 = await db.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM ag_sesiones;", transaction: trans);
-                        int g1 = await db.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM ag_gen;", transaction: trans);
+                        int g1 = hayGen ? await db.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM ag_gen;", transaction: trans) : 0;
                         int c1 = await db.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM ag_corrida;", transaction: trans);
 
                         LoggerHelper.Info($"[Purga] vinc {v0}->{v1} | ses {s0}->{s1} | gen {g0}->{g1} | corridas {c0}->{c1} | idPeriodo={idPeriodo} idPrograma={idPrograma} corridasPeriodo={string.Join(",", idsDel)}");
+
+                        // Fase 1563: invariante de integridad. Si tras la purga quedan hijos de las corridas
+                        // objetivo, la interfaz volvería a mostrar staging sin cabecera: se registra como error.
+                        if (idsDel.Count > 0)
+                        {
+                            var paramVerif = new { Ids = idsDel };
+                            int vincResiduales = await db.ExecuteScalarAsync<int>(new CommandDefinition(
+                                "SELECT COUNT(*) FROM ag_vinculaciones WHERE id_corrida IN @Ids;",
+                                paramVerif, trans, cancellationToken: ct));
+                            int sesResiduales = await db.ExecuteScalarAsync<int>(new CommandDefinition(
+                                "SELECT COUNT(*) FROM ag_sesiones WHERE idvinculacion IN (SELECT id FROM ag_vinculaciones WHERE id_corrida IN @Ids);",
+                                paramVerif, trans, cancellationToken: ct));
+
+                            if (vincResiduales > 0 || sesResiduales > 0)
+                            {
+                                LoggerHelper.Error(
+                                    $"[Purga] Huérfanos residuales tras la purga: {vincResiduales} vinculación(es) y " +
+                                    $"{sesResiduales} sesión(es) de las corridas [{string.Join(",", idsDel)}] " +
+                                    $"(idPeriodo={idPeriodo} idPrograma={idPrograma}). Revise el staging en el Módulo R.");
+                            }
+                        }
 
                         trans.Commit();
                         return Result.Success();
@@ -1022,6 +1131,207 @@ WHERE id_corrida IN (SELECT id FROM ag_corrida WHERE idperiodo = @idPeriodo AND 
                 return Result.Failure($"Error al limpiar staging por período/programa: {ex.Message}");
             }
         }
+
+        public async Task<Result<IReadOnlyCollection<AgGen>>> GetGenesByIndividuoAsync(long idIndividuo, CancellationToken ct)
+        {
+            try
+            {
+                using (var db = _connectionFactory())
+                {
+                    if (db.State != ConnectionState.Open) db.Open();
+
+                    // Fase 1566: lectura tolerante para corridas huérfanas. Los genes sobreviven en ag_gen aunque
+                    // la fila de ag_individuo haya sido eliminada (purga antigua por período/programa).
+                    string sqlGenes = "SELECT id as Id, id_individuo as IdIndividuo, idperiodo as IdPeriodo, idasignatura as IdAsignatura, idprograma as IdPrograma, idsede as IdSede, semestre as Semestre, grupo as Grupo, idtercero as IdTercero, id_aula as IdAula, id_bloque_horario as IdBloqueHorario, dia_semana as DiaSemana, horas_semanales as HorasSemanales, total_horas_asignatura as TotalHorasAsignatura, NULLIF(TRIM(fecha_inicio_estimada), '') as FechaInicioEstimada, NULLIF(TRIM(fecha_fin_estimada), '') as FechaFinEstimada, es_fijo as EsFijo, es_vacante as EsVacante, motivo_vacante as MotivoVacante, dentro_de_ventana as DentroDeVentana, estado as Estado, subunidad as Subunidad, indice_dia_patron as IndiceDiaPatron, patron_semanal as PatronSemanal, dias_patron as DiasPatron, clave_grupo as ClaveGrupo, horas_gen as HorasGen FROM ag_gen WHERE id_individuo = @idIndividuo";
+                    var genes = (await db.QueryAsync<AgGen>(
+                        new CommandDefinition(sqlGenes, new { idIndividuo }, cancellationToken: ct))).ToList();
+
+                    return Result.Success<IReadOnlyCollection<AgGen>>(genes.AsReadOnly());
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                return Result.Failure<IReadOnlyCollection<AgGen>>("Operación cancelada.");
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error($"[AgScheduleRepository] Error obteniendo genes del individuo {idIndividuo}", ex);
+                return Result.Failure<IReadOnlyCollection<AgGen>>($"Error al obtener genes: {ex.Message}");
+            }
+        }
+
+        public async Task<Result<AgCorridaHuerfana>> DetectarCorridaHuerfanaAsync(long idCorrida, CancellationToken ct)
+        {
+            if (idCorrida <= 0)
+                return Result.Failure<AgCorridaHuerfana>("IdCorrida inválido.");
+
+            try
+            {
+                using (var db = _connectionFactory())
+                {
+                    if (db.State != ConnectionState.Open) db.Open();
+
+                    if (!TablaExiste(db, null, "ag_corrida") || !TablaExiste(db, null, "ag_vinculaciones"))
+                        return Result.Failure<AgCorridaHuerfana>(
+                            "El vault no tiene las tablas del AG (ag_corrida / ag_vinculaciones).");
+
+                    // Fase 1566: el staging es la fuente de verdad para período, programa y subunidad cuando
+                    // la cabecera desapareció (caso real corrida #48: staging programa APT-52, cabecera APT-53).
+                    var datos = await db.QuerySingleAsync<AgCorridaHuerfana>(new CommandDefinition(@"
+SELECT COUNT(*) AS TotalVinculaciones,
+       (SELECT COUNT(*) FROM ag_sesiones s
+         WHERE s.idvinculacion IN (SELECT id FROM ag_vinculaciones WHERE id_corrida = @idCorrida)) AS TotalSesiones,
+       COALESCE(MAX(idperiodo), 0) AS IdPeriodo,
+       COALESCE(MAX(idprograma), 0) AS IdPrograma,
+       COALESCE(MAX(NULLIF(TRIM(subunidad), '')), '') AS Subunidad,
+       COALESCE(MAX(id_individuo), 0) AS IdIndividuo
+FROM ag_vinculaciones
+WHERE id_corrida = @idCorrida;", new { idCorrida }, cancellationToken: ct));
+
+                    datos.IdCorrida = idCorrida;
+                    datos.ExisteCabecera = await db.ExecuteScalarAsync<int>(new CommandDefinition(
+                        "SELECT COUNT(*) FROM ag_corrida WHERE id = @idCorrida;",
+                        new { idCorrida }, cancellationToken: ct)) > 0;
+
+                    if (datos.IdIndividuo > 0 && TablaExiste(db, null, "ag_individuo"))
+                    {
+                        datos.ExisteIndividuo = await db.ExecuteScalarAsync<int>(new CommandDefinition(
+                            "SELECT COUNT(*) FROM ag_individuo WHERE id = @idIndividuo;",
+                            new { idIndividuo = datos.IdIndividuo }, cancellationToken: ct)) > 0;
+                    }
+
+                    LoggerHelper.Info($"[AG-Reparacion] Diagnóstico de la corrida #{idCorrida}: {datos}");
+                    return Result.Success(datos);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                return Result.Failure<AgCorridaHuerfana>("Operación cancelada.");
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error($"[AgScheduleRepository] Error diagnosticando la corrida huérfana #{idCorrida}", ex);
+                return Result.Failure<AgCorridaHuerfana>($"Error al diagnosticar la corrida: {ex.Message}");
+            }
+        }
+
+
+        public async Task<Result> ReinsertarCabeceraHuerfanaAsync(
+            AgCorrida corrida, long idCorrida, AgIndividuo individuo, CancellationToken ct)
+        {
+            if (corrida == null) return Result.Failure("Corrida nula.");
+            if (individuo == null) return Result.Failure("Individuo nulo.");
+            if (idCorrida <= 0) return Result.Failure("IdCorrida inválido.");
+            if (individuo.Id <= 0) return Result.Failure("IdIndividuo inválido.");
+
+            try
+            {
+                using (var db = _connectionFactory())
+                {
+                    if (db.State != ConnectionState.Open) db.Open();
+
+                    using (var trans = db.BeginTransaction())
+                    {
+                        int existeCorrida = await db.ExecuteScalarAsync<int>(new CommandDefinition(
+                            "SELECT COUNT(*) FROM ag_corrida WHERE id = @idCorrida;",
+                            new { idCorrida }, trans, cancellationToken: ct));
+                        if (existeCorrida > 0)
+                            return Result.Failure(
+                                $"La corrida #{idCorrida} ya tiene cabecera en ag_corrida; no requiere reparación.");
+
+                        int existeIndividuo = await db.ExecuteScalarAsync<int>(new CommandDefinition(
+                            "SELECT COUNT(*) FROM ag_individuo WHERE id = @idIndividuo;",
+                            new { idIndividuo = individuo.Id }, trans, cancellationToken: ct));
+                        if (existeIndividuo > 0)
+                            return Result.Failure(
+                                $"El individuo #{individuo.Id} ya existe en ag_individuo; no requiere reparación.");
+
+                        // Fase 1566: inserción con id explícito para respetar las referencias ya existentes en
+                        // el staging (ag_vinculaciones.id_individuo, ag_sesiones.idindividuo, ag_gen.id_individuo).
+                        const string sqlIndividuo = @"
+INSERT INTO ag_individuo (id, id_corrida, generacion, fitness, hard_violations, soft_violations, estado, subunidad)
+VALUES (@Id, @IdCorrida, @Generacion, @Fitness, @HardViolations, @SoftViolations, @Estado, @Subunidad);";
+                        await db.ExecuteAsync(new CommandDefinition(sqlIndividuo, new
+                        {
+                            Id = individuo.Id,
+                            IdCorrida = idCorrida,
+                            individuo.Generacion,
+                            individuo.Fitness,
+                            individuo.HardViolations,
+                            individuo.SoftViolations,
+                            Estado = (int)individuo.Estado,
+                            Subunidad = individuo.Subunidad ?? corrida.Subunidad ?? string.Empty
+                        }, trans, cancellationToken: ct));
+
+                        const string sqlCorrida = @"
+INSERT INTO ag_corrida (id, idperiodo, idprograma, idaula, fecha_inicio_corrida, fecha_fin_corrida, estado, poblacion_tamano, generaciones_max, generaciones_ejecutadas, tasa_cruce, tasa_mutacion, elitismo, mejor_fitness, hard_violations, soft_violations, vacantes, id_individuo_optimo, parametros_json, subunidad)
+VALUES (@Id, @IdPeriodo, @IdPrograma, @IdAula, @FechaInicio, @FechaFin, @Estado, @Poblacion, @Generaciones, @GeneracionesEjecutadas, @TasaCruce, @TasaMutacion, @Elitismo, @Fitness, @Hard, @Soft, @Vacantes, @IdIndividuo, @ParametrosJson, @Subunidad);";
+                        await db.ExecuteAsync(new CommandDefinition(sqlCorrida, new
+                        {
+                            Id = idCorrida,
+                            corrida.IdPeriodo,
+                            corrida.IdPrograma,
+                            corrida.IdAula,
+                            FechaInicio = corrida.FechaInicioCorrida ?? string.Empty,
+                            FechaFin = corrida.FechaFinCorrida ?? string.Empty,
+                            Estado = (int)corrida.Estado,
+                            Poblacion = corrida.PoblacionTamano,
+                            Generaciones = corrida.GeneracionesMax,
+                            corrida.GeneracionesEjecutadas,
+                            corrida.TasaCruce,
+                            corrida.TasaMutacion,
+                            corrida.Elitismo,
+                            Fitness = corrida.MejorFitness,
+                            Hard = corrida.HardViolations,
+                            Soft = corrida.SoftViolations,
+                            corrida.Vacantes,
+                            IdIndividuo = individuo.Id,
+                            ParametrosJson = corrida.ParametrosJson ?? "{}",
+                            Subunidad = corrida.Subunidad ?? string.Empty
+                        }, trans, cancellationToken: ct));
+
+                        trans.Commit();
+                        NotifyMarkDirty();
+
+                        LoggerHelper.Info(
+                            $"[AG-Reparacion] Cabecera reconstruida: corrida #{idCorrida} " +
+                            $"(período {corrida.IdPeriodo}, programa {corrida.IdPrograma}, subunidad '{corrida.Subunidad}') " +
+                            $"e individuo #{individuo.Id}. Staging intacto.");
+
+                        return Result.Success();
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                return Result.Failure("Operación cancelada.");
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error($"[AgScheduleRepository] Error reinsertando la cabecera de la corrida #{idCorrida}", ex);
+                return Result.Failure($"Error al reconstruir la cabecera: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Indica si una tabla existe en el vault. Permite purgar vaults legados que aún no tienen
+        /// las tablas opcionales del AG (Fase 1563).
+        /// </summary>
+        private static bool TablaExiste(IDbConnection db, IDbTransaction trans, string tabla)
+        {
+            try
+            {
+                return db.ExecuteScalar<int>(new CommandDefinition(
+                    "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name = @tabla;",
+                    new { tabla }, trans)) > 0;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+
         public async Task<Result> ReemplazarViolacionesAsync(long idIndividuo, IReadOnlyCollection<AgViolacion> violaciones, int hardViolations, double softViolations, AgEstadoIndividuo estado, long idCorrida, CancellationToken ct)
         {
             try

@@ -8373,3 +8373,137 @@ Revisión manual del layout del panel superior `pnlHeaderResultados` en Módulo 
    - Reubicado `btnPromoverProduccion` a `Location = (890, 10)` y configurado `Anchor = Top | Right`, garantizando 15 px de separación mínima en resolución base y anclaje al borde derecho al maximizar.
 2. **Sincronización REGISTRY**:
    - Fila `R-028` (`closed`) y contadores actualizados a `ronda: 306 / 307`, `fase: 1562 / 1563`.
+
+---
+
+## Ronda 307: Purga sin huérfanos y reparación de corridas del AG (Fases 1563–1566)
+
+### Contexto y Diagnóstico
+La corrida **#48** (2027-01 · APT-52 · VALLE · 180 sesiones) quedó visible en el Módulo R pero sin
+violaciones y sin posibilidad de promoción. Evidencia reconstructiva:
+
+1. `log_20261109.txt:1522`: `FinCorridaAG IdCorrida=48 | Estado=Completada | Hard=95 | Vinculaciones=15 | Sesiones=180`
+   y `19:51:24` «Corrida #48 marcada como Aprobada».
+2. `log_20261110.txt:346`: `[Purga] vinc 33->33 | ses 325->325 | gen 70->70 | corridas 2->1 | idPeriodo=3 idPrograma=1 corridasPeriodo=48`.
+3. Vault en vivo: `ag_vinculaciones` de la corrida 48 con `idprograma=2`; `ag_gen` con 30 genes del individuo 33
+   (`idprograma=2`, aulas 12/30/31); **sin** fila 48 en `ag_corrida` y **sin** fila 33 en `ag_individuo`.
+4. Catálogo `programas`: `id=1 → APT-53` y `id=2 → APT-52` con el **mismo nombre**.
+
+**Causa raíz:** `AgFabricaIndividuos` estampa el gen con `asig.IdPrograma` (programa real de la asignatura),
+mientras `AgCorrida.IdPrograma` proviene del combo del formulario. `LimpiarStagingAsync(idPeriodo, idPrograma)`
+borraba la cabecera/individuo/violaciones por el par de `ag_corrida` `(3,1)` y el staging por el par de cada
+fila `(3,2)`, dejando la corrida huérfana. Consecuencias: el panel de violaciones queda vacío (no hay
+individuo que consultar), «Aprobar corrida»/«Promover» se deshabilitan y `PromoverAProduccionAsync`
+retornaba en silencio.
+
+### Cambios Aplicados
+1. **Fase 1563 (`AgScheduleRepository.cs`)** — `LimpiarStagingAsync(int, int)`:
+   - `idsDel` = cabeceras del par ∪ `DISTINCT id_corrida` del staging del par.
+   - Todos los borrados se ejecutan por `id_corrida IN @idsDel` (staging y metadatos genéticos).
+   - Limpieza de `ag_gen`/`ag_violacion` de individuos referenciados por el staging purgado aunque
+     `ag_individuo` ya no exista.
+   - Invariante post-purga con `LoggerHelper.Error` ante hijos residuales; guardas `TablaExiste`.
+2. **Fase 1564 (`AgScheduleRepository.cs`, `AgFormGeneradorHorarios.cs`)**:
+   - `UpdateCorridaAsync` falla si el `UPDATE` afecta 0 filas (antes era un no-op silencioso).
+   - `EjecutarOptimizacionAsync` aborta antes de materializar staging cuando la cabecera no se consolidó.
+   - Verificación del conteo real de `ag_violacion` tras `SaveIndividuoAsync`.
+3. **Fase 1565 (`AgFormGeneradorHorarios.cs`)**:
+   - `CargarModuloResultadosAsync` registra `corridaRes.Error`/`indRes.Error` y distingue cabecera ausente
+     (huérfana), cabecera sin individuo y error de lectura; habilita «Recalcular violaciones» como vía de
+     reparación y explica el estado en `lblAgModo`.
+   - `PromoverAProduccionAsync` informa la causa en lugar de retornar en silencio.
+4. **Fase 1566 (nuevos contratos + servicio)**:
+   - `IAgScheduleRepository.GetGenesByIndividuoAsync`, `DetectarCorridaHuerfanaAsync`,
+     `ReinsertarCabeceraHuerfanaAsync` (inserción con id explícito e idempotente).
+   - `AgCorridaHuerfana`, `AgReparacionCorridaResultado`, `IAgReparacionCorridaService`,
+     `AgReparacionCorridaService` (valida cobertura del contexto antes de escribir, evalúa con
+     `AgEvaluadorAptitud` y persiste violaciones con `ReemplazarViolacionesAsync`).
+   - `RecalcularViolacionesDesdeModuloRAsync` invoca la reparación cuando detecta staging sin cabecera.
+   - Registro de los 4 archivos nuevos en `ConversorPDF.XLL.csproj`.
+
+### Pruebas
+- `AgScheduleRepositoryHuerfanasTests.cs` (nuevo): 6 casos de purga/reparación sobre SQLite temporal.
+- `AgReparacionCorridaServiceTests.cs` (nuevo): 4 casos con Moq (cobertura, éxito, cabecera existente, sin genes).
+- `scripts/verify.ps1 -Mode Fast -Filter "…AgScheduleRepositoryPurga|…AgScheduleRepositoryReparacion|…AgReparacionCorrida"` → 10/10 PASS.
+
+### Sincronización REGISTRY
+- Fila `R-029` (`executing`) y contadores actualizados a `ronda: 307 / 308`, `fase: 1566 / 1567`.
+
+#### Fase 1567 — Nombre de regla en `ag_violacion` (detectada en la verificación end-to-end)
+- **Diagnóstico:** `ag_violacion.regla` está declarada `INTEGER` pero almacena el nombre de la regla
+  (`'R1_SuperposicionDocente'`, …). El proveedor SQLite aplica la afinidad de la columna al leer y devolvía `0`,
+  de modo que el panel mostraba «regla 0» y la vista por fechas perdía el identificador.
+- **Acción:** `CAST(regla AS TEXT)` en `AgScheduleRepository.GetViolacionesByIndividuoAsync` y en
+  `FormVerVinculaciones.CargarViolacionesAsync`; prueba de regresión con la columna declarada `INTEGER`.
+- **Verificación:** arnés end-to-end sobre copia del vault real: `[HARD] R1_SuperposicionDocente`,
+  `[SOFT] S1_HuecosHorarios`.
+
+---
+
+## Ronda 308: Validador de Reglas AG y Oleadas Temporales (Fases 1568–1574)
+
+### Resumen Ejecutivo
+El validador de restricciones duras del algoritmo genético (`AgValidadorReglas`) marcaba colisiones espurias (p. ej. 101 HARD en la corrida #48) porque contrastaba únicamente la plantilla semanal (`DiaSemana`, `IdBloqueHorario`) ignorando las ventanas de fechas estimadas (`FechaInicioEstimada`, `FechaFinEstimada`). En cohortes avanzadas, múltiples asignaturas rotan en el mismo día y bloque en la misma aula física de manera modular (oleadas consecutivas sin solape real).
+
+### Detalle de Fases
+
+1. **Fase 1568 (`AgVentanaSolape.cs`, `AgVentanaSolapeTests.cs`)**:
+   - Creación del helper estático puro `AgVentanaSolape` con método `SeSolapan(DateTime? iniA, DateTime? finA, DateTime? iniB, DateTime? finB)` y `AgruparPorSolape(IEnumerable<T>)`.
+   - Semántica conservadora: cualquier extremo nulo asume solape (`true`).
+   - Registro en `ConversorPDF.XLL.csproj`.
+2. **Fase 1569 (`AgValidadorReglas.cs`)**:
+   - Ajuste de colisiones R1 (docente), R2 (aula), R3 (grupo), R4 (dos asignaturas mismo día y franja) y R14 (bloques solapados en horas) para filtrar únicamente cuando `AgVentanaSolape.SeSolapan` sea verdadero.
+3. **Fase 1570 (`AgValidadorReglas.cs`)**:
+   - Refactorización de `R5_MaxAsignaturasSemana` de semanas ISO a conteo continuo día a día sobre el rango `[min(FechaInicio), max(FechaFin)]` de la cohorte contra `maxCarriles`.
+4. **Fase 1571 (`AgValidadorReglas.cs`)**:
+   - Admisión de `AgEstadoAula.Disponible` y `AgEstadoAula.Aprobado` en `R4_CompatibilidadAula`.
+5. **Fase 1572 (`AgValidadorReglas.cs`)**:
+   - Acotamiento de asignaturas requeridas al alcance de las aulas que participan en la corrida (`contexto.AulaAsignaturas`).
+6. **Fase 1573 (`AgValidadorReglasOleadasTests.cs`)**:
+   - Suite de pruebas de regresión con 6 escenarios de oleadas reales (caso #48), ventanas disyuntas, y controles cruzados.
+7. **Fase 1574 (Verificación, Cierre y Documentación)**:
+   - Verificación global `scripts/verify.ps1 -Mode Fast` (1123/1123 tests PASS).
+   - Documentación técnica en `docs/articles/changes/2026-11-11-validador-oleadas.md`.
+   - Cierre de asignación R-030 en `REGISTRY.md`.
+   - **Verificación sobre datos reales (#48):** con el validador corregido y los 30 genes reales del individuo #33
+     (contexto reconstruido desde `ag_aula`, `ag_bloque_horario`, `asignaturas` y pool docente) el resultado es
+     **HARD = 0, SOFT = 0, 0 filas**; se confirman 0 solapes reales por aula, cohorte y docente, y que
+     `ag_gen.dias_patron` está poblado (`"4,5"` / `"6"`), por lo que R6/R13 agrupan bien por carril.
+   - **Corrección del fixture (F1573):** `AgValidadorReglasOleadasTests` usaba `Franja = "M"/"T"` en lugar del
+     contrato canónico `MANANA`/`TARDE` (`AgFranjaJornada`), lo que producía un fallo espurio de
+     `R11_DuracionSesionInvalida`; corregido, con diagnóstico de violaciones incluido en las aserciones.
+
+
+
+---
+
+## Ronda 309: Contexto Homónimo y Anclaje de Filtros en el Módulo R (Fases 1575–1578)
+
+### Contexto y Diagnóstico
+Con el validador de oleadas desplegado (Ronda 308) la UI seguía mostrando `125 HARD` y fallaban dos acciones:
+
+1. **Fase 1575:** `ConstruirContextoAsync` forzaba el programa de la corrida (id 2) y después la resolución de
+   homónimos (Fases 446/477) lo sustituía por el programa homónimo con más asignaturas del semestre (id 1)
+   ⇒ `contexto=3/1` frente a `corrida=3/2`. `AgRecalculoViolacionesService` (Fase 1532) aborta y el validador nuevo
+   nunca se ejecuta; el panel releyó las 101 filas persistidas el 11/11 a las 14:18 con el validador antiguo.
+2. **Fase 1576:** `AbrirDetalleSesionesModoAgAsync` filtraba `vw_AgSesionesDetalle` por el programa del árbol (1),
+   mientras el staging es programa (2) ⇒ «No se encontraron sesiones registradas…».
+3. **Fase 1577:** `AgReparacionCorridaService` no validaba el período/programa del contexto, por lo que la
+   reparación inicial evaluó con el pensum equivocado.
+4. **Fase 1578:** faltaba prueba de regresión del contexto y verificación end-to-end del recálculo.
+
+### Cambios Aplicados
+1. **Fase 1575 (`AgFormGeneradorHorarios.cs`)**: con `idProgramaForzado > 0` se omite la resolución de homónimos;
+   `ctx.ProgramasAlcance` se fija al programa de la corrida; traza `ProgramaHomonimoOmitido`. La lista
+   `homonimosProg` se conserva a nivel de método porque también filtra aulas.
+2. **Fase 1576 (`AgFormGeneradorHorarios.cs`)**: con corrida cargada, `idPeriodo`/`idPrograma` del detalle se leen de
+   `ag_corrida` (log `[AG] Detalle staging: filtros anclados a la corrida #N`).
+3. **Fase 1577 (`AgReparacionCorridaService.cs`)**: guarda que rechaza contextos con período/programa distinto al de
+   la corrida **antes de escribir**.
+4. **Fase 1578**: test `RepararAsync_ConContextoDeOtroPrograma_FallaSinEscribir`; suite **1124/1124 PASS**;
+   recálculo real sobre copia del vault: **125 → 0** en `ag_corrida`/`ag_individuo` y **101 → 0** filas en
+   `ag_violacion`; artículo `docs/articles/changes/2026-11-11-contexto-homonimo-modulo-r.md`.
+
+### Sincronización REGISTRY
+- Fila `R-031` (`closed`) y contadores actualizados a `ronda: 309 / 310`, `fase: 1578 / 1579`.
+

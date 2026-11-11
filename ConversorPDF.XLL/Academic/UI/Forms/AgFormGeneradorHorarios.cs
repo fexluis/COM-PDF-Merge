@@ -747,23 +747,36 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
                     ? grupoParsed
                     : (combinaciones.Any() ? combinaciones.First().Grupo : string.Empty);
 
-                // Fase 446 & Fase 477: Homónimo de programa con pensum de los semestres solicitados
-                var homonimosProg = _programas.Where(p => string.Equals(p.NombrePrograma?.Trim(), programaSel.NombrePrograma?.Trim(), StringComparison.OrdinalIgnoreCase)).ToList();
-                if (homonimosProg.Count > 1)
+                // Fase 1575: si el programa viene forzado (recálculo/reparación de una corrida), la corrida manda.
+                // La resolución de homónimos (Fase 446/477) sustituía el programa solicitado por otro con el mismo
+                // nombre (APT-53 id=1 vs APT-52 id=2), dejando contexto=3/1 frente a corrida=3/2.
+                bool programaForzado = idProgramaForzado.HasValue && idProgramaForzado.Value > 0;
+                // Fase 1575: la lista de homónimos se conserva a nivel de método porque también filtra aulas más abajo.
+                var homonimosProg = new List<Programa>();
+                if (!programaForzado)
                 {
-                    var ids = homonimosProg.Select(h => h.Id).ToArray();
-                    var semArrayHomonimo = semestresFiltro.Length == 0 ? new[] { "" } : semestresFiltro;
-                    var conAsig = (await db.QueryAsync<int>(new CommandDefinition(
-                        @"SELECT idprograma FROM asignaturas
-                          WHERE idprograma IN @ids AND (@SinFiltro = 1 OR semestre IN @Semestres)
-                          GROUP BY idprograma ORDER BY COUNT(*) DESC",
-                        new { ids, SinFiltro = semestresFiltro.Length == 0 ? 1 : 0, Semestres = semArrayHomonimo }, cancellationToken: ct))).ToList();
-                    if (conAsig.Count > 0 && conAsig[0] != programaSel.Id)
+                    homonimosProg = _programas.Where(p => string.Equals(p.NombrePrograma?.Trim(), programaSel.NombrePrograma?.Trim(), StringComparison.OrdinalIgnoreCase)).ToList();
+                    if (homonimosProg.Count > 1)
                     {
-                        traza.Dato("ProgramaHomonimoResuelto", $"solicitado={programaSel.Id} → usado={conAsig[0]} ({semestreRama})");
-                        LoggerHelper.Info($"[AgFormGeneradorHorarios] Programa homónimo resuelto: solicitado={programaSel.Id} → usado={conAsig[0]} ({semestreRama})");
-                        programaSel = _programas.First(p => p.Id == conAsig[0]);
+                        var ids = homonimosProg.Select(h => h.Id).ToArray();
+                        var semArrayHomonimo = semestresFiltro.Length == 0 ? new[] { "" } : semestresFiltro;
+                        var conAsig = (await db.QueryAsync<int>(new CommandDefinition(
+                            @"SELECT idprograma FROM asignaturas
+                              WHERE idprograma IN @ids AND (@SinFiltro = 1 OR semestre IN @Semestres)
+                              GROUP BY idprograma ORDER BY COUNT(*) DESC",
+                            new { ids, SinFiltro = semestresFiltro.Length == 0 ? 1 : 0, Semestres = semArrayHomonimo }, cancellationToken: ct))).ToList();
+                        if (conAsig.Count > 0 && conAsig[0] != programaSel.Id)
+                        {
+                            traza.Dato("ProgramaHomonimoResuelto", $"solicitado={programaSel.Id} → usado={conAsig[0]} ({semestreRama})");
+                            LoggerHelper.Info($"[AgFormGeneradorHorarios] Programa homónimo resuelto: solicitado={programaSel.Id} → usado={conAsig[0]} ({semestreRama})");
+                            programaSel = _programas.First(p => p.Id == conAsig[0]);
+                        }
                     }
+                }
+                else
+                {
+                    traza.Dato("ProgramaHomonimoOmitido", $"forzado={programaSel.Id} ({programaSel.NombrePrograma})");
+                    LoggerHelper.Info($"[AgFormGeneradorHorarios] Programa forzado #{programaSel.Id} '{programaSel.NombrePrograma}': se omite la resolución de homónimos (Fase 1575).");
                 }
 
                 var ctx = new AgContexto
@@ -781,6 +794,9 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
                 // Fase 525: alcance multi-sede / multi-programa derivado de las combinaciones marcadas
                 var sedesSel = combinaciones.Select(c => c.IdSede).Where(i => i > 0).Distinct().ToList();
                 var progsSel = combinaciones.Select(c => c.IdPrograma).Where(i => i > 0).Distinct().ToList();
+                // Fase 1575: con programa forzado el alcance debe ser el de la corrida; de lo contrario la vista de
+                // detalle staging filtra por el programa del árbol (homónimo) y devuelve 0 sesiones.
+                if (programaForzado) progsSel = new List<int> { programaSel.Id };
                 ctx.SedesAlcance = sedesSel;
                 ctx.ProgramasAlcance = progsSel;
 
@@ -1830,6 +1846,36 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     if (saveIndResult.IsSuccess)
                     {
                         corrida.IdIndividuoOptimo = saveIndResult.Value;
+
+                        // Fase 1564: verificación dura del detalle persistido en ag_violacion. Evita confundir
+                        // "sin violaciones" con "detalle no persistido" (visto en las corridas #44 y #48).
+                        var violPersistidas = await _scheduleRepository.GetViolacionesByIndividuoAsync(
+                            saveIndResult.Value, _ctsEjecucion.Token);
+                        int violEnDb = violPersistidas.IsSuccess ? violPersistidas.Value.Count : -1;
+                        int violEnMemoria = _ultimoResultado.MejorIndividuo.Violaciones?.Count ?? 0;
+
+                        if (violEnDb < 0)
+                        {
+                            LoggerHelper.Warning(
+                                $"[AG] Corrida #{idCorrida}: no se pudo verificar ag_violacion ({violPersistidas.Error}).");
+                        }
+                        else if (violEnDb != violEnMemoria)
+                        {
+                            LoggerHelper.Warning(
+                                $"[AG] Corrida #{idCorrida}: violaciones en memoria={violEnMemoria}, persistidas={violEnDb} " +
+                                $"(HARD={_ultimoResultado.MejorIndividuo.HardViolations}). Revise ag_violacion.");
+                        }
+                        else
+                        {
+                            LoggerHelper.Info(
+                                $"[AG] Corrida #{idCorrida}: {violEnDb} violación(es) persistidas en ag_violacion " +
+                                $"(HARD={_ultimoResultado.MejorIndividuo.HardViolations}).");
+                        }
+                    }
+                    else
+                    {
+                        LoggerHelper.Error(
+                            $"[AG] Corrida #{idCorrida}: no se pudo guardar el individuo óptimo: {saveIndResult.Error}");
                     }
                 }
 
@@ -1845,7 +1891,22 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 corrida.MejorFitness = _ultimoResultado.MejorIndividuo?.Fitness ?? 0.0;
                 corrida.HardViolations = _ultimoResultado.MejorIndividuo?.HardViolations ?? 0;
                 corrida.SoftViolations = _ultimoResultado.MejorIndividuo?.SoftViolations ?? 0.0;
-                await _scheduleRepository.UpdateCorridaAsync(corrida, _ctsEjecucion.Token);
+                var updCorrida = await _scheduleRepository.UpdateCorridaAsync(corrida, _ctsEjecucion.Token);
+                if (updCorrida.IsFailure)
+                {
+                    // Fase 1564: la cabecera desapareció (purga o eliminación concurrente). Sin ag_corrida no hay
+                    // violaciones visibles ni promoción posible: se aborta ANTES de materializar staging.
+                    traza.Fallo("P08_UpdateCorridaAsync", new Exception(updCorrida.Error));
+                    traza.Fin(false, updCorrida.Error);
+                    LoggerHelper.Error($"[AG] Corrida #{idCorrida}: {updCorrida.Error}");
+                    MessageBox.Show(this,
+                        $"No se pudo consolidar la cabecera de la corrida #{idCorrida}:\n{updCorrida.Error}\n\n" +
+                        "La corrida no se materializará en staging para no dejar datos huérfanos.",
+                        "Corrida inconsistente", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    lblStatusAG.Text = "Estado: Corrida sin cabecera en ag_corrida.";
+                    lblStatusAG.ForeColor = Color.DarkRed;
+                    return;
+                }
 
                 // 3. Materializar en Staging (Fase 383 / Fase 404 / Fase 587 / Fase 598)
                 bool stagingOk = true;
@@ -1970,10 +2031,20 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             _idCorridaCargada = idCorrida;
 
             // Fase 314: Rehidratar _ultimoResultado desde SQLite si no existe en la sesión viva
+            bool cabeceraAusente = false;
             if (_ultimoResultado?.MejorIndividuo == null)
             {
                 var corridaRes = await _scheduleRepository.GetCorridaByIdAsync(idCorrida, CancellationToken.None);
-                if (corridaRes.IsSuccess && corridaRes.Value != null)
+                if (corridaRes.IsFailure || corridaRes.Value == null)
+                {
+                    // Fase 1565: no se descarta el motivo real. Antes se asumía "sin cabecera" incluso ante
+                    // errores de lectura (columnas ausentes, bloqueo, etc.), ocultando la causa al usuario.
+                    cabeceraAusente = true;
+                    LoggerHelper.Warning(
+                        $"[AG] No se pudo leer la cabecera de la corrida #{idCorrida} en ag_corrida: " +
+                        $"{(corridaRes.IsFailure ? corridaRes.Error : "sin filas")}");
+                }
+                else
                 {
                     var corridaDb = corridaRes.Value;
                     AgIndividuo indDb = null;
@@ -1983,6 +2054,12 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                         if (indRes.IsSuccess)
                         {
                             indDb = indRes.Value;
+                        }
+                        else
+                        {
+                            LoggerHelper.Warning(
+                                $"[AG] Corrida #{idCorrida}: no se pudo leer el individuo óptimo " +
+                                $"#{corridaDb.IdIndividuoOptimo.Value}: {indRes.Error}");
                         }
                     }
 
@@ -2010,15 +2087,31 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
 
             if (_ultimoResultado?.MejorIndividuo == null)
             {
-                // Fase 1557: staging sin resultado AG; mostrar sesiones y no simular métricas
+                // Fase 1565: staging sin resultado AG. Se distingue "cabecera ausente" (corrida huérfana,
+                // reparable desde esta misma pantalla) de "cabecera presente sin individuo óptimo"
+                // (requiere volver a ejecutar el AG).
                 lblMejorFitness.Text = "Aptitud (Fitness): —";
-                lblHardViolaciones.Text = "Restricciones Hard: — (sin resultado AG)";
+                lblHardViolaciones.Text = cabeceraAusente
+                    ? "Violaciones: — (staging huérfano: sin cabecera en ag_corrida)"
+                    : "Restricciones Hard: — (sin individuo óptimo persistido)";
+                lblHardViolaciones.ForeColor = Color.DarkOrange;
                 lblVacantes.Text = "Vacantes: —";
-                btnRecalcularViolaciones.Enabled = false;
+
+                // El botón existente «Recalcular violaciones» es también la vía de reparación: reconstruye
+                // cabecera e individuo desde el staging y recalcula el detalle en ag_violacion.
+                btnRecalcularViolaciones.Enabled = true;
                 btnPromoverProduccion.Enabled = false;
-                lblAgModo.Text = $"Modo AG · corrida #{idCorrida} · staging sin resultado AG (solo lectura)";
-                LoggerHelper.Warning(
-                    $"[AG] La corrida #{idCorrida} tiene staging pero no cabecera en ag_corrida ni individuo óptimo persistido.");
+                btnAprobarCorrida.Enabled = false;
+
+                lblAgModo.Text = cabeceraAusente
+                    ? $"Modo AG · corrida #{idCorrida} · staging huérfano (sin ag_corrida): use «Recalcular violaciones» para repararla"
+                    : $"Modo AG · corrida #{idCorrida} · sin individuo óptimo persistido (solo lectura)";
+
+                LoggerHelper.Warning(cabeceraAusente
+                    ? $"[AG] La corrida #{idCorrida} tiene staging pero no cabecera en ag_corrida (huérfana). " +
+                      "«Recalcular violaciones» intentará reconstruir cabecera e individuo desde el staging."
+                    : $"[AG] La corrida #{idCorrida} tiene cabecera en ag_corrida pero no individuo óptimo persistido.");
+
                 return true;   // el grid ya está cargado con las sesiones
             }
 
@@ -2426,7 +2519,10 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
 
                 var ind = _ultimoResultado?.MejorIndividuo;
                 btnAprobarCorrida.Enabled = ind != null && ind.Id > 0;
-                btnRecalcularViolaciones.Enabled = ind != null && ind.Id > 0;
+                // Fase 1565: el recálculo queda disponible también para corridas huérfanas (staging sin cabecera),
+                // donde es la única vía de reparación sin volver a ejecutar el AG.
+                bool esHuerfana = _ultimoResultado == null;
+                btnRecalcularViolaciones.Enabled = (ind != null && ind.Id > 0) || esHuerfana;
                 // Fase 1522: el estado del botón se recalcula tras cada carga (antes quedaba heredado del AG)
                 btnPromoverProduccion.Enabled = ind != null && ind.HardViolations == 0;
                 LoggerHelper.Info($"[AG] Corrida #{corrida.IdCorrida} cargada: individuo #{ind?.Id ?? 0}, HARD={ind?.HardViolations ?? 0}, promover={btnPromoverProduccion.Enabled}.");
@@ -2444,6 +2540,90 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 Cursor = Cursors.Default;
             }
         }
+
+        /// <summary>
+        /// Repara una corrida huérfana (staging en ag_vinculaciones/ag_sesiones sin cabecera en ag_corrida
+        /// ni individuo en ag_individuo) reutilizando los genes persistidos en ag_gen y el contexto del AG
+        /// (Fase 1566). Se invoca desde «Recalcular violaciones», sin añadir controles nuevos a la interfaz.
+        /// </summary>
+        /// <param name="idCorrida">Corrida a reparar.</param>
+        /// <returns>True si la corrida quedó reparada y recargada en el Módulo R.</returns>
+        private async Task<bool> IntentarRepararCorridaHuerfanaAsync(long idCorrida)
+        {
+            var diagnostico = await _scheduleRepository.DetectarCorridaHuerfanaAsync(idCorrida, CancellationToken.None);
+            if (diagnostico.IsFailure || !diagnostico.Value.PuedeRepararse)
+            {
+                LoggerHelper.Warning(
+                    $"[AG-Reparacion] Corrida #{idCorrida} no reparable: " +
+                    $"{(diagnostico.IsFailure ? diagnostico.Error : diagnostico.Value.ToString())}");
+                return false;
+            }
+
+            var huerfana = diagnostico.Value;
+            string periodoNom = _periodos.FirstOrDefault(p => p.Id == huerfana.IdPeriodo)?.Nombre
+                ?? huerfana.IdPeriodo.ToString();
+            string programaNom = _programas.FirstOrDefault(pr => pr.Id == huerfana.IdPrograma)?.NombrePrograma
+                ?? huerfana.IdPrograma.ToString();
+
+            var confirmar = MessageBox.Show(this,
+                $"La corrida #{idCorrida} conserva {huerfana.TotalVinculaciones} vinculación(es) y " +
+                $"{huerfana.TotalSesiones} sesión(es) en staging, pero perdió su cabecera en ag_corrida " +
+                $"y su individuo (#{huerfana.IdIndividuo}).\n\n" +
+                $"Se reconstruirá con período «{periodoNom}» y programa «{programaNom}» (datos del staging) " +
+                "y se recalcularán las violaciones. No se vuelve a ejecutar el algoritmo genético.\n\n" +
+                "Requiere que el árbol tenga seleccionadas las cohortes de esa corrida. ¿Continuar?",
+                "Reparar corrida huérfana", MessageBoxButtons.YesNo, MessageBoxIcon.Warning,
+                MessageBoxDefaultButton.Button2);
+            if (confirmar != DialogResult.Yes) return false;
+
+            _contextoActual = null;
+            var ctxRes = await ConstruirContextoAsync(
+                CancellationToken.None, huerfana.IdPeriodo, huerfana.IdPrograma, huerfana.Subunidad);
+            if (ctxRes.IsFailure)
+            {
+                MessageBox.Show(this,
+                    "No se pudo reconstruir el contexto del AG para reparar la corrida:\n" + ctxRes.Error +
+                    "\n\nVerifique el período, el programa, el semestre y las aulas del árbol.",
+                    "Reparar corrida huérfana", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+            _contextoActual = ctxRes.Value;
+
+
+            var servicio = new AgReparacionCorridaService(
+                _scheduleRepository, new AgEvaluadorAptitud(new AgValidadorReglas()));
+            var res = await servicio.RepararAsync(idCorrida, _contextoActual, CancellationToken.None);
+            if (res.IsFailure)
+            {
+                LoggerHelper.Warning($"[AG-Reparacion] corrida #{idCorrida} no reparada: {res.Error}");
+                MessageBox.Show(this, "No se pudo reparar la corrida:\n" + res.Error,
+                    "Reparar corrida huérfana", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+
+            var r = res.Value;
+            LoggerHelper.Info(
+                $"[AG-Reparacion] Corrida #{idCorrida} reparada: individuo #{r.IdIndividuo}, " +
+                $"HARD={r.Hard}, SOFT={r.Soft:0.##}, violaciones={r.Violaciones}, genes={r.GenesEvaluados}.");
+            Log($"[AG-Reparacion] corrida #{idCorrida} reparada · individuo #{r.IdIndividuo} · " +
+                $"HARD={r.Hard} · {r.ResumenPorRegla}");
+
+            _ultimoResultado = null;
+            await CargarModuloResultadosAsync(idCorrida);
+
+            MessageBox.Show(this,
+                $"Corrida #{idCorrida} reparada.\n\n" +
+                $"• Cabecera reconstruida: período «{periodoNom}», programa «{programaNom}»\n" +
+                $"• Individuo #{r.IdIndividuo} con {r.GenesEvaluados} gen(es)\n" +
+                $"• Violaciones: HARD {r.Hard} · SOFT {r.Soft:0.##} ({r.Violaciones} en detalle)\n" +
+                $"• Desglose: {r.ResumenPorRegla}\n\n" +
+                "El detalle quedó persistido en ag_violacion. Apruebe la corrida para habilitar la promoción " +
+                "(la compuerta de seguridad exige HARD = 0).",
+                "Corrida reparada", MessageBoxButtons.OK,
+                r.Hard == 0 ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
+            return true;
+        }
+
 
         /// <summary>
         /// Recalcula las violaciones de la corrida cargada reutilizando el contexto del AG y persiste
@@ -2475,6 +2655,13 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 var corridaRes = await _scheduleRepository.GetCorridaByIdAsync(idCorrida, CancellationToken.None);
                 if (corridaRes.IsFailure)
                 {
+                    // Fase 1566: si la corrida conserva staging pero perdió su cabecera, se ofrece reconstruirla
+                    // (ag_corrida + ag_individuo + ag_violacion) antes de reportar el error de lectura.
+                    if (await IntentarRepararCorridaHuerfanaAsync(idCorrida))
+                    {
+                        return;
+                    }
+
                     MessageBox.Show(this, $"No se pudo consultar la corrida #{idCorrida}:\n{corridaRes.Error}",
                         "Recalcular violaciones", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
@@ -2635,7 +2822,18 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 await CargarModuloResultadosAsync(_idCorridaCargada);
             }
 
-            if (_ultimoResultado == null || _ultimoResultado.MejorIndividuo == null) return;
+            if (_ultimoResultado == null || _ultimoResultado.MejorIndividuo == null)
+            {
+                // Fase 1565: antes retornaba en silencio y el usuario percibía que "promover no funciona".
+                LoggerHelper.Warning(
+                    $"[AG] Promover: la corrida #{_idCorridaCargada} no tiene individuo óptimo rehidratado; se cancela la promoción.");
+                MessageBox.Show(this,
+                    $"La corrida #{_idCorridaCargada} no tiene individuo óptimo persistido.\n\n" +
+                    "Pulse «Recalcular violaciones» para reconstruir la corrida (si conserva staging) " +
+                    "o vuelva a ejecutar el AG.",
+                    "Promover a producción", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
 
             var ind = _ultimoResultado.MejorIndividuo;
             var traza = CrearTraza("PromoverProduccion");
@@ -3204,6 +3402,27 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
 
                 long? idCorridaDetalle = _ultimoResultado?.IdCorrida > 0 ? (long?)_ultimoResultado.IdCorrida
                                        : _idCorridaCargada > 0 ? (long?)_idCorridaCargada : null;
+
+                // Fase 1576: si hay corrida cargada, su período y programa mandan sobre el contexto del árbol.
+                // Evita que un programa homónimo (mismo nombre, distinto id) deje la vista de detalle vacía.
+                if (idCorridaDetalle.HasValue && idCorridaDetalle.Value > 0)
+                {
+                    var corridaFiltro = await _scheduleRepository.GetCorridaByIdAsync(idCorridaDetalle.Value, CancellationToken.None);
+                    if (corridaFiltro.IsSuccess && corridaFiltro.Value != null)
+                    {
+                        if (corridaFiltro.Value.IdPeriodo > 0) idPeriodo = corridaFiltro.Value.IdPeriodo;
+                        if (corridaFiltro.Value.IdPrograma > 0) idPrograma = corridaFiltro.Value.IdPrograma;
+                        LoggerHelper.Info(
+                            $"[AG] Detalle staging: filtros anclados a la corrida #{idCorridaDetalle.Value} " +
+                            $"(período {idPeriodo}, programa {idPrograma}).");
+                    }
+                    else
+                    {
+                        LoggerHelper.Warning(
+                            $"[AG] Detalle staging: no se pudo leer la corrida #{idCorridaDetalle.Value}; " +
+                            "se usan los filtros del contexto.");
+                    }
+                }
 
                 var res = await queryRepo.GetSesionesAsync(
                     idSede,

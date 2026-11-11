@@ -578,6 +578,7 @@
     <Compile Include="Academic\Application\Services\CalculadoraViaticaSesion.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgResolutorVentanaSemestre.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgValidadorReglas.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgVentanaSolape.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgValidadorVentana.cs" />
      <Compile Include="Academic\Domain\Models\Genetica\AgPreferenciaDocente.cs" />
     <Compile Include="Academic\Application\Mappers\AgGenToAgVinculacionMapper.cs" />
@@ -600,6 +601,11 @@
     <Compile Include="Academic\Application\Services\Genetica\AgRecalculoViolacionesService.cs" />
     <Compile Include="Academic\Application\Services\Genetica\IAgRecalculoViolacionesService.cs" />
     <Compile Include="Academic\Domain\Models\Genetica\AgRecalculoResultado.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgReparacionCorridaService.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\IAgReparacionCorridaService.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\AgCorridaHuerfana.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\AgReparacionCorridaResultado.cs" />
+
     <Compile Include="Academic\Application\Services\Genetica\AgDiagnosticoTraza.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgEsquemaDiagnostico.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgFormatoAsignatura.cs" />

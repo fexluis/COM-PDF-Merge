@@ -25,6 +25,10 @@ namespace ConversorPDF.XLL.Academic.Domain.Interfaces
         Task<Result<long>> SaveIndividuoAsync(AgIndividuo individuo, CancellationToken ct);
         Task<Result<AgIndividuo>> GetIndividuoByIdAsync(long idIndividuo, CancellationToken ct);
         Task<Result<IReadOnlyCollection<AgViolacion>>> GetViolacionesByIndividuoAsync(long idIndividuo, CancellationToken ct);
+        Task<Result<IReadOnlyCollection<AgGen>>> GetGenesByIndividuoAsync(long idIndividuo, CancellationToken ct);
+        Task<Result<AgCorridaHuerfana>> DetectarCorridaHuerfanaAsync(long idCorrida, CancellationToken ct);
+        Task<Result> ReinsertarCabeceraHuerfanaAsync(AgCorrida corrida, long idCorrida, AgIndividuo individuo, CancellationToken ct);
+
         Task<Result> ReemplazarViolacionesAsync(long idIndividuo, IReadOnlyCollection<AgViolacion> violaciones, int hardViolations, double softViolations, AgEstadoIndividuo estado, long idCorrida, CancellationToken ct);
         Task<Result<IReadOnlyCollection<AgIndividuo>>> GetIndividuosByCorridaAsync(long idCorrida, CancellationToken ct);
         Task<Result> SaveBitacoraAsync(AgBitacora bitacora, CancellationToken ct);

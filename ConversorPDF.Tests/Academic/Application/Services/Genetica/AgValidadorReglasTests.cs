@@ -582,6 +582,171 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
         }
 
         [Fact]
+        public void Evaluar_OleadaBordeSemanaISO_NoEmiteR5Max()
+        {
+            // Asignatura 1 termina domingo 15/03/2026, Asignatura 2 empieza lunes 16/03/2026.
+            // Aunque compartan o linden en la misma semana ISO en los extremos, por días reales nunca son concurrentes.
+            var contexto = new AgContexto();
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
+            contexto.AulasPorId[1] = new AgAula { Id = 1, DiasVentana = "VIE-SAB" }; // 1 carril
+            contexto.RegistrarDocenteHabilitado(10, 1, 148, "IX");
+            contexto.RegistrarDocenteHabilitado(20, 1, 150, "IX");
+
+            var individuo = new AgIndividuo();
+            individuo.Genes.Add(new AgGen
+            {
+                Id = 1,
+                IdTercero = 10,
+                IdAsignatura = 148,
+                IdPrograma = 1,
+                IdSede = 1,
+                Semestre = "IX",
+                Grupo = "A",
+                IdAula = 1,
+                FechaInicioEstimada = new DateTime(2026, 2, 2),
+                FechaFinEstimada = new DateTime(2026, 3, 15)
+            });
+            individuo.Genes.Add(new AgGen
+            {
+                Id = 2,
+                IdTercero = 20,
+                IdAsignatura = 150,
+                IdPrograma = 1,
+                IdSede = 1,
+                Semestre = "IX",
+                Grupo = "A",
+                IdAula = 1,
+                FechaInicioEstimada = new DateTime(2026, 3, 16),
+                FechaFinEstimada = new DateTime(2026, 5, 3)
+            });
+
+            _sut.Evaluar(individuo, contexto);
+
+            individuo.Violaciones.Should().NotContain(v => v.Regla == AgReglaViolacion.R5_MaxAsignaturasSemana);
+        }
+
+        [Fact]
+        public void Evaluar_TresAsignaturasConcurrentesMismoDia_EmiteR5Max()
+        {
+            var contexto = new AgContexto();
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
+            contexto.AulasPorId[1] = new AgAula { Id = 1, DiasVentana = "VIE-SAB" }; // 1 carril
+            contexto.RegistrarDocenteHabilitado(10, 1, 1, "IX");
+            contexto.RegistrarDocenteHabilitado(20, 1, 2, "IX");
+            contexto.RegistrarDocenteHabilitado(30, 1, 3, "IX");
+
+            var individuo = new AgIndividuo();
+            individuo.Genes.Add(new AgGen
+            {
+                Id = 1,
+                IdTercero = 10,
+                IdAsignatura = 1,
+                IdPrograma = 1,
+                IdSede = 1,
+                Semestre = "IX",
+                Grupo = "A",
+                IdAula = 1,
+                FechaInicioEstimada = new DateTime(2026, 2, 2),
+                FechaFinEstimada = new DateTime(2026, 4, 30)
+            });
+            individuo.Genes.Add(new AgGen
+            {
+                Id = 2,
+                IdTercero = 20,
+                IdAsignatura = 2,
+                IdPrograma = 1,
+                IdSede = 1,
+                Semestre = "IX",
+                Grupo = "A",
+                IdAula = 1,
+                FechaInicioEstimada = new DateTime(2026, 2, 2),
+                FechaFinEstimada = new DateTime(2026, 4, 30)
+            });
+            individuo.Genes.Add(new AgGen
+            {
+                Id = 3,
+                IdTercero = 30,
+                IdAsignatura = 3,
+                IdPrograma = 1,
+                IdSede = 1,
+                Semestre = "IX",
+                Grupo = "A",
+                IdAula = 1,
+                FechaInicioEstimada = new DateTime(2026, 2, 2),
+                FechaFinEstimada = new DateTime(2026, 4, 30)
+            });
+
+            _sut.Evaluar(individuo, contexto);
+
+            individuo.Violaciones.Should().Contain(v => v.Regla == AgReglaViolacion.R5_MaxAsignaturasSemana);
+        }
+
+        [Fact]
+        public void Evaluar_AulaAprobada_NoEmiteR4PorEstado()
+        {
+            var contexto = new AgContexto();
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
+            contexto.AulasPorId[1] = new AgAula { Id = 1, Estado = AgEstadoAula.Aprobado, Semestre = "I", Grupo = "A", IdPrograma = 1 };
+            contexto.RegistrarDocenteHabilitado(10, 1, 1, "I");
+
+            var individuo = new AgIndividuo();
+            individuo.Genes.Add(new AgGen
+            {
+                Id = 1,
+                IdTercero = 10,
+                IdAsignatura = 1,
+                IdPrograma = 1,
+                IdSede = 1,
+                Semestre = "I",
+                Grupo = "A",
+                IdAula = 1
+            });
+
+            _sut.Evaluar(individuo, contexto);
+
+            individuo.Violaciones.Should().NotContain(v => v.Regla == AgReglaViolacion.R4_CompatibilidadAula && v.Mensaje.Contains("no está disponible"));
+        }
+
+        [Fact]
+        public void Evaluar_AsignaturasDeAulasNoCubiertas_NoEmiteR5Requerida()
+        {
+            var contexto = new AgContexto
+            {
+                Asignaturas = new List<Asignatura>
+                {
+                    new Asignatura { Id = 1, Nombre = "Cálculo X" },
+                    new Asignatura { Id = 99, Nombre = "Cálculo I (Otra cohorte no cubierta)" }
+                },
+                AulaAsignaturas = new List<AgAulaAsignatura>
+                {
+                    new AgAulaAsignatura { IdAula = 10, IdAsignatura = 1 },
+                    new AgAulaAsignatura { IdAula = 20, IdAsignatura = 99 } // Aula 20 no está presente en los genes del cromosoma
+                }
+            };
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
+            contexto.AulasPorId[10] = new AgAula { Id = 10, Estado = AgEstadoAula.Disponible };
+            contexto.RegistrarDocenteHabilitado(10, 1, 1, "X");
+
+            var individuo = new AgIndividuo();
+            individuo.Genes.Add(new AgGen
+            {
+                Id = 1,
+                IdTercero = 10,
+                IdAsignatura = 1,
+                IdPrograma = 1,
+                IdSede = 1,
+                Semestre = "X",
+                Grupo = "A",
+                IdAula = 10
+            });
+
+            _sut.Evaluar(individuo, contexto);
+
+            individuo.Violaciones.Should().NotContain(v => v.Regla == AgReglaViolacion.R5_HabilitacionDocentePool
+                && v.Mensaje.Contains("Cálculo I (Otra cohorte no cubierta)"));
+        }
+
+        [Fact]
         public void Validador_GenSinBloqueNivel_NoEmiteR14Generico()
         {
             // Arrange (Fase 1100): Gen con SIN_BLOQUE_NIVEL e IdBloqueHorario=0 no debe duplicar sanción con R14 genérico
@@ -787,6 +952,246 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             individuo.HardViolations.Should().Be(2);
             individuo.Violaciones.Should().HaveCount(2, "el detalle debe quedar disponible para persistirse");
             individuo.Violaciones.Should().OnlyContain(v => v.EsDura);
+        }
+
+        [Fact]
+        public void Evaluar_OleadasConsecutivasMismaAula_NoEmiteR2NiR3NiR14()
+        {
+            var contexto = new AgContexto();
+            contexto.Ventana = VentanaSemestre.Crear(1, "2027-1", new DateTime(2027, 2, 1), new DateTime(2027, 6, 30), AgOrigenVentana.Presencial).Value;
+            contexto.AulasPorId[12] = new AgAula { Id = 12, Estado = AgEstadoAula.Disponible };
+            contexto.RegistrarDocenteHabilitado(10, 1, 154, "X");
+            contexto.RegistrarDocenteHabilitado(20, 1, 156, "X");
+            contexto.BloquesPorId[29] = new AgBloqueHorario { Id = 29, DiaSemanaNumero = 5, HoraInicio = "08:00", HoraFin = "12:00", Franja = "M" };
+
+            var individuo = new AgIndividuo();
+            individuo.Genes.Add(new AgGen
+            {
+                Id = 1,
+                IdTercero = 10,
+                IdAsignatura = 154,
+                IdPrograma = 1,
+                IdSede = 1,
+                Semestre = "X",
+                Grupo = "A",
+                IdAula = 12,
+                IdBloqueHorario = 29,
+                DiaSemana = 5,
+                FechaInicioEstimada = new DateTime(2027, 2, 2),
+                FechaFinEstimada = new DateTime(2027, 4, 5)
+            });
+            individuo.Genes.Add(new AgGen
+            {
+                Id = 2,
+                IdTercero = 20,
+                IdAsignatura = 156,
+                IdPrograma = 1,
+                IdSede = 1,
+                Semestre = "X",
+                Grupo = "A",
+                IdAula = 12,
+                IdBloqueHorario = 29,
+                DiaSemana = 5,
+                FechaInicioEstimada = new DateTime(2027, 4, 6),
+                FechaFinEstimada = new DateTime(2027, 4, 19)
+            });
+
+            _sut.Evaluar(individuo, contexto);
+
+            individuo.Violaciones.Should().NotContain(v => v.Regla == AgReglaViolacion.R2_SuperposicionAula);
+            individuo.Violaciones.Should().NotContain(v => v.Regla == AgReglaViolacion.R3_SuperposicionGrupo);
+            individuo.Violaciones.Should().NotContain(v => v.Regla == AgReglaViolacion.R14_BloqueSolapadoPorIntervalo);
+        }
+
+        [Fact]
+        public void Evaluar_OleadasConsecutivasMismoDocente_NoEmiteR1()
+        {
+            var contexto = new AgContexto();
+            contexto.Ventana = VentanaSemestre.Crear(1, "2027-1", new DateTime(2027, 2, 1), new DateTime(2027, 6, 30), AgOrigenVentana.Presencial).Value;
+            contexto.AulasPorId[1] = new AgAula { Id = 1, Estado = AgEstadoAula.Disponible };
+            contexto.AulasPorId[2] = new AgAula { Id = 2, Estado = AgEstadoAula.Disponible };
+            contexto.RegistrarDocenteHabilitado(10, 1, 1, "I");
+            contexto.RegistrarDocenteHabilitado(10, 1, 2, "I");
+            contexto.BloquesPorId[5] = new AgBloqueHorario { Id = 5, DiaSemanaNumero = 1, HoraInicio = "08:00", HoraFin = "12:00", Franja = "M" };
+
+            var individuo = new AgIndividuo();
+            individuo.Genes.Add(new AgGen
+            {
+                Id = 1,
+                IdTercero = 10,
+                IdAsignatura = 1,
+                IdPrograma = 1,
+                IdSede = 1,
+                Semestre = "I",
+                Grupo = "A",
+                IdAula = 1,
+                IdBloqueHorario = 5,
+                DiaSemana = 1,
+                FechaInicioEstimada = new DateTime(2027, 2, 2),
+                FechaFinEstimada = new DateTime(2027, 3, 15)
+            });
+            individuo.Genes.Add(new AgGen
+            {
+                Id = 2,
+                IdTercero = 10,
+                IdAsignatura = 2,
+                IdPrograma = 1,
+                IdSede = 1,
+                Semestre = "I",
+                Grupo = "B",
+                IdAula = 2,
+                IdBloqueHorario = 5,
+                DiaSemana = 1,
+                FechaInicioEstimada = new DateTime(2027, 3, 16),
+                FechaFinEstimada = new DateTime(2027, 4, 30)
+            });
+
+            _sut.Evaluar(individuo, contexto);
+
+            individuo.Violaciones.Should().NotContain(v => v.Regla == AgReglaViolacion.R1_SuperposicionDocente);
+        }
+
+        [Fact]
+        public void Evaluar_VentanasSolapadasMismaAula_EmiteR2()
+        {
+            var contexto = new AgContexto();
+            contexto.Ventana = VentanaSemestre.Crear(1, "2027-1", new DateTime(2027, 2, 1), new DateTime(2027, 6, 30), AgOrigenVentana.Presencial).Value;
+            contexto.AulasPorId[12] = new AgAula { Id = 12, Estado = AgEstadoAula.Disponible };
+            contexto.RegistrarDocenteHabilitado(10, 1, 154, "X");
+            contexto.RegistrarDocenteHabilitado(20, 1, 156, "X");
+            contexto.BloquesPorId[29] = new AgBloqueHorario { Id = 29, DiaSemanaNumero = 5, HoraInicio = "08:00", HoraFin = "12:00", Franja = "M" };
+
+            var individuo = new AgIndividuo();
+            individuo.Genes.Add(new AgGen
+            {
+                Id = 1,
+                IdTercero = 10,
+                IdAsignatura = 154,
+                IdPrograma = 1,
+                IdSede = 1,
+                Semestre = "X",
+                Grupo = "A",
+                IdAula = 12,
+                IdBloqueHorario = 29,
+                DiaSemana = 5,
+                FechaInicioEstimada = new DateTime(2027, 2, 2),
+                FechaFinEstimada = new DateTime(2027, 4, 10)
+            });
+            individuo.Genes.Add(new AgGen
+            {
+                Id = 2,
+                IdTercero = 20,
+                IdAsignatura = 156,
+                IdPrograma = 1,
+                IdSede = 1,
+                Semestre = "X",
+                Grupo = "B",
+                IdAula = 12,
+                IdBloqueHorario = 29,
+                DiaSemana = 5,
+                FechaInicioEstimada = new DateTime(2027, 4, 5), // Solape 05/04 a 10/04
+                FechaFinEstimada = new DateTime(2027, 4, 19)
+            });
+
+            _sut.Evaluar(individuo, contexto);
+
+            individuo.Violaciones.Should().Contain(v => v.Regla == AgReglaViolacion.R2_SuperposicionAula);
+        }
+
+        [Fact]
+        public void Evaluar_MismoBloqueSinFechas_EmiteR2Conservador()
+        {
+            var contexto = new AgContexto();
+            contexto.Ventana = VentanaSemestre.Crear(1, "2027-1", new DateTime(2027, 2, 1), new DateTime(2027, 6, 30), AgOrigenVentana.Presencial).Value;
+            contexto.AulasPorId[12] = new AgAula { Id = 12, Estado = AgEstadoAula.Disponible };
+            contexto.RegistrarDocenteHabilitado(10, 1, 154, "X");
+            contexto.RegistrarDocenteHabilitado(20, 1, 156, "X");
+            contexto.BloquesPorId[29] = new AgBloqueHorario { Id = 29, DiaSemanaNumero = 5, HoraInicio = "08:00", HoraFin = "12:00", Franja = "M" };
+
+            var individuo = new AgIndividuo();
+            individuo.Genes.Add(new AgGen
+            {
+                Id = 1,
+                IdTercero = 10,
+                IdAsignatura = 154,
+                IdPrograma = 1,
+                IdSede = 1,
+                Semestre = "X",
+                Grupo = "A",
+                IdAula = 12,
+                IdBloqueHorario = 29,
+                DiaSemana = 5,
+                FechaInicioEstimada = null,
+                FechaFinEstimada = null
+            });
+            individuo.Genes.Add(new AgGen
+            {
+                Id = 2,
+                IdTercero = 20,
+                IdAsignatura = 156,
+                IdPrograma = 1,
+                IdSede = 1,
+                Semestre = "X",
+                Grupo = "B",
+                IdAula = 12,
+                IdBloqueHorario = 29,
+                DiaSemana = 5,
+                FechaInicioEstimada = null,
+                FechaFinEstimada = null
+            });
+
+            _sut.Evaluar(individuo, contexto);
+
+            individuo.Violaciones.Should().Contain(v => v.Regla == AgReglaViolacion.R2_SuperposicionAula);
+        }
+
+        [Fact]
+        public void Evaluar_MismoBloqueYFechas_EmiteR2SinDuplicarR14()
+        {
+            var contexto = new AgContexto();
+            contexto.Ventana = VentanaSemestre.Crear(1, "2027-1", new DateTime(2027, 2, 1), new DateTime(2027, 6, 30), AgOrigenVentana.Presencial).Value;
+            contexto.AulasPorId[12] = new AgAula { Id = 12, Estado = AgEstadoAula.Disponible };
+            contexto.RegistrarDocenteHabilitado(10, 1, 154, "X");
+            contexto.RegistrarDocenteHabilitado(20, 1, 156, "X");
+            contexto.BloquesPorId[29] = new AgBloqueHorario { Id = 29, DiaSemanaNumero = 5, HoraInicio = "08:00", HoraFin = "12:00", Franja = "M" };
+
+            var individuo = new AgIndividuo();
+            individuo.Genes.Add(new AgGen
+            {
+                Id = 1,
+                IdTercero = 10,
+                IdAsignatura = 154,
+                IdPrograma = 1,
+                IdSede = 1,
+                Semestre = "X",
+                Grupo = "A",
+                IdAula = 12,
+                IdBloqueHorario = 29,
+                DiaSemana = 5,
+                FechaInicioEstimada = new DateTime(2027, 2, 2),
+                FechaFinEstimada = new DateTime(2027, 4, 10)
+            });
+            individuo.Genes.Add(new AgGen
+            {
+                Id = 2,
+                IdTercero = 20,
+                IdAsignatura = 156,
+                IdPrograma = 1,
+                IdSede = 1,
+                Semestre = "X",
+                Grupo = "B",
+                IdAula = 12,
+                IdBloqueHorario = 29,
+                DiaSemana = 5,
+                FechaInicioEstimada = new DateTime(2027, 2, 2),
+                FechaFinEstimada = new DateTime(2027, 4, 10)
+            });
+
+            _sut.Evaluar(individuo, contexto);
+
+            individuo.Violaciones.Should().Contain(v => v.Regla == AgReglaViolacion.R2_SuperposicionAula);
+            individuo.Violaciones.Should().NotContain(v => v.Regla == AgReglaViolacion.R14_BloqueSolapadoPorIntervalo,
+                "R14 no debe duplicar la colisión si tienen exactamente el mismo bloque horario");
         }
     }
 }

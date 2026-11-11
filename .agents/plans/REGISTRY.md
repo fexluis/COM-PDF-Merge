@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 306 | 307 | 2026-11-11 |
-| `fase` | 1562 | 1563 | 2026-11-11 |
+| `ronda` | 309 | 310 | 2026-11-11 |
+| `fase` | 1578 | 1579 | 2026-11-11 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -63,6 +63,10 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-026 | 2026-11-11 | `(revisión manual Ronda 304 — Fases 1557–1558)` | `Wave 304` | `Fase 1557–1558` | closed | — | pendiente |
 | R-027 | 2026-11-11 | `(revisión manual Ronda 305 — Fase 1559)` | `Wave 305` | `Fase 1559` | closed | — | pendiente |
 | R-028 | 2026-11-11 | `(revisión manual Ronda 306 — Fase 1562)` | `Wave 306` | `Fase 1562` | closed | — | pendiente |
+| R-029 | 2026-11-11 | `(revisión manual Ronda 307 — Fases 1563–1567: corrida huérfana)` | `Wave 307` | `Fase 1563–1567` | executing | PASS (Full 1102) | e53d2f5 |
+| R-030 | 2026-11-11 | `(revisión manual Ronda 308 — Fases 1568–1574: validador oleadas)` | `Wave 308` | `Fase 1568–1574` | closed | PASS (Fast 1123 + #48 HARD 0) | HEAD |
+| R-031 | 2026-11-11 | `(revisión manual Ronda 309 — Fases 1575–1578: contexto homónimo Módulo R)` | `Wave 309` | `Fase 1575–1578` | closed | PASS (Fast 1124 + recálculo #48 125→0) | HEAD |
+
 
 Estados: `reserved` (Fase A) · `executing` (Fase B) · `closed` (Fase C, sellado) · `abandoned` (plan descartado: los números **no** se reciclan).
 

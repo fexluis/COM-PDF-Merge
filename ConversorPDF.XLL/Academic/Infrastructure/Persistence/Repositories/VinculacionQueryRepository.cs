@@ -222,6 +222,10 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                     return Result.Failure<IReadOnlyCollection<CorridaStagingItem>>("La base de datos no tiene staging AG (falta tabla ag_vinculaciones).");
 
                 bool tieneCorrida = await ExisteTablaAsync(db, "ag_corrida", ct);
+                bool tieneIdOptimo = tieneCorrida && await ExisteColumnaAsync(db, "ag_corrida", "id_individuo_optimo", ct);
+
+                string colOptimoUnion = tieneIdOptimo ? "COALESCE(c2.id_individuo_optimo, 0)" : "0";
+                string colOptimoMain = tieneIdOptimo ? "COALESCE(MAX(c.id_individuo_optimo), 0)" : "0";
 
                 // Segunda rama del UNION: corridas registradas sin vinculaciones materializadas.
                 // Si la tabla no existe en vaults legados, se sustituye por un SELECT vacío.
@@ -238,7 +242,7 @@ SELECT c2.id AS IdCorrida,
        COALESCE(c2.estado, 0) AS EstadoCorrida,
        0 AS TotalVinculaciones,
        0 AS TotalSesiones,
-       COALESCE(c2.id_individuo_optimo, 0) AS IdIndividuoOptimo
+       " + colOptimoUnion + @" AS IdIndividuoOptimo
 FROM ag_corrida c2
 LEFT JOIN periodos  pe2 ON pe2.idperiodo = c2.idperiodo
 LEFT JOIN programas pr2 ON pr2.id = c2.idprograma
@@ -259,7 +263,7 @@ SELECT v.id_corrida AS IdCorrida,
        COALESCE(MAX(c.estado), 0) AS EstadoCorrida,
        COUNT(DISTINCT v.id) AS TotalVinculaciones,
        COUNT(s.id) AS TotalSesiones,
-       COALESCE(MAX(c.id_individuo_optimo), 0) AS IdIndividuoOptimo
+       " + colOptimoMain + @" AS IdIndividuoOptimo
 FROM ag_vinculaciones v
 LEFT JOIN ag_sesiones  s  ON s.idvinculacion = v.id
 LEFT JOIN ag_corrida   c  ON c.id = v.id_corrida
@@ -472,6 +476,27 @@ WHERE IdCorrida = @idCorrida;";
                 new { vista },
                 cancellationToken: ct));
             return total > 0;
+        }
+
+        private static async Task<bool> ExisteColumnaAsync(IDbConnection db, string tabla, string columna, CancellationToken ct)
+        {
+            try
+            {
+                var rows = await db.QueryAsync(new CommandDefinition($"PRAGMA table_info({tabla})", cancellationToken: ct));
+                foreach (IDictionary<string, object> row in rows)
+                {
+                    if (row.TryGetValue("name", out var val) &&
+                        string.Equals(val?.ToString(), columna, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         private static Task<int> EjecutarAsync(IDbConnection db, IDbTransaction trans, CancellationToken ct, string sql, long idCorrida)
