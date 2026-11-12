@@ -65,5 +65,10 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
         }
 
         public static bool PuedeEscalar(string diasVentana) => Escalera(diasVentana).Count > 0;
+
+        internal static string Rotular(string diasVentana, double unidad)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
