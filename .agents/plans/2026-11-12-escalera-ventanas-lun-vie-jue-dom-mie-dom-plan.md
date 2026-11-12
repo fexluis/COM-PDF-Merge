@@ -9,7 +9,7 @@ numbering:
 ---
 
 # Plan: escalado automático de ventanas LUN-VIE / JUE-DOM / MIE-DOM (consolidado)
-**Generado**: 2026-11-12 · **Autor**: Antigravity/Swarm-Planner · **Estado**: reserved
+**Generado**: 2026-11-12 · **Autor**: Antigravity/Swarm-Planner · **Estado**: closed
 
 ## Execution envelope
 - branch: refactor/academic-modularization
@@ -236,10 +236,13 @@ if (capacidad <= capacidadAntes) continue;
 - **description**: artículo con: tabla de capacidad **nominal** (4 h/8 h) y su diferencia con la efectiva (`4W`, `5W`, `6W`); rutas de escalera; R1 (sábado como rótulo), R2 (ISO `4,5,6,7` terminal), R3 (sin migración/L0), R4 (un escalón por corrida); códigos `I5_INFECTIBLE`/`I5_CAPACIDAD_CARRIL_PATRON`/`R8`; límites y coordinación con el plan de ranuras 4→8 h. En Fase C: fila R-057/R-058, contadores 350/1714, `verify`, `HEAD`, `implementation_plan.md`/`walkthrough.md`.
 - **validation**: documentación enlazada; `-Mode Full` = 0 y `TOTAL` ejecutado ≥ baseline (1172).
 - **verification**: `powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Full`
-- **evidence**: `_evidence/<stamp>/summary.md`
-- **status**: pending
-- **log**: —
-- **files edited/created**: —
+- **evidence**: _evidence/20261112-155902/summary.md
+- **status**: done
+- **log**: GREEN. Artículo técnico redactado en docs/articles/changes/. Gate verify -Mode Full superado con éxito: 1223 tests PASS (0 fallos, 0 errores), superando el baseline oficial de 1172 tests. Registro REGISTRY.md sellado en fila R-058 como closed.
+- **files edited/created**:
+  - docs/articles/changes/2026-11-12-escalera-ventanas-lun-vie-jue-dom-mie-dom.md
+  - tests/baseline/test_baseline.txt
+  - .agents/plans/REGISTRY.md
 
 ---
 

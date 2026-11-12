@@ -92,7 +92,7 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-055 | 2026-11-12 | (revisión documental Ronda 339: sincronización efectiva del plan) | Wave — | Fase 1692 | closed | revisión documental; sin build/tests | c0d986d |
 | R-056 | 2026-11-12 | (corrección documental Ronda 340: rutas T6/T10 y numeración) | Wave — | Fase 1693–1694 | closed | inspección de archivos; sin build/tests | c0d986d |
 | R-057 | 2026-11-12 | `(revisión estática Ronda 344 — Fases 1701–1706: consolidación escalera ventanas)` | `Wave —` | `Fase 1701–1706` | closed | revisión documental; sin build/tests | `e523b51` |
-| R-058 | 2026-11-12 | `2026-11-12-escalera-ventanas-lun-vie-jue-dom-mie-dom-plan.md` | `Wave 1..6` → `Ronda 345–350` | `T1..T8` → `Fase 1707–1714` | reserved | pendiente | `e523b51` |
+| R-058 | 2026-11-12 | `2026-11-12-escalera-ventanas-lun-vie-jue-dom-mie-dom-plan.md` | `Wave 1..6` → `Ronda 345–350` | `T1..T8` → `Fase 1707–1714` | closed | PASS (Full 1223) | HEAD |
 
 
 Estados: `reserved` (Fase A) · `executing` (Fase B) · `closed` (Fase C, sellado) · `abandoned` (plan descartado: los números **no** se reciclan).

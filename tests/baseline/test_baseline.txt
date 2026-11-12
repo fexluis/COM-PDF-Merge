@@ -1,5 +1,5 @@
-# Baseline medido 2026-11-12 con scripts/verify.ps1 -Mode Full tras commit e523b51
-TOTAL: 1172
-PASSED: 1172
+# Baseline medido 2026-11-12 con scripts/verify.ps1 -Mode Full tras Fases 1707-1714 (R-058)
+TOTAL: 1223
+PASSED: 1223
 FAILED: 0
 SKIPPED: 0
