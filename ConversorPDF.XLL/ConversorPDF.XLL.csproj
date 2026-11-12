@@ -17,9 +17,9 @@
     <ExcelDnaCreate64BitAddIn>true</ExcelDnaCreate64BitAddIn>
     <!-- Excluir dependencias que no existen en .NET 4.8 y no deben empaquetarse -->
     <ExcelDnaExcludedDependencies>Microsoft.Bcl.HashCode.dll</ExcelDnaExcludedDependencies>
-    <Version>1.6.4.05</Version>
-    <AssemblyVersion>1.6.4.05</AssemblyVersion>
-    <FileVersion>1.6.4.05</FileVersion>
+    <Version>1.6.4.07</Version>
+    <AssemblyVersion>1.6.4.07</AssemblyVersion>
+    <FileVersion>1.6.4.07</FileVersion>
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <Import Project="obj\ConversorPDF.XLL.csproj.nuget.g.props" Condition="Exists('obj\ConversorPDF.XLL.csproj.nuget.g.props')" />
@@ -699,6 +699,7 @@
     <Compile Include="Academic\Domain\Models\Genetica\AgPlanOleada.cs" />
     <Compile Include="Academic\Domain\Models\Genetica\AgPlanOleadasResultado.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgPlanificadorOleadas.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgParticionCarriles.cs" />
     <Compile Include="Academic\Application\Mappers\AgSeleccionMapper.cs" />
     <Compile Include="Academic\Application\Mappers\AgNodoArbolKeyMapper.cs" />
     <Compile Include="Academic\Domain\Models\Genetica\AgRanura.cs" />
@@ -714,8 +715,10 @@
     <Compile Include="Academic\Domain\Models\AgFiltroTipo.cs" />
     <Compile Include="Academic\Domain\Interfaces\IAgFiltroSeleccionRepository.cs" />
     <Compile Include="Academic\Application\DTOs\AgDimensionesSeleccion.cs" />
+    <Compile Include="Academic\Application\DTOs\AgSeleccionModuloR.cs" />
     <Compile Include="Academic\Application\DTOs\AgTerceroSeleccionDto.cs" />
     <Compile Include="Academic\Application\Services\AgFiltroArbolResolver.cs" />
+    <Compile Include="Academic\Application\Services\AgPerfilAlcanceResolver.cs" />
     <Compile Include="Academic\Application\Services\AgProgramaCatalogoSql.cs" />
     <Compile Include="Academic\Application\Services\AgResumenFiltros.cs" />
     <Compile Include="Academic\Application\Services\AgTerritorialCatalog.cs" />

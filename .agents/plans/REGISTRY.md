@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 309 | 310 | 2026-11-11 |
-| `fase` | 1578 | 1579 | 2026-11-11 |
+| `ronda` | 325 | 326 | 2026-11-12 |
+| `fase` | 1612 | 1613 | 2026-11-12 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -66,6 +66,16 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-029 | 2026-11-11 | `(revisión manual Ronda 307 — Fases 1563–1567: corrida huérfana)` | `Wave 307` | `Fase 1563–1567` | executing | PASS (Full 1102) | e53d2f5 |
 | R-030 | 2026-11-11 | `(revisión manual Ronda 308 — Fases 1568–1574: validador oleadas)` | `Wave 308` | `Fase 1568–1574` | closed | PASS (Fast 1123 + #48 HARD 0) | HEAD |
 | R-031 | 2026-11-11 | `(revisión manual Ronda 309 — Fases 1575–1578: contexto homónimo Módulo R)` | `Wave 309` | `Fase 1575–1578` | closed | PASS (Fast 1124 + recálculo #48 125→0) | HEAD |
+| R-032 | 2026-11-11 | `(revisión manual Ronda 310 — Fase 1579: sede en el log del validador de ventana)` | `Wave —` | `Fase 1579` | closed | PASS (Fast 21/21 AgValidadorVentanaTests) | HEAD |
+| R-033 | 2026-11-11 | `(revisión manual Ronda 311 — Fase 1580: alcance completo al cargar perfil de árbol)` | `Wave —` | `Fase 1580` | closed | PASS (Fast 27 tests alcance+validador) | HEAD |
+| R-034 | 2026-11-11 | `(revisión manual Ronda 312 — Fase 1581: partición de carriles consciente del patrón)` | `Wave —` | `Fase 1581` | closed | PASS (Fast 1156, 49/49 oleadas) | HEAD |
+| R-035 | 2026-11-11 | `(revisión manual Ronda 313 — Fases 1582–1589: fidelidad de patrón y robustecimiento)` | `Wave —` | `Fase 1582–1589` | closed | PASS (Fast/Full) | HEAD |
+| R-036 | 2026-11-11 | `(revisión manual Ronda 314 — Fases 1590–1595: separación de casos, diagnóstico y gate)` | `Wave —` | `Fase 1590–1595` | closed | PASS (Fast 1157, gate y fixtures calibrados) | HEAD |
+| R-037 | 2026-11-11 | `(revisión manual Ronda 315 — Fases 1596–1598: índices/bloques gate, pool docente y festivo)` | `Wave —` | `Fase 1596–1598` | closed | PASS (Fast/Full) | HEAD |
+| R-038 | 2026-11-11 | `(revisión manual Ronda 316 — Fase 1599: API canónica RegistrarDocenteHabilitado en Gate G-1 y calibración Caso 7.6)` | `Wave —` | `Fase 1599` | closed | PASS (Fast 1158, 44/44 focalizados) | HEAD |
+| R-039 | 2026-11-11 | `(revisión manual Ronda 317 — Fases 1600–1602: reparto compatible con patrón y diagnóstico verificable de carriles)` | `Wave —` | `Fase 1600–1602` | closed | PASS (Fast/Full) | HEAD |
+| R-040 | 2026-11-11 | `(revisión manual Ronda 318 — Fases 1603–1605: corrección de tipos en pruebas, calibración de fixtures y cobertura festivo)` | `Wave —` | `Fase 1603–1605` | closed | PASS (Full 1166) | HEAD |
+| R-041 | 2026-11-12 | `2026-11-12-sincronizacion-corridas-modulo-r-plan.md` | `Wave 1..7` → `Ronda 319–325` | `T1..T7` → `Fase 1606–1612` | executing | pendiente (Full) | 742afcd |
 
 
 Estados: `reserved` (Fase A) · `executing` (Fase B) · `closed` (Fase C, sellado) · `abandoned` (plan descartado: los números **no** se reciclan).

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using ConversorPDF.XLL.Academic.Application.DTOs;
 using ConversorPDF.XLL.Academic.Domain.Enums;
 using ConversorPDF.XLL.Academic.Domain.Models.Genetica;
 
@@ -134,6 +135,14 @@ namespace ConversorPDF.XLL.Academic.Application.Services
 
             var conStaging = items.FirstOrDefault(c => c.IdCorrida > 0 && c.TieneStaging);
             return conStaging ?? CrearTodasLasCorridas();
+        }
+
+        /// <summary>
+        /// Resuelve la selección para el selector de corridas del Módulo R (Fase 1606).
+        /// </summary>
+        public static AgSeleccionModuloR ResolverSeleccionModuloR(IEnumerable<CorridaStagingItem> corridas, long? idCorridaActiva)
+        {
+            throw new NotImplementedException();
         }
 
         private static void AgregarSiTieneValor(ICollection<string> partes, string valor)
