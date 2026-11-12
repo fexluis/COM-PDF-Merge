@@ -309,6 +309,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
                 components.Add(_imageListEstados);
             }
             treeContextoAcademico.CheckBoxes = false;
+            treeContextoAcademico.ShowNodeToolTips = true;
             treeContextoAcademico.StateImageList = _imageListEstados;
             treeContextoAcademico.BeforeExpand += (s, e) => CargarHijosLazy(e.Node);
             treeContextoAcademico.AfterCheck += TreeContextoAcademico_AfterCheck;
@@ -320,6 +321,12 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
                 {
                     if (key.Nivel == 6)
                     {
+                        int dy = e.Y - e.Node.Bounds.Y;
+                        if (dy < 0 || dy > e.Node.Bounds.Height)
+                        {
+                            return;
+                        }
+
                         int dx = e.X - e.Node.Bounds.X;
                         var c = CalcularColumnasNivel6();
                         if (dx >= c.DxManana)
@@ -1393,11 +1400,29 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 if (decisionesEscalado.Count > 0)
                 {
                     string detalleEsc = string.Join("\n", decisionesEscalado.Select(d =>
-                        $"• {d.AulaRef}: {d.Desde} ({d.CapacidadAntes} ranuras) → {d.Hacia} ({d.CapacidadDespues} ranuras); {d.Motivo}."));
+                    {
+                        var aulaObj = _contextoActual?.Aulas?.FirstOrDefault(a => string.Equals(a.AulaRef, d.AulaRef, StringComparison.OrdinalIgnoreCase));
+                        var progObj = _contextoActual?.Programas?.FirstOrDefault(p => p.Id == aulaObj?.IdPrograma);
+                        var nivelObj = AgNivelAcademicoCatalogo.Desde(progObj?.Modalidad);
+                        double unidad = aulaObj != null ? AgUnidadesSemanales.HorasSesionAula(aulaObj, nivelObj) : 4.0;
+                        string rotuloHacia = AgEscaleraVentanas.Rotular(d.Hacia, unidad);
+                        return $"• {d.AulaRef}: {d.Desde} ({d.CapacidadAntes} ranuras) → {d.Hacia} [{rotuloHacia}] ({d.CapacidadDespues} ranuras); {d.Motivo}.";
+                    }));
+
+                    string sugerenciasResumen = string.Join(", ", decisionesEscalado
+                        .Select(d =>
+                        {
+                            var aulaObj = _contextoActual?.Aulas?.FirstOrDefault(a => string.Equals(a.AulaRef, d.AulaRef, StringComparison.OrdinalIgnoreCase));
+                            var progObj = _contextoActual?.Programas?.FirstOrDefault(p => p.Id == aulaObj?.IdPrograma);
+                            var nivelObj = AgNivelAcademicoCatalogo.Desde(progObj?.Modalidad);
+                            double unidad = aulaObj != null ? AgUnidadesSemanales.HorasSesionAula(aulaObj, nivelObj) : 4.0;
+                            return $"{d.Desde} → {d.Hacia} ({AgEscaleraVentanas.Rotular(d.Hacia, unidad)})";
+                        })
+                        .Distinct());
 
                     var respuesta = MessageBox.Show(this,
                         "Se detectaron aulas cuya demanda excede la capacidad de su ventana:\n\n" + detalleEsc +
-                        "\n\n¿Aplicar el escalado sugerido (VIE-SAB → JUE-SAB → 4,5,6,7)?",
+                        "\n\n¿Aplicar el escalado sugerido (" + sugerenciasResumen + ")?",
                         "Escalado de ventana (Pre-Vuelo)", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
                     traza.Dato("EscaladoSugerido", string.Join(" | ", decisionesEscalado.Select(d => $"{d.AulaRef}:{d.Desde}->{d.Hacia}")));
@@ -1415,7 +1440,16 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                         {
                             var aulaMem = _contextoActual.Aulas.FirstOrDefault(a =>
                                 string.Equals(a.AulaRef, d.AulaRef, StringComparison.OrdinalIgnoreCase));
-                            if (aulaMem != null) aulaMem.DiasVentana = d.Hacia;
+                            if (aulaMem != null)
+                            {
+                                aulaMem.DiasVentana = d.Hacia;
+                            }
+                        }
+
+                        // Fase 1706 / Fase 1713: Recargar dimensiones del perfil activo en el árbol antes de re-validar
+                        if (idArbolActivo > 0)
+                        {
+                            await RecargarDimensionesPerfilActivoTrasEscaladoAsync(idArbolActivo, CancellationToken.None).ConfigureAwait(true);
                         }
 
                         // Fase 1261 / Fase 1264 / Fase 1274: re-validar fuera del hilo UI
@@ -4205,6 +4239,102 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     _timerSyncDimensiones.Start();
                 }
             }
+
+            // Fase 1706 / Fase 1713: Refrescar tooltip de nodo nivel 6
+            ActualizarToolTipNivel6(node, key);
+        }
+
+        private static readonly HashSet<string> EtiquetasVentanaRadio = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "LUN-JUE", "MAR-VIE", "JUE-SAB", "VIE-SAB", "VIE-DOM"
+        };
+
+        private void ActualizarToolTipNivel6(TreeNode node, AgNodoArbolKey key)
+        {
+            if (node == null)
+            {
+                return;
+            }
+
+            string dv = key?.DiasVentana?.Trim();
+            if (!string.IsNullOrWhiteSpace(dv) && !EtiquetasVentanaRadio.Contains(dv))
+            {
+                node.ToolTipText = $"Ventana actual: {dv} ({AgDiasVentana.AIso(dv)})";
+            }
+            else
+            {
+                node.ToolTipText = null;
+            }
+        }
+
+        private void RecorrerNodosNivel6(TreeNodeCollection nodes, Action<TreeNode, AgNodoArbolKey> accion)
+        {
+            if (nodes == null)
+            {
+                return;
+            }
+
+            foreach (TreeNode n in nodes)
+            {
+                if (n.Tag is AgNodoArbolKey k && k.Nivel == 6)
+                {
+                    accion(n, k);
+                }
+
+                RecorrerNodosNivel6(n.Nodes, accion);
+            }
+        }
+
+        /// <summary>
+        /// Fase 1706 / Fase 1713: Helper estrecho para recargar DTOs y dimensiones del perfil activo
+        /// tras un escalado automático sin reiniciar el contexto ni rebarajar combos del formulario.
+        /// </summary>
+        private async Task RecargarDimensionesPerfilActivoTrasEscaladoAsync(int idArbolActivo, CancellationToken ct)
+        {
+            if (idArbolActivo <= 0)
+            {
+                return;
+            }
+
+            bool prevRestaurando = _restaurandoPerfil;
+            _restaurandoPerfil = true;
+            try
+            {
+                var cargaRes = await _arbolService.CargarPerfilAsync(idArbolActivo, ct).ConfigureAwait(true);
+                if (cargaRes.IsFailure || cargaRes.Value.Item2 == null)
+                {
+                    return;
+                }
+
+                var dtosPorAulaRef = cargaRes.Value.Item2
+                    .Where(d => !string.IsNullOrWhiteSpace(d.AulaRef))
+                    .ToDictionary(d => d.AulaRef, StringComparer.OrdinalIgnoreCase);
+
+                if (dtosPorAulaRef.Count == 0)
+                {
+                    return;
+                }
+
+                RecorrerNodosNivel6(treeContextoAcademico.Nodes, (nodo, key) =>
+                {
+                    string aulaRef = ConstruirAulaRefDeNodo(nodo);
+                    if (!string.IsNullOrWhiteSpace(aulaRef) && dtosPorAulaRef.TryGetValue(aulaRef, out var dto))
+                    {
+                        AgNodoArbolKeyMapper.AplicarDimensiones(key, dto);
+                        ActualizarToolTipNivel6(nodo, key);
+                    }
+                });
+
+                treeContextoAcademico.Invalidate();
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error("[AgFormGeneradorHorarios] Error al recargar dimensiones tras escalado", ex);
+            }
+            finally
+            {
+                _restaurandoPerfil = prevRestaurando;
+            }
         }
 
         /// <summary>
@@ -5142,6 +5272,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                         {
                             dimensionesDefecto++;
                         }
+                        ActualizarToolTipNivel6(nodoMod, keyMod);
                     }
 
                     if (primerNodoRestaurado == null)

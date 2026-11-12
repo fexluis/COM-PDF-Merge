@@ -221,10 +221,11 @@ if (capacidad <= capacidadAntes) continue;
   **(c) Leyenda (Fase 1706, ubicación concreta):** **no** dibujar nada dentro de `[DxLunJue, DxSep2)`: `NodeMouseClick` (`:316-353`) ignora `e.Y` y `ProcesarClickDimensionNivel6` (`:4167-4186`) traduce cualquier `dx` de ese rango a una ventana. Solución: `treeContextoAcademico.ShowNodeToolTips = true` y, para nivel 6 con `dias_ventana` fuera de las 5 etiquetas, `node.ToolTipText = $"Ventana actual: {dv} ({AgDiasVentana.AIso(dv)})"` (detalle seleccionado, no clicable, sin layout). Defensa en profundidad: añadir guarda `dy` en el handler (`dy < 0 || dy > e.Node.Bounds.Height → return`) antes de delegar en `ProcesarClickDimensionNivel6`. Si se exigiera leyenda visible, ubicarla fuera de todo rango `x` (cabecera `lblColDias` o franja de estado) y solo con la guarda `dy`.
 - **validation**: `-Mode Build` sin warnings nuevos; flujo en test de integración (repositorio + mapper, sin WinForms): escalar → recargar DTO → cambiar `Jornada` → guardar → recargar → `DiasVentana` conserva `LUN-VIE`/`MIE-DOM` y los demás árboles no cambian. Smoke manual diferido a la ejecución.
 - **verification**: powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "FullyQualifiedName~AgNodoArbolKeyMapper|FullyQualifiedName~AgEscaladorVentanaAula"
-- **evidence**: `_evidence/<stamp>/summary.md`
-- **status**: pending
-- **log**: —
-- **files edited/created**: —
+- **evidence**: _evidence/20261112-155750/summary.md
+- **status**: done
+- **log**: GREEN. Modal genérico con Rotular dinámico según unidad del aula. Recarga de dimensiones del perfil activo implementada sin rebarajar combos. ToolTip seguro y guarda vertical dy en click de nivel 6 integrados. Compilación y tests en PASS (23/23). Auditado por task-reviewer.
+- **files edited/created**:
+  - ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs
 
 ### T8: Documentación y cierre
 - **id**: T8
