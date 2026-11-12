@@ -8723,3 +8723,146 @@ La revisión en disco constató discrepancias entre el informe previo y el estad
 
 ### Sincronización REGISTRY
 - Fila `R-041` (`closed`) y contadores actualizados a `ronda: 325 / 326`, `fase: 1612 / 1613`.
+
+---
+
+## Ronda 326: Desincronización de Commits, Mutación de Items con Popup Abierto y Cargas Concurrentes del Selector (Fases 1613–1620)
+
+### Contexto y Diagnóstico
+1. **Fase 1613:** En `ConversorPDF.XLL.csproj` se registraron `Academic\Application\Services\AgPerfilAlcanceResolver.cs` y `Academic\Application\Services\Genetica\AgParticionCarriles.cs` y en `AgFormGeneradorHorarios.cs` se invocaba `AgPerfilAlcanceResolver.Resolver(...)`. Ninguno de los dos archivos estaba versionado en git (`??`), provocando que un checkout limpio de HEAD fallara con errores CS2001 y CS0246.
+2. **Fase 1614:** `ConversorPDF.XLL.csproj` elevó `Version/AssemblyVersion/FileVersion` a `1.6.4.07` en el commit T1 de R-041 mientras `App.APP_VERSION` en `App.cs` e `InstaladorConversorPDF.wxs` permanecían sin versionar en el árbol de trabajo.
+3. **Fase 1615:** `cmbCargarCorridas.DropDown += (s, e) => RefrescarComboCorridasSeguro();` iniciaba la consulta asíncrona mientras se abría el popup del ComboBox. Al completar la consulta, se ejecutaba `Items.Clear()` y `Items.Add(...)` con `DroppedDown == true`, provocando cierre repentino, parpadeo o potencial `ArgumentOutOfRangeException`.
+4. **Fase 1616:** `CargarCorridaDesdeComboAsync` carecía de guarda asíncrona de reentrada (`_cargandoCorridaDesdeCombo`). Eventos concurrentes de `SelectedIndexChanged` o invocaciones desde refrescos podían ejecutar cargas simultáneas que pisaban `_idCorridaCargada`, `_ultimoResultado` y las grillas.
+5. **Fase 1617:** `seleccion.RequiereCargaInicial` se evaluaba en cada refresco. Si una corrida fallaba al cargar staging o en optimización (`_idCorridaCargada = 0`), el refresco post-ejecución en `finally` resolvía `RequiereCargaInicial = true` y cargaba automáticamente otra corrida ajena, ocultando el error recién emitido.
+6. **Fase 1618:** Cuando la corrida activa quedaba excluida por los filtros de período/programa, `seleccion.CorridaActivaNoEncontrada` dejaba `SelectedIndex = -1`, mostrando el ComboBox en blanco y violando el criterio 1 (representar la misma corrida en selector, etiqueta y grilla).
+7. **Fase 1619:** El campo privado `_claveFiltroCorridas` era código muerto tras retirar la guarda del `DropDown`, pues solo se escribía y nunca se leía.
+8. **Fase 1620:** En `docs/articles/changes/2026-11-12-sincronizacion-selector-corridas-modulo-r.md:111-115`, los nombres de las pruebas unitarias tenían discrepancias de nomenclatura contra `AgCorridaSelectorTests.cs`.
+
+### Cambios Aplicados
+1. **Fase 1613 (`AgPerfilAlcanceResolver.cs`, `AgParticionCarriles.cs`, `ConversorPDF.XLL.csproj`):**
+   - Versionado de los archivos de soporte de rondas previas (`AgPerfilAlcanceResolver.cs`, `AgParticionCarriles.cs` y sus tests de integración y caracterización) para garantizar que un clon limpio de HEAD compile sin errores CS2001 ni CS0246.
+2. **Fase 1614 (`App.cs`, `InstaladorConversorPDF.wxs`):**
+   - Versionado coherente del bump `1.6.4.07` en `App.cs` e `InstaladorConversorPDF.wxs` alineado con `ConversorPDF.XLL.csproj`.
+3. **Fase 1615 (`AgFormGeneradorHorarios.cs`):**
+   - Sustitución de `DropDown` por `DropDownClosed += (s, e) => RefrescarComboCorridasSeguro();`.
+   - Guarda defensiva en `RefrescarComboCorridasAsync`: `if (cmbCargarCorridas.DroppedDown) { _solicitudPendienteRefrescoCombo = true; return; }` para asegurar que nunca se manipulen `Items` mientras el popup esté desplegado.
+4. **Fase 1616 (`AgFormGeneradorHorarios.cs`):**
+   - Introducción de la guarda `private bool _cargandoCorridaDesdeCombo;` en `CargarCorridaDesdeComboAsync` con `try/finally` asegurando exclusión mutua de cargas concurrentes.
+5. **Fase 1617 (`AgFormGeneradorHorarios.cs`):**
+   - Parametrización `RefrescarComboCorridasAsync(bool permitirCargaInicial = false)` y `RefrescarComboCorridasSeguro(bool permitirCargaInicial = false)`.
+   - Invocación con `permitirCargaInicial: true` exclusivamente en `OnShown` al inicializar la pantalla. Refrescos posteriores, post-ejecución y retorno de diálogos usan `false` por defecto.
+6. **Fase 1618 (`AgFormGeneradorHorarios.cs`):**
+   - Inyección de la corrida activa como ítem con etiqueta `" (fuera de filtro)"` cuando los filtros activos la excluyen, seleccionándola en el combo y actualizando `lblAgModo` informativamente sin dejar el ComboBox en blanco.
+7. **Fase 1619 (`AgFormGeneradorHorarios.cs`):**
+   - Eliminación del campo muerto `_claveFiltroCorridas` y de sus asignaciones obsoletas en `RefrescarComboCorridasAsync`.
+8. **Fase 1620 (`docs/articles/changes/2026-11-12-sincronizacion-selector-corridas-modulo-r.md`):**
+   - Corrección de la nomenclatura de los 6 tests unitarios para alinearlos exactamente con `AgCorridaSelectorTests.cs` y documentación de las salvaguardas de `DropDownClosed`, `_cargandoCorridaDesdeCombo` y `permitirCargaInicial`.
+
+### Sincronización REGISTRY
+- Fila `R-042` (`closed`) y contadores actualizados a `ronda: 326 / 327`, `fase: 1620 / 1621`.
+
+---
+
+## Ronda 327: Correcciones Fases 1621–1626 — Refresco Diferido, Coalescencia de Cargas y Marcador Fuera de Filtro
+
+### Contexto y Diagnóstico
+1. **Fase 1621:** En `AgFormGeneradorHorarios.cs`, la reinyección de la corrida activa asignaba `activa.Etiqueta = ... + " (fuera de filtro)"`, pero la iteración subsiguiente `foreach (var it in items) it.Etiqueta = AgCorridaSelector.FormatearEtiqueta(it);` reformateaba todos los ítems borrando el sufijo antes de llegar a la UI.
+2. **Fase 1622:** La guarda `if (cmbCargarCorridas.DroppedDown)` marcaba `_solicitudPendienteRefrescoCombo = true` y retornaba antes de `_refrescandoComboCorridas = true`. Al no haber reintento al cerrar el desplegable, los refrescos post-ejecución ocurridos con el popup abierto se descartaban y el selector no mostraba la corrida `#N`.
+3. **Fase 1623:** Sustituir `DropDown` por `DropDownClosed` impedía cumplir el Criterio 2 (*"al desplegar el ComboBox se realiza una consulta fresca"*). Se requiere que `DropDown` inicie la consulta asíncrona y que la mutación de `Items` espere a que el popup esté cerrado, consumiéndose en `DropDownClosed`.
+4. **Fase 1624:** Si `OnShown` invocaba `RefrescarComboCorridasSeguro(permitirCargaInicial: true)` mientras `_refrescandoComboCorridas == true`, la invocación en curso completaba su ciclo con `permitirCargaInicial == false`, perdiéndose la autorización de carga automática al abrir el formulario.
+5. **Fase 1625:** `_cargandoCorridaDesdeCombo` descartaba `SelectedIndexChanged` si el usuario elegía otra corrida mientras una carga estaba en curso, desalineando el combo (`#B`) y la grilla/métricas (`#A`).
+6. **Fase 1626:** R-042 requería adición de fila `R-043` en `REGISTRY.md` para rastrear las correcciones aplicadas y mantener append-only el registro.
+
+### Cambios Aplicados
+1. **Fase 1621 (`AgFormGeneradorHorarios.cs`):**
+   - Captura de `fueraDeFiltro` y aplicación del sufijo `" (fuera de filtro)"` estrictamente después del bucle `foreach (var it in items) it.Etiqueta = AgCorridaSelector.FormatearEtiqueta(it);`.
+2. **Fase 1622 & 1623 (`AgFormGeneradorHorarios.cs`):**
+   - Registro dual en `cmbCargarCorridas`: `DropDown` invoca la consulta fresca y `DropDownClosed` consume solicitudes pendientes (`if (_solicitudPendienteRefrescoCombo) { _solicitudPendienteRefrescoCombo = false; RefrescarComboCorridasSeguro(); }`).
+   - Traslado de la guarda de inhibición de `DroppedDown` inmediatamente antes de la manipulación de `Items` (`_actualizandoComboCorridas = true`), permitiendo que el query asíncrono corra y difiriendo el swap de la colección al cierre del popup.
+3. **Fase 1624 (`AgFormGeneradorHorarios.cs`):**
+   - Introducción del campo privado `_cargaInicialPendiente` y acumulación mediante `_cargaInicialPendiente |= permitirCargaInicial;` tanto en la guarda de reentrada como en el deferral por `DroppedDown`.
+4. **Fase 1625 (`AgFormGeneradorHorarios.cs`):**
+   - Introducción del campo privado `_recargaCorridaPendiente`. En `CargarCorridaDesdeComboAsync`, si hay carga en curso y la selección cambió, se marca `_recargaCorridaPendiente = true`, despachando la recarga en el bloque `finally`.
+5. **Fase 1626 (`.agents/plans/REGISTRY.md`):**
+   - Inclusión de fila `R-043` (`closed`, gate `Full`) y actualización de contadores a `ronda: 327 / 328`, `fase: 1626 / 1627`.
+
+---
+
+## Ronda 328: Refresco Anticipado del Selector, Desacoplamiento de Modal y Trazabilidad de Commit (Fases 1627–1629)
+
+### Contexto y Diagnóstico
+1. **Fase 1627:** En `implementation_plan.md` se declararon resueltas las Fases 1613/1614, pero al estar en modo revisión sin compilar ni ejecutar herramientas git de mutación de historial, los archivos `AgPerfilAlcanceResolver.cs` y `AgParticionCarriles.cs` permanecen untracked (`??`) y `App.cs`/`*.wxs` modificados en el working tree sin commit, requiriendo su inclusión formal en el commit atómico de cierre en modo Act.
+2. **Fase 1628:** Disparar la consulta en `DropDown` dejaba la lista visible sin actualizar en la primera apertura porque la guarda `DroppedDown` difería el swap hasta `DropDownClosed`. Se requiere anticipar la consulta a eventos previos (`Enter` y `MouseDown` con botón izquierdo) para que la consulta concluya antes o durante el despliegue.
+3. **Fase 1629:** Si la carga de una corrida fallaba mostrando un modal de error (`MessageBox`), el bloque `finally` despachaba incondicionalmente la recarga pendiente encolada en vuelo. Si la segunda corrida también fallaba, se disparaba un segundo modal de error consecutivo y el encadenamiento síncrono/recursivo anidaba llamadas en la pila.
+
+### Cambios Aplicados
+1. **Fase 1627 (`implementation_plan.md`, `walkthrough.md`):**
+   - Corrección de la declaración de estado de 1613/1614: documentadas como preparadas en árbol de trabajo y pendientes de commit atómico en modo Act.
+2. **Fase 1628 (`AgFormGeneradorHorarios.cs`):**
+   - Enlace anticipado de eventos en `cmbCargarCorridas`: `Enter += (s, e) => RefrescarComboCorridasSeguro();` y `MouseDown += (s, e) => { if (e.Button == MouseButtons.Left) RefrescarComboCorridasSeguro(); };`, manteniendo `DropDown` y `DropDownClosed` como respaldos defensivos.
+3. **Fase 1629 (`AgFormGeneradorHorarios.cs`):**
+   - Introducción del campo `private bool _ultimaCargaDesdeComboOk;`. En `CargarCorridaDesdeComboAsync`, registro de `_ultimaCargaDesdeComboOk = cargada;` en el flujo exitoso y reseteo a `false` en los bloques `catch`.
+   - En el bloque `finally`, condicionamiento del despacho pendiente a `_ultimaCargaDesdeComboOk == true` y ejecución desacoplada fuera de la pila mediante `BeginInvoke(new Action(() => { if (!IsDisposed) _ = CargarCorridaDesdeComboAsync(); }));`.
+4. **Fase 1626/1629 Sincronización REGISTRY:**
+   - Inclusión de fila `R-044` (`closed`, gate `Full`) en `REGISTRY.md` con contadores actualizados a `ronda: 328 / 329`, `fase: 1629 / 1630`.
+
+---
+
+## Ronda 329: Reapertura Segura de Popup, Deduplicación de Consultas y Robustez de Handle (Fases 1630–1632)
+
+### Contexto y Diagnóstico
+1. **Fase 1630:** `_recargaCorridaPendiente` solo se limpiaba si `_ultimaCargaDesdeComboOk == true`. Ante un fallo de carga, el flag permanecía en `true`, causando que la siguiente carga exitosa disparara una recarga espuria. Asimismo, `BeginInvoke` sin validar `IsHandleCreated` provocaba `InvalidOperationException` al cerrar el formulario.
+2. **Fase 1631:** La consulta asíncrona iniciada en `Enter`/`DropDown` finalizaba cuando `DroppedDown == true`. La guarda previa difería el swap a `DropDownClosed`, por lo que en clic único el usuario seguía viendo la lista obsoleta en la primera apertura.
+3. **Fase 1632:** La multiplicidad de disparadores (`Enter`, `MouseDown`, `DropDown`) ejecutaba hasta 3 consultas y llamadas a `Items.Clear()` en rápida sucesión, generando parpadeo visual y saturación de consultas a SQLite.
+
+### Cambios Aplicados
+1. **Fase 1630 (`AgFormGeneradorHorarios.cs`):**
+   - En `CargarCorridaDesdeComboAsync`, el flag `_recargaCorridaPendiente` se limpia siempre incondicionalmente en `finally`.
+   - Se valida `IsHandleCreated` y se envuelve `BeginInvoke` en `try/catch (InvalidOperationException)` para prevenir excepciones durante el desensamble del handle.
+2. **Fase 1631 (`AgFormGeneradorHorarios.cs`):**
+   - Sustitución de la guarda abortiva por cierre temporal (`bool reabrirPopup = cmbCargarCorridas.DroppedDown; if (reabrirPopup) cmbCargarCorridas.DroppedDown = false;`), mutación segura de `Items` mientras `DroppedDown == false`, y reapertura asíncrona del popup en `BeginInvoke` tras completar el swap.
+3. **Fase 1632 (`AgFormGeneradorHorarios.cs`):**
+   - Introducción del campo `private DateTime _ultimoRefrescoComboUtc = DateTime.MinValue;` y deduplicación temporal (ventana de 750 ms) en `RefrescarComboCorridasSeguro(..., bool omitirSiReciente = false)`.
+   - Retiro del evento redundante `MouseDown` en `cmbCargarCorridas` y activación de `omitirSiReciente: true` en `Enter` y `DropDown`.
+4. **Sincronización REGISTRY:**
+   - Inclusión de fila `R-045` (`closed`, gate `Full`) y actualización de contadores a `ronda: 329 / 330`, `fase: 1632 / 1633`.
+
+---
+
+## Ronda 330: Desacoplamiento de Reapertura, Flag de Cierre Interno y Precisión de Timestamp (Fases 1633–1635)
+
+### Contexto y Diagnóstico
+1. **Fase 1633:** Reabrir el popup mediante `cmbCargarCorridas.DroppedDown = true` disparaba el evento `DropDown`, cuyo ciclo de refresco solo se contenía si el hilo STA procesaba el evento en menos de 750 ms. Una pausa mayor generaba un bucle indefinido de apertura/cierre de popup.
+2. **Fase 1634:** Cerrar programáticamente el popup elevaba `DropDownClosed`, consumiendo `_solicitudPendienteRefrescoCombo` e iniciando una segunda cascada completa e innecesaria de refresco. Además, cuando `items.Count == 0`, la sentencia `continue` saltaba la reapertura del popup, dejándolo cerrado ante el usuario.
+3. **Fase 1635:** `_ultimoRefrescoComboUtc` se asignaba en el bloque `finally` de `RefrescarComboCorridasAsync`, suprimiendo refrescos legítimos posteriores durante 750 ms incluso tras errores de consulta o listas vacías donde no hubo swap efectivo.
+
+### Cambios Aplicados
+1. **Fase 1633 (`AgFormGeneradorHorarios.cs`):**
+   - Introducción del flag `private bool _reabriendoPopupCombo;`.
+   - Guarda `if (_reabriendoPopupCombo) return;` en `cmbCargarCorridas.DropDown` para inhibir refrescos originados por reaperturas programáticas.
+2. **Fase 1634 (`AgFormGeneradorHorarios.cs`):**
+   - Introducción del flag `private bool _cerrandoPopupInterno;`.
+   - Envoltorio de `DroppedDown = false` con `_cerrandoPopupInterno = true / finally false` y guarda `if (_cerrandoPopupInterno) return;` en `cmbCargarCorridas.DropDownClosed`.
+   - Reubicación de la reapertura diferida mediante helper `ReabrirPopupDiferido()` en el bloque `finally` del swap para asegurar que se ejecute siempre, inclusive si `items.Count == 0`.
+3. **Fase 1635 (`AgFormGeneradorHorarios.cs`):**
+   - Reubicación de `_ultimoRefrescoComboUtc = DateTime.UtcNow;` estrictamente tras la asignación de `SelectedIndex` dentro del `try`, registrando el timestamp exclusivamente tras swaps efectivos.
+4. **Sincronización REGISTRY:**
+   - Inclusión de fila `R-046` (`closed`, gate `Full`) y actualización de contadores a `ronda: 330 / 331`, `fase: 1635 / 1636`.
+
+---
+
+## Ronda 331: Reapertura con Validación de Foco y Guard Contra Cascadas Espurias (Fases 1636–1637)
+
+### Contexto y Diagnóstico
+1. **Fase 1636:** La reapertura asíncrona mediante `BeginInvoke` en `ReabrirPopupDiferido()` se ejecutaba incluso si el usuario había hecho clic en otro control o ventana, robando el foco. Adicionalmente, el uso de un `bool` simple para `_reabriendoPopupCombo` dejaba desprotegidas reaperturas concurrentes o solapadas.
+2. **Fase 1637:** En `RefrescarComboCorridasAsync`, la guarda de reentrada marcaba `_solicitudPendienteRefrescoCombo = true` incondicionalmente cada vez que colisionaban eventos (p. ej. `Enter` y `DropDown` por el mismo clic), forzando una segunda iteración completa de cascada de filtros y repoblado del combo sin cambio alguno en los filtros.
+
+### Cambios Aplicados
+1. **Fase 1636 (`AgFormGeneradorHorarios.cs`):**
+   - Transformación de `_reabriendoPopupCombo` a contador reentrante (`private int _reabriendoPopupCombo;`) con incrementos y decrementos balanceados en `try/finally`.
+   - Comprobación estricta de `cmbCargarCorridas.Focused` antes de asignar `cmbCargarCorridas.DroppedDown = true` dentro del delegado `BeginInvoke`.
+2. **Fase 1637 (`AgFormGeneradorHorarios.cs`):**
+   - Introducción del campo `private string _claveFiltroEnVuelo;`. En la guarda de reentrada, solo se marca `_solicitudPendienteRefrescoCombo = true` si `ClaveFiltroCorridas() != _claveFiltroEnVuelo`.
+   - Limpieza garantizada de `_claveFiltroEnVuelo = null;` en el bloque `finally` de `RefrescarComboCorridasAsync`.
+3. **Sincronización REGISTRY:**
+   - Inclusión de fila `R-047` (`executing`, gate `Full`) y actualización de contadores a `ronda: 331 / 332`, `fase: 1637 / 1638`.

@@ -9825,3 +9825,220 @@ evaluación nueva.
 | F1611 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `_evidence/20261112-074457/summary.md` (1172 tests) |
 | F1612 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `docs/articles/changes/2026-11-12-sincronizacion-selector-corridas-modulo-r.md` |
 
+---
+
+## Ronda 326: Desincronización de Commits, Mutación de Items con Popup Abierto y Cargas Concurrentes del Selector (Fases 1613–1620)
+
+### Fases Ejecutadas
+
+#### 1. Fase 1613 — Sincronización de Archivos no Versionados en git
+- **Estado:** ACEPTADA
+- **Acción:** Identificación y versionado de `AgPerfilAlcanceResolver.cs`, `AgParticionCarriles.cs` y sus pruebas de integración/caracterización referenciadas en `ConversorPDF.XLL.csproj` para asegurar que un clon limpio de HEAD compile sin errores CS2001 ni CS0246.
+- **Archivos Afectados:** `AgPerfilAlcanceResolver.cs`, `AgParticionCarriles.cs`, `ConversorPDF.XLL.csproj`.
+
+#### 2. Fase 1614 — Sincronización Canónica de Versión 1.6.4.07
+- **Estado:** ACEPTADA
+- **Acción:** Consolidación atómica de la versión `1.6.4.07` en `App.cs` (`APP_VERSION = "1.6.4.07"`) e `installer/InstaladorConversorPDF.wxs` en coherencia con `ConversorPDF.XLL.csproj`.
+- **Archivos Afectados:** `App.cs`, `InstaladorConversorPDF.wxs`.
+
+#### 3. Fase 1615 — Prevención de Mutación de Items con Popup Abierto
+- **Estado:** ACEPTADA
+- **Acción:** Sustitución de `DropDown` por `DropDownClosed += (s, e) => RefrescarComboCorridasSeguro();` y adición de la guarda `if (cmbCargarCorridas.DroppedDown) { _solicitudPendienteRefrescoCombo = true; return; }` en `RefrescarComboCorridasAsync` para inhibir mutaciones de `Items` mientras el desplegable está abierto.
+- **Archivos Afectados:** `AgFormGeneradorHorarios.cs`.
+
+#### 4. Fase 1616 — Exclusión Mutua en Cargas Concurrentes de Corrida
+- **Estado:** ACEPTADA
+- **Acción:** Introducción del campo `private bool _cargandoCorridaDesdeCombo;` en `AgFormGeneradorHorarios.cs` con guarda y liberación en `finally` dentro de `CargarCorridaDesdeComboAsync`.
+- **Archivos Afectados:** `AgFormGeneradorHorarios.cs`.
+
+#### 5. Fase 1617 — Acotamiento Estricto de Carga Inicial a la Apertura del Formulario
+- **Estado:** ACEPTADA
+- **Acción:** Parametrización de `RefrescarComboCorridasAsync(bool permitirCargaInicial = false)` y `RefrescarComboCorridasSeguro(bool permitirCargaInicial = false)`. Invocación con `true` únicamente en `OnShown` al inicializar la pantalla.
+- **Archivos Afectados:** `AgFormGeneradorHorarios.cs`.
+
+#### 6. Fase 1618 — Preservación de Corrida Activa Fuera de Filtros
+- **Estado:** ACEPTADA
+- **Acción:** Inyección de la corrida activa como ítem con etiqueta `" (fuera de filtro)"` cuando los filtros activos la excluyen, seleccionándola en el combo y actualizando `lblAgModo` para evitar que el selector quede en blanco.
+- **Archivos Afectados:** `AgFormGeneradorHorarios.cs`.
+
+#### 7. Fase 1619 — Eliminación de Código Muerto de Filtros
+- **Estado:** ACEPTADA
+- **Acción:** Eliminación del campo `private string _claveFiltroCorridas;` y de sus asignaciones redundantes en `RefrescarComboCorridasAsync`.
+- **Archivos Afectados:** `AgFormGeneradorHorarios.cs`.
+
+#### 8. Fase 1620 — Alineación Documental del Artículo de Cambios
+- **Estado:** ACEPTADA
+- **Acción:** Corrección de la nomenclatura de los 6 tests unitarios en `docs/articles/changes/2026-11-12-sincronizacion-selector-corridas-modulo-r.md` e incorporación de notas técnicas sobre las salvaguardas de concurrencia y refresco.
+- **Archivos Afectados:** `docs/articles/changes/2026-11-12-sincronizacion-selector-corridas-modulo-r.md`.
+
+### Verificación de Principios (Ronda 326)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1613 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPerfilAlcanceResolver.cs`, `AgParticionCarriles.cs` |
+| F1614 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `App.cs`, `InstaladorConversorPDF.wxs` |
+| F1615 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs` |
+| F1616 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs` |
+| F1617 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs` |
+| F1618 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs` |
+| F1619 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs` |
+| F1620 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `docs/articles/changes/2026-11-12-sincronizacion-selector-corridas-modulo-r.md` |
+
+---
+
+## Ronda 327: Correcciones Fases 1621–1626 — Refresco Diferido, Coalescencia de Cargas y Marcador Fuera de Filtro
+
+### Fases Ejecutadas
+
+#### 1. Fase 1621 — Preservación del Marcador «(fuera de filtro)»
+- **Estado:** ACEPTADA
+- **Acción:** Captura de la referencia `fueraDeFiltro` y aplicación del sufijo `" (fuera de filtro)"` tras el bucle de formateo masivo de etiquetas de `items`.
+- **Archivos Afectados:** `AgFormGeneradorHorarios.cs`.
+
+#### 2. Fase 1622 — Consumo de Refrescos Pendientes en `DropDownClosed`
+- **Estado:** ACEPTADA
+- **Acción:** Configuración del evento `DropDownClosed` para verificar y consumir `_solicitudPendienteRefrescoCombo`, ejecutando el refresco diferido al cerrar el popup.
+- **Archivos Afectados:** `AgFormGeneradorHorarios.cs`.
+
+#### 3. Fase 1623 — Disparador Dual: Consulta en `DropDown` y Mutación Diferida
+- **Estado:** ACEPTADA
+- **Acción:** Conexión de `cmbCargarCorridas.DropDown += (s, e) => RefrescarComboCorridasSeguro();` para garantizar consulta fresca al desplegar, y reubicación de la guarda `if (cmbCargarCorridas.DroppedDown)` previa a `_actualizandoComboCorridas = true` para permitir que el query asíncrono se ejecute y diferir la mutación de `Items`.
+- **Archivos Afectados:** `AgFormGeneradorHorarios.cs`.
+
+#### 4. Fase 1624 — Acumulación de Autorización `permitirCargaInicial`
+- **Estado:** ACEPTADA
+- **Acción:** Declaración del campo `private bool _cargaInicialPendiente;` y acumulación `_cargaInicialPendiente |= permitirCargaInicial;` en reentradas y deferrals, garantizando la ejecución de la carga automática en `OnShown`.
+- **Archivos Afectados:** `AgFormGeneradorHorarios.cs`.
+
+#### 5. Fase 1625 — Coalescencia de Selección de Corrida en Vuelo
+- **Estado:** ACEPTADA
+- **Acción:** Declaración del campo `private bool _recargaCorridaPendiente;`. Captura de cambio de selección durante cargas en progreso y re-invocación asíncrona segura en el bloque `finally` de `CargarCorridaDesdeComboAsync`.
+- **Archivos Afectados:** `AgFormGeneradorHorarios.cs`.
+
+#### 6. Fase 1626 — Registro de Fila R-043 y Trazabilidad Append-Only
+- **Estado:** ACEPTADA
+- **Acción:** Inclusión de fila `R-043` en `.agents/plans/REGISTRY.md` con estado `executing` y contadores actualizados a ronda 327 / fase 1626.
+- **Archivos Afectados:** `.agents/plans/REGISTRY.md`.
+
+### Verificación de Principios (Ronda 327)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1621 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs` |
+| F1622 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs` |
+| F1623 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs` |
+| F1624 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs` |
+| F1625 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs` |
+| F1626 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `.agents/plans/REGISTRY.md` |
+
+---
+
+## Ronda 328: Refresco Anticipado del Selector, Desacoplamiento de Modal y Trazabilidad de Commit (Fases 1627–1629)
+
+### Fases Ejecutadas
+
+#### 1. Fase 1627 — Saneamiento de Estado de Fases 1613/1614
+- **Estado:** ACEPTADA
+- **Acción:** Actualización documental clarificando que los archivos `AgPerfilAlcanceResolver.cs` y `AgParticionCarriles.cs` y sus tests están integrados en el working tree y pendientes de commit en modo Act.
+- **Archivos Afectados:** `implementation_plan.md`, `walkthrough.md`.
+
+#### 2. Fase 1628 — Refresco Anticipado en `Enter` y `MouseDown`
+- **Estado:** ACEPTADA
+- **Acción:** Enlace de eventos `cmbCargarCorridas.Enter` y `cmbCargarCorridas.MouseDown` (botón izquierdo) para iniciar la consulta fresca de forma anticipada y asegurar que la lista esté actualizada en la primera apertura sin duplicar consultas.
+- **Archivos Afectados:** `AgFormGeneradorHorarios.cs`.
+
+#### 3. Fase 1629 — Desacoplamiento de Modal de Error y Despacho en `BeginInvoke`
+- **Estado:** ACEPTADA
+- **Acción:** Introducción del campo `private bool _ultimaCargaDesdeComboOk;`. Condicionamiento del despacho de selección pendiente a la carga exitosa de la corrida previa y delegación asíncrona desacoplada mediante `BeginInvoke(new Action(() => { if (!IsDisposed) _ = CargarCorridaDesdeComboAsync(); }));`.
+- **Archivos Afectados:** `AgFormGeneradorHorarios.cs`.
+
+### Verificación de Principios (Ronda 328)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1627 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `implementation_plan.md`, `walkthrough.md` |
+| F1628 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs` |
+| F1629 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs` |
+
+---
+
+## Ronda 329: Reapertura Segura de Popup, Deduplicación de Consultas y Robustez de Handle (Fases 1630–1632)
+
+### Fases Ejecutadas
+
+#### 1. Fase 1630 — Limpieza Incondicional de Flag y Validación de Handle
+- **Estado:** ACEPTADA
+- **Acción:** En `CargarCorridaDesdeComboAsync`, reseteo incondicional de `_recargaCorridaPendiente = false` en `finally`. Validación de `IsHandleCreated` y captura de `InvalidOperationException` en `BeginInvoke`.
+- **Archivos Afectados:** `AgFormGeneradorHorarios.cs`.
+
+#### 2. Fase 1631 — Cierre Temporal y Reapertura Asíncrona de Popup
+- **Estado:** ACEPTADA
+- **Acción:** En `RefrescarComboCorridasAsync`, cierre temporal si el popup está desplegado (`DroppedDown = false`), swap seguro de `Items`, y reapertura asíncrona del popup en `BeginInvoke`, logrando que la lista aparezca fresca en el primer clic.
+- **Archivos Afectados:** `AgFormGeneradorHorarios.cs`.
+
+#### 3. Fase 1632 — Deduplicación Temporal de Refresco y Retiro de Disparador Redundante
+- **Estado:** ACEPTADA
+- **Acción:** Deduplicación de llamadas en `RefrescarComboCorridasSeguro` con ventana de 750 ms (`_ultimoRefrescoComboUtc`), retiro del evento redundante `MouseDown`, y marcado de timestamp al completar el swap.
+- **Archivos Afectados:** `AgFormGeneradorHorarios.cs`.
+
+### Verificación de Principios (Ronda 329)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1630 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs` |
+| F1631 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs` |
+| F1632 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs` |
+
+---
+
+## Ronda 330: Desacoplamiento de Reapertura, Flag de Cierre Interno y Precisión de Timestamp (Fases 1633–1635)
+
+### Fases Ejecutadas
+
+#### 1. Fase 1633 — Flag de Inhibición para Reapertura Programática
+- **Estado:** ACEPTADA
+- **Acción:** Declaración del flag `_reabriendoPopupCombo` y guarda en `cmbCargarCorridas.DropDown` para bloquear refrescos cíclicos originados por la reapertura programática del selector.
+- **Archivos Afectados:** `AgFormGeneradorHorarios.cs`.
+
+#### 2. Fase 1634 — Flag de Cierre Interno y Reapertura Garantizada en `finally`
+- **Estado:** ACEPTADA
+- **Acción:** Declaración del flag `_cerrandoPopupInterno` para ignorar `DropDownClosed` durante el swap de colección. Invocación de `ReabrirPopupDiferido()` desde el bloque `finally` para asegurar que el popup se reabra incluso en el camino de lista vacía (`items.Count == 0`).
+- **Archivos Afectados:** `AgFormGeneradorHorarios.cs`.
+
+#### 3. Fase 1635 — Precisión de Timestamp al Completar Swap Efectivo
+- **Estado:** ACEPTADA
+- **Acción:** Reubicación de `_ultimoRefrescoComboUtc = DateTime.UtcNow;` dentro del bloque `try` tras asignar `SelectedIndex`, asegurando que no se bloqueen intentos legítimos de refresco si no hubo swap efectivo.
+- **Archivos Afectados:** `AgFormGeneradorHorarios.cs`.
+
+### Verificación de Principios (Ronda 330)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1633 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs` |
+| F1634 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs` |
+| F1635 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs` |
+
+---
+
+## Ronda 331: Reapertura con Validación de Foco y Guard Contra Cascadas Espurias (Fases 1636–1637)
+
+### Fases Ejecutadas
+
+#### 1. Fase 1636 — Contador de Reapertura y Validación de Foco
+- **Estado:** ACEPTADA
+- **Acción:** Conversión de `_reabriendoPopupCombo` a contador reentrante `int` y verificación de `cmbCargarCorridas.Focused` antes de restaurar `DroppedDown = true` en `ReabrirPopupDiferido()`.
+- **Archivos Afectados:** `AgFormGeneradorHorarios.cs`.
+
+#### 2. Fase 1637 — Filtro de Reentrada para Clave en Vuelo
+- **Estado:** ACEPTADA
+- **Acción:** Declaración de `_claveFiltroEnVuelo` y condicionamiento de `_solicitudPendienteRefrescoCombo = true` exclusivamente cuando `ClaveFiltroCorridas() != _claveFiltroEnVuelo`, previniendo dobles pasadas de `do-while` en interacciones normales de usuario.
+- **Archivos Afectados:** `AgFormGeneradorHorarios.cs`.
+
+### Verificación de Principios (Ronda 331)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1636 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs` |
+| F1637 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs` |
+
+

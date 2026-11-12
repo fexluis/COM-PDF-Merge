@@ -1,4 +1,4 @@
-﻿# Sincronización del Selector de Corridas del Módulo R (Fases 1606–1612)
+# Sincronización del Selector de Corridas del Módulo R (Fases 1606–1612)
 
 ## 1. Contexto y Problema
 
@@ -107,14 +107,20 @@ En `AgFormGeneradorHorarios.RefrescarComboCorridasAsync`:
 La solución fue desarrollada bajo la metodología TDD estricta (RED -> GREEN -> REFACTOR) y validada en múltiples niveles de la suite de pruebas automatizadas:
 
 ### 4.1. Pruebas Unitarias de `AgCorridaSelector` (Fases 1607–1608)
-Se ejecutaron las 24 pruebas del componente selector (`AgCorridaSelectorTests`), cubriendo:
-1. `ResolverSeleccionModuloR_CuandoActivaPresente_DebeSeleccionarActivaSinRequerirCarga`: Activa presente se selecciona con su índice sin forzar recarga.
-2. `ResolverSeleccionModuloR_CuandoActivaAusenteConStaging_NoDebeSeleccionarNiCargar`: Activa ausente pero con corridas con staging devuelve índice `-1` y bandera `CorridaActivaNoEncontrada = true`.
-3. `ResolverSeleccionModuloR_CuandoActivaAusenteYSoloCabeceras_NoDebeSeleccionarNiCargar`: Activa ausente con solo cabeceras devuelve índice `-1` y bandera `CorridaActivaNoEncontrada = true`.
+Se ejecutaron las 24 pruebas del componente selector (`AgCorridaSelectorTests`), cubriendo los 6 casos de negocio obligatorios:
+1. `ResolverSeleccionModuloR_CuandoActivaPresente_DebeSeleccionarActivaYSinCargaInicial`: Activa presente se selecciona con su índice sin forzar recarga.
+2. `ResolverSeleccionModuloR_CuandoActivaAusenteConStagingDisponible_NoDebeSeleccionarNiCargarYMarcaNoEncontrada`: Activa ausente pero con corridas con staging devuelve índice `-1` y bandera `CorridaActivaNoEncontrada = true`.
+3. `ResolverSeleccionModuloR_CuandoActivaAusenteConSoloCabeceras_NoDebeSeleccionarNiCargarYMarcaNoEncontrada`: Activa ausente con solo cabeceras devuelve índice `-1` y bandera `CorridaActivaNoEncontrada = true`.
 4. `ResolverSeleccionModuloR_CuandoSinActivaYConStagingDisponible_DebeSeleccionarPrimeraConStagingYRequiereCargaInicial`: Sin activa previa, selecciona la primera corrida con staging y habilita carga inicial.
 5. `ResolverSeleccionModuloR_CuandoSinActivaYSoloCabeceras_NoDebeSeleccionarNiCargar`: Sin activa previa y sin staging, no selecciona ni carga.
 6. `ResolverSeleccionModuloR_CuandoListaVaciaONula_NoDebeSeleccionarNiCargar`: Casos borde de colecciones vacías o nulas devuelven estado neutro.
 7. 18 pruebas preexistentes de formateo de etiquetas, cascada tolerante y selección inicial con comodín para `FormVinculaciones` (100% PASS).
+
+**Nota de robustez y concurrencia (Ronda 326 / Fases 1615–1618)**:
+- El refresco en UI se realiza al cerrar el desplegable (`DropDownClosed`) o con el popup cerrado, evitando mutar `Items` mientras `DroppedDown == true`.
+- `CargarCorridaDesdeComboAsync` cuenta con exclusión mutua mediante `_cargandoCorridaDesdeCombo` para prevenir colisiones asíncronas concurrentes.
+- La carga inicial automática está estrictamente acotada a la apertura del formulario (`permitirCargaInicial: true` en `OnShown`), sin dispararse tras errores de staging ni en refrescos manuales.
+- Cuando la corrida activa queda excluida por los filtros de período/programa, se reinyecta en el catálogo como ítem fuera de filtro, asegurando que el selector nunca quede vacío y siempre represente la corrida `#N` activa.
 
 **Resultado**: 24/24 pruebas unitarias aprobadas (0 fallos).
 

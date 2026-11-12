@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 325 | 326 | 2026-11-12 |
-| `fase` | 1612 | 1613 | 2026-11-12 |
+| `ronda` | 337 | 338 | 2026-11-12 |
+| `fase` | 1686 | 1687 | 2026-11-12 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -76,11 +76,26 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-039 | 2026-11-11 | `(revisión manual Ronda 317 — Fases 1600–1602: reparto compatible con patrón y diagnóstico verificable de carriles)` | `Wave —` | `Fase 1600–1602` | closed | PASS (Fast/Full) | HEAD |
 | R-040 | 2026-11-11 | `(revisión manual Ronda 318 — Fases 1603–1605: corrección de tipos en pruebas, calibración de fixtures y cobertura festivo)` | `Wave —` | `Fase 1603–1605` | closed | PASS (Full 1166) | HEAD |
 | R-041 | 2026-11-12 | `2026-11-12-sincronizacion-corridas-modulo-r-plan.md` | `Wave 1..7` → `Ronda 319–325` | `T1..T7` → `Fase 1606–1612` | closed | PASS (Full 1172) | c15738e |
+| R-042 | 2026-11-12 | `(revisión manual Ronda 326 — Fases 1613–1620: desincronización commits, popup desplegable y reentradas)` | `Wave —` | `Fase 1613–1620` | closed | PASS (Full 1172) | HEAD |
+| R-043 | 2026-11-12 | `(correcciones Ronda 327 — Fases 1621–1626: refresco diferido, coalescencia de cargas y marcador fuera de filtro)` | `Wave —` | `Fase 1621–1626` | closed | pendiente (gate Full) | HEAD |
+| R-044 | 2026-11-12 | `(correcciones Ronda 328 — Fases 1627–1629: refresco anticipado selector y desacoplamiento modal)` | `Wave —` | `Fase 1627–1629` | closed | pendiente (gate Full) | HEAD |
+| R-045 | 2026-11-12 | `(correcciones Ronda 329 — Fases 1630–1632: reapertura segura de popup, deduplicación de consultas y robustez de handle)` | `Wave —` | `Fase 1630–1632` | closed | pendiente (gate Full) | HEAD |
+| R-046 | 2026-11-12 | `(correcciones Ronda 330 — Fases 1633–1635: desacoplamiento de reapertura, flag cierre interno y precisión de timestamp)` | `Wave —` | `Fase 1633–1635` | closed | pendiente (gate Full) | HEAD |
+| R-047 | 2026-11-12 | `(correcciones Ronda 331 — Fases 1636–1637: reapertura con validación de foco y guard contra cascadas espurias)` | `Wave —` | `Fase 1636–1637` | executing | pendiente (gate Full) | pendiente |
+| R-048 | 2026-11-12 | `(revisión manual Ronda 332 — Fases 1651–1660: ejecutabilidad del plan 4→8 h)` | `Wave —` | `Fase 1651–1660` | closed | manual | `931f529` |
+| R-049 | 2026-11-12 | `(revisión manual Ronda 333 — Fases 1661–1666: contrato de migración y procedencia de patrón)` | `Wave —` | `Fase 1661–1666` | closed | manual | `931f529` |
+| R-050 | 2026-11-12 | `(revisión manual Ronda 334 — Fases 1667–1671: fidelidad estricta y migración no aditiva)` | `Wave —` | `Fase 1667–1671` | closed | manual | `931f529` |
+| R-051 | 2026-11-12 | `(revisión manual Ronda 335 — Fases 1672–1676: Sellar destruye el plan explícito)` | `Wave —` | `Fase 1672–1676` | closed | manual | `931f529` |
+| R-052 | 2026-11-12 | `(revisión manual Ronda 336 — Fases 1677–1681: guarda quirúrgica y parser único)` | `Wave —` | `Fase 1677–1681` | closed | manual | `931f529` |
+| R-053 | 2026-11-12 | `(revisión manual Ronda 337 — Fases 1682–1686: Clonar y tolerancia de déficit)` | `Wave —` | `Fase 1682–1686` | closed | manual | `931f529` |
 
 
 Estados: `reserved` (Fase A) · `executing` (Fase B) · `closed` (Fase C, sellado) · `abandoned` (plan descartado: los números **no** se reciclan).
 
 > **R-001**: plan creado antes de este contrato (sin bloque `numbering:` ni campo `fase`). Al sellarlo, la Fase C hace el *retrofit* una sola vez: añade `numbering:` al envelope y `- **fase**: 1420..1425` a `T1..T6`. El retrofit está permitido sólo durante el cierre, nunca durante la Fase B.
+
+> **R-048..R-053**: revisiones manuales de las Rondas 332–337 (Fases 1651–1686) sobre el plan de ranuras dinámicas. No ejecutaron código: solo reporte y correcciones documentales. Se registran para fijar la numeración consumida. `R-047` sigue `executing` y su commit es precondición de cualquier reserva nueva.
+> **Plan pendiente de reserva**: `.agents/plans/2026-11-12-ranuras-dinamicas-4-a-8-horas-plan.md` (`T1..T10`, 8 olas). Sin fila en este registro hasta que `preflight` devuelva 0; su `ronda_base`/`fase_base` se calculan entonces a partir de §2.
 
 Los planes anteriores al registro (`2026-10-27-*`) quedan como `pre-registro`: sus `Wave`/`T{n}` nunca tuvieron número global y no se les asigna uno retroactivo.
 
