@@ -107,8 +107,8 @@ Nota de gate: entre la ola 2 y la 5 la suite completa queda roja a propósito (l
 - **validation**: compila con el stub de T1 y **falla por aserción** (RED real, no por compilación). Validación limitada al parser: no incluye escalera ni integración.
 - **verification**: `powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "FullyQualifiedName~AgDiasVentana"`
 - **evidence**: `_evidence/20261112-152930/summary.md`
-- **status**: red
-- **log**: RED_CERTIFIED por tdd-red-writer. 27 tests (16 pasados, 11 fallando por aserción esperada). Auditado por task-reviewer (OK).
+- **status**: done
+- **log**: RED_CERTIFIED por tdd-red-writer (completada en Fase B). 27 tests (16 pasados, 11 fallando por aserción esperada). Auditado por task-reviewer (OK).
 - **files edited/created**: `ConversorPDF.Tests/Academic/Domain/AgDiasVentanaTests.cs`
 
 ### T3: RED de dominio, integración y persistencia
@@ -132,8 +132,8 @@ Nota de gate: entre la ola 2 y la 5 la suite completa queda roja a propósito (l
 - **validation**: todo falla por aserción; compila con el stub (T1). No se modifica producción.
 - **verification**: `powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "FullyQualifiedName~AgEscaleraVentanas|FullyQualifiedName~AgEscaladorVentanaAula|FullyQualifiedName~AgPlanificadorOleadas|FullyQualifiedName~AgValidadorVentana|FullyQualifiedName~AgNodoArbolKeyMapper"`
 - **evidence**: _evidence/20261112-153415/summary.md
-- **status**: red
-- **log**: RED_CERTIFIED por tdd-red-writer. Suite compila con 0 errores CS. 14 fallos esperados por aserción/stub en tests nuevos de dominio, persistencia e integración. Auditado por task-reviewer (OK).
+- **status**: done
+- **log**: RED_CERTIFIED por tdd-red-writer (completada en Fase B). Suite compila con 0 errores CS. 14 fallos esperados por aserción/stub en tests nuevos de dominio, persistencia e integración. Auditado por task-reviewer (OK).
 - **files edited/created**:
   - ConversorPDF.Tests/Academic/Domain/AgEscaleraVentanasTests.cs
   - ConversorPDF.Tests/Academic/Infrastructure/Persistence/AgEscaladorVentanaAulaTests.cs

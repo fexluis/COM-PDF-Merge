@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 350 | 351 | 2026-11-12 |
-| `fase` | 1714 | 1715 | 2026-11-12 |
+| `ronda` | 357 | 358 | 2026-11-12 |
+| `fase` | 1733 | 1734 | 2026-11-12 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -92,7 +92,14 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-055 | 2026-11-12 | (revisión documental Ronda 339: sincronización efectiva del plan) | Wave — | Fase 1692 | closed | revisión documental; sin build/tests | c0d986d |
 | R-056 | 2026-11-12 | (corrección documental Ronda 340: rutas T6/T10 y numeración) | Wave — | Fase 1693–1694 | closed | inspección de archivos; sin build/tests | c0d986d |
 | R-057 | 2026-11-12 | `(revisión estática Ronda 344 — Fases 1701–1706: consolidación escalera ventanas)` | `Wave —` | `Fase 1701–1706` | closed | revisión documental; sin build/tests | `e523b51` |
-| R-058 | 2026-11-12 | `2026-11-12-escalera-ventanas-lun-vie-jue-dom-mie-dom-plan.md` | `Wave 1..6` → `Ronda 345–350` | `T1..T8` → `Fase 1707–1714` | closed | PASS (Full 1223) | HEAD |
+| R-058 | 2026-11-12 | `2026-11-12-escalera-ventanas-lun-vie-jue-dom-mie-dom-plan.md` | `Wave 1..6` → `Ronda 345–350` | `T1..T8` → `Fase 1707–1714` | closed | PASS (Full 1223) | `1a97cfc` |
+| R-059 | 2026-11-12 | `(revisión Ronda 351 — Fases 1715–1719: correcciones antes de release/smoke)` | `Wave —` | `Fase 1715–1719` | closed | revisión y correcciones; sin build/tests | `1a97cfc` |
+| R-060 | 2026-11-12 | `(revisión Ronda 352 — Fases 1720–1723: robustez SQL, recarga checked y exclusión mutua pre-vuelo)` | `Wave —` | `Fase 1720–1723` | closed | revisión y correcciones; sin build/tests | `1a97cfc` |
+| R-061 | 2026-11-12 | `(revisión Ronda 353 — Fases 1724–1727: tipos en tests, Result<int> en sincronización y anti-reentrada)` | `Wave —` | `Fase 1724–1727` | closed | revisión y correcciones; sin build/tests | `1a97cfc` |
+| R-062 | 2026-11-12 | `(revisión Ronda 354 — Fases 1728–1730: revisión concurrente, bloqueo diagnóstico y cierre confirmado)` | `Wave —` | `Fase 1728–1730` | closed | revisión y correcciones; sin build/tests | `1a97cfc` |
+| R-063 | 2026-11-12 | `(revisión Ronda 355 — Fase 1731: aislamiento de subunidad en dimensiones pendientes)` | `Wave —` | `Fase 1731` | closed | revisión y correcciones; sin build/tests | `1a97cfc` |
+| R-064 | 2026-11-12 | `(revisión Ronda 356 — Fase 1732: corrección de columnas en fixtures ag_aula de tests)` | `Wave —` | `Fase 1732` | closed | revisión y correcciones; sin build/tests | `1a97cfc` |
+| R-065 | 2026-11-12 | `(re-gate post-cierre Ronda 357 — Fase 1733: correcciones R-059..R-064)` | `Wave —` | `Fase 1733` | closed | PASS (Full 1236) | `27b7c71` |
 
 
 Estados: `reserved` (Fase A) · `executing` (Fase B) · `closed` (Fase C, sellado) · `abandoned` (plan descartado: los números **no** se reciclan).
