@@ -138,11 +138,30 @@ namespace ConversorPDF.XLL.Academic.Application.Services
         }
 
         /// <summary>
-        /// Resuelve la selección para el selector de corridas del Módulo R (Fase 1606).
+        /// Resuelve la selección para el selector de corridas del Módulo R (Fase 1606, 1608).
         /// </summary>
         public static AgSeleccionModuloR ResolverSeleccionModuloR(IEnumerable<CorridaStagingItem> corridas, long? idCorridaActiva)
         {
-            throw new NotImplementedException();
+            var items = corridas?.Where(c => c != null).ToList() ?? new List<CorridaStagingItem>();
+
+            if (idCorridaActiva.HasValue && idCorridaActiva.Value > 0)
+            {
+                var activa = items.FirstOrDefault(c => c.IdCorrida == idCorridaActiva.Value);
+                if (activa != null)
+                {
+                    return new AgSeleccionModuloR(activa, items.IndexOf(activa), false, false);
+                }
+
+                return new AgSeleccionModuloR(null, -1, false, true);
+            }
+
+            var primera = items.FirstOrDefault(c => c.IdCorrida > 0 && c.TieneStaging);
+            if (primera != null)
+            {
+                return new AgSeleccionModuloR(primera, items.IndexOf(primera), true, false);
+            }
+
+            return new AgSeleccionModuloR(null, -1, false, false);
         }
 
         private static void AgregarSiTieneValor(ICollection<string> partes, string valor)

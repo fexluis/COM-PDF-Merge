@@ -2397,6 +2397,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     }
                 }
 
+                AgSeleccionModuloR seleccion = null;
                 _actualizandoComboCorridas = true;
                 try
                 {
@@ -2426,6 +2427,10 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                             btnRecalcularViolaciones.Enabled = false;
                             btnPromoverProduccion.Enabled = false;
                         }
+                        else
+                        {
+                            lblAgModo.Text = $"Modo AG · corrida cargada #{_idCorridaCargada} no visible con los filtros actuales";
+                        }
                         Log("[AG] No hay corridas de staging para los filtros activos.");
                         return;
                     }
@@ -2439,20 +2444,27 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     cmbCargarCorridas.ValueMember = nameof(CorridaStagingItem.IdCorrida);
                     foreach (var it in items) cmbCargarCorridas.Items.Add(it);
 
-                    var elegido = AgCorridaSelector.ResolverSeleccionInicial(
+                    // Fase 1608: resolución segura del selector de corridas en Módulo R
+                    seleccion = AgCorridaSelector.ResolverSeleccionModuloR(
                         items, _idCorridaCargada > 0 ? _idCorridaCargada : (long?)null);
-                    int idx = elegido != null ? items.IndexOf(elegido) : 0;
-                    cmbCargarCorridas.SelectedIndex = idx >= 0 ? idx : 0;
+                    cmbCargarCorridas.SelectedIndex = seleccion.IndiceSeleccionado;
+
+                    if (seleccion.CorridaActivaNoEncontrada)
+                    {
+                        lblAgModo.Text = $"Modo AG · corrida cargada #{_idCorridaCargada} no visible con los filtros actuales";
+                    }
                 }
                 finally
                 {
                     _actualizandoComboCorridas = false;
                 }
 
-                // Fase 1554: la selección programática no dispara la carga dentro de _actualizandoComboCorridas; forzarla explícitamente
-                if (cmbCargarCorridas.SelectedItem is CorridaStagingItem elegida &&
-                    elegida.IdCorrida > 0 &&
-                    elegida.IdCorrida != _idCorridaCargada)
+                // Fase 1608: carga inicial automática solo si está explícitamente autorizada por la política
+                if (seleccion != null &&
+                    seleccion.RequiereCargaInicial &&
+                    seleccion.ItemSeleccionado != null &&
+                    seleccion.ItemSeleccionado.IdCorrida > 0 &&
+                    seleccion.ItemSeleccionado.IdCorrida != _idCorridaCargada)
                 {
                     await CargarCorridaDesdeComboAsync();
                 }
@@ -4664,26 +4676,47 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                         }
                     }
 
-                    // Fase 1208: Sincronizar cmbSedes y cmbProgramas con el primer DTO de la selección
-                    var primerDto = dtos.FirstOrDefault();
-                    if (primerDto != null)
+                    // Fase 1580: Alinear el alcance del árbol (períodos, sedes, programas y tipo) con TODAS
+                    // las combinaciones del perfil. Antes solo se sincronizaba el primer DTO, por lo que las
+                    // combinaciones de otras sedes/programas activas se reportaban como "omitidas".
+                    var alcancePerfil = AgPerfilAlcanceResolver.Resolver(dtos, _periodos, _sedes, _programas);
+
+                    if (alcancePerfil.Periodos.Count > 0)
                     {
-                        if (primerDto.IdSede > 0 && _sedes != null)
+                        cmbPeriodos.Marcar(alcancePerfil.Periodos);
+                    }
+
+                    if (alcancePerfil.Sedes.Count > 0)
+                    {
+                        cmbSedes.Marcar(alcancePerfil.Sedes);
+                    }
+
+                    // El tipo se ajusta al mínimo que cubre los programas del perfil (TODOS si son mixtos)
+                    bool suprimirPrevio = _suprimirAutoFiltro;
+                    _suprimirAutoFiltro = true;
+                    try
+                    {
+                        int idxTipo = cmbTipoPrograma.FindStringExact(alcancePerfil.TipoPrograma);
+                        if (idxTipo >= 0 && idxTipo != cmbTipoPrograma.SelectedIndex)
                         {
-                            var sedeEncontrada = _sedes.FirstOrDefault(s => s.Id == primerDto.IdSede);
-                            if (sedeEncontrada != null)
-                            {
-                                cmbSedes.Marcar(new[] { sedeEncontrada.Id });
-                            }
+                            cmbTipoPrograma.SelectedIndex = idxTipo;
                         }
-                        if (primerDto.IdPrograma > 0 && _programas != null)
-                        {
-                            var progEncontrado = _programas.FirstOrDefault(p => p.Id == primerDto.IdPrograma);
-                            if (progEncontrado != null)
-                            {
-                                cmbProgramas.Marcar(new[] { progEncontrado.Id });
-                            }
-                        }
+                    }
+                    finally
+                    {
+                        _suprimirAutoFiltro = suprimirPrevio;
+                    }
+
+                    // Recarga la lista de programas visibles según el tipo y marca los del perfil
+                    if (alcancePerfil.Programas.Count > 0)
+                    {
+                        CargarProgramasSegunTipo(alcancePerfil.TipoPrograma, alcancePerfil.Programas);
+                    }
+
+                    if (alcancePerfil.CombosFueraDeCatalogo > 0)
+                    {
+                        LoggerHelper.Warning(
+                            $"[AgFormGeneradorHorarios] Perfil '{perfilSel.Nombre}': {alcancePerfil.CombosFueraDeCatalogo} combinación(es) con período/sede/programa inexistente en catálogo.");
                     }
 
                     // 2. Establecer ventana temporal
@@ -4706,6 +4739,13 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 // Fase 245 & 253: Actualizar _ventanaResuelta una única vez y en orden determinista tras fijar todos los controles
                 await ActualizarVentanaSemestralAsync();
 
+                // Fase 1580: Repoblar el árbol con el alcance del perfil antes de restaurar las hojas,
+                // evitando que combinaciones de sedes/programas activos queden fuera del árbol por el filtro previo.
+                PoblarArbolContextoAcademico();
+                _filtroArbolDesactualizado = false;
+                ActualizarResumenFiltros();
+                await GuardarFiltrosAsync(forzar: true);
+
                 // 3. Establecer Parámetros Evolutivos
                 if (perfil.Poblacion >= numPoblacion.Minimum && perfil.Poblacion <= numPoblacion.Maximum)
                     numPoblacion.Value = perfil.Poblacion;
@@ -4725,7 +4765,13 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 var resumenDims = string.Join("; ", dtos.Take(20).Select(d => $"{d.AulaRef}={d.Jornada}/{d.HorasDia}h/{d.DiasVentana}"));
                 traza.Dato("Dimensiones", resumenDims);
 
-                int dimsDefecto = AsegurarSubarbol(dtos, mostrarAvisos);
+                int dimsDefecto = AsegurarSubarbol(dtos, mostrarAvisos, out var omitidas);
+
+                if (omitidas.Count > 0)
+                {
+                    LoggerHelper.Warning(
+                        $"[AgFormGeneradorHorarios] Perfil '{perfil.Nombre}': {omitidas.Count} combinación(es) omitida(s) por período/sede/programa inexistente en catálogo: {string.Join(", ", omitidas)}");
+                }
 
                 if (dimsDefecto > 0)
                 {
@@ -4787,8 +4833,9 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             }
         }
 
-        private int AsegurarSubarbol(IReadOnlyCollection<AgContextoSeleccionDto> nodos, bool mostrarAvisos = true)
+        private int AsegurarSubarbol(IReadOnlyCollection<AgContextoSeleccionDto> nodos, bool mostrarAvisos, out List<string> omitidas)
         {
+            omitidas = new List<string>();
             if (nodos == null || nodos.Count == 0) return 0;
 
             _isUpdatingTreeChecks = true;
@@ -4796,6 +4843,10 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             int huerfanos = 0;
             int dimensionesDefecto = 0;
             TreeNode primerNodoRestaurado = null;
+
+            string RefDe(AgContextoSeleccionDto d) => !string.IsNullOrWhiteSpace(d.AulaRef)
+                ? d.AulaRef
+                : $"{d.IdPeriodo}|{d.IdSede}|{d.IdPrograma}|{d.Semestre}|{d.Grupo}|{d.ModalidadEfectiva}";
 
             try
             {
@@ -4816,6 +4867,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     if (nodoPer == null)
                     {
                         huerfanos++;
+                        omitidas.Add(RefDe(dto));
                         continue;
                     }
 
@@ -4826,6 +4878,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     if (nodoSede == null)
                     {
                         huerfanos++;
+                        omitidas.Add(RefDe(dto));
                         continue;
                     }
 
@@ -4836,6 +4889,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     if (nodoProg == null)
                     {
                         huerfanos++;
+                        omitidas.Add(RefDe(dto));
                         continue;
                     }
 
@@ -4929,23 +4983,28 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 ActualizarCabecerasNivel6();
             }
 
+            // Fase 1580: detalle accionable de las combinaciones realmente fuera de catálogo
+            string detalleOmitidas = omitidas.Count > 0
+                ? " Ej.: " + string.Join(", ", omitidas.Take(5)) + (omitidas.Count > 5 ? ", …" : string.Empty)
+                : string.Empty;
+
             if (dimensionesDefecto > 0)
             {
                 LoggerHelper.Warning($"[AgFormGeneradorHorarios] Fallback MAÑANA/4h/MAR-VIE en {dimensionesDefecto} combinación(es) con configuración incompleta.");
                 if (mostrarAvisos)
                 {
                     string aviso = huerfanos > 0
-                        ? $"Se cargó el perfil.\n- Se omitieron {huerfanos} combinación(es) no encontradas en el período/sedes activas.\n- Se aplicaron dimensiones por defecto en {dimensionesDefecto} combinación(es) incompletas."
+                        ? $"Se cargó el perfil.\n- Se omitieron {huerfanos} combinación(es) porque su período, sede o programa no existe en el catálogo activo.{detalleOmitidas}\n- Se aplicaron dimensiones por defecto en {dimensionesDefecto} combinación(es) incompletas."
                         : $"Se cargó el perfil. Se aplicaron dimensiones por defecto en {dimensionesDefecto} combinación(es) incompletas.";
                     MessageBox.Show(this, aviso, "Aviso de Carga", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
             else if (huerfanos > 0)
             {
-                LoggerHelper.Warning($"[AgFormGeneradorHorarios] Perfil cargado con {huerfanos} combinación(es) huérfana(s) omitida(s).");
+                LoggerHelper.Warning($"[AgFormGeneradorHorarios] Perfil cargado con {huerfanos} combinación(es) huérfana(s) omitida(s): {string.Join(", ", omitidas)}");
                 if (mostrarAvisos)
                 {
-                    MessageBox.Show(this, $"Se cargó el perfil. Se omitieron {huerfanos} combinación(es) no encontradas en el período/sedes activas.", "Aviso de Carga", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show(this, $"Se cargó el perfil. Se omitieron {huerfanos} combinación(es) porque su período, sede o programa no existe en el catálogo activo.{detalleOmitidas}", "Aviso de Carga", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
 

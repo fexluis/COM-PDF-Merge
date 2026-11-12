@@ -117,10 +117,12 @@ Leases disjuntos: T1 opera en L0 (`ConversorPDF.XLL.csproj`) y crea `AgSeleccion
 - **description**: Implementar la lógica completa de `AgCorridaSelector.ResolverSeleccionModuloR`. Integrarlo en `RefrescarComboCorridasAsync` eliminando la degradación forzada a `idx >= 0 ? idx : 0` y la llamada incondicional a `CargarCorridaDesdeComboAsync`. Si la activa está presente, seleccionarla sin recargar; si la activa no está en la lista, fijar `SelectedIndex = -1` y actualizar `lblAgModo` informando que la corrida cargada no aparece con los filtros actuales; si no hay activa pero hay staging, seleccionar la primera y autorizar la carga inicial una sola vez; si solo hay cabeceras, dejar `SelectedIndex = -1` sin carga automática.
 - **validation**: Las pruebas de T2 pasan a GREEN; ninguna regresión en `AgCorridaSelectorTests` ni en `FormVinculaciones`.
 - **verification**: `powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "FullyQualifiedName~AgCorridaSelector"`
-- **evidence**: pendiente
-- **status**: pending
-- **log**: pendiente
-- **files edited/created**: []
+- **evidence**: `_evidence/20261112-072421/summary.md`
+- **status**: done
+- **log**: ResolverSeleccionModuloR implementado en AgCorridaSelector.cs y cableado en RefrescarComboCorridasAsync en AgFormGeneradorHorarios.cs. Fallback destructor a 0 eliminado. 24/24 pruebas en GREEN.
+- **files edited/created**:
+  - `ConversorPDF.XLL/Academic/Application/Services/AgCorridaSelector.cs`
+  - `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
 
 ### T4: Refresco seguro del selector y protección de concurrencia
 - **id**: T4
