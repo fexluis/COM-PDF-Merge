@@ -75,7 +75,7 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-038 | 2026-11-11 | `(revisión manual Ronda 316 — Fase 1599: API canónica RegistrarDocenteHabilitado en Gate G-1 y calibración Caso 7.6)` | `Wave —` | `Fase 1599` | closed | PASS (Fast 1158, 44/44 focalizados) | HEAD |
 | R-039 | 2026-11-11 | `(revisión manual Ronda 317 — Fases 1600–1602: reparto compatible con patrón y diagnóstico verificable de carriles)` | `Wave —` | `Fase 1600–1602` | closed | PASS (Fast/Full) | HEAD |
 | R-040 | 2026-11-11 | `(revisión manual Ronda 318 — Fases 1603–1605: corrección de tipos en pruebas, calibración de fixtures y cobertura festivo)` | `Wave —` | `Fase 1603–1605` | closed | PASS (Full 1166) | HEAD |
-| R-041 | 2026-11-12 | `2026-11-12-sincronizacion-corridas-modulo-r-plan.md` | `Wave 1..7` → `Ronda 319–325` | `T1..T7` → `Fase 1606–1612` | executing | pendiente (Full) | 742afcd |
+| R-041 | 2026-11-12 | `2026-11-12-sincronizacion-corridas-modulo-r-plan.md` | `Wave 1..7` → `Ronda 319–325` | `T1..T7` → `Fase 1606–1612` | closed | PASS (Full 1172) | c15738e |
 
 
 Estados: `reserved` (Fase A) · `executing` (Fase B) · `closed` (Fase C, sellado) · `abandoned` (plan descartado: los números **no** se reciclan).

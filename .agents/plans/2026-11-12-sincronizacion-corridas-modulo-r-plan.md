@@ -10,7 +10,7 @@ numbering:
 
 # Plan R-041: Sincronización del Selector de Corridas del Módulo R
 
-**Generado**: 2026-11-12 · **Autor**: Antigravity/Swarm-Planner · **Estado**: reserved · **Depende de**: R-040 (Fases 1603–1605)
+**Generado**: 2026-11-12 · **Autor**: Antigravity/Swarm-Planner · **Estado**: closed · **Depende de**: R-040 (Fases 1603–1605)
 
 ## Execution envelope
 - branch: `refactor/academic-modularization`
