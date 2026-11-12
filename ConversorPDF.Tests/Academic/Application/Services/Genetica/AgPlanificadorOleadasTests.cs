@@ -445,8 +445,177 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
 
             res.IsSuccess.Should().BeTrue();
             res.Value.Infactibles.Should().Contain(3);           // 3ª asignatura no cabe en carril 0 (34 ses)
+            // F1600 / F1601: Al existir carril con día 5 (alojable == true) pero lleno, se diagnostica
+            // I5_CAPACIDAD_CARRIL_PATRON en lugar de derivar falsamente a R8_DiaFueraDePatron hacia otro carril incompatible
             res.Value.DetalleInfactibles.Should().ContainSingle()
-                .Which.Should().Contain("Asig 3").And.Contain("R8_DiaFueraDePatron");
+                .Which.Should().Contain("Asig 3").And.Contain("I5_CAPACIDAD_CARRIL_PATRON");
+        }
+
+        [Fact]
+        public void Construir_Patron5ConCapacidad_DebeAsignarEnCarrilCompatible()
+        {
+            // Arrange (Fase 1602): Asignatura con patrón '5' (viernes) con capacidad en VIE-SAB
+            var fInicio = new DateTime(2026, 3, 2);
+            var fFin = new DateTime(2026, 6, 30);
+            var asigs = new List<(int, double, int)> { (1, 16.0, 1) };
+            var patrones = new Dictionary<int, string> { { 1, "5" } };
+
+            // Act
+            var res = _sut.Construir(asigs, "VIE-SAB", fInicio, fFin, 4.0, diasPatronPorAsignatura: patrones);
+
+            // Assert
+            res.IsSuccess.Should().BeTrue();
+            res.Value.Infactibles.Should().BeEmpty();
+            res.Value.Planes.Should().HaveCount(1);
+            var plan = res.Value.Planes[0];
+            plan.IdAsignatura.Should().Be(1);
+            plan.DiasPatron.Should().Contain(5);
+        }
+
+        [Fact]
+        public void Construir_CarrilMasEspecificoLleno_OtroCompatibleDisponible_DebeUsarAlternativa()
+        {
+            // Arrange (Fase 1602 / Fase 1604): Ventana 5,6; cuatro semanas; unidad 4 h.
+            // Canónica: carril 0 [5,6M] (capacidad 8) | carril 1 [6T] (capacidad 4, más específico).
+            // Materia 1: 16 h (4 ses), patrón 6 -> ocupa carril específico 1.
+            // Materia 2: 16 h (4 ses), patrón 6 -> carril 1 lleno, debe usar carril compatible 0.
+            var fInicio = new DateTime(2026, 3, 2);
+            var fFin = new DateTime(2026, 3, 29); // 4 semanas exactas
+            var bloques = new List<AgBloqueHorario>
+            {
+                new AgBloqueHorario { Id = 1, DiaSemanaNumero = 5, Franja = "NOCHE", DuracionHoras = 4, Activo = 1 },
+                new AgBloqueHorario { Id = 2, DiaSemanaNumero = 6, Franja = "MANANA", DuracionHoras = 4, Activo = 1 },
+                new AgBloqueHorario { Id = 3, DiaSemanaNumero = 6, Franja = "TARDE", DuracionHoras = 4, Activo = 1 }
+            };
+
+            var asigs = new List<(int, double, int)>
+            {
+                (1, 16.0, 1),
+                (2, 16.0, 2)
+            };
+            var patrones = new Dictionary<int, string>
+            {
+                { 1, "6" },
+                { 2, "6" }
+            };
+
+            // Act
+            var res = _sut.Construir(asigs, "5,6", fInicio, fFin, 4.0, bloques: bloques, diasPatronPorAsignatura: patrones);
+
+            // Assert
+            res.IsSuccess.Should().BeTrue();
+            res.Value.Infactibles.Should().BeEmpty();
+            res.Value.Planes.Should().HaveCount(2);
+            res.Value.Planes.Single(p => p.IdAsignatura == 1).Carril.Should().Be(1);
+            res.Value.Planes.Single(p => p.IdAsignatura == 2).Carril.Should().Be(0);
+        }
+
+        [Fact]
+        public void Construir_Patron5Saturado_DebeReportarI5CapacidadCarrilPatron_YNuncaRepartirHaciaIncompatible()
+        {
+            // Arrange (Fase 1602 / Fase 1604): Ventana con capacidad global suficiente (1,2,3,4,5),
+            // pero materias con patrón exclusivo de viernes (5) que superan la capacidad de viernes (3 sesiones).
+            var fInicio = new DateTime(2026, 3, 2);
+            var fFin = new DateTime(2026, 3, 22); // 3 semanas (3 viernes = 3 sesiones de capacidad en viernes)
+            var asigs = new List<(int, double, int)>
+            {
+                (1, 12.0, 1), // 3 sesiones (satura viernes)
+                (2, 12.0, 2)  // 3 sesiones adicionales -> sin capacidad en viernes
+            };
+            var patrones = new Dictionary<int, string>
+            {
+                { 1, "5" },
+                { 2, "5" }
+            };
+
+            // Act
+            var res = _sut.Construir(
+                asigs, "1,2,3,4,5", fInicio, fFin, 4.0,
+                diasPatronPorAsignatura: patrones);
+
+            // Assert
+            res.IsSuccess.Should().BeTrue();
+            res.Value.Planes.Should().ContainSingle();
+            res.Value.Infactibles.Should().Equal(2);
+            res.Value.DetalleInfactibles.Should().ContainSingle()
+                .Which.Should().Contain("I5_CAPACIDAD_CARRIL_PATRON");
+            res.Value.Planes.Should().OnlyContain(p => p.DiasPatron.Contains(5));
+        }
+
+        [Fact]
+        public void Construir_DiaFueraDeVentana_DebeConservarR8()
+        {
+            // Arrange (Fase 1602): Patrón con día fuera de la ventana declarada
+            var fInicio = new DateTime(2026, 3, 2);
+            var fFin = new DateTime(2026, 6, 30);
+            var asigs = new List<(int, double, int)> { (1, 16.0, 1) };
+            var patrones = new Dictionary<int, string> { { 1, "1" } }; // LUN (1) en ventana VIE-SAB (5,6)
+
+            // Act
+            var res = _sut.Construir(asigs, "VIE-SAB", fInicio, fFin, 4.0, diasPatronPorAsignatura: patrones);
+
+            // Assert
+            res.IsSuccess.Should().BeTrue();
+            res.Value.Infactibles.Should().Contain(1);
+            res.Value.DetalleInfactibles.Should().Contain(d =>
+                d.Contains("Asig 1") && d.Contains("R8_DiaFueraDePatron"));
+        }
+
+        [Fact]
+        public void Construir_MateriaSinPatron_DebeConservarRepartoActualPorUtilizacion()
+        {
+            // Arrange (Fase 1602): Materias sin patrón sembrado
+            var fInicio = new DateTime(2026, 3, 2);
+            var fFin = new DateTime(2026, 6, 30);
+            var asigs = new List<(int, double, int)>
+            {
+                (1, 16.0, 1),
+                (2, 16.0, 2),
+                (3, 16.0, 3),
+                (4, 16.0, 4)
+            };
+
+            // Act: sin diccionario de patrones
+            var res = _sut.Construir(asigs, "MAR-VIE", fInicio, fFin, 4.0);
+
+            // Assert: se reparten equilibradamente entre los carriles disponibles
+            res.IsSuccess.Should().BeTrue();
+            res.Value.Infactibles.Should().BeEmpty();
+            res.Value.Planes.Should().HaveCount(4);
+            res.Value.Planes.Select(p => p.Carril).Distinct().Count().Should().BeGreaterThan(1);
+        }
+
+        [Fact]
+        public void Construir_Casos6Y7_MixtosYFestivos_DebeConservarResultados()
+        {
+            // Arrange (Fase 1602 / Fase 1605): Ventana explícita 4,5,6,7; patrones 4,5 y 6,7; festivo en primer sábado
+            var fInicio = new DateTime(2027, 2, 1);
+            var fFin = new DateTime(2027, 4, 30);
+            var asigs = new List<(int, double, int)>
+            {
+                (1, 32.0, 1),
+                (2, 32.0, 2)
+            };
+            var patrones = new Dictionary<int, string>
+            {
+                { 1, "4,5" },
+                { 2, "6,7" }
+            };
+            Func<DateTime, bool> festivo = d => d.Date == new DateTime(2027, 2, 6);
+
+            // Act
+            var res = _sut.Construir(asigs, "4,5,6,7", fInicio, fFin, 4.0, esFestivo: festivo, diasPatronPorAsignatura: patrones);
+
+            // Assert
+            res.IsSuccess.Should().BeTrue();
+            res.Value.Infactibles.Should().BeEmpty();
+            res.Value.Planes.Should().HaveCount(2);
+
+            foreach (var plan in res.Value.Planes)
+            {
+                plan.DiasPatron.Should().BeEquivalentTo(
+                    AgCarriles.Ventana(patrones[plan.IdAsignatura]));
+            }
         }
 
         [Fact]

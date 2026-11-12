@@ -390,6 +390,116 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             // Assert
             result.Value.Bloqueos.Should().Contain(b => b.Contains("capacidad real de 7 ranuras"));
         }
+
+        [Fact]
+        public void ValidarFactibilidad_BloqueoI5_IncluyeNombreDeSede()
+        {
+            // Arrange (Fase 1579): el bloqueo [I5_INFACTIBLE] debe identificar la sede además del AulaRef.
+            // Mismo escenario que el test de festivos (7 ranuras reales < 8 sesiones requeridas) para forzar el bloqueo.
+            var contexto = new AgContexto();
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 8, 10), new DateTime(2026, 8, 23), AgOrigenVentana.Presencial).Value;
+            contexto.Festivos.Add((new DateTime(2026, 8, 18), new DateTime(2026, 8, 18)));
+            contexto.Sedes.Add(new Sede { Id = 13, Ciudad = "BOGOTA", Subsede = "SUBSEDE NORTE" });
+            contexto.Aulas.Add(new AgAula { Id = 1, IdSede = 13, AulaRef = "1|13|1|I|A|PRESENCIAL", IdPrograma = 1, Semestre = "I", DiasVentana = "MAR,MIE,JUE,VIE", HorasDia = 4, Estado = AgEstadoAula.Disponible, Capacidad = 30 });
+            contexto.AulaAsignaturas.Add(new AgAulaAsignatura { IdAula = 1, IdAsignatura = 1, HorasObjetivo = 32, OrdenCurricular = 1 });
+            contexto.Asignaturas.Add(new Asignatura { Id = 1, Nombre = "ASIG", IdPrograma = 1, Semestre = "I", Horas = 32 });
+            contexto.Bloques.Add(new AgBloqueHorario { Id = 1, DiaSemanaNumero = 2, Activo = 1, DuracionHoras = 4 });
+            contexto.Bloques.Add(new AgBloqueHorario { Id = 2, DiaSemanaNumero = 3, Activo = 1, DuracionHoras = 4 });
+            contexto.Bloques.Add(new AgBloqueHorario { Id = 3, DiaSemanaNumero = 4, Activo = 1, DuracionHoras = 4 });
+            contexto.Bloques.Add(new AgBloqueHorario { Id = 4, DiaSemanaNumero = 5, Activo = 1, DuracionHoras = 4 });
+            contexto.Docentes.Add(new Tercero { Id = 1, Nombre = "Profesor", Activo = 1 });
+            contexto.ConstruirIndices();
+
+            // Act
+            var result = _sut.ValidarFactibilidad(contexto);
+
+            // Assert: el mensaje incluye la sede en catálogo entre el código y el AulaRef
+            result.Value.Bloqueos.Should().Contain(b =>
+                b.Contains("[I5_INFACTIBLE]") &&
+                b.Contains("Sede 'BOGOTA (SUBSEDE NORTE)'") &&
+                b.Contains("Aula '1|13|1|I|A|PRESENCIAL'"));
+        }
+
+        [Fact]
+        public void ValidarFactibilidad_MateriaSinPoolDocente_PermiteVacanteYGeneracionContinua()
+        {
+            // Arrange (Fase 1602 / Fase 1603): Materia sin docentes habilitados en PoolDocente genera advertencia
+            // de vacante (AgMotivoVacante.SIN_CANDIDATOS), pero NO bloquea la factibilidad
+            // mientras existan docentes en catálogo para otras asignaturas.
+            var contexto = new AgContexto();
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
+            contexto.Aulas.Add(new AgAula { Id = 1, Estado = AgEstadoAula.Disponible, Capacidad = 30 });
+            contexto.Bloques.Add(new AgBloqueHorario { Id = 1, DiaSemanaNumero = 1, Activo = 1, DuracionHoras = 4 });
+
+            contexto.Asignaturas.Add(new Asignatura { Id = 1, Nombre = "Matemáticas Con Docente", Horas = 32 });
+            contexto.Asignaturas.Add(new Asignatura { Id = 2, Nombre = "Física Sin Docente", Horas = 32 });
+
+            contexto.Docentes.Add(new Tercero { Id = 101, Nombre = "Docente Matemáticas", Activo = 1 });
+
+            // F1603: Registrar docente habilitado formalmente en el pool solo para la asignatura 1
+            contexto.RegistrarDocenteHabilitado(101, 0, 1);
+            contexto.ConstruirIndices();
+
+            // Act
+            var result = _sut.ValidarFactibilidad(contexto);
+
+            // Assert
+            result.IsSuccess.Should().BeTrue();
+            result.Value.EsFactible.Should().BeTrue();
+            result.Value.AsignaturasVacantes.Should().ContainKey(2);
+            result.Value.AsignaturasVacantes[2].Should().Be(AgMotivoVacante.SIN_CANDIDATOS);
+            result.Value.Advertencias.Should().Contain(a => a.Contains("Física Sin Docente") && a.Contains("no tiene ningún docente habilitado en el Pool"));
+        }
+
+        [Fact]
+        public void ValidarFactibilidad_PatronSaturadoEnAula_ReportaBloqueoI5CapacidadCarrilPatron()
+        {
+            // Arrange (Fase 1601 / Fase 1602 / Fase 1604): Aula con ventana amplia (1..5)
+            // donde las asignaturas tienen patrón exclusivo "5" (viernes) saturando la capacidad del carril compatible.
+            var contexto = new AgContexto();
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 3, 2), new DateTime(2026, 3, 22), AgOrigenVentana.Presencial).Value; // 3 semanas
+            contexto.Sedes.Add(new Sede { Id = 5, Ciudad = "MEDELLIN", Subsede = "CENTRAL" });
+            var aula = new AgAula
+            {
+                Id = 1,
+                IdSede = 5,
+                AulaRef = "MED-01",
+                IdPrograma = 1,
+                Semestre = "I",
+                DiasVentana = "1,2,3,4,5",
+                Jornada = "NOCHE",
+                HorasDia = 4,
+                Estado = AgEstadoAula.Disponible,
+                Capacidad = 30
+            };
+            contexto.Aulas.Add(aula);
+
+            contexto.AulaAsignaturas.Add(new AgAulaAsignatura { IdAula = 1, IdAsignatura = 1, HorasObjetivo = 12, OrdenCurricular = 1, DiasPatron = "5" });
+            contexto.AulaAsignaturas.Add(new AgAulaAsignatura { IdAula = 1, IdAsignatura = 2, HorasObjetivo = 12, OrdenCurricular = 2, DiasPatron = "5" });
+
+            contexto.Asignaturas.Add(new Asignatura { Id = 1, Nombre = "ASIG 1", IdPrograma = 1, Semestre = "I", Horas = 12 });
+            contexto.Asignaturas.Add(new Asignatura { Id = 2, Nombre = "ASIG 2", IdPrograma = 1, Semestre = "I", Horas = 12 });
+
+            for (int d = 1; d <= 5; d++)
+            {
+                contexto.Bloques.Add(new AgBloqueHorario { Id = d, DiaSemanaNumero = d, Franja = "NOCHE", DuracionHoras = 4, Activo = 1 });
+            }
+
+            contexto.Docentes.Add(new Tercero { Id = 1, Nombre = "Profesor", Activo = 1 });
+            contexto.ConstruirIndices();
+
+            // Act
+            var result = _sut.ValidarFactibilidad(contexto);
+
+            // Assert
+            result.Value.EsFactible.Should().BeFalse();
+            result.Value.Bloqueos.Should().Contain(b =>
+                b.Contains("[I5_CAPACIDAD_CARRIL_PATRON]") &&
+                b.Contains("Sede 'MEDELLIN (CENTRAL)'") &&
+                b.Contains("Aula 'MED-01'") &&
+                b.Contains("I5_CAPACIDAD_CARRIL_PATRON") &&
+                b.Contains("compatibles:"));
+        }
     }
 }
 

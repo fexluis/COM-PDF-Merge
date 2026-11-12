@@ -181,7 +181,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 {
                     var ganadora = mejorCfg;
                     informe.AgregarBloqueo(
-                        $"Asignatura '{asig.Nombre}' (Id={asig.Id}): {sesionesRequeridas} sesiones > capacidad real {capacidadReal} " +
+                        $"{EtiquetaSede(contexto, AulaDe(ganadora?.IdAula ?? 0))} Asignatura '{asig.Nombre}' (Id={asig.Id}): {sesionesRequeridas} sesiones > capacidad real {capacidadReal} " +
                         $"(aula={ganadora?.IdAula ?? 0}, días=[{string.Join(",", AgPlanificadorPatronSemanal.DiasKDe(ganadora, AulaDe(ganadora?.IdAula ?? 0)))}], ventana {ini:yyyy-MM-dd}..{fin:yyyy-MM-dd}).");
                 }
 
@@ -210,7 +210,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         var v = Validar(string.Join(",", diasEfectivos), auCfg.DiasVentana, auCfg.Jornada, horasEfectivasCfg, contexto.Bloques);
                         if (v.IsFailure)
                         {
-                            informe.AgregarBloqueo($"Asignatura '{asig.Nombre}' / Aula '{auCfg.AulaRef}': {v.Error}");
+                            informe.AgregarBloqueo($"{EtiquetaSede(contexto, auCfg)} Asignatura '{asig.Nombre}' / Aula '{auCfg.AulaRef}': {v.Error}");
                         }
                     }
                 }
@@ -232,7 +232,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     if (ventanaAu.Count == 0)
                     {
                         informe.AgregarBloqueo(
-                            $"[I1_VENTANA_VACIA] Aula '{au.AulaRef}': sin dias_ventana. Ejecute 'Generar Aulas' con la selección vigente.");
+                            $"[I1_VENTANA_VACIA] {EtiquetaSede(contexto, au)} Aula '{au.AulaRef}': sin dias_ventana. Ejecute 'Generar Aulas' con la selección vigente.");
                         continue;
                     }
 
@@ -242,7 +242,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     if (au.HorasDia == 8 && nivelAu == AgNivelAcademico.Pregrado)
                     {
                         informe.AgregarBloqueo(
-                            $"[D4_PREGRADO_8H] Aula '{au.AulaRef}': 8 h/día no permitido en PREGRADO (unidad canónica 4 h). " +
+                            $"[D4_PREGRADO_8H] {EtiquetaSede(contexto, au)} Aula '{au.AulaRef}': 8 h/día no permitido en PREGRADO (unidad canónica 4 h). " +
                             "Seleccione 4h en el árbol y ejecute 'Generar Aulas'.");
                     }
                     double unidadAu = AgUnidadesSemanales.HorasSesionAula(au, nivelAu);
@@ -285,7 +285,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 
                         if (horasAu <= 0.0)
                         {
-                            informe.AgregarAdvertencia($"[I5_HORAS_DESCONOCIDAS] Aula '{au.AulaRef}' asig {aa.IdAsignatura}: horas_objetivo=0; no se computa en la demanda.");
+                            informe.AgregarAdvertencia($"[I5_HORAS_DESCONOCIDAS] {EtiquetaSede(contexto, au)} Aula '{au.AulaRef}' asig {aa.IdAsignatura}: horas_objetivo=0; no se computa en la demanda.");
                             continue;
                         }
                         totalSesionesAula += (int)Math.Ceiling(horasAu / unidadAu);
@@ -296,7 +296,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     {
                         string escalon = AgEscaleraVentanas.Siguiente(au.DiasVentana);
                         informe.AgregarBloqueo(
-                            $"[I5_INFACTIBLE] Aula '{au.AulaRef}': demanda total de {totalSesionesAula} sesiones " +
+                            $"[I5_INFACTIBLE] {EtiquetaSede(contexto, au)} Aula '{au.AulaRef}': demanda total de {totalSesionesAula} sesiones " +
                             $"({materiasComputadas} materias computadas de {asigsAula.Count}) excede la capacidad real de " +
                             $"{capacidadTotalRanuras} ranuras ({ranurasAu.Count} ranuras/semana, festivos descontados) " +
                             $"en ventana {ini:yyyy-MM-dd}..{fin:yyyy-MM-dd}." +
@@ -334,7 +334,12 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         contexto.EsFestivo, contexto.Bloques, au.Jornada, patronesAula);   // Fase 1252
                     if (planRes.IsFailure)
                     {
-                        informe.AgregarBloqueo($"[I5_INFACTIBLE_OLEADA] Aula '{au.AulaRef}': {planRes.Error}");
+                        // F1594: Distinguir I1_ASIGNATURA_DUPLICADA de I5_INFACTIBLE_OLEADA
+                        string codigo = planRes.Error.StartsWith("I1_ASIGNATURA_DUPLICADA:", StringComparison.Ordinal)
+                            ? "I1_ASIGNATURA_DUPLICADA"
+                            : "I5_INFACTIBLE_OLEADA";
+
+                        informe.AgregarBloqueo($"[{codigo}] {EtiquetaSede(contexto, au)} Aula '{au.AulaRef}': {planRes.Error}");
                     }
                     else if (planRes.Value.Infactibles != null && planRes.Value.Infactibles.Count > 0)
                     {
@@ -345,15 +350,23 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         string sugerida = planRes.Value.VentanaSugerida;
                         if (!string.IsNullOrEmpty(sugerida)) detalle += $" Escale la ventana a '{sugerida}'.";
 
+                        // F1600 / F1601: Distinguir incompatibilidad R8 de saturación I5_CAPACIDAD_CARRIL_PATRON y agotamiento temporal I5_INFACTIBLE_OLEADA
                         bool esR8 = planRes.Value.DetalleInfactibles != null &&
                                     planRes.Value.DetalleInfactibles.Any(x => x.Contains("R8_DiaFueraDePatron"));
 
+                        bool esCapacidadPatron = planRes.Value.DetalleInfactibles != null &&
+                                    planRes.Value.DetalleInfactibles.Any(x => x.Contains("I5_CAPACIDAD_CARRIL_PATRON"));
+
+                        string etiquetaBloqueo = esR8
+                            ? "[R8_DiaFueraDePatron]"
+                            : (esCapacidadPatron ? "[I5_CAPACIDAD_CARRIL_PATRON]" : "[I5_INFACTIBLE_OLEADA]");
+
                         informe.AgregarBloqueo(
                             esR8
-                                ? $"[R8_DiaFueraDePatron] Aula '{au.AulaRef}': asignaturas [{string.Join(",", planRes.Value.Infactibles)}] " +
+                                ? $"{etiquetaBloqueo} {EtiquetaSede(contexto, au)} Aula '{au.AulaRef}': asignaturas [{string.Join(",", planRes.Value.Infactibles)}] " +
                                   $"con día de patrón fuera de la banda asignada.{detalle}"
-                                : $"[I5_INFACTIBLE_OLEADA] Aula '{au.AulaRef}': asignaturas [{string.Join(",", planRes.Value.Infactibles)}] " +
-                                  $"no caben en su sub-ventana de oleada.{detalle} Amplíe la ventana, reduzca horas o aumente carriles.");   // Fase 1269
+                                : $"{etiquetaBloqueo} {EtiquetaSede(contexto, au)} Aula '{au.AulaRef}': asignaturas [{string.Join(",", planRes.Value.Infactibles)}] " +
+                                  $"no caben en su sub-ventana de oleada.{detalle} Amplíe la ventana, reduzca horas o aumente carriles.");   // Fase 1269 / Fase 1601
                     }
 
                     if (capacidadTotalRanuras > 0)
@@ -362,7 +375,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         if (ocupacion >= 88.0)
                         {
                             informe.AgregarAdvertencia(
-                                $"[I5_HOLGURA_BAJA] Aula '{au.AulaRef}': ocupación {ocupacion:0.#}% " +
+                                $"[I5_HOLGURA_BAJA] {EtiquetaSede(contexto, au)} Aula '{au.AulaRef}': ocupación {ocupacion:0.#}% " +
                                 $"({totalSesionesAula}/{capacidadTotalRanuras} sesiones). Sin margen para festivos " +
                                 $"ni reprogramaciones; considere ampliar la ventana (AgEscaleraVentanas).");   // Fase 1230
                         }
@@ -394,6 +407,41 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             }
 
             return Result.Success(informe);
+        }
+
+        /// <summary>
+        /// Fase 1579: Resuelve una etiqueta legible de sede para los bloqueos/advertencias del pre-vuelo,
+        /// de modo que el log identifique la sede además de la referencia del aula (AulaRef).
+        /// Prioriza el nombre de la sede en catálogo, luego su subunidad y, en último término, la del aula.
+        /// </summary>
+        private static string EtiquetaSede(AgContexto contexto, AgAula aula)
+        {
+            if (aula == null) return "Sede 'N/D'";
+
+            Sede sede = null;
+            if (aula.IdSede > 0)
+            {
+                if (contexto?.SedesPorId != null)
+                {
+                    contexto.SedesPorId.TryGetValue(aula.IdSede, out sede);
+                }
+
+                if (sede == null && contexto?.Sedes != null)
+                {
+                    sede = contexto.Sedes.FirstOrDefault(s => s != null && s.Id == aula.IdSede);
+                }
+            }
+
+            string nombre = sede?.Nombre;
+            if (string.IsNullOrWhiteSpace(nombre)) nombre = sede?.Subunidad;
+            if (string.IsNullOrWhiteSpace(nombre)) nombre = aula.Subunidad;
+            if (string.IsNullOrWhiteSpace(nombre)) nombre = contexto?.Subunidad;
+            if (string.IsNullOrWhiteSpace(nombre))
+            {
+                nombre = aula.IdSede > 0 ? $"Id {aula.IdSede}" : "N/D";
+            }
+
+            return $"Sede '{nombre.Trim()}'";
         }
 
         /// <summary>

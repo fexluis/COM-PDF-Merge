@@ -69,7 +69,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             if (!informe.EsFactible)
             {
                 string errores = string.Join("\n• ", informe.BloqueosCriticos);
-                return Result.Failure<AgResultadoCorrida>($"Corrida abortada por inviabilidad matemática:\n• {errores}");
+                // F1601: Se reemplaza «inviabilidad matemática» por «bloqueos de factibilidad detectados»
+                return Result.Failure<AgResultadoCorrida>($"Corrida abortada por bloqueos de factibilidad detectados:\n• {errores}");
             }
 
             // 2. Construir Índices de Contexto

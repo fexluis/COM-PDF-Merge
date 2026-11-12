@@ -53,7 +53,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
 
             // Assert
             result.IsFailure.Should().BeTrue();
-            result.Error.Should().Contain("inviabilidad");
+            result.Error.Should().Contain("bloqueos de factibilidad detectados");
         }
 
         [Fact]

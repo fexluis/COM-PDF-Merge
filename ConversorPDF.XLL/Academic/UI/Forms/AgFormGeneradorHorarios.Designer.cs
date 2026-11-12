@@ -1066,7 +1066,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             this.btnPromoverProduccion.Enabled = false;
             this.btnPromoverProduccion.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             this.btnPromoverProduccion.ForeColor = System.Drawing.Color.White;
-            this.btnPromoverProduccion.Location = new System.Drawing.Point(890, 10);
+            this.btnPromoverProduccion.Location = new System.Drawing.Point(750, 10);
             this.btnPromoverProduccion.Name = "btnPromoverProduccion";
             this.btnPromoverProduccion.Size = new System.Drawing.Size(200, 32);
             this.btnPromoverProduccion.TabIndex = 2;

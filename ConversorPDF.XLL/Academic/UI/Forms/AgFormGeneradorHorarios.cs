@@ -64,8 +64,15 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
         private long _idCorridaCargada;
         private bool _actualizandoComboCorridas;
         private bool _refrescandoComboCorridas;
+        private string _claveFiltroEnVuelo; // Fase 1637: filtro en vuelo para no marcar pendiente si los filtros no cambiaron
         private bool _solicitudPendienteRefrescoCombo;
-        private string _claveFiltroCorridas = string.Empty; // Fase 1544: cache de filtros para evitar reconsultas en DropDown
+        private bool _cargaInicialPendiente; // Fase 1624: acumular autorización de carga inicial ante refrescos en curso
+        private bool _cargandoCorridaDesdeCombo; // Fase 1616: exclusión mutua para evitar cargas concurrentes de corrida
+        private bool _recargaCorridaPendiente; // Fase 1625: coalescencia de selección de corrida para evitar desalineación combo/grilla
+        private bool _ultimaCargaDesdeComboOk; // Fase 1629: estado de última carga para inhibir cascada de modales
+        private DateTime _ultimoRefrescoComboUtc = DateTime.MinValue; // Fase 1632: deduplicación temporal de refrescos
+        private int _reabriendoPopupCombo; // Fase 1633, 1636: contador de reaperturas programáticas para no disparar refresco recursivo
+        private bool _cerrandoPopupInterno; // Fase 1634: cierre programático para no disparar refresco en DropDownClosed
         private VentanaSemestre _ventanaResuelta;
         private bool _isUpdatingTreeChecks = false;
         private bool _restaurandoPerfil = false;
@@ -172,6 +179,9 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
                 cmbArboles.SelectedIndex = 0;
                 await CargarPerfilArbolSeleccionadoAsync(mostrarAvisos: false);
             }
+
+            // Fase 1617: única invocación con autorización de carga inicial automática
+            RefrescarComboCorridasSeguro(permitirCargaInicial: true);
         }
 
         /// <summary>
@@ -399,8 +409,22 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
 
             // Fase 1519: el botón "Cargar última optimización" se sustituye por un selector de corridas
             cmbCargarCorridas.SelectedIndexChanged += async (s, e) => await CargarCorridaDesdeComboAsync();
-            // Fase 1609: al desplegar el combo, solicitar siempre lectura fresca
-            cmbCargarCorridas.DropDown += (s, e) => RefrescarComboCorridasSeguro();
+            // Fases 1622, 1623, 1628, 1631, 1632, 1633, 1634: refresco anticipado y deduplicado con inhibición de eventos programáticos
+            cmbCargarCorridas.Enter += (s, e) => RefrescarComboCorridasSeguro(omitirSiReciente: true);
+            cmbCargarCorridas.DropDown += (s, e) =>
+            {
+                if (_reabriendoPopupCombo > 0) return; // Fase 1633, 1636: reapertura programática, no refrescar
+                RefrescarComboCorridasSeguro(omitirSiReciente: true);
+            };
+            cmbCargarCorridas.DropDownClosed += (s, e) =>
+            {
+                if (_cerrandoPopupInterno) return; // Fase 1634: cierre programático por mutación interna de Items
+                if (_solicitudPendienteRefrescoCombo)
+                {
+                    _solicitudPendienteRefrescoCombo = false;
+                    RefrescarComboCorridasSeguro();
+                }
+            };
             btnAprobarCorrida.Click += async (s, e) => await AprobarCorridaDesdeModuloRAsync();
             btnRecalcularViolaciones.Click += async (s, e) => await RecalcularViolacionesDesdeModuloRAsync();
 
@@ -2391,25 +2415,32 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
         }
 
         /// <summary>
-        /// Refresca el selector de corridas del Módulo R (Fase 1519, 1542, 1543, 1609): lista las corridas del período,
-        /// programa y territorial activos con su volumen de staging y preselecciona la corrida cargada.
+        /// Refresca el selector de corridas del Módulo R (Fase 1519, 1542, 1543, 1609, 1615, 1617, 1618, 1621, 1622, 1623, 1624):
+        /// lista las corridas del período, programa y territorial activos con su volumen de staging y preselecciona la corrida cargada.
         /// Aplica cascada tolerante de filtros para no dejar vacío el selector si hay staging en la territorial.
-        /// Protegido con guarda de reentrada y procesamiento de solicitudes pendientes (Fase 1556, 1609).
+        /// Protegido con guarda de reentrada, inhibición de mutación con popup abierto y procesamiento de solicitudes pendientes.
         /// </summary>
-        private async Task RefrescarComboCorridasAsync()
+        private async Task RefrescarComboCorridasAsync(bool permitirCargaInicial = false)
         {
             if (cmbCargarCorridas == null) return;
             if (_refrescandoComboCorridas)
             {
-                _solicitudPendienteRefrescoCombo = true;
+                _cargaInicialPendiente |= permitirCargaInicial; // Fase 1624: acumular autorización si coincide con refresco en curso
+                if (ClaveFiltroCorridas() != _claveFiltroEnVuelo) // Fase 1637: encolar solo si los filtros cambiaron realmente
+                {
+                    _solicitudPendienteRefrescoCombo = true;
+                }
                 return;
             }
             _refrescandoComboCorridas = true;
+            _claveFiltroEnVuelo = ClaveFiltroCorridas(); // Fase 1637: registrar clave activa al inicio del refresco
 
             try
             {
                 do
                 {
+                    permitirCargaInicial |= _cargaInicialPendiente; // Fase 1624: consumir permiso acumulado
+                    _cargaInicialPendiente = false;
                     _solicitudPendienteRefrescoCombo = false;
                     if (IsDisposed || Disposing) return;
 
@@ -2450,10 +2481,33 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                         continue;
                     }
 
+                    // Fases 1618 & 1621: si la corrida activa no está en items filtrados, buscarla sin filtro y preservar marcador
+                    CorridaStagingItem fueraDeFiltro = null;
+                    if (_idCorridaCargada > 0 && !items.Any(c => c.IdCorrida == _idCorridaCargada))
+                    {
+                        var activaRes = await repo.GetCorridasStagingAsync(null, null, subunidad, CancellationToken.None);
+                        fueraDeFiltro = activaRes.IsSuccess
+                            ? activaRes.Value.FirstOrDefault(c => c.IdCorrida == _idCorridaCargada)
+                            : null;
+                        if (fueraDeFiltro != null)
+                        {
+                            items.Add(fueraDeFiltro);
+                        }
+                    }
+
                     if (ClaveFiltroCorridas() != claveFiltrosAlIniciar)
                     {
                         _solicitudPendienteRefrescoCombo = true;
                         continue;
+                    }
+
+                    // Fases 1615, 1622, 1623, 1631, 1634: cerrar temporalmente el popup si está abierto para mutar Items con seguridad
+                    bool reabrirPopup = cmbCargarCorridas.DroppedDown;
+                    if (reabrirPopup)
+                    {
+                        _cerrandoPopupInterno = true;
+                        try { cmbCargarCorridas.DroppedDown = false; }
+                        finally { _cerrandoPopupInterno = false; }
                     }
 
                     AgSeleccionModuloR seleccion = null;
@@ -2469,8 +2523,6 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
 
                         if (items.Count == 0)
                         {
-                            // Fase 1545-bis: cachear clave para no repetir consultas en aperturas consecutivas
-                            _claveFiltroCorridas = ClaveFiltroCorridas();
                             if (_idCorridaCargada <= 0)
                             {
                                 lblAgModo.Text = $"Modo AG · sin corridas en staging (período #{idPeriodo?.ToString() ?? "todos"}, programa #{idPrograma?.ToString() ?? "todos"}, territorial {subunidad ?? "todas"})";
@@ -2490,6 +2542,8 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                             lblAgModo.Text = "Modo AG · corridas ampliadas (sin filtro período/programa)";
 
                         foreach (var it in items) it.Etiqueta = AgCorridaSelector.FormatearEtiqueta(it);
+                        // Fase 1621: sufijo aplicado tras el formateo para no sobrescribir la marca de fuera de filtro
+                        if (fueraDeFiltro != null) fueraDeFiltro.Etiqueta += " (fuera de filtro)";
 
                         cmbCargarCorridas.DisplayMember = nameof(CorridaStagingItem.Etiqueta);
                         cmbCargarCorridas.ValueMember = nameof(CorridaStagingItem.IdCorrida);
@@ -2504,14 +2558,22 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                         {
                             lblAgModo.Text = $"Modo AG · corrida cargada #{_idCorridaCargada} no visible con los filtros actuales";
                         }
+
+                        _ultimoRefrescoComboUtc = DateTime.UtcNow; // Fase 1632 & 1635: registrar marca de tiempo estrictamente tras swap efectivo
                     }
                     finally
                     {
                         _actualizandoComboCorridas = false;
+                        // Fases 1631, 1633, 1634: reabrir de forma diferida en el finally para cubrir también el camino items.Count == 0
+                        if (reabrirPopup && !IsDisposed && !Disposing && IsHandleCreated)
+                        {
+                            ReabrirPopupDiferido();
+                        }
                     }
 
-                    // Fase 1608: carga inicial automática solo si está explícitamente autorizada por la política
-                    if (seleccion != null &&
+                    // Fase 1608 & 1617: carga inicial automática solo si está explícitamente autorizada al abrir el formulario
+                    if (permitirCargaInicial &&
+                        seleccion != null &&
                         seleccion.RequiereCargaInicial &&
                         seleccion.ItemSeleccionado != null &&
                         seleccion.ItemSeleccionado.IdCorrida > 0 &&
@@ -2521,9 +2583,6 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                         await CargarCorridaDesdeComboAsync();
                         if (IsDisposed || Disposing) return;
                     }
-
-                    // Fase 1544: registrar clave de filtros exitosa
-                    _claveFiltroCorridas = ClaveFiltroCorridas();
                 }
                 while (_solicitudPendienteRefrescoCombo && !IsDisposed && !Disposing);
             }
@@ -2533,6 +2592,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             }
             finally
             {
+                _claveFiltroEnVuelo = null; // Fase 1637: liberar clave en vuelo
                 _refrescandoComboCorridas = false;
             }
         }
@@ -2547,22 +2607,75 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             return $"{p}|{g}|{SyncContext.ActiveSubunidad}";
         }
 
-        private void RefrescarComboCorridasSeguro() => _ = RefrescarComboCorridasAsync();
+        private void RefrescarComboCorridasSeguro(bool permitirCargaInicial = false, bool omitirSiReciente = false)
+        {
+            // Fase 1632: deduplicación temporal para evitar sobrecarga de consultas y parpadeo de UI
+            if (omitirSiReciente && !permitirCargaInicial &&
+                (DateTime.UtcNow - _ultimoRefrescoComboUtc).TotalMilliseconds < 750)
+            {
+                return;
+            }
+            _ = RefrescarComboCorridasAsync(permitirCargaInicial);
+        }
 
         /// <summary>
-        /// Carga en el Módulo R la corrida elegida en el selector (Fase 1519), rehidratando grid,
-        /// métricas, vacantes y aprobando/habilitando la promoción según corresponda.
+        /// Reabre asíncronamente el desplegable del selector inhibiendo la suscripción al evento DropDown (Fases 1631, 1633, 1634, 1636).
+        /// Valida que el combo mantenga el foco para no robarlo indebidamente.
+        /// </summary>
+        private void ReabrirPopupDiferido()
+        {
+            _reabriendoPopupCombo++;
+            try
+            {
+                BeginInvoke(new Action(() =>
+                {
+                    try
+                    {
+                        // Fase 1636: sólo reabrir si el combo conserva el foco y nadie abrió otro control
+                        if (!IsDisposed && !Disposing && IsHandleCreated && cmbCargarCorridas.Focused)
+                        {
+                            cmbCargarCorridas.DroppedDown = true;
+                        }
+                    }
+                    catch (InvalidOperationException) { /* handle destruido durante el cierre */ }
+                    finally
+                    {
+                        _reabriendoPopupCombo--;
+                    }
+                }));
+            }
+            catch (InvalidOperationException)
+            {
+                _reabriendoPopupCombo--;
+            }
+        }
+
+        /// <summary>
+        /// Carga en el Módulo R la corrida elegida en el selector (Fase 1519, 1616, 1625), rehidratando grid,
+        /// métricas, vacantes y aprobando/habilitando la promoción según corresponda. Coalesce selecciones en vuelo.
         /// </summary>
         private async Task CargarCorridaDesdeComboAsync()
         {
-            if (_actualizandoComboCorridas) return;
+            if (_actualizandoComboCorridas || _cargandoCorridaDesdeCombo)
+            {
+                // Fase 1625: no descartar selección del usuario ocurrida mientras otra carga está en vuelo
+                if (!_actualizandoComboCorridas && cmbCargarCorridas?.SelectedItem is CorridaStagingItem pend
+                    && pend.IdCorrida != _idCorridaCargada)
+                {
+                    _recargaCorridaPendiente = true;
+                }
+                return;
+            }
             if (!(cmbCargarCorridas?.SelectedItem is CorridaStagingItem corrida) || corrida.IdCorrida <= 0) return;
+
+            _cargandoCorridaDesdeCombo = true;
 
             try
             {
                 Cursor = Cursors.WaitCursor;
                 _ultimoResultado = null;   // Fase 1284: rehidratación limpia desde SQLite
                 bool cargada = await CargarModuloResultadosAsync(corrida.IdCorrida);
+                _ultimaCargaDesdeComboOk = cargada; // Fase 1629: registrar éxito de carga para despacho seguro
 
                 if (!cargada)
                 {
@@ -2595,16 +2708,33 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 LoggerHelper.Info($"[AG] Corrida #{corrida.IdCorrida} cargada: individuo #{ind?.Id ?? 0}, HARD={ind?.HardViolations ?? 0}, promover={btnPromoverProduccion.Enabled}.");
                 Log($"[AG] Corrida #{corrida.IdCorrida} cargada desde el selector ({corrida.TotalSesiones} sesiones en staging).");
             }
-            catch (OperationCanceledException) { }
+            catch (OperationCanceledException)
+            {
+                _ultimaCargaDesdeComboOk = false;
+            }
             catch (Exception ex)
             {
+                _ultimaCargaDesdeComboOk = false;
                 LoggerHelper.Error($"[AgFormGeneradorHorarios] Error al cargar la corrida #{corrida.IdCorrida} desde el selector", ex);
                 MessageBox.Show(this, $"No se pudo cargar la corrida #{corrida.IdCorrida}:\n{ex.Message}",
                     "Cargar corrida", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
+                _cargandoCorridaDesdeCombo = false;
                 Cursor = Cursors.Default;
+                // Fases 1625, 1629 & 1630: limpiar siempre flag pendiente y verificar IsHandleCreated antes de BeginInvoke
+                bool despachar = _recargaCorridaPendiente && _ultimaCargaDesdeComboOk;
+                _recargaCorridaPendiente = false;
+
+                if (despachar && !IsDisposed && !Disposing && IsHandleCreated)
+                {
+                    try
+                    {
+                        BeginInvoke(new Action(() => { if (!IsDisposed && !Disposing) _ = CargarCorridaDesdeComboAsync(); }));
+                    }
+                    catch (InvalidOperationException) { /* handle destruido durante el cierre */ }
+                }
             }
         }
 
