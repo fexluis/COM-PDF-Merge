@@ -1,8 +1,5 @@
-# Baseline medido 2026-10-27 en C:\dev\ConversorPDF con scripts/verify.ps1 -Mode Full
-# medicion 1: HEAD 6ae4995 -> 939 total, 939 passed, 0 failed
-# medicion 2: HEAD 94453f2 -> 952 total, 952 passed, 0 failed (~54 s) tras T-fix de usuarios
-# Un clon de HEAD anterior a 6ae4995 devolvia 51 pruebas: baseline invalido (auditoria 2026-10-27).
-TOTAL: 952
-PASSED: 952
+# Baseline medido 2026-11-12 con scripts/verify.ps1 -Mode Full tras commit e523b51
+TOTAL: 1172
+PASSED: 1172
 FAILED: 0
 SKIPPED: 0
