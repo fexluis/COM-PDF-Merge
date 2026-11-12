@@ -202,10 +202,12 @@ if (capacidad <= capacidadAntes) continue;
   `AplicarAsync` no se modifica (ya escribe `ag_aula` y `ag_arbol_nodo` con alcance `idArbol`).
 - **validation**: escalador + persistencia verdes: `LUN-JUE→LUN-VIE`, `MAR-VIE→LUN-VIE`, `VIE-DOM→JUE-DOM`, `JUE-DOM→MIE-DOM`; primer paso sin ganancia → 0 propuestas; `5W` no dispara segunda escalada; `MIE-DOM`/`LUN-VIE` sin propuesta.
 - **verification**: `powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "FullyQualifiedName~AgEscaladorVentanaAula"`
-- **evidence**: `_evidence/<stamp>/summary.md`
-- **status**: pending
-- **log**: —
-- **files edited/created**: —
+- **evidence**: _evidence/20261112-155126/summary.md
+- **status**: done
+- **log**: GREEN. Evaluar evalúa exclusivamente AgEscaleraVentanas.Siguiente. Caso 1703 verificado. Pruebas unitarias (12/12) y de persistencia (3/3) en PASS. Auditado por task-reviewer (OK).
+- **files edited/created**:
+  - ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgEscaladorVentanaAula.cs
+  - ConversorPDF.Tests/Academic/Infrastructure/Persistence/AgEscaladorVentanaAulaTests.cs
 
 ### T7: UI — recarga de claves y leyenda no clicable
 - **id**: T7

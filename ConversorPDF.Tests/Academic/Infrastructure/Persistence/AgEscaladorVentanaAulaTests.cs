@@ -261,13 +261,15 @@ namespace ConversorPDF.Tests.Academic.Infrastructure.Persistence
                 Horas = (int)horasTotales
             });
 
-            contexto.AulaAsignaturaPorAulaAsig.Add((1, 101), new AgAulaAsignatura
+            var aa = new AgAulaAsignatura
             {
                 IdAula = 1,
                 IdAsignatura = 101,
                 HorasObjetivo = horasTotales,
                 OrdenCurricular = 1
-            });
+            };
+            contexto.AulaAsignaturas.Add(aa);
+            contexto.AulaAsignaturaPorAulaAsig.Add((1, 101), aa);
 
             if (festivos != null)
             {

@@ -62,24 +62,29 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                 int capacidadAntes = Capacidad(aula.DiasVentana, aula.Jornada, unidad, contexto, ini, fin);
                 if (demanda <= capacidadAntes) continue;
 
-                foreach (var paso in AgEscaleraVentanas.Escalera(aula.DiasVentana))
+                var paso = AgEscaleraVentanas.Siguiente(aula.DiasVentana);
+                if (string.IsNullOrWhiteSpace(paso))
                 {
-                    int capacidad = Capacidad(paso, aula.Jornada, unidad, contexto, ini, fin);
-                    if (capacidad <= capacidadAntes) continue;
-
-                    decisiones.Add(new Decision
-                    {
-                        AulaRef = aula.AulaRef,
-                        Subunidad = aula.Subunidad,
-                        Desde = aula.DiasVentana,
-                        Hacia = paso,
-                        DemandaSesiones = demanda,
-                        CapacidadAntes = capacidadAntes,
-                        CapacidadDespues = capacidad,
-                        Motivo = $"demanda {demanda} sesiones > capacidad {capacidadAntes} ranuras"
-                    });
-                    break;   // Fase 1229: un escalón por corrida (idempotente)
+                    continue;
                 }
+
+                int capacidad = Capacidad(paso, aula.Jornada, unidad, contexto, ini, fin);
+                if (capacidad <= capacidadAntes)
+                {
+                    continue;
+                }
+
+                decisiones.Add(new Decision
+                {
+                    AulaRef = aula.AulaRef,
+                    Subunidad = aula.Subunidad,
+                    Desde = aula.DiasVentana,
+                    Hacia = paso,
+                    DemandaSesiones = demanda,
+                    CapacidadAntes = capacidadAntes,
+                    CapacidadDespues = capacidad,
+                    Motivo = $"demanda {demanda} sesiones > capacidad {capacidadAntes} ranuras"
+                });
             }
             return decisiones;
         }
