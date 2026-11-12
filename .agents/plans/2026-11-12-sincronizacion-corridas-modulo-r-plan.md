@@ -168,11 +168,10 @@ Leases disjuntos: T1 opera en L0 (`ConversorPDF.XLL.csproj`) y crea `AgSeleccion
 - **description**: Ejecutar la suite completa de pruebas unitarias e integración en modo Full mediante `verify.ps1` para asegurar 0 fallos y 0 regresiones respecto al baseline oficial (TOTAL: 952). Generar reporte TRX y summary.md bajo `_evidence/`.
 - **validation**: Exit code 0, 0 tests fallidos, 0 regresiones.
 - **verification**: `powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Full`
-- **evidence**: `_evidence/20261112-074004/test.trx`
+- **evidence**: `_evidence/20261112-074457/summary.md`
 - **status**: done
-- **log**: Sincronización post-ejecución centralizada en finally con idCorridaCreada > 0 y token independiente. CargarModuloResultadosAsync resetea _idCorridaCargada = 0 ante fallo de staging y actualiza lblAgModo en ruta directa. AbrirVinculacionesModoAgAsync verifica recarga y refresca combo. Tests 617/617 PASS.
-- **files edited/created**:
-  - `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
+- **log**: Verificación integral Full ejecutada con éxito. Total: 1172, Passed: 1172, Failed: 0, Skipped: 0. 0 regresiones vs baseline (952). Veredicto PASS.
+- **files edited/created**: []
 
 ### T7: Documentación técnica del cambio
 - **id**: T7
