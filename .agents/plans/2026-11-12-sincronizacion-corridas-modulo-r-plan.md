@@ -135,10 +135,11 @@ Leases disjuntos: T1 opera en L0 (`ConversorPDF.XLL.csproj`) y crea `AgSeleccion
 - **description**: Corregir el evento `DropDown` para solicitar siempre una lectura fresca (eliminando el guard `ClaveFiltroCorridas() == _claveFiltroCorridas`). Capturar los filtros y el ID de corrida activa al inicio de la consulta asíncrona; no dar por válida una respuesta si durante el await cambiaron los filtros o el formulario fue dispuesto (`IsDisposed`). Proteger contra colisiones de peticiones concurrentes: si llega una nueva solicitud mientras una está en curso, registrar la solicitud pendiente y procesar la más reciente al finalizar, en lugar de descartarla con un return ciego. Ante error de lectura, preservar el catálogo y la corrida activa previos sin vaciar la selección.
 - **validation**: Apertura de DropDown reconsulta siempre; respuestas obsoletas no sobreescriben la selección reciente; sin excepciones por controles dispuestos.
 - **verification**: `powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "FullyQualifiedName~AgCorridaSelector"`
-- **evidence**: pendiente
-- **status**: pending
-- **log**: pendiente
-- **files edited/created**: []
+- **evidence**: `_evidence/20261112-073145/test.trx`
+- **status**: done
+- **log**: DropDown reconsulta siempre; bucle de coalescencia con _solicitudPendienteRefrescoCombo, descarte de respuestas obsoletas ante cambio de filtro durante await, chequeos de IsDisposed/Disposing y preservación de catálogo ante error. Tests en PASS (24/24).
+- **files edited/created**:
+  - `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
   - `ConversorPDF.Tests/Academic/Application/Services/AgCorridaSelectorTests.cs`
 
 ### T5: Ciclo de vida de corrida, sincronización post-ejecución y retorno de diálogo

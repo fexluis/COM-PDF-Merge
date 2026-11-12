@@ -64,6 +64,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
         private long _idCorridaCargada;
         private bool _actualizandoComboCorridas;
         private bool _refrescandoComboCorridas;
+        private bool _solicitudPendienteRefrescoCombo;
         private string _claveFiltroCorridas = string.Empty; // Fase 1544: cache de filtros para evitar reconsultas en DropDown
         private VentanaSemestre _ventanaResuelta;
         private bool _isUpdatingTreeChecks = false;
@@ -398,12 +399,8 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
 
             // Fase 1519: el botón "Cargar última optimización" se sustituye por un selector de corridas
             cmbCargarCorridas.SelectedIndexChanged += async (s, e) => await CargarCorridaDesdeComboAsync();
-            // Fase 1544: no reconsultar si los filtros no han cambiado y ya hay ítems cargados
-            cmbCargarCorridas.DropDown += (s, e) =>
-            {
-                if (cmbCargarCorridas.Items.Count > 0 && ClaveFiltroCorridas() == _claveFiltroCorridas) return;
-                RefrescarComboCorridasSeguro();
-            };
+            // Fase 1609: al desplegar el combo, solicitar siempre lectura fresca
+            cmbCargarCorridas.DropDown += (s, e) => RefrescarComboCorridasSeguro();
             btnAprobarCorrida.Click += async (s, e) => await AprobarCorridaDesdeModuloRAsync();
             btnRecalcularViolaciones.Click += async (s, e) => await RecalcularViolacionesDesdeModuloRAsync();
 
@@ -2359,118 +2356,141 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
         }
 
         /// <summary>
-        /// Refresca el selector de corridas del Módulo R (Fase 1519, 1542, 1543): lista las corridas del período,
+        /// Refresca el selector de corridas del Módulo R (Fase 1519, 1542, 1543, 1609): lista las corridas del período,
         /// programa y territorial activos con su volumen de staging y preselecciona la corrida cargada.
         /// Aplica cascada tolerante de filtros para no dejar vacío el selector si hay staging en la territorial.
-        /// Protegido con guarda de reentrada _refrescandoComboCorridas (Fase 1556) para evitar cargas concurrentes.
+        /// Protegido con guarda de reentrada y procesamiento de solicitudes pendientes (Fase 1556, 1609).
         /// </summary>
         private async Task RefrescarComboCorridasAsync()
         {
-            if (cmbCargarCorridas == null || _refrescandoComboCorridas) return;
+            if (cmbCargarCorridas == null) return;
+            if (_refrescandoComboCorridas)
+            {
+                _solicitudPendienteRefrescoCombo = true;
+                return;
+            }
             _refrescandoComboCorridas = true;
 
             try
             {
-                var periodo = cmbPeriodos.Primario<Periodo>() ?? (cmbPeriodos.SelectedItem as Periodo);
-                var programa = cmbProgramas.Primario<Programa>() ?? (cmbProgramas.SelectedItem as Programa);
-
-                int? idPeriodo = periodo != null && periodo.Id > 0 ? (int?)periodo.Id : null;
-                int? idPrograma = programa != null && programa.Id > 0 ? (int?)programa.Id : null;
-                string subunidad = string.IsNullOrWhiteSpace(SyncContext.ActiveSubunidad) ? null : SyncContext.ActiveSubunidad;
-
-                var repo = new VinculacionQueryRepository(_connectionFactory, AgModoDatos.Ag);
-                var items = new List<CorridaStagingItem>();
-                string error = null;
-                bool ampliado = false;
-
-                // Fase 1542: cascada tolerante (período+programa -> período sin programa -> sin período ni programa)
-                foreach (var (fPeriodo, fPrograma) in AgCorridaSelector.CascadaFiltros(idPeriodo, idPrograma))
+                do
                 {
-                    var intento = await repo.GetCorridasStagingAsync(fPeriodo, fPrograma, subunidad, CancellationToken.None);
-                    if (intento.IsFailure) { error = intento.Error; break; }
+                    _solicitudPendienteRefrescoCombo = false;
+                    if (IsDisposed || Disposing) return;
 
-                    items = intento.Value.Where(c => c.IdCorrida > 0).ToList();
-                    if (items.Count > 0)
+                    string claveFiltrosAlIniciar = ClaveFiltroCorridas();
+
+                    var periodo = cmbPeriodos.Primario<Periodo>() ?? (cmbPeriodos.SelectedItem as Periodo);
+                    var programa = cmbProgramas.Primario<Programa>() ?? (cmbProgramas.SelectedItem as Programa);
+
+                    int? idPeriodo = periodo != null && periodo.Id > 0 ? (int?)periodo.Id : null;
+                    int? idPrograma = programa != null && programa.Id > 0 ? (int?)programa.Id : null;
+                    string subunidad = string.IsNullOrWhiteSpace(SyncContext.ActiveSubunidad) ? null : SyncContext.ActiveSubunidad;
+
+                    var repo = new VinculacionQueryRepository(_connectionFactory, AgModoDatos.Ag);
+                    var items = new List<CorridaStagingItem>();
+                    string error = null;
+                    bool ampliado = false;
+
+                    // Fase 1542: cascada tolerante (período+programa -> período sin programa -> sin período ni programa)
+                    foreach (var (fPeriodo, fPrograma) in AgCorridaSelector.CascadaFiltros(idPeriodo, idPrograma))
                     {
-                        ampliado = fPeriodo != idPeriodo || fPrograma != idPrograma;
-                        break;
-                    }
-                }
+                        if (IsDisposed || Disposing) return;
+                        var intento = await repo.GetCorridasStagingAsync(fPeriodo, fPrograma, subunidad, CancellationToken.None);
+                        if (IsDisposed || Disposing) return;
 
-                AgSeleccionModuloR seleccion = null;
-                _actualizandoComboCorridas = true;
-                try
-                {
-                    // Fase 1543: limpiar enlace de datos antes de manipular Items
-                    cmbCargarCorridas.DisplayMember = string.Empty;
-                    cmbCargarCorridas.ValueMember = string.Empty;
-                    cmbCargarCorridas.Items.Clear();
-                    cmbCargarCorridas.SelectedIndex = -1;
-                    cmbCargarCorridas.Text = string.Empty;
+                        if (intento.IsFailure) { error = intento.Error; break; }
+
+                        items = intento.Value.Where(c => c.IdCorrida > 0).ToList();
+                        if (items.Count > 0)
+                        {
+                            ampliado = fPeriodo != idPeriodo || fPrograma != idPrograma;
+                            break;
+                        }
+                    }
 
                     if (error != null)
                     {
-                        if (_idCorridaCargada <= 0)
-                            lblAgModo.Text = "Modo AG · no se pudieron leer las corridas de staging";
                         LoggerHelper.Warning($"[AgFormGeneradorHorarios] No se pudieron listar corridas AG: {error}");
-                        return;
+                        continue;
                     }
 
-                    if (items.Count == 0)
+                    if (ClaveFiltroCorridas() != claveFiltrosAlIniciar)
                     {
-                        // Fase 1545-bis: cachear clave para no repetir consultas en aperturas consecutivas
-                        _claveFiltroCorridas = ClaveFiltroCorridas();
-                        if (_idCorridaCargada <= 0)
+                        _solicitudPendienteRefrescoCombo = true;
+                        continue;
+                    }
+
+                    AgSeleccionModuloR seleccion = null;
+                    _actualizandoComboCorridas = true;
+                    try
+                    {
+                        // Fase 1543: limpiar enlace de datos antes de manipular Items
+                        cmbCargarCorridas.DisplayMember = string.Empty;
+                        cmbCargarCorridas.ValueMember = string.Empty;
+                        cmbCargarCorridas.Items.Clear();
+                        cmbCargarCorridas.SelectedIndex = -1;
+                        cmbCargarCorridas.Text = string.Empty;
+
+                        if (items.Count == 0)
                         {
-                            lblAgModo.Text = $"Modo AG · sin corridas en staging (período #{idPeriodo?.ToString() ?? "todos"}, programa #{idPrograma?.ToString() ?? "todos"}, territorial {subunidad ?? "todas"})";
-                            btnAprobarCorrida.Enabled = false;
-                            btnRecalcularViolaciones.Enabled = false;
-                            btnPromoverProduccion.Enabled = false;
+                            // Fase 1545-bis: cachear clave para no repetir consultas en aperturas consecutivas
+                            _claveFiltroCorridas = ClaveFiltroCorridas();
+                            if (_idCorridaCargada <= 0)
+                            {
+                                lblAgModo.Text = $"Modo AG · sin corridas en staging (período #{idPeriodo?.ToString() ?? "todos"}, programa #{idPrograma?.ToString() ?? "todos"}, territorial {subunidad ?? "todas"})";
+                                btnAprobarCorrida.Enabled = false;
+                                btnRecalcularViolaciones.Enabled = false;
+                                btnPromoverProduccion.Enabled = false;
+                            }
+                            else
+                            {
+                                lblAgModo.Text = $"Modo AG · corrida cargada #{_idCorridaCargada} no visible con los filtros actuales";
+                            }
+                            Log("[AG] No hay corridas de staging para los filtros activos.");
+                            continue;
                         }
-                        else
+
+                        if (ampliado && _idCorridaCargada <= 0)
+                            lblAgModo.Text = "Modo AG · corridas ampliadas (sin filtro período/programa)";
+
+                        foreach (var it in items) it.Etiqueta = AgCorridaSelector.FormatearEtiqueta(it);
+
+                        cmbCargarCorridas.DisplayMember = nameof(CorridaStagingItem.Etiqueta);
+                        cmbCargarCorridas.ValueMember = nameof(CorridaStagingItem.IdCorrida);
+                        foreach (var it in items) cmbCargarCorridas.Items.Add(it);
+
+                        // Fase 1608: resolución segura del selector de corridas en Módulo R
+                        seleccion = AgCorridaSelector.ResolverSeleccionModuloR(
+                            items, _idCorridaCargada > 0 ? _idCorridaCargada : (long?)null);
+                        cmbCargarCorridas.SelectedIndex = seleccion.IndiceSeleccionado;
+
+                        if (seleccion.CorridaActivaNoEncontrada)
                         {
                             lblAgModo.Text = $"Modo AG · corrida cargada #{_idCorridaCargada} no visible con los filtros actuales";
                         }
-                        Log("[AG] No hay corridas de staging para los filtros activos.");
-                        return;
                     }
-
-                    if (ampliado && _idCorridaCargada <= 0)
-                        lblAgModo.Text = "Modo AG · corridas ampliadas (sin filtro período/programa)";
-
-                    foreach (var it in items) it.Etiqueta = AgCorridaSelector.FormatearEtiqueta(it);
-
-                    cmbCargarCorridas.DisplayMember = nameof(CorridaStagingItem.Etiqueta);
-                    cmbCargarCorridas.ValueMember = nameof(CorridaStagingItem.IdCorrida);
-                    foreach (var it in items) cmbCargarCorridas.Items.Add(it);
-
-                    // Fase 1608: resolución segura del selector de corridas en Módulo R
-                    seleccion = AgCorridaSelector.ResolverSeleccionModuloR(
-                        items, _idCorridaCargada > 0 ? _idCorridaCargada : (long?)null);
-                    cmbCargarCorridas.SelectedIndex = seleccion.IndiceSeleccionado;
-
-                    if (seleccion.CorridaActivaNoEncontrada)
+                    finally
                     {
-                        lblAgModo.Text = $"Modo AG · corrida cargada #{_idCorridaCargada} no visible con los filtros actuales";
+                        _actualizandoComboCorridas = false;
                     }
-                }
-                finally
-                {
-                    _actualizandoComboCorridas = false;
-                }
 
-                // Fase 1608: carga inicial automática solo si está explícitamente autorizada por la política
-                if (seleccion != null &&
-                    seleccion.RequiereCargaInicial &&
-                    seleccion.ItemSeleccionado != null &&
-                    seleccion.ItemSeleccionado.IdCorrida > 0 &&
-                    seleccion.ItemSeleccionado.IdCorrida != _idCorridaCargada)
-                {
-                    await CargarCorridaDesdeComboAsync();
-                }
+                    // Fase 1608: carga inicial automática solo si está explícitamente autorizada por la política
+                    if (seleccion != null &&
+                        seleccion.RequiereCargaInicial &&
+                        seleccion.ItemSeleccionado != null &&
+                        seleccion.ItemSeleccionado.IdCorrida > 0 &&
+                        seleccion.ItemSeleccionado.IdCorrida != _idCorridaCargada)
+                    {
+                        if (IsDisposed || Disposing) return;
+                        await CargarCorridaDesdeComboAsync();
+                        if (IsDisposed || Disposing) return;
+                    }
 
-                // Fase 1544: registrar clave de filtros exitosa
-                _claveFiltroCorridas = ClaveFiltroCorridas();
+                    // Fase 1544: registrar clave de filtros exitosa
+                    _claveFiltroCorridas = ClaveFiltroCorridas();
+                }
+                while (_solicitudPendienteRefrescoCombo && !IsDisposed && !Disposing);
             }
             catch (Exception ex)
             {
