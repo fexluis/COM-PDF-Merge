@@ -56,7 +56,10 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
         private const string TituloGrpSeleccion = "1. Contexto Académico (Jerarquía 6 Niveles)";
 
         private System.Windows.Forms.Timer _timerSyncDimensiones;
-        private (string AulaRef, string Jornada, int HorasDia, string DiasVentana)? _dimensionesPendientes;
+        private (string AulaRef, string Jornada, int HorasDia, string DiasVentana, string Subunidad)? _dimensionesPendientes; // Fase 1731: aislar dimensión pendiente por subunidad activa
+        private long _revisionDimensiones; // Fase 1728: contador de revisión para evitar que un await descarte una edición concurrente
+        private readonly SemaphoreSlim _semaforoSyncDimensiones = new SemaphoreSlim(1, 1); // Fase 1716: exclusión mutua entre debounce de sincronización y escalado
+        private bool _diagnosticoEnCurso; // Fase 1727: exclusión de reentrada concurrente en diagnóstico pre-vuelo
 
         private CancellationTokenSource _ctsEjecucion;
         private AgContexto _contextoActual;
@@ -113,22 +116,56 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             InitializeComponent();
             ConfigurarEventos();
 
-            // Fase 1193, 1215 & 1219: Temporizador con debounce (300 ms) para sincronización UI ↔ BD de dimensiones en ag_aula
+            // Fase 1193, 1215, 1219 & 1716: Temporizador con debounce (300 ms) para sincronización UI ↔ BD de dimensiones en ag_aula con semáforo
             _timerSyncDimensiones = components != null ? new System.Windows.Forms.Timer(components) : new System.Windows.Forms.Timer();
             _timerSyncDimensiones.Interval = 300;
             _timerSyncDimensiones.Tick += async (s, e) =>
             {
                 _timerSyncDimensiones.Stop();
-                if (_dimensionesPendientes == null || IsDisposed || Disposing) return;
-                var pend = _dimensionesPendientes.Value;
-                _dimensionesPendientes = null;
-                // Fase 1214: AulaRef ya identifica la rama completa; no acotar por subunidad global
-                int n = await _aulaDimSync.SincronizarAsync(pend.AulaRef, pend.Jornada, pend.HorasDia, pend.DiasVentana, string.Empty, CancellationToken.None);
-                if (IsDisposed || Disposing || !IsHandleCreated) return;
-                Log($"[DIM] ag_aula {pend.AulaRef} → {pend.Jornada}/{pend.DiasVentana}/{pend.HorasDia}h (filas={n})");
-                if (n == 0)
+                if (_dimensionesPendientes == null || IsDisposed || Disposing)
                 {
-                    Log("[DIM] aula_ref sin fila en ag_aula; se aplicará al ejecutar 'Generar Aulas'");
+                    return;
+                }
+
+                await _semaforoSyncDimensiones.WaitAsync();
+                try
+                {
+                    if (_dimensionesPendientes == null || IsDisposed || Disposing)
+                    {
+                        return;
+                    }
+
+                    long revision = _revisionDimensiones;
+                    var pend = _dimensionesPendientes.Value;
+                    // Fase 1214, Fase 1726 & Fase 1731: Sincronizar confirmadamente preservando la subunidad activa del pendiente
+                    var resultado = await _aulaDimSync.SincronizarConfirmadoAsync(pend.AulaRef, pend.Jornada, pend.HorasDia, pend.DiasVentana, pend.Subunidad, CancellationToken.None);
+                    if (IsDisposed || Disposing || !IsHandleCreated)
+                    {
+                        return;
+                    }
+
+                    if (resultado.IsFailure)
+                    {
+                        Log($"[DIM ERROR] Error al sincronizar {pend.AulaRef}: {resultado.Error}");
+                        return;
+                    }
+
+                    // Fase 1728: Limpiar pendiente únicamente si no hubo una nueva asignación concurrente durante el await
+                    if (resultado.IsSuccess && revision == _revisionDimensiones)
+                    {
+                        _dimensionesPendientes = null;
+                    }
+
+                    int n = resultado.Value;
+                    Log($"[DIM] ag_aula {pend.AulaRef} → {pend.Jornada}/{pend.DiasVentana}/{pend.HorasDia}h (filas={n})");
+                    if (n == 0)
+                    {
+                        Log("[DIM] aula_ref sin cambios pendientes en ag_aula");
+                    }
+                }
+                finally
+                {
+                    _semaforoSyncDimensiones.Release();
                 }
             };
 
@@ -190,30 +227,50 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
         /// </summary>
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
+            // Fase 1723: Aplazar cierre si existe una operación protegida (escalado/recarga/sincronización) en curso
+            if (_semaforoSyncDimensiones.CurrentCount == 0)
+            {
+                e.Cancel = true;
+                return;
+            }
+
             var traza = CrearTraza("CierreFormulario");
             traza.Inicio();
             traza.Paso("P11_CierreFormulario", "Persistencia forzada de Vault y sincronización de estado");
 
             try
             {
-                // Fase 1215 & Fase 1218: detener debounce y volcar el último cambio de dimensiones antes de persistir el Vault
+                // Fase 1215, Fase 1218 & Fase 1730: detener debounce y volcar confirmadamente el último cambio de dimensiones antes de persistir el Vault
                 _timerSyncDimensiones.Stop();
                 if (_dimensionesPendientes != null)
                 {
                     var pend = _dimensionesPendientes.Value;
-                    _dimensionesPendientes = null;
                     try
                     {
-                        int nCierre = Task.Run(() => _aulaDimSync.SincronizarAsync(
+                        var resultado = Task.Run(() => _aulaDimSync.SincronizarConfirmadoAsync(
                                 pend.AulaRef, pend.Jornada, pend.HorasDia, pend.DiasVentana,
-                                string.Empty, CancellationToken.None))
+                                pend.Subunidad, CancellationToken.None))
                             .GetAwaiter().GetResult();
+
+                        if (resultado.IsFailure)
+                        {
+                            e.Cancel = true;
+                            traza.Fallo("P11_FlushDimensiones", new Exception(resultado.Error), AgCausaFallo.ExcepcionNoControlada);
+                            MessageBox.Show(this, resultado.Error, "Cierre de formulario", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            return;
+                        }
+
+                        _dimensionesPendientes = null;
+                        int nCierre = resultado.Value;
                         traza.Dato("DimensionesAlCierre", $"{pend.AulaRef}={pend.Jornada}/{pend.DiasVentana}/{pend.HorasDia}h filas={nCierre}");
                     }
                     catch (Exception ex)
                     {
+                        e.Cancel = true;
                         traza.Fallo("P11_FlushDimensiones", ex, AgCausaFallo.ExcepcionNoControlada);
                         LoggerHelper.Warning($"[AgFormGeneradorHorarios] Volcado de dimensiones al cierre falló: {ex.Message}");
+                        MessageBox.Show(this, ex.Message, "Cierre de formulario", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
                     }
                 }
 
@@ -1207,6 +1264,13 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
         /// </summary>
         private async Task EjecutarDiagnosticoPreVueloAsync()
         {
+            // Fase 1727: Prevenir reentrada concurrente en diagnóstico pre-vuelo
+            if (_diagnosticoEnCurso)
+            {
+                return;
+            }
+            _diagnosticoEnCurso = true;
+
             txtLogAG.Clear();
             Log("================================================================================");
             Log(" INICIANDO DIAGNÓSTICO DE FACTIBILIDAD PRE-VUELO (Algoritmo Genético)");
@@ -1216,8 +1280,44 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             traza.Inicio();
             traza.Paso("P07_DiagnosticoPreVuelo", "Evaluación de factibilidad y consistencia pre-vuelo");
 
+            // Fase 1716, Fase 1722, Fase 1727 & Fase 1729: Bloquear controles y acciones de perfil/árbol, detener temporizador y adquirir semáforo
+            bool arbolHabilitado = treeContextoAcademico.Enabled;
+            bool perfilesHabilitados = cmbArboles.Enabled;
+            bool btnValidarHabilitado = btnValidarFactibilidad.Enabled;
+            bool btnEjecutarHabilitado = btnEjecutarAG.Enabled;
+            bool btnFiltrarHabilitado = btnFiltrarArbol.Enabled;
+            bool btnCargarHabilitado = btnCargarArbol.Enabled;
+            bool btnSobrescribirHabilitado = btnSobrescribirArbol.Enabled;
+
+            treeContextoAcademico.Enabled = false;
+            cmbArboles.Enabled = false;
+            btnValidarFactibilidad.Enabled = false;
+            btnEjecutarAG.Enabled = false;
+            btnFiltrarArbol.Enabled = false;
+            btnCargarArbol.Enabled = false;
+            btnSobrescribirArbol.Enabled = false;
+            _timerSyncDimensiones.Stop();
+            await _semaforoSyncDimensiones.WaitAsync();
+
             try
             {
+                // Fase 1722, Fase 1726 & Fase 1731: Vaciar y sincronizar pendientes con la subunidad capturada antes de construir el contexto
+                if (_dimensionesPendientes != null)
+                {
+                    var pend = _dimensionesPendientes.Value;
+                    var resSync = await _aulaDimSync.SincronizarConfirmadoAsync(pend.AulaRef, pend.Jornada, pend.HorasDia, pend.DiasVentana, pend.Subunidad, CancellationToken.None);
+                    if (resSync.IsFailure)
+                    {
+                        Log($"[ERROR PRE-VUELO] Fallo en sincronización pendiente de {pend.AulaRef}: {resSync.Error}");
+                        MessageBox.Show(this, resSync.Error, "Sincronización de dimensiones", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+
+                    _dimensionesPendientes = null;
+                    int nSync = resSync.Value;
+                    Log($"[DIM PRE-VUELO] Sincronización pendiente de {pend.AulaRef} completada (filas={nSync}).");
+                }
+
                 var ctxRes = await ConstruirContextoAsync(CancellationToken.None);
                 if (ctxRes.IsFailure)
                 {
@@ -1433,8 +1533,19 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                         int idArbolActivo = cmbArboles.SelectedItem is AgArbol perfilActivo
                             ? (int)perfilActivo.Id
                             : 0;
+
+                        // Fase 1715: Persistencia fallida tratada como aborto antes de alterar memoria
+                        int esperadas = decisionesEscalado.Count(d => d.Aplica);
                         int aplicadas = await escalador.AplicarAsync(decisionesEscalado, idArbolActivo, CancellationToken.None);
-                        Log($"[ESCALADO] Ventanas actualizadas en {aplicadas} aula(s).");
+                        Log($"[ESCALADO] Ventanas actualizadas en {aplicadas} de {esperadas} aula(s) requerida(s).");
+
+                        if (aplicadas != esperadas)
+                        {
+                            MessageBox.Show(this,
+                                "Escalado incompleto. Recargue el contexto antes de continuar.",
+                                "Escalado", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            return;
+                        }
 
                         foreach (var d in decisionesEscalado.Where(x => x.Aplica))
                         {
@@ -1446,10 +1557,16 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                             }
                         }
 
-                        // Fase 1706 / Fase 1713: Recargar dimensiones del perfil activo en el árbol antes de re-validar
+                        // Fase 1706 / Fase 1713 / Fase 1716: Recargar dimensiones del perfil activo en el árbol antes de re-validar
                         if (idArbolActivo > 0)
                         {
-                            await RecargarDimensionesPerfilActivoTrasEscaladoAsync(idArbolActivo, CancellationToken.None).ConfigureAwait(true);
+                            if (!await RecargarDimensionesPerfilActivoTrasEscaladoAsync(idArbolActivo, CancellationToken.None).ConfigureAwait(true))
+                            {
+                                MessageBox.Show(this,
+                                    "No se pudieron actualizar las dimensiones. Recargue el perfil.",
+                                    "Escalado de ventana", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                return;
+                            }
                         }
 
                         // Fase 1261 / Fase 1264 / Fase 1274: re-validar fuera del hilo UI
@@ -1551,10 +1668,28 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 traza.Fin(false, ex.Message);
                 Log($"[EXCEPCIÓN] {ex.Message}");
             }
+            finally
+            {
+                _semaforoSyncDimensiones.Release();
+                treeContextoAcademico.Enabled = arbolHabilitado;
+                cmbArboles.Enabled = perfilesHabilitados;
+                btnValidarFactibilidad.Enabled = btnValidarHabilitado;
+                btnEjecutarAG.Enabled = btnEjecutarHabilitado;
+                btnFiltrarArbol.Enabled = btnFiltrarHabilitado;
+                btnCargarArbol.Enabled = btnCargarHabilitado;
+                btnSobrescribirArbol.Enabled = btnSobrescribirHabilitado;
+                _diagnosticoEnCurso = false;
+            }
         }
 
         private async Task IniciarOptimizacionAsync()
         {
+            // Fase 1727: No permitir optimización si el diagnóstico está en curso
+            if (_diagnosticoEnCurso)
+            {
+                return;
+            }
+
             btnEjecutarAG.Enabled = false;
             btnValidarFactibilidad.Enabled = false;
             btnCancelar.Enabled = true;
@@ -4234,7 +4369,9 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 string aulaRef = ConstruirAulaRefDeNodo(node);
                 if (!string.IsNullOrWhiteSpace(aulaRef))
                 {
-                    _dimensionesPendientes = (aulaRef, key.Jornada, key.HorasDia, key.DiasVentana);
+                    // Fase 1731: Capturar subunidad activa al registrar edición para que SincronizarConfirmadoAsync no rechace aulas de subunidad no vacía
+                    _dimensionesPendientes = (aulaRef, key.Jornada, key.HorasDia, key.DiasVentana, SyncContext.ActiveSubunidad ?? string.Empty);
+                    _revisionDimensiones++; // Fase 1728: registrar nueva revisión para evitar descartes concurrentes
                     _timerSyncDimensiones.Stop();
                     _timerSyncDimensiones.Start();
                 }
@@ -4286,14 +4423,15 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
         }
 
         /// <summary>
-        /// Fase 1706 / Fase 1713: Helper estrecho para recargar DTOs y dimensiones del perfil activo
+        /// Fase 1706 / Fase 1713 / Fase 1716: Helper estrecho para recargar DTOs y dimensiones del perfil activo
         /// tras un escalado automático sin reiniciar el contexto ni rebarajar combos del formulario.
+        /// Devuelve true si todas las claves requeridas fueron validadas y mapeadas exitosamente; false ante error o inconsistencia.
         /// </summary>
-        private async Task RecargarDimensionesPerfilActivoTrasEscaladoAsync(int idArbolActivo, CancellationToken ct)
+        private async Task<bool> RecargarDimensionesPerfilActivoTrasEscaladoAsync(int idArbolActivo, CancellationToken ct)
         {
             if (idArbolActivo <= 0)
             {
-                return;
+                return false;
             }
 
             bool prevRestaurando = _restaurandoPerfil;
@@ -4301,9 +4439,15 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             try
             {
                 var cargaRes = await _arbolService.CargarPerfilAsync(idArbolActivo, ct).ConfigureAwait(true);
-                if (cargaRes.IsFailure || cargaRes.Value.Item2 == null)
+                if (cargaRes.IsFailure)
                 {
-                    return;
+                    LoggerHelper.Warning($"[AgFormGeneradorHorarios] CargarPerfilAsync falló para perfil {idArbolActivo}: {cargaRes.Error}");
+                    return false;
+                }
+
+                if (cargaRes.Value.Item2 == null)
+                {
+                    return false;
                 }
 
                 var dtosPorAulaRef = cargaRes.Value.Item2
@@ -4312,24 +4456,68 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
 
                 if (dtosPorAulaRef.Count == 0)
                 {
-                    return;
+                    LoggerHelper.Warning($"[AgFormGeneradorHorarios] Perfil {idArbolActivo} no contiene DTOs con AulaRef.");
+                    return false;
                 }
+
+                // Fase 1716 & Fase 1721: Validar únicamente sobre nodos seleccionados (Checked) y sobre clave temporal antes de mutar
+                var preparadas = new List<Tuple<TreeNode, AgNodoArbolKey, AgNodoArbolKey>>();
+                bool falloMapeo = false;
 
                 RecorrerNodosNivel6(treeContextoAcademico.Nodes, (nodo, key) =>
                 {
-                    string aulaRef = ConstruirAulaRefDeNodo(nodo);
-                    if (!string.IsNullOrWhiteSpace(aulaRef) && dtosPorAulaRef.TryGetValue(aulaRef, out var dto))
+                    if (!nodo.Checked)
                     {
-                        AgNodoArbolKeyMapper.AplicarDimensiones(key, dto);
-                        ActualizarToolTipNivel6(nodo, key);
+                        return;
                     }
+
+                    string aulaRef = ConstruirAulaRefDeNodo(nodo);
+                    if (string.IsNullOrWhiteSpace(aulaRef))
+                    {
+                        return;
+                    }
+
+                    if (!dtosPorAulaRef.TryGetValue(aulaRef, out var dto))
+                    {
+                        LoggerHelper.Warning($"[AgFormGeneradorHorarios] DTO faltante para aulaRef '{aulaRef}' seleccionada en perfil {idArbolActivo}.");
+                        falloMapeo = true;
+                        return;
+                    }
+
+                    var temporal = new AgNodoArbolKey(6, 0, "", "");
+                    var validacion = AgNodoArbolKeyMapper.AplicarDimensiones(temporal, dto);
+                    if (validacion.IsFailure)
+                    {
+                        LoggerHelper.Warning($"[AgFormGeneradorHorarios] Dimensiones inválidas para aulaRef '{aulaRef}': {validacion.Error}");
+                        falloMapeo = true;
+                        return;
+                    }
+
+                    preparadas.Add(Tuple.Create(nodo, key, temporal));
                 });
 
+                if (falloMapeo || preparadas.Count == 0)
+                {
+                    return false;
+                }
+
+                // Aplicar las dimensiones solo si la validación previa de todas las seleccionadas fue completamente exitosa
+                foreach (var p in preparadas)
+                {
+                    p.Item2.Jornada = p.Item3.Jornada;
+                    p.Item2.HorasDia = p.Item3.HorasDia;
+                    p.Item2.DiasVentana = p.Item3.DiasVentana;
+
+                    ActualizarToolTipNivel6(p.Item1, p.Item2);
+                }
+
                 treeContextoAcademico.Invalidate();
+                return true;
             }
             catch (Exception ex)
             {
                 LoggerHelper.Error("[AgFormGeneradorHorarios] Error al recargar dimensiones tras escalado", ex);
+                return false;
             }
             finally
             {
@@ -4873,6 +5061,12 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
 
         private async Task SobrescribirPerfilArbolAsync()
         {
+            // Fase 1729: Inhibir acción si el diagnóstico pre-vuelo está en curso
+            if (_diagnosticoEnCurso)
+            {
+                return;
+            }
+
             if (!(cmbArboles.SelectedItem is AgArbol perfilSel))
             {
                 MessageBox.Show(this, "Seleccione un perfil existente de la lista para sobrescribir.", "Sobrescribir Perfil", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -4954,6 +5148,12 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
 
         private async Task CargarPerfilArbolSeleccionadoAsync(bool mostrarAvisos = true)
         {
+            // Fase 1729: Inhibir acción si el diagnóstico pre-vuelo está en curso
+            if (_diagnosticoEnCurso)
+            {
+                return;
+            }
+
             if (!(cmbArboles.SelectedItem is AgArbol perfilSel))
             {
                 if (mostrarAvisos)
@@ -5749,6 +5949,12 @@ ON CONFLICT(id_aula, id_asignatura) DO UPDATE SET
 
         private async Task EjecutarFiltroArbolAsync()
         {
+            // Fase 1729: Inhibir acción si el diagnóstico pre-vuelo está en curso
+            if (_diagnosticoEnCurso)
+            {
+                return;
+            }
+
             var expandidos = ObtenerRutasExpandidas();
             PoblarArbolContextoAcademico();
             RestaurarRutasExpandidas(expandidos);

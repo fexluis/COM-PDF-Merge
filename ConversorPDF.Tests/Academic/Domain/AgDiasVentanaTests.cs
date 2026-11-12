@@ -111,6 +111,22 @@ namespace ConversorPDF.Tests.Academic.Domain
             iso.Should().BeEmpty();
             dias.Should().BeEmpty();
         }
+
+        [Theory]
+        [InlineData("3,4,5,6M,6T,7")]
+        [InlineData("1,2,6M")]
+        [InlineData("6T,7")]
+        [InlineData("LUN,6M,MIE")]
+        public void AIsoAndDias_WhenListaContieneTokens6Mo6T_ShouldReturnEmpty(string ventanaConFranja)
+        {
+            // Act
+            string iso = AgDiasVentana.AIso(ventanaConFranja);
+            IReadOnlyList<int> dias = AgDiasVentana.Dias(ventanaConFranja);
+
+            // Assert
+            iso.Should().BeEmpty();
+            dias.Should().BeEmpty();
+        }
     }
 }
 

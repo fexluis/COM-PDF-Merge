@@ -3,12 +3,18 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using ConversorPDF.XLL.Academic.Application.DTOs;
+using ConversorPDF.XLL.Academic.Application.Mappers;
+using ConversorPDF.XLL.Academic.Application.Services;
+using ConversorPDF.XLL.Academic.Application.Services.Genetica;
 using ConversorPDF.XLL.Academic.Domain.Enums;
 using ConversorPDF.XLL.Academic.Domain.Models;
 using ConversorPDF.XLL.Academic.Domain.Models.Genetica;
 using ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories;
+using CSharpFunctionalExtensions;
 using Dapper;
 using FluentAssertions;
 using Xunit;
@@ -52,23 +58,61 @@ namespace ConversorPDF.Tests.Academic.Infrastructure.Persistence
             {
                 conn.Open();
                 conn.Execute(@"
+CREATE TABLE ag_arbol (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT NOT NULL DEFAULT '',
+    descripcion TEXT NOT NULL DEFAULT '',
+    idperiodo INTEGER NOT NULL DEFAULT 0,
+    fecha_inicio TEXT,
+    fecha_fin TEXT,
+    ventana_origen TEXT NOT NULL DEFAULT '',
+    manual_ventana INTEGER NOT NULL DEFAULT 0,
+    poblacion INTEGER NOT NULL DEFAULT 0,
+    generaciones INTEGER NOT NULL DEFAULT 0,
+    tasa_cruce REAL NOT NULL DEFAULT 0,
+    tasa_mutacion REAL NOT NULL DEFAULT 0,
+    elitismo INTEGER NOT NULL DEFAULT 0,
+    estancamiento_max INTEGER NOT NULL DEFAULT 0,
+    semilla INTEGER NOT NULL DEFAULT 0,
+    usuario TEXT NOT NULL DEFAULT '',
+    subunidad TEXT NOT NULL DEFAULT '',
+    creado_en TEXT,
+    modificado_en TEXT,
+    activo INTEGER NOT NULL DEFAULT 1
+);
+
 CREATE TABLE ag_aula (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     aula_ref TEXT NOT NULL DEFAULT '',
     jornada TEXT NOT NULL DEFAULT '',
     horas_dia INTEGER NOT NULL DEFAULT 0,
     dias_ventana TEXT NOT NULL DEFAULT '',
-    subunidad TEXT NOT NULL DEFAULT ''
+    subunidad TEXT NOT NULL DEFAULT '',
+    id_programa INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE ag_arbol_nodo (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     idarbol INTEGER NOT NULL DEFAULT 1,
+    idperiodo INTEGER NOT NULL DEFAULT 0,
+    idsede INTEGER NOT NULL DEFAULT 0,
+    idprograma INTEGER NOT NULL DEFAULT 0,
+    semestre TEXT NOT NULL DEFAULT '',
+    grupo TEXT NOT NULL DEFAULT '',
+    modalidad TEXT NOT NULL DEFAULT '',
+    modalidad_efectiva TEXT NOT NULL DEFAULT '',
     aula_ref TEXT NOT NULL DEFAULT '',
+    capacidad INTEGER NOT NULL DEFAULT 0,
+    tipo_aula TEXT NOT NULL DEFAULT '',
+    caracteristicas_json TEXT NOT NULL DEFAULT '',
+    codigo TEXT NOT NULL DEFAULT '',
+    nombre TEXT NOT NULL DEFAULT '',
+    es_virtual INTEGER NOT NULL DEFAULT 0,
+    habilitado INTEGER NOT NULL DEFAULT 1,
+    subunidad TEXT NOT NULL DEFAULT '',
     jornada TEXT NOT NULL DEFAULT '',
     horas_dia INTEGER NOT NULL DEFAULT 0,
-    dias_ventana TEXT NOT NULL DEFAULT '',
-    subunidad TEXT NOT NULL DEFAULT ''
+    dias_ventana TEXT NOT NULL DEFAULT ''
 );");
             }
         }
@@ -128,8 +172,17 @@ VALUES (2, @Ref, 'MANANA', 4, @V, '');",
                 nodoArbol2.Should().Be(ventanaInicial, "el árbol inactivo no debe ser modificado");
             }
 
-            // Assert por contexto recargado: la nueva evaluación debe ser vacía (idempotente)
-            var contextoRecargado = CrearContextoNominal(w, "LUN-VIE", demandaSesiones, aulaRef);
+            // Assert por contexto recargado leyendo persistencia real: la nueva evaluación debe ser vacía (idempotente)
+            string persistida;
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                persistida = conn.QuerySingle<string>(
+                    "SELECT dias_ventana FROM ag_aula WHERE aula_ref = @Ref",
+                    new { Ref = aulaRef });
+            }
+
+            var contextoRecargado = CrearContextoNominal(w, persistida, demandaSesiones, aulaRef);
             var decisionesRecargadas = sut.Evaluar(contextoRecargado);
             decisionesRecargadas.Should().BeEmpty();
         }
@@ -180,8 +233,14 @@ VALUES (2, @Ref, 'MANANA', 4, 'VIE-DOM', '');",
                     .Should().Be("VIE-DOM");
             }
 
-            // --- Ciclo 2: JUE-DOM -> MIE-DOM ---
-            var ctx2 = CrearContextoNominal(w, "JUE-DOM", demandaSesiones, aulaRef);
+            // --- Ciclo 2: JUE-DOM -> MIE-DOM (leyendo persistencia real) ---
+            string persistidaCiclo1;
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                persistidaCiclo1 = conn.QuerySingle<string>("SELECT dias_ventana FROM ag_aula WHERE aula_ref = @Ref", new { Ref = aulaRef });
+            }
+            var ctx2 = CrearContextoNominal(w, persistidaCiclo1, demandaSesiones, aulaRef);
             var d2 = sut.Evaluar(ctx2);
             d2.Should().ContainSingle();
             d2[0].Desde.Should().Be("JUE-DOM");
@@ -202,10 +261,297 @@ VALUES (2, @Ref, 'MANANA', 4, 'VIE-DOM', '');",
                     .Should().Be("VIE-DOM");
             }
 
-            // --- Ciclo 3: MIE-DOM ya satisface 24 sesiones o está en tope -> sin propuestas ---
-            var ctx3 = CrearContextoNominal(w, "MIE-DOM", demandaSesiones, aulaRef);
+            // --- Ciclo 3: MIE-DOM ya satisface 24 sesiones o está en tope (leyendo persistencia real) ---
+            string persistidaCiclo2;
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                persistidaCiclo2 = conn.QuerySingle<string>("SELECT dias_ventana FROM ag_aula WHERE aula_ref = @Ref", new { Ref = aulaRef });
+            }
+            var ctx3 = CrearContextoNominal(w, persistidaCiclo2, demandaSesiones, aulaRef);
             var d3 = sut.Evaluar(ctx3);
             d3.Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task FlujoIntegracion_Escalar_RecargarDto_CambiarJornada_Guardar_Recargar_ShouldConservarVentanaYPerfilAjenoIntacto()
+        {
+            // Arrange
+            string aulaRef = AgAulaFactory.ConstruirAulaRef(1, 1, 1, "1", "1", "PRESENCIAL");
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                conn.Execute(@"
+INSERT INTO ag_arbol (id, nombre, descripcion) VALUES (1, 'Perfil 1', 'Test 1');
+INSERT INTO ag_arbol (id, nombre, descripcion) VALUES (2, 'Perfil 2', 'Test 2');
+
+INSERT INTO ag_aula (aula_ref, jornada, horas_dia, dias_ventana, subunidad, id_programa)
+VALUES (@Ref, 'MANANA', 4, 'LUN-JUE', '', 1);
+
+INSERT INTO ag_arbol_nodo (idarbol, aula_ref, jornada, horas_dia, dias_ventana, subunidad, idperiodo, idsede, idprograma, semestre, grupo, modalidad, modalidad_efectiva)
+VALUES (1, @Ref, 'MANANA', 4, 'LUN-JUE', '', 1, 1, 1, '1', '1', 'PRESENCIAL', 'PRESENCIAL');
+
+INSERT INTO ag_arbol_nodo (idarbol, aula_ref, jornada, horas_dia, dias_ventana, subunidad, idperiodo, idsede, idprograma, semestre, grupo, modalidad, modalidad_efectiva)
+VALUES (2, @Ref, 'MANANA', 4, 'LUN-JUE', '', 1, 1, 1, '1', '1', 'PRESENCIAL', 'PRESENCIAL');",
+                    new { Ref = aulaRef });
+            }
+
+            var repo = new AgArbolRepository(_connectionFactory);
+            var servicio = new AgArbolService(repo);
+            var sut = new AgEscaladorVentanaAula(_connectionFactory);
+            var sync = new AgAulaDimensionesSync(_connectionFactory);
+
+            // 1. Escalar de LUN-JUE a LUN-VIE en idArbol = 1
+            var ctx = CrearContextoNominal(4, "LUN-JUE", 20, aulaRef);
+            var decisiones = sut.Evaluar(ctx);
+            decisiones.Should().ContainSingle();
+            decisiones[0].Hacia.Should().Be("LUN-VIE");
+
+            int aplicadas = await sut.AplicarAsync(decisiones, 1, CancellationToken.None);
+            aplicadas.Should().Be(1);
+
+            // 2. Recargar DTO con servicio real
+            var carga1 = await servicio.CargarPerfilAsync(1, CancellationToken.None);
+            carga1.IsSuccess.Should().BeTrue();
+            var dtos1 = carga1.Value.Item2;
+            var dtoAula = dtos1.Single(d => string.Equals(d.AulaRef, aulaRef, StringComparison.OrdinalIgnoreCase));
+            dtoAula.DiasVentana.Should().Be("LUN-VIE");
+
+            // 3. Mapear a AgNodoArbolKey y cambiar Jornada a 'TARDE'
+            var key = new AgNodoArbolKey(6, 1, "PRESENCIAL", "PRESENCIAL");
+            var mapRes = AgNodoArbolKeyMapper.AplicarDimensiones(key, dtoAula);
+            mapRes.IsSuccess.Should().BeTrue();
+            key.DiasVentana.Should().Be("LUN-VIE");
+
+            // Mutar jornada en la clave y persistir con AgAulaDimensionesSync
+            key.Jornada = "TARDE";
+            int sincronizadas = await sync.SincronizarAsync(aulaRef, key.Jornada, key.HorasDia, key.DiasVentana, string.Empty, CancellationToken.None);
+            sincronizadas.Should().BeGreaterThan(0);
+
+            // Comprobar persistencia en ag_aula
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                var aulaPersistida = conn.QuerySingle<AgAula>(
+                    "SELECT jornada, dias_ventana as DiasVentana, horas_dia as HorasDia FROM ag_aula WHERE aula_ref = @Ref",
+                    new { Ref = aulaRef });
+                aulaPersistida.Jornada.Should().Be("TARDE");
+                aulaPersistida.DiasVentana.Should().Be("LUN-VIE");
+            }
+
+            // Fase 1725: Persistir también el nodo en ag_arbol_nodo del perfil 1 para reflejar el cambio en el árbol
+            var nodos = await repo.ObtenerNodosAsync(1, CancellationToken.None);
+            nodos.IsSuccess.Should().BeTrue();
+            var nodo = nodos.Value.Single(n => string.Equals(n.AulaRef, aulaRef, StringComparison.OrdinalIgnoreCase));
+            nodo.Jornada = key.Jornada;
+            nodo.HorasDia = key.HorasDia;
+            nodo.DiasVentana = key.DiasVentana;
+
+            var guardado = await repo.GuardarAsync(carga1.Value.Item1, nodos.Value, CancellationToken.None);
+            guardado.IsSuccess.Should().BeTrue();
+
+            // 4. Recargar y verificar que DiasVentana conserva LUN-VIE y perfil 2 sigue intacto
+            var carga2 = await servicio.CargarPerfilAsync(1, CancellationToken.None);
+            carga2.IsSuccess.Should().BeTrue();
+            var dtoRecargado = carga2.Value.Item2.Single(d => string.Equals(d.AulaRef, aulaRef, StringComparison.OrdinalIgnoreCase));
+            dtoRecargado.DiasVentana.Should().Be("LUN-VIE");
+            dtoRecargado.Jornada.Should().Be("TARDE");
+
+            var cargaPerfil2 = await servicio.CargarPerfilAsync(2, CancellationToken.None);
+            cargaPerfil2.IsSuccess.Should().BeTrue();
+            var dtoPerfil2 = cargaPerfil2.Value.Item2.Single(d => string.Equals(d.AulaRef, aulaRef, StringComparison.OrdinalIgnoreCase));
+            dtoPerfil2.DiasVentana.Should().Be("LUN-JUE", "el árbol 2 debe permanecer intacto");
+        }
+
+        [Fact]
+        public async Task AplicarAsync_WhenDecisionesInexistentesEnBD_ShouldRetornarCeroFilasAfectadas()
+        {
+            var sut = new AgEscaladorVentanaAula(_connectionFactory);
+            var decisionesInexistentes = new List<AgEscaladorVentanaAula.Decision>
+            {
+                new AgEscaladorVentanaAula.Decision
+                {
+                    AulaRef = "NO_EXISTE_999",
+                    Desde = "LUN-JUE",
+                    Hacia = "LUN-VIE",
+                    CapacidadAntes = 16,
+                    CapacidadDespues = 20,
+                    Motivo = "Test"
+                }
+            };
+
+            int aplicadas = await sut.AplicarAsync(decisionesInexistentes, 1, CancellationToken.None);
+            aplicadas.Should().Be(0, "si el aula no existe en BD, las filas afectadas deben ser 0");
+        }
+
+        [Fact]
+        public async Task SincronizarConfirmadoAsync_WhenValoresDifieren_ShouldActualizarYRetornarFilasAfectadas()
+        {
+            string aulaRef = AgAulaFactory.ConstruirAulaRef(1, 1, 1, "1", "1", "PRESENCIAL");
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                conn.Execute(@"
+INSERT INTO ag_aula (aula_ref, subunidad, jornada, dias_ventana, horas_dia, id_programa)
+VALUES (@Ref, @Sub, 'MANANA', 'LUN-JUE', 4, 1);",
+                    new { Ref = aulaRef, Sub = "" });
+            }
+
+            var sync = new AgAulaDimensionesSync(_connectionFactory);
+            var res = await sync.SincronizarConfirmadoAsync(aulaRef, "TARDE", 8, "LUN-VIE", string.Empty, CancellationToken.None);
+
+            res.IsSuccess.Should().BeTrue();
+            res.Value.Should().Be(1);
+
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                var aula = conn.QuerySingle<AgAula>(
+                    "SELECT jornada, dias_ventana as DiasVentana, horas_dia as HorasDia FROM ag_aula WHERE aula_ref = @Ref",
+                    new { Ref = aulaRef });
+                aula.Jornada.Should().Be("TARDE");
+                aula.DiasVentana.Should().Be("LUN-VIE");
+                aula.HorasDia.Should().Be(8);
+            }
+        }
+
+        [Fact]
+        public async Task SincronizarConfirmadoAsync_WhenValoresCoinciden_ShouldRetornarExitoCeroFilas()
+        {
+            string aulaRef = AgAulaFactory.ConstruirAulaRef(1, 1, 1, "1", "1", "PRESENCIAL");
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                conn.Execute(@"
+INSERT INTO ag_aula (aula_ref, subunidad, jornada, dias_ventana, horas_dia, id_programa)
+VALUES (@Ref, @Sub, 'MANANA', 'LUN-JUE', 4, 1);",
+                    new { Ref = aulaRef, Sub = "" });
+            }
+
+            var sync = new AgAulaDimensionesSync(_connectionFactory);
+            var res = await sync.SincronizarConfirmadoAsync(aulaRef, "MANANA", 4, "LUN-JUE", string.Empty, CancellationToken.None);
+
+            res.IsSuccess.Should().BeTrue();
+            res.Value.Should().Be(0);
+        }
+
+        [Fact]
+        public async Task SincronizarConfirmadoAsync_WhenAulaNoExiste_ShouldRetornarFailure()
+        {
+            var sync = new AgAulaDimensionesSync(_connectionFactory);
+            var res = await sync.SincronizarConfirmadoAsync("AULA_INEXISTENTE_999", "MANANA", 4, "LUN-VIE", string.Empty, CancellationToken.None);
+
+            res.IsFailure.Should().BeTrue();
+            res.Error.Should().Contain("no existe en la base de datos");
+        }
+
+        [Fact]
+        public async Task SincronizarConfirmadoAsync_WhenErrorSql_ShouldRetornarFailure()
+        {
+            Func<IDbConnection> connFalla = () =>
+            {
+                var conn = new SQLiteConnection("Data Source=:memory:;");
+                conn.Open();
+                // Tabla ag_aula no creada intencionalmente para inducir fallo SQL
+                return conn;
+            };
+
+            var sync = new AgAulaDimensionesSync(connFalla);
+            var res = await sync.SincronizarConfirmadoAsync("AULA_CUALQUIERA", "MANANA", 4, "LUN-VIE", string.Empty, CancellationToken.None);
+
+            res.IsFailure.Should().BeTrue();
+            res.Error.Should().Contain("Error al sincronizar dimensiones");
+        }
+
+        [Fact]
+        public async Task SincronizarConfirmadoAsync_WhenSubunidadEspecificaCoincide_ShouldActualizarCorrectamente()
+        {
+            string aulaRef = AgAulaFactory.ConstruirAulaRef(1, 1, 1, "1", "1", "PRESENCIAL");
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                conn.Execute(@"
+INSERT INTO ag_aula (aula_ref, subunidad, jornada, dias_ventana, horas_dia, id_programa)
+VALUES (@Ref, @Sub, 'MANANA', 'LUN-JUE', 4, 1);",
+                    new { Ref = aulaRef, Sub = "CENTRAL" });
+            }
+
+            var sync = new AgAulaDimensionesSync(_connectionFactory);
+            var res = await sync.SincronizarConfirmadoAsync(aulaRef, "TARDE", 8, "LUN-VIE", "CENTRAL", CancellationToken.None);
+
+            res.IsSuccess.Should().BeTrue();
+            res.Value.Should().Be(1);
+
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                var aula = conn.QuerySingle<AgAula>(
+                    "SELECT jornada, dias_ventana as DiasVentana, horas_dia as HorasDia FROM ag_aula WHERE aula_ref = @Ref AND subunidad = 'CENTRAL'",
+                    new { Ref = aulaRef });
+                aula.Jornada.Should().Be("TARDE");
+                aula.DiasVentana.Should().Be("LUN-VIE");
+                aula.HorasDia.Should().Be(8);
+            }
+        }
+
+        [Fact]
+        public async Task SincronizarConfirmadoAsync_WhenSubunidadDifiere_ShouldRetornarFailureYSinModificar()
+        {
+            string aulaRef = AgAulaFactory.ConstruirAulaRef(1, 1, 1, "1", "1", "PRESENCIAL");
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                conn.Execute(@"
+INSERT INTO ag_aula (aula_ref, subunidad, jornada, dias_ventana, horas_dia, id_programa)
+VALUES (@Ref, @Sub, 'MANANA', 'LUN-JUE', 4, 1);",
+                    new { Ref = aulaRef, Sub = "CENTRAL" });
+            }
+
+            var sync = new AgAulaDimensionesSync(_connectionFactory);
+            var res = await sync.SincronizarConfirmadoAsync(aulaRef, "TARDE", 8, "LUN-VIE", "NORTE", CancellationToken.None);
+
+            res.IsFailure.Should().BeTrue();
+            res.Error.Should().Contain("no existe en la base de datos");
+
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                var aula = conn.QuerySingle<AgAula>(
+                    "SELECT jornada, dias_ventana as DiasVentana, horas_dia as HorasDia FROM ag_aula WHERE aula_ref = @Ref AND subunidad = 'CENTRAL'",
+                    new { Ref = aulaRef });
+                aula.Jornada.Should().Be("MANANA", "no debe mutar si la subunidad difiere");
+            }
+        }
+
+        [Fact]
+        public async Task SincronizarConfirmadoAsync_WhenFilaLegacyConSubunidadVacia_ShouldActualizarConSubunidadActiva()
+        {
+            string aulaRef = AgAulaFactory.ConstruirAulaRef(1, 1, 1, "1", "1", "PRESENCIAL");
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                conn.Execute(@"
+INSERT INTO ag_aula (aula_ref, subunidad, jornada, dias_ventana, horas_dia, id_programa)
+VALUES (@Ref, @Sub, 'MANANA', 'LUN-JUE', 4, 1);",
+                    new { Ref = aulaRef, Sub = "" });
+            }
+
+            var sync = new AgAulaDimensionesSync(_connectionFactory);
+            var res = await sync.SincronizarConfirmadoAsync(aulaRef, "TARDE", 8, "LUN-VIE", "CENTRAL", CancellationToken.None);
+
+            res.IsSuccess.Should().BeTrue();
+            res.Value.Should().Be(1);
+
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                var aula = conn.QuerySingle<AgAula>(
+                    "SELECT jornada, dias_ventana as DiasVentana, horas_dia as HorasDia FROM ag_aula WHERE aula_ref = @Ref",
+                    new { Ref = aulaRef });
+                aula.Jornada.Should().Be("TARDE");
+                aula.DiasVentana.Should().Be("LUN-VIE");
+                aula.HorasDia.Should().Be(8);
+            }
         }
 
         private static AgContexto CrearContextoNominal(int w, string diasVentana, int demandaSesiones, string aulaRef)

@@ -103,10 +103,18 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
                 }
             }
 
-            // Fase 1021 / Fase 1136: tolerar ISO numérico ('1,2,3,4') o abreviaturas ('LUN,MIE') ya persistidas
-            var dias = v.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
-                        .Select(DiaIso)
-                        .Where(d => d > 0).Distinct().OrderBy(d => d).ToList();
+            // Fase 1021 / Fase 1136 / Fase 1718: tolerar ISO numérico ('1,2,3,4') o abreviaturas ('LUN,MIE') ya persistidas.
+            // Si la lista contiene tokens de franja (6M/6T), rechazar completamente la cadena para no perder el sábado silenciosamente.
+            var tokens = v.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+            if (tokens.Any(t =>
+                string.Equals(t.Trim(), "6M", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(t.Trim(), "6T", StringComparison.OrdinalIgnoreCase)))
+            {
+                return string.Empty;
+            }
+
+            var dias = tokens.Select(DiaIso)
+                             .Where(d => d > 0).Distinct().OrderBy(d => d).ToList();
             return dias.Count > 0 ? string.Join(",", dias) : string.Empty;
         }
 
