@@ -178,10 +178,10 @@ internal static string Rotular(string diasVentana, double unidad)
   `LUN-JUE→[LUN-VIE]`, `MAR-VIE→[LUN-VIE]`, `LUN-VIE→[]`, `VIE-SAB→[JUE-SAB,"4,5,6,7"]` (**sin cambio**), `JUE-SAB→["4,5,6,7"]`, `"4,5,6,7"→[]`, `VIE-DOM→[JUE-DOM,MIE-DOM]`, `JUE-DOM→[MIE-DOM]`, `MIE-DOM→[]`, `"3,4,5,6,7"→[]`; alias ISO de legado: `"1,2,3,4"→[LUN-VIE]`, `"2,3,4,5"→[LUN-VIE]`, `"1,2,3,4,5"→[]`, `"5,6"→["4,5,6"]`, `"4,5,6"→["4,5,6,7"]`, `"5,6,7"→[JUE-DOM]`. `Normalizar`: coincidencia exacta de **Key** primero; si no, `AIso` (deja de mapear alias ISO→etiqueta, R2). `MaxPasos=2` intacto; firmas públicas sin cambios.
 - **validation**: dominio e integración verdes (escalera, `Rotular`, planner, validador, mapper, escalador nominal); `Siguiente("4,5,6,7")==""`; `Siguiente("MIE-DOM")==""`.
 - **verification**: `powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "FullyQualifiedName~AgEscaleraVentanas|FullyQualifiedName~AgPlanificadorOleadas|FullyQualifiedName~AgValidadorVentana|FullyQualifiedName~AgNodoArbolKeyMapper"`
-- **evidence**: `_evidence/<stamp>/summary.md`
-- **status**: pending
-- **log**: —
-- **files edited/created**: —
+- **evidence**: _evidence/20261112-154543/summary.md
+- **status**: done
+- **log**: GREEN. Escalera ampliada y Rotular real implementados en AgEscaleraVentanas.cs. Dominio e integración verdes (AgEscaleraVentanasTests 21/21, KeyMapper/ValidadorVentana 35/35, AgPlanificadorOleadas 33/33, Caracterizacion 8/8). Auditado por task-reviewer (OK).
+- **files edited/created**: ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgEscaleraVentanas.cs
 
 ### T6: Escalador — evaluar exclusivamente `Siguiente`
 - **id**: T6
