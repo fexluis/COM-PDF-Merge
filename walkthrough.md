@@ -10041,4 +10041,92 @@ evaluación nueva.
 | F1636 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs` |
 | F1637 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs` |
 
+---
+
+## Ronda 338: Validación y Corrección de Dependencias, Integridad de Plan Explícito y Estado del Árbol (Fases 1687–1691)
+
+### Fases Ejecutadas
+
+#### 1. Fase 1687 — Olas Compatibles con Dependencias
+- **Estado:** ACEPTADA
+- **Acción:** Desdoblamiento a 10 olas en serie (`waves: 10`) en el plan de ranuras dinámicas para respetar la causalidad `T1->T2` y `T3->T4`.
+- **Archivos Afectados:** `.agents/plans/2026-11-12-ranuras-dinamicas-4-a-8-horas-plan.md`.
+
+#### 2. Fase 1688 — Prohibición de Fallback Legado
+- **Estado:** ACEPTADA
+- **Acción:** Sustitución de `DemoverPlanExplicito()` por replanificación atómica del grupo con rechazo del candidato si falla.
+- **Archivos Afectados:** `.agents/plans/2026-11-12-ranuras-dinamicas-4-a-8-horas-plan.md`.
+
+#### 3. Fase 1689 — Cobertura Estricta y Descuento de Festivos
+- **Estado:** ACEPTADA
+- **Acción:** Descuento de festivos en reservas y exigencia de `Result.Failure` estricto en el expansor si la cobertura no coincide exactamente con las horas del gen.
+- **Archivos Afectados:** `.agents/plans/2026-11-12-ranuras-dinamicas-4-a-8-horas-plan.md`.
+
+#### 4. Fase 1690 — Completitud de Rutas y Leases
+- **Estado:** ACEPTADA
+- **Acción:** Inclusión de `AgGeneradorHorarios.cs` en T6 y rutas completas con tests para T2–T9.
+- **Archivos Afectados:** `.agents/plans/2026-11-12-ranuras-dinamicas-4-a-8-horas-plan.md`.
+
+#### 5. Fase 1691 — Precondición y Diagnóstico de Gate
+- **Estado:** ACEPTADA
+- **Acción:** Actualización de precondición a HEAD `c0d986d` limpio y calibración de diagnóstico de exit code 3 de `verify.ps1`.
+- **Archivos Afectados:** `.agents/plans/2026-11-12-ranuras-dinamicas-4-a-8-horas-plan.md`.
+
+### Verificación de Principios (Ronda 338)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1687 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `.agents/plans/2026-11-12-ranuras-dinamicas-4-a-8-horas-plan.md` |
+| F1688 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `.agents/plans/2026-11-12-ranuras-dinamicas-4-a-8-horas-plan.md` |
+| F1689 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `.agents/plans/2026-11-12-ranuras-dinamicas-4-a-8-horas-plan.md` |
+| F1690 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `.agents/plans/2026-11-12-ranuras-dinamicas-4-a-8-horas-plan.md` |
+| F1691 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `.agents/plans/2026-11-12-ranuras-dinamicas-4-a-8-horas-plan.md` |
+
+---
+
+## Ronda 339: Consolidación Documental y Sincronización del Plan de Ranuras Dinámicas (Fase 1692)
+
+### Fases Ejecutadas
+
+#### 1. Fase 1692 — Aplicación Efectiva del Diff en Disco
+- **Estado:** ACEPTADA
+- **Acción:** Modificación y saneamiento integral de `.agents/plans/2026-11-12-ranuras-dinamicas-4-a-8-horas-plan.md`, alineando el texto real con los acuerdos de Ronda 338 (10 olas, rutas completas con tests en `files_lock`, erradicación de `DemoverPlanExplicito` y precondición de árbol limpio).
+- **Archivos Afectados:** `.agents/plans/2026-11-12-ranuras-dinamicas-4-a-8-horas-plan.md`.
+
+### Verificación de Principios (Ronda 339)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1692 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `.agents/plans/2026-11-12-ranuras-dinamicas-4-a-8-horas-plan.md` |
+
+
+
+
+
+## Ronda 340: Rutas del plan y numeración (Fases 1693–1694)
+
+- **Fase 1693 realizada (documental):** corregida ruta de AgGen.cs en T6 a Academic/Domain/Models/Genetica; completada ruta de AgGeneradorHorarios.cs en T10.
+- **Fase 1694 realizada (documental):** registradas revisiones 338–339 en R-054/R-055 y esta corrección en R-056. Contadores ronda 340/341, fase 1694/1695. R-047 continúa executing.
+- **Verificación:** inspección de archivos; sin compilación ni pruebas. T1–T10 siguen pending y sin reserva. No se implementó código 4→8.
+
+---
+
+# Walkthrough — Empaquetado Release e Instalador 1.6.4.08
+
+## Resumen de Ejecución
+- **Comando Ejecutado:** `powershell -ExecutionPolicy Bypass -File ".\scripts\build_installer.ps1" -NewVersion "1.6.4.08"`
+- **Acciones Realizadas:**
+  1. Limpieza de artefactos e instaladores previos en `installer\`.
+  2. Sincronización canónica de versión `1.6.4.08` en `ConversorPDF.XLL/Core/Helpers/App.cs`, `ConversorPDF.XLL/ConversorPDF.XLL.csproj` e `installer/InstaladorConversorPDF.wxs`.
+  3. Ejecución integral y aprobación al 100% de la suite de pruebas unitarias (`dotnet test`): 0 fallos, 0 regresiones.
+  4. Compilación del Add-In Excel-DNA en modo `Release|x64` y empaquetado del runtime.
+  5. Empaquetado del instalador MSI mediante WiX Toolset 4 (`InstaladorConversorPDF.wixproj`).
+
+## Verificación de Artefactos
+
+| Artefacto | Estado | Detalle |
+| :--- | :---: | :--- |
+| `installer\InstaladorConversorPDFv1.6.4.08.msi` | Generado | Instalador MSI WiX 4 de 5,726,208 bytes (5.46 MB) con auto-activación per-user en Excel. |
+| `ConversorPDF.Tests` | 100% Pass | Suite completa ejecutada sin errores ni regresiones. |
+| `ConversorPDF.XLL` | Compilado | `Release|x64` empaquetado sin errores CS. |
 

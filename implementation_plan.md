@@ -8866,3 +8866,39 @@ La revisión en disco constató discrepancias entre el informe previo y el estad
    - Limpieza garantizada de `_claveFiltroEnVuelo = null;` en el bloque `finally` de `RefrescarComboCorridasAsync`.
 3. **Sincronización REGISTRY:**
    - Inclusión de fila `R-047` (`executing`, gate `Full`) y actualización de contadores a `ronda: 331 / 332`, `fase: 1637 / 1638`.
+
+---
+
+## Ronda 338: Validación y Corrección de Dependencias, Integridad de Plan Explícito y Estado del Árbol (Fases 1687–1691)
+
+### Contexto y Diagnóstico
+1. **Fase 1687:** Olas incompatibles con dependencias causales en el plan: Wave 1 agrupaba T1 y T2 simultáneamente a pesar de que T2 declara `depends_on: [T1]`; idéntica anomalía en Wave 2 con T3 y T4.
+2. **Fase 1688:** La propuesta de degradar con `DemoverPlanExplicito()` (`PlanExplicito = false`) ante la invalidación de fechas activaba el expansor semanal tradicional con `AddDays(7)`, destruyendo la reserva explícita.
+3. **Fase 1689:** Tolerar déficit por festivos quebrantaba la cobertura estricta (`HorasGen == FechasGen.Count * unidad`).
+4. **Fase 1690:** Omisión de `AgGeneradorHorarios.cs` en `files_lock` de T6 y ausencia de suites de test en rutas de locks.
+5. **Fase 1691:** Precondición de git desactualizada y error conceptual al asociar exit code 3 únicamente a `SUITE_SHRUNK`.
+
+### Cambios Aplicados
+1. **Olas y Dependencias (Fase 1687):** Desdoble a 10 olas en serie (`waves: 10`) con inicio secuencial `Wave n: Tn; iniciar después de T(n-1)`.
+2. **Prohibición de Fallback Legado (Fase 1688):** Ante fechas invalidadas, replanificación atómica del grupo (`ReplanificarGrupo(grupo, contexto)`); si no es factible, `Result.Failure` sin degradación.
+3. **Cobertura Estricta (Fase 1689):** Descuento de festivos en reservas del planificador; `Result.Failure` ante déficit y suite `Expansor_DeficitPorFestivo_Falla`.
+4. **Completitud de Leases (Fase 1690):** Inclusión de `AgGeneradorHorarios.cs` en T6 y rutas canónicas completas con tests en T2–T9.
+5. **Precondición y Diagnóstico (Fase 1691):** HEAD `c0d986d` verificado limpio; exit code 3 diagnosticado consultando `summary.md`.
+
+---
+
+## Ronda 339: Consolidación Documental y Sincronización del Plan de Ranuras Dinámicas (Fase 1692)
+
+### Contexto y Diagnóstico
+- **Fase 1692:** Desincronización entre las correcciones aprobadas de la Ronda 338 y el contenido físico en disco del plan `.agents/plans/2026-11-12-ranuras-dinamicas-4-a-8-horas-plan.md` (el archivo en disco aún conservaba `waves: 8`, omisiones en `files_lock` y referencias a `DemoverPlanExplicito`).
+
+### Cambios Aplicados
+- **Sincronización en Disco:** Aplicación efectiva de las 5 correcciones de la Ronda 338 directamente sobre `.agents/plans/2026-11-12-ranuras-dinamicas-4-a-8-horas-plan.md`.
+- **Verificación de Diff:** 10 olas consolidadas, rutas completas con tests para T2–T9, prohibición formal de `DemoverPlanExplicito` y precondición de árbol limpio certificada.
+
+
+## Ronda 340: Rutas del plan y numeración (Fases 1693–1694)
+
+- **Fase 1693 realizada (documental):** corregida ruta de AgGen.cs en T6 a Academic/Domain/Models/Genetica; completada ruta de AgGeneradorHorarios.cs en T10.
+- **Fase 1694 realizada (documental):** registradas revisiones 338–339 en R-054/R-055 y esta corrección en R-056. Contadores ronda 340/341, fase 1694/1695. R-047 continúa executing.
+- **Verificación:** inspección de archivos; sin compilación ni pruebas. T1–T10 siguen pending y sin reserva. No se implementó código 4→8.
