@@ -1515,6 +1515,8 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             traza.Inicio();
             traza.Paso("P08_IniciarOptimizacion", "Preparación de corrida y ejecución evolutiva del Algoritmo Genético");
 
+            long idCorridaCreada = 0;
+
             try
             {
                 txtLogAG.Clear();
@@ -1770,6 +1772,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 }
 
                 long idCorrida = idCorridaResult.Value;
+                idCorridaCreada = idCorrida;
                 traza.Dato("IdCorrida", idCorrida);
                 _contextoActual.IdCorrida = idCorrida; // Fase 585
                 traza.Dato("Poblacion", corrida.PoblacionTamano);
@@ -2008,6 +2011,18 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 btnEjecutarAG.Enabled = true;
                 btnValidarFactibilidad.Enabled = true;
                 btnCancelar.Enabled = false;
+
+                if (idCorridaCreada > 0)
+                {
+                    try
+                    {
+                        await RefrescarComboCorridasAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        LoggerHelper.Warning($"[AG] Error al refrescar el combo de corridas tras optimización: {ex.Message}");
+                    }
+                }
             }
         }
 
@@ -2079,6 +2094,22 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             // Fase 1557: Cargar siempre el grid de sesiones antes de evaluar la existencia del individuo óptimo
             if (!await CargarGridStagingAsync(idCorrida))
             {
+                _idCorridaCargada = 0;
+                _ultimoResultado = null;
+                btnAprobarCorrida.Enabled = false;
+                btnRecalcularViolaciones.Enabled = false;
+                btnPromoverProduccion.Enabled = false;
+                lblMejorFitness.Text = "Aptitud (Fitness): —";
+                lblHardViolaciones.Text = "Restricciones Hard: —";
+                lblHardViolaciones.ForeColor = Color.DarkOrange;
+                lblVacantes.Text = "Vacantes: —";
+                lblVacantes.ForeColor = Color.DarkOrange;
+                dgvHorariosGenerados.DataSource = null;
+                dgvViolaciones.DataSource = null;
+                _todasLasVacantes = new List<AgVacanteGridDto>();
+                dgvVacantes.DataSource = null;
+                lblConteoVacantesTab.Text = "0 vacante(s)";
+                lblAgModo.Text = "Modo AG · staging: ag_vinculaciones / ag_sesiones";
                 return false;   // error de lectura o staging vacío (ya limpian estado)
             }
 
@@ -2112,6 +2143,9 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 return true;   // el grid ya está cargado con las sesiones
             }
 
+            _idCorridaCargada = idCorrida;
+            lblAgModo.Text = $"Modo AG · corrida #{idCorrida} · {AgModoDatos.Ag.VistaSesionesDetalle}";
+
             var ind = _ultimoResultado.MejorIndividuo;
             var traza = CrearTraza("CargarResultados");
             traza.Inicio($"idCorrida={idCorrida}");
@@ -2142,6 +2176,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             btnPromoverProduccion.Enabled = ind.HardViolations == 0;
             // Fase 1531: Habilitar recálculo de violaciones si la corrida tiene individuo persistido (cubre ruta AG y rehidratación)
             btnRecalcularViolaciones.Enabled = ind.Id > 0;
+            btnAprobarCorrida.Enabled = ind.Id > 0;
             return true;
         }
 
@@ -3394,8 +3429,14 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
 
                 if (_idCorridaCargada > 0)
                 {
-                    await CargarModuloResultadosAsync(_idCorridaCargada);
+                    bool recargada = await CargarModuloResultadosAsync(_idCorridaCargada);
+                    if (!recargada)
+                    {
+                        _idCorridaCargada = 0;
+                        _ultimoResultado = null;
+                    }
                 }
+                await RefrescarComboCorridasAsync();
             }
             catch (Exception ex)
             {

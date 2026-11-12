@@ -140,7 +140,6 @@ Leases disjuntos: T1 opera en L0 (`ConversorPDF.XLL.csproj`) y crea `AgSeleccion
 - **log**: DropDown reconsulta siempre; bucle de coalescencia con _solicitudPendienteRefrescoCombo, descarte de respuestas obsoletas ante cambio de filtro durante await, chequeos de IsDisposed/Disposing y preservación de catálogo ante error. Tests en PASS (24/24).
 - **files edited/created**:
   - `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
-  - `ConversorPDF.Tests/Academic/Application/Services/AgCorridaSelectorTests.cs`
 
 ### T5: Ciclo de vida de corrida, sincronización post-ejecución y retorno de diálogo
 - **id**: T5
@@ -153,10 +152,11 @@ Leases disjuntos: T1 opera en L0 (`ConversorPDF.XLL.csproj`) y crea `AgSeleccion
 - **description**: 1) Centralizar el refresco post-ejecución del AG en un único bloque protegido en `finally` que no herede el CancellationToken cancelado del AG, refrescando el combo únicamente si se alcanzó a crear o modificar una cabecera de corrida. 2) Tras una carga exitosa en `CargarModuloResultadosAsync`, actualizar `lblAgModo` con `#N` también en la ruta de ejecución directa. 3) Comprobar el valor devuelto (`bool`) de `CargarModuloResultadosAsync`: si retorna `false`, limpiar `_idCorridaCargada` y las vistas para no dejar una corrida falsamente activa. 4) En `AbrirVinculacionesModoAgAsync`, verificar el resultado de recargar `_idCorridaCargada`: si la corrida fue eliminada o quedó vacía en el diálogo, limpiar el estado y solicitar refresco del selector para resolver la selección inicial limpia.
 - **validation**: Ejecución directa de AG actualiza combo y `lblAgModo` con la misma corrida #N; cancelación o fallo post-cabecera no activan corridas ajenas; cierre de diálogo con corrida eliminada limpia la interfaz.
 - **verification**: `powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "FullyQualifiedName~Ag"`
-- **evidence**: pendiente
-- **status**: pending
-- **log**: pendiente
-- **files edited/created**: []
+- **evidence**: `_evidence/20261112-074004/test.trx`
+- **status**: done
+- **log**: Sincronización post-ejecución centralizada en finally con idCorridaCreada > 0 y token independiente. CargarModuloResultadosAsync resetea _idCorridaCargada = 0 ante fallo de staging y actualiza lblAgModo en ruta directa. AbrirVinculacionesModoAgAsync verifica recarga y refresca combo. Tests 617/617 PASS.
+- **files edited/created**:
+  - `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
 
 ### T6: Verificación integral de la suite completa
 - **id**: T6
@@ -168,10 +168,11 @@ Leases disjuntos: T1 opera en L0 (`ConversorPDF.XLL.csproj`) y crea `AgSeleccion
 - **description**: Ejecutar la suite completa de pruebas unitarias e integración en modo Full mediante `verify.ps1` para asegurar 0 fallos y 0 regresiones respecto al baseline oficial (TOTAL: 952). Generar reporte TRX y summary.md bajo `_evidence/`.
 - **validation**: Exit code 0, 0 tests fallidos, 0 regresiones.
 - **verification**: `powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Full`
-- **evidence**: pendiente
-- **status**: pending
-- **log**: pendiente
-- **files edited/created**: []
+- **evidence**: `_evidence/20261112-074004/test.trx`
+- **status**: done
+- **log**: Sincronización post-ejecución centralizada en finally con idCorridaCreada > 0 y token independiente. CargarModuloResultadosAsync resetea _idCorridaCargada = 0 ante fallo de staging y actualiza lblAgModo en ruta directa. AbrirVinculacionesModoAgAsync verifica recarga y refresca combo. Tests 617/617 PASS.
+- **files edited/created**:
+  - `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
 
 ### T7: Documentación técnica del cambio
 - **id**: T7
