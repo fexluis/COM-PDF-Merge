@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using ConversorPDF.XLL.Academic.Application.DTOs;
 using ConversorPDF.XLL.Academic.Application.Services;
 using ConversorPDF.XLL.Academic.Domain.Models.Genetica;
 using FluentAssertions;
@@ -186,6 +187,128 @@ namespace ConversorPDF.Tests.Academic.Application.Services
             var ultimo = AgCorridaSelector.CascadaFiltros(idPeriodo, idPrograma).Last();
             ultimo.IdPeriodo.Should().BeNull();
             ultimo.IdPrograma.Should().BeNull();
+        }
+
+        [Fact]
+        public void ResolverSeleccionModuloR_CuandoActivaPresente_DebeSeleccionarActivaYSinCargaInicial()
+        {
+            // Arrange
+            var corridas = FixtureReal();
+            long idActiva = 44;
+
+            // Act
+            var seleccion = AgCorridaSelector.ResolverSeleccionModuloR(corridas, idActiva);
+
+            // Assert
+            seleccion.Should().NotBeNull();
+            seleccion.ItemSeleccionado.Should().NotBeNull();
+            seleccion.ItemSeleccionado.IdCorrida.Should().Be(44);
+            seleccion.IndiceSeleccionado.Should().Be(1);
+            seleccion.RequiereCargaInicial.Should().BeFalse();
+            seleccion.CorridaActivaNoEncontrada.Should().BeFalse();
+        }
+
+        [Fact]
+        public void ResolverSeleccionModuloR_CuandoActivaAusenteConStagingDisponible_NoDebeSeleccionarNiCargarYMarcaNoEncontrada()
+        {
+            // Arrange
+            var corridas = FixtureReal();
+            long idActivaInexistente = 999;
+
+            // Act
+            var seleccion = AgCorridaSelector.ResolverSeleccionModuloR(corridas, idActivaInexistente);
+
+            // Assert
+            seleccion.Should().NotBeNull();
+            seleccion.ItemSeleccionado.Should().BeNull();
+            seleccion.IndiceSeleccionado.Should().Be(-1);
+            seleccion.RequiereCargaInicial.Should().BeFalse();
+            seleccion.CorridaActivaNoEncontrada.Should().BeTrue();
+        }
+
+        [Fact]
+        public void ResolverSeleccionModuloR_CuandoActivaAusenteConSoloCabeceras_NoDebeSeleccionarNiCargarYMarcaNoEncontrada()
+        {
+            // Arrange
+            var soloCabeceras = new List<CorridaStagingItem>
+            {
+                Corrida(46, 3, "2027-01", 20, "MAESTRIA", "BOLIVAR", 0, estado: 4),
+                Corrida(37, 3, "2027-01", 2, "OTRO", "VALLE", 0, estado: 2)
+            };
+            long idActivaInexistente = 999;
+
+            // Act
+            var seleccion = AgCorridaSelector.ResolverSeleccionModuloR(soloCabeceras, idActivaInexistente);
+
+            // Assert
+            seleccion.Should().NotBeNull();
+            seleccion.ItemSeleccionado.Should().BeNull();
+            seleccion.IndiceSeleccionado.Should().Be(-1);
+            seleccion.RequiereCargaInicial.Should().BeFalse();
+            seleccion.CorridaActivaNoEncontrada.Should().BeTrue();
+        }
+
+        [Fact]
+        public void ResolverSeleccionModuloR_CuandoSinActivaYConStagingDisponible_DebeSeleccionarPrimeraConStagingYRequiereCargaInicial()
+        {
+            // Arrange
+            var corridas = FixtureReal();
+
+            // Act
+            var seleccion = AgCorridaSelector.ResolverSeleccionModuloR(corridas, null);
+
+            // Assert
+            seleccion.Should().NotBeNull();
+            seleccion.ItemSeleccionado.Should().NotBeNull();
+            seleccion.ItemSeleccionado.IdCorrida.Should().Be(44);
+            seleccion.IndiceSeleccionado.Should().Be(1);
+            seleccion.RequiereCargaInicial.Should().BeTrue();
+            seleccion.CorridaActivaNoEncontrada.Should().BeFalse();
+        }
+
+        [Fact]
+        public void ResolverSeleccionModuloR_CuandoSinActivaYSoloCabeceras_NoDebeSeleccionarNiCargar()
+        {
+            // Arrange
+            var soloCabeceras = new List<CorridaStagingItem>
+            {
+                Corrida(46, 3, "2027-01", 20, "MAESTRIA", "BOLIVAR", 0, estado: 4),
+                Corrida(37, 3, "2027-01", 2, "OTRO", "VALLE", 0, estado: 2)
+            };
+
+            // Act
+            var seleccion = AgCorridaSelector.ResolverSeleccionModuloR(soloCabeceras, null);
+
+            // Assert
+            seleccion.Should().NotBeNull();
+            seleccion.ItemSeleccionado.Should().BeNull();
+            seleccion.IndiceSeleccionado.Should().Be(-1);
+            seleccion.RequiereCargaInicial.Should().BeFalse();
+            seleccion.CorridaActivaNoEncontrada.Should().BeFalse();
+        }
+
+        [Fact]
+        public void ResolverSeleccionModuloR_CuandoListaVaciaONula_NoDebeSeleccionarNiCargar()
+        {
+            // Arrange
+            var vacia = new List<CorridaStagingItem>();
+
+            // Act
+            var seleccionVacia = AgCorridaSelector.ResolverSeleccionModuloR(vacia, null);
+            var seleccionNula = AgCorridaSelector.ResolverSeleccionModuloR(null, null);
+
+            // Assert
+            seleccionVacia.Should().NotBeNull();
+            seleccionVacia.ItemSeleccionado.Should().BeNull();
+            seleccionVacia.IndiceSeleccionado.Should().Be(-1);
+            seleccionVacia.RequiereCargaInicial.Should().BeFalse();
+            seleccionVacia.CorridaActivaNoEncontrada.Should().BeFalse();
+
+            seleccionNula.Should().NotBeNull();
+            seleccionNula.ItemSeleccionado.Should().BeNull();
+            seleccionNula.IndiceSeleccionado.Should().Be(-1);
+            seleccionNula.RequiereCargaInicial.Should().BeFalse();
+            seleccionNula.CorridaActivaNoEncontrada.Should().BeFalse();
         }
     }
 }

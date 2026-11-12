@@ -99,10 +99,11 @@ Leases disjuntos: T1 opera en L0 (`ConversorPDF.XLL.csproj`) y crea `AgSeleccion
 - **description**: Escribir pruebas unitarias para `AgCorridaSelector.ResolverSeleccionModuloR` cubriendo los 6 casos obligatorios: 1) Activa presente (selecciona la activa, no recarga); 2) Activa ausente con corrida candidata con staging (sin selección, no autoriza carga); 3) Activa ausente con solo cabeceras (sin selección, no autoriza carga); 4) Sin activa y staging disponible (selecciona primera con staging, autoriza carga inicial); 5) Sin activa y solo cabeceras (sin selección, no autoriza carga); 6) Lista vacía o nula. Preservar todas las pruebas existentes de `ResolverSeleccionInicial` y del comodín para `FormVinculaciones`.
 - **validation**: La solución compila correctamente y las nuevas pruebas fallan con `NotImplementedException` (RED auténtico por lógica no implementada).
 - **verification**: `powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "FullyQualifiedName~AgCorridaSelector"`
-- **evidence**: pendiente
-- **status**: pending
-- **log**: pendiente
-- **files edited/created**: []
+- **evidence**: `_evidence/20261112-071854/summary.md`
+- **status**: done
+- **log**: 6 pruebas unitarias RED implementadas en AgCorridaSelectorTests.cs. Build exitoso, 18 pruebas previas superadas, 6 nuevas fallando exactamente con NotImplementedException.
+- **files edited/created**:
+  - `ConversorPDF.Tests/Academic/Application/Services/AgCorridaSelectorTests.cs`
 
 ### T3: Implementación de la política segura ResolverSeleccionModuloR y enlace inicial
 - **id**: T3
@@ -136,6 +137,7 @@ Leases disjuntos: T1 opera en L0 (`ConversorPDF.XLL.csproj`) y crea `AgSeleccion
 - **status**: pending
 - **log**: pendiente
 - **files edited/created**: []
+  - `ConversorPDF.Tests/Academic/Application/Services/AgCorridaSelectorTests.cs`
 
 ### T5: Ciclo de vida de corrida, sincronización post-ejecución y retorno de diálogo
 - **id**: T5
