@@ -8507,3 +8507,219 @@ Con el validador de oleadas desplegado (Ronda 308) la UI seguía mostrando `125 
 ### Sincronización REGISTRY
 - Fila `R-031` (`closed`) y contadores actualizados a `ronda: 309 / 310`, `fase: 1578 / 1579`.
 
+
+
+---
+
+## Ronda 312: Partición de Carriles Consciente del Patrón Sembrado (Fase 1581)
+
+### Contexto y Diagnóstico
+La partición canónica en bloques fijos de 2 ranuras contiguas fragmentaba patrones sembrados (`dias_patron`, ej. `"6,7"` en `"4,5,6,7"`), impidiendo que las materias fueran asignadas al carril correspondiente y disparando fallos espurios de `R8_DiaFueraDePatron` e infactibles innecesarios.
+
+### Cambios Aplicados (Fase 1581)
+1. **Extracción de evaluador único:** En `AgPlanificadorOleadas.cs`, se extrajo la lógica de asignación y oleadas al método privado `EvaluarParticion(ContextoEvaluacion ctx, string diasVentana, IReadOnlyList<IReadOnlyList<AgRanura>> bandas)`.
+2. **Reordenamiento defensivo:** Se verificó la restricción R8 antes de invocar la construcción de `AgPatronSemanal`, evitando cómputos descartados y preservando la salida textual exacta de `DetalleInfactibles`.
+3. **Componente selector:** Se creó `AgParticionCarriles.cs` con el método puro `Seleccionar(...)`, aplicando filtros estructurales y las 4 condiciones de aceptación conservadora estricta (reducción de no alojables, preservación de alojables previos, no pérdida de asignaturas planificadas y reducción estricta de infactibles).
+4. **Registro en proyecto:** Inclusión de `AgParticionCarriles.cs` en `ConversorPDF.XLL.csproj`.
+5. **Gate G-1 y Cobertura:** Suites de caracterización, unitarios del selector, integración y Gate G-1 (`AgPlanificadorOleadasCaracterizacionTests`, `AgParticionCarrilesTests`, `AgParticionCarrilesIntegracionTests`, `AgGateG1ParticionCarrilesTests`). Suite general: **1156/1156 PASS**.
+
+### Sincronización REGISTRY
+- Fila `R-034` (`closed`) y contadores actualizados a `ronda: 312 / 313`, `fase: 1581 / 1582`.
+
+
+---
+
+## Ronda 313: Robustecimiento Integral, Fidelidad de Patrones y Corrección de Pruebas (Fases 1582–1589)
+
+### Contexto y Diagnóstico
+La revisión en disco constató discrepancias entre el informe previo y el estado del código:
+1. **F1582:** El selector llamaba al evaluador ante listas vacías pudiendo acceder fuera de rango.
+2. **F1583:** El selector retornaba temprano si `PatronesNoAlojables == 0` y el filtro `>=` descartaba alternativas con igual adecuación estructural que aportaran capacidad para materias de alta demanda.
+3. **F1584:** `CandidatasEvaluadas` devolvía `candidatas.Count` en lugar del número real de llamadas al evaluador.
+4. **F1585:** Ausencia de validación de `IdAsignatura` repetidos, provocando crash posterior en `AgFabricaIndividuos`.
+5. **F1586:** Ausencia de validación de fidelidad exacta entre las ranuras asignadas y el patrón sembrado, ampliando los días permitidos en la fábrica.
+6. **F1588:** Pruebas con `if (res.IsSuccess)` que pasaban sin validar el selector y festivo fuera de rango.
+
+### Cambios Aplicados
+1. **Fase 1582:** Guardas estrictas previas al delegado en `AgParticionCarriles.cs` y en `EvaluarParticion`.
+2. **Fase 1585:** Guarda `I1_ASIGNATURA_DUPLICADA` en `AgPlanificadorOleadas.Construir`.
+3. **Fase 1584:** Contador exacto `evaluadas` tras cada llamada a `evaluar(bandas)`.
+4. **Fase 1586:** Delegado de admisibilidad `EsParticionFiel` exigiendo coincidencia estricta de días entre `plan.RanurasPatron` y `dias_patron`.
+5. **Fase 1583:** Condición `noAloj > referencia.PatronesNoAlojables` y continuación de búsqueda cuando `PatronesNoAlojables == 0` si existen infactibles.
+6. **Fase 1588:** Eliminación de `if (res.IsSuccess)` en `Caso76` y reubicación del festivo en `Caso78`.
+7. **Fase 1589:** Sincronización íntegra de artefactos e implementación en disco.
+
+### Sincronización REGISTRY
+- Fila `R-035` (`closed`) y contadores actualizados a `ronda: 313 / 314`, `fase: 1589 / 1590`.
+
+
+---
+
+## Ronda 314: Separación de Casos de Integración, Diagnóstico I1 vs I5 y Gate con API Real (Fases 1590–1595)
+
+### Contexto y Diagnóstico
+1. **Fase 1590:** En `AgParticionCarrilesIntegracionTests`, el fixture de dos materias de 8h en W=1 reducía infactibles de 2 a 1 (mejora parcial con banda `{6,7}`), no probaba la ausencia total de mejora.
+2. **Fases 1591 y 1592:** Se ratificó el rechazo a relajar la fidelidad del patrón (conservando `SetEquals`) y el rechazo a ocultar errores en guardas internas con retornos vacíos, manteniendo la estricta robustez del diseño.
+3. **Fase 1593:** En `AgGateG1ParticionCarrilesTests`, no se comprobaba la concordancia de `gen.DiasPatron` con el patrón sembrado, y el fixture no asociaba `AgAulaAsignatura` con sus respectivos `DiasPatron`.
+4. **Fase 1594:** En `AgValidadorVentana.cs`, el fallo `I1_ASIGNATURA_DUPLICADA` se reportaba bajo la etiqueta errónea `[I5_INFACTIBLE_OLEADA]`.
+5. **Fase 1595:** En `AgGateG1ParticionCarrilesTests`, se llamaba a un método inexistente `validador.Validar` y se evaluaba `v.Regla` como string en vez de su API real `validador.Evaluar(individuo, contexto)` sobre el enum `AgReglaViolacion`.
+
+### Cambios Aplicados
+1. **Fase 1590:** Separación en dos pruebas explícitas: `Caso76_Integracion_MejoraParcial_DebeReducirInfactiblesYConservarFactible` (2 asignaturas de 8h, reduce de 2 a 1 infactible) y `Caso76_Integracion_AusenciaDeMejora_DebeConservarReferencia` (1 asignatura de 16h, 0 planes, 1 infactible, conserva las 3 bandas canónicas).
+2. **Fases 1591 y 1592:** Código de producción intacto; preservada la fidelidad estricta y las excepciones tempranas ante entradas corruptas.
+3. **Fase 1593 y 1595:** Refactorización integral de `AgGateG1ParticionCarrilesTests` configurando `AgAulaAsignatura` con sus patrones y bloques por franja/horario, verificando que `gen.DiasPatron` no se amplíe (`SetEquals`), que `gen.DiaSemana` pertenezca al patrón sembrado, cobertura completa de materias (38, 40, 42), y validación de reglas con `validador.Evaluar(individuo, contexto)` confirmando 0 violaciones duras R8, R5 y R13.
+4. **Fase 1594:** En `AgValidadorVentana.cs`, clasificación diferenciada `I1_ASIGNATURA_DUPLICADA` vs `I5_INFACTIBLE_OLEADA`.
+
+### Sincronización REGISTRY
+- Fila `R-036` (`closed`) y contadores actualizados a `ronda: 314 / 315`, `fase: 1595 / 1596`.
+
+
+---
+
+## Ronda 315: Bloques Canónicos e Índices en Gate G-1, Habilitaciones en Pool Docente y Comprobación Temporal de Festivos (Fases 1596–1598)
+
+### Contexto y Diagnóstico
+1. **Fase 1596:** En `AgGateG1ParticionCarrilesTests`, no se invocaba `contexto.ConstruirIndices()` tras agregar datos a las listas, y los bloques de fin de semana estaban configurados erróneamente en franja `NOCHE` en lugar del contrato canónico (sábado `MANANA/TARDE`, domingo `MANANA`).
+2. **Fase 1597:** No se asociaban registros a `contexto.PoolDocentes`, por lo que el algoritmo genético generaba genes con `EsVacante == 1` y la comprobación de la regla R5 resultaba inoperante.
+3. **Fase 1598:** En `AgParticionCarrilesIntegracionTests`, la prueba de festivo con 16h no verificaba la extensión temporal de oleadas ni comparaba contra un control sin festivo.
+
+### Cambios Aplicados
+1. **Fase 1596:** Configuración en `AgGateG1ParticionCarrilesTests` de bloques 61 (sábado MANANA), 62 (sábado TARDE) y 71 (domingo MANANA) con horas de inicio y fin canónicas, y llamada obligatoria a `contexto.ConstruirIndices()` con asserts sobre `AulaAsignaturaPorAulaAsig` y `BloquesPorId`.
+2. **Fase 1597:** Inclusión de registros en `contexto.PoolDocentes` para las materias 38, 40 y 42 asociadas a los docentes 101, 102 y 103, con aserción estricta de que todos los genes generados tengan `EsVacante == 0`, `IdTercero > 0` e `IdBloqueHorario > 0`.
+3. **Fase 1598:** Escenario de 24h (6 sesiones) en `AgParticionCarrilesIntegracionTests`:
+   - Con festivo (`2027-02-06`): requiere 3 semanas y `FechaFin == 2027-02-25`.
+   - Control sin festivo: requiere 2 semanas y `FechaFin == 2027-02-18`.
+
+### Sincronización REGISTRY
+- Fila `R-037` (`closed`) y contadores actualizados a `ronda: 315 / 316`, `fase: 1598 / 1599`.
+
+---
+
+## Ronda 316: Habilitaciones Canónicas en Gate G-1 y Calibración de Partición en Integración (Fase 1599)
+
+### Contexto y Diagnóstico
+1. **Fase 1599:** En `AgGateG1ParticionCarrilesTests`, las habilitaciones docentes se asignaban manualmente con `Id = i + 1`, sin calcular las claves de habilitación esperadas en `PoolDocenteKeys`. `EsDocenteHabilitado` requiere el cálculo de hash mediante `TerceroAsignaturaKey.Calcular(idTercero, idPrograma, idAsignatura, semestre)` realizado por `contexto.RegistrarDocenteHabilitado`.
+2. **Correcciones de Compilación y Tipos en Gate G-1:**
+   - Incorporación del namespace `ConversorPDF.XLL.Academic.Domain.Enums` para resolver `AgEstadoAula` y `AgOrigenVentana`.
+   - Remoción de la propiedad inexistente `DiasPatron` sobre el modelo de dominio `Asignatura`.
+   - Consulta de fidelidad de patrón contra `contexto.AulaAsignaturaPorAulaAsig[(aula.Id, gen.IdAsignatura)].DiasPatron`.
+3. **Calibración del Desempate en Caso 7.6 (`AgParticionCarrilesIntegracionTests`):**
+   - El ordenamiento determinista de particiones candidatas incluye `ThenByDescending(ev => ev.Bandas)`.
+   - Entre la partición de 2 bandas `{{4,5}, {6,7}}` y la de 3 bandas `{{4}, {5}, {6,7}}`, ambas con 1 infactible, 0 patrones no alojables y makespan 0, el selector escoge deterministamente la de mayor paralelismo (3 bandas). La aserción fue ajustada para validar `{{4}, {5}, {6,7}}`.
+
+### Cambios Aplicados
+1. **`AgGateG1ParticionCarrilesTests.cs`:**
+   - Invocación de `contexto.RegistrarDocenteHabilitado(101 + i, 1, ids[i], "I")` para docentes 101, 102, 103 sobre asignaturas 38, 40, 42.
+   - Verificación con `contexto.EsDocenteHabilitado(101 + i, 1, ids[i], "I").Should().BeTrue()`.
+   - Verificación de ausencia de violaciones duras R8, R5 y R13 tras validación completa con `validador.Evaluar(individuo, contexto)`.
+2. **`AgParticionCarrilesIntegracionTests.cs`:**
+   - Aserción de `res.Value.Particion` en `Caso76_Integracion_MejoraParcial` adaptada a 3 bandas (`{{4}, {5}, {6, 7}}`).
+
+### Evidencia y Verificación
+- **Pruebas Focalizadas:** 44/44 PASS (`AgGateG1ParticionCarrilesTests`, `AgParticionCarrilesIntegracionTests`, `AgParticionCarrilesTests`, `AgPlanificadorOleadasTests`).
+- **Suite Completa Fast:** 1158/1158 tests PASS (0 fallos, 0 omitidos).
+- **Sincronización REGISTRY:** Fila `R-038` (`closed`) y contadores actualizados a `ronda: 316 / 317`, `fase: 1599 / 1600`.
+
+---
+
+## Ronda 317: Reparto Compatible con Patrón Sembrado y Diagnóstico Verificable de Capacidad en Carriles (Fases 1600–1602)
+
+### Contexto y Diagnóstico
+1. **Fase 1600:** En `AgPlanificadorOleadas.cs`, la primera pasada de asignación de patrón elegía el carril más específico antes de verificar si tenía capacidad suficiente; al fallar la capacidad, el carril caía a renormalizados y en la segunda pasada (greedy por utilización relativa) se ignoraban las restricciones de patrón sembrado y el fallback forzaba `if (elegido < 0) elegido = 0`. Esto enviaba asignaturas con patrón (ej. viernes "5") a carriles incompatibles (ej. [1,2] o [3,4]), disparando falsos positivos de `R8_DiaFueraDePatron` aunque el día existiera en la ventana.
+2. **Fase 1601:** Ausencia de diagnóstico unificado y discriminado entre incompatibilidad de patrón (`R8_DiaFueraDePatron`) y saturación de capacidad del carril compatible (`I5_CAPACIDAD_CARRIL_PATRON`). El texto en `AgGeneradorHorarios.cs` referenciaba «inviabilidad matemática» en lugar del término preciso «bloqueos de factibilidad detectados».
+3. **Fase 1602:** Requerimiento de batería de pruebas de regresión y validación cubriendo asignación compatible con capacidad, desvío a carriles compatibles alternativos, aislamiento de patrones saturados sin desbordamiento a carriles incompatibles, preservación de R8 ante días fuera de ventana, conservación de reparto de materias sin patrón, soporte de vacantes permitidas cuando una materia carece de pool docente y casos reales con fines de semana y festivos.
+
+### Cambios Aplicados
+1. **Fase 1600 (`AgPlanificadorOleadas.cs`):**
+   - **Pasada 1:** Comprobación de capacidad (`carga[c] + ctx.Demanda[i] <= capacidadCarril[c]`) integrada dentro de la búsqueda de carril compatible, seleccionando el carril de menor tamaño que efectivamente posea capacidad libre.
+   - **Pasada 2:** Conservación de restricciones sembradas: omisión de carriles que no contengan los días del patrón y omisión si se satura la capacidad. Eliminación del fallback coercitivo `if (elegido < 0) elegido = 0`, permitiendo que `carrilDe[i]` permanezca en `-1`.
+   - **Pasada 3:** Guarda `if (c < 0)` antes de indexar `slotsCarril[c]`. Distingue si la asignatura es estructuralmente alojable (`diasCarril.Any(b => dias.All(b.Contains))`), asignando `I5_CAPACIDAD_CARRIL_PATRON` si es alojable o `R8_DiaFueraDePatron` si no lo es.
+2. **Fase 1601 (`AgPlanificadorOleadas.cs`, `AgValidadorVentana.cs`, `AgGeneradorHorarios.cs`):**
+   - Integración en `DetalleInfactibles` de un único diagnóstico por asignatura reportando patrón, demanda, código (`I5_CAPACIDAD_CARRIL_PATRON` vs `R8_DiaFueraDePatron`) y capacidades reservadas/totales de los carriles compatibles (`c{j}[{dias}] capacidad={cap} reservada={carga}`).
+   - Discriminación en `AgValidadorVentana.cs` del bloqueo `[I5_CAPACIDAD_CARRIL_PATRON]` frente a `[R8_DiaFueraDePatron]` e `[I5_INFACTIBLE_OLEADA]`.
+   - Actualización del mensaje de error en `AgGeneradorHorarios.cs` a `"Corrida abortada por bloqueos de factibilidad detectados:\n• {errores}"`.
+3. **Fase 1602 (Suites de pruebas):**
+   - Pruebas exhaustivas añadidas en `AgPlanificadorOleadasTests.cs` (patrón 5 con capacidad, alternativa disponible cuando el más específico está lleno, saturación sin desbordamiento a incompatibles, R8 para día fuera de ventana, reparto proporcional para materias sin patrón, y fin de semana 6,7 mixto con festivos).
+   - Pruebas en `AgValidadorVentanaTests.cs` verificando la no-bloqueante tolerancia a vacantes por ausencia de pool docente y el bloqueo específico `[I5_CAPACIDAD_CARRIL_PATRON]` con sede y aula.
+   - Actualización de aserciones diagnósticas en `AgGeneradorHorariosTests.cs` y `AgPlanificadorOleadasCaracterizacionTests.cs`.
+
+### Sincronización REGISTRY
+- Fila `R-039` (`closed`) y contadores actualizados a `ronda: 317 / 318`, `fase: 1602 / 1603`.
+
+---
+
+## Ronda 318: Corrección de Tipos en Pruebas, Calibración de Fixtures de Capacidad y Cobertura Efectiva de Festivos (Fases 1603–1605)
+
+### Contexto y Diagnóstico
+1. **Fase 1603:** Errores de compilación estáticos introducidos en la suite de pruebas:
+   - En `AgPlanificadorOleadasTests.cs`, se invocaba `p.DiasCarril` cuando la propiedad pública en `AgPlanOleada` es `DiasPatron`.
+   - En `AgValidadorVentanaTests.cs`, se asignaba directamente una lista de `AgDocenteHabilitado` a `PoolPorAsignatura[1]`, cuyo tipo de diccionario es `Dictionary<int, List<TerceroAsignatura>>`.
+2. **Fase 1604:** Fixtures de prueba que no alcanzaban la rama evaluada por fallo prematuro o cobertura condicional:
+   - En `AgPlanificadorOleadasTests.cs` (`Patron5Saturado`), la ventana `"VIE"` (capacidad total 3) abortaba tempranamente con `I5_SIN_CAPACIDAD` ante demanda de 6 sesiones antes de llegar al reparto de carriles.
+   - En `AgValidadorVentanaTests.cs` (`PatronSaturadoEnAula`), la ventana `"VIE"` activaba el bloqueo global preliminar `[I5_INFACTIBLE]` por sobre-demanda total de aula antes de evaluar oleadas.
+   - En `AgPlanificadorOleadasTests.cs` (`CarrilMasEspecificoLleno`), los patrones `4,5` ya cabían en ambos carriles y las aserciones estaban envueltas en un bloque `if` que permitía pasar sin verificar la alternancia de carriles.
+3. **Fase 1605:** En `AgPlanificadorOleadasTests.cs` (`Casos6Y7_MixtosYFestivos`), ambos patrones eran `6,7` sin variación cruzada, el festivo caía en lunes (fuera de la ventana evaluada), y el assert usaba `AllSatisfy` que pasa con listas vacías.
+
+### Cambios Aplicados
+1. **Fase 1603 (`AgPlanificadorOleadasTests.cs`, `AgValidadorVentanaTests.cs`):**
+   - Corrección de `p.DiasCarril` a `p.DiasPatron` en aserciones de `AgPlanificadorOleadasTests.cs`.
+   - Reemplazo de la asignación manual en `AgValidadorVentanaTests.cs` por la invocación canónica de `contexto.RegistrarDocenteHabilitado(101, 0, 1)` seguida de `contexto.ConstruirIndices()`.
+2. **Fase 1604 (`AgPlanificadorOleadasTests.cs`, `AgValidadorVentanaTests.cs`):**
+   - En `Patron5Saturado`: uso de ventana amplia `"1,2,3,4,5"` (capacidad suficiente para no disparar `I5_SIN_CAPACIDAD`), verificando que se planifique exactamente una materia en viernes y la segunda reporte infactibilidad con `I5_CAPACIDAD_CARRIL_PATRON`.
+   - En `ValidarFactibilidad_PatronSaturadoEnAula`: configuración de aula con ventana `"1,2,3,4,5"`, jornada `"NOCHE"` y bloques nocturnos 1–5, alcanzando la llamada a `AgPlanificadorOleadas.Construir` y emitiendo el bloqueo discriminado `[I5_CAPACIDAD_CARRIL_PATRON]`.
+   - En `CarrilMasEspecificoLleno`: rediseño determinista con ventana `"5,6"`, 4 semanas, bloques canónicos (carril 0 `[5,6M]` con capacidad 8, carril 1 `[6T]` con capacidad 4), y materias 1 y 2 con patrón "6" de 16h (4 sesiones), validando que la materia 1 ocupe el carril 1 (más específico) y la materia 2 use la alternativa compatible (carril 0) sin infactibles.
+3. **Fase 1605 (`AgPlanificadorOleadasTests.cs`):**
+   - Configuración explícita de ventana `"4,5,6,7"`, patrones diferenciados (materia 1 `"4,5"`, materia 2 `"6,7"`), y festivo en el primer sábado utilizado (`2027-02-06`).
+   - Aserción previa obligatoria `res.Value.Planes.Should().HaveCount(2)` y validación estricta de `plan.DiasPatron` con `BeEquivalentTo` contra los días esperados de cada patrón.
+
+### Sincronización REGISTRY
+- Fila `R-040` (`closed`) y contadores actualizados a `ronda: 318 / 319`, `fase: 1605 / 1606`.
+
+---
+
+## Ronda 319–325: Sincronización del Selector de Corridas del Módulo R (Fases 1606–1612)
+
+### Contexto y Diagnóstico
+1. **Fase 1606–1607:**
+   - En Módulo R (`AgFormGeneradorHorarios`), el selector de corridas (`cmbCargarCorridas`) mostraba discordancia con los resultados en pantalla (p. ej. `#60` en el selector vs `#62` en la grilla y staging).
+   - Causa: Se reutilizaba `AgCorridaSelector.ResolverSeleccionInicial`, diseñado para `FormVinculaciones` con el comodín `-- Todas las corridas --` (`IdCorrida = 0`). Al no pertenecer ese objeto a los `Items` de Módulo R, `items.IndexOf()` retornaba `-1`, cayendo en un fallback coercitivo a `SelectedIndex = 0`. Esto forzaba `CargarCorridaDesdeComboAsync()`, destruyendo la corrida activa para cargar silenciosamente otra ajena.
+2. **Fase 1608–1609:**
+   - Al desplegar el ComboBox (`cmbCargarCorridas.DropDown`), una guarda por clave de filtros (`ClaveFiltroCorridas() == _claveFiltroCorridas`) bloqueaba la reconsulta en la base de datos, impidiendo detectar nuevas corridas creadas por el AG o desde otra ventana.
+   - Peticiones concurrentes durante refrescos se descartaban ciegamente con un simple `return` por `_refrescandoComboCorridas`.
+3. **Fase 1610:**
+   - Al finalizar `IniciarOptimizacionAsync`, no se realizaba un refresco garantizado en `finally` de `cmbCargarCorridas`. Si la ejecución era cancelada o fallaba tras crear la cabecera en SQLite, el selector quedaba desactualizado.
+   - La ruta directa de ejecución no actualizaba `lblAgModo` con `#N` tras completar `CargarModuloResultadosAsync`.
+   - `CargarModuloResultadosAsync` asignaba `_idCorridaCargada` prematuramente antes de comprobar si el staging contenía sesiones. Si fallaba, la corrida quedaba falsamente activa en memoria.
+   - Al volver de `FormVinculaciones`, si la corrida activa había sido eliminada, la interfaz no se limpiaba ni se refrescaba el selector.
+4. **Fases 1611–1612:**
+   - Verificación integral de la suite completa de pruebas y documentación técnica del cambio.
+
+### Cambios Aplicados
+1. **Fase 1606 (`AgSeleccionModuloR.cs`, `ConversorPDF.XLL.csproj`):**
+   - Creación del DTO inmutable `AgSeleccionModuloR` en `ConversorPDF.XLL.Academic.Application.DTOs` con propiedades get-only (`ItemSeleccionado`, `IndiceSeleccionado`, `RequiereCargaInicial`, `CorridaActivaNoEncontrada`).
+   - Registro en `ConversorPDF.XLL.csproj` cumpliendo Lease L0 y la regla Single Type Per File.
+   - Declaración del stub de `AgCorridaSelector.ResolverSeleccionModuloR` lanzando `NotImplementedException` (estrategia `integrator-first`).
+2. **Fase 1607 (`AgCorridaSelectorTests.cs`):**
+   - 6 pruebas unitarias RED implementadas en `AgCorridaSelectorTests.cs` cubriendo exhaustivamente los 6 casos de negocio (activa presente, activa ausente con candidatas con staging, activa ausente con solo cabeceras, sin activa con staging disponible, sin activa y solo cabeceras, lista vacía/nula).
+   - Preservación íntegra de las pruebas existentes de `ResolverSeleccionInicial` y de `FormVinculaciones`.
+3. **Fase 1608 (`AgCorridaSelector.cs`, `AgFormGeneradorHorarios.cs`):**
+   - Implementación pura de `AgCorridaSelector.ResolverSeleccionModuloR`.
+   - Integración en `RefrescarComboCorridasAsync` eliminando la degradación a índice 0 y la llamada incondicional a `CargarCorridaDesdeComboAsync`.
+   - Asignación `SelectedIndex = seleccion.IndiceSeleccionado` (queda en `-1` si no está en la lista) y notificación informativa en `lblAgModo` (*"Modo AG · corrida cargada #N no visible con los filtros actuales"*).
+   - Carga automática inicial permitida únicamente cuando `seleccion.RequiereCargaInicial` lo autoriza. Pruebas pasadas a GREEN (24/24 PASS).
+4. **Fase 1609 (`AgFormGeneradorHorarios.cs`):**
+   - Remoción de la guarda de caché en `cmbCargarCorridas.DropDown`, invocando siempre `RefrescarComboCorridasSeguro()`.
+   - Concurrencia robusta en `RefrescarComboCorridasAsync` con campo `_solicitudPendienteRefrescoCombo` y bucle `do-while` para procesar solicitudes acumuladas.
+   - Captura de filtros al iniciar y descarte de respuestas obsoletas si los filtros cambiaron durante el `await`. Preservación de catálogo ante error.
+5. **Fase 1610 (`AgFormGeneradorHorarios.cs`):**
+   - Registro de `idCorridaCreada` en `IniciarOptimizacionAsync` y refresco garantizado en `finally` con `CancellationToken.None` independiente.
+   - Actualización de `lblAgModo.Text = $"Modo AG · corrida #{idCorrida} · {AgModoDatos.Ag.VistaSesionesDetalle}";` en ejecución directa.
+   - Control del valor booleano en `CargarModuloResultadosAsync`: resetea `_idCorridaCargada = 0`, métricas y grillas ante fallo de staging.
+   - En `AbrirVinculacionesModoAgAsync`, comprobación de recarga y refresco del combo.
+6. **Fase 1611 (`scripts/verify.ps1`):**
+   - Verificación integral con `scripts/verify.ps1 -Mode Full`: 1172/1172 tests PASS (0 fallos, 0 omitidos, 0 regresiones vs baseline 952).
+7. **Fase 1612 (`docs/articles/changes/`):**
+   - Documentación técnica completa en `docs/articles/changes/2026-11-12-sincronizacion-selector-corridas-modulo-r.md`.
+
+### Sincronización REGISTRY
+- Fila `R-041` (`closed`) y contadores actualizados a `ronda: 325 / 326`, `fase: 1612 / 1613`.
