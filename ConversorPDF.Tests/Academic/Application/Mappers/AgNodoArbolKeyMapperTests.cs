@@ -128,5 +128,28 @@ namespace ConversorPDF.Tests.Academic.Application.Mappers
             result.IsFailure.Should().BeTrue();
             result.Error.Should().Contain("I1_DTO_NULO");
         }
+
+        [Theory]
+        [InlineData("LUN-VIE")]
+        [InlineData("JUE-DOM")]
+        [InlineData("MIE-DOM")]
+        public void AplicarDimensiones_WhenVentanasNuevasValidas_ShouldAsignarKeyYRetornarSuccess(string ventana)
+        {
+            // Arrange
+            var key = new AgNodoArbolKey(6, 10, "PRESENCIAL", "Presencial");
+            var dto = new AgContextoSeleccionDto(1, 100, 50, "II", "A", "Presencial")
+            {
+                Jornada = "MANANA",
+                HorasDia = 4,
+                DiasVentana = ventana
+            };
+
+            // Act
+            var result = AgNodoArbolKeyMapper.AplicarDimensiones(key, dto);
+
+            // Assert
+            result.IsSuccess.Should().BeTrue();
+            key.DiasVentana.Should().Be(ventana);
+        }
     }
 }

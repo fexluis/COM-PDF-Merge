@@ -131,10 +131,17 @@ Nota de gate: entre la ola 2 y la 5 la suite completa queda roja a propósito (l
   **(d) Caso 1703:** primer paso sin ganancia y segundo con ganancia → **ninguna propuesta** (se fija `Siguiente` como único candidato).
 - **validation**: todo falla por aserción; compila con el stub (T1). No se modifica producción.
 - **verification**: `powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "FullyQualifiedName~AgEscaleraVentanas|FullyQualifiedName~AgEscaladorVentanaAula|FullyQualifiedName~AgPlanificadorOleadas|FullyQualifiedName~AgValidadorVentana|FullyQualifiedName~AgNodoArbolKeyMapper"`
-- **evidence**: `_evidence/<stamp>/summary.md`
-- **status**: pending
-- **log**: —
-- **files edited/created**: —
+- **evidence**: _evidence/20261112-153415/summary.md
+- **status**: red
+- **log**: RED_CERTIFIED por tdd-red-writer. Suite compila con 0 errores CS. 14 fallos esperados por aserción/stub en tests nuevos de dominio, persistencia e integración. Auditado por task-reviewer (OK).
+- **files edited/created**:
+  - ConversorPDF.Tests/Academic/Domain/AgEscaleraVentanasTests.cs
+  - ConversorPDF.Tests/Academic/Infrastructure/Persistence/AgEscaladorVentanaAulaTests.cs
+  - ConversorPDF.Tests/Academic/Infrastructure/Persistence/AgEscaladorVentanaAulaPersistenciaTests.cs
+  - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgPlanificadorOleadasTests.cs
+  - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgPlanificadorOleadasCaracterizacionTests.cs
+  - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgValidadorVentanaTests.cs
+  - ConversorPDF.Tests/Academic/Application/Mappers/AgNodoArbolKeyMapperTests.cs
 
 ### T4: Parser único de ventanas
 - **id**: T4
@@ -145,10 +152,10 @@ Nota de gate: entre la ola 2 y la 5 la suite completa queda roja a propósito (l
 - **description**: añadir a `Opciones` `LUN-VIE→"1,2,3,4,5"`, `JUE-DOM→"4,5,6,7"`, `MIE-DOM→"3,4,5,6,7"`. Resolver rangos `AAA-BBB` solo si ambos extremos son válidos y `inicio<=fin` (sin envolvente). Mantener ISO, abreviaturas, orden ascendente y `Distinct`. Rechazar `6M/6T` devolviendo `[]` (R1). Sin métodos públicos nuevos (clase pública con superficie potencial de UDF).
 - **validation**: **solo** pruebas del parser verdes; `Dias("VIE-LUN")=[]`, `Dias("6M")=[]`; las 5 etiquetas vigentes sin regresión.
 - **verification**: `powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "FullyQualifiedName~AgDiasVentana"`
-- **evidence**: `_evidence/<stamp>/summary.md`
-- **status**: pending
-- **log**: —
-- **files edited/created**: —
+- **evidence**: _evidence/20261112-154403/summary.md
+- **status**: done
+- **log**: GREEN. Opciones incluye LUN-VIE, JUE-DOM, MIE-DOM. Rangos AAA-BBB sin envolvente y rechazo R1 de franjas 6M/6T. 27/27 tests pasando. Auditado por task-reviewer (OK).
+- **files edited/created**: ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgDiasVentana.cs
 
 ### T5: Escalera ampliada y `Rotular` real
 - **id**: T5

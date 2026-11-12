@@ -500,6 +500,47 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
                 b.Contains("I5_CAPACIDAD_CARRIL_PATRON") &&
                 b.Contains("compatibles:"));
         }
+
+        [Fact]
+        public void ValidarFactibilidad_WhenDemandaExcedeCapacidadEnVieDom_ShouldSugerirJueDomEnBloqueoCritico()
+        {
+            // Arrange (W = 4 semanas: 2026-08-07 al 2026-08-30, VIE-DOM capacidad = 4W = 16 ranuras; Demanda = 20 sesiones = 5W)
+            var contexto = new AgContexto();
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-2", new DateTime(2026, 8, 7), new DateTime(2026, 8, 30), AgOrigenVentana.Presencial).Value;
+
+            var aula = new AgAula
+            {
+                Id = 1,
+                AulaRef = "AULA-VIE-DOM",
+                DiasVentana = "VIE-DOM",
+                Jornada = "MANANA",
+                HorasDia = 4,
+                Estado = AgEstadoAula.Disponible,
+                Capacidad = 30
+            };
+            contexto.Aulas.Add(aula);
+
+            // Bloques activos para VIE (5), SAB (6M, 6T), DOM (7)
+            contexto.Bloques.Add(new AgBloqueHorario { Id = 1, DiaSemanaNumero = 5, Franja = "MANANA", DuracionHoras = 4, Activo = 1 });
+            contexto.Bloques.Add(new AgBloqueHorario { Id = 2, DiaSemanaNumero = 6, Franja = "MANANA", DuracionHoras = 4, Activo = 1 });
+            contexto.Bloques.Add(new AgBloqueHorario { Id = 3, DiaSemanaNumero = 6, Franja = "TARDE", DuracionHoras = 4, Activo = 1 });
+            contexto.Bloques.Add(new AgBloqueHorario { Id = 4, DiaSemanaNumero = 7, Franja = "MANANA", DuracionHoras = 4, Activo = 1 });
+
+            // Asignatura con 80h = 20 sesiones de 4h (> 16 ranuras)
+            contexto.Asignaturas.Add(new Asignatura { Id = 1, Nombre = "ASIG 1", Horas = 80 });
+            contexto.AulaAsignaturas.Add(new AgAulaAsignatura { IdAula = 1, IdAsignatura = 1, HorasObjetivo = 80, OrdenCurricular = 1 });
+            contexto.Docentes.Add(new Tercero { Id = 1, Nombre = "Profesor", Activo = 1 });
+            contexto.ConstruirIndices();
+
+            // Act
+            var result = _sut.ValidarFactibilidad(contexto);
+
+            // Assert
+            result.Value.EsFactible.Should().BeFalse();
+            result.Value.Bloqueos.Should().Contain(b =>
+                b.Contains("[I5_INFACTIBLE]") &&
+                b.Contains("Escale la ventana a 'JUE-DOM'"));
+        }
     }
 }
 

@@ -650,5 +650,88 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             res.Value.Planes.Select(p => p.Carril).Distinct().Should().Equal(0);
             res.Value.Planes.Select(p => p.Oleada).OrderBy(o => o).Should().Equal(0, 1);
         }
+
+        [Fact]
+        public void Construir_WhenVentanaLunVieConPatronesSembradosYDemanda5W_ShouldPlanificar5WSesionesSinInfactibles()
+        {
+            // Arrange (W = 4 semanas completas: 2026-08-03 al 2026-08-30, sin festivos)
+            int w = 4;
+            var fInicio = new DateTime(2026, 8, 3);
+            var fFin = new DateTime(2026, 8, 30);
+            double unidad = 4.0;
+
+            var asignaturas = new List<(int IdAsignatura, double Horas, int OrdenCurricular)>
+            {
+                (101, 2 * w * unidad, 1), // 2W sesiones = 8 sesiones = 32h
+                (102, 2 * w * unidad, 2), // 2W sesiones = 8 sesiones = 32h
+                (103, 1 * w * unidad, 3)  // W sesiones = 4 sesiones = 16h
+            };
+            var patrones = new Dictionary<int, string>
+            {
+                { 101, "1,2" },
+                { 102, "3,4" },
+                { 103, "5" }
+            };
+            var bloques = new List<AgBloqueHorario>
+            {
+                new AgBloqueHorario { Id = 1, DiaSemanaNumero = 1, Franja = "MANANA", DuracionHoras = 4, Activo = 1 },
+                new AgBloqueHorario { Id = 2, DiaSemanaNumero = 2, Franja = "MANANA", DuracionHoras = 4, Activo = 1 },
+                new AgBloqueHorario { Id = 3, DiaSemanaNumero = 3, Franja = "MANANA", DuracionHoras = 4, Activo = 1 },
+                new AgBloqueHorario { Id = 4, DiaSemanaNumero = 4, Franja = "MANANA", DuracionHoras = 4, Activo = 1 },
+                new AgBloqueHorario { Id = 5, DiaSemanaNumero = 5, Franja = "MANANA", DuracionHoras = 4, Activo = 1 }
+            };
+
+            // Act
+            var res = _sut.Construir(asignaturas, "LUN-VIE", fInicio, fFin, unidad,
+                bloques: bloques, jornada: "MANANA", diasPatronPorAsignatura: patrones);
+
+            // Assert: 5W sesiones planificadas, Infactibles = 0
+            res.IsSuccess.Should().BeTrue();
+            res.Value.Infactibles.Should().BeEmpty();
+            res.Value.Planes.Should().HaveCount(3);
+            res.Value.Planes.Sum(p => p.SesionesRequeridas).Should().Be(5 * w);
+        }
+
+        [Fact]
+        public void Construir_WhenDemandaExcedeCapacidadNominal5WPlus1_ShouldFailWithI5SinCapacidad()
+        {
+            // Arrange (W = 4 semanas = 20 ranuras max en LUN-VIE; Demanda = 5W + 1 = 21 sesiones = 84h)
+            int w = 4;
+            var fInicio = new DateTime(2026, 8, 3);
+            var fFin = new DateTime(2026, 8, 30);
+            double unidad = 4.0;
+
+            var asignaturas = new List<(int IdAsignatura, double Horas, int OrdenCurricular)>
+            {
+                (101, 2 * w * unidad, 1),
+                (102, 2 * w * unidad, 2),
+                (103, (w + 1) * unidad, 3) // 5 sesiones en vez de 4 -> total 21 sesiones > 20
+            };
+
+            // Act
+            var res = _sut.Construir(asignaturas, "LUN-VIE", fInicio, fFin, unidad);
+
+            // Assert
+            res.IsFailure.Should().BeTrue();
+            res.Error.Should().Contain("I5_SIN_CAPACIDAD");
+        }
+
+        [Fact]
+        public void Construir_CuandoInfactibleEnVieDom_SugiereJueDom()
+        {
+            // Arrange: patrón con Jueves (4) en ventana VIE-DOM
+            var fInicio = new DateTime(2026, 8, 7); // Viernes
+            var fFin = new DateTime(2026, 8, 30);
+            var asigs = new List<(int, double, int)> { (1, 16.0, 1) };
+            var patrones = new Dictionary<int, string> { { 1, "4,5" } };
+
+            // Act
+            var res = _sut.Construir(asigs, "VIE-DOM", fInicio, fFin, 4.0, diasPatronPorAsignatura: patrones);
+
+            // Assert
+            res.IsSuccess.Should().BeTrue();
+            res.Value.Infactibles.Should().Contain(1);
+            res.Value.VentanaSugerida.Should().Be("JUE-DOM");
+        }
     }
 }

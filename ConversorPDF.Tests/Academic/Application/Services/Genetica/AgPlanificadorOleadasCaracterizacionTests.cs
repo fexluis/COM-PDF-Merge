@@ -100,6 +100,29 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
         }
 
         [Fact]
+        public void Construir_PatronFueraDeVentana_VieDomConJueves_DebeMarcarInfactibleYSugerirJueDom()
+        {
+            // Arrange (patrón '4,5' en ventana VIE-DOM '5,6,7')
+            var fInicio = new DateTime(2026, 3, 2);
+            var fFin = new DateTime(2026, 6, 30);
+            var asignaturas = new List<(int IdAsignatura, double Horas, int OrdenCurricular)>
+            {
+                (1, 16.0, 1)
+            };
+            var patrones = new Dictionary<int, string> { { 1, "4,5" } };
+
+            // Act
+            var res = _sut.Construir(asignaturas, "VIE-DOM", fInicio, fFin, 4.0, diasPatronPorAsignatura: patrones);
+
+            // Assert
+            res.IsSuccess.Should().BeTrue();
+            res.Value.Infactibles.Should().Equal(1);
+            res.Value.DetalleInfactibles.Should().ContainSingle()
+                .Which.Should().Contain("Asig 1").And.Contain("R8_DiaFueraDePatron");
+            res.Value.VentanaSugerida.Should().Be("JUE-DOM");
+        }
+
+        [Fact]
         public void Construir_CapacidadGlobalInsuficiente_DebeFallarConI5SinCapacidad()
         {
             // Arrange
