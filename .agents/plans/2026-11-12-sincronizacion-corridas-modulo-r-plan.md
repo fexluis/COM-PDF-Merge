@@ -184,13 +184,11 @@ Leases disjuntos: T1 opera en L0 (`ConversorPDF.XLL.csproj`) y crea `AgSeleccion
 - **description**: Redactar el artículo de cambios documentando la causa raíz del desfasaje entre el selector y los resultados, la política pura `ResolverSeleccionModuloR`, la gestión de concurrencia y el ciclo de vida de la corrida.
 - **validation**: Archivo de documentación creado y coherente con las evidencias.
 - **verification**: `powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Build`
-- **evidence**: `_evidence/20261112-071607/summary.md`
+- **evidence**: `_evidence/20261112-075059/summary.md`
 - **status**: done
-- **log**: Esqueleto AgSeleccionModuloR.cs creado, registrado en ConversorPDF.XLL.csproj y stub estático en AgCorridaSelector.cs. Build exit 0.
+- **log**: Documentación técnica del cambio completada en docs/articles/changes/2026-11-12-sincronizacion-selector-corridas-modulo-r.md detallando causas raíz, política AgCorridaSelector.ResolverSeleccionModuloR, concurrencia, sincronización post-ejecución y evidencias de prueba. Build exit 0.
 - **files edited/created**:
-  - `ConversorPDF.XLL/Academic/Application/DTOs/AgSeleccionModuloR.cs`
-  - `ConversorPDF.XLL/ConversorPDF.XLL.csproj`
-  - `ConversorPDF.XLL/Academic/Application/Services/AgCorridaSelector.cs`
+  - `docs/articles/changes/2026-11-12-sincronizacion-selector-corridas-modulo-r.md`
 
 ---
 
