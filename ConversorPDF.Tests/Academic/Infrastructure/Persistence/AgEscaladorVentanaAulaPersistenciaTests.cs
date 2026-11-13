@@ -113,6 +113,19 @@ CREATE TABLE ag_arbol_nodo (
     jornada TEXT NOT NULL DEFAULT '',
     horas_dia INTEGER NOT NULL DEFAULT 0,
     dias_ventana TEXT NOT NULL DEFAULT ''
+);
+
+CREATE TABLE ag_aula_asignatura (
+    id_aula INTEGER,
+    id_asignatura INTEGER,
+    exclusivo INTEGER NOT NULL DEFAULT 0,
+    prioridad INTEGER NOT NULL DEFAULT 0,
+    horas_objetivo REAL NOT NULL DEFAULT 0.0,
+    orden_curricular INTEGER NOT NULL DEFAULT 0,
+    requerida INTEGER NOT NULL DEFAULT 1,
+    dias_patron TEXT NOT NULL DEFAULT '',
+    subunidad TEXT NOT NULL DEFAULT '',
+    origen_patron TEXT NOT NULL DEFAULT 'LEGADO'
 );");
             }
         }
@@ -551,6 +564,63 @@ VALUES (@Ref, @Sub, 'MANANA', 'LUN-JUE', 4, 1);",
                 aula.Jornada.Should().Be("TARDE");
                 aula.DiasVentana.Should().Be("LUN-VIE");
                 aula.HorasDia.Should().Be(8);
+            }
+        }
+
+        [Fact]
+        public async Task AplicarAsync_WhenEscalaVentana_ShouldResetearPatronesAutomaticosYConservarFijos()
+        {
+            string aulaRef = "A102";
+            long idAula = 0;
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                conn.Execute(@"
+INSERT INTO ag_aula (aula_ref, jornada, horas_dia, dias_ventana, subunidad)
+VALUES (@Ref, 'MANANA', 4, 'VIE-DOM', '');", new { Ref = aulaRef });
+
+                idAula = conn.QueryFirstOrDefault<long>("SELECT id FROM ag_aula WHERE aula_ref = @Ref;", new { Ref = aulaRef });
+
+                conn.Execute(@"
+INSERT INTO ag_aula_asignatura (id_aula, id_asignatura, dias_patron, origen_patron)
+VALUES (@IdAula, 101, '5,6', 'AUTOMATICO');
+
+INSERT INTO ag_aula_asignatura (id_aula, id_asignatura, dias_patron, origen_patron)
+VALUES (@IdAula, 102, '7', 'FIJO');", new { IdAula = idAula });
+            }
+
+            var sut = new AgEscaladorVentanaAula(_connectionFactory);
+            var decisiones = new List<AgEscaladorVentanaAula.Decision>
+            {
+                new AgEscaladorVentanaAula.Decision
+                {
+                    AulaRef = aulaRef,
+                    Subunidad = "",
+                    Desde = "VIE-DOM",
+                    Hacia = "JUE-DOM",
+                    CapacidadAntes = 68,
+                    CapacidadDespues = 85
+                }
+            };
+
+            int afectadas = await sut.AplicarAsync(decisiones, 0, CancellationToken.None);
+            afectadas.Should().Be(1);
+
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                string ventana = conn.QueryFirstOrDefault<string>("SELECT dias_ventana FROM ag_aula WHERE id = @Id;", new { Id = idAula });
+                ventana.Should().Be("JUE-DOM");
+
+                string patronAuto = conn.QueryFirstOrDefault<string>(
+                    "SELECT dias_patron FROM ag_aula_asignatura WHERE id_aula = @Id AND id_asignatura = 101;",
+                    new { Id = idAula });
+                patronAuto.Should().Be(string.Empty, "los patrones AUTOMATICO se deben limpiar para permitir redistribución en la nueva ventana");
+
+                string patronFijo = conn.QueryFirstOrDefault<string>(
+                    "SELECT dias_patron FROM ag_aula_asignatura WHERE id_aula = @Id AND id_asignatura = 102;",
+                    new { Id = idAula });
+                patronFijo.Should().Be("7", "los patrones FIJO se deben conservar intactos");
             }
         }
 

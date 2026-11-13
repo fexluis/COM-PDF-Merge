@@ -187,10 +187,12 @@ Dependencias declaradas:
 - **description**: Asegurar que AplicarAsync actualice ag_aula, ag_arbol_nodo y actualice patrones automáticos redistribuidos en una única transacción atómica. Invalidar caché y verificar idempotencia en segunda corrida.
 - **validation**: Transacción atómica confirmada, sin mutaciones parciales ante errores, segunda corrida sobre estado factible no produce propuestas.
 - **verification**: powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "AgEscaladorVentanaAulaPersistenciaTests"
-- **evidence**: pendiente
-- **status**: pending
-- **log**: pendiente
-- **files edited/created**: []
+- **evidence**: _evidence/20261112-192025/summary.md
+- **status**: done
+- **log**: Verificación Fast ejecutada con éxito (13/13 tests PASS). AplicarAsync actualiza aula y nodos en transacción, resetea patrones AUTOMATICO a vacío para recomputación y preserva patrones FIJO intactos.
+- **files edited/created**:
+  - ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgEscaladorVentanaAula.cs
+  - ConversorPDF.Tests/Academic/Infrastructure/Persistence/AgEscaladorVentanaAulaPersistenciaTests.cs
 
 ### T6: Integración UI y pre-vuelo en AgFormGeneradorHorarios
 - **id**: T6

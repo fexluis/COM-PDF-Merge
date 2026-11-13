@@ -125,6 +125,20 @@ WHERE aula_ref = @Ref
                             {
                                 await conn.ExecuteAsync(new CommandDefinition(sqlNodo, new { D = d.Hacia, Ref = d.AulaRef, IdArbol = idArbol }, trans, cancellationToken: ct)).ConfigureAwait(false);
                             }
+
+                            // Fase 1738: resetear patrones automáticos al escalar para permitir que el planificador aproveche los días añadidos
+                            bool tieneOrigen = conn.QueryFirstOrDefault<int>(
+                                "SELECT COUNT(1) FROM pragma_table_info('ag_aula_asignatura') WHERE name = 'origen_patron';",
+                                transaction: trans) > 0;
+                            if (tieneOrigen)
+                            {
+                                const string sqlResetAuto = @"
+UPDATE ag_aula_asignatura
+SET dias_patron = ''
+WHERE id_aula IN (SELECT id FROM ag_aula WHERE aula_ref = @Ref AND COALESCE(NULLIF(TRIM(subunidad), ''), @Sub) = @Sub)
+  AND UPPER(COALESCE(origen_patron, '')) = 'AUTOMATICO';";
+                                await conn.ExecuteAsync(new CommandDefinition(sqlResetAuto, args, trans, cancellationToken: ct)).ConfigureAwait(false);
+                            }
                         }
                         trans.Commit();
                     }
