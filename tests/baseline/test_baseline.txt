@@ -1,5 +1,5 @@
-# Baseline medido 2026-11-12 con scripts/verify.ps1 -Mode Full tras Fases 1734-1741 (R-066)
-TOTAL: 1253
-PASSED: 1253
+# Baseline medido 2026-11-12 con scripts/verify.ps1 -Mode Full tras Fases 1772-1774 (R-073)
+TOTAL: 1259
+PASSED: 1259
 FAILED: 0
 SKIPPED: 0

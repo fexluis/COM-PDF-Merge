@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 365 | 366 | 2026-11-12 |
-| `fase` | 1741 | 1742 | 2026-11-12 |
+| `ronda` | 372 | 373 | 2026-11-12 |
+| `fase` | 1774 | 1775 | 2026-11-12 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -100,7 +100,14 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-063 | 2026-11-12 | `(revisión Ronda 355 — Fase 1731: aislamiento de subunidad en dimensiones pendientes)` | `Wave —` | `Fase 1731` | closed | revisión y correcciones; sin build/tests | `1a97cfc` |
 | R-064 | 2026-11-12 | `(revisión Ronda 356 — Fase 1732: corrección de columnas en fixtures ag_aula de tests)` | `Wave —` | `Fase 1732` | closed | revisión y correcciones; sin build/tests | `1a97cfc` |
 | R-065 | 2026-11-12 | `(re-gate post-cierre Ronda 357 — Fase 1733: correcciones R-059..R-064)` | `Wave —` | `Fase 1733` | closed | PASS (Full 1236) | `27b7c71` |
-| R-066 | 2026-11-12 | `2026-11-12-escalado-automatico-tres-casos-plan.md` | `Wave 1..8` → `Ronda 358–365` | `T1..T8` → `Fase 1734–1741` | closed | PASS (Full 1253) | `852708d` |
+| R-066 | 2026-11-12 | `2026-11-12-escalado-automatico-tres-casos-plan.md` | `Wave 1..8` → `Ronda 358–365` | `T1..T8` → `Fase 1734–1741` | closed | PASS (Full 1253) | `c34bec4` |
+| R-067 | 2026-11-12 | `(revisión Ronda 366 — Fases 1742–1746: criterios mejora, persistencia patrones)` | `Wave —` | `Fase 1742–1746` | closed | revisión y correcciones; sin build/tests | pendiente |
+| R-068 | 2026-11-12 | `(revisión Ronda 367 — Fases 1747–1752: carriles reales, semanas requeridas)` | `Wave —` | `Fase 1747–1752` | closed | revisión y correcciones; sin build/tests | pendiente |
+| R-069 | 2026-11-12 | `(revisión Ronda 368 — Fases 1753–1758: bloque huérfano, bounds carril, fecha fin ventana)` | `Wave —` | `Fase 1753–1758` | closed | revisión y correcciones; sin build/tests | pendiente |
+| R-070 | 2026-11-12 | `(revisión Ronda 369 — Fases 1759–1762: granularidad slot/franja, contención reset)` | `Wave —` | `Fase 1759–1762` | closed | revisión y correcciones; sin build/tests | pendiente |
+| R-071 | 2026-11-12 | `(revisión Ronda 370 — Fases 1763–1767: exposición métricas, I5_DIA_SATURADO, retiro bandas)` | `Wave —` | `Fase 1763–1767` | closed | revisión y correcciones; sin build/tests | pendiente |
+| R-072 | 2026-11-12 | `(revisión Ronda 371 — Fases 1768–1771: supresión oleada contradictoria, déficit global ordenado)` | `Wave —` | `Fase 1768–1771` | closed | revisión y correcciones; sin build/tests | pendiente |
+| R-073 | 2026-11-12 | `(revisión Ronda 372 — Fases 1772–1774: reducción materias fuera de ventana, mejora real)` | `Wave —` | `Fase 1772–1774` | closed | PASS (Full 1259) | `9265db3` |
 
 
 Estados: `reserved` (Fase A) · `executing` (Fase B) · `closed` (Fase C, sellado) · `abandoned` (plan descartado: los números **no** se reciclan).

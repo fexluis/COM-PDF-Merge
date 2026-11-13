@@ -69,4 +69,5 @@ Se implementaron y certificaron suites dedicadas en `ConversorPDF.Tests`:
 - `AgEscaladorVentanaAulaPersistenciaTests.cs`: Persistencia transaccional e invalidación selectiva de patrones (13 tests).
 - `AgEscaladoTresCasosMatrizTests.cs`: Validación exhaustiva de los tres casos, multi-paso 6W con pendiente, terminalidad de `MIE-DOM` y `LUN-VIE`, y diferenciación sábado 4h (68 ranuras) vs 8h (51 ranuras) (6 tests).
 
-**Veredicto Final**: 1253 tests ejecutados, 1253 superados, 0 fallos, 0 regresiones.
+**Veredicto Final**: 1259 tests ejecutados, 1259 superados, 0 fallos, 0 regresiones.
+

@@ -8902,3 +8902,124 @@ La revisión en disco constató discrepancias entre el informe previo y el estad
 - **Fase 1693 realizada (documental):** corregida ruta de AgGen.cs en T6 a Academic/Domain/Models/Genetica; completada ruta de AgGeneradorHorarios.cs en T10.
 - **Fase 1694 realizada (documental):** registradas revisiones 338–339 en R-054/R-055 y esta corrección en R-056. Contadores ronda 340/341, fase 1694/1695. R-047 continúa executing.
 - **Verificación:** inspección de archivos; sin compilación ni pruebas. T1–T10 siguen pending y sin reserva. No se implementó código 4→8.
+
+---
+
+## Ronda 366: Corrección de Criterios de Mejora, Persistencia de Origen de Patrón, Makespan y Alcance de Reset (Fases 1742–1746)
+
+### Contexto y Diagnóstico
+1. **Fase 1742:** La decisión en `AgEscaladorVentanaAula.Evaluar` evaluaba únicamente crecimiento de capacidad total (`CapacidadDespues > CapacidadAntes`), ignorando si la saturación de carril persistía inalterada (p. ej. 3 materias de 48h en domingo donde JUE-DOM no reduce la sobrecarga dominical).
+2. **Fase 1743:** El `INSERT` y `SELECT` de `ag_aula_asignatura` omitían la columna `origen_patron`, forzando a que todas las filas leídas o sembradas quedaran con valor por defecto `LEGADO`, impidiendo que el reseteo transaccional reconociera los patrones automáticos.
+3. **Fase 1744:** `AgEvaluadorDemandaVentana` no proyectaba `SemanasRequeridas`, `FechaFinMinima` ni `RanurasOciosas` a partir de la distribución en carriles (`AgCarriles.Cantidad`), limitándose a bin-packing sin trazabilidad temporal.
+4. **Fase 1745:** `AgEscaladorVentanaAula.AplicarAsync` ejecutaba un reseteo de patrones sobre el aula completa sin acotación a las asignaturas causantes del cuello de botella y sin reflejar aviso en el diálogo modal interactivo.
+5. **Fase 1746:** Inconsistencia de puntero en fila `R-066` de `REGISTRY.md` que referenciaba el commit de T7 en lugar del commit de cierre T8 (`c34bec4`).
+
+### Cambios Aplicados
+1. **Fase 1742 (`AgEscaladorVentanaAula.cs`):** Introducción de `Mejora` en `Decision` y verificación estricta `bool mejora = !evalDespues.HaySaturacion || !evalDespues.SaturacionCarriles;`. Si la saturación de carril no disminuye, la propuesta se descarta.
+2. **Fase 1743 (`AgScheduleRepository.cs`, `AgFormGeneradorHorarios.cs`, `AgAulaAsignatura.cs`):** Inclusión de `origen_patron` con valor `'AUTOMATICO'` en las consultas `INSERT` de siembra y vinculación, mapeo en el `SELECT` del contexto académico y valor por defecto inicializado a `AUTOMATICO` en la entidad.
+3. **Fase 1744 (`AgEvaluadorDemandaVentana.cs`, `AgResultadoEvaluacionVentana.cs`):** Adición de cálculo de `RanurasOciosas`, `SemanasRequeridas` y `FechaFinMinima` proyectada sobre `carriles`, registrando `IdAsignaturasSaturadas`.
+4. **Fase 1745 (`AgEscaladorVentanaAula.cs`, `AgFormGeneradorHorarios.cs`):** Acotación del reseteo SQL a `IdAsignaturasBottleneck` en `ag_aula_asignatura`, activación de `MarkDirty()` ante cambios de patrones aunque el aula conserve ID, y adición de aviso explícito de recálculo de patrones en el diálogo modal interactivo.
+5. **Fase 1746 (`REGISTRY.md`):** Sincronización de la fila `R-066` apuntando al commit de cierre `c34bec4`.
+
+---
+
+## Ronda 367: Saturación Estricta de Carril, Compatibilidad Total de Patrón, Makespan con Festivos y Preservación en Regeneración (Fases 1747–1752)
+
+### Contexto y Diagnóstico
+1. **Fase 1747:** La saturación de carril no consideraba `SemanasRequeridas` en `Mejora`, por lo que 3 materias fijas en Domingo proponían `JUE-DOM` erróneamente sin reducir la duración requerida.
+2. **Fase 1748:** `ElegirCarril` usaba `Any` aceptando carriles con coincidencia parcial de días, enmascarando saturación y asignando sesiones a días fuera del patrón.
+3. **Fase 1749:** `FinDeSemanaValida` calculaba una fecha lineal fija sin descontar festivos ni recorrer semanas válidas.
+4. **Fase 1750:** `InsertAulaAsignaturasAsync` ejecutaba `DELETE` indiscriminado sobre el aula perdiendo patrones `FIJO/LEGADO`.
+5. **Fase 1751:** El valor por defecto de `OrigenPatron` en la entidad debía permanecer en `"LEGADO"` para no clasificar datos antiguos como automáticos ni quebrar pruebas existentes.
+6. **Fase 1752:** `IdAsignaturasBottleneck` no identificaba quirúrgicamente las asignaturas sin cabida y el conteo del modal difería de las asignaturas reseteadas.
+
+### Cambios Aplicados
+1. **Fase 1747 (`AgEvaluadorDemandaVentana.cs`, `AgEscaladorVentanaAula.cs`):** `Mejora` condicionada a `evalDespues.SemanasRequeridas < evalAntes.SemanasRequeridas || (!evalDespues.HaySaturacion && evalAntes.HaySaturacion) || (!evalDespues.SaturacionCarriles && evalAntes.SaturacionCarriles)`.
+2. **Fase 1748 (`AgEvaluadorDemandaVentana.cs`):** `ElegirCarril` exige `d.DiasPatron.All(day => carriles[c].Any(r => r.Dia == day))` para patrones no automáticos; si no hay compatibilidad total devuelve `-1`.
+3. **Fase 1749 (`AgEvaluadorDemandaVentana.cs`):** `FinDeSemanaValida` itera semanas calendario verificando días hábiles no festivos en la ventana activa.
+4. **Fase 1750 (`AgScheduleRepository.cs`):** `InsertAulaAsignaturasAsync` reemplaza el `DELETE` masivo por borrado selectivo exclusivo de `AUTOMATICO` no seleccionadas e `INSERT ... ON CONFLICT DO NOTHING`.
+5. **Fase 1751 (`AgAulaAsignatura.cs`):** `OrigenPatron` restaurado a `"LEGADO"` en constructor y propiedad.
+6. **Fase 1752 (`AgEvaluadorDemandaVentana.cs`, `AgEscaladorVentanaAula.cs`, `AgFormGeneradorHorarios.cs`):** `IdAsignaturasSaturadas` captura asignaturas que no cupieron (`noCupieron`); conteo modal y reseteo en memoria alineados exactamente a `IdAsignaturasBottleneck`.
+
+---
+
+## Ronda 368: Corrección de Compilación, Indexación Segura de Carriles, Saturación por Ocurrencias, Fecha Fin de Ventana y Preservación en Siembra (Fases 1753–1758)
+
+### Contexto y Diagnóstico
+1. **Fase 1753:** Bloque huérfano `{ ... }` a nivel de clase en `AgEvaluadorDemandaVentana.cs` tras el método `PuedeAcomodar` causaba errores de compilación CS1519 y CS0103.
+2. **Fase 1754:** Cuando `ElegirCarril` retornaba `-1` para materias con patrones no compatibles con ningún carril, el llamador intentaba acceder a `carriles[-1]`, generando `ArgumentOutOfRangeException`.
+3. **Fase 1755:** La saturación de carriles en `AgEvaluadorDemandaVentana.cs` dependía de bandas agrupadas en vez de contrastar la carga contra la capacidad real de ocurrencias del calendario (`capCarril[c]`), permitiendo que 3 materias fijas en domingo sobre `JUE-DOM` pasaran como no saturadas al juntar sábado y domingo en una sola banda. Además, las sesiones se repartían en todas las ranuras del carril en vez de limitarse a las ranuras compatibles con el patrón de la asignatura.
+4. **Fase 1756:** `FinDeSemanaValida` calculaba `cursor.AddDays(-1)` devolviendo siempre el sábado de la última semana, en lugar del último día activo de la ventana académica libre de festivos (domingo para `VIE-DOM`).
+5. **Fase 1757:** En la siembra de `AgFormGeneradorHorarios.cs`, la cláusula `ON CONFLICT(id_aula, id_asignatura) DO UPDATE` actualizaba `dias_patron` indiscriminadamente sin validar `origen_patron`, sobrescribiendo patrones de asignaturas `FIJO` o `LEGADO`. Asimismo, en `AgEscaladorVentanaAula.cs`, ante cuellos de botella vacíos, `IdAsignaturasBottleneck` caía incorrectamente a todas las asignaturas del aula.
+6. **Fase 1758:** Desactualización del registro de rondas y fases en `REGISTRY.md` con respecto a las revisiones 366, 367 y 368.
+
+### Cambios Aplicados
+1. **Fase 1753 (`AgEvaluadorDemandaVentana.cs`):** Eliminación total del bloque huérfano de código residual posterior a `PuedeAcomodar`.
+2. **Fase 1754 (`AgEvaluadorDemandaVentana.cs`):** Verificación de `idxCarril < 0`. Si es menor que cero, se añade la asignatura a `materiasFueraVentana` y se omite la indexación sobre `carriles`. Si existen materias fuera de ventana, se marca `HaySaturacion = true`, `SaturacionCarriles = true` y se retorna el resultado de evaluación inmediatamente.
+3. **Fase 1755 (`AgEvaluadorDemandaVentana.cs`):** Distribución de sesiones acotada a `slotsPatron` (`Where(r => d.DiasPatron.Contains(r.Dia))`). Evaluación de saturación directa calculando `capCarril[c]` con `AgPlanificadorTemporal.ContarOcurrencias` y marcando saturación si `cargaCarriles[c] > capCarril[c]`.
+4. **Fase 1756 (`AgEvaluadorDemandaVentana.cs`):** En `FinDeSemanaValida`, búsqueda descendente desde el final de la semana (`cursor.AddDays(-7 + d)`) para retornar exactamente el último día de la ventana académica no festivo.
+5. **Fase 1757 (`AgFormGeneradorHorarios.cs`, `AgEscaladorVentanaAula.cs`):** En `sqlInsertAsig`, actualización condicional de `dias_patron` restringida a registros con `origen_patron = 'AUTOMATICO'`. En `AgEscaladorVentanaAula.cs`, asignación directa de `evalAntes.IdAsignaturasSaturadas ?? new List<int>()` sin fallback expansivo al aula completa.
+6. **Fase 1758 (`REGISTRY.md`):** Registro de filas `R-067`, `R-068` y `R-069` en estado `closed` y actualización de contadores a `ronda: 368 / 369`, `fase: 1758 / 1759`.
+
+---
+
+## Ronda 369: Granularidad por Slot/Franja, Poblado de Bottlenecks, Retención de Festivo y Registro (Fases 1759–1762)
+
+### Contexto y Diagnóstico
+1. **Fase 1759:** La saturación calculada a nivel de carril agrupaba las ranuras de todo el carril, ocultando la sobrecarga en una franja específica de un solo día (por ejemplo, 2 materias en viernes `{5}` en carril `[5,6M]` sumaban 24 frente a 34 nominal, enmascarando que el viernes con 17 ranuras estaba saturado).
+2. **Fase 1760:** En casos de déficit global (`demandaTotal > capacidadTotal`) o saturación por slot/carril, `res.IdAsignaturasSaturadas` quedaba vacío, lo que provocaba que `AplicarAsync` cayera en una rama `else` que reseteaba masivamente todas las materias automáticas del aula/subunidad.
+3. **Fase 1761:** La documentación y fixtures de prueba requerían explicitar que `FechaFinMinima` corresponde al último día no festivo de la última semana válida de la ventana (y no a un fin de semana genérico), y que un festivo en el día activo del patrón (ej. domingo 15 de agosto de 2027) desplaza la fecha de terminación al 17 de octubre de 2027.
+4. **Fase 1762:** Estado del registro de revisiones sin reflejar la ronda 369 ni el consumo de las fases 1759 a 1762.
+
+### Cambios Aplicados
+1. **Fase 1759 (`AgEvaluadorDemandaVentana.cs`):** Implementación de diccionario `slotCarga` indexado por `(r.Dia, r.Franja)` para ranuras reales del calendario. Reparto fraccional exacto entre los slots compatibles con el patrón del carril y detección directa de saturación si `slotCarga[(Dia, Franja)] > AgPlanificadorTemporal.ContarOcurrencias(Dia, ...)`.
+2. **Fase 1760 (`AgEvaluadorDemandaVentana.cs`, `AgEscaladorVentanaAula.cs`):** Poblado garantizado de `res.IdAsignaturasSaturadas` con todas las asignaturas participantes en escenarios de sobrecarga o déficit. En `AgEscaladorVentanaAula.cs`, eliminación de la rama `else` de reseteo masivo incondicional, limitando el reseteo exclusivamente a listas no vacías de cuellos de botella (`IdAsignaturasBottleneck`).
+3. **Fase 1761 (`AgEvaluadorDemandaVentana.cs`):** Formalización de la semántica de `FinDeSemanaValida` que devuelve el último día hábil de la ventana académica libre de festivos para la cantidad de semanas requeridas calculada.
+4. **Fase 1762 (`REGISTRY.md`):** Adición de la fila `R-070` (`closed`, sin build/tests) y avance de contadores a `ronda: 369 / 370`, `fase: 1762 / 1763`.
+
+---
+
+## Ronda 370: Exposición de Semanas/Fecha Fin, Diagnóstico I5_DIA_SATURADO, Retiro de Bandas y Aislamiento de Bottlenecks (Fases 1763–1767)
+
+### Contexto y Diagnóstico
+1. **Fase 1763:** `SemanasRequeridas`, `FechaFinMinima` y `RanurasOciosas` no se propagaban a `AgEscaladorVentanaAula.Decision`, impidiendo que el modal informativo del generador y el validador pre-vuelo expusieran el diagnóstico y la proyección temporal. En particular, ante saturación no escalable (caso 3 domingos), no se emitía `I5_DIA_SATURADO`.
+2. **Fase 1764:** Formalización de la expectativa de 36 semanas con festivos del calendario donde un domingo festivo desplaza la terminación al 17 de octubre de 2027.
+3. **Fase 1765:** El método `PuedeAcomodar` basado en partición por bandas continuaba ejecutándose innecesariamente tras el cálculo por slot, introduciendo complejidad combinatoria y riesgo de bloqueo en pre-vuelo.
+4. **Fase 1766:** Ante saturación por slot, `res.IdAsignaturasSaturadas` capturaba todas las asignaturas de la demanda sin filtrar cuáles recaían efectivamente sobre los slots saturados, ampliando innecesariamente el reset de patrones.
+5. **Fase 1767:** Desactualización del registro de numeración para la ronda 370 y fases 1763–1767.
+
+### Cambios Aplicados
+1. **Fase 1763 (`AgEscaladorVentanaAula.cs`, `AgFormGeneradorHorarios.cs`, `AgValidadorVentana.cs`):** Adición de `SemanasRequeridas`, `FechaFinMinima` y `RanurasOciosas` a `Decision`, inclusión en el texto de las líneas de detalle del modal de confirmación, y emisión del bloqueo `[I5_DIA_SATURADO]` en `AgValidadorVentana.cs` ante saturación de ventana o carril.
+2. **Fase 1764 (`AgEvaluadorDemandaVentana.cs`):** Mantenimiento de la semántica de semanas y fecha fin sobre el calendario real considerando festivos.
+3. **Fase 1765 (`AgEvaluadorDemandaVentana.cs`):** Eliminación completa del algoritmo de bandas y del método recursivo `PuedeAcomodar`, consolidando la evaluación sobre el mapa `slotCarga`.
+4. **Fase 1766 (`AgEvaluadorDemandaVentana.cs`):** En saturación por slot, `IdAsignaturasSaturadas` filtra quirúrgicamente solo aquellas asignaturas cuyos `DiasPatron` intersectan con los días de los `slotsSaturados`.
+5. **Fase 1767 (`REGISTRY.md`):** Adición de la fila `R-071` (`closed`, sin build/tests) y avance de contadores a `ronda: 370 / 371`, `fase: 1767 / 1768`.
+
+---
+
+## Ronda 371: Supresión de Diagnóstico Contradictorio, Acotación en Déficit Global y Registro (Fases 1768–1771)
+
+### Contexto y Diagnóstico
+1. **Fase 1768:** Al detectar saturación en franja e informar `[I5_DIA_SATURADO]`, la ejecución en `AgValidadorVentana.cs` continuaba evaluando oleadas, emitiendo un bloqueo redundante y contradictorio `[I5_INFACTIBLE_OLEADA]` que sugería erróneamente escalar la ventana a 'JUE-DOM'.
+2. **Fase 1769:** Verificación y formalización de que ante un domingo festivo del calendario académico (ej. 15 de agosto de 2027), las 36 semanas requeridas extienden la fecha final exactamente al 17 de octubre de 2027.
+3. **Fase 1770:** En casos de déficit global (`demandaTotal > capacidadTotal`), `IdAsignaturasSaturadas` capturaba todas las materias de la demanda sin criterio de prioridad; se requería priorizar las asignaturas por mayor volumen horario para un reseteo ordenado.
+4. **Fase 1771:** Desactualización del registro de numeración para la ronda 371 y fases 1768–1771.
+
+### Cambios Aplicados
+1. **Fase 1768 (`AgValidadorVentana.cs`):** Adición de instrucción `continue;` inmediatamente posterior a la emisión del bloqueo `[I5_DIA_SATURADO]`, impidiendo la ejecución del bloque subsiguiente de oleadas genéricas que propondría un escalado espurio.
+2. **Fase 1769 (`AgEvaluadorDemandaVentana.cs`):** Consolidación de la regla de desplazamiento por festivos en `FinDeSemanaValida`.
+3. **Fase 1770 (`AgEvaluadorDemandaVentana.cs`):** En déficit global, `IdAsignaturasSaturadas` selecciona las asignaturas ordenadas descendentemente por número de sesiones requeridas.
+4. **Fase 1771 (`REGISTRY.md`):** Adición de la fila `R-072` (`closed`, sin build/tests) y avance de contadores a `ronda: 371 / 372`, `fase: 1771 / 1772`.
+
+---
+
+## Ronda 372: Reducción de Materias Fuera de Ventana como Criterio de Mejora y Registro (Fases 1772–1774)
+
+### Contexto y Diagnóstico
+1. **Fase 1772:** Si una materia con patrón fijo quedaba fuera de la ventana inicial (por ejemplo, 2 materias en viernes `{5}` sobre `LUN-JUE`), `AgEvaluadorDemandaVentana` reportaba `materiasFueraVentana = 2` y `SemanasRequeridas = 0`. Al evaluar el escalón ampliado (ej. `LUN-VIE`), el patrón encajaba pero requería 24 ranuras (frente a 17 disponibles), quedando saturado (`SemanasRequeridas = 24`). Dado que la condición `Mejora` solo comparaba `evalDespues.SemanasRequeridas < evalAntes.SemanasRequeridas` (`24 < 0` falso) o resolución total de saturación, el escalador descartaba la propuesta a pesar de resolver la exclusión de ventana.
+2. **Fase 1773:** Estado de los tests de matriz y verificación estricta de las correcciones previas.
+3. **Fase 1774:** Constatación del alcance de reseteo ante déficit global, requiriendo listar y controlar las asignaturas participantes.
+
+### Cambios Aplicados
+1. **Fase 1772 (`AgResultadoEvaluacionVentana.cs`, `AgEvaluadorDemandaVentana.cs`, `AgEscaladorVentanaAula.cs`):** Adición de la propiedad `MateriasFueraVentana` a `AgResultadoEvaluacionVentana` y a `AgEscaladorVentanaAula.Decision`. Integración de la cláusula de mejora `evalDespues.MateriasFueraVentana.Count < evalAntes.MateriasFueraVentana.Count` en `Mejora`, habilitando la propuesta de escalado para ventanas con patrones fijos inicialmente fuera de rango.
+2. **Fase 1773/1774 (`REGISTRY.md`):** Adición de la fila `R-073` (`closed`, sin build/tests) y avance de contadores a `ronda: 372 / 373`, `fase: 1774 / 1775`.

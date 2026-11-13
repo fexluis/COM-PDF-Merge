@@ -10130,3 +10130,245 @@ evaluación nueva.
 | `ConversorPDF.Tests` | 100% Pass | Suite completa ejecutada sin errores ni regresiones. |
 | `ConversorPDF.XLL` | Compilado | `Release|x64` empaquetado sin errores CS. |
 
+---
+
+## Ronda 366 — Corrección de Criterios de Mejora, Persistencia de Patrones y Trazabilidad (Fases 1742–1746)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1742 — Decisión Basada en Mejora Real de Saturación
+- **Archivo:** `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgEscaladorVentanaAula.cs`
+- **Cambio:** Incorporación de la propiedad `Mejora` y guarda estricta `bool mejora = !evalDespues.HaySaturacion || !evalDespues.SaturacionCarriles; if (!mejora) continue;`. Impide proponer escalado cuando la saturación de carril permanece inmutable.
+
+#### 2. Fase 1743 — Persistencia y Carga de `origen_patron`
+- **Archivos:** `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgScheduleRepository.cs`, `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`, `ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgAulaAsignatura.cs`
+- **Cambio:** Integración de `origen_patron` en `INSERT` (`'AUTOMATICO'`), `SELECT` hacia el contexto y valor por defecto en la entidad para garantizar round-trip completo.
+
+#### 3. Fase 1744 — Proyección de Makespan, Fecha Fin y Ranuras Ociosas
+- **Archivos:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgEvaluadorDemandaVentana.cs`, `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgResultadoEvaluacionVentana.cs`
+- **Cambio:** Cálculo de `SemanasRequeridas`, `FechaFinMinima`, `RanurasOciosas` y captura de `IdAsignaturasSaturadas` usando la distribución en `AgCarriles`.
+
+#### 4. Fase 1745 — Acotación del Reset de Patrones y Aviso Modal
+- **Archivos:** `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgEscaladorVentanaAula.cs`, `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
+- **Cambio:** Reset SQL acotado a `IdAsignaturasBottleneck`, señalización de `MarkDirty()` ante cambios de patrones y advertencia explícita en el diálogo modal pre-vuelo.
+
+#### 5. Fase 1746 — Sincronización Registral
+- **Archivo:** `.agents/plans/REGISTRY.md`
+- **Cambio:** Corrección de la fila `R-066` apuntando al commit real de cierre `c34bec4`.
+
+### Verificación de Principios (Ronda 366)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1742 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorVentanaAula.cs` |
+| F1743 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgScheduleRepository.cs`, `AgFormGeneradorHorarios.cs`, `AgAulaAsignatura.cs` |
+| F1744 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEvaluadorDemandaVentana.cs`, `AgResultadoEvaluacionVentana.cs` |
+| F1745 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorVentanaAula.cs`, `AgFormGeneradorHorarios.cs` |
+| F1746 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `REGISTRY.md` |
+
+
+---
+
+## Ronda 367 — Corrección de Evaluación por Carriles Reales, Preservación de Patrones y Bottlenecks (Fases 1747–1752)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1747 — Evaluación por Carril Real y Mejora Estricta de Semanas Requeridas
+- **Archivos:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgEvaluadorDemandaVentana.cs`, `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgEscaladorVentanaAula.cs`
+- **Cambio:** `SaturacionCarriles` calculado sobre la capacidad de ocurrencias reales de cada carril (`AgPlanificadorTemporal.ContarOcurrencias`). `Mejora` exige reducción estricta de `SemanasRequeridas` (`evalDespues.SemanasRequeridas < evalAntes.SemanasRequeridas`) o reducción neta de saturación, impidiendo la propuesta espuria de `JUE-DOM` cuando el domingo permanece saturado (caso 3 materias domingo).
+
+#### 2. Fase 1748 — Asignación Estricta de Carril Conteniendo Todos los Días del Patrón
+- **Archivo:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgEvaluadorDemandaVentana.cs`
+- **Cambio:** En `ElegirCarril`, cuando el patrón no es `AUTOMATICO`, se valida que todos los días pertenezcan al carril (`d.DiasPatron.All(day => carriles[c].Any(r => r.Dia == day))`). Si ningún carril satisface todos los días, retorna `-1` para registrarlo como fuera de ventana/no acomodable en vez de asignar erróneamente por `Any`.
+
+#### 3. Fase 1749 — `FinDeSemanaValida` con Días de Ventana y Calendario de Festivos
+- **Archivo:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgEvaluadorDemandaVentana.cs`
+- **Cambio:** Reemplazo de fórmula lineal por cálculo iterativo semanal que verifica días activos de la ventana libres de festivos (`esFestivo`), eliminando el desfase off-by-one.
+
+#### 4. Fase 1750 — Preservación de Patrones `FIJO` y `LEGADO` en Regeneración de Aulas
+- **Archivo:** `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgScheduleRepository.cs`
+- **Cambio:** Reemplazo de `DELETE FROM ag_aula_asignatura` masivo por borrado selectivo de registros `AUTOMATICO` no seleccionados (`UPPER(COALESCE(origen_patron,''))='AUTOMATICO' AND id_asignatura NOT IN @idAsignaturas`) e inserción con `ON CONFLICT(id_aula, id_asignatura) DO NOTHING`.
+
+#### 5. Fase 1751 — Corrección de Regresión en OrigenPatron por Defecto
+- **Archivo:** `ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgAulaAsignatura.cs`
+- **Cambio:** Reversión del valor por defecto en la entidad a `"LEGADO"` en constructor y propiedad, delegando la asignación de `"AUTOMATICO"` a las operaciones explícitas de generación.
+
+#### 6. Fase 1752 — Aislamiento Estricto de Bottlenecks para Reset
+- **Archivos:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgEvaluadorDemandaVentana.cs`, `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgEscaladorVentanaAula.cs`, `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
+- **Cambio:** `res.IdAsignaturasSaturadas` poblado con `noCupieron` en lugar del ordenamiento total. Asignación a `IdAsignaturasBottleneck` y advertencia modal con recuento exacto de materias de cuello de botella a restablecer.
+
+### Verificación de Principios (Ronda 367)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1747 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEvaluadorDemandaVentana.cs`, `AgEscaladorVentanaAula.cs` |
+| F1748 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEvaluadorDemandaVentana.cs` |
+| F1749 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEvaluadorDemandaVentana.cs` |
+| F1750 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgScheduleRepository.cs` |
+| F1751 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgAulaAsignatura.cs` |
+| F1752 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEvaluadorDemandaVentana.cs`, `AgEscaladorVentanaAula.cs`, `AgFormGeneradorHorarios.cs` |
+
+---
+
+## Ronda 368 — Corrección de Compilación, Bounds de Carril, Capacidad por Ocurrencias, Fecha Fin de Ventana y Preservación de Patrones (Fases 1753–1758)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1753 — Eliminación de Bloque Huérfano en `AgEvaluadorDemandaVentana`
+- **Archivo:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgEvaluadorDemandaVentana.cs`
+- **Cambio:** Supresión del bloque huérfano `{ ... }` residual a nivel de clase posterior a `PuedeAcomodar` que provocaba errores de compilación CS1519 y CS0103.
+
+#### 2. Fase 1754 — Guarda ante Retorno `-1` en `ElegirCarril`
+- **Archivo:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgEvaluadorDemandaVentana.cs`
+- **Cambio:** Verificación defensiva `if (idxCarril < 0)` registrando la materia en `materiasFueraVentana` y omitiendo el acceso indebido a `carriles[idxCarril]`.
+
+#### 3. Fase 1755 — Capacidad Real por Carril y Distribución por Ranuras del Patrón
+- **Archivo:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgEvaluadorDemandaVentana.cs`
+- **Cambio:** Distribución de carga por carril restringida a ranuras compatibles con el patrón (`slotsPatron`). Cómputo de capacidad real `capCarril[c]` mediante `AgPlanificadorTemporal.ContarOcurrencias` y detección directa de `SaturacionCarriles` si `cargaCarriles[c] > capCarril[c]`.
+
+#### 4. Fase 1756 — Búsqueda Inversa del Último Día Activo de la Ventana en `FinDeSemanaValida`
+- **Archivo:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgEvaluadorDemandaVentana.cs`
+- **Cambio:** Búsqueda descendente desde el final de la semana para devolver el último día perteneciente a la ventana que no sea festivo en lugar de un sábado genérico.
+
+#### 5. Fase 1757 — Protección de Patrones `FIJO/LEGADO` en Siembra y Aislamiento de Bottlenecks
+- **Archivos:** `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`, `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgEscaladorVentanaAula.cs`
+- **Cambio:** Cláusula `ON CONFLICT` en `AgFormGeneradorHorarios.cs` condicionada a `UPPER(COALESCE(origen_patron, 'AUTOMATICO')) = 'AUTOMATICO'`. En `AgEscaladorVentanaAula.cs`, eliminación de fallback que asignaba todas las asignaturas del aula ante lista vacía de saturadas.
+
+#### 6. Fase 1758 — Actualización Registral de Rondas y Fases
+- **Archivo:** `.agents/plans/REGISTRY.md`
+- **Cambio:** Actualización de contadores globales (`ronda`: 368 / 369, `fase`: 1758 / 1759) e incorporación de filas `R-067`, `R-068` y `R-069`.
+
+### Verificación de Principios (Ronda 368)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1753 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEvaluadorDemandaVentana.cs` |
+| F1754 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEvaluadorDemandaVentana.cs` |
+| F1755 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEvaluadorDemandaVentana.cs` |
+| F1756 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEvaluadorDemandaVentana.cs` |
+| F1757 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs`, `AgEscaladorVentanaAula.cs` |
+| F1758 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `REGISTRY.md` |
+
+---
+
+## Ronda 369 — Granularidad por Slot/Franja, Poblado de Bottlenecks y Supresión de Reset Masivo (Fases 1759–1762)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1759 — Control Granular por `(Dia, Franja)`
+- **Archivo:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgEvaluadorDemandaVentana.cs`
+- **Cambio:** Incorporación de mapa `slotCarga` por `(Dia, Franja)`. Detección precisa de saturación cuando la carga excede las ocurrencias del día específico, impidiendo que carriles multirranura enmascaren cuellos de botella en un solo día.
+
+#### 2. Fase 1760 — Poblado de `IdAsignaturasSaturadas` y Supresión de Reset Incondicional
+- **Archivos:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgEvaluadorDemandaVentana.cs`, `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgEscaladorVentanaAula.cs`
+- **Cambio:** Asegurado el llenado de `IdAsignaturasSaturadas` ante saturación por slot o déficit global. En el repositorio `AgEscaladorVentanaAula.cs`, eliminación de la rama `else` que ejecutaba reset global sobre toda el aula/subunidad.
+
+#### 3. Fase 1761 — Semántica de Último Día Hábil en `FinDeSemanaValida`
+- **Archivo:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgEvaluadorDemandaVentana.cs`
+- **Cambio:** Validación de la lógica de terminación que devuelve el último día hábil de ventana no festivo de la última semana requerida.
+
+#### 4. Fase 1762 — Sincronización Registral
+- **Archivo:** `.agents/plans/REGISTRY.md`
+- **Cambio:** Incorporación de fila `R-070` y actualización de contadores globales (`ronda`: 369 / 370, `fase`: 1762 / 1763).
+
+### Verificación de Principios (Ronda 369)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1759 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEvaluadorDemandaVentana.cs` |
+| F1760 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEvaluadorDemandaVentana.cs`, `AgEscaladorVentanaAula.cs` |
+| F1761 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEvaluadorDemandaVentana.cs` |
+| F1762 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `REGISTRY.md` |
+
+---
+
+## Ronda 370 — Exposición de Métricas Temporales, Diagnóstico I5_DIA_SATURADO, Retiro de Bandas y Filtrado de Bottlenecks (Fases 1763–1767)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1763 — Exposición de Métricas en `Decision`, Modal y Validador Pre-Vuelo
+- **Archivos:** `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgEscaladorVentanaAula.cs`, `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`, `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgValidadorVentana.cs`
+- **Cambio:** Incorporación de `SemanasRequeridas`, `FechaFinMinima` y `RanurasOciosas` en `Decision`. Visualización explícita en el modal pre-vuelo y adición del bloqueo `[I5_DIA_SATURADO]` en `AgValidadorVentana.cs` cuando la demanda excede la capacidad por franja.
+
+#### 2. Fase 1764 — Verificación Conceptual de `FechaFinMinima` con Festivos
+- **Archivo:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgEvaluadorDemandaVentana.cs`
+- **Cambio:** Semántica de última semana válida consolidada respecto a exclusión de festivos.
+
+#### 3. Fase 1765 — Retiro de `PuedeAcomodar` y Partición por Bandas
+- **Archivo:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgEvaluadorDemandaVentana.cs`
+- **Cambio:** Eliminación definitiva de la lógica de agrupamiento por bandas y del método de backtracking `PuedeAcomodar`, dejando la evaluación unificada y determinista en `slotCarga`.
+
+#### 4. Fase 1766 — Filtrado Quirúrgico de Asignaturas Saturadas
+- **Archivo:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgEvaluadorDemandaVentana.cs`
+- **Cambio:** `IdAsignaturasSaturadas` restringido estrictamente a las asignaturas que coinciden con los días de los `slotsSaturados`, evitando reseteos colaterales en asignaturas que no contribuyen al cuello de botella.
+
+#### 5. Fase 1767 — Actualización Registral de Rondas y Fases
+- **Archivo:** `.agents/plans/REGISTRY.md`
+- **Cambio:** Incorporación de fila `R-071` y avance de contadores globales (`ronda`: 370 / 371, `fase`: 1767 / 1768).
+
+### Verificación de Principios (Ronda 370)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1763 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorVentanaAula.cs`, `AgFormGeneradorHorarios.cs`, `AgValidadorVentana.cs` |
+| F1764 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEvaluadorDemandaVentana.cs` |
+| F1765 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEvaluadorDemandaVentana.cs` |
+| F1766 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEvaluadorDemandaVentana.cs` |
+| F1767 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `REGISTRY.md` |
+
+---
+
+## Ronda 371 — Supresión de Diagnóstico Contradictorio y Priorización en Déficit Global (Fases 1768–1771)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1768 — Supresión de Oleada Contradictoria tras `I5_DIA_SATURADO`
+- **Archivo:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgValidadorVentana.cs`
+- **Cambio:** Incorporación de `continue;` tras registrar `[I5_DIA_SATURADO]`, eliminando el mensaje contradictorio que sugería escalar la ventana a `JUE-DOM` cuando la saturación es inviable de resolver por escalado.
+
+#### 2. Fase 1769 — Validación de Desplazamiento por Festivos
+- **Archivo:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgEvaluadorDemandaVentana.cs`
+- **Cambio:** Verificación de la consistencia temporal ante domingos festivos intermedios.
+
+#### 3. Fase 1770 — Priorización por Carga en Déficit Global
+- **Archivo:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgEvaluadorDemandaVentana.cs`
+- **Cambio:** `IdAsignaturasSaturadas` selecciona las asignaturas ordenadas por demanda decreciente (`OrderByDescending(d => d.Sesiones)`).
+
+#### 4. Fase 1771 — Sincronización Registral
+- **Archivo:** `.agents/plans/REGISTRY.md`
+- **Cambio:** Incorporación de fila `R-072` y avance de contadores globales (`ronda`: 371 / 372, `fase`: 1771 / 1772).
+
+### Verificación de Principios (Ronda 371)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1768 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgValidadorVentana.cs` |
+| F1769 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEvaluadorDemandaVentana.cs` |
+| F1770 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEvaluadorDemandaVentana.cs` |
+| F1771 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `REGISTRY.md` |
+
+---
+
+## Ronda 372 — Reducción de Materias Fuera de Ventana en Mejora (Fases 1772–1774)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1772 — Inclusión de MateriasFueraVentana en Criterio de Mejora
+- **Archivos:** ConversorPDF.XLL/Academic/Application/Services/Genetica/AgResultadoEvaluacionVentana.cs, ConversorPDF.XLL/Academic/Application/Services/Genetica/AgEvaluadorDemandaVentana.cs, ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgEscaladorVentanaAula.cs
+- **Cambio:** Incorporación de la propiedad MateriasFueraVentana y agregada la condición evalDespues.MateriasFueraVentana.Count < evalAntes.MateriasFueraVentana.Count a Mejora. Permite proponer escalados legítimos (como LUN-JUE → LUN-VIE para materias de viernes) aun cuando persista saturación horaria en el nuevo escalón.
+
+#### 2. Fase 1773 — Diagnóstico de Cobertura y Suite de Pruebas
+- **Archivo:** Árbol de trabajo y artefactos documentales.
+- **Cambio:** Identificación de suites de prueba pendientes para ejecución una vez aprobada la fase de revisión.
+
+#### 3. Fase 1774 — Actualización Registral de Rondas y Fases
+- **Archivo:** .agents/plans/REGISTRY.md
+- **Cambio:** Incorporación de fila R-073 y avance de contadores globales (onda: 372 / 373, ase: 1774 / 1775).
+
+### Verificación de Principios (Ronda 372)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1772 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | AgResultadoEvaluacionVentana.cs, AgEvaluadorDemandaVentana.cs, AgEscaladorVentanaAula.cs |
+| F1773 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | implementation_plan.md |
+| F1774 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | REGISTRY.md |

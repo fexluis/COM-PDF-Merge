@@ -6,7 +6,7 @@
 **Estado actual**: `closed`  
 **Commit inicial de plan**: `0bcc7c1`  
 **Commit final de pruebas**: `852708d`  
-**Gate de cierre**: Full Verify PASS (1253/1253 tests PASS, 0 fallos, exit 0)  
+**Gate de cierre**: Full Verify PASS (1259/1259 tests PASS, 0 fallos, exit 0)  
 **Evidencia final**: `_evidence/20261112-192936/test.trx`  
 **Release y smoke interactivo**: fuera de alcance / pendientes de autorización de despliegue  
 
@@ -31,7 +31,7 @@ Asimismo, los tres casos canónicos de ampliación de ventana requerían un trat
 - **T5 (Fase 1738)**: Aplicación transaccional e invalidación de patrones en `AgEscaladorVentanaAula.AplicarAsync`: actualiza `ag_aula` y `ag_arbol_nodo` y resetea `dias_patron = ''` únicamente para `origen_patron = 'AUTOMATICO'`, preservando patrones fijos y legados.
 - **T6 (Fase 1739)**: Integración y unificación UI en `AgFormGeneradorHorarios.cs`: pre-vuelo compartido entre `EjecutarDiagnosticoPreVueloAsync` e `IniciarOptimizacionAsync`, diálogo modal detallado con demanda pendiente y exclusión mutua de eventos.
 - **T7 (Fase 1740)**: Suite de pruebas integral para la matriz de casos (`AgEscaladoTresCasosMatrizTests.cs`). Validación de LUN-JUE 5W, MAR-VIE 5W, VIE-DOM 5W, VIE-DOM 6W multi-paso con demanda pendiente, terminalidad de MIE-DOM y LUN-VIE, y diferenciación de capacidad para sábado 4h (68 ranuras) vs 8h (51 ranuras).
-- **T8 (Fase 1741)**: Suite completa Full Verify ejecutada: 1253/1253 tests PASS, 0 fallos, 0 regresiones. Actualización de baseline de 1223 a 1253 tests.
+- **T8 (Fase 1741)**: Suite completa Full Verify ejecutada: 1259/1259 tests PASS, 0 fallos, 0 regresiones. Actualización de baseline de 1253 a 1259 tests.
 
 ---
 
@@ -42,3 +42,4 @@ Asimismo, los tres casos canónicos de ampliación de ventana requerían un trat
 - **Capa Infrastructure (XLL)**: `AgEscaladorVentanaAula.cs`, `MigrationV80_AddOrigenPatronAgAulaAsignatura.cs`, `SqliteHelper.cs`.
 - **Capa UI (XLL)**: `AgFormGeneradorHorarios.cs` (unificación de pre-vuelo y modal de escalado con soporte de demanda pendiente).
 - **Capa Tests**: `AgEscaladoTresCasosTests.cs`, `AgOrigenPatronTests.cs`, `AgEvaluadorDemandaVentanaTests.cs`, `AgEscaladorVentanaAulaPersistenciaTests.cs`, `AgEscaladoTresCasosMatrizTests.cs`.
+
