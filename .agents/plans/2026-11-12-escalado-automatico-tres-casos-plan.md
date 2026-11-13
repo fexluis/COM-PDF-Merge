@@ -220,10 +220,11 @@ Dependencias declaradas:
 - **description**: Implementar la suite completa de pruebas para los casos de la matriz: LUN-JUE 5W, MAR-VIE 5W, VIE-DOM 5W (a JUE-DOM), VIE-DOM 6W (paso 1 JUE-DOM, paso 2 MIE-DOM), MIE-DOM/LUN-VIE terminales, sábado 4h (2 ranuras) y 8h (1 ranura).
 - **validation**: Todos los casos de la matriz verificados y en verde (PASS).
 - **verification**: powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "AgEscaladoTresCasosMatrizTests"
-- **evidence**: pendiente
-- **status**: pending
-- **log**: pendiente
-- **files edited/created**: []
+- **evidence**: _evidence/20261112-192852/summary.md
+- **status**: done
+- **log**: Verificación Fast completada con éxito (6/6 tests PASS). Cubre la matriz obligatoria completa: LUN-JUE 5W (-> LUN-VIE), MAR-VIE 5W (-> LUN-VIE), VIE-DOM 5W (-> JUE-DOM), VIE-DOM 6W (paso 1 JUE-DOM con 11 sesiones pendientes, paso 2 MIE-DOM, paso 3 terminal), terminalidad de MIE-DOM y LUN-VIE, y diferenciación de capacidad para sábado 4h (68 ranuras) vs 8h (51 ranuras). Segunda corrida en estado factible produce 0 propuestas en todos los casos.
+- **files edited/created**:
+  - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgEscaladoTresCasosMatrizTests.cs
 
 ### T8: Gates, documentación y handoff
 - **id**: T8
