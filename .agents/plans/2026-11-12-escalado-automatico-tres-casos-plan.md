@@ -9,7 +9,7 @@ numbering:
 ---
 
 # Plan: escalado automático de tres casos y planificación balanceada por ranuras
-**Generado**: 2026-11-12 · **Autor**: Antigravity/Swarm-Planner · **Estado**: executing
+**Generado**: 2026-11-12 · **Autor**: Antigravity/Swarm-Planner · **Estado**: closed
 
 ## Execution envelope
 - branch: refactor/academic-modularization
@@ -237,7 +237,10 @@ Dependencias declaradas:
 - **description**: Ejecutar suite completa verify.ps1 -Mode Full, actualizar test_baseline.txt si creció la suite sin regresiones, redactar handoff y artículo de cambios técnicos.
 - **validation**: Full verify PASS con 0 regresiones.
 - **verification**: powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Full
-- **evidence**: pendiente
-- **status**: pending
-- **log**: pendiente
-- **files edited/created**: []
+- **evidence**: _evidence/20261112-192936/summary.md
+- **status**: done
+- **log**: Verificación Full completada exitosamente (1253/1253 tests PASS, 0 fallos). Baseline actualizado de 1223 a 1253. Documentos de handoff y artículo de cambios generados satisfactoriamente.
+- **files edited/created**:
+  - tests/baseline/test_baseline.txt
+  - .agents/plans/2026-11-12-escalado-automatico-tres-casos-handoff.md
+  - docs/articles/changes/2026-11-12-escalado-automatico-tres-casos.md
