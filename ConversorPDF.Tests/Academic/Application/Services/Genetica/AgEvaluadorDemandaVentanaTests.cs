@@ -114,14 +114,11 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             eval.DemandaTotal.Should().Be(64);
             eval.CapacidadTotal.Should().Be(68);
 
-            // Escalador debe detectar saturación y proponer paso a JUE-DOM
+            // Escalador no debe proponer JUE-DOM: no reduce la cola dominical y rompe el patrón 5,6
             var escalador = new AgEscaladorVentanaAula(() => null);
             var decisiones = escalador.Evaluar(contexto);
 
-            decisiones.Should().HaveCount(1);
-            decisiones[0].AulaRef.Should().Be("AULA-01");
-            decisiones[0].Hacia.Should().Be("JUE-DOM"); // Escalón canónico JUE-DOM
-            decisiones[0].Aplica.Should().BeTrue();
+            decisiones.Should().BeEmpty("JUE-DOM no reduce la saturación dominical ni conserva el patrón 5,6");
         }
     }
 }

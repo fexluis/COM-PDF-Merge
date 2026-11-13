@@ -452,7 +452,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
         }
 
         [Fact]
-        public void ValidarFactibilidad_PatronSaturadoEnAula_ReportaBloqueoI5CapacidadCarrilPatron()
+        public void ValidarFactibilidad_PatronSaturadoEnAula_ReportaBloqueoI5DiaSaturado()
         {
             // Arrange (Fase 1601 / Fase 1602 / Fase 1604): Aula con ventana amplia (1..5)
             // donde las asignaturas tienen patrón exclusivo "5" (viernes) saturando la capacidad del carril compatible.
@@ -494,11 +494,11 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             // Assert
             result.Value.EsFactible.Should().BeFalse();
             result.Value.Bloqueos.Should().Contain(b =>
-                b.Contains("[I5_CAPACIDAD_CARRIL_PATRON]") &&
+                b.Contains("[I5_DIA_SATURADO]") &&
                 b.Contains("Sede 'MEDELLIN (CENTRAL)'") &&
                 b.Contains("Aula 'MED-01'") &&
-                b.Contains("I5_CAPACIDAD_CARRIL_PATRON") &&
-                b.Contains("compatibles:"));
+                b.Contains("saturación de franja") &&
+                b.Contains("semanas"));
         }
 
         [Fact]

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ConversorPDF.XLL.Academic.Application.Services.Genetica;
 using ConversorPDF.XLL.Academic.Domain.Enums;
 using ConversorPDF.XLL.Academic.Domain.Models;
 using ConversorPDF.XLL.Academic.Domain.Models.Genetica;
@@ -195,15 +196,132 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             dec8h[0].CapacidadAntes.Should().Be(51);
         }
 
+        [Fact]
+        public void Evaluar_LunJue_PatronFijoViernes_ShouldProponerLunVie()
+        {
+            int w = 17;
+            var contexto = CrearContextoMatriz(w, "LUN-JUE", numAsignaturas: 2, sesionesPorAsignatura: 12);
+            FijarPatron(contexto, "5");
+            var sut = new AgEscaladorVentanaAula(() => null);
+
+            var decisiones = sut.Evaluar(contexto);
+
+            decisiones.Should().ContainSingle();
+            decisiones[0].Hacia.Should().Be("LUN-VIE");
+            decisiones[0].MateriasFueraVentana.Should().Be(2);
+            decisiones[0].Aplica.Should().BeTrue();
+
+            contexto.Aulas[0].DiasVentana = decisiones[0].Hacia;
+            sut.Evaluar(contexto).Should().BeEmpty();
+        }
+
+        [Fact]
+        public void Evaluar_MarVie_PatronFijoLunes_ShouldProponerLunVie()
+        {
+            int w = 17;
+            var contexto = CrearContextoMatriz(w, "MAR-VIE", numAsignaturas: 2, sesionesPorAsignatura: 12);
+            FijarPatron(contexto, "1");
+            var sut = new AgEscaladorVentanaAula(() => null);
+
+            var decisiones = sut.Evaluar(contexto);
+
+            decisiones.Should().ContainSingle();
+            decisiones[0].Hacia.Should().Be("LUN-VIE");
+            decisiones[0].MateriasFueraVentana.Should().Be(2);
+            decisiones[0].Aplica.Should().BeTrue();
+        }
+
+        [Fact]
+        public void Evaluar_VieDom_PatronFijoJueves_ShouldProponerJueDomYNoMieDom()
+        {
+            int w = 17;
+            var contexto = CrearContextoMatriz(w, "VIE-DOM", numAsignaturas: 2, sesionesPorAsignatura: 12);
+            FijarPatron(contexto, "4");
+            var sut = new AgEscaladorVentanaAula(() => null);
+
+            var decisiones = sut.Evaluar(contexto);
+
+            decisiones.Should().ContainSingle();
+            decisiones[0].Hacia.Should().Be("JUE-DOM");
+            decisiones[0].MateriasFueraVentana.Should().Be(2);
+            decisiones[0].Aplica.Should().BeTrue();
+
+            contexto.Aulas[0].DiasVentana = decisiones[0].Hacia;
+            sut.Evaluar(contexto).Should().BeEmpty("MIE-DOM no reduce las semanas ni la saturación de jueves");
+        }
+
+        [Fact]
+        public void Evaluar_VieDom_TresPatronesDomingo_ShouldNoProponer()
+        {
+            int w = 17;
+            var contexto = CrearContextoMatriz(w, "VIE-DOM", numAsignaturas: 3, sesionesPorAsignatura: 12);
+            FijarPatron(contexto, "7");
+            var sut = new AgEscaladorVentanaAula(() => null);
+
+            sut.Evaluar(contexto).Should().BeEmpty("jueves/miércoles no reducen la cola de domingo");
+        }
+
+        [Fact]
+        public void Evaluar_VieDom_TresDomingosConFestivo_ShouldCalcularFechaMinima17Oct()
+        {
+            var inicio = new DateTime(2027, 2, 7);
+            var contexto = CrearContextoMatriz(17, "VIE-DOM", numAsignaturas: 3, sesionesPorAsignatura: 12, fechaInicio: inicio);
+            FijarPatron(contexto, "7");
+            contexto.Festivos.Add((new DateTime(2027, 8, 15), new DateTime(2027, 8, 15)));
+            contexto.ConstruirIndices();
+
+            var res = AgEvaluadorDemandaVentana.Evaluar(
+                "VIE-DOM", "MANANA", 4.0, contexto, contexto.Aulas[0],
+                contexto.Ventana.FechaInicio, contexto.Ventana.FechaFin);
+
+            res.SemanasRequeridas.Should().Be(36);
+            res.FechaFinMinima.Should().Be(new DateTime(2027, 10, 17));
+            res.SaturacionCarriles.Should().BeTrue();
+            res.MateriasFueraVentana.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void ValidarFactibilidad_VieDomTresDomingos_ShouldEmitirI5DiaSinSugerirJueDom()
+        {
+            var inicio = new DateTime(2027, 2, 7);
+            var contexto = CrearContextoMatriz(17, "VIE-DOM", numAsignaturas: 3, sesionesPorAsignatura: 12, fechaInicio: inicio);
+            FijarPatron(contexto, "7");
+            contexto.Festivos.Add((new DateTime(2027, 8, 15), new DateTime(2027, 8, 15)));
+            contexto.ConstruirIndices();
+
+            var informe = new AgValidadorVentana().ValidarFactibilidad(contexto);
+
+            informe.IsSuccess.Should().BeTrue();
+            string bloqueos = string.Join(" | ", informe.Value.BloqueosCriticos);
+            bloqueos.Should().Contain("I5_DIA_SATURADO");
+            bloqueos.Should().NotContain("Escale la ventana a 'JUE-DOM'");
+        }
+
+        private static void FijarPatron(AgContexto contexto, string diasPatron)
+        {
+            foreach (var aa in contexto.AulaAsignaturas)
+            {
+                aa.DiasPatron = diasPatron;
+                aa.OrigenPatron = "FIJO";
+            }
+
+            foreach (var kv in contexto.AulaAsignaturaPorAulaAsig)
+            {
+                kv.Value.DiasPatron = diasPatron;
+                kv.Value.OrigenPatron = "FIJO";
+            }
+        }
+
         private static AgContexto CrearContextoMatriz(
             int w,
             string diasVentana,
             int numAsignaturas,
             int sesionesPorAsignatura,
             int horasDia = 4,
-            string modalidadPrograma = "PRESENCIAL")
+            string modalidadPrograma = "PRESENCIAL",
+            DateTime? fechaInicio = null)
         {
-            var fInicio = new DateTime(2026, 8, 3); // Lunes
+            var fInicio = fechaInicio ?? new DateTime(2026, 8, 3); // Lunes por defecto
             var fFin = fInicio.AddDays(7 * w - 1);  // Domingo
 
             var contexto = new AgContexto();

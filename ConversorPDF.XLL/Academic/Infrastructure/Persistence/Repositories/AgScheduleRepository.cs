@@ -183,12 +183,18 @@ SELECT last_insert_rowid();";
 
                     using (var trans = db.BeginTransaction())
                     {
-                        string sqlDel = "DELETE FROM ag_aula_asignatura WHERE id_aula = @idAula;";
-                        await db.ExecuteAsync(new CommandDefinition(sqlDel, new { idAula }, trans, cancellationToken: ct));
+                        // Fase 1750: No borrar indiscriminadamente; preservar patrones y origen FIJO/LEGADO existentes
+                        string sqlDel = @"
+DELETE FROM ag_aula_asignatura
+WHERE id_aula = @idAula
+  AND UPPER(COALESCE(origen_patron, '')) = 'AUTOMATICO'
+  AND id_asignatura NOT IN @idAsignaturas;";
+                        await db.ExecuteAsync(new CommandDefinition(sqlDel, new { idAula, idAsignaturas }, trans, cancellationToken: ct));
 
                         string sqlIns = @"
-INSERT OR IGNORE INTO ag_aula_asignatura (id_aula, id_asignatura, exclusivo, prioridad, dias_patron, subunidad)
-VALUES (@idAula, @idAsignatura, 0, 0, '', @subunidad);";
+INSERT INTO ag_aula_asignatura (id_aula, id_asignatura, exclusivo, prioridad, dias_patron, subunidad, origen_patron)
+VALUES (@idAula, @idAsignatura, 0, 0, '', @subunidad, 'AUTOMATICO')
+ON CONFLICT(id_aula, id_asignatura) DO NOTHING;";
 
                         string subunidad = SyncContext.ActiveSubunidad ?? string.Empty;
                         foreach (var idAsig in idAsignaturas)

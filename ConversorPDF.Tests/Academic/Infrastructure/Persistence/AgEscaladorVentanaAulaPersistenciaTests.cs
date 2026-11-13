@@ -599,7 +599,8 @@ VALUES (@IdAula, 102, '7', 'FIJO');", new { IdAula = idAula });
                     Desde = "VIE-DOM",
                     Hacia = "JUE-DOM",
                     CapacidadAntes = 68,
-                    CapacidadDespues = 85
+                    CapacidadDespues = 85,
+                    IdAsignaturasBottleneck = new List<int> { 101 }
                 }
             };
 

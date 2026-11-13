@@ -306,6 +306,52 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         continue;
                     }
 
+                    // Fase 1763 & Fase 1768: Evaluación de saturación de ventana/carril y diagnóstico I5_DIA_SATURADO
+                    // Fase 1772: no bloquear si todas las materias del aula tienen otra aula viable
+                    bool TieneCapacidadAlternativa(AgAulaAsignatura cfg, int requeridas)
+                    {
+                        var auAlt = contexto.Aulas?.FirstOrDefault(x => x.Id == cfg.IdAula);
+                        if (auAlt == null) return false;
+                        var progAlt = contexto.Programas?.FirstOrDefault(p => p.Id == auAlt.IdPrograma);
+                        var nivelAlt = AgNivelAcademicoCatalogo.Desde(progAlt?.Modalidad);
+                        double unidadAlt = AgUnidadesSemanales.HorasSesionAula(auAlt, nivelAlt);
+                        var ranurasAlt = AgRanuras.PorVentana(auAlt.DiasVentana, contexto.Bloques, auAlt.Jornada, unidadAlt);
+                        int capacidadAlt = ranurasAlt.Sum(r =>
+                            AgPlanificadorTemporal.ContarOcurrencias(r.Dia, ini, fin, contexto.EsFestivo));
+                        return capacidadAlt >= requeridas;
+                    }
+
+                    bool todasConAlternativa = true;
+                    foreach (var aa in asigsAula)
+                    {
+                        double horasAlt = aa.HorasObjetivo > 0
+                            ? aa.HorasObjetivo
+                            : (asigPorId.TryGetValue(aa.IdAsignatura, out var asigAlt) && asigAlt.IntHoraria > 0 ? asigAlt.IntHoraria : 0.0);
+                        if (horasAlt <= 0) continue;
+
+                        int reqAlt = (int)Math.Ceiling(horasAlt / unidadAu);
+                        var alternativas = (contexto.AulaAsignaturas ?? new List<AgAulaAsignatura>())
+                            .Where(x => x.IdAsignatura == aa.IdAsignatura && x.IdAula != au.Id)
+                            .ToList();
+                        if (!alternativas.Any(c => TieneCapacidadAlternativa(c, reqAlt)))
+                        {
+                            todasConAlternativa = false;
+                            break;
+                        }
+                    }
+
+                    if (!todasConAlternativa)
+                    {
+                        var evalDemanda = AgEvaluadorDemandaVentana.Evaluar(au.DiasVentana, au.Jornada, unidadAu, contexto, au, ini, fin);
+                        if (evalDemanda.HaySaturacion || evalDemanda.SaturacionCarriles)
+                        {
+                            informe.AgregarBloqueo(
+                                $"[I5_DIA_SATURADO] {EtiquetaSede(contexto, au)} Aula '{au.AulaRef}': {evalDemanda.Motivo}; " +
+                                $"{evalDemanda.SemanasRequeridas} semanas; fin mínimo {evalDemanda.FechaFinMinima:yyyy-MM-dd}.");
+                            continue; // Suprimir el diagnóstico genérico de oleada que aconsejaría escalar erróneamente
+                        }
+                    }
+
                     // Fase 1122 / Fase 1129: Validar sub-ventana de oleada por asignatura dentro del aula (filtrando por alcance real del motor)
                     var semAula = AgFormatoAsignatura.SemestreRomano(au.Semestre);
                     var itemsPlan = asigsAula

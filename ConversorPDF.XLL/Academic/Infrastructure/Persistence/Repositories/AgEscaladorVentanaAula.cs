@@ -37,8 +37,15 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
             public int CapacidadAntes { get; set; }
             public int CapacidadDespues { get; set; }
             public string Motivo { get; set; }
+            public bool Mejora { get; set; } = true;
+            public int SemanasRequeridas { get; set; }
+            public DateTime? FechaFinMinima { get; set; }
+            public int RanurasOciosas { get; set; }
+            public int DemandaPendiente { get; set; }
+            public int MateriasFueraVentana { get; set; }
+            public List<int> IdAsignaturasBottleneck { get; set; } = new List<int>();
 
-            public bool Aplica => !string.IsNullOrWhiteSpace(Hacia) && CapacidadDespues > CapacidadAntes;
+            public bool Aplica => !string.IsNullOrWhiteSpace(Hacia) && Mejora && CapacidadDespues > CapacidadAntes;
         }
 
         /// <summary>Dry-run: no escribe en base de datos.</summary>
@@ -71,6 +78,17 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                     continue;
                 }
 
+                // Fase 1742, 1747 & 1772: Mejora real. Reducción de SemanasRequeridas, reducción de MateriasFueraVentana o resolución de saturación
+                bool mejora = evalDespues.SemanasRequeridas < evalAntes.SemanasRequeridas
+                           || evalDespues.DemandaPendiente < evalAntes.DemandaPendiente
+                           || evalDespues.MateriasFueraVentana.Count < evalAntes.MateriasFueraVentana.Count
+                           || (!evalDespues.HaySaturacion && evalAntes.HaySaturacion)
+                           || (!evalDespues.SaturacionCarriles && evalAntes.SaturacionCarriles);
+                if (!mejora)
+                {
+                    continue;
+                }
+
                 decisiones.Add(new Decision
                 {
                     AulaRef = aula.AulaRef,
@@ -80,7 +98,14 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                     DemandaSesiones = evalAntes.DemandaTotal,
                     CapacidadAntes = evalAntes.CapacidadTotal,
                     CapacidadDespues = evalDespues.CapacidadTotal,
-                    Motivo = evalAntes.Motivo
+                    Motivo = evalAntes.Motivo,
+                    Mejora = mejora,
+                    SemanasRequeridas = evalAntes.SemanasRequeridas,
+                    FechaFinMinima = evalAntes.FechaFinMinima,
+                    RanurasOciosas = evalAntes.RanurasOciosas,
+                    DemandaPendiente = evalAntes.DemandaPendiente,
+                    MateriasFueraVentana = evalAntes.MateriasFueraVentana.Count,
+                    IdAsignaturasBottleneck = evalAntes.IdAsignaturasSaturadas ?? new List<int>()
                 });
             }
             return decisiones;
@@ -110,6 +135,7 @@ WHERE aula_ref = @Ref
   AND COALESCE(dias_ventana, '') <> @D;";
 
             int total = 0;
+            bool huboCambiosPatron = false;
             try
             {
                 using (var conn = _connectionFactory())
@@ -126,25 +152,39 @@ WHERE aula_ref = @Ref
                                 await conn.ExecuteAsync(new CommandDefinition(sqlNodo, new { D = d.Hacia, Ref = d.AulaRef, IdArbol = idArbol }, trans, cancellationToken: ct)).ConfigureAwait(false);
                             }
 
-                            // Fase 1738: resetear patrones automáticos al escalar para permitir que el planificador aproveche los días añadidos
+                            // Fase 1738 & Fase 1745: resetear patrones automáticos al escalar, acotado a las asignaturas de cuello de botella
                             bool tieneOrigen = conn.QueryFirstOrDefault<int>(
                                 "SELECT COUNT(1) FROM pragma_table_info('ag_aula_asignatura') WHERE name = 'origen_patron';",
                                 transaction: trans) > 0;
                             if (tieneOrigen)
                             {
-                                const string sqlResetAuto = @"
+                                int filasReset = 0;
+                                // Fase 1760: Eliminar rama else de reset global masivo; resetear solo si hay lista acotada
+                                if (d.IdAsignaturasBottleneck != null && d.IdAsignaturasBottleneck.Count > 0)
+                                {
+                                    const string sqlResetAutoAcotado = @"
 UPDATE ag_aula_asignatura
 SET dias_patron = ''
 WHERE id_aula IN (SELECT id FROM ag_aula WHERE aula_ref = @Ref AND COALESCE(NULLIF(TRIM(subunidad), ''), @Sub) = @Sub)
+  AND id_asignatura IN @Ids
   AND UPPER(COALESCE(origen_patron, '')) = 'AUTOMATICO';";
-                                await conn.ExecuteAsync(new CommandDefinition(sqlResetAuto, args, trans, cancellationToken: ct)).ConfigureAwait(false);
+                                    filasReset = await conn.ExecuteAsync(new CommandDefinition(
+                                        sqlResetAutoAcotado,
+                                        new { Ref = d.AulaRef, Sub = d.Subunidad ?? string.Empty, Ids = d.IdAsignaturasBottleneck },
+                                        trans,
+                                        cancellationToken: ct)).ConfigureAwait(false);
+                                }
+                                if (filasReset > 0)
+                                {
+                                    huboCambiosPatron = true;
+                                }
                             }
                         }
                         trans.Commit();
                     }
                 }
 
-                if (total > 0)
+                if (total > 0 || huboCambiosPatron)
                 {
                     ConversorPDF.XLL.Core.Sync.SyncContext.Scheduler?.MarkDirty();
                 }

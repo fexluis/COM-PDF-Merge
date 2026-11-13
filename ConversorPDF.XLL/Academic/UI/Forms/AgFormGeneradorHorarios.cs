@@ -1182,7 +1182,7 @@ WHERE a.estado = 4 AND s.fechasesion BETWEEN @fi AND @ff;";
                     const string sqlAulaAsig = @"
 SELECT id_aula AS IdAula, id_asignatura AS IdAsignatura, exclusivo AS Exclusivo, prioridad AS Prioridad,
        horas_objetivo AS HorasObjetivo, orden_curricular AS OrdenCurricular, requerida AS Requerida,
-       dias_patron AS DiasPatron, subunidad AS Subunidad
+       dias_patron AS DiasPatron, subunidad AS Subunidad, origen_patron AS OrigenPatron
 FROM ag_aula_asignatura
 WHERE id_aula IN @ids AND id_asignatura > 0;";
                     ctx.AulaAsignaturas = (await db.QueryAsync<AgAulaAsignatura>(
@@ -1626,6 +1626,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             }
 
             var lineasDetalle = new List<string>();
+            int totalAsigsReset = 0;
             foreach (var d in decisionesEscalado)
             {
                 var aulaObj = _contextoActual?.Aulas?.FirstOrDefault(a => string.Equals(a.AulaRef, d.AulaRef, StringComparison.OrdinalIgnoreCase));
@@ -1639,7 +1640,14 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     ? $" [Demanda pendiente: {pendiente} sesiones; requerirá escalado posterior]"
                     : " [Demanda completamente cubierta]";
 
-                lineasDetalle.Add($"• {d.AulaRef}: {d.Desde} ({d.CapacidadAntes} ranuras) → {d.Hacia} [{rotuloHacia}] ({d.CapacidadDespues} ranuras); {d.Motivo}.{textoPendiente}");
+                int asigsAutoAula = d.IdAsignaturasBottleneck != null && d.IdAsignaturasBottleneck.Count > 0
+                    ? d.IdAsignaturasBottleneck.Count
+                    : (_contextoActual?.AulaAsignaturas != null && aulaObj != null
+                        ? _contextoActual.AulaAsignaturas.Count(x => x.IdAula == aulaObj.Id && string.Equals(x.OrigenPatron, "AUTOMATICO", StringComparison.OrdinalIgnoreCase))
+                        : 0);
+                totalAsigsReset += asigsAutoAula;
+
+                lineasDetalle.Add($"• {d.AulaRef}: {d.Desde} ({d.CapacidadAntes} ranuras) → {d.Hacia} [{rotuloHacia}] ({d.CapacidadDespues} ranuras); {d.SemanasRequeridas} semanas; fin mínimo {d.FechaFinMinima:yyyy-MM-dd}; ranuras ociosas {d.RanurasOciosas}; {d.Motivo}.{textoPendiente}");
             }
 
             string detalleEsc = string.Join("\n", lineasDetalle);
@@ -1659,9 +1667,14 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 ? "\n\nNOTA: Para una o más aulas, este escalado es un paso intermedio que amplía la ventana pero aún dejará demanda pendiente insatisfecha (se requerirá una segunda evaluación o escalado posterior). Las fechas de semestre se mantienen fijas."
                 : "\n\nNOTA: Las fechas de inicio y fin de semestre se mantienen fijas.";
 
+            string advertenciaReset = totalAsigsReset > 0
+                ? $"\n\nAVISO DE PATRONES: Se recalcularán los patrones AUTOMÁTICOS de {totalAsigsReset} asignatura(s) en las aulas afectadas para distribuirlas en los nuevos días."
+                : string.Empty;
+
             var respuesta = MessageBox.Show(this,
                 "Se detectaron aulas cuya demanda excede la capacidad o saturación de su ventana actual:\n\n" + detalleEsc +
                 advertenciaPendiente +
+                advertenciaReset +
                 "\n\n¿Desea aplicar el escalado sugerido (" + sugerenciasResumen + ")?",
                 "Escalado de ventana (Pre-Vuelo)", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
@@ -1701,9 +1714,16 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     // Reset in-memory aula-asignaturas dias_patron for AUTOMATICO so scheduler recalculates on updated window
                     if (_contextoActual?.AulaAsignaturas != null)
                     {
+                        var idsFiltro = d.IdAsignaturasBottleneck != null && d.IdAsignaturasBottleneck.Count > 0
+                            ? new HashSet<int>(d.IdAsignaturasBottleneck)
+                            : null;
+
                         foreach (var aa in _contextoActual.AulaAsignaturas.Where(x => x.IdAula == aulaMem.Id && string.Equals(x.OrigenPatron, "AUTOMATICO", StringComparison.OrdinalIgnoreCase)))
                         {
-                            aa.DiasPatron = string.Empty;
+                            if (idsFiltro == null || idsFiltro.Contains(aa.IdAsignatura))
+                            {
+                                aa.DiasPatron = string.Empty;
+                            }
                         }
                     }
                 }
@@ -5836,12 +5856,15 @@ ORDER BY COALESCE(aa.orden_curricular, 0), a.id;";
                                 {
                                     string sqlInsertAsig = @"
 INSERT INTO ag_aula_asignatura (
-    id_aula, id_asignatura, exclusivo, prioridad, horas_objetivo, orden_curricular, requerida, dias_patron, subunidad
+    id_aula, id_asignatura, exclusivo, prioridad, horas_objetivo, orden_curricular, requerida, dias_patron, subunidad, origen_patron
 ) VALUES (
-    @IdAula, @IdAsig, 0, 0, @HorasObjetivo, 1, 1, @DiasPatron, @Sub
+    @IdAula, @IdAsig, 0, 0, @HorasObjetivo, 1, 1, @DiasPatron, @Sub, 'AUTOMATICO'
 )
 ON CONFLICT(id_aula, id_asignatura) DO UPDATE SET
-    dias_patron = CASE WHEN excluded.dias_patron <> '' THEN excluded.dias_patron ELSE ag_aula_asignatura.dias_patron END,
+    dias_patron = CASE
+        WHEN UPPER(COALESCE(ag_aula_asignatura.origen_patron,'AUTOMATICO'))='AUTOMATICO'
+         AND excluded.dias_patron <> '' THEN excluded.dias_patron
+        ELSE ag_aula_asignatura.dias_patron END,
     horas_objetivo = CASE WHEN excluded.horas_objetivo > 0 THEN excluded.horas_objetivo ELSE ag_aula_asignatura.horas_objetivo END;";
 
                                     // Fase 1013: sembrar el carril (2 días) rotado por asignatura, no la ventana completa

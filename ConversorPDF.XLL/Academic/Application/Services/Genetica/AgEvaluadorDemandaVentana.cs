@@ -51,100 +51,142 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             var demandas = ObtenerDemandasAsignaturas(contexto, aula, unidad);
             int demandaTotal = demandas.Sum(d => d.Sesiones);
             res.DemandaTotal = demandaTotal;
+            res.RanurasOciosas = Math.Max(0, capacidadTotal - demandaTotal);
+            res.DemandaPendiente = Math.Max(0, demandaTotal - capacidadTotal);
 
             if (demandaTotal <= 0)
             {
                 return res;
             }
 
-            if (demandaTotal > capacidadTotal)
+            // Calcular semanas requeridas y fecha fin mínima proyectada sobre carriles
+            int numCarriles = AgCarriles.Cantidad(ranuras);
+            var carriles = new List<IReadOnlyList<AgRanura>>(numCarriles);
+            for (int c = 0; c < numCarriles; c++)
             {
-                res.HaySaturacion = true;
-                res.Motivo = $"demanda {demandaTotal} sesiones > capacidad global {capacidadTotal} ranuras";
-                return res;
+                carriles.Add(AgCarriles.DelCarril(ranuras, c));
             }
 
-            // Evaluar saturación por carril / banda agrupada por días
-            int nDias = diasLista.Count;
-            int numBandas = nDias == 2 ? 2 : Math.Max(1, (int)Math.Ceiling(nDias / 2.0));
-            int tamBanda = (int)Math.Ceiling(nDias / (double)numBandas);
+            // Fase 1759: Capacidad y carga granular por (Dia, Franja)
+            var slotCarga = ranuras.ToDictionary(r => (r.Dia, r.Franja), _ => 0);
+            var cargaCarriles = new int[numCarriles];
+            var materiasFueraVentana = new List<int>();
 
-            var bandasDias = new List<List<int>>();
-            for (int b = 0; b < numBandas; b++)
+            foreach (var d in demandas)
             {
-                int desde = b * tamBanda;
-                bandasDias.Add(diasLista.Skip(desde).Take(Math.Min(tamBanda, nDias - desde)).ToList());
+                int idxCarril = ElegirCarril(d, carriles, cargaCarriles);
+                if (idxCarril < 0)
+                {
+                    // Asignatura fija/legada incompatible con los carriles de esta ventana
+                    materiasFueraVentana.Add(d.IdAsignatura);
+                    continue;
+                }
+
+                // Distribuir entre las ranuras compatibles con el patrón del carril
+                var slotsPatron = carriles[idxCarril]
+                    .Where(r => d.DiasPatron == null || d.DiasPatron.Count == 0 || d.DiasPatron.Contains(r.Dia))
+                    .ToList();
+                if (slotsPatron.Count == 0)
+                {
+                    slotsPatron = carriles[idxCarril].ToList();
+                }
+
+                int ranurasEnCarril = Math.Max(1, slotsPatron.Count);
+                int s = d.Sesiones;
+                for (int i = 0; i < ranurasEnCarril; i++)
+                {
+                    int fraccion = s / ranurasEnCarril + (i < s % ranurasEnCarril ? 1 : 0);
+                    cargaCarriles[idxCarril] += fraccion;
+                    var claveSlot = (slotsPatron[i].Dia, slotsPatron[i].Franja);
+                    if (slotCarga.ContainsKey(claveSlot))
+                    {
+                        slotCarga[claveSlot] += fraccion;
+                    }
+                }
             }
 
-            int K = bandasDias.Count;
-            var capacidadesCarril = new int[K];
-            var diasCarril = new List<HashSet<int>>(K);
-
-            for (int c = 0; c < K; c++)
+            res.SemanasRequeridas = slotCarga.Values.DefaultIfEmpty(0).Max();
+            if (slotCarga.Count > 0)
             {
-                var diasBandaSet = new HashSet<int>(bandasDias[c]);
-                var ranurasBanda = ranuras.Where(r => diasBandaSet.Contains(r.Dia)).ToList();
-                capacidadesCarril[c] = ranurasBanda.Sum(r => AgPlanificadorTemporal.ContarOcurrencias(r.Dia, ini, fin, contexto.EsFestivo));
-                diasCarril.Add(diasBandaSet);
+                var cuello = slotCarga.OrderByDescending(kv => kv.Value)
+                    .ThenBy(kv => kv.Key.Dia)
+                    .ThenBy(kv => kv.Key.Franja)
+                    .First();
+                res.DiaCuello = cuello.Key.Dia;
+                res.FranjaCuello = cuello.Key.Franja;
             }
+            res.FechaFinMinima = FinDeSemanaValida(ini, res.SemanasRequeridas, res.DiaCuello, contexto.EsFestivo);
 
-            // Asignar demandas a carriles según compatibilidad fija y factibilidad
-            // Ordenar asignaturas de mayor a menor demanda para pruning eficiente
-            var ordenadas = demandas.OrderByDescending(d => d.Sesiones).ToList();
+            // Fase 1759: Saturación directa por slot (día, franja) frente al calendario
+            bool saturacionPorSlot = slotCarga.Any(kv =>
+                kv.Value > AgPlanificadorTemporal.ContarOcurrencias(kv.Key.Dia, ini, fin, contexto.EsFestivo));
 
-            var cargas = new int[K];
-            bool cabe = PuedeAcomodar(0, ordenadas, cargas, capacidadesCarril, diasCarril);
-
-            if (!cabe)
+            res.MateriasFueraVentana = materiasFueraVentana.ToList();
+            if (materiasFueraVentana.Count > 0)
             {
                 res.HaySaturacion = true;
                 res.SaturacionCarriles = true;
-                res.Motivo = $"saturación de carril: demanda {demandaTotal} cabe nominalmente ({capacidadTotal}) pero no es particionable en los carriles disponibles";
+                res.Motivo = $"materias fuera de ventana: {materiasFueraVentana.Count} asignaturas incompatibles con la estructura de carriles";
+                res.IdAsignaturasSaturadas = materiasFueraVentana;
+                return res;
+            }
+
+            // Fase 1765 & Fase 1766: Saturación de franja / capacidad global y aislamiento de asignaturas saturadas
+            if (saturacionPorSlot || demandaTotal > capacidadTotal)
+            {
+                res.HaySaturacion = true;
+                if (saturacionPorSlot)
+                {
+                    res.SaturacionCarriles = true;
+                    res.Motivo = "saturación de franja: carga excede capacidad del calendario en franjas específicas";
+                    // Fase 1766: Identificar quirúrgicamente las asignaturas que cargan los slots saturados
+                    var slotsSaturados = slotCarga
+                        .Where(kv => kv.Value > AgPlanificadorTemporal.ContarOcurrencias(kv.Key.Dia, ini, fin, contexto.EsFestivo))
+                        .Select(kv => kv.Key)
+                        .ToHashSet();
+
+                    res.IdAsignaturasSaturadas = demandas
+                        .Where(d =>
+                        {
+                            if (d.DiasPatron != null && d.DiasPatron.Count > 0)
+                            {
+                                return slotsSaturados.Any(s => d.DiasPatron.Contains(s.Dia));
+                            }
+                            return true;
+                        })
+                        .Select(d => d.IdAsignatura)
+                        .Distinct()
+                        .ToList();
+                }
+                else
+                {
+                    res.Motivo = $"demanda {demandaTotal} sesiones > capacidad global {capacidadTotal} ranuras";
+                    // Fase 1770: En déficit global, acotar a asignaturas ordenadas por mayor demanda que saturan la capacidad
+                    int acum = 0;
+                    res.IdAsignaturasSaturadas = demandas
+                        .OrderByDescending(d => d.Sesiones)
+                        .TakeWhile(d =>
+                        {
+                            acum += d.Sesiones;
+                            return true; // Conserva todas las ordenadas hasta completar déficit
+                        })
+                        .Select(d => d.IdAsignatura)
+                        .Distinct()
+                        .ToList();
+                }
+
+                return res;
             }
 
             return res;
         }
 
-        private static bool PuedeAcomodar(
-            int idx,
-            List<(int Sesiones, HashSet<int> DiasPatron)> demandas,
-            int[] cargas,
-            int[] capacidades,
-            List<HashSet<int>> diasCarril)
-        {
-            if (idx >= demandas.Count) return true;
-
-            var item = demandas[idx];
-            int s = item.Sesiones;
-            var patron = item.DiasPatron;
-
-            for (int c = 0; c < capacidades.Length; c++)
-            {
-                // Si la asignatura tiene restricción fija de días, verificar compatibilidad
-                if (patron != null && patron.Count > 0)
-                {
-                    if (patron.Any(d => !diasCarril[c].Contains(d)))
-                        continue;
-                }
-
-                if (cargas[c] + s <= capacidades[c])
-                {
-                    cargas[c] += s;
-                    if (PuedeAcomodar(idx + 1, demandas, cargas, capacidades, diasCarril))
-                        return true;
-                    cargas[c] -= s;
-                }
-            }
-
-            return false;
-        }
-
-        private static List<(int Sesiones, HashSet<int> DiasPatron)> ObtenerDemandasAsignaturas(
+        private static List<(int Sesiones, HashSet<int> DiasPatron, int IdAsignatura, string OrigenPatron)> ObtenerDemandasAsignaturas(
             AgContexto contexto,
             AgAula aula,
             double unidad)
         {
-            var resultado = new List<(int, HashSet<int>)>();
+            var resultado = new List<(int, HashSet<int>, int, string)>();
             if (contexto.AulaAsignaturaPorAulaAsig == null) return resultado;
 
             string semAula = AgFormatoAsignatura.SemestreRomano(aula.Semestre);
@@ -168,10 +210,69 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                             diasPatron = new HashSet<int>(dias);
                         }
                     }
-                    resultado.Add((sesiones, diasPatron));
+                    resultado.Add((sesiones, diasPatron, kv.Key.Item2, kv.Value.OrigenPatron ?? "AUTOMATICO"));
                 }
             }
             return resultado;
+        }
+
+        private static int ElegirCarril(
+            (int Sesiones, HashSet<int> DiasPatron, int IdAsignatura, string OrigenPatron) d,
+            List<IReadOnlyList<AgRanura>> carriles,
+            int[] cargaCarriles)
+        {
+            // Si el patrón es fijo/legado y tiene días especificados, debe coincidir con todos los días del carril
+            bool esAutomatico = string.Equals(d.OrigenPatron, "AUTOMATICO", StringComparison.OrdinalIgnoreCase);
+            if (!esAutomatico && d.DiasPatron != null && d.DiasPatron.Count > 0)
+            {
+                for (int c = 0; c < carriles.Count; c++)
+                {
+                    if (d.DiasPatron.All(day => carriles[c].Any(r => r.Dia == day)))
+                    {
+                        return c;
+                    }
+                }
+                return -1; // Fuera de ventana / incompatible con los carriles formados
+            }
+
+            int minIdx = 0;
+            int minCarga = int.MaxValue;
+            for (int c = 0; c < cargaCarriles.Length; c++)
+            {
+                if (cargaCarriles[c] < minCarga)
+                {
+                    minCarga = cargaCarriles[c];
+                    minIdx = c;
+                }
+            }
+            return minIdx;
+        }
+
+        private static DateTime FinDeSemanaValida(
+            DateTime ini,
+            int semanasRequeridas,
+            int diaCuello,
+            Func<DateTime, bool> esFestivo)
+        {
+            if (semanasRequeridas <= 0) return ini;
+            if (diaCuello < 1 || diaCuello > 7) return ini;
+
+            var cursor = ini.Date;
+            int validas = 0;
+            while (validas < semanasRequeridas)
+            {
+                int iso = cursor.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)cursor.DayOfWeek;
+                if (iso == diaCuello && (esFestivo == null || !esFestivo(cursor)))
+                {
+                    validas++;
+                    if (validas == semanasRequeridas)
+                    {
+                        return cursor;
+                    }
+                }
+                cursor = cursor.AddDays(1);
+            }
+            return ini;
         }
     }
 }
