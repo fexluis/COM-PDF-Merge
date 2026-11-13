@@ -728,6 +728,8 @@
     <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV79_NormalizeUsuariosIds.cs" />
     <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV80_AddOrigenPatronAgAulaAsignatura.cs" />
     <Compile Include="Academic\Domain\Enums\AgOrigenPatron.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgEvaluadorDemandaVentana.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgResultadoEvaluacionVentana.cs" />
     <Compile Include="Academic\Infrastructure\Persistence\Repositories\AgFiltroSeleccionRepository.cs" />
     <Compile Include="Academic\UI\Controls\CheckedComboBox.cs" />
     <Compile Include="Academic\UI\Forms\AgFormTerceros.cs">

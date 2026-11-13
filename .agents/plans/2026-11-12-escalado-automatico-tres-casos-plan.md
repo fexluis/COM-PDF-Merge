@@ -158,16 +158,23 @@ Dependencias declaradas:
 - **location**: ConversorPDF.XLL/Academic/Application/Services/Genetica
 - **files_lock**:
   - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgEvaluadorDemandaVentana.cs
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgResultadoEvaluacionVentana.cs
   - ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgEscaladorVentanaAula.cs
+  - ConversorPDF.XLL/ConversorPDF.XLL.csproj
   - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgEvaluadorDemandaVentanaTests.cs
   - ConversorPDF.Tests/Academic/Infrastructure/Persistence/AgEscaladorVentanaAulaTests.cs
 - **description**: Crear AgEvaluadorDemandaVentana que evalúe tanto la capacidad global como la factibilidad por carril. Eliminar la salida anticipada errónea de AgEscaladorVentanaAula (demanda <= capacidadTotal) cuando hay saturación de carril. Evaluar ganancia real hacia AgEscaleraVentanas.Siguiente.
 - **validation**: AgEscaladorVentanaAula detecta saturación en VIE-DOM o LUN-JUE aunque la suma global de horas fuera menor que el total de ranuras.
 - **verification**: powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "AgEvaluadorDemandaVentana|AgEscaladorVentanaAulaTests"
-- **evidence**: pendiente
-- **status**: pending
-- **log**: pendiente
-- **files edited/created**: []
+- **evidence**: _evidence/20261112-191910/summary.md
+- **status**: done
+- **log**: Verificación Fast ejecutada con éxito (23/23 tests PASS). AgEvaluadorDemandaVentana implementado con detección de saturación estructural de carriles y conectado a AgEscaladorVentanaAula.
+- **files edited/created**:
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgEvaluadorDemandaVentana.cs
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgResultadoEvaluacionVentana.cs
+  - ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgEscaladorVentanaAula.cs
+  - ConversorPDF.XLL/ConversorPDF.XLL.csproj
+  - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgEvaluadorDemandaVentanaTests.cs
 
 ### T5: Aplicación transaccional e invalidación
 - **id**: T5

@@ -56,11 +56,8 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                 var nivel = AgNivelAcademicoCatalogo.Desde(programa?.Modalidad);
                 double unidad = AgUnidadesSemanales.HorasSesionAula(aula, nivel);
 
-                int demanda = DemandaAula(contexto, aula, unidad);
-                if (demanda <= 0) continue;
-
-                int capacidadAntes = Capacidad(aula.DiasVentana, aula.Jornada, unidad, contexto, ini, fin);
-                if (demanda <= capacidadAntes) continue;
+                var evalAntes = AgEvaluadorDemandaVentana.Evaluar(aula.DiasVentana, aula.Jornada, unidad, contexto, aula, ini, fin);
+                if (!evalAntes.HaySaturacion) continue;
 
                 var paso = AgEscaleraVentanas.Siguiente(aula.DiasVentana);
                 if (string.IsNullOrWhiteSpace(paso))
@@ -68,8 +65,8 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                     continue;
                 }
 
-                int capacidad = Capacidad(paso, aula.Jornada, unidad, contexto, ini, fin);
-                if (capacidad <= capacidadAntes)
+                var evalDespues = AgEvaluadorDemandaVentana.Evaluar(paso, aula.Jornada, unidad, contexto, aula, ini, fin);
+                if (evalDespues.CapacidadTotal <= evalAntes.CapacidadTotal && evalDespues.HaySaturacion)
                 {
                     continue;
                 }
@@ -80,10 +77,10 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                     Subunidad = aula.Subunidad,
                     Desde = aula.DiasVentana,
                     Hacia = paso,
-                    DemandaSesiones = demanda,
-                    CapacidadAntes = capacidadAntes,
-                    CapacidadDespues = capacidad,
-                    Motivo = $"demanda {demanda} sesiones > capacidad {capacidadAntes} ranuras"
+                    DemandaSesiones = evalAntes.DemandaTotal,
+                    CapacidadAntes = evalAntes.CapacidadTotal,
+                    CapacidadDespues = evalDespues.CapacidadTotal,
+                    Motivo = evalAntes.Motivo
                 });
             }
             return decisiones;
