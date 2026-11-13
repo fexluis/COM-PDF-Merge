@@ -101,9 +101,9 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 }
             }
 
-            // F1583: No detenerse si PatronesNoAlojables == 0; la partición alternativa puede aportar
-            // capacidad requerida para resolver infactibles en asignaturas de alta demanda.
-            if (!hayPatronValido || referencia.Resultado.Infactibles.Count == 0)
+            // F1583 / F1736: No detenerse si PatronesNoAlojables == 0; la partición alternativa puede aportar
+            // capacidad requerida para resolver infactibles en asignaturas o acortar makespan.
+            if (!hayPatronValido && referencia.Resultado.Infactibles.Count == 0)
             {
                 return new AgSeleccionParticion(false, referencia, referencia, 0, 0);
             }
@@ -184,8 +184,10 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     continue;
                 }
 
-                // (d) Reducción estricta de infactibles
-                if (ev.Resultado.Infactibles.Count >= referencia.Resultado.Infactibles.Count)
+                // (d) Reducción estricta de infactibles o acortamiento de makespan con igual número de infactibles (F1736)
+                bool menorInfactibles = ev.Resultado.Infactibles.Count < referencia.Resultado.Infactibles.Count;
+                bool mejorMakespan = ev.Resultado.Infactibles.Count == referencia.Resultado.Infactibles.Count && ev.Makespan < referencia.Makespan;
+                if (!menorInfactibles && !mejorMakespan)
                 {
                     descartadas++;
                     continue;

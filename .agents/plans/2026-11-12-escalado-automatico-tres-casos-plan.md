@@ -144,10 +144,12 @@ Dependencias declaradas:
 - **description**: Sustituir el reparto ingenuo de materias iguales por carril. Asignar materias automáticas según sesiones requeridas y capacidad efectiva de cada ranura/carril. Respetar estrictamente restricciones fijas y legadas sin mutarlas.
 - **validation**: Partición de carriles balancea la carga según capacidad y resuelve cuellos de botella sin desbordar carriles pequeños (como domingo en VIE-DOM).
 - **verification**: powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "AgParticionCarriles"
-- **evidence**: pendiente
-- **status**: pending
-- **log**: pendiente
-- **files edited/created**: []
+- **evidence**: _evidence/20261112-191247/summary.md
+- **status**: done
+- **log**: Verificación Fast ejecutada con éxito (14/14 tests PASS). AgParticionCarriles evalúa alternativas para patrones automáticos y permite optimización temporal (makespan) cuando el número de infactibles es igual.
+- **files edited/created**:
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgParticionCarriles.cs
+  - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgParticionCarrilesTests.cs
 
 ### T4: Evaluador compartido y decisión de escalado (AgEvaluadorDemandaVentana)
 - **id**: T4

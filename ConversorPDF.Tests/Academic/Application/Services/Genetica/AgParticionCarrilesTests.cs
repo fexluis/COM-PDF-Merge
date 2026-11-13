@@ -266,6 +266,79 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             res.Cambiada.Should().BeFalse();
         }
 
+        [Fact]
+        public void Seleccionar_WhenIgualInfactiblesPeroMejorMakespan_ShouldAceptar()
+        {
+            var ranuras = new List<AgRanura>
+            {
+                new AgRanura(4, AgFranjaJornada.NOCHE, 4.0),
+                new AgRanura(5, AgFranjaJornada.NOCHE, 4.0),
+                new AgRanura(6, AgFranjaJornada.NOCHE, 4.0),
+                new AgRanura(7, AgFranjaJornada.NOCHE, 4.0)
+            };
+            var canonicas = new List<IReadOnlyList<AgRanura>>
+            {
+                new List<AgRanura> { ranuras[0], ranuras[1] },
+                new List<AgRanura> { ranuras[2] },
+                new List<AgRanura> { ranuras[3] }
+            };
+            var patrones = new List<string> { "6,7" };
+
+            var res = AgParticionCarriles.Seleccionar(
+                new List<int> { 4, 5, 6, 7 },
+                ranuras,
+                patrones,
+                canonicas,
+                bandas =>
+                {
+                    if (bandas.Count == 3)
+                        return CrearEvaluacionSintetica(bandas, 1, 1, new List<int> { 1 }, new List<int> { 2 }, makespan: 5);
+                    // Alternativa: igual número de infactibles (1) pero mejor makespan (3)
+                    return CrearEvaluacionSintetica(bandas, 0, 1, new List<int> { 1 }, new List<int> { 2 }, makespan: 3);
+                });
+
+            res.Cambiada.Should().BeTrue();
+            res.Elegida.Makespan.Should().Be(3);
+        }
+
+        [Fact]
+        public void Seleccionar_WhenSinPatronesValidosPeroConInfactibles_ShouldEvaluarParticionesAlternativas()
+        {
+            var ranuras = new List<AgRanura>
+            {
+                new AgRanura(1, AgFranjaJornada.NOCHE, 4.0),
+                new AgRanura(2, AgFranjaJornada.NOCHE, 4.0),
+                new AgRanura(3, AgFranjaJornada.NOCHE, 4.0),
+                new AgRanura(4, AgFranjaJornada.NOCHE, 4.0),
+                new AgRanura(5, AgFranjaJornada.NOCHE, 4.0)
+            };
+            var canonicas = new List<IReadOnlyList<AgRanura>>
+            {
+                new List<AgRanura> { ranuras[0], ranuras[1] },
+                new List<AgRanura> { ranuras[2], ranuras[3] },
+                new List<AgRanura> { ranuras[4] }
+            };
+            // Sin patrones explícitos (todos automáticos)
+            var patrones = new List<string> { "", "" };
+
+            var res = AgParticionCarriles.Seleccionar(
+                new List<int> { 1, 2, 3, 4, 5 },
+                ranuras,
+                patrones,
+                canonicas,
+                bandas =>
+                {
+                    // Canónica tiene 1 infactible por cuello de botella
+                    if (bandas.Count == 3 && bandas[2].Count == 1)
+                        return CrearEvaluacionSintetica(bandas, 0, 1, new List<int> { 1 }, new List<int> { 2 });
+                    // Alternativa balanceada resuelve el infactible
+                    return CrearEvaluacionSintetica(bandas, 0, 0, new List<int> { 1, 2 }, new List<int>());
+                });
+
+            res.Cambiada.Should().BeTrue();
+            res.Elegida.Resultado.Infactibles.Count.Should().Be(0);
+        }
+
         private static AgEvaluacionParticion CrearEvaluacionSintetica(
             IReadOnlyList<IReadOnlyList<AgRanura>> bandas,
             int patronesNoAlojables,
