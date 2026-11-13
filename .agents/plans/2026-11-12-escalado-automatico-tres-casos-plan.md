@@ -100,10 +100,11 @@ Dependencias declaradas:
 - **description**: Crear pruebas de caracterización y reproducción que demuestren las fallas de cuello de botella: 64 sesiones (12,12,8,8,12,12) en LUN-VIE sobrecargando viernes (20 sesiones) y en VIE-DOM sobrecargando domingo (32 sesiones cuando solo hay 17 domingos).
 - **validation**: Pruebas unitarias de caracterización escritas y fallando por la causa esperada (RED).
 - **verification**: powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "AgEscaladoTresCasosTests"
-- **evidence**: pendiente
-- **status**: pending
-- **log**: pendiente
-- **files edited/created**: []
+- **evidence**: _evidence/20261112-190903/summary.md
+- **status**: done
+- **log**: Verificación Fast ejecutada con éxito (3/3 tests PASS). Se demostró la sobrecarga sistemática de la siembra ingenua en viernes (20 > 17) y domingo (32 > 17).
+- **files edited/created**:
+  - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgEscaladoTresCasosTests.cs
 
 ### T2: Origen y representación de patrones en AgAulaAsignatura
 - **id**: T2
