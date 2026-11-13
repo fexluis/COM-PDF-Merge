@@ -204,10 +204,11 @@ Dependencias declaradas:
 - **description**: Unificar pre-vuelo entre Diagnosticar y Optimizar. Modal informativo detallado (aula, ruta, días añadidos, fechas originales fijas, sesiones antes/después, demanda pendiente). Bloqueo de acciones y recarga segura.
 - **validation**: Mismo diagnóstico desde Diagnosticar y Optimizar; confirmación modal respetada; segunda corrida estable.
 - **verification**: powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Build
-- **evidence**: pendiente
-- **status**: pending
-- **log**: pendiente
-- **files edited/created**: []
+- **evidence**: _evidence/20261112-192532/summary.md
+- **status**: done
+- **log**: Verificación Build completada con éxito. Pre-vuelo de escalado y diálogo modal detallado (con demanda pendiente y advertencia de soluciones parciales) unificados entre Diagnosticar y Optimizar con exclusión mutua mediante semáforo y recarga segura de dimensiones del perfil.
+- **files edited/created**:
+  - ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs
 
 ### T7: Matriz integral de validación de los tres casos
 - **id**: T7

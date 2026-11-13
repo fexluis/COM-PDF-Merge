@@ -1494,92 +1494,11 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     }
                 }
 
-                // Fase 1233 / Fase 1261: pre-vuelo de escalado de ventana (dry-run + confirmación, máx. 2 pasos)
-                var escalador = new AgEscaladorVentanaAula(_connectionFactory);
-                var decisionesEscalado = escalador.Evaluar(_contextoActual);
-                if (decisionesEscalado.Count > 0)
+                // Fase 1233 / Fase 1261 / Fase 1739: pre-vuelo de escalado de ventana unificado
+                var resEscaladoDiag = await EvaluarYAplicarEscaladoAsync(traza, CancellationToken.None);
+                if (resEscaladoDiag == AgResultadoEscaladoUI.FalloAlAplicar)
                 {
-                    string detalleEsc = string.Join("\n", decisionesEscalado.Select(d =>
-                    {
-                        var aulaObj = _contextoActual?.Aulas?.FirstOrDefault(a => string.Equals(a.AulaRef, d.AulaRef, StringComparison.OrdinalIgnoreCase));
-                        var progObj = _contextoActual?.Programas?.FirstOrDefault(p => p.Id == aulaObj?.IdPrograma);
-                        var nivelObj = AgNivelAcademicoCatalogo.Desde(progObj?.Modalidad);
-                        double unidad = aulaObj != null ? AgUnidadesSemanales.HorasSesionAula(aulaObj, nivelObj) : 4.0;
-                        string rotuloHacia = AgEscaleraVentanas.Rotular(d.Hacia, unidad);
-                        return $"• {d.AulaRef}: {d.Desde} ({d.CapacidadAntes} ranuras) → {d.Hacia} [{rotuloHacia}] ({d.CapacidadDespues} ranuras); {d.Motivo}.";
-                    }));
-
-                    string sugerenciasResumen = string.Join(", ", decisionesEscalado
-                        .Select(d =>
-                        {
-                            var aulaObj = _contextoActual?.Aulas?.FirstOrDefault(a => string.Equals(a.AulaRef, d.AulaRef, StringComparison.OrdinalIgnoreCase));
-                            var progObj = _contextoActual?.Programas?.FirstOrDefault(p => p.Id == aulaObj?.IdPrograma);
-                            var nivelObj = AgNivelAcademicoCatalogo.Desde(progObj?.Modalidad);
-                            double unidad = aulaObj != null ? AgUnidadesSemanales.HorasSesionAula(aulaObj, nivelObj) : 4.0;
-                            return $"{d.Desde} → {d.Hacia} ({AgEscaleraVentanas.Rotular(d.Hacia, unidad)})";
-                        })
-                        .Distinct());
-
-                    var respuesta = MessageBox.Show(this,
-                        "Se detectaron aulas cuya demanda excede la capacidad de su ventana:\n\n" + detalleEsc +
-                        "\n\n¿Aplicar el escalado sugerido (" + sugerenciasResumen + ")?",
-                        "Escalado de ventana (Pre-Vuelo)", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-
-                    traza.Dato("EscaladoSugerido", string.Join(" | ", decisionesEscalado.Select(d => $"{d.AulaRef}:{d.Desde}->{d.Hacia}")));
-
-                    if (respuesta == DialogResult.Yes)
-                    {
-                        // Fase 1258 / Fase 1268 / Fase 1272 / Fase 1276: acotar al perfil activo; 0 sólo si no hay árbol seleccionado
-                        int idArbolActivo = cmbArboles.SelectedItem is AgArbol perfilActivo
-                            ? (int)perfilActivo.Id
-                            : 0;
-
-                        // Fase 1715: Persistencia fallida tratada como aborto antes de alterar memoria
-                        int esperadas = decisionesEscalado.Count(d => d.Aplica);
-                        int aplicadas = await escalador.AplicarAsync(decisionesEscalado, idArbolActivo, CancellationToken.None);
-                        Log($"[ESCALADO] Ventanas actualizadas en {aplicadas} de {esperadas} aula(s) requerida(s).");
-
-                        if (aplicadas != esperadas)
-                        {
-                            MessageBox.Show(this,
-                                "Escalado incompleto. Recargue el contexto antes de continuar.",
-                                "Escalado", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                            return;
-                        }
-
-                        foreach (var d in decisionesEscalado.Where(x => x.Aplica))
-                        {
-                            var aulaMem = _contextoActual.Aulas.FirstOrDefault(a =>
-                                string.Equals(a.AulaRef, d.AulaRef, StringComparison.OrdinalIgnoreCase));
-                            if (aulaMem != null)
-                            {
-                                aulaMem.DiasVentana = d.Hacia;
-                            }
-                        }
-
-                        // Fase 1706 / Fase 1713 / Fase 1716: Recargar dimensiones del perfil activo en el árbol antes de re-validar
-                        if (idArbolActivo > 0)
-                        {
-                            if (!await RecargarDimensionesPerfilActivoTrasEscaladoAsync(idArbolActivo, CancellationToken.None).ConfigureAwait(true))
-                            {
-                                MessageBox.Show(this,
-                                    "No se pudieron actualizar las dimensiones. Recargue el perfil.",
-                                    "Escalado de ventana", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                                return;
-                            }
-                        }
-
-                        // Fase 1261 / Fase 1264 / Fase 1274: re-validar fuera del hilo UI
-                        var reval = await Task.Run(() => _validadorVentana.ValidarFactibilidad(_contextoActual)).ConfigureAwait(true);
-                        if (reval.IsFailure || (reval.Value != null && !reval.Value.EsFactible))
-                        {
-                            string msgReval = reval.IsFailure
-                                ? reval.Error
-                                : string.Join(" | ", reval.Value.BloqueosCriticos);
-                            MessageBox.Show(this, msgReval, "Re-validación Pre-Vuelo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                            return;
-                        }
-                    }
+                    return;
                 }
 
                 // Fase 295, 296, 303 & 321: Validar cobertura de pool docente (Consentimiento de Vacante)
@@ -1682,6 +1601,143 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             }
         }
 
+        private enum AgResultadoEscaladoUI
+        {
+            SinCambios,
+            AplicadoExitosamente,
+            RechazadoPorUsuario,
+            FalloAlAplicar
+        }
+
+        /// <summary>
+        /// Evalúa si la demanda de las aulas excede la capacidad o satura los carriles de su ventana actual.
+        /// Si detecta saturación, presenta un diálogo modal detallado con la ruta propuesta, ranuras antes/después,
+        /// demanda requerida y demanda pendiente. Si el usuario confirma, aplica el escalado transaccionalmente,
+        /// actualiza la memoria (aulas y patrones automáticos en ag_aula_asignatura), recarga las dimensiones del perfil activo
+        /// en el árbol de forma segura y ejecuta una revalidación de factibilidad.
+        /// </summary>
+        private async Task<AgResultadoEscaladoUI> EvaluarYAplicarEscaladoAsync(AgDiagnosticoTraza traza, CancellationToken ct)
+        {
+            var escalador = new AgEscaladorVentanaAula(_connectionFactory);
+            var decisionesEscalado = escalador.Evaluar(_contextoActual);
+            if (decisionesEscalado == null || decisionesEscalado.Count == 0)
+            {
+                return AgResultadoEscaladoUI.SinCambios;
+            }
+
+            var lineasDetalle = new List<string>();
+            foreach (var d in decisionesEscalado)
+            {
+                var aulaObj = _contextoActual?.Aulas?.FirstOrDefault(a => string.Equals(a.AulaRef, d.AulaRef, StringComparison.OrdinalIgnoreCase));
+                var progObj = _contextoActual?.Programas?.FirstOrDefault(p => p.Id == aulaObj?.IdPrograma);
+                var nivelObj = AgNivelAcademicoCatalogo.Desde(progObj?.Modalidad);
+                double unidad = aulaObj != null ? AgUnidadesSemanales.HorasSesionAula(aulaObj, nivelObj) : 4.0;
+                string rotuloHacia = AgEscaleraVentanas.Rotular(d.Hacia, unidad);
+
+                int pendiente = Math.Max(0, d.DemandaSesiones - d.CapacidadDespues);
+                string textoPendiente = pendiente > 0
+                    ? $" [Demanda pendiente: {pendiente} sesiones; requerirá escalado posterior]"
+                    : " [Demanda completamente cubierta]";
+
+                lineasDetalle.Add($"• {d.AulaRef}: {d.Desde} ({d.CapacidadAntes} ranuras) → {d.Hacia} [{rotuloHacia}] ({d.CapacidadDespues} ranuras); {d.Motivo}.{textoPendiente}");
+            }
+
+            string detalleEsc = string.Join("\n", lineasDetalle);
+            string sugerenciasResumen = string.Join(", ", decisionesEscalado
+                .Select(d =>
+                {
+                    var aulaObj = _contextoActual?.Aulas?.FirstOrDefault(a => string.Equals(a.AulaRef, d.AulaRef, StringComparison.OrdinalIgnoreCase));
+                    var progObj = _contextoActual?.Programas?.FirstOrDefault(p => p.Id == aulaObj?.IdPrograma);
+                    var nivelObj = AgNivelAcademicoCatalogo.Desde(progObj?.Modalidad);
+                    double unidad = aulaObj != null ? AgUnidadesSemanales.HorasSesionAula(aulaObj, nivelObj) : 4.0;
+                    return $"{d.Desde} → {d.Hacia} ({AgEscaleraVentanas.Rotular(d.Hacia, unidad)})";
+                })
+                .Distinct());
+
+            bool algunaPendiente = decisionesEscalado.Any(d => d.DemandaSesiones > d.CapacidadDespues);
+            string advertenciaPendiente = algunaPendiente
+                ? "\n\nNOTA: Para una o más aulas, este escalado es un paso intermedio que amplía la ventana pero aún dejará demanda pendiente insatisfecha (se requerirá una segunda evaluación o escalado posterior). Las fechas de semestre se mantienen fijas."
+                : "\n\nNOTA: Las fechas de inicio y fin de semestre se mantienen fijas.";
+
+            var respuesta = MessageBox.Show(this,
+                "Se detectaron aulas cuya demanda excede la capacidad o saturación de su ventana actual:\n\n" + detalleEsc +
+                advertenciaPendiente +
+                "\n\n¿Desea aplicar el escalado sugerido (" + sugerenciasResumen + ")?",
+                "Escalado de ventana (Pre-Vuelo)", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+            traza?.Dato("EscaladoSugerido", string.Join(" | ", decisionesEscalado.Select(d => $"{d.AulaRef}:{d.Desde}->{d.Hacia}")));
+
+            if (respuesta != DialogResult.Yes)
+            {
+                Log("[ESCALADO] Propuesta de escalado rechazada por el usuario.");
+                return AgResultadoEscaladoUI.RechazadoPorUsuario;
+            }
+
+            // Fase 1258 / Fase 1268 / Fase 1272 / Fase 1276: acotar al perfil activo; 0 sólo si no hay árbol seleccionado
+            int idArbolActivo = cmbArboles.SelectedItem is AgArbol perfilActivo
+                ? (int)perfilActivo.Id
+                : 0;
+
+            int esperadas = decisionesEscalado.Count(d => d.Aplica);
+            int aplicadas = await escalador.AplicarAsync(decisionesEscalado, idArbolActivo, ct);
+            Log($"[ESCALADO] Ventanas actualizadas en {aplicadas} de {esperadas} aula(s) requerida(s).");
+
+            if (aplicadas != esperadas)
+            {
+                MessageBox.Show(this,
+                    "Escalado incompleto. Recargue el contexto antes de continuar.",
+                    "Escalado", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return AgResultadoEscaladoUI.FalloAlAplicar;
+            }
+
+            foreach (var d in decisionesEscalado.Where(x => x.Aplica))
+            {
+                var aulaMem = _contextoActual?.Aulas?.FirstOrDefault(a =>
+                    string.Equals(a.AulaRef, d.AulaRef, StringComparison.OrdinalIgnoreCase));
+                if (aulaMem != null)
+                {
+                    aulaMem.DiasVentana = d.Hacia;
+
+                    // Reset in-memory aula-asignaturas dias_patron for AUTOMATICO so scheduler recalculates on updated window
+                    if (_contextoActual?.AulaAsignaturas != null)
+                    {
+                        foreach (var aa in _contextoActual.AulaAsignaturas.Where(x => x.IdAula == aulaMem.Id && string.Equals(x.OrigenPatron, "AUTOMATICO", StringComparison.OrdinalIgnoreCase)))
+                        {
+                            aa.DiasPatron = string.Empty;
+                        }
+                    }
+                }
+            }
+
+            // Recargar dimensiones del perfil activo en el árbol
+            if (idArbolActivo > 0)
+            {
+                if (!await RecargarDimensionesPerfilActivoTrasEscaladoAsync(idArbolActivo, ct).ConfigureAwait(true))
+                {
+                    MessageBox.Show(this,
+                        "No se pudieron actualizar las dimensiones. Recargue el perfil.",
+                        "Escalado de ventana", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return AgResultadoEscaladoUI.FalloAlAplicar;
+                }
+            }
+
+            // Re-validar fuera del hilo UI
+            var reval = await Task.Run(() => _validadorVentana.ValidarFactibilidad(_contextoActual), ct).ConfigureAwait(true);
+            if (reval.IsFailure || (reval.Value != null && !reval.Value.EsFactible))
+            {
+                string msgReval = reval.IsFailure
+                    ? reval.Error
+                    : string.Join(" | ", reval.Value.BloqueosCriticos);
+                Log($"[AVISO RE-VALIDACIÓN] {msgReval}");
+                if (!algunaPendiente)
+                {
+                    MessageBox.Show(this, msgReval, "Re-validación Pre-Vuelo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            }
+
+            return AgResultadoEscaladoUI.AplicadoExitosamente;
+        }
+
         private async Task IniciarOptimizacionAsync()
         {
             // Fase 1727: No permitir optimización si el diagnóstico está en curso
@@ -1690,12 +1746,29 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 return;
             }
 
-            btnEjecutarAG.Enabled = false;
+            // Fase 1716, Fase 1727 & Fase 1739: Bloquear controles y acciones de perfil/árbol, detener temporizador y adquirir semáforo
+            bool arbolHabilitado = treeContextoAcademico.Enabled;
+            bool perfilesHabilitados = cmbArboles.Enabled;
+            bool btnValidarHabilitado = btnValidarFactibilidad.Enabled;
+            bool btnEjecutarHabilitado = btnEjecutarAG.Enabled;
+            bool btnFiltrarHabilitado = btnFiltrarArbol.Enabled;
+            bool btnCargarHabilitado = btnCargarArbol.Enabled;
+            bool btnSobrescribirHabilitado = btnSobrescribirArbol.Enabled;
+
+            treeContextoAcademico.Enabled = false;
+            cmbArboles.Enabled = false;
             btnValidarFactibilidad.Enabled = false;
+            btnEjecutarAG.Enabled = false;
+            btnFiltrarArbol.Enabled = false;
+            btnCargarArbol.Enabled = false;
+            btnSobrescribirArbol.Enabled = false;
             btnCancelar.Enabled = true;
             progressBarAG.Value = 0;
             lblStatusAG.Text = "Estado: Optimizando...";
             lblStatusAG.ForeColor = Color.DarkBlue;
+
+            _timerSyncDimensiones.Stop();
+            await _semaforoSyncDimensiones.WaitAsync();
 
             _ctsEjecucion = new CancellationTokenSource();
             LoggerHelper.ReiniciarDedupe(); // Fase 594/598: Reinicio centralizado de dedupe por proceso
@@ -1712,6 +1785,23 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
 
             try
             {
+                // Fase 1722, Fase 1726, Fase 1731 & Fase 1739: Vaciar y sincronizar pendientes con la subunidad capturada antes de construir el contexto
+                if (_dimensionesPendientes != null)
+                {
+                    var pend = _dimensionesPendientes.Value;
+                    var resSync = await _aulaDimSync.SincronizarConfirmadoAsync(pend.AulaRef, pend.Jornada, pend.HorasDia, pend.DiasVentana, pend.Subunidad, _ctsEjecucion.Token);
+                    if (resSync.IsFailure)
+                    {
+                        Log($"[ERROR PRE-VUELO] Fallo en sincronización pendiente de {pend.AulaRef}: {resSync.Error}");
+                        MessageBox.Show(this, resSync.Error, "Sincronización de dimensiones", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+
+                    _dimensionesPendientes = null;
+                    int nSync = resSync.Value;
+                    Log($"[DIM PRE-VUELO] Sincronización pendiente de {pend.AulaRef} completada (filas={nSync}).");
+                }
+
                 txtLogAG.Clear();
                 Log("================================================================================");
                 Log(" INICIANDO OPTIMIZACIÓN EVOLUTIVA (Algoritmo Genético)");
@@ -1893,6 +1983,24 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                         traza.Fin(false, msgLog);
                         Log($"[ERROR] {msgLog}");
                         MessageBox.Show(this, msgModal, "Validación Pre-Vuelo Ventana/Jornada", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+                }
+
+                // Fase 1739: pre-vuelo de escalado de ventana unificado en IniciarOptimizacionAsync
+                var resEscaladoOpt = await EvaluarYAplicarEscaladoAsync(traza, _ctsEjecucion.Token);
+                if (resEscaladoOpt == AgResultadoEscaladoUI.FalloAlAplicar)
+                {
+                    return;
+                }
+                if (resEscaladoOpt == AgResultadoEscaladoUI.RechazadoPorUsuario)
+                {
+                    var cont = MessageBox.Show(this,
+                        "Ha rechazado el escalado de ventana sugerido. La capacidad actual es insuficiente para la demanda y la optimización resultará con sesiones sin ubicar o violaciones.\n\n¿Desea continuar con la optimización de todos modos?",
+                        "Escalado Rechazado", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                    if (cont != DialogResult.Yes)
+                    {
+                        Log("[OPTIMIZACIÓN] Cancelada por el usuario tras rechazar el escalado.");
                         return;
                     }
                 }
@@ -2201,8 +2309,14 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             }
             finally
             {
-                btnEjecutarAG.Enabled = true;
-                btnValidarFactibilidad.Enabled = true;
+                _semaforoSyncDimensiones.Release();
+                treeContextoAcademico.Enabled = arbolHabilitado;
+                cmbArboles.Enabled = perfilesHabilitados;
+                btnValidarFactibilidad.Enabled = btnValidarHabilitado;
+                btnEjecutarAG.Enabled = btnEjecutarHabilitado;
+                btnFiltrarArbol.Enabled = btnFiltrarHabilitado;
+                btnCargarArbol.Enabled = btnCargarHabilitado;
+                btnSobrescribirArbol.Enabled = btnSobrescribirHabilitado;
                 btnCancelar.Enabled = false;
 
                 if (idCorridaCreada > 0)
