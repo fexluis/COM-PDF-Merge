@@ -121,10 +121,16 @@ Dependencias declaradas:
 - **description**: Incorporar enum AgOrigenPatron (AUTOMATICO, FIJO, LEGADO) en dominio, añadir propiedad OrigenPatron en AgAulaAsignatura, implementar MigrationV80 para agregar columna origen_patron en ag_aula_asignatura con fallback seguro, y registrar en SqliteHelper.
 - **validation**: AgAulaAsignatura y DTOs leen/escriben OrigenPatron correctamente. Tests de migración pasan.
 - **verification**: powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "AgOrigenPatronTests"
-- **evidence**: pendiente
-- **status**: pending
-- **log**: pendiente
-- **files edited/created**: []
+- **evidence**: _evidence/20261112-191039/summary.md
+- **status**: done
+- **log**: Verificación Fast ejecutada con éxito (3/3 tests PASS). AgOrigenPatron enum, AgAulaAsignatura.OrigenPatron, MigrationV80 y registro en SqliteHelper/csproj implementados.
+- **files edited/created**:
+  - ConversorPDF.XLL/Academic/Domain/Enums/AgOrigenPatron.cs
+  - ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgAulaAsignatura.cs
+  - ConversorPDF.XLL/Academic/Infrastructure/Persistence/Migrations/MigrationV80_AddOrigenPatronAgAulaAsignatura.cs
+  - ConversorPDF.XLL/Core/Helpers/SqliteHelper.cs
+  - ConversorPDF.XLL/ConversorPDF.XLL.csproj
+  - ConversorPDF.Tests/Academic/Domain/AgOrigenPatronTests.cs
 
 ### T3: Planificación por ranuras y demanda en AgParticionCarriles y AgPlanificadorOleadas
 - **id**: T3

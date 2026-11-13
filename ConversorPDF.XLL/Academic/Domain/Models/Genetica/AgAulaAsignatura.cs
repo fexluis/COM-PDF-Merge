@@ -17,11 +17,13 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
         public int Requerida { get; set; } = 1;
         public string DiasPatron { get; set; } = string.Empty;
         public string Subunidad { get; set; }
+        public string OrigenPatron { get; set; } = "LEGADO";
 
         public AgAulaAsignatura()
         {
             Subunidad = string.Empty;
             DiasPatron = string.Empty;
+            OrigenPatron = "LEGADO";
         }
     }
 }
