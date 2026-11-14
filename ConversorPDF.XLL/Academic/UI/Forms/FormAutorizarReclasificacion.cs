@@ -35,22 +35,23 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.StartPosition = FormStartPosition.CenterParent;
-            this.ClientSize = new Size(580, 420);
+            this.ClientSize = new Size(680, 420);
             this.Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point, 0);
 
             _lblDescripcion = new Label
             {
                 Text = "Seleccione individualmente las asignaturas cuya restricción de días desea reclasificar a AUTOMATICO para redistribución. Las asignaturas no marcadas conservarán su patrón intacto:",
                 Location = new Point(16, 12),
-                Size = new Size(548, 40),
+                Size = new Size(648, 40),
                 AutoEllipsis = true
             };
 
             _chkLista = new CheckedListBox
             {
                 Location = new Point(16, 56),
-                Size = new Size(548, 290),
-                CheckOnClick = true
+                Size = new Size(648, 290),
+                CheckOnClick = true,
+                HorizontalScrollbar = true
             };
 
             _btnTodos = new Button
@@ -75,7 +76,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             {
                 Text = "Aceptar",
                 DialogResult = DialogResult.OK,
-                Location = new Point(386, 356),
+                Location = new Point(486, 356),
                 Size = new Size(86, 28),
                 UseVisualStyleBackColor = true
             };
@@ -85,7 +86,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             {
                 Text = "Cancelar",
                 DialogResult = DialogResult.Cancel,
-                Location = new Point(478, 356),
+                Location = new Point(578, 356),
                 Size = new Size(86, 28),
                 UseVisualStyleBackColor = true
             };
@@ -107,7 +108,47 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             for (int i = 0; i < _candidatos.Count; i++)
             {
                 var c = _candidatos[i];
-                string itemTexto = $"[{c.AulaRef}] {c.NombreAsignatura} (Días: {c.DiasPatronAnterior} -> {c.OrigenPropuesto})";
+                if (c == null)
+                {
+                    _chkLista.Items.Add("(Elemento nulo)", false);
+                    continue;
+                }
+
+                string ubicacionBase;
+                if (!string.IsNullOrWhiteSpace(c.Sede) && !string.IsNullOrWhiteSpace(c.Programa))
+                {
+                    ubicacionBase = $"{c.Sede} - {c.Programa}";
+                }
+                else if (!string.IsNullOrWhiteSpace(c.Sede))
+                {
+                    ubicacionBase = c.Sede;
+                }
+                else if (!string.IsNullOrWhiteSpace(c.Programa))
+                {
+                    ubicacionBase = c.Programa;
+                }
+                else
+                {
+                    ubicacionBase = c.AulaRef;
+                }
+
+                string infoUbicacion = !string.IsNullOrWhiteSpace(ubicacionBase)
+                    ? $"[{ubicacionBase}] "
+                    : string.Empty;
+
+                string infoGrupo = !string.IsNullOrWhiteSpace(c.SemestreGrupo)
+                    ? $" [{c.SemestreGrupo}]"
+                    : string.Empty;
+
+                string infoDeficit = c.SesionesPendientes > 0
+                    ? $" | Déficit: {c.SesionesPendientes} ses ({c.HorasPendientes:0.#}h)"
+                    : string.Empty;
+
+                string diasAnt = !string.IsNullOrWhiteSpace(c.DiasPatronAnterior)
+                    ? c.DiasPatronAnterior
+                    : "N/D";
+
+                string itemTexto = $"{infoUbicacion}{c.NombreAsignatura}{infoGrupo} (Días: {diasAnt} -> {c.OrigenPropuesto}){infoDeficit}";
                 // Inicialmente desmarcado salvo que ya estuviera autorizado explícitamente
                 _chkLista.Items.Add(itemTexto, c.Autorizado);
             }
@@ -125,7 +166,10 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
         {
             for (int i = 0; i < _candidatos.Count; i++)
             {
-                _candidatos[i].Autorizado = _chkLista.GetItemChecked(i);
+                if (_candidatos[i] != null && i < _chkLista.Items.Count)
+                {
+                    _candidatos[i].Autorizado = _chkLista.GetItemChecked(i);
+                }
             }
         }
     }
