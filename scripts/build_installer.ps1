@@ -1,6 +1,9 @@
 ﻿param(
     [string]$NewVersion,
-    [switch]$SkipTests
+    [switch]$SkipTests,
+    [string]$CommitMessage,
+    [switch]$NoGit,
+    [switch]$NoPush
 )
 
 $ErrorActionPreference = 'Stop'
@@ -98,4 +101,40 @@ if (Test-Path $GENERATED_MSI) {
     Write-Host "Artefacto generado: $OUTPUT_MSI" -ForegroundColor Yellow
 } else {
     throw "No se encontró el MSI generado en $GENERATED_MSI"
+}
+
+# 6. Git Commit y Push en la rama actual de GitHub
+if (-not $NoGit) {
+    Write-Host "--- 6. Git Commit y Push (GitHub) ---" -ForegroundColor Cyan
+    try {
+        $branch = (git rev-parse --abbrev-ref HEAD 2>$null).Trim()
+        if (-not [string]::IsNullOrWhiteSpace($branch)) {
+            git add .
+            $status = (git status --porcelain)
+            if (-not [string]::IsNullOrWhiteSpace($status)) {
+                $msg = if (-not [string]::IsNullOrWhiteSpace($CommitMessage)) { $CommitMessage } else { "chore(release): bump v$VERSION" }
+                git commit -m $msg
+                Write-Host "✅ Commit realizado en rama '$branch': $msg" -ForegroundColor Green
+            } else {
+                Write-Host "ℹ️ Sin cambios pendientes para commitear en '$branch'." -ForegroundColor Yellow
+            }
+
+            if (-not $NoPush) {
+                Write-Host "🚀 Enviando commits a origin/$branch..." -ForegroundColor Cyan
+                git push origin $branch
+                if ($LASTEXITCODE -eq 0) {
+                    Write-Host "✅ Push completado exitosamente a origin/$branch." -ForegroundColor Green
+                } else {
+                    Write-Warning "El comando git push retornó código de salida $LASTEXITCODE."
+                }
+            } else {
+                Write-Host "ℹ️ Push omitido (-NoPush)." -ForegroundColor Yellow
+            }
+        } else {
+            Write-Warning "No se pudo determinar la rama actual de Git."
+        }
+    }
+    catch {
+        Write-Warning "Error al ejecutar commit/push automático en Git: $_"
+    }
 }

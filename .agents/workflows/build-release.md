@@ -24,7 +24,7 @@ Decidir el número de versión en formato `Major.Minor.Patch.Build` (ej: `1.2.45
 
 ### 2. Ejecutar el script maestro
 
-El script maestro automatiza el flujo completo: limpia artefactos anteriores, sincroniza la nueva versión en todos los archivos del proyecto, ejecuta **todos los tests unitarios** para prevenir regresiones, y finalmente compila el XLL y empaqueta el MSI.
+El script maestro automatiza el flujo completo: limpia artefactos anteriores, sincroniza la nueva versión en todos los archivos del proyecto, ejecuta **todos los tests unitarios** para prevenir regresiones, compila el XLL, empaqueta el MSI y finalmente realiza el **commit y push automático** en la rama activa de GitHub.
 
 Abre una terminal en la **raíz del proyecto** y ejecuta:
 
@@ -32,6 +32,12 @@ Abre una terminal en la **raíz del proyecto** y ejecuta:
 ```powershell
 powershell -ExecutionPolicy Bypass -File ".\scripts\build_installer.ps1" -NewVersion "LA.NUEVA.VERSION"
 ```
+
+> **Parámetros opcionales del script maestro:**
+> - `-CommitMessage "mensaje"`: Personaliza el mensaje del commit (por defecto `chore(release): bump v<Version>`).
+> - `-NoGit`: Omite el paso de Git (sin commit ni push).
+> - `-NoPush`: Realiza el commit localmente pero omite el `git push`.
+> - `-SkipTests`: Omite la ejecución previa de pruebas unitarias.
 
 > **Notas técnicas WiX 4:**
 > - No colocar archivos `.wxs` adicionales en la raíz de `installer/`, ya que WiX 4 hace globbing automático y genera conflictos de símbolos.
@@ -91,7 +97,18 @@ Verificar metadatos del MSI con `msiinfo` o el explorador de propiedades de Wind
 > - **ICE61** — `AllowSameVersionUpgrades="yes"`: comportamiento intencional.
 > - **ICE91** — XLL en `AddInsFolder` de usuario: correcto para complementos Excel por usuario.
 
-### 7. Smoke test manual
+### 7. Confirmación y Push en Git (GitHub)
+
+Si no se ejecutó a través de `build_installer.ps1` (o si se usó `-NoGit`), proceder manualmente con la confirmación y publicación en la rama activa:
+
+```powershell
+$branch = (git rev-parse --abbrev-ref HEAD).Trim()
+git add .
+git commit -m "chore(release): bump v<Version>"
+git push origin $branch
+```
+
+### 8. Smoke test manual
 
 1. Instalar el MSI en una máquina limpia (o VM).
 2. Abrir Excel y confirmar que el complemento ConversorPDF aparece activo.
