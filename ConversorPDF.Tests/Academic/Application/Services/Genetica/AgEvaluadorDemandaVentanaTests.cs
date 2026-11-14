@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ConversorPDF.XLL.Academic.Application.Services.Genetica;
 using ConversorPDF.XLL.Academic.Domain.Enums;
 using ConversorPDF.XLL.Academic.Domain.Models;
@@ -55,7 +56,8 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
                 aula.DiasVentana, aula.Jornada, 4.0, contexto, aula,
                 contexto.Ventana.FechaInicio, contexto.Ventana.FechaFin);
 
-            eval.HaySaturacion.Should().BeTrue();
+            string sesInfo = string.Join("; ", (eval.Sesiones ?? new List<AgSesionPlanificada>()).GroupBy(s => s.IdAsignatura).Select(g => $"Asig{g.Key}:{g.Count()}(dias:{string.Join(",", g.Select(x => x.Ranura.Dia).Distinct())})"));
+            eval.HaySaturacion.Should().BeTrue($"sesInfo={sesInfo}, cabe={eval.CabeEnPlazo}, pend={eval.DemandaPendiente}");
             eval.DemandaTotal.Should().Be(64);
             eval.CapacidadTotal.Should().Be(51);
         }
@@ -98,7 +100,8 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
                     IdAula = 1,
                     IdAsignatura = id,
                     HorasObjetivo = horas[i],
-                    DiasPatron = (i % 2 == 1) ? "7" : "5,6"
+                    DiasPatron = (i % 2 == 1) ? "7" : "5,6",
+                    OrigenPatron = "FIJO"
                 };
                 contexto.AulaAsignaturas.Add(aa);
                 contexto.AulaAsignaturaPorAulaAsig[(1, id)] = aa;

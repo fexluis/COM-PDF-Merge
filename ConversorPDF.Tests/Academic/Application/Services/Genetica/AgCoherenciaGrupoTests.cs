@@ -181,16 +181,20 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
                 TotalHorasAsignatura = 48.0,
                 HorasGen = 96.0,
                 Estado = AgEstadoGen.Fijado,
+                DiaSemana = 7,
+                FechaInicioEstimada = new DateTime(2026, 3, 1),
+                FechaFinEstimada = new DateTime(2026, 3, 1).AddDays(24 * 7),
                 FechasGen = Enumerable.Range(1, 24).Select(i => new DateTime(2026, 3, 1).AddDays(i * 7)).ToList()
             });
 
             // Act
             AgCoherenciaGrupo.Sellar(ind, null);
 
-            // Assert: se reescala a 48h y se limpian las fechas residuales
+            // Assert: se reescala a 48h y se recortan las fechas conservando cantidadFechas * 4h == HorasGen
             ind.Genes.Sum(g => g.HorasGen).Should().Be(48.0);
             ind.Genes[0].HorasGen.Should().Be(48.0);
-            ind.Genes[0].FechasGen.Should().BeEmpty();
+            ind.Genes[0].FechasGen.Should().HaveCount(12);
+            (ind.Genes[0].FechasGen.Count * 4.0).Should().Be(ind.Genes[0].HorasGen);
         }
 
         [Fact]

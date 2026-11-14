@@ -15,6 +15,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         public bool SaturacionCarriles { get; set; }
         public string Motivo { get; set; } = string.Empty;
         public int SemanasRequeridas { get; set; }
+        public DateTime FechaInicioVentana { get; set; }
+        public DateTime FechaLimite { get; set; }
         public DateTime? FechaFinProyectada { get; set; }
         // Compatibilidad con consumidores antiguos. La proyección no acredita un mínimo global.
         public DateTime? FechaFinMinima { get { return FechaFinProyectada; } set { FechaFinProyectada = value; } }
@@ -26,6 +28,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         public IReadOnlyList<AgSesionPlanificada> Sesiones { get; set; } = new List<AgSesionPlanificada>();
         public int RanurasOciosas { get; set; }
         public int DemandaPendiente { get; set; }
+        public double DeficitHoras { get; set; }
+        public int DeficitSesiones => DemandaPendiente;
         public int DiaCuello { get; set; }
         public string FranjaCuello { get; set; } = string.Empty;
         public List<int> MateriasFueraVentana { get; set; } = new List<int>();

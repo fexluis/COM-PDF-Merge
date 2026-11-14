@@ -69,7 +69,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     {
                         var tmp = new AgIndividuo();
                         foreach (var g in genes) tmp.Genes.Add(g);   // referencias: la reparación impacta al individuo
-                        AgCoherenciaGrupo.Sellar(tmp, contexto);
+                        AgCoherenciaGrupo.Sellar(tmp, contexto, individuo.Genes);
                     }
 
                     // Fase 133: Mapeo centralizado vía AgGenToAgVinculacionMapper (Estado = Borrador)

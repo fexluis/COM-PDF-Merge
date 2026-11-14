@@ -13,7 +13,8 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
     internal static class AgHuellaEscaladoPersistido
     {
         internal static string Calcular(IDbConnection db, IDbTransaction tx, string referencia,
-            string subunidad, int perfil, string destino = null, IReadOnlyCollection<int> liberar = null)
+            string subunidad, int perfil, string destino = null, IReadOnlyCollection<int> liberar = null,
+            IReadOnlyCollection<AgReclasificacionPatron> reclasificaciones = null)
         {
             var aulas = LeerAulas(db, tx, referencia, subunidad);
             if (aulas.Count != 1) { throw new InvalidOperationException("Configuración modificada: aula ausente o ambigua."); }
@@ -34,6 +35,19 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                         && valores.ContainsKey("origen_patron") && Normalizar(valores["origen_patron"]) == "AUTOMATICO")
                     {
                         valores["dias_patron"] = string.Empty;
+                    }
+                    if (destino != null && tabla == "ag_aula_asignatura" && reclasificaciones != null)
+                    {
+                        int idAsigVal = Convert.ToInt32(valores["id_asignatura"], CultureInfo.InvariantCulture);
+                        var rec = reclasificaciones.FirstOrDefault(r => r.IdAsignatura == idAsigVal
+                            && r.Autorizado && r.IdAula == id
+                            && string.Equals(r.AulaRef, referencia, StringComparison.Ordinal)
+                            && string.Equals(r.Subunidad ?? string.Empty, subunidad ?? string.Empty, StringComparison.Ordinal));
+                        if (rec != null)
+                        {
+                            valores["origen_patron"] = rec.OrigenPropuesto;
+                            valores["dias_patron"] = rec.DiasPatronPropuesto ?? string.Empty;
+                        }
                     }
                     registros.Add(AgHuellaPlanVentana.Hash(valores.OrderBy(v => v.Key, StringComparer.Ordinal)
                         .SelectMany(v => new[] { v.Key, Texto(v.Value) })));
@@ -80,7 +94,8 @@ FROM ag_aula_asignatura WHERE id_aula=@Id;", new { aula.Id }, tx)
         }
 
         internal static bool EstadoCompleto(IDbConnection db, IDbTransaction tx, string referencia,
-            string subunidad, int perfil, string destino, IReadOnlyCollection<int> liberar)
+            string subunidad, int perfil, string destino, IReadOnlyCollection<int> liberar,
+            IReadOnlyCollection<AgReclasificacionPatron> reclasificaciones = null)
         {
             var aulas = LeerAulas(db, tx, referencia, subunidad);
             if (aulas.Count != 1 || !string.Equals(Convert.ToString(((IDictionary<string, object>)aulas[0])["dias_ventana"]), destino, StringComparison.Ordinal)) { return false; }
@@ -91,13 +106,36 @@ WHERE idarbol=@Perfil AND aula_ref=@Ref AND COALESCE(NULLIF(TRIM(subunidad),''),
                     new { Perfil = perfil, Ref = referencia, Sub = subunidad ?? string.Empty }, tx).ToList();
                 if (nodos.Count != 1 || !string.Equals(nodos[0], destino, StringComparison.Ordinal)) { return false; }
             }
+            long id = Convert.ToInt64(((IDictionary<string, object>)aulas[0])["id"], CultureInfo.InvariantCulture);
             if (liberar != null && liberar.Count > 0)
             {
-                long id = Convert.ToInt64(((IDictionary<string, object>)aulas[0])["id"], CultureInfo.InvariantCulture);
                 int pendientes = db.QuerySingle<int>(@"SELECT COUNT(*) FROM ag_aula_asignatura
 WHERE id_aula=@Id AND id_asignatura IN @Ids AND UPPER(COALESCE(origen_patron,''))='AUTOMATICO'
 AND COALESCE(dias_patron,'')<>'';", new { Id = id, Ids = liberar }, tx);
                 if (pendientes > 0) { return false; }
+            }
+            if (reclasificaciones != null && reclasificaciones.Count > 0)
+            {
+                foreach (var rec in reclasificaciones)
+                {
+                    if (rec == null || !rec.Autorizado || rec.IdAula != id
+                        || !string.Equals(rec.AulaRef, referencia, StringComparison.Ordinal)
+                        || !string.Equals(rec.Subunidad ?? string.Empty, subunidad ?? string.Empty, StringComparison.Ordinal))
+                    {
+                        return false;
+                    }
+                    int ok = db.QuerySingle<int>(@"SELECT COUNT(*) FROM ag_aula_asignatura
+WHERE id_aula=@Id AND id_asignatura=@IdAsig
+AND UPPER(COALESCE(origen_patron,''))=@OrigenPropuesto
+AND COALESCE(dias_patron,'')=@DiasPropuesto;",
+                        new {
+                            Id = id,
+                            IdAsig = rec.IdAsignatura,
+                            OrigenPropuesto = (rec.OrigenPropuesto ?? string.Empty).Trim().ToUpperInvariant(),
+                            DiasPropuesto = rec.DiasPatronPropuesto ?? string.Empty
+                        }, tx);
+                    if (ok != 1) { return false; }
+                }
             }
             return true;
         }

@@ -54,7 +54,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             AgContexto contexto, AgAula aula, DateTime ini, DateTime fin, CancellationToken ct = default(CancellationToken))
         {
             ct.ThrowIfCancellationRequested();
-            var res = new AgResultadoEvaluacionVentana();
+            var res = new AgResultadoEvaluacionVentana
+            {
+                FechaInicioVentana = ini.Date,
+                FechaLimite = fin.Date
+            };
             if (contexto == null || aula == null || fin < ini || unidad <= 0 || double.IsNaN(unidad) || double.IsInfinity(unidad))
             {
                 res.Error = "I1_ENTRADA_INVALIDA: contexto, fechas o unidad inválidos.";
@@ -95,6 +99,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             foreach (var sesion in res.Sesiones) { ubicadas[sesion.IdAsignatura]++; }
             res.IdAsignaturasSaturadas = requeridas.Where(p => ubicadas[p.Key] < p.Value).Select(p => p.Key).ToList();
             res.DemandaPendiente = requeridas.Sum(p => Math.Max(0, p.Value - ubicadas[p.Key]));
+            res.DeficitHoras = res.DemandaPendiente * unidad;
             res.RanurasOciosas = Math.Max(0, res.CapacidadTotal - res.Sesiones.Count);
             res.CabeEnPlazo = res.DemandaPendiente == 0 && evaluacion.Value.Infactibles.Count == 0;
             res.BusquedaAgotada = evaluacion.Value.BusquedaAgotada;
@@ -104,8 +109,9 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             res.MateriasFueraVentana = patrones.Where(p => requeridas.ContainsKey(p.Key)
                 && AgDiasVentana.Dias(p.Value).Any(d => !dias.Contains(d))).Select(p => p.Key).ToList();
             res.Motivo = res.CabeEnPlazo ? "plan fechado factible dentro del plazo"
-                : res.BusquedaAgotada ? "búsqueda acotada: quedan sesiones sin ubicar; no se acredita imposibilidad"
-                : "sesiones sin ubicar dentro del plazo por calendario o restricciones";
+                : res.BusquedaAgotada ? $"búsqueda acotada: quedan sesiones sin ubicar ({res.DeficitHoras:0.#} h pendientes); no se acredita imposibilidad"
+                : res.SaturacionCarriles ? $"saturación de franja / carril: sesiones sin ubicar dentro del plazo por calendario o restricciones; déficit de {res.DeficitHoras:0.#} h"
+                : $"sesiones sin ubicar dentro del plazo por calendario o restricciones; déficit de {res.DeficitHoras:0.#} h";
             res.FechaFinProyectada = res.CabeEnPlazo && res.Sesiones.Count > 0
                 ? (DateTime?)res.Sesiones.Max(s => s.Fecha) : null;
             if (!res.CabeEnPlazo && ranuras.Count > 0)
@@ -122,7 +128,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             }
             if (res.FechaFinProyectada.HasValue)
             {
-                res.SemanasRequeridas = (res.FechaFinProyectada.Value.Date - ini.Date).Days / 7 + 1;
+                res.SemanasRequeridas = Math.Max(1, (int)Math.Ceiling((res.FechaFinProyectada.Value.Date - ini.Date).TotalDays / 7.0));
             }
             LoggerHelper.Debug($"[AG-RANURAS-TMP] EVALUACION {diagnostico} cabe={res.CabeEnPlazo} ubicadas={res.Sesiones.Count} pendientes={res.DemandaPendiente} ociosas={res.RanurasOciosas} agotada={res.BusquedaAgotada} finProyectado={res.FechaFinProyectada:yyyy-MM-dd} motivo={res.Motivo}");
             return res;

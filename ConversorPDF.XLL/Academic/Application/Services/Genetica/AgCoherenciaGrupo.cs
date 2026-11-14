@@ -43,12 +43,86 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         }
 
         /// <summary>
+        /// Sincroniza la lista de fechas discretas (FechasGen) con las sesiones requeridas por HorasGen / unidad,
+        /// controlando colisiones por aula, fecha e intervalo horario e informando insuficiencia explícita sin reducir demanda.
+        /// </summary>
+        private static void SincronizarFechasGen(
+            AgGen g, double unidad, int targetSesiones, AgContexto ctx, IReadOnlyCollection<AgGen> genes)
+        {
+            if (g == null || g.FechasGen == null) { return; }
+            g.HorasGen = Math.Max(0, targetSesiones) * unidad;
+            DateTime inicio = (g.FechaInicioEstimada ?? ctx?.Ventana?.FechaInicio ?? DateTime.Today).Date;
+            DateTime fin = (g.FechaFinEstimada ?? ctx?.Ventana?.FechaFin ?? inicio.AddMonths(4)).Date;
+            if (ctx?.Ventana != null)
+            {
+                inicio = inicio < ctx.Ventana.FechaInicio.Date ? ctx.Ventana.FechaInicio.Date : inicio;
+                fin = fin > ctx.Ventana.FechaFin.Date ? ctx.Ventana.FechaFin.Date : fin;
+            }
+            int dia = g.DiaSemana >= 1 && g.DiaSemana <= 7 ? g.DiaSemana : 1;
+            AgBloqueHorario bloque;
+            if (ctx?.BloquesPorId != null && ctx.BloquesPorId.TryGetValue(g.IdBloqueHorario, out bloque))
+            {
+                dia = bloque.DiaSemanaNumero;
+            }
+            DayOfWeek dow = dia == 7 ? DayOfWeek.Sunday : (DayOfWeek)dia;
+            Func<DateTime, bool> disponible = fecha => fecha >= inicio && fecha <= fin
+                && fecha.DayOfWeek == dow && (ctx == null || !ctx.EsFestivo(fecha))
+                && !genes.Any(otro => !ReferenceEquals(otro, g) && g.IdAula > 0 && otro.IdAula == g.IdAula
+                    && otro.HorasGen > 0 && otro.FechasGen != null
+                    && otro.FechasGen.Any(f => f.Date == fecha)
+                    && BloquesSeSolapan(g, otro, ctx));
+
+            // Conservar fechas válidas; buscar también huecos anteriores a la última sesión.
+            g.FechasGen = g.FechasGen.Select(f => f.Date).Distinct().OrderBy(f => f)
+                .Where(disponible).Take(Math.Max(0, targetSesiones)).ToList();
+            for (DateTime fecha = inicio; fecha <= fin && g.FechasGen.Count < targetSesiones;)
+            {
+                if (!g.FechasGen.Contains(fecha) && disponible(fecha)) { g.FechasGen.Add(fecha); }
+                if (fecha == fin) { break; }
+                fecha = fecha.AddDays(1);
+            }
+            g.FechasGen.Sort();
+            if (g.FechasGen.Count < targetSesiones)
+            {
+                g.Estado = AgEstadoGen.Incompleto;
+                g.EsVacante = 1;
+                if (string.IsNullOrEmpty(g.MotivoVacante))
+                {
+                    g.MotivoVacante = AgMotivoVacante.SIN_PLAN_OLEADA.Codigo();
+                }
+                if (ctx?.IdTerceroVacante > 0) { g.IdTercero = ctx.IdTerceroVacante; }
+                LoggerHelper.WarningLimitado($"InsuficienciaFechas|{ctx?.IdCorrida}|{g.IdAula}|{g.IdAsignatura}",
+                    $"[Coherencia] Gen {g.Id}: aula {g.IdAula} asig {g.IdAsignatura} solo ubicó {g.FechasGen.Count}/{targetSesiones} sesiones; conserva {g.HorasGen:0.#} h pendientes de cobertura.");
+            }
+        }
+
+        private static bool BloquesSeSolapan(AgGen primero, AgGen segundo, AgContexto ctx)
+        {
+            AgBloqueHorario a, b;
+            TimeSpan inicioA, finA, inicioB, finB;
+            // Un bloque desconocido no acredita que el hueco esté libre.
+            if (ctx?.BloquesPorId == null
+                || !ctx.BloquesPorId.TryGetValue(primero.IdBloqueHorario, out a)
+                || !ctx.BloquesPorId.TryGetValue(segundo.IdBloqueHorario, out b)
+                || !TimeSpan.TryParse(a.HoraInicio, System.Globalization.CultureInfo.InvariantCulture, out inicioA)
+                || !TimeSpan.TryParse(a.HoraFin, System.Globalization.CultureInfo.InvariantCulture, out finA)
+                || !TimeSpan.TryParse(b.HoraInicio, System.Globalization.CultureInfo.InvariantCulture, out inicioB)
+                || !TimeSpan.TryParse(b.HoraFin, System.Globalization.CultureInfo.InvariantCulture, out finB)
+                || finA <= inicioA || finB <= inicioB) { return true; }
+            return inicioA < finB && inicioB < finA;
+        }
+
+        /// <summary>
         /// Unifica el docente y estado de vacante por ClaveGrupo (utilizando la moda de los docentes reales asignados,
         /// o priorizando genes con estado Fijado) en todo el cromosoma del individuo.
         /// </summary>
-        public static void Sellar(AgIndividuo ind, AgContexto ctx)
+        /// <param name="ind">Grupos que se van a reparar.</param>
+        /// <param name="ctx">Calendario y bloques vigentes.</param>
+        /// <param name="ocupacion">Genes de todo el individuo si se repara solo un grupo; por defecto se usa ind.</param>
+        public static void Sellar(AgIndividuo ind, AgContexto ctx, IReadOnlyCollection<AgGen> ocupacion = null)
         {
             if (ind?.Genes == null) return;
+            var genesOcupacion = ocupacion ?? ind.Genes;
 
             foreach (var grp in ind.Genes.GroupBy(g => string.IsNullOrWhiteSpace(g.ClaveGrupo)
                          ? $"{g.IdAsignatura}|{g.IdAula}|{g.Grupo}" : g.ClaveGrupo))
@@ -74,7 +148,10 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     if (g.HorasSemanales <= uNivel + 0.001) continue; // sólo corregir SOBRE-duración (8h→4h) (F1117)
 
                     g.HorasSemanales = uNivel;
-                    g.FechasGen?.Clear();
+                    if (!g.EsFijoTemporal)
+                    {
+                        g.FechasGen?.Clear();
+                    }
 
                     // Fase 1121 / Fase 1125 / Fase 1127 / Fase 1135 / Fase 1160: selección unificada de bloque con preferencia por franja de la ranura
                     AgAula aJ = null;
@@ -227,7 +304,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                                     double u = ObtenerUnidad(g);
                                     double cuantizado = Math.Round(g.HorasGen * factor / u) * u;
                                     g.HorasGen = cuantizado < u ? u : cuantizado;   // nunca 0 si esperado > 0
-                                    g.FechasGen?.Clear();
+                                    if (g.FechasGen != null && g.FechasGen.Count > 0)
+                                    {
+                                        int targetSes = (int)Math.Round(g.HorasGen / u);
+                                        SincronizarFechasGen(g, u, targetSes, ctx, genesOcupacion);
+                                    }
                                 }
 
                                 double delta = esperado - fijados.Sum(g => g.HorasGen);
@@ -237,7 +318,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                                     double u = ObtenerUnidad(mayor);
                                     double nuevo = Math.Round((mayor.HorasGen + delta) / u) * u;
                                     mayor.HorasGen = Math.Max(u, nuevo);
-                                    mayor.FechasGen?.Clear();
+                                    if (mayor.FechasGen != null && mayor.FechasGen.Count > 0)
+                                    {
+                                        int targetSes = (int)Math.Round(mayor.HorasGen / u);
+                                        SincronizarFechasGen(mayor, u, targetSes, ctx, genesOcupacion);
+                                    }
                                 }
 
                                 LoggerHelper.Warning($"[Coherencia] Grupo '{grp.Key}': fijados reescalados a {esperado:0.#} h (antes {suma:0.#}) para satisfacer I1.");
@@ -259,7 +344,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                                 for (int i = 0; i < ajustables.Count; i++)
                                 {
                                     ajustables[i].HorasGen = i < totalSesiones ? unidad : 0.0;
-                                    ajustables[i].FechasGen?.Clear();
+                                    if (ajustables[i].FechasGen != null && ajustables[i].FechasGen.Count > 0)
+                                    {
+                                        int targetSes = i < totalSesiones ? 1 : 0;
+                                        SincronizarFechasGen(ajustables[i], unidad, targetSes, ctx, genesOcupacion);
+                                    }
                                 }
                             }
                             else
@@ -273,22 +362,10 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                                     int sesionesAsignadas = baseSesiones + (i < extraSesiones ? 1 : 0);
                                     g.HorasGen = sesionesAsignadas * unidad;
 
-                                    // Si tiene FechasGen precalculadas, ajustar cardinalidad de sesiones
+                                    // Si tiene FechasGen precalculadas, sincronizar cardinalidad e invariante cantidadFechas * unidad == HorasGen
                                     if (g.FechasGen != null && g.FechasGen.Count > 0)
                                     {
-                                        while (g.FechasGen.Count < sesionesAsignadas)
-                                        {
-                                            DateTime ultima = g.FechasGen[g.FechasGen.Count - 1];
-                                            DateTime siguiente = ultima.AddDays(7);
-                                            DateTime tope = g.FechaFinEstimada ?? (ctx?.Ventana != null ? ctx.Ventana.FechaFin : siguiente.AddMonths(4));
-                                            if (siguiente.Date > tope.Date) break;
-                                            g.FechasGen.Add(siguiente);
-                                        }
-                                        while (g.FechasGen.Count > sesionesAsignadas && g.FechasGen.Count > 0)
-                                        {
-                                            g.FechasGen.RemoveAt(g.FechasGen.Count - 1);
-                                        }
-                                        g.HorasGen = g.FechasGen.Count * unidad;
+                                        SincronizarFechasGen(g, unidad, sesionesAsignadas, ctx, genesOcupacion);
                                     }
                                 }
                             }
@@ -308,9 +385,9 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                                     int aplicado = objetivo - actual;
                                     if (aplicado == 0) continue;
                                     g.HorasGen = objetivo * unidad;
-                                    if (aplicado < 0 || (g.FechasGen != null && g.FechasGen.Count > 0 && g.FechasGen.Count != objetivo))
+                                    if (g.FechasGen != null && g.FechasGen.Count > 0)
                                     {
-                                        g.FechasGen?.Clear();
+                                        SincronizarFechasGen(g, unidad, objetivo, ctx, genesOcupacion);
                                     }
                                     deltaSes -= aplicado;
                                 }

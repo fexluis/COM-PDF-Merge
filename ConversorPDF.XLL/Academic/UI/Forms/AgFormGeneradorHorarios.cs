@@ -1631,15 +1631,45 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             var escalador = new AgEscaladorRanuraAula(_connectionFactory);
             int idArbolActivo = cmbArboles.SelectedItem is AgArbol perfilActivo ? (int)perfilActivo.Id : 0;
             var contextoPropuesta = _contextoActual;
+            // Fase 1380: Paso 1 - Identificar candidatos y permitir selección individual desmarcada
+            var candidatosReclasificacion = (await Task.Run(() => escalador.IdentificarPatronesRedistribuibles(contextoPropuesta), ct))
+                .Select(r => r.Clone())
+                .ToList();
+
             var decisionesEscalado = await Task.Run(() => escalador.Evaluar(contextoPropuesta, idArbolActivo, ct), ct);
-            if (decisionesEscalado == null || decisionesEscalado.Count == 0)
+            if ((decisionesEscalado == null || decisionesEscalado.Count == 0) && candidatosReclasificacion.Count == 0)
             {
                 return AgResultadoEscaladoUI.SinCambios;
             }
 
+            if (candidatosReclasificacion.Count > 0)
+            {
+                using (var dlg = new FormAutorizarReclasificacion(candidatosReclasificacion))
+                {
+                    if (dlg.ShowDialog(this) != DialogResult.OK)
+                    {
+                        return AgResultadoEscaladoUI.RechazadoPorUsuario;
+                    }
+                }
+            }
+
+            var autorizadas = candidatosReclasificacion.Where(c => c.Autorizado).ToList();
+
+            // Paso 2 - Simulación previa con las reclasificaciones autorizadas
+            var propuestaDefinitiva = await Task.Run(() => escalador.Evaluar(contextoPropuesta, idArbolActivo, autorizadas, ct), ct);
+
+            // Paso 3 - Separar candidatos de decisiones aplicables; selección vacía devuelve SinCambios
+            var decisionesAplicables = propuestaDefinitiva.Where(d => d != null && d.Aplica).ToList();
+            if (decisionesAplicables.Count == 0)
+            {
+                Log("[ESCALADO] Sin decisiones aplicables tras la selección (no hay escalado ni reclasificaciones autorizadas).");
+                return AgResultadoEscaladoUI.SinCambios;
+            }
+
+            // Paso 4 - Presentación del resultado definitivo al usuario
             var lineasDetalle = new List<string>();
             int totalAsigsReset = 0;
-            foreach (var d in decisionesEscalado)
+            foreach (var d in decisionesAplicables)
             {
                 var aulaObj = _contextoActual?.Aulas?.FirstOrDefault(a => string.Equals(a.AulaRef, d.AulaRef, StringComparison.OrdinalIgnoreCase));
                 var progObj = _contextoActual?.Programas?.FirstOrDefault(p => p.Id == aulaObj?.IdPrograma);
@@ -1659,13 +1689,19 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                         : 0);
                 totalAsigsReset += asigsAutoAula;
 
+                string plazoAprobado = d.FechaLimite != default(DateTime) ? d.FechaLimite.ToString("yyyy-MM-dd") : "no definido";
                 string finProyectado = d.FechaFinProyectada.HasValue
                     ? d.FechaFinProyectada.Value.ToString("yyyy-MM-dd") : "sin proyección dentro del horizonte diagnóstico";
-                lineasDetalle.Add($"• {d.AulaRef}: {d.Desde} ({d.CapacidadAntes} ranuras) → {d.Hacia} [{rotuloHacia}] ({d.CapacidadDespues} ranuras); {d.SemanasRequeridas} semanas; fin proyectado {finProyectado}; ranuras ociosas {d.RanurasOciosas}; {d.Motivo}.{textoPendiente}");
+                string linea = $"• {d.AulaRef}: {d.Desde} ({d.CapacidadAntes} ranuras) → {d.Hacia} [{rotuloHacia}] ({d.CapacidadDespues} ranuras); {d.SemanasRequeridas} semanas; plazo aprobado: {plazoAprobado}; fin proyectado {finProyectado}; ranuras ociosas {d.RanurasOciosas}; {d.Motivo}.{textoPendiente}";
+                if (d.ReclasificacionesAutorizadas != null && d.ReclasificacionesAutorizadas.Count > 0)
+                {
+                    linea += $"\n   [Reclasificación autorizada: {string.Join(", ", d.ReclasificacionesAutorizadas.Select(r => $"{r.NombreAsignatura} ({r.DiasPatronAnterior} -> AUTOMATICO)"))}]";
+                }
+                lineasDetalle.Add(linea);
             }
 
             string detalleEsc = string.Join("\n", lineasDetalle);
-            string sugerenciasResumen = string.Join(", ", decisionesEscalado
+            string sugerenciasResumen = string.Join(", ", decisionesAplicables
                 .Select(d =>
                 {
                     var aulaObj = _contextoActual?.Aulas?.FirstOrDefault(a => string.Equals(a.AulaRef, d.AulaRef, StringComparison.OrdinalIgnoreCase));
@@ -1676,7 +1712,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 })
                 .Distinct());
 
-            bool algunaPendiente = decisionesEscalado.Any(d => d.DemandaPendiente > 0);
+            bool algunaPendiente = decisionesAplicables.Any(d => d.DemandaPendiente > 0);
             string advertenciaPendiente = algunaPendiente
                 ? "\n\nNOTA: Para una o más aulas, este escalado es un paso intermedio que amplía la ventana pero aún dejará demanda pendiente insatisfecha (se requiere revisar restricciones; otro escalón puede no resolverlas). Las fechas de semestre se mantienen fijas."
                 : "\n\nNOTA: Las fechas de inicio y fin de semestre se mantienen fijas.";
@@ -1689,10 +1725,10 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 "Se detectaron aulas cuya demanda excede la capacidad o saturación de su ventana actual:\n\n" + detalleEsc +
                 advertenciaPendiente +
                 advertenciaReset +
-                "\n\n¿Desea aplicar el escalado sugerido (" + sugerenciasResumen + ")?",
+                "\n\n¿Desea confirmar y aplicar la propuesta definitiva (" + sugerenciasResumen + ")?",
                 "Escalado de ventana (Pre-Vuelo)", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
-            traza?.Dato("EscaladoSugerido", string.Join(" | ", decisionesEscalado.Select(d => $"{d.AulaRef}:{d.Desde}->{d.Hacia}")));
+            traza?.Dato("EscaladoSugerido", string.Join(" | ", decisionesAplicables.Select(d => $"{d.AulaRef}:{d.Desde}->{d.Hacia}")));
 
             if (respuesta != DialogResult.Yes)
             {
@@ -1700,6 +1736,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 return AgResultadoEscaladoUI.RechazadoPorUsuario;
             }
 
+            // Paso 5 - Guardado del mismo lote sellado sin recalcular
             var vigente = await ConstruirContextoAsync(ct);
             if (vigente.IsFailure)
             {
@@ -1712,8 +1749,9 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 MessageBox.Show(this, "Cambió el perfil. Recalcule la propuesta.", "Escalado", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return AgResultadoEscaladoUI.FalloAlAplicar;
             }
-            int esperadas = decisionesEscalado.Count(d => d.Aplica);
-            var resultado = await escalador.AplicarDetalladoAsync(decisionesEscalado, idArbolActivo, vigente.Value, ct);
+
+            int esperadas = decisionesAplicables.Count;
+            var resultado = await escalador.AplicarDetalladoAsync(decisionesAplicables, idArbolActivo, vigente.Value, ct);
             if (!resultado.Exito || resultado.Confirmadas != esperadas)
             {
                 Log("[ESCALADO] " + resultado.Error);

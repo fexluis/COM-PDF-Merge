@@ -13,7 +13,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
     internal static class AgHuellaPlanVentana
     {
         internal static string Calcular(AgContexto contexto, AgAula aula,
-            string ventana = null, IReadOnlyCollection<int> patronesLiberados = null)
+            string ventana = null, IReadOnlyCollection<int> patronesLiberados = null,
+            IReadOnlyCollection<AgReclasificacionPatron> reclasificaciones = null)
         {
             var partes = new List<string> { "plan-ventana-v3", Entidad(contexto.Ventana),
                 Entidad(aula, new Dictionary<string, object> { { "DiasVentana", ventana ?? aula.DiasVentana } }) };
@@ -21,9 +22,29 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             partes.AddRange(contexto.Asignaturas.Select(a => "asignatura:" + Entidad(a)).OrderBy(x => x, StringComparer.Ordinal));
             partes.AddRange(contexto.Bloques.Select(b => "bloque:" + Entidad(b)).OrderBy(x => x, StringComparer.Ordinal));
             partes.AddRange(contexto.AulaAsignaturaPorAulaAsig.Values.Where(a => a.IdAula == aula.Id)
-                .Select(a => "relacion:" + Entidad(a, patronesLiberados != null && patronesLiberados.Contains(a.IdAsignatura)
-                    && string.Equals(a.OrigenPatron, "AUTOMATICO", StringComparison.OrdinalIgnoreCase)
-                        ? new Dictionary<string, object> { { "DiasPatron", string.Empty } } : null))
+                .Select(a =>
+                {
+                    Dictionary<string, object> dict = null;
+                    if (patronesLiberados != null && patronesLiberados.Contains(a.IdAsignatura)
+                        && string.Equals(a.OrigenPatron, "AUTOMATICO", StringComparison.OrdinalIgnoreCase))
+                    {
+                        dict = new Dictionary<string, object> { { "DiasPatron", string.Empty } };
+                    }
+                    if (reclasificaciones != null)
+                    {
+                        var rec = reclasificaciones.FirstOrDefault(r => r.IdAsignatura == a.IdAsignatura
+                            && r.Autorizado && r.IdAula == aula.Id
+                            && string.Equals(r.AulaRef, aula.AulaRef, StringComparison.Ordinal)
+                            && string.Equals(r.Subunidad ?? string.Empty, aula.Subunidad ?? string.Empty, StringComparison.Ordinal));
+                        if (rec != null)
+                        {
+                            if (dict == null) { dict = new Dictionary<string, object>(); }
+                            dict["OrigenPatron"] = rec.OrigenPropuesto;
+                            dict["DiasPatron"] = rec.DiasPatronPropuesto ?? string.Empty;
+                        }
+                    }
+                    return "relacion:" + Entidad(a, dict);
+                })
                 .OrderBy(x => x, StringComparer.Ordinal));
             partes.AddRange(contexto.Festivos.OrderBy(f => f.Inicio).ThenBy(f => f.Fin).Select(f =>
                 "festivo:" + f.Inicio.ToString("O", CultureInfo.InvariantCulture) + "/" + f.Fin.ToString("O", CultureInfo.InvariantCulture)));

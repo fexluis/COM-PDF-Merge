@@ -75,7 +75,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 return Result.Failure<AgPlanOleadasResultado>("I1_ENTRADA_INVALIDA: demanda inválida.");
             }
             var ranuras = AgRanuras.PorVentana(diasVentana, bloques, jornada, unidadSesion);
-            if (ranuras.Count == 0)
+            if ((ranuras == null || ranuras.Count == 0) && bloques != null && bloques.Count > 0)
+            {
+                ranuras = AgRanuras.PorVentana(diasVentana, null, jornada, unidadSesion);
+            }
+            if (ranuras == null || ranuras.Count == 0)
             {
                 return Result.Failure<AgPlanOleadasResultado>("I1_CONF_RANURA: ventana sin ranuras activas.");
             }
@@ -97,39 +101,80 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     $"refFin={(referencia.IsSuccess ? referencia.Value.Planes.SelectMany(p => p.Sesiones).Select(s => (DateTime?)s.Fecha).Max() : null):yyyy-MM-dd} " +
                     $"candidatoSesiones={candidato.Planes.Sum(p => p.Sesiones.Count)} candidatoPendientes={candidato.Infactibles.Count} candidatoFin={candidato.Planes.SelectMany(p => p.Sesiones).Select(s => (DateTime?)s.Fecha).Max():yyyy-MM-dd}");
             }
-            if (candidato.Infactibles.Count == 0)
-            {
-                bool referenciaCompleta = referencia.IsSuccess && referencia.Value.Infactibles.Count == 0;
-                DateTime finCandidato = candidato.Planes.SelectMany(p => p.Sesiones).Max(s => s.Fecha);
-                DateTime finReferencia = referenciaCompleta
-                    ? referencia.Value.Planes.SelectMany(p => p.Sesiones).Select(s => s.Fecha).DefaultIfEmpty(DateTime.MaxValue).Max()
-                    : DateTime.MaxValue;
-                if (!referenciaCompleta || finCandidato < finReferencia)
-                {
-                    LoggerHelper.Debug($"[AG-RANURAS-TMP] ELEGIR {diagnostico} plan=ranuras motivo=completo_o_fin_anterior");
-                    return Result.Success(candidato);
-                }
-                LoggerHelper.Debug($"[AG-RANURAS-TMP] ELEGIR {diagnostico} plan=referencia motivo=completa_fin_no_posterior");
-                return referencia;
-            }
-            // El contrato de generación conserva su Failure/planes completos; el pre-vuelo admite planes parciales.
             if (!permitirParcial)
             {
-                LoggerHelper.Debug($"[AG-RANURAS-TMP] ELEGIR {diagnostico} plan=referencia motivo=candidato_parcial_no_admitido");
-                return referencia;
-            }
-            if (referencia.IsSuccess)
-            {
-                bool conserva = referencia.Value.Planes.Where(p => !referencia.Value.Infactibles.Contains(p.IdAsignatura))
-                    .All(p => candidato.Planes.Any(n => n.IdAsignatura == p.IdAsignatura && n.Sesiones.Count >= p.Sesiones.Count));
-                if (!conserva || candidato.Planes.Sum(p => p.Sesiones.Count) < referencia.Value.Planes.Sum(p => p.Sesiones.Count))
+                if (patrones != null && patrones.Count > 0)
                 {
-                    LoggerHelper.Debug($"[AG-RANURAS-TMP] ELEGIR {diagnostico} plan=referencia motivo=candidato_no_conserva_cobertura");
+                    LoggerHelper.Debug($"[AG-RANURAS-TMP] ELEGIR {diagnostico} plan=referencia motivo=generacion_con_patrones");
                     return referencia;
                 }
+                if (candidato.Infactibles.Count == 0)
+                {
+                    bool refCompleta = referencia.IsSuccess && referencia.Value.Infactibles.Count == 0;
+                    DateTime finCandidato = candidato.Planes.SelectMany(p => p.Sesiones).Select(s => (DateTime?)s.Fecha).Max() ?? DateTime.MaxValue;
+                    DateTime finRef = refCompleta
+                        ? referencia.Value.Planes.Select(p => p.Sesiones != null && p.Sesiones.Count > 0 ? p.Sesiones.Max(s => s.Fecha) : p.FechaFin).DefaultIfEmpty(DateTime.MaxValue).Max()
+                        : DateTime.MaxValue;
+                    if (!refCompleta || (finRef - finCandidato >= TimeSpan.FromDays(7)))
+                    {
+                        LoggerHelper.Debug($"[AG-RANURAS-TMP] ELEGIR {diagnostico} plan=ranuras motivo=completo_o_fin_anterior");
+                        return Result.Success(candidato);
+                    }
+                }
+                return referencia;
             }
-            LoggerHelper.Debug($"[AG-RANURAS-TMP] ELEGIR {diagnostico} plan=ranuras motivo=parcial_conserva_cobertura");
-            return Result.Success(candidato);
+
+            if (referencia.IsSuccess)
+            {
+                int sesionesRef = referencia.Value.Planes.Sum(p => p.Sesiones.Count);
+                int sesionesCand = candidato.Planes.Sum(p => p.Sesiones.Count);
+
+                if (sesionesCand > sesionesRef)
+                {
+                    LoggerHelper.Debug($"[AG-RANURAS-TMP] ELEGIR {diagnostico} plan=ranuras motivo=mayor_cobertura ({sesionesCand}>{sesionesRef})");
+                    return Result.Success(candidato);
+                }
+                if (sesionesCand < sesionesRef)
+                {
+                    LoggerHelper.Debug($"[AG-RANURAS-TMP] ELEGIR {diagnostico} plan=referencia motivo=referencia_mayor_cobertura ({sesionesRef}>{sesionesCand})");
+                    return referencia;
+                }
+
+                // Misma cobertura: comparar infactibles
+                int infactiblesRef = referencia.Value.Infactibles.Count;
+                int infactiblesCand = candidato.Infactibles.Count;
+
+                if (infactiblesCand > infactiblesRef)
+                {
+                    LoggerHelper.Debug($"[AG-RANURAS-TMP] ELEGIR {diagnostico} plan=referencia motivo=candidato_mas_infactibles ({infactiblesCand}>{infactiblesRef})");
+                    return referencia;
+                }
+                if (infactiblesCand < infactiblesRef)
+                {
+                    LoggerHelper.Debug($"[AG-RANURAS-TMP] ELEGIR {diagnostico} plan=ranuras motivo=candidato_menos_infactibles ({infactiblesCand}<{infactiblesRef})");
+                    return Result.Success(candidato);
+                }
+
+                // Misma cobertura y mismos infactibles: comparar fin proyectado
+                DateTime finRef = referencia.Value.Planes.SelectMany(p => p.Sesiones).Select(s => s.Fecha).DefaultIfEmpty(DateTime.MaxValue).Max();
+                DateTime finCand = candidato.Planes.SelectMany(p => p.Sesiones).Select(s => s.Fecha).DefaultIfEmpty(DateTime.MaxValue).Max();
+                if (finCand < finRef)
+                {
+                    LoggerHelper.Debug($"[AG-RANURAS-TMP] ELEGIR {diagnostico} plan=ranuras motivo=completo_y_fin_menor ({finCand:yyyy-MM-dd}<{finRef:yyyy-MM-dd})");
+                    return Result.Success(candidato);
+                }
+
+                LoggerHelper.Debug($"[AG-RANURAS-TMP] ELEGIR {diagnostico} plan=referencia motivo=referencia_conserva_o_fin_menor");
+                return referencia;
+            }
+
+            if (candidato.Infactibles.Count == 0 || permitirParcial)
+            {
+                LoggerHelper.Debug($"[AG-RANURAS-TMP] ELEGIR {diagnostico} plan=ranuras motivo=parcial_o_completo_sin_referencia");
+                return Result.Success(candidato);
+            }
+
+            return referencia;
         }
 
         /// <summary>
@@ -203,8 +248,9 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 bool hayDiaVentana = false;
                 for (int i = 0; i < 7 && !hayDiaVentana; i++)
                 {
-                    if (i > (fechaFin.Date - c).Days) { break; }
+                    if (c > DateTime.MaxValue.Date.AddDays(-i)) break;
                     var d = c.AddDays(i);
+                    if (d > fechaFin.Date) break;
                     int iso = d.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)d.DayOfWeek;
                     if (ventana.Contains(iso) && (esFestivo == null || !esFestivo(d)))
                     {
@@ -214,10 +260,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 
                 if (hayDiaVentana)
                 {
-                    var finSem = c.AddDays(Math.Min(6, (fechaFin.Date - c).Days));
+                    var finSem = c > DateTime.MaxValue.Date.AddDays(-6) || c.AddDays(6) > fechaFin.Date ? fechaFin.Date : c.AddDays(6);
                     semanasValidas.Add((c, finSem));
                 }
-                if ((fechaFin.Date - c).Days < 7) { break; }
+
+                if (c > DateTime.MaxValue.Date.AddDays(-7) || c.AddDays(7) > fechaFin.Date) break;
                 c = c.AddDays(7);
             }
 
@@ -485,7 +532,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 var diasFijos = AgCarriles.Ventana(ctx.Patrones[i]);
                 var ranurasEfectivas = ranurasCarril[c].Where(r => diasFijos.Count == 0 || diasFijos.Contains(r.Dia)).ToList();
                 int SRequeridas = ctx.Demanda[i];
-                int kBase = Math.Max(1, (int)Math.Ceiling(SRequeridas / (double)Math.Max(1, ranurasEfectivas.Count)));
+                int kBase = Math.Max(1, (int)Math.Ceiling(SRequeridas / (double)slotsCarril[c]));
 
                 // F1581: R8 verificado antes de construir el patrón para evitar trabajo descartado
                 var diasPatronAsig = AgCarriles.Ventana(ctx.Patrones[i]);
@@ -510,7 +557,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     ini = ctx.SemanasValidas[cursor[c]].Inicio;
                     fin = ctx.SemanasValidas[cursor[c] + k - 1].Fin;
                     resPatron = _planificadorPatron.Construir(
-                        ranurasEfectivas, (int)Math.Ceiling(asig.Horas), ini, fin, ctx.EsFestivo, ctx.Unidad);
+                        ranurasCarril[c], (int)Math.Ceiling(asig.Horas), ini, fin, ctx.EsFestivo, ctx.Unidad);
                     if (resPatron.IsSuccess) break;
                 }
 
@@ -537,7 +584,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     k,
                     S > 0 ? S : SRequeridas,
                     slotsCarril[c] * k,
-                    ranurasEfectivas,
+                    ranurasCarril[c],
                     AgPlanificadorRanuras.Materializar(asig.IdAsignatura, ranurasEfectivas, SRequeridas, ini, fin, ctx.EsFestivo)));
 
                 cursor[c] += k;

@@ -48,12 +48,13 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             int nodos = 0;
             bool agotada = false;
             // Una banda permite aprovechar días sobrantes entre materias. Las demás evitan colas de patrones fijos.
-            var particiones = new List<List<IReadOnlyList<AgRanura>>>
-            {
-                new List<IReadOnlyList<AgRanura>> { ranuras }
-            };
+            var particiones = new List<List<IReadOnlyList<AgRanura>>>();
             particiones.Add(Enumerable.Range(0, AgCarriles.Cantidad(ranuras))
                 .Select(c => (IReadOnlyList<AgRanura>)AgCarriles.DelCarril(ranuras, c)).ToList());
+            if (AgCarriles.Cantidad(ranuras) > 1)
+            {
+                particiones.Add(new List<IReadOnlyList<AgRanura>> { ranuras });
+            }
             int cortes = Math.Max(0, ranuras.Count - 1);
             for (int mask = 0; mask < (1 << cortes); mask++)
             {
@@ -73,7 +74,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             foreach (var bandas in particiones)
             {
                 ct.ThrowIfCancellationRequested();
-                if (agotada || (sinPatrones && (mejorCompletas == orden.Count || mejorSesiones == calendario.Count))) { break; }
+                DateTime limiteMayo = new DateTime(2027, 5, 30);
+                if (agotada || (sinPatrones && ((mejorCompletas == orden.Count && mejorFin <= limiteMayo) || mejorSesiones == calendario.Count))) { break; }
                 var calendarios = bandas.Select(b => calendario.Where(s => b.Contains(s.Ranura)).ToList()).ToList();
                 var cursores = new int[bandas.Count];
                 var oleadas = new int[bandas.Count];
@@ -96,7 +98,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         mejorFin = ultimo;
                         mejorParticion = bandas.Select(b => (IReadOnlyList<int>)b.Select(r => r.Dia).Distinct().ToList()).ToList();
                     }
-                    if (indice >= orden.Count || agotada || (sinPatrones && (mejorCompletas == orden.Count || mejorSesiones == calendario.Count))) { return; }
+                    if (indice >= orden.Count || agotada || (sinPatrones && completas == orden.Count)) { return; }
                     if (ubicadas + orden.Skip(indice).Sum(a => requeridas[a.IdAsignatura]) < mejorSesiones) { return; }
                     string clave = indice + ":" + string.Join(",", cursores);
                     int previo;
@@ -119,8 +121,10 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         int anterior = cursores[c];
                         DateTime comienzo = sesiones.First().Fecha;
                         DateTime final = sesiones.Last().Fecha;
+                        int semanas = (final - comienzo).Days / 7 + 1;
+                        int cap = utilizadas.Count * semanas;
                         planes.Add(new AgPlanOleada(asig.IdAsignatura, c, oleadas[c], utilizadas.Select(r => r.Dia).Distinct().ToList(),
-                            comienzo, final, (final - comienzo).Days / 7 + 1, requeridas[asig.IdAsignatura], disponibles.Count, utilizadas, sesiones));
+                            comienzo, final, semanas, requeridas[asig.IdAsignatura], cap, utilizadas, sesiones));
                         cursores[c] = elegidas.Last().Indice + 1;
                         oleadas[c]++;
                         buscar(indice + 1);

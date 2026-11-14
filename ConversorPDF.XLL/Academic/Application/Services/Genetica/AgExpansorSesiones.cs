@@ -62,31 +62,10 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 
             double horasObjetivoGen = gen.HorasGen;
 
-            // Fase 414: Usar FechasGen si fueron precalculadas por el planificador semanal
-            List<DateTime> fechas = (gen.FechasGen != null && gen.FechasGen.Count > 0)
-                ? gen.FechasGen
-                : _planificador.GenerarFechasValidas(
-                    bloque.DiaSemana,
-                    fInicio,
-                    fFin,
-                    bloque.DuracionHoras,
-                    horasObjetivoGen,
-                    contexto.EsFestivo);
-
-            // Obtener datos para el cálculo de viáticos (Fase 51: Modalidad tomada del aula)
             contexto.AsignaturasPorId.TryGetValue(gen.IdAsignatura, out _);
             contexto.AulasPorId.TryGetValue(gen.IdAula, out var aula);
             contexto.DocentesPorId.TryGetValue(gen.IdTercero, out var docente);
             contexto.SedesPorId.TryGetValue(gen.IdSede, out var sede);
-            // Fase 217 & 786: Si el aula es virtual (EsVirtual == 1), forzar modalidad Plataforma para que CalculadoraViaticaSesion anule viáticos.
-            string modalidad = (aula != null && aula.EsVirtual == 1)
-                ? ModalidadTutoriaCatalog.Plataforma
-                : ModalidadTutoriaCatalog.NormalizarTutoria(aula?.ModalidadVinculacion ?? ModalidadTutoriaCatalog.Presencial);
-            string ciudadSede = sede != null ? sede.Ciudad : string.Empty;
-            string residenciaDocente = docente != null ? docente.Residencia : string.Empty;
-
-            var sesiones = new List<AgSesion>();
-            double horasAcumuladas = 0.0;   // Fase 965: restaurar acumulador de horas de sesiones
 
             // Fase 964: Cuantización estricta de sesiones (sin residuos fraccionarios Math.Min)
             double unidad = bloque.DuracionHoras;
@@ -115,6 +94,83 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 return Result.Failure<List<AgSesion>>(
                     $"Gen {gen.Id}: {horasObjetivoGen:0.#} h no es múltiplo de {unidad:0.#} h (unidad de sesión).");
             }
+            int sesionesRequeridas = (int)Math.Round(sesionesExactas);
+
+            // Fase 414: Usar FechasGen si fueron precalculadas por el planificador semanal
+            bool usaFechasGen = gen.FechasGen != null && gen.FechasGen.Count > 0;
+            List<DateTime> fechas = usaFechasGen
+                ? gen.FechasGen
+                : _planificador.GenerarFechasValidas(
+                    bloque.DiaSemana,
+                    fInicio,
+                    fFin,
+                    bloque.DuracionHoras,
+                    horasObjetivoGen,
+                    contexto.EsFestivo);
+
+            if (!usaFechasGen && LoggerHelper.ModoVerboso)
+            {
+                LoggerHelper.Debug($"[AG-EXPANSOR-LEGACY] Gen {gen.Id} (aula {gen.IdAula}, asig {gen.IdAsignatura}) usa generador de fechas legacy en lugar de FechasGen.");
+            }
+
+            if (fechas == null || fechas.Count == 0)
+            {
+                return Result.Failure<List<AgSesion>>(
+                    $"Gen {gen.Id}: sin fechas disponibles para cubrir {horasObjetivoGen:0.#} h.");
+            }
+
+            // Validaciones estrictas antes de materializar:
+            // 1. Plazo semestral
+            if (fechas.Any(f => f.Date < contexto.Ventana.FechaInicio.Date || f.Date > contexto.Ventana.FechaFin.Date))
+            {
+                return Result.Failure<List<AgSesion>>(
+                    $"Gen {gen.Id} contiene sesiones fuera del plazo semestral ({contexto.Ventana.FechaInicio:yyyy-MM-dd}..{contexto.Ventana.FechaFin:yyyy-MM-dd}).");
+            }
+
+            // 2. Rango del gen
+            if (fechas.Any(f => f.Date < fInicio || f.Date > fFin))
+            {
+                return Result.Failure<List<AgSesion>>(
+                    $"Gen {gen.Id} contiene sesiones fuera de su rango ({fInicio:yyyy-MM-dd}..{fFin:yyyy-MM-dd}).");
+            }
+
+            // 3. Día de la semana del bloque
+            if (fechas.Any(f => f.DayOfWeek != bloque.DiaSemana))
+            {
+                return Result.Failure<List<AgSesion>>(
+                    $"Gen {gen.Id}: fecha incompatible con el día del bloque ({bloque.DiaSemana}).");
+            }
+
+            // 4. Festivos
+            if (contexto != null && fechas.Any(f => contexto.EsFestivo(f.Date)))
+            {
+                return Result.Failure<List<AgSesion>>(
+                    $"Gen {gen.Id}: contiene fechas festivas.");
+            }
+
+            // 5. Duplicados
+            if (fechas.Select(f => f.Date).Distinct().Count() != fechas.Count)
+            {
+                return Result.Failure<List<AgSesion>>(
+                    $"Gen {gen.Id}: contiene fechas duplicadas.");
+            }
+
+            // 6. Cardinalidad
+            if (fechas.Count != sesionesRequeridas)
+            {
+                return Result.Failure<List<AgSesion>>(
+                    $"Gen {gen.Id}: cardinalidad de fechas ({fechas.Count}) no coincide con sesiones requeridas ({sesionesRequeridas}).");
+            }
+
+            // Fase 217 & 786: Si el aula es virtual (EsVirtual == 1), forzar modalidad Plataforma para que CalculadoraViaticaSesion anule viáticos.
+            string modalidad = (aula != null && aula.EsVirtual == 1)
+                ? ModalidadTutoriaCatalog.Plataforma
+                : ModalidadTutoriaCatalog.NormalizarTutoria(aula?.ModalidadVinculacion ?? ModalidadTutoriaCatalog.Presencial);
+            string ciudadSede = sede != null ? sede.Ciudad : string.Empty;
+            string residenciaDocente = docente != null ? docente.Residencia : string.Empty;
+
+            var sesiones = new List<AgSesion>();
+            double horasAcumuladas = 0.0;   // Fase 965: restaurar acumulador de horas de sesiones
 
             foreach (var f in fechas)
             {

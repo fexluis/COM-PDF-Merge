@@ -540,7 +540,10 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                                 gen.IdBloqueHorario = 0;
                                 gen.DiasPatron = string.Empty;
                                 gen.Estado = AgEstadoGen.Incompleto;
-                                gen.MotivoVacante = AgMotivoVacante.SIN_PLAN_OLEADA.Codigo();
+                                if (aula == null || string.IsNullOrWhiteSpace(aula.DiasVentana) || gen.MotivoVacante != AgMotivoVacante.SIN_BLOQUE_NIVEL.Codigo())
+                                {
+                                    gen.MotivoVacante = AgMotivoVacante.SIN_PLAN_OLEADA.Codigo();
+                                }
                             }
 
                             individuo.Genes.Add(gen);
@@ -787,7 +790,10 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                                 gen.IdBloqueHorario = 0;
                                 gen.DiasPatron = string.Empty;
                                 gen.Estado = AgEstadoGen.Incompleto;
-                                gen.MotivoVacante = AgMotivoVacante.SIN_PLAN_OLEADA.Codigo();
+                                if (aula == null || string.IsNullOrWhiteSpace(aula.DiasVentana) || gen.MotivoVacante != AgMotivoVacante.SIN_BLOQUE_NIVEL.Codigo())
+                                {
+                                    gen.MotivoVacante = AgMotivoVacante.SIN_PLAN_OLEADA.Codigo();
+                                }
                             }
 
                             individuo.Genes.Add(gen);
