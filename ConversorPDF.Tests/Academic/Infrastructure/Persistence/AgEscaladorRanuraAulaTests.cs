@@ -9,12 +9,12 @@ using Xunit;
 
 namespace ConversorPDF.Tests.Academic.Infrastructure.Persistence
 {
-    public class AgEscaladorVentanaAulaTests
+    public class AgEscaladorRanuraAulaTests
     {
         [Fact]
         public void DecisionAplica_CuandoCapacidadCrece_DevuelveTrue()
         {
-            var decision = new AgEscaladorVentanaAula.Decision
+            var decision = new AgEscaladorRanuraAula.Decision
             {
                 AulaRef = "A101",
                 Subunidad = "",
@@ -32,7 +32,7 @@ namespace ConversorPDF.Tests.Academic.Infrastructure.Persistence
         [Fact]
         public void DecisionAplica_CuandoCapacidadNoCrece_DevuelveFalse()
         {
-            var decision = new AgEscaladorVentanaAula.Decision
+            var decision = new AgEscaladorRanuraAula.Decision
             {
                 AulaRef = "A101",
                 Subunidad = "",
@@ -50,7 +50,7 @@ namespace ConversorPDF.Tests.Academic.Infrastructure.Persistence
         [Fact]
         public void DecisionAplica_CuandoHaciaEsVacio_DevuelveFalse()
         {
-            var decision = new AgEscaladorVentanaAula.Decision
+            var decision = new AgEscaladorRanuraAula.Decision
             {
                 AulaRef = "A101",
                 Subunidad = "",
@@ -71,7 +71,7 @@ namespace ConversorPDF.Tests.Academic.Infrastructure.Persistence
             // Arrange (W = 4 semanas completas: 16 ranuras antes, 20 después)
             int w = 4;
             var contexto = CrearContextoNominal(w, "LUN-JUE", 5 * w);
-            var sut = new AgEscaladorVentanaAula(() => null);
+            var sut = new AgEscaladorRanuraAula(() => null);
 
             // Act
             var decisiones = sut.Evaluar(contexto);
@@ -93,7 +93,7 @@ namespace ConversorPDF.Tests.Academic.Infrastructure.Persistence
             // Arrange
             int w = 4;
             var contexto = CrearContextoNominal(w, "MAR-VIE", 5 * w);
-            var sut = new AgEscaladorVentanaAula(() => null);
+            var sut = new AgEscaladorRanuraAula(() => null);
 
             // Act
             var decisiones = sut.Evaluar(contexto);
@@ -114,7 +114,7 @@ namespace ConversorPDF.Tests.Academic.Infrastructure.Persistence
             // Arrange
             int w = 4;
             var contexto = CrearContextoNominal(w, "VIE-DOM", 5 * w);
-            var sut = new AgEscaladorVentanaAula(() => null);
+            var sut = new AgEscaladorRanuraAula(() => null);
 
             // Act
             var decisiones = sut.Evaluar(contexto);
@@ -136,7 +136,7 @@ namespace ConversorPDF.Tests.Academic.Infrastructure.Persistence
             int w = 1;
             var festivos = new[] { (new DateTime(2026, 8, 7), new DateTime(2026, 8, 7)) };
             var contexto = CrearContextoNominal(w, "LUN-JUE", 5 * w, festivos: festivos);
-            var sut = new AgEscaladorVentanaAula(() => null);
+            var sut = new AgEscaladorRanuraAula(() => null);
 
             // Act
             var decisiones = sut.Evaluar(contexto);
@@ -151,7 +151,7 @@ namespace ConversorPDF.Tests.Academic.Infrastructure.Persistence
             // Arrange: W = 4 semanas, sin bloque para el día 5 (Viernes)
             int w = 4;
             var contexto = CrearContextoNominal(w, "LUN-JUE", 5 * w, diasBloquesExcluidos: new[] { 5 });
-            var sut = new AgEscaladorVentanaAula(() => null);
+            var sut = new AgEscaladorRanuraAula(() => null);
 
             // Act
             var decisiones = sut.Evaluar(contexto);
@@ -169,7 +169,7 @@ namespace ConversorPDF.Tests.Academic.Infrastructure.Persistence
             // Bajo el caso 1703, solo se evalúa Siguiente ("JUE-SAB"). Como no tiene ganancia, NO se salta a "4,5,6,7".
             int w = 4;
             var contexto = CrearContextoNominal(w, "VIE-SAB", 5 * w, diasBloquesExcluidos: new[] { 4 });
-            var sut = new AgEscaladorVentanaAula(() => null);
+            var sut = new AgEscaladorRanuraAula(() => null);
 
             // Act
             var decisiones = sut.Evaluar(contexto);

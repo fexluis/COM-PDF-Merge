@@ -1628,7 +1628,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
 
         private async Task<AgResultadoEscaladoUI> EvaluarYAplicarEscaladoInternoAsync(AgDiagnosticoTraza traza, CancellationToken ct)
         {
-            var escalador = new AgEscaladorVentanaAula(_connectionFactory);
+            var escalador = new AgEscaladorRanuraAula(_connectionFactory);
             int idArbolActivo = cmbArboles.SelectedItem is AgArbol perfilActivo ? (int)perfilActivo.Id : 0;
             var contextoPropuesta = _contextoActual;
             var decisionesEscalado = await Task.Run(() => escalador.Evaluar(contextoPropuesta, idArbolActivo, ct), ct);
@@ -4070,6 +4070,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             bool habilitado = chkModoDebug != null && chkModoDebug.Checked;
             LoggerHelper.ModoVerboso = habilitado;
             LoggerHelper.Minimo = habilitado ? NivelLog.Debug : NivelLog.Info; // Fase 605: sincronizar nivel mínimo con modo diagnóstico
+            LoggerHelper.Info($"[AG-RANURAS-TMP] DIAGNOSTICO operacion={operacion} activo={habilitado} version={ConversorPDF.XLL.Core.Helpers.App.APP_VERSION}");
             return new AgDiagnosticoTraza(operacion, Log)
             {
                 Habilitado = habilitado

@@ -194,7 +194,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             ctx.Ventana.FechaInicio = new DateTime(2027, 2, 1);
             ctx.Ventana.FechaFin = new DateTime(2027, 2, 28);
             ctx.Aulas[0].DiasVentana = "VIE-DOM";
-            var escalador = new ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.AgEscaladorVentanaAula(() => null);
+            var escalador = new ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.AgEscaladorRanuraAula(() => null);
             // Act / Assert: cada evaluación ofrece únicamente el paso inmediato.
             var primero = escalador.Evaluar(ctx).Single();
             primero.Hacia.Should().Be("JUE-DOM");

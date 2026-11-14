@@ -115,7 +115,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             eval.CapacidadTotal.Should().Be(68);
 
             // Escalador no debe proponer JUE-DOM: no reduce la cola dominical y rompe el patrón 5,6
-            var escalador = new AgEscaladorVentanaAula(() => null);
+            var escalador = new AgEscaladorRanuraAula(() => null);
             var decisiones = escalador.Evaluar(contexto);
 
             decisiones.Should().BeEmpty("JUE-DOM no reduce la saturación dominical ni conserva el patrón 5,6");

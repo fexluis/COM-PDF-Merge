@@ -26,6 +26,10 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         {
             if (gen == null) throw new ArgumentNullException(nameof(gen));
             if (contexto == null) throw new ArgumentNullException(nameof(contexto));
+            if (LoggerHelper.ModoVerboso)
+            {
+                LoggerHelper.Debug($"[AG-RANURAS-TMP] EXPANDIR_ENTRADA corrida={contexto.IdCorrida} individuo={gen.IdIndividuo} gen={gen.Id} aula={gen.IdAula} asig={gen.IdAsignatura} bloque={gen.IdBloqueHorario} horas={gen.HorasGen} fuente={(gen.FechasGen != null && gen.FechasGen.Count > 0 ? "FechasGen" : "calendario_legacy")} fechas={gen.FechasGen?.Count ?? 0} ultima={gen.FechasGen?.Select(d => (DateTime?)d).Max():yyyy-MM-dd} rango={gen.FechaInicioEstimada:yyyy-MM-dd}..{gen.FechaFinEstimada:yyyy-MM-dd}");
+            }
 
             // Fase 573 & 576: sin carga => 0 sesiones directamente, sin fallar por ventana/bloque
             if (gen.HorasGen <= 0.0)
@@ -149,6 +153,10 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             }
 
             const double Tolerancia = 0.001;
+            if (LoggerHelper.ModoVerboso)
+            {
+                LoggerHelper.Debug($"[AG-RANURAS-TMP] EXPANDIR_SALIDA corrida={contexto.IdCorrida} gen={gen.Id} aula={gen.IdAula} asig={gen.IdAsignatura} sesiones={sesiones.Count} horas={horasAcumuladas}/{horasObjetivoGen} ultima={sesiones.Select(s => (DateTime?)s.FechaSesion).Max():yyyy-MM-dd}");
+            }
             if (horasAcumuladas + Tolerancia < horasObjetivoGen)
             {
                 return Result.Failure<List<AgSesion>>(

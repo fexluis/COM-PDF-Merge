@@ -23,7 +23,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             // Arrange: 17 semanas, LUN-JUE (4 días * 1 ranura = 68 ranuras). Demanda = 5 asignaturas de 16 sesiones = 80 sesiones.
             int w = 17;
             var contexto = CrearContextoMatriz(w, "LUN-JUE", numAsignaturas: 5, sesionesPorAsignatura: 16);
-            var sut = new AgEscaladorVentanaAula(() => null);
+            var sut = new AgEscaladorRanuraAula(() => null);
 
             // Act 1: Primera corrida
             var decisiones1 = sut.Evaluar(contexto);
@@ -53,7 +53,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             // Arrange: 17 semanas, MAR-VIE (4 días * 1 ranura = 68 ranuras). Demanda = 5 asignaturas de 16 sesiones = 80 sesiones.
             int w = 17;
             var contexto = CrearContextoMatriz(w, "MAR-VIE", numAsignaturas: 5, sesionesPorAsignatura: 16);
-            var sut = new AgEscaladorVentanaAula(() => null);
+            var sut = new AgEscaladorRanuraAula(() => null);
 
             // Act 1: Primera corrida
             var decisiones1 = sut.Evaluar(contexto);
@@ -84,7 +84,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             // Demanda 5W = 5 asignaturas de 16 sesiones = 80 sesiones.
             int w = 17;
             var contexto = CrearContextoMatriz(w, "VIE-DOM", numAsignaturas: 5, sesionesPorAsignatura: 16);
-            var sut = new AgEscaladorVentanaAula(() => null);
+            var sut = new AgEscaladorRanuraAula(() => null);
 
             // Act 1: Primera corrida
             var decisiones1 = sut.Evaluar(contexto);
@@ -114,7 +114,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             // Arrange: 17 semanas, VIE-DOM. Demanda = 6 asignaturas de 16 sesiones = 96 sesiones.
             int w = 17;
             var contexto = CrearContextoMatriz(w, "VIE-DOM", numAsignaturas: 6, sesionesPorAsignatura: 16);
-            var sut = new AgEscaladorVentanaAula(() => null);
+            var sut = new AgEscaladorRanuraAula(() => null);
 
             // Act 1: Primera corrida
             var decisiones1 = sut.Evaluar(contexto);
@@ -159,7 +159,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             // Arrange: Aula en MIE-DOM (ventana máxima de fin de semana) con demanda excesiva (110 sesiones > 102 ranuras)
             int w = 17;
             var ctxMieDom = CrearContextoMatriz(w, "3,4,5,6,7", numAsignaturas: 7, sesionesPorAsignatura: 16);
-            var sut = new AgEscaladorVentanaAula(() => null);
+            var sut = new AgEscaladorRanuraAula(() => null);
 
             // Act & Assert MIE-DOM: Terminal; no inventa escalones adicionales
             var decMieDom = sut.Evaluar(ctxMieDom);
@@ -183,7 +183,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             var ctx4h = CrearContextoMatriz(w, "5,6,7", numAsignaturas: 5, sesionesPorAsignatura: 16, horasDia: 4);
             var ctx8h = CrearContextoMatriz(w, "5,6,7", numAsignaturas: 5, sesionesPorAsignatura: 16, horasDia: 8, modalidadPrograma: "POSGRADO");
 
-            var sut = new AgEscaladorVentanaAula(() => null);
+            var sut = new AgEscaladorRanuraAula(() => null);
 
             var dec4h = sut.Evaluar(ctx4h);
             var dec8h = sut.Evaluar(ctx8h);
@@ -202,7 +202,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             int w = 17;
             var contexto = CrearContextoMatriz(w, "LUN-JUE", numAsignaturas: 2, sesionesPorAsignatura: 12);
             FijarPatron(contexto, "5");
-            var sut = new AgEscaladorVentanaAula(() => null);
+            var sut = new AgEscaladorRanuraAula(() => null);
 
             var decisiones = sut.Evaluar(contexto);
 
@@ -221,7 +221,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             int w = 17;
             var contexto = CrearContextoMatriz(w, "MAR-VIE", numAsignaturas: 2, sesionesPorAsignatura: 12);
             FijarPatron(contexto, "1");
-            var sut = new AgEscaladorVentanaAula(() => null);
+            var sut = new AgEscaladorRanuraAula(() => null);
 
             var decisiones = sut.Evaluar(contexto);
 
@@ -237,7 +237,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             int w = 17;
             var contexto = CrearContextoMatriz(w, "VIE-DOM", numAsignaturas: 2, sesionesPorAsignatura: 12);
             FijarPatron(contexto, "4");
-            var sut = new AgEscaladorVentanaAula(() => null);
+            var sut = new AgEscaladorRanuraAula(() => null);
 
             var decisiones = sut.Evaluar(contexto);
 
@@ -256,7 +256,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             int w = 17;
             var contexto = CrearContextoMatriz(w, "VIE-DOM", numAsignaturas: 3, sesionesPorAsignatura: 12);
             FijarPatron(contexto, "7");
-            var sut = new AgEscaladorVentanaAula(() => null);
+            var sut = new AgEscaladorRanuraAula(() => null);
 
             sut.Evaluar(contexto).Should().BeEmpty("jueves/miércoles no reducen la cola de domingo");
         }

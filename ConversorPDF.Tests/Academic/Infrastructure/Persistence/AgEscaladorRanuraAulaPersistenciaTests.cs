@@ -21,13 +21,13 @@ using Xunit;
 
 namespace ConversorPDF.Tests.Academic.Infrastructure.Persistence
 {
-    public class AgEscaladorVentanaAulaPersistenciaTests : IDisposable
+    public class AgEscaladorRanuraAulaPersistenciaTests : IDisposable
     {
         private readonly string _dbPath;
         private readonly string _connectionString;
         private readonly Func<IDbConnection> _connectionFactory;
 
-        public AgEscaladorVentanaAulaPersistenciaTests()
+        public AgEscaladorRanuraAulaPersistenciaTests()
         {
             _dbPath = Path.Combine(Path.GetTempPath(), "AgEscaladorPersistencia_" + Guid.NewGuid().ToString("N") + ".sqlite");
             SQLiteConnection.CreateFile(_dbPath);
@@ -156,7 +156,7 @@ VALUES (2, @Ref, 'MANANA', 4, @V, '');",
             int demandaSesiones = 5 * w; // 20 sesiones para ventana de 16 -> requiere LUN-VIE
             var contexto = CrearContextoNominal(w, ventanaInicial, demandaSesiones, aulaRef);
             SembrarDemanda(contexto);
-            var sut = new AgEscaladorVentanaAula(_connectionFactory);
+            var sut = new AgEscaladorRanuraAula(_connectionFactory);
 
             // Act 1: Evaluar
             var decisiones = sut.Evaluar(contexto);
@@ -223,7 +223,7 @@ VALUES (2, @Ref, 'MANANA', 4, 'VIE-DOM', '');",
 
             int w = 4;
             int demandaSesiones = 6 * w; // 24 sesiones: VIE-DOM tiene 16, JUE-DOM tiene 20, MIE-DOM tiene 24
-            var sut = new AgEscaladorVentanaAula(_connectionFactory);
+            var sut = new AgEscaladorRanuraAula(_connectionFactory);
 
             // --- Ciclo 1: VIE-DOM -> JUE-DOM ---
             var ctx1 = CrearContextoNominal(w, "VIE-DOM", demandaSesiones, aulaRef);
@@ -313,7 +313,7 @@ VALUES (2, @Ref, 'MANANA', 4, 'LUN-JUE', '', 1, 1, 1, '1', '1', 'PRESENCIAL', 'P
 
             var repo = new AgArbolRepository(_connectionFactory);
             var servicio = new AgArbolService(repo);
-            var sut = new AgEscaladorVentanaAula(_connectionFactory);
+            var sut = new AgEscaladorRanuraAula(_connectionFactory);
             var sync = new AgAulaDimensionesSync(_connectionFactory);
 
             // 1. Escalar de LUN-JUE a LUN-VIE en idArbol = 1
@@ -382,10 +382,10 @@ VALUES (2, @Ref, 'MANANA', 4, 'LUN-JUE', '', 1, 1, 1, '1', '1', 'PRESENCIAL', 'P
         [Fact]
         public async Task AplicarAsync_WhenDecisionesInexistentesEnBD_ShouldRetornarCeroFilasAfectadas()
         {
-            var sut = new AgEscaladorVentanaAula(_connectionFactory);
-            var decisionesInexistentes = new List<AgEscaladorVentanaAula.Decision>
+            var sut = new AgEscaladorRanuraAula(_connectionFactory);
+            var decisionesInexistentes = new List<AgEscaladorRanuraAula.Decision>
             {
-                new AgEscaladorVentanaAula.Decision
+                new AgEscaladorRanuraAula.Decision
                 {
                     AulaRef = "NO_EXISTE_999",
                     Desde = "LUN-JUE",
@@ -592,7 +592,7 @@ INSERT INTO ag_aula_asignatura (id_aula, id_asignatura, dias_patron, origen_patr
 VALUES (@IdAula, 102, '7', 'FIJO');", new { IdAula = idAula });
             }
 
-            var sut = new AgEscaladorVentanaAula(_connectionFactory);
+            var sut = new AgEscaladorRanuraAula(_connectionFactory);
             var contexto = CrearContextoNominal(4, "VIE-DOM", 20, aulaRef);
             var automatico = contexto.AulaAsignaturaPorAulaAsig[(1, 101)];
             automatico.HorasObjetivo = 64;

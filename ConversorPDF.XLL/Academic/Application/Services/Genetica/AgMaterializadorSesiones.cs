@@ -59,6 +59,10 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 {
                     var genes = grp.OrderBy(g => g.IndiceDiaPatron).ToList();
                     int idAulaGrupo = genes.Count > 0 ? genes[0].IdAula : 0;
+                    if (LoggerHelper.ModoVerboso)
+                    {
+                        LoggerHelper.Debug($"[AG-RANURAS-TMP] STAGING_ANTES_SELLAR corrida={idCorrida} individuo={individuo.Id} " + DescribirGrupo(genes, genes[0].TotalHorasAsignatura));
+                    }
 
                     // Fase 583 / Fase 589 / Fase 1304: coherencia defensiva SIEMPRE (I1 + desdoble de franjas de sábado)
                     if (genes.Count > 1)
@@ -69,6 +73,10 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     }
 
                     // Fase 133: Mapeo centralizado vía AgGenToAgVinculacionMapper (Estado = Borrador)
+                    if (LoggerHelper.ModoVerboso)
+                    {
+                        LoggerHelper.Debug($"[AG-RANURAS-TMP] STAGING_DESPUES_SELLAR corrida={idCorrida} individuo={individuo.Id} " + DescribirGrupo(genes, genes[0].TotalHorasAsignatura));
+                    }
                     var agVinc = AgGenToAgVinculacionMapper.MapGrupo(genes, idCorrida, individuo.Id, contexto);
                     if (agVinc == null) continue;
 
@@ -221,6 +229,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         var expRes = _expansorSesiones.Expandir(g, idSeq, contexto);
                         if (expRes.IsFailure)
                         {
+                            LoggerHelper.Debug($"[AG-RANURAS-TMP] EXPANDIR_ERROR corrida={idCorrida} gen={g.Id} aula={g.IdAula} asig={g.IdAsignatura} motivo={expRes.Error}");
                             // Fase 584: cuarentena por grupo al fallar expansión
                             var detalleExp = DescribirGrupo(genes, esperado);
                             LoggerHelper.Warning($"[Materializador] grupo en cuarentena (expansión): {detalleExp} | {expRes.Error}");
@@ -291,6 +300,10 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 }
 
                 LoggerHelper.Info($"[AgMaterializadorSesiones] Solución materializada en staging: {vinculacionesStaging.Count} vinculaciones, {sesionesStaging.Count} sesiones.");
+                if (LoggerHelper.ModoVerboso)
+                {
+                    LoggerHelper.Debug($"[AG-RANURAS-TMP] STAGING_GUARDADO corrida={idCorrida} individuo={individuo.Id} sesiones={sesionesStaging.Count} ultima={sesionesStaging.Select(s => (DateTime?)s.FechaSesion).Max():yyyy-MM-dd} limiteEfectivo={contexto.Ventana?.FechaFin:yyyy-MM-dd}");
+                }
                 return Result.Success();
             }
             catch (Exception ex)

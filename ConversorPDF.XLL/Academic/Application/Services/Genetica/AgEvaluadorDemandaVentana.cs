@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using ConversorPDF.XLL.Core.Helpers;
 using ConversorPDF.XLL.Academic.Domain.Models;
 using ConversorPDF.XLL.Academic.Domain.Models.Genetica;
 
@@ -69,14 +70,23 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 && !string.Equals(a.OrigenPatron, "AUTOMATICO", StringComparison.OrdinalIgnoreCase)
                 && !string.IsNullOrWhiteSpace(a.DiasPatron)).ToDictionary(a => a.IdAsignatura, a => a.DiasPatron);
             var planificador = new AgPlanificadorOleadas();
+            // AG-RANURAS-TMP: diagnóstico transitorio; no modifica restricciones ni ventana.
+            string diagnostico = $"corrida={contexto.IdCorrida} traza={contexto.Traza?.Correlacion} aula={aula.Id} sede={aula.IdSede} ref={aula.AulaRef}";
+            if (LoggerHelper.ModoVerboso)
+            {
+                LoggerHelper.Debug($"[AG-RANURAS-TMP] EVALUAR {diagnostico} dias={diasVentana} jornada={jornada} unidad={unidad} plazo={ini:yyyy-MM-dd}..{fin:yyyy-MM-dd} demanda={res.DemandaTotal} capacidad={res.CapacidadTotal} " +
+                    "patrones=" + string.Join(";", contexto.AulaAsignaturaPorAulaAsig.Values.Where(a => a.IdAula == aula.Id).OrderBy(a => a.IdAsignatura)
+                        .Select(a => $"{a.IdAsignatura}:{a.OrigenPatron}:{a.DiasPatron}:efectivo={(patrones.ContainsKey(a.IdAsignatura) ? patrones[a.IdAsignatura] : "LIBRE")}")));
+            }
             var evaluacion = planificador.ConstruirEvaluacion(demandas, diasVentana, ini, fin, unidad,
-                contexto.EsFestivo, contexto.Bloques, jornada, patrones, ct);
+                contexto.EsFestivo, contexto.Bloques, jornada, patrones, ct, diagnostico);
             if (evaluacion.IsFailure)
             {
                 res.Error = evaluacion.Error;
                 res.Motivo = evaluacion.Error;
                 res.HaySaturacion = true;
                 res.DemandaPendiente = res.DemandaTotal;
+                LoggerHelper.Debug($"[AG-RANURAS-TMP] EVALUACION_ERROR {diagnostico} error={res.Error}");
                 return res;
             }
             res.Plan = evaluacion.Value;
@@ -103,7 +113,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 DateTime horizonte = ini.Date <= DateTime.MaxValue.Date.AddYears(-2)
                     ? ini.Date.AddYears(2).AddDays(-1) : DateTime.MaxValue.Date;
                 var proyeccion = planificador.ConstruirEvaluacion(demandas, diasVentana, ini, horizonte, unidad,
-                    contexto.EsFestivo, contexto.Bloques, jornada, patrones, ct);
+                    contexto.EsFestivo, contexto.Bloques, jornada, patrones, ct, diagnostico + " proyeccion=true");
                 if (proyeccion.IsSuccess && proyeccion.Value.Infactibles.Count == 0)
                 {
                     res.FechaFinProyectada = proyeccion.Value.Planes.SelectMany(p => p.Sesiones).Select(s => (DateTime?)s.Fecha).Max();
@@ -114,6 +124,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             {
                 res.SemanasRequeridas = (res.FechaFinProyectada.Value.Date - ini.Date).Days / 7 + 1;
             }
+            LoggerHelper.Debug($"[AG-RANURAS-TMP] EVALUACION {diagnostico} cabe={res.CabeEnPlazo} ubicadas={res.Sesiones.Count} pendientes={res.DemandaPendiente} ociosas={res.RanurasOciosas} agotada={res.BusquedaAgotada} finProyectado={res.FechaFinProyectada:yyyy-MM-dd} motivo={res.Motivo}");
             return res;
         }
     }

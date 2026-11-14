@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using ConversorPDF.XLL.Core.Helpers;
 using ConversorPDF.XLL.Academic.Domain.Models.Genetica;
 
 namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
@@ -32,7 +33,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             IReadOnlyList<(int IdAsignatura, double Horas, int OrdenCurricular)> asignaturas,
             IReadOnlyList<AgRanura> ranuras, DateTime ini, DateTime fin, double unidad,
             Func<DateTime, bool> festivo, IReadOnlyDictionary<int, string> patrones,
-            int presupuesto = 12000, CancellationToken ct = default(CancellationToken))
+            int presupuesto = 12000, CancellationToken ct = default(CancellationToken), string diagnostico = null)
         {
             var orden = asignaturas.OrderBy(a => a.OrdenCurricular > 0 ? a.OrdenCurricular : 0)
                 .ThenBy(a => a.IdAsignatura).ToList();
@@ -134,6 +135,10 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             var porId = mejor.ToDictionary(p => p.IdAsignatura, p => p.Sesiones.Count);
             var pendientes = orden.Where(a => !porId.ContainsKey(a.IdAsignatura) || porId[a.IdAsignatura] < requeridas[a.IdAsignatura])
                 .Select(a => a.IdAsignatura).ToList();
+            if (LoggerHelper.ModoVerboso)
+            {
+                LoggerHelper.Debug($"[AG-RANURAS-TMP] BUSQUEDA {diagnostico} calendario={calendario.Count} demanda={requeridas.Values.Sum()} nodos={nodos} presupuesto={presupuesto} agotada={agotada} ubicadas={Math.Max(0, mejorSesiones)} completas={mejorCompletas}/{orden.Count} pendientes={string.Join(",", pendientes)} fin={mejor.SelectMany(p => p.Sesiones).Select(s => (DateTime?)s.Fecha).Max():yyyy-MM-dd} bandas={string.Join("|", mejorParticion.Select(b => string.Join(",", b)))}");
+            }
             return new AgPlanOleadasResultado(mejor, pendientes,
                 pendientes.Select(id => "Asig " + id + ": sesiones pendientes dentro del plazo.").ToList(), mejorParticion,
                 ocupacionPorcentaje: calendario.Count > 0 ? 100.0 * Math.Max(0, mejorSesiones) / calendario.Count : 0,

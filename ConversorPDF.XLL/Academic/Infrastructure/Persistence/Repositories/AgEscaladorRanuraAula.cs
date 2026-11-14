@@ -15,11 +15,11 @@ using Dapper;
 namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
 {
     /// <summary>Propone un paso de ventana y verifica su instantánea antes de aplicar el lote transaccional.</summary>
-    internal sealed class AgEscaladorVentanaAula
+    internal sealed class AgEscaladorRanuraAula
     {
         private readonly Func<IDbConnection> _connectionFactory;
 
-        public AgEscaladorVentanaAula(Func<IDbConnection> connectionFactory)
+        public AgEscaladorRanuraAula(Func<IDbConnection> connectionFactory)
         {
             _connectionFactory = connectionFactory;
         }
@@ -78,17 +78,30 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                 && !string.IsNullOrWhiteSpace(a.AulaRef)).OrderBy(a => a.Id))
             {
                 ct.ThrowIfCancellationRequested();
+                LoggerHelper.Debug($"[AG-RANURAS-TMP] ESCALADOR_ENTRADA corrida={contexto.IdCorrida} traza={contexto.Traza?.Correlacion} perfil={perfil} aula={aula.Id} ref={aula.AulaRef} dias={aula.DiasVentana} plazoEfectivo={contexto.Ventana.FechaInicio:yyyy-MM-dd}..{contexto.Ventana.FechaFin:yyyy-MM-dd} plazoAula={aula.FechaInicio}..{aula.FechaFin}");
                 string huellaInicial = AgHuellaPlanVentana.Calcular(contexto, aula);
                 var programa = contexto.Programas.FirstOrDefault(p => p.Id == aula.IdPrograma);
                 double unidad = AgUnidadesSemanales.HorasSesionAula(aula, AgNivelAcademicoCatalogo.Desde(programa?.Modalidad));
                 var antes = AgEvaluadorDemandaVentana.Evaluar(aula.DiasVentana, aula.Jornada, unidad,
                     contexto, aula, contexto.Ventana.FechaInicio, contexto.Ventana.FechaFin, ct);
-                if (!antes.HaySaturacion) { continue; }
+                if (!antes.HaySaturacion)
+                {
+                    LoggerHelper.Debug($"[AG-RANURAS-TMP] ESCALADOR_OMITIR aula={aula.Id} motivo=cabe_en_plazo_efectivo");
+                    continue;
+                }
                 string paso = AgEscaleraVentanas.Siguiente(aula.DiasVentana);
-                if (string.IsNullOrEmpty(paso)) { continue; }
+                if (string.IsNullOrEmpty(paso))
+                {
+                    LoggerHelper.Debug($"[AG-RANURAS-TMP] ESCALADOR_OMITIR aula={aula.Id} motivo=ventana_terminal dias={aula.DiasVentana} pendientes={antes.DemandaPendiente} error={antes.Error}");
+                    continue;
+                }
                 var despues = AgEvaluadorDemandaVentana.Evaluar(paso, aula.Jornada, unidad,
                     contexto, aula, contexto.Ventana.FechaInicio, contexto.Ventana.FechaFin, ct);
-                if (!AgEvaluadorDemandaVentana.PasoMejora(antes, despues)) { continue; }
+                if (!AgEvaluadorDemandaVentana.PasoMejora(antes, despues))
+                {
+                    LoggerHelper.Debug($"[AG-RANURAS-TMP] ESCALADOR_OMITIR aula={aula.Id} motivo=paso_sin_mejora desde={aula.DiasVentana} hacia={paso} capacidad={antes.CapacidadTotal}->{despues.CapacidadTotal} pendientes={antes.DemandaPendiente}->{despues.DemandaPendiente} errorAntes={antes.Error} errorDespues={despues.Error}");
+                    continue;
+                }
                 var automaticas = contexto.AulaAsignaturaPorAulaAsig.Values.Where(aa => aa.IdAula == aula.Id
                     && string.Equals(aa.OrigenPatron, "AUTOMATICO", StringComparison.OrdinalIgnoreCase))
                     .Select(aa => aa.IdAsignatura).Distinct().OrderBy(id => id).ToList();
@@ -126,6 +139,7 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                 }
                 ct.ThrowIfCancellationRequested();
                 decisiones.Add(d);
+                LoggerHelper.Debug($"[AG-RANURAS-TMP] PROPUESTA aula={aula.Id} ref={aula.AulaRef} desde={d.Desde} hacia={d.Hacia} capacidad={d.CapacidadAntes}->{d.CapacidadDespues} pendientes={d.DemandaPendiente} automaticas={string.Join(",", automaticas)} sellada=true");
             }
             return decisiones;
         }
@@ -191,12 +205,14 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                             string huellaContexto = AgHuellaPlanVentana.Calcular(contexto, aulas[0]);
                             string huellaSql = AgHuellaEscaladoPersistido.Calcular(db, tx, d.AulaRef, d.Subunidad, idArbol);
                             bool contextoCompatible = huellaContexto == d.HuellaContextoAntes || huellaContexto == d.HuellaContextoDespues;
+                            LoggerHelper.Debug($"[AG-RANURAS-TMP] GUARDAR_HUELLAS perfil={idArbol} ref={d.AulaRef} contextoAntes={huellaContexto == d.HuellaContextoAntes} contextoDespues={huellaContexto == d.HuellaContextoDespues} sqlAntes={huellaSql == d.HuellaPersistidaAntes} sqlDespues={huellaSql == d.HuellaPersistidaDespues}");
                             // Reaplicación: comprobar todo el postestado antes de exigir el estado anterior.
                             if (d.PerfilAplicado == idArbol && contextoCompatible && !string.IsNullOrEmpty(d.HuellaPersistidaDespues)
                                 && huellaSql == d.HuellaPersistidaDespues
                                 && AgHuellaEscaladoPersistido.EstadoCompleto(db, tx, d.AulaRef, d.Subunidad, idArbol, d.Hacia, d.IdAsignaturasBottleneck))
                             {
                                 resultado.Confirmadas++;
+                                LoggerHelper.Debug($"[AG-RANURAS-TMP] GUARDAR_IDEMPOTENTE perfil={idArbol} ref={d.AulaRef}");
                                 continue;
                             }
                             if (huellaContexto != d.HuellaContextoAntes || huellaSql != d.HuellaPersistidaAntes
@@ -240,11 +256,13 @@ AND id_asignatura IN @Ids AND UPPER(COALESCE(origen_patron,''))='AUTOMATICO';",
                         }
                         ct.ThrowIfCancellationRequested();
                         tx.Commit();
+                        LoggerHelper.Debug($"[AG-RANURAS-TMP] GUARDAR_COMMIT perfil={idArbol} confirmadas={resultado.Confirmadas} modificadas={resultado.Modificadas}");
                     }
                 }
             }
             catch (Exception ex)
             {
+                LoggerHelper.Debug($"[AG-RANURAS-TMP] GUARDAR_REVERTIDO perfil={idArbol} tipo={ex.GetType().Name} motivo={ex.Message}");
                 // Contadores nuevos: ningún resultado provisional sobrevive al rollback.
                 return new ResultadoAplicacion { Error = ex is OperationCanceledException ? "Operación cancelada." : ex.Message };
             }

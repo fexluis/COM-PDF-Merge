@@ -56,7 +56,7 @@ INSERT INTO ag_bloque_horario VALUES(10,1);");
         {
             // Arrange
             var ctx = Preparar();
-            var sut = new AgEscaladorVentanaAula(Conexion);
+            var sut = new AgEscaladorRanuraAula(Conexion);
             var decisiones = sut.Evaluar(ctx, 42);
             decisiones.Should().ContainSingle();
             // Act
@@ -95,7 +95,7 @@ INSERT INTO ag_bloque_horario VALUES(10,1);");
         {
             // Arrange
             var ctx = Preparar();
-            var sut = new AgEscaladorVentanaAula(Conexion);
+            var sut = new AgEscaladorRanuraAula(Conexion);
             var decisiones = sut.Evaluar(ctx, 42);
             decisiones.Should().ContainSingle();
             var sql = new Dictionary<string, string>
@@ -132,7 +132,7 @@ INSERT INTO ag_bloque_horario VALUES(10,1);");
         {
             // Arrange
             var ctx = Preparar();
-            var sut = new AgEscaladorVentanaAula(Conexion);
+            var sut = new AgEscaladorRanuraAula(Conexion);
             var decisiones = sut.Evaluar(ctx, 42);
             var vigente = Contexto(false);
             if (cambio == "ventana") { vigente.Ventana.FechaFin = vigente.Ventana.FechaFin.AddDays(1); }
@@ -152,7 +152,7 @@ INSERT INTO ag_bloque_horario VALUES(10,1);");
         {
             // Arrange
             var ctx = Preparar();
-            var sut = new AgEscaladorVentanaAula(Conexion);
+            var sut = new AgEscaladorRanuraAula(Conexion);
             var decisiones = sut.Evaluar(ctx, 42);
             // Act
             var result = await sut.AplicarDetalladoAsync(decisiones, 43, ctx, CancellationToken.None);
@@ -167,7 +167,7 @@ INSERT INTO ag_bloque_horario VALUES(10,1);");
         {
             // Arrange
             var ctx = Preparar(true);
-            var sut = new AgEscaladorVentanaAula(Conexion);
+            var sut = new AgEscaladorRanuraAula(Conexion);
             var decisiones = sut.Evaluar(ctx, 42);
             decisiones.Should().HaveCount(2);
             decisiones[1].Hacia = "MIE-DOM";
@@ -191,7 +191,7 @@ INSERT INTO ag_bloque_horario VALUES(10,1);");
         {
             // Arrange
             var ctx = Preparar();
-            var sut = new AgEscaladorVentanaAula(Conexion);
+            var sut = new AgEscaladorRanuraAula(Conexion);
             var decisiones = sut.Evaluar(ctx, 42);
             using (var db = Conexion())
             {
@@ -211,7 +211,7 @@ INSERT INTO ag_bloque_horario VALUES(10,1);");
         {
             // Arrange
             var ctx = Preparar();
-            var sut = new AgEscaladorVentanaAula(Conexion);
+            var sut = new AgEscaladorRanuraAula(Conexion);
             var decisiones = sut.Evaluar(ctx, 42);
             (await sut.AplicarDetalladoAsync(decisiones, 42, ctx, CancellationToken.None)).Exito.Should().BeTrue();
             using (var db = Conexion()) { db.Open(); db.Execute("UPDATE ag_arbol_nodo SET dias_ventana='LUN-JUE' WHERE idarbol=42"); }
@@ -227,7 +227,7 @@ INSERT INTO ag_bloque_horario VALUES(10,1);");
         {
             // Arrange
             var ctx = Preparar();
-            var sut = new AgEscaladorVentanaAula(Conexion);
+            var sut = new AgEscaladorRanuraAula(Conexion);
             var decisiones = sut.Evaluar(ctx, 42);
             using (var cancelacion = new CancellationTokenSource())
             {
@@ -245,8 +245,8 @@ INSERT INTO ag_bloque_horario VALUES(10,1);");
         public async Task Aplicar_WhenSinInstantanea_ShouldRechazar()
         {
             // Arrange
-            var sut = new AgEscaladorVentanaAula(Conexion);
-            var decisiones = new[] { new AgEscaladorVentanaAula.Decision
+            var sut = new AgEscaladorRanuraAula(Conexion);
+            var decisiones = new[] { new AgEscaladorRanuraAula.Decision
                 { AulaRef="A",Desde="LUN-JUE",Hacia="LUN-VIE",CapacidadAntes=16,CapacidadDespues=20 } };
             // Act
             var result = await sut.AplicarDetalladoAsync(decisiones, 0, CancellationToken.None);
@@ -260,7 +260,7 @@ INSERT INTO ag_bloque_horario VALUES(10,1);");
         {
             // Arrange
             var ctx = Preparar();
-            var sut = new AgEscaladorVentanaAula(Conexion);
+            var sut = new AgEscaladorRanuraAula(Conexion);
             var decisiones = sut.Evaluar(ctx, 42);
             (await sut.AplicarDetalladoAsync(decisiones, 42, ctx, CancellationToken.None)).Exito.Should().BeTrue();
             var vigente = Contexto(false);
@@ -279,7 +279,7 @@ INSERT INTO ag_bloque_horario VALUES(10,1);");
         {
             // Arrange
             var ctx = Preparar();
-            var sut = new AgEscaladorVentanaAula(Conexion);
+            var sut = new AgEscaladorRanuraAula(Conexion);
             var decisiones = sut.Evaluar(ctx, 42);
             (await sut.AplicarDetalladoAsync(decisiones, 42, ctx, CancellationToken.None)).Exito.Should().BeTrue();
             using (var db = Conexion()) { db.Open(); db.Execute("UPDATE ag_aula_asignatura SET dias_patron='5' WHERE id_asignatura=101"); }

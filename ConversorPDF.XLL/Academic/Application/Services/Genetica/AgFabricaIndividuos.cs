@@ -56,6 +56,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 _ultimaCorrida = idCorrida;
             }
 
+            // AG-RANURAS-TMP: detalle de genes solo en la primera semilla de esta corrida.
+            bool diagnosticoPrimeraSemilla = LoggerHelper.ModoVerboso && _cachePlanes.Count == 0;
             _rotacionDocente.Clear(); // Fase 533: reiniciar rotación por individuo
             var trazaEfectiva = traza ?? contexto.Traza;
             int descartadasSemestre = 0;
@@ -237,6 +239,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                                        $"{huellaPatrones}|{AgHuellaPlanVentana.Calcular(contexto, aula)}";
                     if (!_cachePlanes.TryGetValue(clavePlan, out var planRes))
                     {
+                        if (LoggerHelper.ModoVerboso)
+                        {
+                            LoggerHelper.Debug($"[AG-RANURAS-TMP] FABRICA_CACHE_MISS corrida={idCorrida} aula={aula.Id} ref={aula.AulaRef} dias={aula.DiasVentana} jornada={aula.Jornada} plazo={fInicioVentana:yyyy-MM-dd}..{fFinVentana:yyyy-MM-dd} " +
+                                "demanda=" + string.Join(";", itemsPlan.Select(p => $"{p.IdAsignatura}:{p.Horas}h:orden={p.OrdenCurricular}")) + " patrones=" + huellaPatrones);
+                        }
                         var patronesPlan = new Dictionary<int, string>();
                         foreach (var it in itemsPlan)
                         {
@@ -253,7 +260,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                             contexto.EsFestivo,
                             contexto.Bloques,      // Fase 1170
                             aula.Jornada,          // Fase 1170
-                            patronesPlan);         // Fase 1252
+                            patronesPlan, $"corrida={idCorrida} aula={aula.Id} ref={aula.AulaRef} origen=fabrica");
                         _cachePlanes[clavePlan] = planRes;
                     }
 
@@ -522,6 +529,10 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                                 ? sesionesPlanificadas.Where(s => s.Ranura.Equals(ranura)).Select(s => s.Fecha).OrderBy(d => d).ToList()
                                 : AgPlanificadorPatronSemanal.FechasDeRanura(diaIso, sesionesRan[i], fechaInicio, fechaFin, contexto.EsFestivo).ToList();
                             gen.HorasGen = gen.FechasGen.Count * horasEfectivas;
+                            if (diagnosticoPrimeraSemilla)
+                            {
+                                LoggerHelper.Debug($"[AG-RANURAS-TMP] FABRICA_FECHAS corrida={idCorrida} aula={gen.IdAula} asig={gen.IdAsignatura} dia={diaIso} franja={ranura.Franja} fuente={(sesionesPlanificadas != null && sesionesPlanificadas.Count > 0 ? "plan_fechado" : "calendario_legacy")} fechas={gen.FechasGen.Count}");
+                            }
 
                             // Fase 1099: la cuarentena I1 anula bloque y estado para impedir materialización indebida
                             if (cohorteSinPlan)
@@ -819,6 +830,13 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 LoggerHelper.Debug($"[AgFabricaIndividuos] AsignaturasDescartadasPorSemestre: {descartadasSemestre}");
             }
 
+            if (diagnosticoPrimeraSemilla)
+            {
+                foreach (var g in individuo.Genes)
+                {
+                    LoggerHelper.Debug($"[AG-RANURAS-TMP] SEMILLA corrida={idCorrida} aula={g.IdAula} asig={g.IdAsignatura} dia={g.DiaSemana} bloque={g.IdBloqueHorario} horas={g.HorasGen} fechas={g.FechasGen?.Count ?? 0} primera={g.FechasGen?.Select(d => (DateTime?)d).Min():yyyy-MM-dd} ultima={g.FechasGen?.Select(d => (DateTime?)d).Max():yyyy-MM-dd} rango={g.FechaInicioEstimada:yyyy-MM-dd}..{g.FechaFinEstimada:yyyy-MM-dd} estado={g.Estado}");
+                }
+            }
             return individuo;
         }
 

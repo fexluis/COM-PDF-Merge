@@ -29,10 +29,10 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             IReadOnlyList<(int IdAsignatura, double Horas, int OrdenCurricular)> asignaturas,
             string diasVentana, DateTime fechaInicio, DateTime fechaFin, double unidadSesion,
             Func<DateTime, bool> esFestivo = null, IReadOnlyCollection<AgBloqueHorario> bloques = null,
-            string jornada = null, IReadOnlyDictionary<int, string> diasPatronPorAsignatura = null)
+            string jornada = null, IReadOnlyDictionary<int, string> diasPatronPorAsignatura = null, string diagnostico = null)
         {
             return ConstruirInterno(asignaturas, diasVentana, fechaInicio, fechaFin, unidadSesion,
-                esFestivo, bloques, jornada, diasPatronPorAsignatura, false, System.Threading.CancellationToken.None);
+                esFestivo, bloques, jornada, diasPatronPorAsignatura, false, System.Threading.CancellationToken.None, diagnostico);
         }
 
         internal Result<AgPlanOleadasResultado> ConstruirEvaluacion(
@@ -40,10 +40,10 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             string diasVentana, DateTime fechaInicio, DateTime fechaFin, double unidadSesion,
             Func<DateTime, bool> esFestivo = null, IReadOnlyCollection<AgBloqueHorario> bloques = null,
             string jornada = null, IReadOnlyDictionary<int, string> diasPatronPorAsignatura = null,
-            System.Threading.CancellationToken ct = default(System.Threading.CancellationToken))
+            System.Threading.CancellationToken ct = default(System.Threading.CancellationToken), string diagnostico = null)
         {
             return ConstruirInterno(asignaturas, diasVentana, fechaInicio, fechaFin, unidadSesion,
-                esFestivo, bloques, jornada, diasPatronPorAsignatura, true, ct);
+                esFestivo, bloques, jornada, diasPatronPorAsignatura, true, ct, diagnostico);
         }
 
         private Result<AgPlanOleadasResultado> ConstruirInterno(
@@ -51,7 +51,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             string diasVentana, DateTime fechaInicio, DateTime fechaFin, double unidadSesion,
             Func<DateTime, bool> esFestivo, IReadOnlyCollection<AgBloqueHorario> bloques,
             string jornada, IReadOnlyDictionary<int, string> patrones, bool permitirParcial,
-            System.Threading.CancellationToken ct)
+            System.Threading.CancellationToken ct, string diagnostico)
         {
             ct.ThrowIfCancellationRequested();
             if (fechaFin < fechaInicio || unidadSesion <= 0 || double.IsNaN(unidadSesion) || double.IsInfinity(unidadSesion))
@@ -81,10 +81,22 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             }
             var referencia = ConstruirReferencia(asignaturas, diasVentana, fechaInicio, fechaFin,
                 unidadSesion, esFestivo, bloques, jornada, patrones);
-            if (referencia.IsFailure && !referencia.Error.StartsWith("I5_", StringComparison.Ordinal)) { return referencia; }
+            if (referencia.IsFailure && !referencia.Error.StartsWith("I5_", StringComparison.Ordinal))
+            {
+                LoggerHelper.Debug($"[AG-RANURAS-TMP] ELEGIR {diagnostico} plan=error_referencia motivo={referencia.Error} candidatoEjecutado=false");
+                return referencia;
+            }
             // También se buscan mejoras cuando la referencia ya es factible en una ventana ampliada.
             var candidato = AgPlanificadorRanuras.Construir(asignaturas, ranuras, fechaInicio.Date,
-                fechaFin.Date, unidadSesion, esFestivo, patrones, ct: ct);
+                fechaFin.Date, unidadSesion, esFestivo, patrones, ct: ct, diagnostico: diagnostico);
+            if (LoggerHelper.ModoVerboso)
+            {
+                LoggerHelper.Debug($"[AG-RANURAS-TMP] COMPARAR {diagnostico} plazo={fechaInicio:yyyy-MM-dd}..{fechaFin:yyyy-MM-dd} parcial={permitirParcial} " +
+                    $"referenciaError={(referencia.IsFailure ? referencia.Error : "ninguno")} " +
+                    $"refSesiones={(referencia.IsSuccess ? referencia.Value.Planes.Sum(p => p.Sesiones.Count) : 0)} refPendientes={(referencia.IsSuccess ? referencia.Value.Infactibles.Count : -1)} " +
+                    $"refFin={(referencia.IsSuccess ? referencia.Value.Planes.SelectMany(p => p.Sesiones).Select(s => (DateTime?)s.Fecha).Max() : null):yyyy-MM-dd} " +
+                    $"candidatoSesiones={candidato.Planes.Sum(p => p.Sesiones.Count)} candidatoPendientes={candidato.Infactibles.Count} candidatoFin={candidato.Planes.SelectMany(p => p.Sesiones).Select(s => (DateTime?)s.Fecha).Max():yyyy-MM-dd}");
+            }
             if (candidato.Infactibles.Count == 0)
             {
                 bool referenciaCompleta = referencia.IsSuccess && referencia.Value.Infactibles.Count == 0;
@@ -92,20 +104,31 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 DateTime finReferencia = referenciaCompleta
                     ? referencia.Value.Planes.SelectMany(p => p.Sesiones).Select(s => s.Fecha).DefaultIfEmpty(DateTime.MaxValue).Max()
                     : DateTime.MaxValue;
-                if (!referenciaCompleta || finCandidato < finReferencia) { return Result.Success(candidato); }
+                if (!referenciaCompleta || finCandidato < finReferencia)
+                {
+                    LoggerHelper.Debug($"[AG-RANURAS-TMP] ELEGIR {diagnostico} plan=ranuras motivo=completo_o_fin_anterior");
+                    return Result.Success(candidato);
+                }
+                LoggerHelper.Debug($"[AG-RANURAS-TMP] ELEGIR {diagnostico} plan=referencia motivo=completa_fin_no_posterior");
                 return referencia;
             }
             // El contrato de generación conserva su Failure/planes completos; el pre-vuelo admite planes parciales.
-            if (!permitirParcial) { return referencia; }
+            if (!permitirParcial)
+            {
+                LoggerHelper.Debug($"[AG-RANURAS-TMP] ELEGIR {diagnostico} plan=referencia motivo=candidato_parcial_no_admitido");
+                return referencia;
+            }
             if (referencia.IsSuccess)
             {
                 bool conserva = referencia.Value.Planes.Where(p => !referencia.Value.Infactibles.Contains(p.IdAsignatura))
                     .All(p => candidato.Planes.Any(n => n.IdAsignatura == p.IdAsignatura && n.Sesiones.Count >= p.Sesiones.Count));
                 if (!conserva || candidato.Planes.Sum(p => p.Sesiones.Count) < referencia.Value.Planes.Sum(p => p.Sesiones.Count))
                 {
+                    LoggerHelper.Debug($"[AG-RANURAS-TMP] ELEGIR {diagnostico} plan=referencia motivo=candidato_no_conserva_cobertura");
                     return referencia;
                 }
             }
+            LoggerHelper.Debug($"[AG-RANURAS-TMP] ELEGIR {diagnostico} plan=ranuras motivo=parcial_conserva_cobertura");
             return Result.Success(candidato);
         }
 
