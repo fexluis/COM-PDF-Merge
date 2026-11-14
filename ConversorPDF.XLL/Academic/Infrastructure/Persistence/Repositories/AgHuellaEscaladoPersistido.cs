@@ -80,6 +80,10 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                 || Normalizar(fila["dias_ventana"]) != Normalizar(aula.DiasVentana)
                 || Normalizar(fila["jornada"]) != Normalizar(aula.Jornada)
                 || Convert.ToInt32(fila["horas_dia"], CultureInfo.InvariantCulture) != aula.HorasDia) { return false; }
+            if (fila.TryGetValue("estado", out var estadoVal) && estadoVal != null && !(estadoVal is DBNull))
+            {
+                if (Convert.ToInt32(estadoVal, CultureInfo.InvariantCulture) != (int)aula.Estado) { return false; }
+            }
             var actuales = db.Query(@"SELECT id_asignatura,horas_objetivo,orden_curricular,origen_patron,dias_patron
 FROM ag_aula_asignatura WHERE id_aula=@Id;", new { aula.Id }, tx)
                 .Select(x => (IDictionary<string, object>)x).ToList();

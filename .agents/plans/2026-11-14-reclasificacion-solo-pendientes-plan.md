@@ -163,10 +163,12 @@ Wave 8:                 T10 (Fase 1797) [Gate Full Baseline]
 - **description**: Proveer validación tipada de selecciones en AgEscaladorRanuraAula que retorne un resultado estructurado en lugar de lanzar ArgumentException indiscriminada. Diferenciar explícitamente motivos: aula no elegible (ej. Estado != Disponible), materia ajena a candidatas evaluadas, configuración modificada o huella cambiada. Registrar advertencias WARN con IDs de aula/asignatura y detalle del rechazo. Asegurar rollback y cero escrituras ante rechazo.
 - **validation**: La solución compila limpiamente en Debug/x64 y los métodos de validación estructurada discriminan con precisión la causa de rechazo.
 - **verification**: powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Build
-- **evidence**: (la llena build-verifier)
-- **status**: pending
-- **log**: (lo llena el orquestador)
-- **files edited/created**: (lo llena el orquestador)
+- **evidence**: _evidence/20261114-185823/summary.md
+- **status**: done
+- **log**: Implementada clase AgResultadoValidacionSeleccion y método ValidarSelecciones(...) con discriminación precisa de causas de rechazo (AULA_NO_ELEGIBLE, CONFIGURACION_MODIFICADA, etc.), logs WARN y verificación de estado en huella. Compilación limpia y 40/40 tests PASS.
+- **files edited/created**:
+  - ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgEscaladorRanuraAula.cs
+  - ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgHuellaEscaladoPersistido.cs
 
 ### T7: Cobertura de Pruebas Unitarias de Elegibilidad y Rechazos Controlados
 - **id**: T7

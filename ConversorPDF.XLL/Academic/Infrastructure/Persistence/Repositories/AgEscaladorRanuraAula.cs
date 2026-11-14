@@ -62,6 +62,19 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
             internal string HuellaPersistidaDespues { get; set; }
         }
 
+        public sealed class AgResultadoValidacionSeleccion
+        {
+            public bool EsValido { get; set; }
+            public string Motivo { get; set; } = string.Empty;
+            public string Mensaje { get; set; } = string.Empty;
+            public int? IdAulaRechazada { get; set; }
+            public int? IdAsignaturaRechazada { get; set; }
+
+            public static AgResultadoValidacionSeleccion Valido() => new AgResultadoValidacionSeleccion { EsValido = true };
+            public static AgResultadoValidacionSeleccion Rechazo(string motivo, string mensaje, int? idAula = null, int? idAsig = null) =>
+                new AgResultadoValidacionSeleccion { EsValido = false, Motivo = motivo, Mensaje = mensaje, IdAulaRechazada = idAula, IdAsignaturaRechazada = idAsig };
+        }
+
         /// <summary>
         /// Predicado canónico de elegibilidad de aula para propuesta y autorización de reclasificación.
         /// Aulas con Estado Aprobado (4), Inactiva (0), Mantenimiento (2) o Reservada (3) nunca son elegibles.
@@ -195,6 +208,81 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
             return resultado;
         }
 
+        /// <summary>
+        /// Valida tipadamente las selecciones de reclasificación sin lanzar excepciones de control de flujo.
+        /// Retorna un resultado estructurado diferenciando los motivos concretos de rechazo.
+        /// </summary>
+        public AgResultadoValidacionSeleccion ValidarSelecciones(AgContexto contexto, IReadOnlyCollection<AgReclasificacionPatron> reclasificacionesAutorizadas)
+        {
+            if (reclasificacionesAutorizadas == null || reclasificacionesAutorizadas.Count == 0)
+            {
+                return AgResultadoValidacionSeleccion.Valido();
+            }
+
+            if (contexto == null || contexto.Aulas == null || contexto.AulaAsignaturaPorAulaAsig == null)
+            {
+                return RechazoConLog("CONFIGURACION_MODIFICADA", "Contexto no inicializado o incompleto.", null, null);
+            }
+
+            var identidades = new HashSet<(int, int)>();
+            foreach (var rec in reclasificacionesAutorizadas)
+            {
+                if (rec == null)
+                {
+                    return RechazoConLog("RECLASIFICACION_NULA", "Reclasificación nula.", null, null);
+                }
+
+                if (!rec.Autorizado)
+                {
+                    continue;
+                }
+
+                string error;
+                if (!rec.EsTransicionValida(out error))
+                {
+                    return RechazoConLog("TRANSICION_INVALIDA", string.IsNullOrWhiteSpace(error) ? "Transición inválida." : error, rec.IdAula, rec.IdAsignatura);
+                }
+
+                if (!identidades.Add((rec.IdAula, rec.IdAsignatura)))
+                {
+                    return RechazoConLog("SELECCION_DUPLICADA", "Reclasificación duplicada para aula y asignatura.", rec.IdAula, rec.IdAsignatura);
+                }
+
+                var aulasCoincidentes = contexto.Aulas.Where(a => a != null
+                    && a.Id == rec.IdAula
+                    && string.Equals(a.AulaRef, rec.AulaRef, StringComparison.Ordinal)
+                    && string.Equals(a.Subunidad ?? string.Empty, rec.Subunidad ?? string.Empty, StringComparison.Ordinal)).ToList();
+
+                if (aulasCoincidentes.Count != 1 || !EsAulaElegible(aulasCoincidentes[0]))
+                {
+                    string mensajeAula = aulasCoincidentes.Count == 0
+                        ? $"Aula {rec.AulaRef} (id={rec.IdAula}) no encontrada en el contexto."
+                        : aulasCoincidentes.Count > 1
+                            ? $"Aula {rec.AulaRef} (id={rec.IdAula}) ambigua en el contexto ({aulasCoincidentes.Count} encontradas)."
+                            : $"Aula {rec.AulaRef} (id={rec.IdAula}) no elegible (estado={aulasCoincidentes[0].Estado}).";
+
+                    return RechazoConLog("AULA_NO_ELEGIBLE", mensajeAula, rec.IdAula, rec.IdAsignatura);
+                }
+
+                AgAulaAsignatura relacion;
+                if (!contexto.AulaAsignaturaPorAulaAsig.TryGetValue((rec.IdAula, rec.IdAsignatura), out relacion)
+                    || !string.Equals((relacion.OrigenPatron ?? string.Empty).Trim(), (rec.OrigenAnterior ?? string.Empty).Trim(), StringComparison.OrdinalIgnoreCase)
+                    || !string.Equals(relacion.DiasPatron ?? string.Empty, rec.DiasPatronAnterior ?? string.Empty, StringComparison.Ordinal))
+                {
+                    return RechazoConLog("CONFIGURACION_MODIFICADA", "Reclasificación ajena o configuración modificada. Recalcular propuesta.", rec.IdAula, rec.IdAsignatura);
+                }
+            }
+
+            return AgResultadoValidacionSeleccion.Valido();
+        }
+
+        private static AgResultadoValidacionSeleccion RechazoConLog(string motivo, string mensaje, int? idAula = null, int? idAsig = null)
+        {
+            var res = AgResultadoValidacionSeleccion.Rechazo(motivo, mensaje, idAula, idAsig);
+            LoggerHelper.Warning($"[AG-RECLASIFICACION-WARN] Validación fallida: motivo={res.Motivo}, aula={res.IdAulaRechazada}, asig={res.IdAsignaturaRechazada}: {res.Mensaje}");
+            return res;
+        }
+
         public IReadOnlyList<Decision> Evaluar(AgContexto contexto)
         {
             return EvaluarInterno(contexto, null, null, CancellationToken.None);
@@ -228,32 +316,20 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
             var decisiones = new List<Decision>();
             if (contexto == null || contexto.Ventana == null) { return decisiones; }
 
+            var validacion = ValidarSelecciones(contexto, reclasificacionesAutorizadas);
+            if (!validacion.EsValido)
+            {
+                throw new ArgumentException(validacion.Mensaje);
+            }
+
             var seleccionadas = new List<AgReclasificacionPatron>();
-            var identidades = new HashSet<(int, int)>();
             if (reclasificacionesAutorizadas != null)
             {
                 foreach (var rec in reclasificacionesAutorizadas)
                 {
                     ct.ThrowIfCancellationRequested();
-                    if (rec == null) { throw new ArgumentException("Reclasificación nula."); }
                     if (!rec.Autorizado) { continue; }
-                    string error;
-                    if (!rec.EsTransicionValida(out error)) { throw new ArgumentException(error); }
-                    if (!identidades.Add((rec.IdAula, rec.IdAsignatura)))
-                    {
-                        throw new ArgumentException("Reclasificación duplicada para aula y asignatura.");
-                    }
-                    var origen = contexto.Aulas.SingleOrDefault(a => a.Id == rec.IdAula
-                        && string.Equals(a.AulaRef, rec.AulaRef, StringComparison.Ordinal)
-                        && string.Equals(a.Subunidad ?? string.Empty, rec.Subunidad ?? string.Empty, StringComparison.Ordinal)
-                        && EsAulaElegible(a));
-                    AgAulaAsignatura relacion;
-                    if (origen == null || !contexto.AulaAsignaturaPorAulaAsig.TryGetValue((rec.IdAula, rec.IdAsignatura), out relacion)
-                        || !string.Equals((relacion.OrigenPatron ?? string.Empty).Trim(), rec.OrigenAnterior.Trim(), StringComparison.OrdinalIgnoreCase)
-                        || !string.Equals(relacion.DiasPatron ?? string.Empty, rec.DiasPatronAnterior ?? string.Empty, StringComparison.Ordinal))
-                    {
-                        throw new ArgumentException("Reclasificación ajena o configuración modificada. Recalcular propuesta.");
-                    }
+
                     var copia = rec.Clone();
                     copia.OrigenAnterior = "LEGADO";
                     copia.OrigenPropuesto = rec.OrigenPropuesto.Trim().ToUpperInvariant();
