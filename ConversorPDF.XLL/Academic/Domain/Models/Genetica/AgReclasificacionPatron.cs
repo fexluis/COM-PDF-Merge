@@ -20,6 +20,12 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
         public string DiasPatronPropuesto { get; set; } = string.Empty;
         public string Motivo { get; set; } = string.Empty;
         public bool Autorizado { get; set; }
+        public int SesionesPendientes { get; set; }
+        public double HorasPendientes { get; set; }
+        public DateTime? FechaLimite { get; set; }
+        public string Sede { get; set; } = string.Empty;
+        public string Programa { get; set; } = string.Empty;
+        public string SemestreGrupo { get; set; } = string.Empty;
 
         /// <summary>Valida identidad y transición explícita desde LEGADO, conservando los patrones FIJO.</summary>
         public bool EsTransicionValida(out string error)
@@ -77,7 +83,13 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
                 DiasPatronAnterior = this.DiasPatronAnterior,
                 DiasPatronPropuesto = this.DiasPatronPropuesto,
                 Motivo = this.Motivo,
-                Autorizado = this.Autorizado
+                Autorizado = this.Autorizado,
+                SesionesPendientes = this.SesionesPendientes,
+                HorasPendientes = this.HorasPendientes,
+                FechaLimite = this.FechaLimite,
+                Sede = this.Sede,
+                Programa = this.Programa,
+                SemestreGrupo = this.SemestreGrupo
             };
         }
     }

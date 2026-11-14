@@ -111,6 +111,7 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-074 | 2026-11-12 | `(revisión Ronda 373 — Fases 1775–1779: cota horizonte fecha, autoridad planificador, idempotencia)` | `Wave —` | `Fase 1775–1779` | closed | revisión y correcciones; sin build/tests | pendiente |
 | R-075 | 2026-11-12 | `(revisión Ronda 374 — Fases 1780–1783: métricas destino, confirmadas idempotencia, huella)` | `Wave —` | `Fase 1780–1783` | closed | revisión y correcciones; sin build/tests | pendiente |
 | R-076 | 2026-11-12 | `(revisión Ronda 375 — Fases 1784–1787: rollback vacío, demanda pendiente real, huella/idempotencia)` | `Wave —` | `Fase 1784–1787` | closed | revisión y correcciones; sin build/tests | pendiente |
+| R-077 | 2026-11-14 | `2026-11-14-reclasificacion-solo-pendientes-plan.md` | `Wave 1..8` → `Ronda 376–383` | `T1..T10` → `Fase 1788–1797` | reserved | pendiente | `3c2d1b4` |
 
 
 Estados: `reserved` (Fase A) · `executing` (Fase B) · `closed` (Fase C, sellado) · `abandoned` (plan descartado: los números **no** se reciclan).
