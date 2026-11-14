@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 372 | 373 | 2026-11-12 |
-| `fase` | 1774 | 1775 | 2026-11-12 |
+| `ronda` | 375 | 376 | 2026-11-12 |
+| `fase` | 1787 | 1788 | 2026-11-12 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -108,6 +108,9 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-071 | 2026-11-12 | `(revisión Ronda 370 — Fases 1763–1767: exposición métricas, I5_DIA_SATURADO, retiro bandas)` | `Wave —` | `Fase 1763–1767` | closed | revisión y correcciones; sin build/tests | pendiente |
 | R-072 | 2026-11-12 | `(revisión Ronda 371 — Fases 1768–1771: supresión oleada contradictoria, déficit global ordenado)` | `Wave —` | `Fase 1768–1771` | closed | revisión y correcciones; sin build/tests | pendiente |
 | R-073 | 2026-11-12 | `(revisión Ronda 372 — Fases 1772–1774: reducción materias fuera de ventana, mejora real)` | `Wave —` | `Fase 1772–1774` | closed | PASS (Full 1259) | `9265db3` |
+| R-074 | 2026-11-12 | `(revisión Ronda 373 — Fases 1775–1779: cota horizonte fecha, autoridad planificador, idempotencia)` | `Wave —` | `Fase 1775–1779` | closed | revisión y correcciones; sin build/tests | pendiente |
+| R-075 | 2026-11-12 | `(revisión Ronda 374 — Fases 1780–1783: métricas destino, confirmadas idempotencia, huella)` | `Wave —` | `Fase 1780–1783` | closed | revisión y correcciones; sin build/tests | pendiente |
+| R-076 | 2026-11-12 | `(revisión Ronda 375 — Fases 1784–1787: rollback vacío, demanda pendiente real, huella/idempotencia)` | `Wave —` | `Fase 1784–1787` | closed | revisión y correcciones; sin build/tests | pendiente |
 
 
 Estados: `reserved` (Fase A) · `executing` (Fase B) · `closed` (Fase C, sellado) · `abandoned` (plan descartado: los números **no** se reciclan).

@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ConversorPDF.XLL.Academic.Application.Services.Genetica;
 using ConversorPDF.XLL.Academic.Domain.Enums;
+using ConversorPDF.XLL.Academic.Domain.Models;
 using ConversorPDF.XLL.Academic.Domain.Models.Genetica;
 using ConversorPDF.XLL.Core.Helpers;
 using Dapper;

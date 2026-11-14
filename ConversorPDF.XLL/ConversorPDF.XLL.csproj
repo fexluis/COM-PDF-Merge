@@ -17,9 +17,9 @@
     <ExcelDnaCreate64BitAddIn>true</ExcelDnaCreate64BitAddIn>
     <!-- Excluir dependencias que no existen en .NET 4.8 y no deben empaquetarse -->
     <ExcelDnaExcludedDependencies>Microsoft.Bcl.HashCode.dll</ExcelDnaExcludedDependencies>
-    <Version>1.6.4.09</Version>
-    <AssemblyVersion>1.6.4.09</AssemblyVersion>
-    <FileVersion>1.6.4.09</FileVersion>
+    <Version>1.6.4.11</Version>
+    <AssemblyVersion>1.6.4.11</AssemblyVersion>
+    <FileVersion>1.6.4.11</FileVersion>
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <Import Project="obj\ConversorPDF.XLL.csproj.nuget.g.props" Condition="Exists('obj\ConversorPDF.XLL.csproj.nuget.g.props')" />
@@ -696,12 +696,12 @@
     <Compile Include="Academic\Domain\Models\Genetica\AgBandasDias.cs" />
     <Compile Include="Academic\Domain\Models\Genetica\AgEscaleraVentanas.cs" />
     <Compile Include="Academic\Infrastructure\Persistence\Repositories\AgHuellaEscaladoPersistido.cs" />
-    <Compile Include="Academic\Domain\Models\Genetica\AgSesionPlanificada.cs" />
-    <Compile Include="Academic\Application\Services\Genetica\AgHuellaPlanVentana.cs" />
-    <Compile Include="Academic\Application\Services\Genetica\AgPlanificadorRanuras.cs" />
     <Compile Include="Academic\Infrastructure\Persistence\Repositories\AgEscaladorVentanaAula.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\AgSesionPlanificada.cs" />
     <Compile Include="Academic\Domain\Models\Genetica\AgPlanOleada.cs" />
     <Compile Include="Academic\Domain\Models\Genetica\AgPlanOleadasResultado.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgHuellaPlanVentana.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgPlanificadorRanuras.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgPlanificadorOleadas.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgParticionCarriles.cs" />
     <Compile Include="Academic\Application\Mappers\AgSeleccionMapper.cs" />

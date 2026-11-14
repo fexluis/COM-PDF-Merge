@@ -9023,3 +9023,61 @@ La revisión en disco constató discrepancias entre el informe previo y el estad
 ### Cambios Aplicados
 1. **Fase 1772 (`AgResultadoEvaluacionVentana.cs`, `AgEvaluadorDemandaVentana.cs`, `AgEscaladorVentanaAula.cs`):** Adición de la propiedad `MateriasFueraVentana` a `AgResultadoEvaluacionVentana` y a `AgEscaladorVentanaAula.Decision`. Integración de la cláusula de mejora `evalDespues.MateriasFueraVentana.Count < evalAntes.MateriasFueraVentana.Count` en `Mejora`, habilitando la propuesta de escalado para ventanas con patrones fijos inicialmente fuera de rango.
 2. **Fase 1773/1774 (`REGISTRY.md`):** Adición de la fila `R-073` (`closed`, sin build/tests) y avance de contadores a `ronda: 372 / 373`, `fase: 1774 / 1775`.
+
+---
+
+## Ronda 373: Horizonte Acotado de Fecha Fin, Autoridad del Planificador, Idempotencia de Escalado y Registro (Fases 1775–1779)
+
+### Contexto y Diagnóstico
+1. **Fase 1775:** `FinDeSemanaValida` iteraba día a día sin límite superior. Ante un calendario enteramente festivo o con festivos infinitos, entraba en ciclo infinito. La propuesta de restringir la búsqueda a `fin` truncaba el cálculo de extensión mínima (makespan) más allá del semestre. Se requería una cota superior finita razonable (`limite = fin.AddDays(...)`) y firma `DateTime?` con fallback en UI y validador a "no cabe dentro del plazo".
+2. **Fase 1776:** A pesar de tener `origen_patron`, los patrones marcados como `AUTOMATICO` seguían extrayéndose en `ObtenerDemandasAsignaturas`, en `AgFabricaIndividuos.ObtenerDiasPatron` y en `AgValidadorVentana.patronesAula`, actuando como restricciones rígidas de día en el motor genético y el validador en lugar de redistribuirse libremente.
+3. **Fase 1777:** `AgValidadorVentana` anteponía la heurística de `AgEvaluadorDemandaVentana` emitiendo `[I5_DIA_SATURADO]` e interrumpiendo el flujo con `continue` antes de invocar `AgPlanificadorOleadas.Construir`. El planificador es la autoridad algorítmica: solo debe diagnosticarse saturación cuando el plan resulte infactible.
+4. **Fase 1778:** `AgEscaladorVentanaAula.AplicarAsync` actualizaba `ag_aula` sin verificar si `dias_ventana` seguía coincidiendo con `Desde`, sobrescribiendo cambios concurrentes. Además, una reaplicación idempotente fallaba si no se detectaba que el aula ya se encontraba en el estado objetivo `Hacia`.
+5. **Fase 1779:** Desactualización del registro de numeración para la ronda 373 y fases 1775–1779.
+
+### Cambios Aplicados
+1. **Fase 1775 (`AgEvaluadorDemandaVentana.cs`, `AgValidadorVentana.cs`, `AgFormGeneradorHorarios.cs`):** Parámetro `DateTime limite` añadido a `FinDeSemanaValida`, retorno `DateTime?` ante agotamiento del límite, y despliegue del texto "no cabe dentro del plazo" en modal y validaciones cuando el resultado es nulo.
+2. **Fase 1776 (`AgEvaluadorDemandaVentana.cs`, `AgFabricaIndividuos.cs`, `AgValidadorVentana.cs`):** Ignorado sistemático de `DiasPatron` cuando `OrigenPatron == "AUTOMATICO"` tanto en la extracción de demandas, en la fábrica de individuos genéticos como en la construcción de patrones para oleadas.
+3. **Fase 1777 (`AgValidadorVentana.cs`):** `AgPlanificadorOleadas.Construir` se ejecuta primero; el bloqueo `[I5_DIA_SATURADO]` solo se emite cuando `!planFactible` (`planRes.IsFailure || Infactibles.Count > 0`).
+4. **Fase 1778 (`AgEscaladorVentanaAula.cs`):** Guarda SQL `AND COALESCE(dias_ventana, '') = @Desde`, consulta previa en transacción para omitir idempotentemente si ya es `Hacia`, y lanzamiento de `InvalidOperationException` si `dias_ventana != Desde`.
+5. **Fase 1779 (`REGISTRY.md`):** Adición de la fila `R-074` (`closed`, sin build/tests) y avance de contadores a `ronda: 373 / 374`, `fase: 1779 / 1780`.
+
+---
+
+## Ronda 374: Métricas del Plan Efectivo en Modal, Confirmadas en Idempotencia y Huella de Entrada (Fases 1780–1783)
+
+### Contexto y Diagnóstico
+1. **Fase 1780:** `AgEscaladorVentanaAula.Evaluar` requería unificación metodológica con el planificador de oleadas para garantizar que las propuestas de escalado correspondan a mejoras que el planificador materializa efectivamente.
+2. **Fase 1781:** La comprobación de idempotencia en `AplicarAsync` saltaba con `continue` cuando la ventana ya estaba en `Hacia`, devolviendo 0 filas actualizadas. En la UI, la verificación `aplicadas != esperadas` interpretaba erróneamente la reaplicación como fallo.
+3. **Fase 1782:** El modal pre-vuelo calculaba la demanda pendiente de forma abstracta (`demanda - capacidad total`) y presentaba las métricas previas en lugar de las proyectadas para la ventana destino.
+4. **Fase 1783:** Falta de captura de huella de configuración (`HuellaEntrada`) para garantizar que la demanda, jornada y capacidad no hayan cambiado entre la evaluación y la aplicación.
+
+### Cambios Aplicados
+1. **Fase 1780/1782 (`AgEscaladorVentanaAula.cs`, `AgFormGeneradorHorarios.cs`):** Las propiedades `SemanasRequeridas`, `FechaFinMinima`, `RanurasOciosas`, `DemandaPendiente` y `MateriasFueraVentana` de `Decision` ahora almacenan los resultados de `evalDespues`, reflejando exactamente el estado posterior al escalado. En la UI, el texto de demanda pendiente utiliza directamente `d.DemandaPendiente`.
+2. **Fase 1781 (`AgEscaladorVentanaAula.cs`):** Introducción de `ResultadoAplicacion` con `Confirmadas` y `Modificadas`. `AplicarDetalladoAsync` incrementa `resultado.Confirmadas++` tanto si se actualiza la base de datos como si ya se encontraba idempotentemente en `Hacia`. `AplicarAsync` retorna `resultado.Confirmadas`, satisfaciendo la condición `aplicadas == esperadas` de la UI.
+3. **Fase 1783 (`AgEscaladorVentanaAula.cs`):** Adición de `HuellaEntrada` en `Decision` (`diasVentana|jornada|demanda|capacidad`) para rastrear cambios en la configuración entre la evaluación y la persistencia transaccional.
+4. **Numeración y Registro (`REGISTRY.md`):** Adición de la fila `R-075` (`closed`, sin build/tests) y avance de contadores a `ronda: 374 / 375`, `fase: 1783 / 1784`.
+
+---
+
+## Ronda 375: Rollback con Contadores Vacíos, Demanda Pendiente por Ranuras No Acomodadas y Validación de Huella/Idempotencia (Fases 1784–1787)
+
+### Contexto y Diagnóstico
+1. **Fase 1784:** En caso de excepción tras incrementar `resultado.Confirmadas` (por ejemplo, en el reseteo transaccional de patrones), la transacción se revertía pero el bloque `catch` devolvía el objeto con contadores positivos, permitiendo que la UI asumiera éxito.
+2. **Fase 1785:** `DemandaPendiente` calculada como `Math.Max(0, demandaTotal - capacidadTotal)` ocultaba demandas insatisfechas cuando había capacidad global pero los slots/franjas específicos estaban saturados (ej. materias dominicales).
+3. **Fase 1786:** `HuellaEntrada` se asignaba pero no se verificaba contra la base de datos dentro de la transacción previa a la mutación.
+4. **Fase 1787:** La comprobación de idempotencia confirmaba el aula si `dias_ventana == Hacia` sin validar que el nodo del árbol (`ag_arbol_nodo`) también estuviera actualizado en la ventana destino.
+
+### Cambios Aplicados
+1. **Fase 1784 (`AgEscaladorVentanaAula.cs`):** En el bloque `catch`, se retorna `new ResultadoAplicacion()` (con 0 confirmadas y 0 modificadas) garantizando que un fallo o aborto transaccional no reporte confirmaciones espurias.
+2. **Fase 1785 (`AgEvaluadorDemandaVentana.cs`):** Cálculo de `DemandaPendiente` como sumatoria de sesiones no acomodadas en cada slot respecto a su capacidad real (`demandas.Sum(d => Math.Max(0, d.Sesiones - sesionesUbicadasPorAsignatura[d.IdAsignatura]))`).
+3. **Fase 1786 (`AgEscaladorVentanaAula.cs`):** Validación transaccional de `HuellaEntrada` comprobando consistencia de ventana y jornada antes de ejecutar la actualización.
+4. **Fase 1787 (`AgEscaladorVentanaAula.cs`):** Verificación de idempotencia completa: si `actual == d.Hacia`, se verifica adicionalmente que `ag_arbol_nodo.dias_ventana == d.Hacia` cuando se especifica `idArbol > 0`.
+5. **Numeración y Registro (`REGISTRY.md`):** Adición de la fila `R-076` (`closed`, sin build/tests) y avance de contadores a `ronda: 375 / 376`, `fase: 1787 / 1788`.
+
+
+## Ronda 376 propuesta — Fases 1788–1793 — 2026-11-13
+
+Implementación editada: plan compartido con sesiones fechadas; aprovechamiento de ranuras sobrantes; fábrica consume las mismas fechas; fecha proyectada sin promesa de mínimo; huella completa de contexto/BD; idempotencia y contadores posteriores al commit; recarga de UI y caché por contenido. Pruebas de aceptación y consistencia añadidas.
+
+Estado: sin compilación ni ejecución de pruebas por restricción del usuario. Fases 1792–1793 sin evidencia de aprobación. No se declara release listo ni smoke superado. Detalle vigente: docs/plans/2026-11-12-escalado-tres-casos-revision-ronda-376.md. Sin nueva reserva en REGISTRY.

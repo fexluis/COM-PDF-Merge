@@ -1,8 +1,8 @@
 # Walkthrough — Movimiento de Usuarios entre Vaults al Cambiar de Subunidad (MUV)
 
-**Fecha:** 2026-10-29  
-**Plan:** `.agents/plans/2026-10-29-mover-usuario-entre-vaults-plan.md`  
-**Estado:** COMPLETED  
+**Fecha:** 2026-10-29
+**Plan:** `.agents/plans/2026-10-29-mover-usuario-entre-vaults-plan.md`
+**Estado:** COMPLETED
 **Verificación Full:** 964 de 964 pruebas superadas (0 fallos, 0 regresiones vs baseline de 952).
 
 ## Resumen de la Ejecución
@@ -454,11 +454,11 @@ Se completó la implementación y verificación de las 6 tareas del plan MUV:
   - `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgOperadorCruceTests.cs`
 
 ---
- 
+
  ## Ronda 114 — Fase 660: Colisión de UDF `Normalizar` por Auto-Registro Excel-DNA
- 
+
  ### Resumen de Cambios Aplicados
- 
+
  #### 1. Fase 660 — Renombrado de Métodos `Normalizar` a Nombres Específicos
  - **Estado:** ACEPTADA
  - **Hallazgo:**
@@ -477,9 +477,9 @@ Se completó la implementación y verificación de las 6 tareas del plan MUV:
    - `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Migrations/MigrationV63_UnificarHorariosMilitar.cs`
    - `ConversorPDF.XLL/UI/DayHoursDropdown.cs`
    - `ConversorPDF.Tests/Academic/Application/Services/HorarioMilitarizadorTests.cs`
- 
+
  ### Verificaciones de Principios (Ronda 114)
- 
+
  | Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa |
  |---|---|---|---|---|
  | F660 | [X] Sí | [X] Sí | [X] Sí | [X] Sí |
@@ -1458,7 +1458,7 @@ Se completó la implementación y verificación de las 6 tareas del plan MUV:
   - *Diagnóstico Crítico:* Al actualizar mediante `MajorUpgrade`, Windows Installer trata los `.xlsx` como archivos de datos sin versión PE. Si el archivo en destino fue tocado, `CostFinalize` asigna `FA_NoOverwrite` y omite su reemplazo durante `InstallFiles`, incluso si `RemoveFile` lo elimina durante `RemoveFiles`.
   - *Causa Raíz:* Archivos sin versión en la tabla `File` de MSI y componentes per-user sin `KeyPath` explícito en `HKCU`.
   - *Impacto Confirmado:* Riesgo de conservar plantillas obsoletas o eliminarlas sin reemplazo en `%APPDATA%\Microsoft\AddIns\ExcelTemplates\`.
-- **Acción Aplicada:** 
+- **Acción Aplicada:**
   1. Conservados los identificadores de archivo `File/@Id` (`filTemplate1`, `filTemplate2`) y Component GUIDs para garantizar trazabilidad y consistencia de linaje MSI.
   2. Asignado `DefaultVersion="!(bind.FileVersion.filXllDll)"` a cada `<File>` para forzar a `CostFinalize` a asignar `FileAction = Install` incondicional contra archivos no versionados en disco.
   3. Declarados `RegistryValue` con `KeyPath="yes"` en `HKCU\Software\ESAP\ConversorPDF\Templates` con valor `[ProductVersion]` para asegurar el estado activo de instalación del componente en el ámbito per-user.
@@ -10372,3 +10372,113 @@ evaluación nueva.
 | F1772 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | AgResultadoEvaluacionVentana.cs, AgEvaluadorDemandaVentana.cs, AgEscaladorVentanaAula.cs |
 | F1773 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | implementation_plan.md |
 | F1774 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | REGISTRY.md |
+
+---
+
+## Ronda 373 — Horizonte Acotado de Fecha Fin, Autoridad del Planificador e Idempotencia (Fases 1775–1779)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1775 — Límite de Horizonte Temporal en FinDeSemanaValida
+- **Archivos:** ConversorPDF.XLL/Academic/Application/Services/Genetica/AgEvaluadorDemandaVentana.cs, ConversorPDF.XLL/Academic/Application/Services/Genetica/AgValidadorVentana.cs, ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs
+- **Cambio:** Integración de cota superior finita limite en FinDeSemanaValida, firma nullable DateTime? y manejo explícito de  no cabe dentro del plazo ante sobrepaso de horizonte.
+
+#### 2. Fase 1776 — Supresión de Restricción Rígida en Patrones AUTOMATICO
+- **Archivos:** ConversorPDF.XLL/Academic/Application/Services/Genetica/AgEvaluadorDemandaVentana.cs, ConversorPDF.XLL/Academic/Application/Services/Genetica/AgFabricaIndividuos.cs, ConversorPDF.XLL/Academic/Application/Services/Genetica/AgValidadorVentana.cs
+- **Cambio:** DiasPatron ignorado y sustituido por vacío/nulo cuando OrigenPatron == AUTOMATICO en demandas, fábrica de individuos y oleadas, permitiendo que el motor redistribuya libremente.
+
+#### 3. Fase 1777 — Primacía del Planificador de Oleadas
+- **Archivo:** ConversorPDF.XLL/Academic/Application/Services/Genetica/AgValidadorVentana.cs
+- **Cambio:** Ejecución previa de AgPlanificadorOleadas.Construir. El diagnóstico de [I5_DIA_SATURADO] solo se emite si el planificador formal declara infactibilidad.
+
+#### 4. Fase 1778 — Idempotencia y Protección ante Decisiones Obsoletas
+- **Archivo:** ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgEscaladorVentanaAula.cs
+- **Cambio:** Verificación previa en transacción: si el aula ya está en Hacia no reescribe; si difiere de Desde aborta con excepción descriptiva; actualización acotada con AND COALESCE(dias_ventana, '') = @Desde.
+
+#### 5. Fase 1779 — Registro y Trazabilidad
+- **Archivo:** .agents/plans/REGISTRY.md
+- **Cambio:** Incorporación de fila R-074 y actualización de contadores globales (onda: 373 / 374, ase: 1779 / 1780).
+
+### Verificación de Principios (Ronda 373)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1775 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | AgEvaluadorDemandaVentana.cs, AgValidadorVentana.cs, AgFormGeneradorHorarios.cs |
+| F1776 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | AgEvaluadorDemandaVentana.cs, AgFabricaIndividuos.cs, AgValidadorVentana.cs |
+| F1777 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | AgValidadorVentana.cs |
+| F1778 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | AgEscaladorVentanaAula.cs |
+| F1779 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | REGISTRY.md |
+
+---
+
+## Ronda 374 — Métricas del Plan Efectivo, Confirmadas en Idempotencia y Huella de Entrada (Fases 1780–1783)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1780/1782 — Proyección Posterior en Decision y Desacople de Pendiente
+- **Archivos:** ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgEscaladorVentanaAula.cs, ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs
+- **Cambio:** Decision almacena las métricas de evalDespues (semanas, fecha fin mínima, ranuras ociosas y demanda pendiente calculada). El modal pre-vuelo utiliza d.DemandaPendiente en vez de fórmulas abstractas.
+
+#### 2. Fase 1781 — Separación de Aulas Confirmadas y Modificadas en Repositorio
+- **Archivo:** ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgEscaladorVentanaAula.cs
+- **Cambio:** Clase ResultadoAplicacion que distingue Confirmadas de Modificadas. La verificación en AplicarAsync devuelve las confirmadas (incluyendo aulas que ya estaban en Hacia), garantizando compatibilidad con la guarda plicadas == esperadas de la UI.
+
+#### 3. Fase 1783 — Huella de Entrada en Decisión
+- **Archivo:** ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgEscaladorVentanaAula.cs
+- **Cambio:** Propiedad HuellaEntrada para verificación de inmutabilidad entre evaluación y persistencia.
+
+#### 4. Numeración y Registro
+- **Archivo:** .agents/plans/REGISTRY.md
+- **Cambio:** Incorporación de fila R-075 y avance de contadores globales (onda: 374 / 375, ase: 1783 / 1784).
+
+### Verificación de Principios (Ronda 374)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1780 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | AgEscaladorVentanaAula.cs |
+| F1781 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | AgEscaladorVentanaAula.cs |
+| F1782 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | AgEscaladorVentanaAula.cs, AgFormGeneradorHorarios.cs |
+| F1783 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | AgEscaladorVentanaAula.cs, REGISTRY.md |
+
+---
+
+## Ronda 375 — Rollback con Contadores Vacíos, Demanda Pendiente por Ranuras y Validación de Huella/Idempotencia (Fases 1784–1787)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1784 — Cero Confirmadas en Excepción
+- **Archivo:** ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgEscaladorVentanaAula.cs
+- **Cambio:** En catch, retorno de
+ew ResultadoAplicacion() en lugar de devolver contadores incrementados antes del fallo transaccional.
+
+#### 2. Fase 1785 — Demanda Pendiente Real por Capacidad de Slot
+- **Archivo:** ConversorPDF.XLL/Academic/Application/Services/Genetica/AgEvaluadorDemandaVentana.cs
+- **Cambio:** DemandaPendiente computa la sumatoria de sesiones que no pudieron acomodarse en sus respectivos slots frente a la capacidad del calendario.
+
+#### 3. Fase 1786 — Verificación de Huella Pre-Mutación
+- **Archivo:** ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgEscaladorVentanaAula.cs
+- **Cambio:** Comprobación de d.HuellaEntrada dentro de la transacción contra la configuración persistida antes de aplicar cambios.
+
+#### 4. Fase 1787 — Idempotencia Completa Incluyendo Nodo
+- **Archivo:** ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgEscaladorVentanaAula.cs
+- **Cambio:** Si el aula ya posee dias_ventana == Hacia, se verifica que el nodo en g_arbol_nodo también coincida antes de darla por confirmada.
+
+#### 5. Numeración y Registro
+- **Archivo:** .agents/plans/REGISTRY.md
+- **Cambio:** Incorporación de fila R-076 y avance de contadores globales (onda: 375 / 376, ase: 1787 / 1788).
+
+### Verificación de Principios (Ronda 375)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1784 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | AgEscaladorVentanaAula.cs |
+| F1785 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | AgEvaluadorDemandaVentana.cs |
+| F1786 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | AgEscaladorVentanaAula.cs |
+| F1787 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | AgEscaladorVentanaAula.cs, REGISTRY.md |
+
+
+## Ronda 376 propuesta — Fases 1788–1793 — 2026-11-13
+
+Implementación editada: plan compartido con sesiones fechadas; aprovechamiento de ranuras sobrantes; fábrica consume las mismas fechas; fecha proyectada sin promesa de mínimo; huella completa de contexto/BD; idempotencia y contadores posteriores al commit; recarga de UI y caché por contenido. Pruebas de aceptación y consistencia añadidas.
+
+Estado: sin compilación ni ejecución de pruebas por restricción del usuario. Fases 1792–1793 sin evidencia de aprobación. No se declara release listo ni smoke superado. Detalle vigente: docs/plans/2026-11-12-escalado-tres-casos-revision-ronda-376.md. Sin nueva reserva en REGISTRY.

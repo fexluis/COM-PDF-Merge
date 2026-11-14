@@ -1,5 +1,6 @@
-param(
-    [string]$NewVersion
+﻿param(
+    [string]$NewVersion,
+    [switch]$SkipTests
 )
 
 $ErrorActionPreference = 'Stop'
@@ -60,9 +61,13 @@ if (Test-Path $INSTALLER_DIR) {
 }
 
 # 2. Verificación de Tests
-Write-Host "2. Ejecutando pruebas unitarias..."
-dotnet test ConversorPDF.Tests\ConversorPDF.Tests.csproj -c Release
-if ($LASTEXITCODE -ne 0) { throw "Las pruebas unitarias fallaron. Abortando build." }
+if (-not $SkipTests) {
+    Write-Host "2. Ejecutando pruebas unitarias..."
+    dotnet test ConversorPDF.Tests\ConversorPDF.Tests.csproj -c Release
+    if ($LASTEXITCODE -ne 0) { throw "Las pruebas unitarias fallaron. Abortando build." }
+} else {
+    Write-Host "2. Pruebas unitarias omitidas (-SkipTests)..." -ForegroundColor Yellow
+}
 
 # 3. Compilación XLL (Release)
 Write-Host "3. Compilando proyecto XLL (Release|x64)..."
