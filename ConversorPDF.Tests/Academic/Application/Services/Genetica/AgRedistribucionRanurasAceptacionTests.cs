@@ -364,8 +364,8 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
         [Fact]
         public void Evaluar_WhenVentanaTerminalConPatronLegado_ShouldIdentificarCandidatosSinExigirEscalarDias()
         {
-            // Arrange: Aula en ventana terminal MIE-DOM con patrón LEGADO
-            var ctx = CrearContextoSintetico(17, "MIE-DOM", numAsignaturas: 2, sesionesPorAsignatura: 16);
+            // Arrange: Aula en ventana terminal MIE-DOM con patrón LEGADO y déficit real en domingo (20 sesiones vs 17 domingos disponibles)
+            var ctx = CrearContextoSintetico(17, "MIE-DOM", numAsignaturas: 2, sesionesPorAsignatura: 20);
             ctx.AulaAsignaturas[0].DiasPatron = "7";
             ctx.AulaAsignaturas[0].OrigenPatron = "LEGADO";
             ctx.AulaAsignaturaPorAulaAsig[(1, 1)].DiasPatron = "7";
@@ -392,14 +392,17 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
         [Fact]
         public void Evaluar_WhenMismaAsignaturaEnDistintasAulas_ShouldAislarAutorizacionPorAula()
         {
-            // Arrange: CALI III-A (Aula 36) y CALI III-B (Aula 37) comparten la asignatura 13
-            var ctx = CrearContextoSintetico(17, "VIE-DOM", numAsignaturas: 1, sesionesPorAsignatura: 16, aulaRef: "CALI-36");
+            // Arrange: CALI III-A (Aula 36) y CALI III-B (Aula 37) comparten la asignatura 13 con saturación en domingo (20 sesiones vs 17 domingos)
+            var ctx = CrearContextoSintetico(17, "VIE-DOM", numAsignaturas: 1, sesionesPorAsignatura: 20, aulaRef: "CALI-36");
             ctx.Aulas[0].Id = 36;
             ctx.Aulas[0].Subunidad = "VALLE";
             ctx.Asignaturas[0].Id = 13;
+            ctx.Asignaturas[0].Horas = 80;
+            ctx.Asignaturas[0].IntHoraria = 80;
             ctx.AulaAsignaturas[0].IdAula = 36;
             ctx.AulaAsignaturas[0].IdAsignatura = 13;
             ctx.AulaAsignaturas[0].Subunidad = "VALLE";
+            ctx.AulaAsignaturas[0].HorasObjetivo = 80;
             ctx.AulaAsignaturas[0].OrigenPatron = "LEGADO";
             ctx.AulaAsignaturas[0].DiasPatron = "7";
 
@@ -421,7 +424,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
                 IdAula = 37,
                 IdAsignatura = 13,
                 Subunidad = "VALLE",
-                HorasObjetivo = 64,
+                HorasObjetivo = 80,
                 OrigenPatron = "LEGADO",
                 DiasPatron = "7"
             };
@@ -463,9 +466,15 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
         public void Simular_WhenAplicarReclasificaciones_ShouldEvaluarMismaVentanaPrimero()
         {
             // Arrange: Contexto con demanda que se resuelve en la misma ventana al redistribuir
-            var ctx = CrearContextoSintetico(17, "VIE-DOM", numAsignaturas: 4, sesionesPorAsignatura: 16);
+            // Asignatura 1 con 18 sesiones (72h) en domingo excede los 17 domingos disponibles (1 sesión / 4h pendiente).
+            // Con 60 sesiones totales (18 + 3*14), cabe en las 68 ranuras de VIE-DOM al reclasificar a AUTOMATICO.
+            var ctx = CrearContextoSintetico(17, "VIE-DOM", numAsignaturas: 4, sesionesPorAsignatura: 14);
+            ctx.Asignaturas[0].Horas = 72;
+            ctx.Asignaturas[0].IntHoraria = 72;
+            ctx.AulaAsignaturas[0].HorasObjetivo = 72;
             ctx.AulaAsignaturas[0].DiasPatron = "7";
             ctx.AulaAsignaturas[0].OrigenPatron = "LEGADO";
+            ctx.AulaAsignaturaPorAulaAsig[(1, 1)].HorasObjetivo = 72;
             ctx.AulaAsignaturaPorAulaAsig[(1, 1)].DiasPatron = "7";
             ctx.AulaAsignaturaPorAulaAsig[(1, 1)].OrigenPatron = "LEGADO";
 

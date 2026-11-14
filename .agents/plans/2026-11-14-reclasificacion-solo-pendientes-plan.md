@@ -113,10 +113,12 @@ Wave 8:                 T10 (Fase 1797) [Gate Full Baseline]
 - **description**: Calibrar preventivamente los fixtures en los tests preexistentes de redistribución para que aquellos tests que esperan candidatos de reclasificación configuren ventanas con saturación real (déficit > 0) y no asuman que materias que caben en plazo son candidatas, previniendo regresiones anticipadas al implementar la política estricta en T5.
 - **validation**: Los fixtures existentes ejecutan limpiamente sin fallos de Sequence contains no elements ni aserciones prematuras.
 - **verification**: powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "AgRedistribucion"
-- **evidence**: (la llena build-verifier)
-- **status**: pending
-- **log**: (lo llena el orquestador)
-- **files edited/created**: (lo llena el orquestador)
+- **evidence**: _evidence/20261114-184000/summary.md
+- **status**: done
+- **log**: Calibración preventiva de fixtures en AgRedistribucionCorreccionesTests y AgRedistribucionRanurasAceptacionTests con déficit real. 40/40 tests PASS.
+- **files edited/created**:
+  - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgRedistribucionCorreccionesTests.cs
+  - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgRedistribucionRanurasAceptacionTests.cs
 
 ### T4: Diálogo UI de Autorización con Columnas Legibles y Déficit
 - **id**: T4
@@ -128,10 +130,11 @@ Wave 8:                 T10 (Fase 1797) [Gate Full Baseline]
 - **description**: Enriquecer la presentación visual en FormAutorizarReclasificacion: mostrar sede, programa, semestre/grupo, nombre de materia, patrón anterior y sesiones/horas pendientes. Mantener selección individual desmarcada por defecto, y respetar Cancelar/Cerrar sin alterar selecciones.
 - **validation**: Compilación limpia en Debug/x64 y CheckedListBox renderiza el texto compuesto con metadatos y déficit por materia.
 - **verification**: powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Build
-- **evidence**: (la llena build-verifier)
-- **status**: pending
-- **log**: (lo llena el orquestador)
-- **files edited/created**: (lo llena el orquestador)
+- **evidence**: _evidence/20261114-183727/summary.md
+- **status**: done
+- **log**: Enriquecida presentación de PoblarLista() con metadatos compuestos ([Sede - Programa], [SemestreGrupo], déficit sesiones/horas). Compilación x64 limpia en verify.ps1 -Mode Build.
+- **files edited/created**:
+  - ConversorPDF.XLL/Academic/UI/Forms/FormAutorizarReclasificacion.cs
 
 ### T5: Centralización de Elegibilidad, Candidatas Fechadas y Aislamiento SQL
 - **id**: T5

@@ -43,7 +43,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
         [InlineData("sinIdentidad")]
         public void Evaluar_RechazaAutorizacionInvalidaSinAlterarContexto(string caso)
         {
-            var ctx = Contexto();
+            var ctx = CrearContextoConPatrones();
             var sut = new AgEscaladorRanuraAula(() => null);
             var rec = sut.IdentificarPatronesRedistribuibles(ctx, ctx.Aulas[0]).Single();
             rec.Autorizado = true;
@@ -66,7 +66,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
         [Fact]
         public void Evaluar_AutorizaSoloAulaSeleccionadaYCopiaLaSeleccion()
         {
-            var ctx = Contexto();
+            var ctx = CrearContextoConPatrones();
             ctx.Aulas.Add(new AgAula
             {
                 Id = 2, AulaRef = "A2", Subunidad = "VALLE", IdPrograma = 1,
@@ -101,7 +101,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
         [Fact]
         public async Task Aplicar_NoOmiteUnaDecisionManipuladaAunqueDejeDeSerAplicable()
         {
-            var ctx = Contexto();
+            var ctx = CrearContextoConPatrones();
             var sut = new AgEscaladorRanuraAula(() => null);
             var rec = sut.IdentificarPatronesRedistribuibles(ctx, ctx.Aulas[0]).Single();
             rec.Autorizado = true;
@@ -181,12 +181,13 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             };
         }
 
-        private static AgContexto Contexto()
+        private static AgContexto Contexto(DateTime? fin = null)
         {
+            var fechaFin = fin ?? new DateTime(2027, 5, 30);
             var ctx = new AgContexto
             {
                 Ventana = VentanaSemestre.Crear(1, "2027-01", new DateTime(2027, 2, 1),
-                    new DateTime(2027, 5, 30), AgOrigenVentana.Presencial).Value
+                    fechaFin, AgOrigenVentana.Presencial).Value
             };
             ctx.Programas.Add(new Programa { Id = 1, Modalidad = "PREGRADO" });
             ctx.Asignaturas.Add(new Asignatura { Id = 1, IdPrograma = 1, Semestre = "I", IntHoraria = 16 });
@@ -213,6 +214,12 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             }
             ctx.ConstruirIndices();
             return ctx;
+        }
+
+        private static AgContexto CrearContextoConPatrones(DateTime? fin = null)
+        {
+            // Ventana acotada a 2 semanas: 2 viernes disponibles vs 4 sesiones requeridas (16h) = 2 sesiones pendientes (déficit 8h)
+            return Contexto(fin ?? new DateTime(2027, 2, 15));
         }
     }
 }
