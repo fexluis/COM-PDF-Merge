@@ -190,16 +190,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         ? (contexto.AulaAsignaturaPorAulaAsig.TryGetValue((aula.Id, a.Id), out var exact) ? exact : null)
                         : (contexto.AulaAsignaturasPorId != null && contexto.AulaAsignaturasPorId.TryGetValue(a.Id, out var def) ? def : null);
 
-                    double th = (aaObj != null && aaObj.HorasObjetivo > 0)
-                        ? aaObj.HorasObjetivo
-                        : (a.IntHoraria > 0 ? (double)a.IntHoraria : (a.Horas > 0 ? (double)a.Horas : (a.Creditos > 0 ? a.Creditos * 16.0 : 64.0)));
-
-                    double r = th % 4.0;
-                    if (r > 0.001 && r < 3.999)
-                    {
-                        th = Math.Ceiling(th / 4.0) * 4.0;
-                    }
-                    return th;
+                    return AgEvaluadorDemandaVentana.HorasObjetivo(a, aaObj);
                 }
 
                 var asigsOrdenadas = asigsCandidatas
@@ -226,6 +217,10 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     AgAulaAsignatura aaPatron = (aula != null && contexto.AulaAsignaturaPorAulaAsig != null)
                         ? (contexto.AulaAsignaturaPorAulaAsig.TryGetValue((aula.Id, idAsig), out var exact) ? exact : null)
                         : (contexto.AulaAsignaturasPorId != null && contexto.AulaAsignaturasPorId.TryGetValue(idAsig, out var def) ? def : null);
+                    if (aaPatron != null && string.Equals(aaPatron.OrigenPatron, "AUTOMATICO", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return string.Empty;
+                    }
                     return aaPatron?.DiasPatron ?? string.Empty;
                 }
 
@@ -239,7 +234,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     string clavePlan = $"{idCorrida}|{contexto.Ventana?.IdPeriodo}|{aula.Id}|{aula.DiasVentana}|{aula.Jornada}|" +
                                        $"{contexto.Bloques?.Count ?? 0}|" +
                                        $"{fInicioVentana:yyyyMMdd}|{fFinVentana:yyyyMMdd}|{unidadSesionAula}|{itemsPlan.Count}|" +
-                                       $"{huellaPatrones}";
+                                       $"{huellaPatrones}|{AgHuellaPlanVentana.Calcular(contexto, aula)}";
                     if (!_cachePlanes.TryGetValue(clavePlan, out var planRes))
                     {
                         var patronesPlan = new Dictionary<int, string>();
@@ -378,12 +373,14 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 
                     List<int> diasK;
                     IReadOnlyList<AgRanura> ranurasPatron = null;
+                    IReadOnlyList<AgSesionPlanificada> sesionesPlanificadas = null;
                     if (mapaPlanes != null && mapaPlanes.TryGetValue(asig.Id, out var planOleada))
                     {
                         fechaInicio = planOleada.FechaInicio;
                         fechaFin = planOleada.FechaFin;
                         diasK = planOleada.DiasPatron.ToList();
                         ranurasPatron = planOleada.RanurasPatron;
+                        sesionesPlanificadas = planOleada.Sesiones;
                     }
                     else
                     {
@@ -521,7 +518,9 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                             }
 
                             // Fechas específicas precalculadas por ranura
-                            gen.FechasGen = AgPlanificadorPatronSemanal.FechasDeRanura(diaIso, sesionesRan[i], fechaInicio, fechaFin, contexto.EsFestivo).ToList();
+                            gen.FechasGen = sesionesPlanificadas != null && sesionesPlanificadas.Count > 0
+                                ? sesionesPlanificadas.Where(s => s.Ranura.Equals(ranura)).Select(s => s.Fecha).OrderBy(d => d).ToList()
+                                : AgPlanificadorPatronSemanal.FechasDeRanura(diaIso, sesionesRan[i], fechaInicio, fechaFin, contexto.EsFestivo).ToList();
                             gen.HorasGen = gen.FechasGen.Count * horasEfectivas;
 
                             // Fase 1099: la cuarentena I1 anula bloque y estado para impedir materialización indebida

@@ -66,8 +66,9 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         {
             int n = 0;
             var c = ini.Date;
-            while (c.DayOfWeek != diaSemana && c <= fin.Date)
+            while (c <= fin.Date && c.DayOfWeek != diaSemana)
             {
+                if (c == fin.Date) { return 0; }
                 c = c.AddDays(1);
             }
 
@@ -77,6 +78,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 {
                     n++;
                 }
+                if ((fin.Date - c).Days < 7) { break; }
                 c = c.AddDays(7);
             }
 

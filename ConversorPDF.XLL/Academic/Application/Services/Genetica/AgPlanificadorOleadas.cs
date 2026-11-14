@@ -8,10 +8,9 @@ using CSharpFunctionalExtensions;
 namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 {
     /// <summary>
-    /// Servicio determinista de planificación por carriles disjuntos y oleadas secuenciales (Fase 1057 → Fase 1279).
-    /// Reparte las asignaturas entre los carriles de AgCarriles (2 ranuras disjuntas por carril) y las secuencia
-    /// dentro de cada carril con un cursor temporal: cada carril tiene como máximo una asignatura activa por semana.
-    /// "Carril" en AgPlanOleada transporta el índice de carril; "Oleada" es el orden secuencial dentro del carril.
+    /// Compara una referencia por carriles con planes de sesiones fechadas para aprovechar ranuras y acortar el fin.
+    /// La referencia reserva semanas por carril; la compactación puede compartir una semana entre materias.
+    /// Carril identifica la banda elegida y Oleada su orden de asignación.
     /// </summary>
     internal sealed class AgPlanificadorOleadas
     {
@@ -26,11 +25,95 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             _planificadorPatron = planificadorPatron ?? new AgPlanificadorPatronSemanal();
         }
 
+        public Result<AgPlanOleadasResultado> Construir(
+            IReadOnlyList<(int IdAsignatura, double Horas, int OrdenCurricular)> asignaturas,
+            string diasVentana, DateTime fechaInicio, DateTime fechaFin, double unidadSesion,
+            Func<DateTime, bool> esFestivo = null, IReadOnlyCollection<AgBloqueHorario> bloques = null,
+            string jornada = null, IReadOnlyDictionary<int, string> diasPatronPorAsignatura = null)
+        {
+            return ConstruirInterno(asignaturas, diasVentana, fechaInicio, fechaFin, unidadSesion,
+                esFestivo, bloques, jornada, diasPatronPorAsignatura, false, System.Threading.CancellationToken.None);
+        }
+
+        internal Result<AgPlanOleadasResultado> ConstruirEvaluacion(
+            IReadOnlyList<(int IdAsignatura, double Horas, int OrdenCurricular)> asignaturas,
+            string diasVentana, DateTime fechaInicio, DateTime fechaFin, double unidadSesion,
+            Func<DateTime, bool> esFestivo = null, IReadOnlyCollection<AgBloqueHorario> bloques = null,
+            string jornada = null, IReadOnlyDictionary<int, string> diasPatronPorAsignatura = null,
+            System.Threading.CancellationToken ct = default(System.Threading.CancellationToken))
+        {
+            return ConstruirInterno(asignaturas, diasVentana, fechaInicio, fechaFin, unidadSesion,
+                esFestivo, bloques, jornada, diasPatronPorAsignatura, true, ct);
+        }
+
+        private Result<AgPlanOleadasResultado> ConstruirInterno(
+            IReadOnlyList<(int IdAsignatura, double Horas, int OrdenCurricular)> asignaturas,
+            string diasVentana, DateTime fechaInicio, DateTime fechaFin, double unidadSesion,
+            Func<DateTime, bool> esFestivo, IReadOnlyCollection<AgBloqueHorario> bloques,
+            string jornada, IReadOnlyDictionary<int, string> patrones, bool permitirParcial,
+            System.Threading.CancellationToken ct)
+        {
+            ct.ThrowIfCancellationRequested();
+            if (fechaFin < fechaInicio || unidadSesion <= 0 || double.IsNaN(unidadSesion) || double.IsInfinity(unidadSesion))
+            {
+                return Result.Failure<AgPlanOleadasResultado>("I1_ENTRADA_INVALIDA: fechas o unidad inválidas.");
+            }
+            if (AgCarriles.Ventana(diasVentana).Count == 0)
+            {
+                return Result.Failure<AgPlanOleadasResultado>("I1_VENTANA_NO_DEFINIDA: ventana sin días.");
+            }
+            if (asignaturas == null || asignaturas.Count == 0)
+            {
+                return Result.Success(new AgPlanOleadasResultado(new List<AgPlanOleada>(), new List<int>()));
+            }
+            if (asignaturas.GroupBy(a => a.IdAsignatura).Any(g => g.Count() > 1))
+            {
+                return Result.Failure<AgPlanOleadasResultado>("I1_ASIGNATURA_DUPLICADA: IdAsignatura repetido.");
+            }
+            if (asignaturas.Any(a => a.Horas <= 0 || double.IsNaN(a.Horas) || double.IsInfinity(a.Horas)))
+            {
+                return Result.Failure<AgPlanOleadasResultado>("I1_ENTRADA_INVALIDA: demanda inválida.");
+            }
+            var ranuras = AgRanuras.PorVentana(diasVentana, bloques, jornada, unidadSesion);
+            if (ranuras.Count == 0)
+            {
+                return Result.Failure<AgPlanOleadasResultado>("I1_CONF_RANURA: ventana sin ranuras activas.");
+            }
+            var referencia = ConstruirReferencia(asignaturas, diasVentana, fechaInicio, fechaFin,
+                unidadSesion, esFestivo, bloques, jornada, patrones);
+            if (referencia.IsFailure && !referencia.Error.StartsWith("I5_", StringComparison.Ordinal)) { return referencia; }
+            // También se buscan mejoras cuando la referencia ya es factible en una ventana ampliada.
+            var candidato = AgPlanificadorRanuras.Construir(asignaturas, ranuras, fechaInicio.Date,
+                fechaFin.Date, unidadSesion, esFestivo, patrones, ct: ct);
+            if (candidato.Infactibles.Count == 0)
+            {
+                bool referenciaCompleta = referencia.IsSuccess && referencia.Value.Infactibles.Count == 0;
+                DateTime finCandidato = candidato.Planes.SelectMany(p => p.Sesiones).Max(s => s.Fecha);
+                DateTime finReferencia = referenciaCompleta
+                    ? referencia.Value.Planes.SelectMany(p => p.Sesiones).Select(s => s.Fecha).DefaultIfEmpty(DateTime.MaxValue).Max()
+                    : DateTime.MaxValue;
+                if (!referenciaCompleta || finCandidato < finReferencia) { return Result.Success(candidato); }
+                return referencia;
+            }
+            // El contrato de generación conserva su Failure/planes completos; el pre-vuelo admite planes parciales.
+            if (!permitirParcial) { return referencia; }
+            if (referencia.IsSuccess)
+            {
+                bool conserva = referencia.Value.Planes.Where(p => !referencia.Value.Infactibles.Contains(p.IdAsignatura))
+                    .All(p => candidato.Planes.Any(n => n.IdAsignatura == p.IdAsignatura && n.Sesiones.Count >= p.Sesiones.Count));
+                if (!conserva || candidato.Planes.Sum(p => p.Sesiones.Count) < referencia.Value.Planes.Sum(p => p.Sesiones.Count))
+                {
+                    return referencia;
+                }
+            }
+            return Result.Success(candidato);
+        }
+
         /// <summary>
         /// Construye el plan de carril y oleada para una cohorte/aula (Fases 1057, 1088, 1092, 1095, 1226).
         /// Orden canónico de asignaturas: (OrdenCurricular, IdAsignatura).
         /// </summary>
-        public Result<AgPlanOleadasResultado> Construir(
+        private Result<AgPlanOleadasResultado> ConstruirReferencia(
             IReadOnlyList<(int IdAsignatura, double Horas, int OrdenCurricular)> asignaturas,
             string diasVentana,
             DateTime fechaInicio,
@@ -92,13 +175,13 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 
             // 1. Obtener los slices semanales disponibles en la ventana semestral
             var semanasValidas = new List<(DateTime Inicio, DateTime Fin)>();
-            for (var c = fechaInicio.Date; c <= fechaFin.Date; c = c.AddDays(7))
+            for (var c = fechaInicio.Date; c <= fechaFin.Date;)
             {
                 bool hayDiaVentana = false;
                 for (int i = 0; i < 7 && !hayDiaVentana; i++)
                 {
+                    if (i > (fechaFin.Date - c).Days) { break; }
                     var d = c.AddDays(i);
-                    if (d > fechaFin.Date) break;
                     int iso = d.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)d.DayOfWeek;
                     if (ventana.Contains(iso) && (esFestivo == null || !esFestivo(d)))
                     {
@@ -108,9 +191,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 
                 if (hayDiaVentana)
                 {
-                    var finSem = c.AddDays(6) > fechaFin.Date ? fechaFin.Date : c.AddDays(6);
+                    var finSem = c.AddDays(Math.Min(6, (fechaFin.Date - c).Days));
                     semanasValidas.Add((c, finSem));
                 }
+                if ((fechaFin.Date - c).Days < 7) { break; }
+                c = c.AddDays(7);
             }
 
             int W = semanasValidas.Count;
@@ -374,8 +459,10 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     continue;
                 }
 
+                var diasFijos = AgCarriles.Ventana(ctx.Patrones[i]);
+                var ranurasEfectivas = ranurasCarril[c].Where(r => diasFijos.Count == 0 || diasFijos.Contains(r.Dia)).ToList();
                 int SRequeridas = ctx.Demanda[i];
-                int kBase = Math.Max(1, (int)Math.Ceiling(SRequeridas / (double)slotsCarril[c]));
+                int kBase = Math.Max(1, (int)Math.Ceiling(SRequeridas / (double)Math.Max(1, ranurasEfectivas.Count)));
 
                 // F1581: R8 verificado antes de construir el patrón para evitar trabajo descartado
                 var diasPatronAsig = AgCarriles.Ventana(ctx.Patrones[i]);
@@ -400,7 +487,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     ini = ctx.SemanasValidas[cursor[c]].Inicio;
                     fin = ctx.SemanasValidas[cursor[c] + k - 1].Fin;
                     resPatron = _planificadorPatron.Construir(
-                        ranurasCarril[c], (int)Math.Ceiling(asig.Horas), ini, fin, ctx.EsFestivo, ctx.Unidad);
+                        ranurasEfectivas, (int)Math.Ceiling(asig.Horas), ini, fin, ctx.EsFestivo, ctx.Unidad);
                     if (resPatron.IsSuccess) break;
                 }
 
@@ -421,13 +508,14 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     asig.IdAsignatura,
                     c,
                     oleada[c],
-                    new List<int>(diasCarril[c]),
+                    ranurasEfectivas.Select(r => r.Dia).Distinct().ToList(),
                     ini,
                     fin,
                     k,
                     S > 0 ? S : SRequeridas,
                     slotsCarril[c] * k,
-                    ranurasCarril[c]));
+                    ranurasEfectivas,
+                    AgPlanificadorRanuras.Materializar(asig.IdAsignatura, ranurasEfectivas, SRequeridas, ini, fin, ctx.EsFestivo)));
 
                 cursor[c] += k;
                 oleada[c]++;

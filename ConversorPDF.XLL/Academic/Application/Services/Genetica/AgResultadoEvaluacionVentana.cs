@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ConversorPDF.XLL.Academic.Domain.Models.Genetica;
 
 namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 {
@@ -14,7 +15,15 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         public bool SaturacionCarriles { get; set; }
         public string Motivo { get; set; } = string.Empty;
         public int SemanasRequeridas { get; set; }
-        public DateTime? FechaFinMinima { get; set; }
+        public DateTime? FechaFinProyectada { get; set; }
+        // Compatibilidad con consumidores antiguos. La proyección no acredita un mínimo global.
+        public DateTime? FechaFinMinima { get { return FechaFinProyectada; } set { FechaFinProyectada = value; } }
+        public bool CabeEnPlazo { get; set; }
+        public bool BusquedaAgotada { get; set; }
+        public bool HorizonteAgotado { get; set; }
+        public string Error { get; set; } = string.Empty;
+        public AgPlanOleadasResultado Plan { get; set; }
+        public IReadOnlyList<AgSesionPlanificada> Sesiones { get; set; } = new List<AgSesionPlanificada>();
         public int RanurasOciosas { get; set; }
         public int DemandaPendiente { get; set; }
         public int DiaCuello { get; set; }

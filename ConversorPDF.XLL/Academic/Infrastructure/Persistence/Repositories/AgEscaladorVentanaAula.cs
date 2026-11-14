@@ -1,23 +1,19 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ConversorPDF.XLL.Academic.Application.Services.Genetica;
 using ConversorPDF.XLL.Academic.Domain.Enums;
-using ConversorPDF.XLL.Academic.Domain.Models;
 using ConversorPDF.XLL.Academic.Domain.Models.Genetica;
 using ConversorPDF.XLL.Core.Helpers;
 using Dapper;
 
 namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
 {
-    /// <summary>
-    /// Escalador de ventana por aula (Fase 1229): decide (dry-run) y aplica el siguiente escalón de
-    /// AgEscaleraVentanas cuando la demanda de sesiones excede la capacidad real de la ventana.
-    /// Internal para prevenir registro espurio de UDFs en Excel-DNA 1.8.0.
-    /// </summary>
+    /// <summary>Propone un paso de ventana y verifica su instantánea antes de aplicar el lote transaccional.</summary>
     internal sealed class AgEscaladorVentanaAula
     {
         private readonly Func<IDbConnection> _connectionFactory;
@@ -39,198 +35,243 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
             public string Motivo { get; set; }
             public bool Mejora { get; set; } = true;
             public int SemanasRequeridas { get; set; }
-            public DateTime? FechaFinMinima { get; set; }
+            public DateTime? FechaFinProyectada { get; set; }
+            public DateTime? FechaFinMinima { get { return FechaFinProyectada; } set { FechaFinProyectada = value; } }
             public int RanurasOciosas { get; set; }
             public int DemandaPendiente { get; set; }
             public int MateriasFueraVentana { get; set; }
             public List<int> IdAsignaturasBottleneck { get; set; } = new List<int>();
-
             public bool Aplica => !string.IsNullOrWhiteSpace(Hacia) && Mejora && CapacidadDespues > CapacidadAntes;
+            internal AgContexto ContextoOrigen { get; set; }
+            internal int? PerfilPropuesto { get; set; }
+            internal int? PerfilAplicado { get; set; }
+            internal string HuellaDecision { get; set; }
+            internal string HuellaContextoAntes { get; set; }
+            internal string HuellaContextoDespues { get; set; }
+            internal string HuellaPersistidaAntes { get; set; }
+            internal string HuellaPersistidaDespues { get; set; }
         }
 
-        /// <summary>Dry-run: no escribe en base de datos.</summary>
+        /// <summary>Compatibilidad: evaluación sin perfil explícito. Una conexión nula permite solo dry-run.</summary>
         public IReadOnlyList<Decision> Evaluar(AgContexto contexto)
         {
+            return EvaluarInterno(contexto, null, CancellationToken.None);
+        }
+
+        /// <summary>Evalúa y sella el perfil seleccionado sin escribir en la base de datos.</summary>
+        public IReadOnlyList<Decision> Evaluar(AgContexto contexto, int idArbol)
+        {
+            return EvaluarInterno(contexto, idArbol, CancellationToken.None);
+        }
+
+        public IReadOnlyList<Decision> Evaluar(AgContexto contexto, int idArbol, CancellationToken ct)
+        {
+            return EvaluarInterno(contexto, idArbol, ct);
+        }
+
+        private IReadOnlyList<Decision> EvaluarInterno(AgContexto contexto, int? perfil, CancellationToken ct)
+        {
             var decisiones = new List<Decision>();
-            if (contexto == null || contexto.Ventana == null || contexto.Aulas == null) return decisiones;
-
-            var ini = contexto.Ventana.FechaInicio.Date;
-            var fin = contexto.Ventana.FechaFin.Date;
-
-            foreach (var aula in contexto.Aulas.Where(a => a.Estado == AgEstadoAula.Disponible && !string.IsNullOrWhiteSpace(a.AulaRef)))
+            if (contexto == null || contexto.Ventana == null) { return decisiones; }
+            foreach (var aula in contexto.Aulas.Where(a => a.Estado == AgEstadoAula.Disponible
+                && !string.IsNullOrWhiteSpace(a.AulaRef)).OrderBy(a => a.Id))
             {
-                var programa = contexto.Programas?.FirstOrDefault(p => p.Id == aula.IdPrograma);
-                var nivel = AgNivelAcademicoCatalogo.Desde(programa?.Modalidad);
-                double unidad = AgUnidadesSemanales.HorasSesionAula(aula, nivel);
-
-                var evalAntes = AgEvaluadorDemandaVentana.Evaluar(aula.DiasVentana, aula.Jornada, unidad, contexto, aula, ini, fin);
-                if (!evalAntes.HaySaturacion) continue;
-
-                var paso = AgEscaleraVentanas.Siguiente(aula.DiasVentana);
-                if (string.IsNullOrWhiteSpace(paso))
+                ct.ThrowIfCancellationRequested();
+                string huellaInicial = AgHuellaPlanVentana.Calcular(contexto, aula);
+                var programa = contexto.Programas.FirstOrDefault(p => p.Id == aula.IdPrograma);
+                double unidad = AgUnidadesSemanales.HorasSesionAula(aula, AgNivelAcademicoCatalogo.Desde(programa?.Modalidad));
+                var antes = AgEvaluadorDemandaVentana.Evaluar(aula.DiasVentana, aula.Jornada, unidad,
+                    contexto, aula, contexto.Ventana.FechaInicio, contexto.Ventana.FechaFin, ct);
+                if (!antes.HaySaturacion) { continue; }
+                string paso = AgEscaleraVentanas.Siguiente(aula.DiasVentana);
+                if (string.IsNullOrEmpty(paso)) { continue; }
+                var despues = AgEvaluadorDemandaVentana.Evaluar(paso, aula.Jornada, unidad,
+                    contexto, aula, contexto.Ventana.FechaInicio, contexto.Ventana.FechaFin, ct);
+                if (!AgEvaluadorDemandaVentana.PasoMejora(antes, despues)) { continue; }
+                var automaticas = contexto.AulaAsignaturaPorAulaAsig.Values.Where(aa => aa.IdAula == aula.Id
+                    && string.Equals(aa.OrigenPatron, "AUTOMATICO", StringComparison.OrdinalIgnoreCase))
+                    .Select(aa => aa.IdAsignatura).Distinct().OrderBy(id => id).ToList();
+                var d = new Decision
                 {
-                    continue;
+                    AulaRef = aula.AulaRef, Subunidad = aula.Subunidad, Desde = aula.DiasVentana, Hacia = paso,
+                    DemandaSesiones = antes.DemandaTotal, CapacidadAntes = antes.CapacidadTotal, CapacidadDespues = despues.CapacidadTotal,
+                    Motivo = antes.Motivo, SemanasRequeridas = despues.SemanasRequeridas, FechaFinProyectada = despues.FechaFinProyectada,
+                    RanurasOciosas = despues.RanurasOciosas, DemandaPendiente = despues.DemandaPendiente,
+                    MateriasFueraVentana = antes.MateriasFueraVentana.Count, IdAsignaturasBottleneck = automaticas,
+                    ContextoOrigen = contexto, PerfilPropuesto = perfil,
+                    HuellaContextoAntes = huellaInicial,
+                    HuellaContextoDespues = AgHuellaPlanVentana.Calcular(contexto, aula, paso, automaticas)
+                };
+                d.HuellaDecision = HuellaAccion(d);
+                using (var db = _connectionFactory())
+                {
+                    if (db != null)
+                    {
+                        if (db.State != ConnectionState.Open) { db.Open(); }
+                        using (var tx = db.BeginTransaction())
+                        {
+                            if (!AgHuellaEscaladoPersistido.CoincideOrigen(db, tx, contexto, aula))
+                            {
+                                throw new InvalidOperationException("Configuración modificada antes de sellar. Recargue el contexto.");
+                            }
+                            d.HuellaPersistidaAntes = AgHuellaEscaladoPersistido.Calcular(db, tx, d.AulaRef, d.Subunidad, perfil ?? 0);
+                            tx.Commit();
+                        }
+                    }
                 }
-
-                var evalDespues = AgEvaluadorDemandaVentana.Evaluar(paso, aula.Jornada, unidad, contexto, aula, ini, fin);
-                if (evalDespues.CapacidadTotal <= evalAntes.CapacidadTotal && evalDespues.HaySaturacion)
+                if (AgHuellaPlanVentana.Calcular(contexto, aula) != huellaInicial)
                 {
-                    continue;
+                    throw new InvalidOperationException("Configuración modificada durante la evaluación. Recalcular propuesta.");
                 }
-
-                // Fase 1742, 1747 & 1772: Mejora real. Reducción de SemanasRequeridas, reducción de MateriasFueraVentana o resolución de saturación
-                bool mejora = evalDespues.SemanasRequeridas < evalAntes.SemanasRequeridas
-                           || evalDespues.DemandaPendiente < evalAntes.DemandaPendiente
-                           || evalDespues.MateriasFueraVentana.Count < evalAntes.MateriasFueraVentana.Count
-                           || (!evalDespues.HaySaturacion && evalAntes.HaySaturacion)
-                           || (!evalDespues.SaturacionCarriles && evalAntes.SaturacionCarriles);
-                if (!mejora)
-                {
-                    continue;
-                }
-
-                decisiones.Add(new Decision
-                {
-                    AulaRef = aula.AulaRef,
-                    Subunidad = aula.Subunidad,
-                    Desde = aula.DiasVentana,
-                    Hacia = paso,
-                    DemandaSesiones = evalAntes.DemandaTotal,
-                    CapacidadAntes = evalAntes.CapacidadTotal,
-                    CapacidadDespues = evalDespues.CapacidadTotal,
-                    Motivo = evalAntes.Motivo,
-                    Mejora = mejora,
-                    SemanasRequeridas = evalAntes.SemanasRequeridas,
-                    FechaFinMinima = evalAntes.FechaFinMinima,
-                    RanurasOciosas = evalAntes.RanurasOciosas,
-                    DemandaPendiente = evalAntes.DemandaPendiente,
-                    MateriasFueraVentana = evalAntes.MateriasFueraVentana.Count,
-                    IdAsignaturasBottleneck = evalAntes.IdAsignaturasSaturadas ?? new List<int>()
-                });
+                ct.ThrowIfCancellationRequested();
+                decisiones.Add(d);
             }
             return decisiones;
         }
 
-        /// <summary>Aplica las decisiones en ag_aula y ag_arbol_nodo; devuelve filas de ag_aula afectadas.</summary>
-        public Task<int> AplicarAsync(IReadOnlyList<Decision> decisiones, CancellationToken ct)
-            => AplicarAsync(decisiones, 0, ct);
+        internal sealed class ResultadoAplicacion
+        {
+            public bool Exito { get; set; }
+            public string Error { get; set; } = string.Empty;
+            public string Advertencia { get; set; } = string.Empty;
+            public int Confirmadas { get; set; }
+            public int Modificadas { get; set; }
+        }
 
-        /// <summary>Aplica las decisiones en ag_aula y ag_arbol_nodo acotando por idArbol (Fase 1258).</summary>
+        public Task<int> AplicarAsync(IReadOnlyList<Decision> decisiones, CancellationToken ct)
+        {
+            return AplicarAsync(decisiones, 0, ct);
+        }
+
+        /// <summary>Devuelve aulas confirmadas; una reaplicación completa no vuelve a escribir.</summary>
         public async Task<int> AplicarAsync(IReadOnlyList<Decision> decisiones, int idArbol, CancellationToken ct)
         {
-            if (decisiones == null || decisiones.Count == 0) return 0;
+            var resultado = await AplicarDetalladoAsync(decisiones, idArbol, ct).ConfigureAwait(false);
+            return resultado.Confirmadas;
+        }
 
-            const string sqlAula = @"
-UPDATE ag_aula
-SET dias_ventana = @D
-WHERE aula_ref = @Ref
-  AND COALESCE(NULLIF(TRIM(subunidad), ''), @Sub) = @Sub
-  AND COALESCE(dias_ventana, '') <> @D;";
+        public Task<ResultadoAplicacion> AplicarDetalladoAsync(IReadOnlyList<Decision> decisiones, int idArbol, CancellationToken ct)
+        {
+            return AplicarDetalladoAsync(decisiones, idArbol, null, ct);
+        }
 
-            const string sqlNodo = @"
-UPDATE ag_arbol_nodo
-SET dias_ventana = @D
-WHERE aula_ref = @Ref
-  AND (@IdArbol <= 0 OR idarbol = @IdArbol)
-  AND COALESCE(dias_ventana, '') <> @D;";
-
-            int total = 0;
-            bool huboCambiosPatron = false;
+        /// <summary>La UI entrega un contexto recién leído. La instantánea SQL se verifica dentro de la transacción.</summary>
+        public async Task<ResultadoAplicacion> AplicarDetalladoAsync(IReadOnlyList<Decision> decisiones,
+            int idArbol, AgContexto contextoVigente, CancellationToken ct)
+        {
+            var resultado = new ResultadoAplicacion();
+            var posteriores = new Dictionary<Decision, string>();
+            if (decisiones == null || decisiones.Count == 0) { resultado.Exito = true; return resultado; }
             try
             {
-                using (var conn = _connectionFactory())
+                using (var db = _connectionFactory())
                 {
-                    if (conn.State != ConnectionState.Open) conn.Open();
-                    using (var trans = conn.BeginTransaction())
+                    if (db.State != ConnectionState.Open) { db.Open(); }
+                    using (var tx = db.BeginTransaction())
                     {
-                        foreach (var d in decisiones.Where(x => x.Aplica))
+                        foreach (var d in decisiones)
                         {
-                            var args = new { D = d.Hacia, Ref = d.AulaRef, Sub = d.Subunidad ?? string.Empty };
-                            total += await conn.ExecuteAsync(new CommandDefinition(sqlAula, args, trans, cancellationToken: ct)).ConfigureAwait(false);
-                            if (idArbol > 0)   // Fase 1272 / Fase 1276: sin árbol destino no se tocan nodos de otros árboles
+                            ct.ThrowIfCancellationRequested();
+                            if (d == null || !d.Aplica || d.ContextoOrigen == null || string.IsNullOrEmpty(d.HuellaPersistidaAntes)
+                                || string.IsNullOrEmpty(d.HuellaDecision))
                             {
-                                await conn.ExecuteAsync(new CommandDefinition(sqlNodo, new { D = d.Hacia, Ref = d.AulaRef, IdArbol = idArbol }, trans, cancellationToken: ct)).ConfigureAwait(false);
+                                throw new InvalidOperationException("Decisión sin instantánea válida. Recalcular propuesta.");
                             }
-
-                            // Fase 1738 & Fase 1745: resetear patrones automáticos al escalar, acotado a las asignaturas de cuello de botella
-                            bool tieneOrigen = conn.QueryFirstOrDefault<int>(
-                                "SELECT COUNT(1) FROM pragma_table_info('ag_aula_asignatura') WHERE name = 'origen_patron';",
-                                transaction: trans) > 0;
-                            if (tieneOrigen)
+                            if (HuellaAccion(d) != d.HuellaDecision) { throw new InvalidOperationException("La propuesta fue modificada. Recalcular."); }
+                            if ((d.PerfilPropuesto.HasValue && d.PerfilPropuesto.Value != idArbol)
+                                || (d.PerfilAplicado.HasValue && d.PerfilAplicado.Value != idArbol))
                             {
-                                int filasReset = 0;
-                                // Fase 1760: Eliminar rama else de reset global masivo; resetear solo si hay lista acotada
-                                if (d.IdAsignaturasBottleneck != null && d.IdAsignaturasBottleneck.Count > 0)
-                                {
-                                    const string sqlResetAutoAcotado = @"
-UPDATE ag_aula_asignatura
-SET dias_patron = ''
-WHERE id_aula IN (SELECT id FROM ag_aula WHERE aula_ref = @Ref AND COALESCE(NULLIF(TRIM(subunidad), ''), @Sub) = @Sub)
-  AND id_asignatura IN @Ids
-  AND UPPER(COALESCE(origen_patron, '')) = 'AUTOMATICO';";
-                                    filasReset = await conn.ExecuteAsync(new CommandDefinition(
-                                        sqlResetAutoAcotado,
-                                        new { Ref = d.AulaRef, Sub = d.Subunidad ?? string.Empty, Ids = d.IdAsignaturasBottleneck },
-                                        trans,
-                                        cancellationToken: ct)).ConfigureAwait(false);
-                                }
-                                if (filasReset > 0)
-                                {
-                                    huboCambiosPatron = true;
-                                }
+                                throw new InvalidOperationException("Cambió el perfil de la propuesta. Recalcular.");
                             }
+                            var contexto = contextoVigente ?? d.ContextoOrigen;
+                            var aulas = contexto.Aulas.Where(a => string.Equals(a.AulaRef, d.AulaRef, StringComparison.Ordinal)
+                                && string.Equals(a.Subunidad ?? string.Empty, d.Subunidad ?? string.Empty, StringComparison.Ordinal)).ToList();
+                            if (aulas.Count != 1) { throw new InvalidOperationException("Configuración modificada: cambió el aula."); }
+                            string huellaContexto = AgHuellaPlanVentana.Calcular(contexto, aulas[0]);
+                            string huellaSql = AgHuellaEscaladoPersistido.Calcular(db, tx, d.AulaRef, d.Subunidad, idArbol);
+                            bool contextoCompatible = huellaContexto == d.HuellaContextoAntes || huellaContexto == d.HuellaContextoDespues;
+                            // Reaplicación: comprobar todo el postestado antes de exigir el estado anterior.
+                            if (d.PerfilAplicado == idArbol && contextoCompatible && !string.IsNullOrEmpty(d.HuellaPersistidaDespues)
+                                && huellaSql == d.HuellaPersistidaDespues
+                                && AgHuellaEscaladoPersistido.EstadoCompleto(db, tx, d.AulaRef, d.Subunidad, idArbol, d.Hacia, d.IdAsignaturasBottleneck))
+                            {
+                                resultado.Confirmadas++;
+                                continue;
+                            }
+                            if (huellaContexto != d.HuellaContextoAntes || huellaSql != d.HuellaPersistidaAntes
+                                || !AgHuellaEscaladoPersistido.CoincideOrigen(db, tx, contexto, aulas[0]))
+                            {
+                                throw new InvalidOperationException("Configuración modificada. Recalcular propuesta.");
+                            }
+                            string esperado = AgHuellaEscaladoPersistido.Calcular(db, tx, d.AulaRef, d.Subunidad,
+                                idArbol, d.Hacia, d.IdAsignaturasBottleneck);
+                            int modificadas = await db.ExecuteAsync(new CommandDefinition(@"
+UPDATE ag_aula SET dias_ventana=@Hacia
+WHERE aula_ref=@Ref AND COALESCE(NULLIF(TRIM(subunidad),''),@Sub)=@Sub
+AND COALESCE(dias_ventana,'')=@Desde;",
+                                new { d.Hacia, d.Desde, Ref=d.AulaRef, Sub=d.Subunidad ?? string.Empty }, tx, cancellationToken: ct)).ConfigureAwait(false);
+                            if (modificadas != 1) { throw new InvalidOperationException("Configuración modificada durante el guardado."); }
+                            if (idArbol > 0)
+                            {
+                                int nodos = await db.ExecuteAsync(new CommandDefinition(@"
+UPDATE ag_arbol_nodo SET dias_ventana=@Hacia
+WHERE idarbol=@Perfil AND aula_ref=@Ref AND COALESCE(NULLIF(TRIM(subunidad),''),@Sub)=@Sub
+AND COALESCE(dias_ventana,'')=@Desde;",
+                                    new { d.Hacia, d.Desde, Perfil=idArbol, Ref=d.AulaRef, Sub=d.Subunidad ?? string.Empty }, tx, cancellationToken: ct)).ConfigureAwait(false);
+                                if (nodos != 1) { throw new InvalidOperationException("Nodo del perfil ausente, duplicado o modificado."); }
+                            }
+                            if (d.IdAsignaturasBottleneck.Count > 0)
+                            {
+                                await db.ExecuteAsync(new CommandDefinition(@"
+UPDATE ag_aula_asignatura SET dias_patron=''
+WHERE id_aula IN (SELECT id FROM ag_aula WHERE aula_ref=@Ref AND COALESCE(NULLIF(TRIM(subunidad),''),@Sub)=@Sub)
+AND id_asignatura IN @Ids AND UPPER(COALESCE(origen_patron,''))='AUTOMATICO';",
+                                    new { Ref=d.AulaRef, Sub=d.Subunidad ?? string.Empty, Ids=d.IdAsignaturasBottleneck }, tx, cancellationToken: ct)).ConfigureAwait(false);
+                            }
+                            if (AgHuellaEscaladoPersistido.Calcular(db, tx, d.AulaRef, d.Subunidad, idArbol) != esperado
+                                || !AgHuellaEscaladoPersistido.EstadoCompleto(db, tx, d.AulaRef, d.Subunidad, idArbol, d.Hacia, d.IdAsignaturasBottleneck))
+                            {
+                                throw new InvalidOperationException("Postcondiciones incompletas. Operación revertida.");
+                            }
+                            posteriores[d] = esperado;
+                            resultado.Confirmadas++;
+                            resultado.Modificadas += modificadas;
                         }
-                        trans.Commit();
+                        ct.ThrowIfCancellationRequested();
+                        tx.Commit();
                     }
                 }
-
-                if (total > 0 || huboCambiosPatron)
-                {
-                    ConversorPDF.XLL.Core.Sync.SyncContext.Scheduler?.MarkDirty();
-                }
-                LoggerHelper.Info($"[AgEscaladorVentanaAula] Escalado aplicado en {total} aula(s).");
             }
             catch (Exception ex)
             {
-                LoggerHelper.Warning($"[AgEscaladorVentanaAula] Error al aplicar escalado: {ex.Message}");
-                return 0;
+                // Contadores nuevos: ningún resultado provisional sobrevive al rollback.
+                return new ResultadoAplicacion { Error = ex is OperationCanceledException ? "Operación cancelada." : ex.Message };
             }
-            return total;
+            foreach (var par in posteriores)
+            {
+                par.Key.HuellaPersistidaDespues = par.Value;
+                par.Key.PerfilAplicado = idArbol;
+            }
+            resultado.Exito = true;
+            try
+            {
+                if (resultado.Modificadas > 0) { ConversorPDF.XLL.Core.Sync.SyncContext.Scheduler?.MarkDirty(); }
+                LoggerHelper.Info("[Escalado] Confirmadas=" + resultado.Confirmadas + "; modificadas=" + resultado.Modificadas);
+            }
+            catch (Exception ex) { resultado.Advertencia = "Guardado confirmado; falló la notificación posterior: " + ex.Message; }
+            return resultado;
         }
 
-        private static int DemandaAula(AgContexto contexto, AgAula aula, double unidad)
+        private static string HuellaAccion(Decision d)
         {
-            if (contexto.AulaAsignaturaPorAulaAsig == null) return 0;
-
-            // Fase 1259: filtrar asignaturas por programa y semestre del aula (consistente con AgValidadorVentana)
-            string semAula = AgFormatoAsignatura.SemestreRomano(aula.Semestre);
-            int sesiones = 0;
-            foreach (var kv in contexto.AulaAsignaturaPorAulaAsig)
+            return AgHuellaPlanVentana.Hash(new[]
             {
-                if (kv.Key.Item1 != aula.Id || kv.Value == null) continue;
-                var asig = contexto.Asignaturas?.FirstOrDefault(a => a.Id == kv.Key.Item2);
-                if (asig != null && asig.IdPrograma > 0 && aula.IdPrograma > 0 && asig.IdPrograma != aula.IdPrograma) continue;
-                if (asig != null && !string.IsNullOrWhiteSpace(semAula) && semAula != "SIN ASIGNAR" &&
-                    !string.Equals(AgFormatoAsignatura.SemestreRomano(asig.Semestre), semAula, StringComparison.OrdinalIgnoreCase)) continue;
-                if (kv.Value.HorasObjetivo > 0)
-                {
-                    sesiones += (int)Math.Ceiling(kv.Value.HorasObjetivo / unidad);
-                }
-            }
-            return sesiones;
-        }
-
-        private static int Capacidad(string diasVentana, string jornada, double unidad, AgContexto contexto, DateTime ini, DateTime fin)
-        {
-            var ranuras = AgRanuras.PorVentana(diasVentana, contexto.Bloques, jornada, unidad);
-            if (ranuras == null || ranuras.Count == 0) return 0;
-
-            int total = 0;
-            foreach (var r in ranuras)
-            {
-                total += AgPlanificadorTemporal.ContarOcurrencias(r.Dia, ini, fin, contexto.EsFestivo);
-            }
-            return total;
+                "propuesta-escalado-v1", d.AulaRef, d.Subunidad, d.Desde, d.Hacia,
+                d.Mejora.ToString(), d.CapacidadAntes.ToString(CultureInfo.InvariantCulture),
+                d.CapacidadDespues.ToString(CultureInfo.InvariantCulture),
+                d.PerfilPropuesto.HasValue ? d.PerfilPropuesto.Value.ToString(CultureInfo.InvariantCulture) : null,
+                d.IdAsignaturasBottleneck == null ? null : string.Join(",", d.IdAsignaturasBottleneck.OrderBy(id => id))
+            });
         }
     }
 }

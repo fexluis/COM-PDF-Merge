@@ -695,6 +695,10 @@
     <Compile Include="Academic\Domain\Models\Genetica\AgCarriles.cs" />
     <Compile Include="Academic\Domain\Models\Genetica\AgBandasDias.cs" />
     <Compile Include="Academic\Domain\Models\Genetica\AgEscaleraVentanas.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Repositories\AgHuellaEscaladoPersistido.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\AgSesionPlanificada.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgHuellaPlanVentana.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgPlanificadorRanuras.cs" />
     <Compile Include="Academic\Infrastructure\Persistence\Repositories\AgEscaladorVentanaAula.cs" />
     <Compile Include="Academic\Domain\Models\Genetica\AgPlanOleada.cs" />
     <Compile Include="Academic\Domain\Models\Genetica\AgPlanOleadasResultado.cs" />

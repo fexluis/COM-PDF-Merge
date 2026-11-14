@@ -347,31 +347,21 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         {
                             informe.AgregarBloqueo(
                                 $"[I5_DIA_SATURADO] {EtiquetaSede(contexto, au)} Aula '{au.AulaRef}': {evalDemanda.Motivo}; " +
-                                $"{evalDemanda.SemanasRequeridas} semanas; fin mínimo {evalDemanda.FechaFinMinima:yyyy-MM-dd}.");
+                                $"{evalDemanda.SemanasRequeridas} semanas; fin proyectado " +
+                                (evalDemanda.FechaFinProyectada.HasValue ? evalDemanda.FechaFinProyectada.Value.ToString("yyyy-MM-dd") : "sin proyección disponible") + ".");
                             continue; // Suprimir el diagnóstico genérico de oleada que aconsejaría escalar erróneamente
                         }
                     }
 
                     // Fase 1122 / Fase 1129: Validar sub-ventana de oleada por asignatura dentro del aula (filtrando por alcance real del motor)
-                    var semAula = AgFormatoAsignatura.SemestreRomano(au.Semestre);
-                    var itemsPlan = asigsAula
-                        .Where(aa => asigPorId.TryGetValue(aa.IdAsignatura, out var aF)
-                                     && (aF.IdPrograma <= 0 || au.IdPrograma <= 0 || aF.IdPrograma == au.IdPrograma)
-                                     && (string.IsNullOrWhiteSpace(semAula) || semAula == "SIN ASIGNAR"
-                                         || string.Equals(AgFormatoAsignatura.SemestreRomano(aF.Semestre), semAula, StringComparison.OrdinalIgnoreCase)))
-                        .Select(aa => (IdAsignatura: aa.IdAsignatura,
-                                       Horas: aa.HorasObjetivo > 0
-                                           ? aa.HorasObjetivo
-                                           : (asigPorId.TryGetValue(aa.IdAsignatura, out var asigAu) && asigAu.IntHoraria > 0 ? asigAu.IntHoraria : 0.0),
-                                       OrdenCurricular: aa.OrdenCurricular))
-                        .Where(x => x.Horas > 0)
-                        .ToList();
+                    var itemsPlan = AgEvaluadorDemandaVentana.Demandas(contexto, au);
 
                     var patronesAula = itemsPlan
                         .Select(x => (x.IdAsignatura,
                                       Patron: contexto.AulaAsignaturaPorAulaAsig != null &&
                                               contexto.AulaAsignaturaPorAulaAsig.TryGetValue((au.Id, x.IdAsignatura), out var aaP)
-                                                  ? aaP?.DiasPatron : null))
+                                              && !string.Equals(aaP.OrigenPatron, "AUTOMATICO", StringComparison.OrdinalIgnoreCase)
+                                                  ? aaP.DiasPatron : null))
                         .Where(t => !string.IsNullOrWhiteSpace(t.Patron))
                         .GroupBy(t => t.IdAsignatura)
                         .ToDictionary(g => g.Key, g => g.First().Patron);

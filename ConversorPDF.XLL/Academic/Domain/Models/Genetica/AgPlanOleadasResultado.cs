@@ -20,6 +20,7 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
         public int PatronesRenormalizados { get; }
         /// <summary>Fase 1227: ocupación del plan en porcentaje (0–100).</summary>
         public double OcupacionPorcentaje { get; }
+        public bool BusquedaAgotada { get; }
 
         public AgPlanOleadasResultado(
             IReadOnlyList<AgPlanOleada> planes,
@@ -28,7 +29,8 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
             IReadOnlyList<IReadOnlyList<int>> particion = null,
             string ventanaSugerida = null,
             int patronesRenormalizados = 0,
-            double ocupacionPorcentaje = 0.0)
+            double ocupacionPorcentaje = 0.0,
+            bool busquedaAgotada = false)
         {
             Planes = planes ?? new List<AgPlanOleada>();
             Infactibles = infactibles ?? new List<int>();
@@ -37,6 +39,7 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
             VentanaSugerida = ventanaSugerida ?? string.Empty;
             PatronesRenormalizados = patronesRenormalizados;
             OcupacionPorcentaje = ocupacionPorcentaje;
+            BusquedaAgotada = busquedaAgotada;
         }
     }
 }

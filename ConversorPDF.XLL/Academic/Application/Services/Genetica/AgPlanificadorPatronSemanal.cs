@@ -144,6 +144,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 {
                     fechas.Add(cursor);
                 }
+                if (cursor == fechaFin.Date) { break; }
                 cursor = cursor.AddDays(1);
             }
             return fechas;
@@ -433,9 +434,10 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             while (ini <= fechaFin.Date && porSemana.Count < 60)
             {
                 int finDias = 6;
-                var finSem = ini.AddDays(finDias) > fechaFin.Date ? fechaFin.Date : ini.AddDays(finDias);
+                var finSem = ini.AddDays(Math.Min(finDias, (fechaFin.Date - ini).Days));
                 int c = todasFechas.Count(f => f >= ini && f <= finSem);
                 if (c > 0) porSemana.Add(c);
+                if ((fechaFin.Date - ini).Days < 7) { break; }
                 ini = ini.AddDays(7);
             }
 

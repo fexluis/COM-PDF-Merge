@@ -19,6 +19,8 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
         public int SemanasOleada { get; }
         public int SesionesRequeridas { get; }
         public int CapacidadRanuras { get; }
+        /// <summary>Sesiones exactas del plan; la fábrica conserva estas fechas y franjas.</summary>
+        public IReadOnlyList<AgSesionPlanificada> Sesiones { get; }
 
         public AgPlanOleada(
             int idAsignatura,
@@ -30,7 +32,8 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
             int semanasOleada,
             int sesionesRequeridas,
             int capacidadRanuras,
-            IReadOnlyList<AgRanura> ranurasPatron = null)
+            IReadOnlyList<AgRanura> ranurasPatron = null,
+            IReadOnlyList<AgSesionPlanificada> sesiones = null)
         {
             IdAsignatura = idAsignatura;
             Carril = carril;
@@ -42,6 +45,8 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
             SesionesRequeridas = sesionesRequeridas;
             CapacidadRanuras = capacidadRanuras;
             RanurasPatron = ranurasPatron ?? new List<AgRanura>();
+            Sesiones = sesiones == null ? new List<AgSesionPlanificada>().AsReadOnly()
+                : new List<AgSesionPlanificada>(sesiones).AsReadOnly();
         }
 
         public override string ToString() =>

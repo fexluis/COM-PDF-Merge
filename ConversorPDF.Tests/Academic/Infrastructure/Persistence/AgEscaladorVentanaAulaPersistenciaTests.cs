@@ -155,6 +155,7 @@ VALUES (2, @Ref, 'MANANA', 4, @V, '');",
             int w = 4;
             int demandaSesiones = 5 * w; // 20 sesiones para ventana de 16 -> requiere LUN-VIE
             var contexto = CrearContextoNominal(w, ventanaInicial, demandaSesiones, aulaRef);
+            SembrarDemanda(contexto);
             var sut = new AgEscaladorVentanaAula(_connectionFactory);
 
             // Act 1: Evaluar
@@ -226,6 +227,7 @@ VALUES (2, @Ref, 'MANANA', 4, 'VIE-DOM', '');",
 
             // --- Ciclo 1: VIE-DOM -> JUE-DOM ---
             var ctx1 = CrearContextoNominal(w, "VIE-DOM", demandaSesiones, aulaRef);
+            SembrarDemanda(ctx1);
             var d1 = sut.Evaluar(ctx1);
             d1.Should().ContainSingle();
             d1[0].Desde.Should().Be("VIE-DOM");
@@ -316,6 +318,7 @@ VALUES (2, @Ref, 'MANANA', 4, 'LUN-JUE', '', 1, 1, 1, '1', '1', 'PRESENCIAL', 'P
 
             // 1. Escalar de LUN-JUE a LUN-VIE en idArbol = 1
             var ctx = CrearContextoNominal(4, "LUN-JUE", 20, aulaRef);
+            SembrarDemanda(ctx);
             var decisiones = sut.Evaluar(ctx);
             decisiones.Should().ContainSingle();
             decisiones[0].Hacia.Should().Be("LUN-VIE");
@@ -590,19 +593,21 @@ VALUES (@IdAula, 102, '7', 'FIJO');", new { IdAula = idAula });
             }
 
             var sut = new AgEscaladorVentanaAula(_connectionFactory);
-            var decisiones = new List<AgEscaladorVentanaAula.Decision>
+            var contexto = CrearContextoNominal(4, "VIE-DOM", 20, aulaRef);
+            var automatico = contexto.AulaAsignaturaPorAulaAsig[(1, 101)];
+            automatico.HorasObjetivo = 64;
+            automatico.OrigenPatron = "AUTOMATICO";
+            automatico.DiasPatron = "5,6";
+            contexto.Asignaturas.Add(new Asignatura { Id=102, IdPrograma=1, Semestre="I", Horas=16 });
+            contexto.AulaAsignaturaPorAulaAsig.Add((1,102), new AgAulaAsignatura
+                { IdAula=1, IdAsignatura=102, HorasObjetivo=16, OrdenCurricular=2, OrigenPatron="FIJO", DiasPatron="7" });
+            using (var db = _connectionFactory())
             {
-                new AgEscaladorVentanaAula.Decision
-                {
-                    AulaRef = aulaRef,
-                    Subunidad = "",
-                    Desde = "VIE-DOM",
-                    Hacia = "JUE-DOM",
-                    CapacidadAntes = 68,
-                    CapacidadDespues = 85,
-                    IdAsignaturasBottleneck = new List<int> { 101 }
-                }
-            };
+                db.Open();
+                db.Execute("UPDATE ag_aula_asignatura SET horas_objetivo=CASE id_asignatura WHEN 101 THEN 64 ELSE 16 END, orden_curricular=CASE id_asignatura WHEN 101 THEN 1 ELSE 2 END");
+            }
+            var decisiones = sut.Evaluar(contexto, 0);
+            decisiones.Should().ContainSingle();
 
             int afectadas = await sut.AplicarAsync(decisiones, 0, CancellationToken.None);
             afectadas.Should().Be(1);
@@ -622,6 +627,22 @@ VALUES (@IdAula, 102, '7', 'FIJO');", new { IdAula = idAula });
                     "SELECT dias_patron FROM ag_aula_asignatura WHERE id_aula = @Id AND id_asignatura = 102;",
                     new { Id = idAula });
                 patronFijo.Should().Be("7", "los patrones FIJO se deben conservar intactos");
+            }
+        }
+
+        private void SembrarDemanda(AgContexto contexto)
+        {
+            // La propuesta ahora exige que la demanda del contexto exista también en la BD de prueba.
+            using (var db = _connectionFactory())
+            {
+                db.Open();
+                foreach (var aa in contexto.AulaAsignaturaPorAulaAsig.Values)
+                {
+                    db.Execute(@"INSERT INTO ag_aula_asignatura
+(id_aula,id_asignatura,horas_objetivo,orden_curricular,origen_patron,dias_patron)
+SELECT @IdAula,@IdAsignatura,@HorasObjetivo,@OrdenCurricular,@OrigenPatron,@DiasPatron
+WHERE NOT EXISTS(SELECT 1 FROM ag_aula_asignatura WHERE id_aula=@IdAula AND id_asignatura=@IdAsignatura)", aa);
+                }
             }
         }
 
