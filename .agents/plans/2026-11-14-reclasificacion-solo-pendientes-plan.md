@@ -146,10 +146,11 @@ Wave 8:                 T10 (Fase 1797) [Gate Full Baseline]
 - **description**: Centralizar el predicado canónico EsAulaElegible(aula): Id > 0, AulaRef no vacía y Estado == AgEstadoAula.Disponible (1). Aulas con Estado Aprobado (4), Inactiva, Mantenimiento o Reservada quedan excluidas de generar candidatas y de autorizaciones. Reformar la generación de candidatas para basarse en el resultado de evaluación fechado: solo materias LEGADO con sesiones pendientes > 0 en la evaluación fechada. Si CabeEnPlazo == true, retornar lista vacía. Mantener sobrecarga de compatibilidad IdentificarPatronesRedistribuibles(contexto, aula, evaluacion = null). Enriquecer la clase Decision con IdAula y asegurar aislamiento SQL estricto 'WHERE id_aula = @IdAula' en AplicarDetalladoAsync.
 - **validation**: IdentificarPatronesRedistribuibles solo genera candidatos para aulas Disponibles y materias con déficit positivo; materias completas nunca son ofertadas.
 - **verification**: powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "AgRedistribucion"
-- **evidence**: (la llena build-verifier)
-- **status**: pending
-- **log**: (lo llena el orquestador)
-- **files edited/created**: (lo llena el orquestador)
+- **evidence**: _evidence/20261114-185016/summary.md
+- **status**: done
+- **log**: Centralizado predicado canónico EsAulaElegible, candidatos acotados a déficit positivo desde evaluación fechada, sobrecarga retrocompatible, IdAula en Decision y aislamiento SQL WHERE id_aula = @IdAula. 40/40 tests PASS.
+- **files edited/created**:
+  - ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgEscaladorRanuraAula.cs
 
 ### T6: Validación Tipada de Selección, Manejo Controlado de Rechazos y Huellas
 - **id**: T6

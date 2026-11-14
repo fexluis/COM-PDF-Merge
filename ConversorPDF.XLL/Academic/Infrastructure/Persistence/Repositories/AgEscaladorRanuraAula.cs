@@ -28,6 +28,7 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
 
         internal sealed class Decision
         {
+            public int IdAula { get; set; }
             public string AulaRef { get; set; }
             public string Subunidad { get; set; }
             public string Desde { get; set; }
@@ -62,6 +63,12 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
         }
 
         /// <summary>
+        /// Predicado canónico de elegibilidad de aula para propuesta y autorización de reclasificación.
+        /// Aulas con Estado Aprobado (4), Inactiva (0), Mantenimiento (2) o Reservada (3) nunca son elegibles.
+        /// </summary>
+        public static bool EsAulaElegible(AgAula aula) => aula != null && aula.Id > 0 && !string.IsNullOrWhiteSpace(aula.AulaRef) && aula.Estado == AgEstadoAula.Disponible;
+
+        /// <summary>
         /// Identifica patrones LEGADO con días asignados que pueden ser candidatos a redistribución.
         /// Acotado estrictamente a la identidad del aula y subunidad.
         /// </summary>
@@ -78,46 +85,113 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
 
         public IReadOnlyList<AgReclasificacionPatron> IdentificarPatronesRedistribuibles(AgContexto contexto, AgAula aula)
         {
+            return IdentificarPatronesRedistribuibles(contexto, aula, null);
+        }
+
+        public IReadOnlyList<AgReclasificacionPatron> IdentificarPatronesRedistribuibles(AgContexto contexto, AgAula aula, AgResultadoEvaluacionVentana evaluacion = null)
+        {
             var resultado = new List<AgReclasificacionPatron>();
-            if (contexto == null || aula == null) return resultado;
+            if (contexto == null || !EsAulaElegible(aula))
+            {
+                return resultado;
+            }
+
+            if (evaluacion == null)
+            {
+                if (contexto.Ventana == null)
+                {
+                    return resultado;
+                }
+
+                var prog = contexto.Programas != null ? contexto.Programas.FirstOrDefault(p => p.Id == aula.IdPrograma) : null;
+                double u = AgUnidadesSemanales.HorasSesionAula(aula, AgNivelAcademicoCatalogo.Desde(prog?.Modalidad));
+                evaluacion = AgEvaluadorDemandaVentana.Evaluar(aula.DiasVentana, aula.Jornada, u,
+                    contexto, aula, contexto.Ventana.FechaInicio, contexto.Ventana.FechaFin);
+            }
+
+            if (evaluacion == null || !string.IsNullOrEmpty(evaluacion.Error) || evaluacion.CabeEnPlazo)
+            {
+                return resultado;
+            }
+
+            if (contexto.AulaAsignaturaPorAulaAsig == null)
+            {
+                return resultado;
+            }
 
             var relaciones = contexto.AulaAsignaturaPorAulaAsig.Values
                 .Where(aa => aa.IdAula == aula.Id)
                 .OrderBy(aa => aa.OrdenCurricular)
                 .ThenBy(aa => aa.IdAsignatura);
 
+            var programa = contexto.Programas != null ? contexto.Programas.FirstOrDefault(p => p.Id == aula.IdPrograma) : null;
+            var sedeObj = (contexto.SedesPorId != null && contexto.SedesPorId.TryGetValue(aula.IdSede, out var s))
+                ? s
+                : contexto.Sedes?.FirstOrDefault(sd => sd.Id == aula.IdSede);
+            string sedeNombre = !string.IsNullOrWhiteSpace(sedeObj?.Nombre) ? sedeObj.Nombre : (aula.Subunidad ?? string.Empty);
+
             foreach (var aa in relaciones)
             {
                 string origen = (aa.OrigenPatron ?? string.Empty).Trim().ToUpperInvariant();
-                if (origen == "FIJO")
+                if (origen != "LEGADO" || string.IsNullOrWhiteSpace(aa.DiasPatron))
                 {
-                    // FIJO: conservar siempre; no se redistribuye
                     continue;
                 }
-                if (origen == "AUTOMATICO")
+
+                int sesionesPendientes = 0;
+                if (evaluacion.SesionesPendientesPorAsignatura != null
+                    && evaluacion.SesionesPendientesPorAsignatura.TryGetValue(aa.IdAsignatura, out int ses))
                 {
-                    // AUTOMATICO: ya redistribuible; no requiere reclasificación
+                    sesionesPendientes = ses;
+                }
+                else if (evaluacion.IdAsignaturasSaturadas != null && evaluacion.IdAsignaturasSaturadas.Contains(aa.IdAsignatura))
+                {
+                    sesionesPendientes = Math.Max(1, evaluacion.DemandaPendiente);
+                }
+
+                bool saturada = (evaluacion.IdAsignaturasSaturadas == null || evaluacion.IdAsignaturasSaturadas.Contains(aa.IdAsignatura));
+                if (!saturada || sesionesPendientes <= 0)
+                {
                     continue;
                 }
-                if (origen == "LEGADO" && !string.IsNullOrWhiteSpace(aa.DiasPatron))
+
+                double horasPendientes = 0;
+                if (evaluacion.HorasPendientesPorAsignatura != null
+                    && evaluacion.HorasPendientesPorAsignatura.TryGetValue(aa.IdAsignatura, out double h))
                 {
-                    var asig = contexto.Asignaturas.FirstOrDefault(a => a.Id == aa.IdAsignatura);
-                    resultado.Add(new AgReclasificacionPatron
-                    {
-                        IdAula = aula.Id,
-                        AulaRef = aula.AulaRef,
-                        Subunidad = aula.Subunidad ?? string.Empty,
-                        IdAsignatura = aa.IdAsignatura,
-                        NombreAsignatura = asig?.Nombre ?? $"Asig {aa.IdAsignatura}",
-                        OrigenAnterior = "LEGADO",
-                        OrigenPropuesto = "AUTOMATICO",
-                        DiasPatronAnterior = aa.DiasPatron,
-                        DiasPatronPropuesto = string.Empty,
-                        Motivo = $"Patrón histórico '{aa.DiasPatron}' en aula {aula.AulaRef}; reclasificar a AUTOMATICO para permitir redistribución.",
-                        Autorizado = false // Selección individual, inicialmente desmarcada
-                    });
+                    horasPendientes = h;
                 }
+                else
+                {
+                    double u = AgUnidadesSemanales.HorasSesionAula(aula, AgNivelAcademicoCatalogo.Desde(programa?.Modalidad));
+                    horasPendientes = sesionesPendientes * u;
+                }
+
+                var asig = contexto.Asignaturas != null ? contexto.Asignaturas.FirstOrDefault(a => a.Id == aa.IdAsignatura) : null;
+                DateTime? fechaLimite = contexto.Ventana != null ? (DateTime?)contexto.Ventana.FechaFin : (DateTime?)evaluacion.FechaLimite;
+
+                resultado.Add(new AgReclasificacionPatron
+                {
+                    IdAula = aula.Id,
+                    AulaRef = aula.AulaRef,
+                    Subunidad = aula.Subunidad ?? string.Empty,
+                    IdAsignatura = aa.IdAsignatura,
+                    NombreAsignatura = asig?.Nombre ?? $"Asig {aa.IdAsignatura}",
+                    OrigenAnterior = "LEGADO",
+                    OrigenPropuesto = "AUTOMATICO",
+                    DiasPatronAnterior = aa.DiasPatron,
+                    DiasPatronPropuesto = string.Empty,
+                    SesionesPendientes = sesionesPendientes,
+                    HorasPendientes = horasPendientes,
+                    FechaLimite = fechaLimite,
+                    Sede = sedeNombre,
+                    Programa = programa?.Nombre ?? string.Empty,
+                    SemestreGrupo = $"{aula.Semestre}{aula.Grupo}",
+                    Motivo = $"Patrón histórico '{aa.DiasPatron}' en aula {aula.AulaRef}; reclasificar a AUTOMATICO para permitir redistribución.",
+                    Autorizado = false
+                });
             }
+
             return resultado;
         }
 
@@ -172,7 +246,7 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                     var origen = contexto.Aulas.SingleOrDefault(a => a.Id == rec.IdAula
                         && string.Equals(a.AulaRef, rec.AulaRef, StringComparison.Ordinal)
                         && string.Equals(a.Subunidad ?? string.Empty, rec.Subunidad ?? string.Empty, StringComparison.Ordinal)
-                        && a.Estado == AgEstadoAula.Disponible);
+                        && EsAulaElegible(a));
                     AgAulaAsignatura relacion;
                     if (origen == null || !contexto.AulaAsignaturaPorAulaAsig.TryGetValue((rec.IdAula, rec.IdAsignatura), out relacion)
                         || !string.Equals((relacion.OrigenPatron ?? string.Empty).Trim(), rec.OrigenAnterior.Trim(), StringComparison.OrdinalIgnoreCase)
@@ -188,8 +262,7 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                 }
             }
 
-            foreach (var aula in contexto.Aulas.Where(a => a.Estado == AgEstadoAula.Disponible
-                && !string.IsNullOrWhiteSpace(a.AulaRef)).OrderBy(a => a.Id))
+            foreach (var aula in contexto.Aulas.Where(EsAulaElegible).OrderBy(a => a.Id))
             {
                 ct.ThrowIfCancellationRequested();
                 LoggerHelper.Debug($"[AG-RANURAS-TMP] ESCALADOR_ENTRADA corrida={contexto.IdCorrida} traza={contexto.Traza?.Correlacion} perfil={perfil} aula={aula.Id} ref={aula.AulaRef} dias={aula.DiasVentana} plazoEfectivo={contexto.Ventana.FechaInicio:yyyy-MM-dd}..{contexto.Ventana.FechaFin:yyyy-MM-dd} plazoAula={aula.FechaInicio}..{aula.FechaFin}");
@@ -202,7 +275,7 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                     contexto, aula, contexto.Ventana.FechaInicio, contexto.Ventana.FechaFin, ct);
 
                 // Paso 2: Siempre consultar candidatos de reclasificación independientemente del siguiente escalón y de la saturación
-                var candidatos = IdentificarPatronesRedistribuibles(contexto, aula);
+                var candidatos = IdentificarPatronesRedistribuibles(contexto, aula, antes);
 
                 var autorizadasAula = seleccionadas.Where(r => r.IdAula == aula.Id).ToList();
 
@@ -282,6 +355,7 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
 
                 var d = new Decision
                 {
+                    IdAula = aula.Id,
                     AulaRef = aula.AulaRef,
                     Subunidad = aula.Subunidad,
                     Desde = aula.DiasVentana,
@@ -477,6 +551,7 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                             var aulas = contexto.Aulas.Where(a => string.Equals(a.AulaRef, d.AulaRef, StringComparison.Ordinal)
                                 && string.Equals(a.Subunidad ?? string.Empty, d.Subunidad ?? string.Empty, StringComparison.Ordinal)).ToList();
                             if (aulas.Count != 1) { throw new InvalidOperationException("Configuración modificada: cambió el aula."); }
+                            int idAula = d.IdAula > 0 ? d.IdAula : aulas[0].Id;
 
                             string huellaContexto = AgHuellaPlanVentana.Calcular(contexto, aulas[0]);
                             string huellaSql = AgHuellaEscaladoPersistido.Calcular(db, tx, d.AulaRef, d.Subunidad, idArbol);
@@ -527,27 +602,27 @@ AND COALESCE(dias_ventana,'')=@Desde;",
                             {
                                 await db.ExecuteAsync(new CommandDefinition(@"
 UPDATE ag_aula_asignatura SET dias_patron=''
-WHERE id_aula IN (SELECT id FROM ag_aula WHERE aula_ref=@Ref AND COALESCE(NULLIF(TRIM(subunidad),''),@Sub)=@Sub)
+WHERE id_aula = @IdAula
 AND id_asignatura IN @Ids AND UPPER(COALESCE(origen_patron,''))='AUTOMATICO';",
-                                    new { Ref = d.AulaRef, Sub = d.Subunidad ?? string.Empty, Ids = d.IdAsignaturasBottleneck }, tx, cancellationToken: ct)).ConfigureAwait(false);
+                                    new { IdAula = idAula, Ids = d.IdAsignaturasBottleneck }, tx, cancellationToken: ct)).ConfigureAwait(false);
                             }
 
                             if (d.ReclasificacionesAutorizadas != null && d.ReclasificacionesAutorizadas.Count > 0)
                             {
                                 foreach (var rec in d.ReclasificacionesAutorizadas)
                                 {
+                                    int targetIdAula = rec.IdAula > 0 ? rec.IdAula : idAula;
                                     int afectoRec = await db.ExecuteAsync(new CommandDefinition(@"
 UPDATE ag_aula_asignatura
 SET origen_patron=@OrigenNuevo, dias_patron=@DiasNuevo
-WHERE id_aula IN (SELECT id FROM ag_aula WHERE aula_ref=@Ref AND COALESCE(NULLIF(TRIM(subunidad),''),@Sub)=@Sub)
+WHERE id_aula = @IdAula
 AND id_asignatura=@IdAsig AND UPPER(TRIM(COALESCE(origen_patron,'')))=@OrigenAntes
 AND COALESCE(dias_patron,'')=@DiasAntes;",
                                         new
                                         {
                                             OrigenNuevo = rec.OrigenPropuesto,
                                             DiasNuevo = rec.DiasPatronPropuesto ?? string.Empty,
-                                            Ref = d.AulaRef,
-                                            Sub = d.Subunidad ?? string.Empty,
+                                            IdAula = targetIdAula,
                                             IdAsig = rec.IdAsignatura,
                                             OrigenAntes = (rec.OrigenAnterior ?? string.Empty).Trim().ToUpperInvariant(),
                                             DiasAntes = rec.DiasPatronAnterior ?? string.Empty
