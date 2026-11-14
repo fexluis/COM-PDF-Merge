@@ -90,6 +90,9 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 res.Motivo = evaluacion.Error;
                 res.HaySaturacion = true;
                 res.DemandaPendiente = res.DemandaTotal;
+                res.DeficitHoras = res.DemandaTotal * unidad;
+                res.SesionesPendientesPorAsignatura = requeridas.ToDictionary(p => p.Key, p => p.Value);
+                res.HorasPendientesPorAsignatura = requeridas.ToDictionary(p => p.Key, p => p.Value * unidad);
                 LoggerHelper.Debug($"[AG-RANURAS-TMP] EVALUACION_ERROR {diagnostico} error={res.Error}");
                 return res;
             }
@@ -100,6 +103,16 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             res.IdAsignaturasSaturadas = requeridas.Where(p => ubicadas[p.Key] < p.Value).Select(p => p.Key).ToList();
             res.DemandaPendiente = requeridas.Sum(p => Math.Max(0, p.Value - ubicadas[p.Key]));
             res.DeficitHoras = res.DemandaPendiente * unidad;
+            var sesionesPendientes = new Dictionary<int, int>();
+            var horasPendientes = new Dictionary<int, double>();
+            foreach (var kvp in requeridas)
+            {
+                int deficit = Math.Max(0, kvp.Value - ubicadas[kvp.Key]);
+                sesionesPendientes[kvp.Key] = deficit;
+                horasPendientes[kvp.Key] = deficit * unidad;
+            }
+            res.SesionesPendientesPorAsignatura = sesionesPendientes;
+            res.HorasPendientesPorAsignatura = horasPendientes;
             res.RanurasOciosas = Math.Max(0, res.CapacidadTotal - res.Sesiones.Count);
             res.CabeEnPlazo = res.DemandaPendiente == 0 && evaluacion.Value.Infactibles.Count == 0;
             res.BusquedaAgotada = evaluacion.Value.BusquedaAgotada;

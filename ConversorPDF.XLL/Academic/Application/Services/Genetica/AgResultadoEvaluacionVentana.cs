@@ -34,6 +34,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         public string FranjaCuello { get; set; } = string.Empty;
         public List<int> MateriasFueraVentana { get; set; } = new List<int>();
         public List<int> IdAsignaturasSaturadas { get; set; } = new List<int>();
+        public IReadOnlyDictionary<int, int> SesionesPendientesPorAsignatura { get; set; } = new Dictionary<int, int>();
+        public IReadOnlyDictionary<int, double> HorasPendientesPorAsignatura { get; set; } = new Dictionary<int, double>();
     }
 }
 

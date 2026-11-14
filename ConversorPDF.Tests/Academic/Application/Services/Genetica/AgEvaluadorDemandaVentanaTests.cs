@@ -123,5 +123,173 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
 
             decisiones.Should().BeEmpty("JUE-DOM no reduce la saturación dominical ni conserva el patrón 5,6");
         }
+
+        [Fact]
+        public void Evaluar_WhenTodasLasMateriasCaben_ShouldTenerSesionesPendientesVacioOCeroYCabeEnPlazoTrue()
+        {
+            // Arrange
+            var contexto = new AgContexto
+            {
+                Ventana = new VentanaSemestre
+                {
+                    FechaInicio = new DateTime(2026, 2, 1),
+                    FechaFin = new DateTime(2026, 5, 30) // 17 semanas
+                }
+            };
+
+            var aula = new AgAula
+            {
+                Id = 1,
+                AulaRef = "AULA-01",
+                Estado = AgEstadoAula.Disponible,
+                DiasVentana = "5,6", // VIE-SAB (51 ranuras)
+                Jornada = "NOCHE",
+                HorasDia = 4
+            };
+            contexto.Aulas.Add(aula);
+
+            // 2 asignaturas de 32h = 2 * 8 = 16 sesiones <= 51 ranuras
+            for (int i = 1; i <= 2; i++)
+            {
+                var asig = new Asignatura { Id = i, Nombre = $"Materia {i}", IntHoraria = 32 };
+                contexto.Asignaturas.Add(asig);
+                var aa = new AgAulaAsignatura
+                {
+                    IdAula = 1,
+                    IdAsignatura = i,
+                    HorasObjetivo = 32.0
+                };
+                contexto.AulaAsignaturas.Add(aa);
+                contexto.AulaAsignaturaPorAulaAsig[(1, i)] = aa;
+            }
+            contexto.ConstruirIndices();
+
+            // Act
+            var eval = AgEvaluadorDemandaVentana.Evaluar(
+                aula.DiasVentana, aula.Jornada, 4.0, contexto, aula,
+                contexto.Ventana.FechaInicio, contexto.Ventana.FechaFin);
+
+            // Assert
+            eval.CabeEnPlazo.Should().BeTrue();
+            eval.DemandaPendiente.Should().Be(0);
+            eval.SesionesPendientesPorAsignatura.Should().NotBeNull();
+            eval.SesionesPendientesPorAsignatura.Values.Should().OnlyContain(v => v == 0);
+            eval.IdAsignaturasSaturadas.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void Evaluar_WhenMateriaTieneDeficit_ShouldDesglosarSesionesYHorasPendientesPorAsignatura()
+        {
+            // Arrange
+            var contexto = new AgContexto
+            {
+                Ventana = new VentanaSemestre
+                {
+                    FechaInicio = new DateTime(2026, 2, 1),
+                    FechaFin = new DateTime(2026, 5, 30) // 17 semanas
+                }
+            };
+
+            var aula = new AgAula
+            {
+                Id = 1,
+                AulaRef = "AULA-01",
+                Estado = AgEstadoAula.Disponible,
+                DiasVentana = "5,6", // VIE-SAB (51 ranuras)
+                Jornada = "NOCHE",
+                HorasDia = 4
+            };
+            contexto.Aulas.Add(aula);
+
+            // 4 asignaturas de 64h = 4 * 16 = 64 sesiones > 51 ranuras (déficit total = 13 sesiones = 52 horas)
+            for (int i = 1; i <= 4; i++)
+            {
+                var asig = new Asignatura { Id = i, Nombre = $"Materia {i}", IntHoraria = 64 };
+                contexto.Asignaturas.Add(asig);
+                var aa = new AgAulaAsignatura
+                {
+                    IdAula = 1,
+                    IdAsignatura = i,
+                    HorasObjetivo = 64.0
+                };
+                contexto.AulaAsignaturas.Add(aa);
+                contexto.AulaAsignaturaPorAulaAsig[(1, i)] = aa;
+            }
+            contexto.ConstruirIndices();
+
+            // Act
+            var eval = AgEvaluadorDemandaVentana.Evaluar(
+                aula.DiasVentana, aula.Jornada, 4.0, contexto, aula,
+                contexto.Ventana.FechaInicio, contexto.Ventana.FechaFin);
+
+            // Assert
+            eval.CabeEnPlazo.Should().BeFalse();
+            eval.HaySaturacion.Should().BeTrue();
+            eval.DemandaPendiente.Should().Be(13);
+            eval.DeficitHoras.Should().Be(52.0);
+            eval.SesionesPendientesPorAsignatura.Should().NotBeNull();
+            eval.IdAsignaturasSaturadas.Should().NotBeEmpty();
+
+            eval.SesionesPendientesPorAsignatura.Values.Sum().Should().Be(13);
+
+            foreach (var idAsig in eval.IdAsignaturasSaturadas)
+            {
+                eval.SesionesPendientesPorAsignatura.Should().ContainKey(idAsig);
+                eval.SesionesPendientesPorAsignatura[idAsig].Should().BeGreaterThan(0);
+            }
+        }
+
+        [Fact]
+        public void Evaluar_WhenPreservacionCabeEnPlazoYBusquedaAgotada_ShouldMantenerConsistenciaConSesionesPendientes()
+        {
+            // Arrange
+            var contexto = new AgContexto
+            {
+                Ventana = new VentanaSemestre
+                {
+                    FechaInicio = new DateTime(2026, 2, 1),
+                    FechaFin = new DateTime(2026, 5, 30)
+                }
+            };
+
+            var aula = new AgAula
+            {
+                Id = 1,
+                AulaRef = "AULA-01",
+                Estado = AgEstadoAula.Disponible,
+                DiasVentana = "5,6",
+                Jornada = "NOCHE",
+                HorasDia = 4
+            };
+            contexto.Aulas.Add(aula);
+
+            var asig = new Asignatura { Id = 10, Nombre = "Materia Unica", IntHoraria = 32 };
+            contexto.Asignaturas.Add(asig);
+            var aa = new AgAulaAsignatura
+            {
+                IdAula = 1,
+                IdAsignatura = 10,
+                HorasObjetivo = 32.0
+            };
+            contexto.AulaAsignaturas.Add(aa);
+            contexto.AulaAsignaturaPorAulaAsig[(1, 10)] = aa;
+            contexto.ConstruirIndices();
+
+            // Act
+            var eval = AgEvaluadorDemandaVentana.Evaluar(
+                aula.DiasVentana, aula.Jornada, 4.0, contexto, aula,
+                contexto.Ventana.FechaInicio, contexto.Ventana.FechaFin);
+
+            // Assert
+            eval.CabeEnPlazo.Should().BeTrue();
+            eval.BusquedaAgotada.Should().BeFalse();
+            eval.DemandaPendiente.Should().Be(0);
+            eval.DeficitHoras.Should().Be(0.0);
+            eval.SesionesPendientesPorAsignatura.Should().NotBeNull();
+            if (eval.SesionesPendientesPorAsignatura.ContainsKey(10))
+            {
+                eval.SesionesPendientesPorAsignatura[10].Should().Be(0);
+            }
+        }
     }
 }
