@@ -243,15 +243,16 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     }
                 }
 
-                // Fase 562, 563 & 566: Reparto canónico y determinista de horas por grupo
-                // Fase 566: un gen sin carga (HorasGen = 0 por Fase 564 o residuo de siembra) obliga a repartir
-                // aunque la suma coincida con el esperado; el fallback "0 => TotalHorasAsignatura" del expansor/materializador
-                // convertiría ese 0 en horas fantasma y violaría I1/I2 en staging.
+                // Fase 562, 563, 566 & Fase 1802: Reparto canónico y determinista de horas por grupo.
+                // Si el grupo proviene de un plan fechado (FechasGen pobladas) y la suma ya cubre el total esperado,
+                // no se redistribuye aunque algún gen tenga HorasGen <= 0.0 (sesiones concentradas en ranuras específicas).
+                // La redistribución uniforme solo se ejecuta si la suma difiere del esperado, o en genes heredados sin plan fechado.
                 double esperado = genes.Max(g => g.TotalHorasAsignatura);
                 if (esperado > 0 && genes.Count > 0)
                 {
                     double suma = genes.Sum(g => g.HorasGen);
-                    bool hayPendientes = genes.Any(g => g.Estado != AgEstadoGen.Fijado && g.HorasGen <= 0.0);
+                    bool hayPlanFechado = genes.Any(g => g.FechasGen != null && g.FechasGen.Count > 0);
+                    bool hayPendientes = !hayPlanFechado && genes.Any(g => g.Estado != AgEstadoGen.Fijado && g.HorasGen <= 0.0);
                     if (Math.Abs(suma - esperado) > 0.001 || hayPendientes)
                     {
                         var fijados = genes.Where(g => g.Estado == AgEstadoGen.Fijado).ToList();

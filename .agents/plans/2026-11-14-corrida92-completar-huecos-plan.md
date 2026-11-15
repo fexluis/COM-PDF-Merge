@@ -157,10 +157,12 @@ Wave 8: T8 (Fase 1805) [Certificación Gate Full & Calibración Baseline]
 - **description**: Ajustar el consumo de planes en `AgFabricaIndividuos` y `AgCoherenciaGrupo`. En la fábrica, asegurar coincidencia de bloque horario (`Activo == 1 && DiaSemanaNumero == ranura.Dia && Math.Abs(DuracionHoras - ranura.Horas) < 0.001 && Franja == ranura.Franja`), manteniendo fallback defensivo si el catálogo no dispone de la franja exacta, y fijar `FechasGen` y `HorasGen = FechasGen.Count * horasEfectivas` por ranura sin truncamiento. En `AgCoherenciaGrupo.Sellar`, respetar la distribución multi-día del plan cuando la suma total de horas cubre el esperado (`Math.Abs(suma - esperado) < 0.001`), evitando redistribuciones uniformes (`12/N`) incluso si algún gen tiene 0 horas por concentración en ranuras efectivas.
 - **validation**: Los genes del individuo conservan las fechas exactas del planificador y sus horas reflejan la cantidad real de sesiones; no se introducen solapes ni mutaciones espurias en `Sellar`.
 - **verification**: powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "ConversorPDF.Tests.Academic.Application.Services.Genetica"
-- **evidence**: _evidence/pending/summary.md
-- **status**: pending
-- **log**: ""
-- **files edited/created**: []
+- **evidence**: _evidence/20261114-214422/summary.md
+- **status**: done
+- **log**: "Fábrica ajustada con coincidencia exacta y activa de bloques por franja. Coherencia de grupo Sellar blindada para preservar FechasGen y HorasGen de planes fechados sin redistribución forzada. 50/50 tests en GREEN. Evidencia _evidence/20261114-214422/summary.md. Aprobado por task-reviewer."
+- **files edited/created**:
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgFabricaIndividuos.cs
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgCoherenciaGrupo.cs
 
 ### T6: Persistencia en Staging y Trazabilidad Reproducible
 - **id**: T6

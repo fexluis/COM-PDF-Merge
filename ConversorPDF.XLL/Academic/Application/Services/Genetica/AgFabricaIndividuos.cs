@@ -431,13 +431,15 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                             var ranura = ranurasPatron[i];
                             int diaIso = ranura.Dia;
                             var permitidasRanura = AgRanuras.FranjasDe(diaIso, aula?.Jornada, ranura.Horas);
-                            // Fase 1293 / Fase 1309: exigir franja exacta SOLO en día 6 con 2+ franjas reales; L-V mantiene equivalencias
-                            bool franjaExactaObligatoria = diaIso == 6 && permitidasRanura.Count > 1;
+                            // Fase 1293, Fase 1309 & Fase 1802: si hay plan fechado con sesiones o es día 6 con 2+ franjas, priorizar franja exacta
+                            bool tienePlanFechado = sesionesPlanificadas != null && sesionesPlanificadas.Count > 0;
+                            bool franjaExactaPrioritaria = tienePlanFechado || (diaIso == 6 && permitidasRanura.Count > 1);
 
                             Func<AgBloqueHorario, bool> coincideRanura = b =>
-                                b.DiaSemanaNumero == diaIso
+                                b.Activo == 1
+                                && b.DiaSemanaNumero == diaIso
                                 && Math.Abs(b.DuracionHoras - ranura.Horas) < 0.001
-                                && ((permitidasRanura.Count == 0 || franjaExactaObligatoria)
+                                && ((permitidasRanura.Count == 0 || franjaExactaPrioritaria)
                                     ? string.Equals(b.Franja, ranura.Franja, StringComparison.OrdinalIgnoreCase)
                                     : permitidasRanura.Any(f => string.Equals(f, b.Franja, StringComparison.OrdinalIgnoreCase)));
 
@@ -456,13 +458,14 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                                     .FirstOrDefault();
                             }
 
-                            // Fase 1300: catálogo sin bloque de la franja exacta -> conservar comportamiento legacy y avisar
-                            if (bloqueRanura == null && franjaExactaObligatoria)
+                            // Fase 1300 & Fase 1802: catálogo sin bloque de la franja exacta -> conservar comportamiento legacy y avisar
+                            if (bloqueRanura == null && franjaExactaPrioritaria)
                             {
                                 Func<AgBloqueHorario, bool> coincideLegacy = b =>
-                                    b.DiaSemanaNumero == diaIso
+                                    b.Activo == 1
+                                    && b.DiaSemanaNumero == diaIso
                                     && Math.Abs(b.DuracionHoras - ranura.Horas) < 0.001
-                                    && permitidasRanura.Any(f => string.Equals(f, b.Franja, StringComparison.OrdinalIgnoreCase));
+                                    && (permitidasRanura.Count == 0 || permitidasRanura.Any(f => string.Equals(f, b.Franja, StringComparison.OrdinalIgnoreCase)));
 
                                 bloqueRanura = (bloquesValidos ?? new List<AgBloqueHorario>()).Where(coincideLegacy).OrderBy(b => b.Id).FirstOrDefault()
                                             ?? (contexto.Bloques ?? new List<AgBloqueHorario>()).Where(coincideLegacy).OrderBy(b => b.Id).FirstOrDefault();
