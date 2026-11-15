@@ -1,5 +1,5 @@
 # Plan: Reclasificación Exclusiva de Materias con Sesiones Pendientes dentro del Plazo
-**Generado**: 2026-11-14 · **Autor**: Cline/Swarm-Planner · **Estado**: approved
+**Generado**: 2026-11-14 · **Autor**: Cline/Swarm-Planner · **Estado**: closed
 
 ## Execution envelope
 - branch: refactor/reclasificacion-solo-pendientes
@@ -228,10 +228,11 @@ Wave 8:                 T10 (Fase 1797) [Gate Full Baseline]
 - **description**: Ejecutar la suite completa de pruebas mediante verify.ps1 -Mode Full. Validar 0 errores, 0 regresiones contra el baseline (TOTAL >= 1259) y certificar que la integridad global del proyecto se preserva.
 - **validation**: scripts/verify.ps1 -Mode Full devuelve exit code 0 con TOTAL >= 1259.
 - **verification**: powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Full
-- **evidence**: (la llena build-verifier)
-- **status**: pending
-- **log**: (lo llena el orquestador)
-- **files edited/created**: (lo llena el orquestador)
+- **evidence**: _evidence/20261114-192003/summary.md
+- **status**: done
+- **log**: Suite completa ejecutada con verify.ps1 -Mode Full. 1356 tests ejecutados, 1356 PASS, 0 fallos, 0 regresiones. Baseline actualizado canónicamente a 1356. GREEN_VALIDATED.
+- **files edited/created**:
+  - tests/baseline/test_baseline.txt
 
 ## Parallel execution groups
 | Wave | Ronda | Tasks | Can start when |
