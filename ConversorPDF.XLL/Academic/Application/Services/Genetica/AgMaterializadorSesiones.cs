@@ -54,6 +54,13 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         : $"{g.IdAsignatura}|{g.IdAula}|{g.Grupo}")
                     .ToList();
 
+                if (LoggerHelper.ModoVerboso)
+                {
+                    int genesConFechas = individuo.Genes.Count(g => g.FechasGen != null && g.FechasGen.Count > 0);
+                    int totalFechasPlan = individuo.Genes.Sum(g => g.FechasGen != null ? g.FechasGen.Count : 0);
+                    LoggerHelper.Debug($"[AgMaterializadorSesiones] INICIO_MATERIALIZAR corrida={idCorrida} individuo={individuo.Id} genes={individuo.Genes.Count} grupos={grupos.Count} genesConFechas={genesConFechas} totalFechasPlan={totalFechasPlan} ventana={contexto.Ventana?.FechaInicio:yyyy-MM-dd}..{contexto.Ventana?.FechaFin:yyyy-MM-dd}");
+                }
+
                 int idSeq = 1;
                 foreach (var grp in grupos)
                 {
@@ -279,6 +286,57 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         continue;
                     }
 
+                    // Corrida 92 (T6): Asegurar que el mapeo y persistencia en staging respete las fechas de las sesiones expandidas
+                    var fechasSesiones = sesGrupoLista
+                        .Where(s => s.FechaSesion.HasValue)
+                        .Select(s => s.FechaSesion.Value.Date)
+                        .ToList();
+
+                    if (fechasSesiones.Count > 0)
+                    {
+                        var minSes = fechasSesiones.Min();
+                        var maxSes = fechasSesiones.Max();
+
+                        if (DateTime.TryParseExact(agVinc.FechaInicio, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var fiVinParsed))
+                        {
+                            if (minSes < fiVinParsed)
+                            {
+                                var nuevaFi = minSes;
+                                if (contexto.Ventana != null && nuevaFi < contexto.Ventana.FechaInicio.Date)
+                                {
+                                    nuevaFi = contexto.Ventana.FechaInicio.Date;
+                                }
+                                agVinc.FechaInicio = nuevaFi.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+                            }
+                        }
+                        else
+                        {
+                            agVinc.FechaInicio = minSes.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+                        }
+
+                        if (DateTime.TryParseExact(agVinc.FechaFin, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var ffVinParsed))
+                        {
+                            if (maxSes > ffVinParsed)
+                            {
+                                var nuevaFf = maxSes;
+                                if (contexto.Ventana != null && nuevaFf > contexto.Ventana.FechaFin.Date)
+                                {
+                                    nuevaFf = contexto.Ventana.FechaFin.Date;
+                                }
+                                agVinc.FechaFin = nuevaFf.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+                            }
+                        }
+                        else
+                        {
+                            agVinc.FechaFin = maxSes.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+                        }
+                    }
+
+                    if (LoggerHelper.ModoVerboso)
+                    {
+                        LoggerHelper.Debug($"[AgMaterializadorSesiones] GRUPO_MATERIALIZADO grupo={genes[0].ClaveGrupo} vincId={agVinc.Id} sesiones={sesionesGrupo} horas={sumaHorasGrupo:0.#}/{esperado:0.#} rango={agVinc.FechaInicio}..{agVinc.FechaFin}");
+                    }
+
                     vinculacionesStaging.Add(agVinc);
                     idSeq++;
                 }
@@ -290,7 +348,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 }
                 if (incidencias.Count > 0)
                 {
-                    LoggerHelper.Warning($"[AgMaterializadorSesiones] {incidencias.Count} grupo(s) en cuarentena; staging parcial: {vinculacionesStaging.Count} vinculaciones, {sesionesStaging.Count} sesiones.");
+                    LoggerHelper.Warning($"[AgMaterializadorSesiones] {incidencias.Count} grupo(s) en cuarentena; staging parcial: {vinculacionesStaging.Count} vinculaciones, {sesionesStaging.Count} sesiones. Incidencias: [{string.Join("; ", incidencias)}]");
                 }
 
                 var saveResult = await _scheduleRepository.GuardarStagingAsync(idCorrida, individuo.Id, vinculacionesStaging, sesionesStaging, ct);
@@ -299,10 +357,14 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     return Result.Failure($"Error al guardar en staging: {saveResult.Error}");
                 }
 
-                LoggerHelper.Info($"[AgMaterializadorSesiones] Solución materializada en staging: {vinculacionesStaging.Count} vinculaciones, {sesionesStaging.Count} sesiones.");
+                DateTime? fechaMin = sesionesStaging.Where(s => s.FechaSesion.HasValue).Select(s => s.FechaSesion).DefaultIfEmpty().Min();
+                DateTime? fechaMax = sesionesStaging.Where(s => s.FechaSesion.HasValue).Select(s => s.FechaSesion).DefaultIfEmpty().Max();
+                double totalHoras = sesionesStaging.Sum(s => s.Horas);
+
+                LoggerHelper.Info($"[AgMaterializadorSesiones] Solución materializada en staging: {vinculacionesStaging.Count} vinculaciones, {sesionesStaging.Count} sesiones ({totalHoras:0.#} h). Rango: {fechaMin:yyyy-MM-dd}..{fechaMax:yyyy-MM-dd}.");
                 if (LoggerHelper.ModoVerboso)
                 {
-                    LoggerHelper.Debug($"[AG-RANURAS-TMP] STAGING_GUARDADO corrida={idCorrida} individuo={individuo.Id} sesiones={sesionesStaging.Count} ultima={sesionesStaging.Select(s => (DateTime?)s.FechaSesion).Max():yyyy-MM-dd} limiteEfectivo={contexto.Ventana?.FechaFin:yyyy-MM-dd}");
+                    LoggerHelper.Debug($"[AG-RANURAS-TMP] STAGING_GUARDADO corrida={idCorrida} individuo={individuo.Id} vinculaciones={vinculacionesStaging.Count} sesiones={sesionesStaging.Count} horas={totalHoras:0.#} inicio={fechaMin:yyyy-MM-dd} ultima={fechaMax:yyyy-MM-dd} limiteEfectivo={contexto.Ventana?.FechaFin:yyyy-MM-dd} grupos={grupos.Count} incidencias={incidencias.Count}");
                 }
                 return Result.Success();
             }

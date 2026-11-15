@@ -175,10 +175,12 @@ Wave 8: T8 (Fase 1805) [Certificación Gate Full & Calibración Baseline]
 - **description**: Enriquecer `AgExpansorSesiones` y `AgMaterializadorSesiones` para garantizar que la expansión y materialización en las tablas de staging (`ag_sesiones`) utilice fielmente `FechasGen` sin recurrir a generadores legacy cuando el plan es factible. Enriquecer los logs con métricas de decisión (`ELEGIR`, candidatos evaluados, fechas límite y pendientes) y asegurar que los metadatos de corrida permitan reproducir el plan de slots exacto.
 - **validation**: Las sesiones en staging coinciden una a una con el plan fechado; la trazabilidad en log permite reconstruir la alternativa seleccionada.
 - **verification**: powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "ConversorPDF.Tests.Academic.Application.Services.Genetica"
-- **evidence**: _evidence/pending/summary.md
-- **status**: pending
-- **log**: ""
-- **files edited/created**: []
+- **evidence**: _evidence/20261114-215342/summary.md
+- **status**: done
+- **log**: "AgExpansorSesiones enriquecido para adaptar fInicio..fFin a FechasGen sin truncamiento. AgMaterializadorSesiones sincroniza fechas extremas en ag_vinculaciones y enriquece logs con métricas de decisión. 63/63 tests en GREEN. Evidencia _evidence/20261114-215342/summary.md. Aprobado por task-reviewer."
+- **files edited/created**:
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgExpansorSesiones.cs
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgMaterializadorSesiones.cs
 
 ### T7: Suite de Aceptación End-to-End (12 Criterios de Aceptación)
 - **id**: T7

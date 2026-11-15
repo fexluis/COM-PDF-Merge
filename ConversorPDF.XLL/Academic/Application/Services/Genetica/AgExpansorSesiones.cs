@@ -54,6 +54,34 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 ? gen.FechaFinEstimada.Value.Date
                 : contexto.Ventana.FechaFin.Date;
 
+            // Corrida 92 (T6): Cuando usaFechasGen es true, el rango efectivo de validación fInicio..fFin
+            // debe contener al menos los extremos de FechasGen, siempre dentro de contexto.Ventana,
+            // para que una sub-ventana estrecha no rechace sesiones legítimas ubicadas por el planificador fechado en huecos.
+            bool usaFechasGen = gen.FechasGen != null && gen.FechasGen.Count > 0;
+            if (usaFechasGen)
+            {
+                DateTime minFecha = gen.FechasGen.Min(d => d.Date);
+                DateTime maxFecha = gen.FechasGen.Max(d => d.Date);
+
+                if (fInicio > minFecha)
+                {
+                    fInicio = minFecha;
+                }
+                if (fFin < maxFecha)
+                {
+                    fFin = maxFecha;
+                }
+
+                if (fInicio < contexto.Ventana.FechaInicio.Date)
+                {
+                    fInicio = contexto.Ventana.FechaInicio.Date;
+                }
+                if (fFin > contexto.Ventana.FechaFin.Date)
+                {
+                    fFin = contexto.Ventana.FechaFin.Date;
+                }
+            }
+
             if (!contexto.Ventana.ContieneRango(fInicio, fFin))
             {
                 return Result.Failure<List<AgSesion>>(
@@ -97,7 +125,6 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             int sesionesRequeridas = (int)Math.Round(sesionesExactas);
 
             // Fase 414: Usar FechasGen si fueron precalculadas por el planificador semanal
-            bool usaFechasGen = gen.FechasGen != null && gen.FechasGen.Count > 0;
             List<DateTime> fechas = usaFechasGen
                 ? gen.FechasGen
                 : _planificador.GenerarFechasValidas(
@@ -211,6 +238,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             const double Tolerancia = 0.001;
             if (LoggerHelper.ModoVerboso)
             {
+                string fuente = usaFechasGen ? "FechasGen" : "generador legacy";
+                string detalleFechas = sesiones.Count <= 12
+                    ? string.Join(", ", sesiones.Select(s => s.FechaSesion.HasValue ? s.FechaSesion.Value.ToString("yyyy-MM-dd") : string.Empty))
+                    : $"{sesiones[0].FechaSesion:yyyy-MM-dd}..{sesiones[sesiones.Count - 1].FechaSesion:yyyy-MM-dd} ({sesiones.Count} fechas)";
+                LoggerHelper.Debug($"[AgExpansorSesiones] Gen {gen.Id} (aula {gen.IdAula}, asig {gen.IdAsignatura}) expandido vía {fuente}: {sesiones.Count} sesiones [{detalleFechas}].");
                 LoggerHelper.Debug($"[AG-RANURAS-TMP] EXPANDIR_SALIDA corrida={contexto.IdCorrida} gen={gen.Id} aula={gen.IdAula} asig={gen.IdAsignatura} sesiones={sesiones.Count} horas={horasAcumuladas}/{horasObjetivoGen} ultima={sesiones.Select(s => (DateTime?)s.FechaSesion).Max():yyyy-MM-dd}");
             }
             if (horasAcumuladas + Tolerancia < horasObjetivoGen)
