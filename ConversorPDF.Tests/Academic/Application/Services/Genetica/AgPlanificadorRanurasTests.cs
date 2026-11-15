@@ -220,6 +220,172 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             result.Value.Planes.SelectMany(p => p.Sesiones).Select(s => s.Fecha).Should().Equal(fin);
         }
 
+        [Fact]
+        public void ValidarFechado_WhenPlanCompletoValido_ShouldReturnSuccess()
+        {
+            // Arrange
+            var ctx = Crear(new[] { 16, 16 });
+            var demandas = ctx.AulaAsignaturas.Select(a => (a.IdAsignatura, a.HorasObjetivo, a.OrdenCurricular)).ToList();
+            var ranuras = AgRanuras.PorVentana("LUN-VIE", ctx.Bloques, "TARDE", 4);
+            var plan = AgPlanificadorRanuras.Construir(demandas, ranuras, ctx.Ventana.FechaInicio, ctx.Ventana.FechaFin, 4, ctx.EsFestivo, null);
+
+            // Act
+            var result = AgPlanificadorRanuras.ValidarFechado(plan, demandas, ranuras, ctx.Ventana.FechaInicio, ctx.Ventana.FechaFin, 4, ctx.EsFestivo, null, System.Threading.CancellationToken.None);
+
+            // Assert
+            result.IsSuccess.Should().BeTrue();
+            plan.Infactibles.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void ValidarFechado_WhenPlanParcialConInfactiblesConsistentes_ShouldReturnSuccess()
+        {
+            // Arrange
+            var ctx = Crear(new[] { 48, 48 });
+            DateTime ini = new DateTime(2027, 2, 1);
+            DateTime fin = new DateTime(2027, 2, 5);
+            var demandas = ctx.AulaAsignaturas.Select(a => (a.IdAsignatura, a.HorasObjetivo, a.OrdenCurricular)).ToList();
+            var ranuras = AgRanuras.PorVentana("LUN-VIE", ctx.Bloques, "TARDE", 4);
+            var plan = AgPlanificadorRanuras.Construir(demandas, ranuras, ini, fin, 4, ctx.EsFestivo, null);
+
+            // Act
+            var result = AgPlanificadorRanuras.ValidarFechado(plan, demandas, ranuras, ini, fin, 4, ctx.EsFestivo, null, System.Threading.CancellationToken.None);
+
+            // Assert
+            result.IsSuccess.Should().BeTrue();
+            plan.Infactibles.Should().NotBeEmpty();
+        }
+
+        [Fact]
+        public void ValidarFechado_WhenPlanNulo_ShouldReturnFailurePlanNulo()
+        {
+            // Arrange
+            var ctx = Crear(new[] { 16 });
+            var demandas = ctx.AulaAsignaturas.Select(a => (a.IdAsignatura, a.HorasObjetivo, a.OrdenCurricular)).ToList();
+            var ranuras = AgRanuras.PorVentana("LUN-VIE", ctx.Bloques, "TARDE", 4);
+
+            // Act
+            var result = AgPlanificadorRanuras.ValidarFechado(null, demandas, ranuras, ctx.Ventana.FechaInicio, ctx.Ventana.FechaFin, 4, ctx.EsFestivo, null, System.Threading.CancellationToken.None);
+
+            // Assert
+            result.IsFailure.Should().BeTrue();
+            result.Error.Should().Be("I5_PLAN_NULO");
+        }
+
+        [Fact]
+        public void ValidarFechado_WhenHayColisionDeSesiones_ShouldReturnFailureFechaOColision()
+        {
+            // Arrange
+            var demandas = new List<(int IdAsignatura, double Horas, int OrdenCurricular)>
+            {
+                (1, 4.0, 1),
+                (2, 4.0, 2)
+            };
+            var ranura = new AgRanura(1, "TARDE", 4.0);
+            var ranuras = new List<AgRanura> { ranura };
+            DateTime ini = new DateTime(2027, 2, 1);
+            DateTime fin = new DateTime(2027, 2, 1);
+            var sesionColisionada1 = new AgSesionPlanificada(1, ini, ranura);
+            var sesionColisionada2 = new AgSesionPlanificada(2, ini, ranura);
+
+            var oleada1 = new AgPlanOleada(1, 0, 0, new List<int> { 1 }, ini, fin, 1, 1, 1, ranuras, new List<AgSesionPlanificada> { sesionColisionada1 });
+            var oleada2 = new AgPlanOleada(2, 0, 0, new List<int> { 1 }, ini, fin, 1, 1, 1, ranuras, new List<AgSesionPlanificada> { sesionColisionada2 });
+
+            var plan = new AgPlanOleadasResultado(new List<AgPlanOleada> { oleada1, oleada2 }, new List<int>());
+
+            // Act
+            var result = AgPlanificadorRanuras.ValidarFechado(plan, demandas, ranuras, ini, fin, 4.0, null, null, System.Threading.CancellationToken.None);
+
+            // Assert
+            result.IsFailure.Should().BeTrue();
+            result.Error.Should().Be("I5_PLAN_FECHA_O_COLISION");
+        }
+
+        [Fact]
+        public void ValidarFechado_WhenViolacionDiasDePatron_ShouldReturnFailureSesionInvalida()
+        {
+            // Arrange
+            var demandas = new List<(int IdAsignatura, double Horas, int OrdenCurricular)>
+            {
+                (1, 4.0, 1)
+            };
+            var ranuraLunes = new AgRanura(1, "TARDE", 4.0);
+            var ranuras = new List<AgRanura> { ranuraLunes };
+            DateTime ini = new DateTime(2027, 2, 1);
+            DateTime fin = new DateTime(2027, 2, 1);
+            var sesion = new AgSesionPlanificada(1, ini, ranuraLunes);
+            var oleada = new AgPlanOleada(1, 0, 0, new List<int> { 1 }, ini, fin, 1, 1, 1, ranuras, new List<AgSesionPlanificada> { sesion });
+            var plan = new AgPlanOleadasResultado(new List<AgPlanOleada> { oleada }, new List<int>());
+
+            var patrones = new Dictionary<int, string> { { 1, "5" } };
+
+            // Act
+            var result = AgPlanificadorRanuras.ValidarFechado(plan, demandas, ranuras, ini, fin, 4.0, null, patrones, System.Threading.CancellationToken.None);
+
+            // Assert
+            result.IsFailure.Should().BeTrue();
+            result.Error.Should().Be("I5_PLAN_SESION_INVALIDA");
+        }
+
+        [Fact]
+        public void ValidarFechado_WhenPendientesInconsistentes_ShouldReturnFailurePendientesInconsistentes()
+        {
+            // Arrange
+            var ctx = Crear(new[] { 16 });
+            var demandas = ctx.AulaAsignaturas.Select(a => (a.IdAsignatura, a.HorasObjetivo, a.OrdenCurricular)).ToList();
+            var ranuras = AgRanuras.PorVentana("LUN-VIE", ctx.Bloques, "TARDE", 4);
+            var planValido = AgPlanificadorRanuras.Construir(demandas, ranuras, ctx.Ventana.FechaInicio, ctx.Ventana.FechaFin, 4, ctx.EsFestivo, null);
+
+            var planMentiroso = new AgPlanOleadasResultado(planValido.Planes, new List<int> { 1 });
+
+            // Act
+            var result = AgPlanificadorRanuras.ValidarFechado(planMentiroso, demandas, ranuras, ctx.Ventana.FechaInicio, ctx.Ventana.FechaFin, 4, ctx.EsFestivo, null, System.Threading.CancellationToken.None);
+
+            // Assert
+            result.IsFailure.Should().BeTrue();
+            result.Error.Should().Be("I5_PLAN_PENDIENTES_INCONSISTENTES");
+        }
+
+        [Fact]
+        public void ValidarFechado_WhenDemandaInconsistente_ShouldReturnFailureDemandaInconsistente()
+        {
+            // Arrange
+            var ctx = Crear(new[] { 16 });
+            var demandas = ctx.AulaAsignaturas.Select(a => (a.IdAsignatura, a.HorasObjetivo, a.OrdenCurricular)).ToList();
+            var ranuras = AgRanuras.PorVentana("LUN-VIE", ctx.Bloques, "TARDE", 4);
+            var plan = AgPlanificadorRanuras.Construir(demandas, ranuras, ctx.Ventana.FechaInicio, ctx.Ventana.FechaFin, 4, ctx.EsFestivo, null);
+
+            var demandasInconsistentes = new List<(int IdAsignatura, double Horas, int OrdenCurricular)>
+            {
+                (1, 32.0, 1)
+            };
+
+            // Act
+            var result = AgPlanificadorRanuras.ValidarFechado(plan, demandasInconsistentes, ranuras, ctx.Ventana.FechaInicio, ctx.Ventana.FechaFin, 4, ctx.EsFestivo, null, System.Threading.CancellationToken.None);
+
+            // Assert
+            result.IsFailure.Should().BeTrue();
+            result.Error.Should().Be("I5_PLAN_DEMANDA_INCONSISTENTE");
+        }
+
+        [Fact]
+        public void ValidarFechado_WhenPatronInvalido_ShouldReturnFailurePatronInvalido()
+        {
+            // Arrange
+            var ctx = Crear(new[] { 16 });
+            var demandas = ctx.AulaAsignaturas.Select(a => (a.IdAsignatura, a.HorasObjetivo, a.OrdenCurricular)).ToList();
+            var ranuras = AgRanuras.PorVentana("LUN-VIE", ctx.Bloques, "TARDE", 4);
+            var plan = new AgPlanOleadasResultado(new List<AgPlanOleada>(), new List<int> { 1 });
+            var patrones = new Dictionary<int, string> { { 1, "PATRON_INVALIDO_XYZ" } };
+
+            // Act
+            var result = AgPlanificadorRanuras.ValidarFechado(plan, demandas, ranuras, ctx.Ventana.FechaInicio, ctx.Ventana.FechaFin, 4, ctx.EsFestivo, patrones, System.Threading.CancellationToken.None);
+
+            // Assert
+            result.IsFailure.Should().BeTrue();
+            result.Error.Should().Be("I1_PATRON_INVALIDO");
+        }
+
         private static CSharpFunctionalExtensions.Result<AgPlanOleadasResultado> Plan(AgContexto ctx)
         {
             return new AgPlanificadorOleadas().Construir(ctx.AulaAsignaturas.Select(a =>

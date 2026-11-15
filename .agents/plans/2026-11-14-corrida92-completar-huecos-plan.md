@@ -104,10 +104,12 @@ Wave 8: T8 (Fase 1805) [Certificación Gate Full & Calibración Baseline]
 - **description**: Añadir el método `internal static Result ValidarFechado(...)` en `AgPlanificadorRanuras.cs`. Valida de forma exhaustiva: plan no nulo (`I5_PLAN_NULO`), demandas requeridas vs sesiones ubicadas (`I5_PLAN_DEMANDA_INCONSISTENTE`), validez de patrones y días restringidos (`I1_PATRON_INVALIDO`), coincidencia de horas de ranura, límites de sub-ventana por materia (`I5_PLAN_SESION_INVALIDA`), ausencia de colisiones y existencia en calendario (`I5_PLAN_FECHA_O_COLISION`), y consistencia exacta entre materias con déficit y la lista de `Infactibles` (`I5_PLAN_PENDIENTES_INCONSISTENTES`). El validador admite planes parciales legítimos (`Sesiones.Count <= requerida`) siempre que toda materia incompleta figure en `Infactibles`, distinguiendo déficit admisible de inconsistencia estructural. Escribir pruebas unitarias en `AgPlanificadorRanurasTests.cs` verificando casos aprobados y cada código de fallo.
 - **validation**: `ValidarFechado` expone `Result`, compila limpiamente y todas las pruebas unitarias nuevas de validación en `AgPlanificadorRanurasTests.cs` pasan en GREEN sin interferir con T1.
 - **verification**: powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "ConversorPDF.Tests.Academic.Application.Services.Genetica.AgPlanificadorRanurasTests"
-- **evidence**: _evidence/pending/summary.md
-- **status**: pending
-- **log**: ""
-- **files edited/created**: []
+- **evidence**: _evidence/20261114-212158/summary.md
+- **status**: done
+- **log**: "ValidarFechado implementado con validación canónica de consistencia, colisiones, patrones y soporte de déficit estructurado. 24/24 pruebas unitarias en GREEN. Evidencia _evidence/20261114-212158/summary.md. Aprobado por task-reviewer."
+- **files edited/created**:
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgPlanificadorRanuras.cs
+  - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgPlanificadorRanurasTests.cs
 
 ### T3: Ocupación de Huecos por Sesión CompletarReferencia y Desacople de LimiteMayo
 - **id**: T3

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using CSharpFunctionalExtensions;
 using ConversorPDF.XLL.Core.Helpers;
 using ConversorPDF.XLL.Academic.Domain.Models.Genetica;
 
@@ -147,6 +148,78 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 pendientes.Select(id => "Asig " + id + ": sesiones pendientes dentro del plazo.").ToList(), mejorParticion,
                 ocupacionPorcentaje: calendario.Count > 0 ? 100.0 * Math.Max(0, mejorSesiones) / calendario.Count : 0,
                 busquedaAgotada: agotada);
+        }
+
+        internal static Result ValidarFechado(
+            AgPlanOleadasResultado plan,
+            IReadOnlyList<(int IdAsignatura, double Horas, int OrdenCurricular)> demandas,
+            IReadOnlyList<AgRanura> ranuras, DateTime ini, DateTime fin, double unidad,
+            Func<DateTime, bool> festivo, IReadOnlyDictionary<int, string> patrones,
+            CancellationToken ct)
+        {
+            if (plan == null) { return Result.Failure("I5_PLAN_NULO"); }
+            if (patrones != null)
+            {
+                foreach (var d in demandas)
+                {
+                    string textoPatron;
+                    if (patrones.TryGetValue(d.IdAsignatura, out textoPatron)
+                        && !string.IsNullOrWhiteSpace(textoPatron)
+                        && AgDiasVentana.Dias(textoPatron).Count == 0)
+                    {
+                        return Result.Failure("I1_PATRON_INVALIDO");
+                    }
+                }
+            }
+            var requeridas = demandas.ToDictionary(a => a.IdAsignatura,
+                a => (int)Math.Ceiling(a.Horas / unidad));
+            var calendario = Calendario(ranuras, ini.Date, fin.Date, festivo, ct);
+            var ocupadas = new HashSet<int>();
+            var cantidades = new Dictionary<int, int>();
+            foreach (var p in plan.Planes)
+            {
+                ct.ThrowIfCancellationRequested();
+                int requerida;
+                if (!requeridas.TryGetValue(p.IdAsignatura, out requerida)
+                    || cantidades.ContainsKey(p.IdAsignatura)
+                    || p.SesionesRequeridas != requerida || p.Sesiones.Count > requerida)
+                {
+                    return Result.Failure("I5_PLAN_DEMANDA_INCONSISTENTE");
+                }
+                cantidades[p.IdAsignatura] = p.Sesiones.Count;
+                string texto;
+                var dias = patrones != null && patrones.TryGetValue(p.IdAsignatura, out texto)
+                    ? AgDiasVentana.Dias(texto) : new List<int>();
+                if (patrones != null && patrones.TryGetValue(p.IdAsignatura, out texto)
+                    && !string.IsNullOrWhiteSpace(texto) && dias.Count == 0)
+                {
+                    return Result.Failure("I1_PATRON_INVALIDO");
+                }
+                foreach (var s in p.Sesiones)
+                {
+                    ct.ThrowIfCancellationRequested();
+                    if (s.IdAsignatura != p.IdAsignatura || s.Ranura == null
+                        || s.Fecha != s.Fecha.Date
+                        || Math.Abs(s.Ranura.Horas - unidad) > 0.001
+                        || (dias.Count > 0 && !dias.Contains(s.Ranura.Dia))
+                        || s.Fecha < p.FechaInicio.Date || s.Fecha > p.FechaFin.Date
+                        || !p.RanurasPatron.Any(r => r.Equals(s.Ranura)))
+                    {
+                        return Result.Failure("I5_PLAN_SESION_INVALIDA");
+                    }
+                    int indice = calendario.FindIndex(c => c.Fecha == s.Fecha
+                        && c.Ranura.Equals(s.Ranura));
+                    if (indice < 0 || !ocupadas.Add(indice))
+                    {
+                        return Result.Failure("I5_PLAN_FECHA_O_COLISION");
+                    }
+                }
+            }
+            var pendientes = new HashSet<int>(requeridas.Where(kv =>
+                !cantidades.ContainsKey(kv.Key) || cantidades[kv.Key] < kv.Value)
+                .Select(kv => kv.Key));
+            return pendientes.SetEquals(plan.Infactibles)
+                ? Result.Success() : Result.Failure("I5_PLAN_PENDIENTES_INCONSISTENTES");
         }
 
         private static List<AgSesionPlanificada> Calendario(IReadOnlyList<AgRanura> ranuras,
