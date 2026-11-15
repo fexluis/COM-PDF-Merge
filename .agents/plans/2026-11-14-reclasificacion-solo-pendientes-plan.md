@@ -212,10 +212,11 @@ Wave 8:                 T10 (Fase 1797) [Gate Full Baseline]
 - **description**: Actualizar y ampliar las pruebas de aceptación en AgRedistribucionRanurasAceptacionTests: 1) Caso plan completo (CabeEnPlazo=true) produce 0 candidatos y no abre diálogo. 2) Aula con una materia completa y una pendiente ofrece únicamente la materia pendiente. 3) LEGADO pendiente vs FIJO pendiente: solo LEGADO es seleccionable; FIJO permanece intacto. 4) AUTOMATICO pendiente evalúa escalera sin diálogo. 5) Reclasificación en la misma ventana resuelve déficit sin ampliar días. 6) Idempotencia: segunda aplicación produce SinCambios y cero escrituras.
 - **validation**: Todos los tests de AgRedistribucionRanurasAceptacionTests pasan satisfactoriamente.
 - **verification**: powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "AgRedistribucionRanurasAceptacionTests"
-- **evidence**: (la llena build-verifier)
-- **status**: pending
-- **log**: (lo llena el orquestador)
-- **files edited/created**: (lo llena el orquestador)
+- **evidence**: _evidence/20261114-191600/summary.md
+- **status**: done
+- **log**: Pruebas de aceptación end-to-end completadas (materias que caben con 0 candidatos, exclusión de materia completa en aula mixta, LEGADO vs FIJO, resolución en misma ventana, idempotencia). 20/20 PASS.
+- **files edited/created**:
+  - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgRedistribucionRanurasAceptacionTests.cs
 
 ### T10: Certificación de la Suite Completa y Gate Full
 - **id**: T10

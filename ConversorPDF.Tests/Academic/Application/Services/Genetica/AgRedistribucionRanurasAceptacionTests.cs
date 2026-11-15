@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.SQLite;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,6 +13,7 @@ using ConversorPDF.XLL.Academic.Domain.Models;
 using ConversorPDF.XLL.Academic.Domain.Models.Genetica;
 using ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories;
 using CSharpFunctionalExtensions;
+using Dapper;
 using FluentAssertions;
 using Moq;
 using Xunit;
@@ -539,6 +543,303 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             gen.FechasGen.Should().NotBeNull();
             (gen.FechasGen.Count * 4.0).Should().Be(gen.HorasGen);
             gen.HorasGen.Should().Be(16.0);
+        }
+
+        // =========================================================================
+        // Fase 1796 (T9): Reclasificación Exclusiva de Materias con Sesiones Pendientes
+        // =========================================================================
+
+        [Fact]
+        public void Evaluar_WhenTodasLasMateriasCabenEnPlazo_ShouldRetornarCeroCandidatas()
+        {
+            // Arrange: 17 semanas, LUN-VIE (85 ranuras disponibles).
+            // 2 materias LEGADO con 8 sesiones cada una (total 16 sesiones = 64h), caben holgadamente.
+            var ctx = CrearContextoSintetico(17, "LUN-VIE", numAsignaturas: 2, sesionesPorAsignatura: 8);
+            var aula = ctx.Aulas[0];
+
+            ctx.AulaAsignaturas[0].OrigenPatron = "LEGADO";
+            ctx.AulaAsignaturas[0].DiasPatron = "1"; // Lunes (17 lunes disponibles > 8 sesiones)
+            ctx.AulaAsignaturaPorAulaAsig[(1, 1)].OrigenPatron = "LEGADO";
+            ctx.AulaAsignaturaPorAulaAsig[(1, 1)].DiasPatron = "1";
+
+            ctx.AulaAsignaturas[1].OrigenPatron = "LEGADO";
+            ctx.AulaAsignaturas[1].DiasPatron = "3"; // Miércoles (17 miércoles disponibles > 8 sesiones)
+            ctx.AulaAsignaturaPorAulaAsig[(1, 2)].OrigenPatron = "LEGADO";
+            ctx.AulaAsignaturaPorAulaAsig[(1, 2)].DiasPatron = "3";
+            ctx.ConstruirIndices();
+
+            var sut = new AgEscaladorRanuraAula(() => null);
+
+            // Act
+            var evaluacion = AgEvaluadorDemandaVentana.Evaluar(
+                aula.DiasVentana, aula.Jornada, 4.0, ctx, aula, ctx.Ventana.FechaInicio, ctx.Ventana.FechaFin);
+            var candidatosAula = sut.IdentificarPatronesRedistribuibles(ctx, aula);
+            var candidatosGlobal = sut.IdentificarPatronesRedistribuibles(ctx);
+            var decisiones = sut.Evaluar(ctx);
+
+            // Assert
+            evaluacion.CabeEnPlazo.Should().BeTrue();
+            evaluacion.DemandaPendiente.Should().Be(0);
+            candidatosAula.Should().BeEmpty();
+            candidatosGlobal.Should().BeEmpty();
+            decisiones.Should().BeEmpty("un plan donde todas las materias caben en plazo no genera propuestas ni candidatas");
+        }
+
+        [Fact]
+        public void Evaluar_WhenAulaMixtaConMateriaCompletaYMateriaPendiente_ShouldOfrecerSoloMateriaPendiente()
+        {
+            // Arrange: Ventana de 4 semanas en LUN-VIE (20 ranuras).
+            // Asignatura 1 (Lunes, 3 sesiones = 12h): cabe completa en los 4 lunes disponibles (déficit 0).
+            // Asignatura 2 (Viernes, 6 sesiones = 24h): solo hay 4 viernes disponibles -> déficit de 2 sesiones (8h pendientes).
+            var ctx = CrearContextoSintetico(4, "LUN-VIE", numAsignaturas: 2, sesionesPorAsignatura: 4);
+
+            ctx.Asignaturas[0].Horas = 12;
+            ctx.Asignaturas[0].IntHoraria = 12;
+            ctx.AulaAsignaturas[0].HorasObjetivo = 12;
+            ctx.AulaAsignaturas[0].DiasPatron = "1";
+            ctx.AulaAsignaturas[0].OrigenPatron = "LEGADO";
+            ctx.AulaAsignaturaPorAulaAsig[(1, 1)].HorasObjetivo = 12;
+            ctx.AulaAsignaturaPorAulaAsig[(1, 1)].DiasPatron = "1";
+            ctx.AulaAsignaturaPorAulaAsig[(1, 1)].OrigenPatron = "LEGADO";
+
+            ctx.Asignaturas[1].Horas = 24;
+            ctx.Asignaturas[1].IntHoraria = 24;
+            ctx.AulaAsignaturas[1].HorasObjetivo = 24;
+            ctx.AulaAsignaturas[1].DiasPatron = "5";
+            ctx.AulaAsignaturas[1].OrigenPatron = "LEGADO";
+            ctx.AulaAsignaturaPorAulaAsig[(1, 2)].HorasObjetivo = 24;
+            ctx.AulaAsignaturaPorAulaAsig[(1, 2)].DiasPatron = "5";
+            ctx.AulaAsignaturaPorAulaAsig[(1, 2)].OrigenPatron = "LEGADO";
+            ctx.ConstruirIndices();
+
+            var sut = new AgEscaladorRanuraAula(() => null);
+
+            // Act
+            var candidatos = sut.IdentificarPatronesRedistribuibles(ctx, ctx.Aulas[0]);
+
+            // Assert
+            candidatos.Should().ContainSingle();
+            var candidato = candidatos[0];
+            candidato.IdAsignatura.Should().Be(2, "únicamente la Asignatura 2 tiene déficit en la ventana");
+            candidato.SesionesPendientes.Should().Be(2);
+            candidato.HorasPendientes.Should().Be(8.0);
+            candidatos.Should().NotContain(c => c.IdAsignatura == 1, "la Asignatura 1 cabe completa y no debe ser ofrecida para reclasificación");
+        }
+
+        [Fact]
+        public void Evaluar_WhenLegadoPendienteVsFijoPendiente_ShouldSoloOfrecerLegado()
+        {
+            // Arrange: Ventana de 4 semanas en LUN-VIE.
+            // Asignatura 1: LEGADO, Viernes (DiasPatron "5"), 6 sesiones (24h) -> 2 sesiones pendientes frente a 4 viernes.
+            // Asignatura 2: FIJO, Lunes (DiasPatron "1"), 6 sesiones (24h) -> 2 sesiones pendientes frente a 4 lunes.
+            var ctx = CrearContextoSintetico(4, "LUN-VIE", numAsignaturas: 2, sesionesPorAsignatura: 4);
+
+            ctx.Asignaturas[0].Horas = 24;
+            ctx.Asignaturas[0].IntHoraria = 24;
+            ctx.AulaAsignaturas[0].HorasObjetivo = 24;
+            ctx.AulaAsignaturas[0].DiasPatron = "5";
+            ctx.AulaAsignaturas[0].OrigenPatron = "LEGADO";
+            ctx.AulaAsignaturaPorAulaAsig[(1, 1)].HorasObjetivo = 24;
+            ctx.AulaAsignaturaPorAulaAsig[(1, 1)].DiasPatron = "5";
+            ctx.AulaAsignaturaPorAulaAsig[(1, 1)].OrigenPatron = "LEGADO";
+
+            ctx.Asignaturas[1].Horas = 24;
+            ctx.Asignaturas[1].IntHoraria = 24;
+            ctx.AulaAsignaturas[1].HorasObjetivo = 24;
+            ctx.AulaAsignaturas[1].DiasPatron = "1";
+            ctx.AulaAsignaturas[1].OrigenPatron = "FIJO";
+            ctx.AulaAsignaturaPorAulaAsig[(1, 2)].HorasObjetivo = 24;
+            ctx.AulaAsignaturaPorAulaAsig[(1, 2)].DiasPatron = "1";
+            ctx.AulaAsignaturaPorAulaAsig[(1, 2)].OrigenPatron = "FIJO";
+            ctx.ConstruirIndices();
+
+            var sut = new AgEscaladorRanuraAula(() => null);
+
+            // Act
+            var candidatos = sut.IdentificarPatronesRedistribuibles(ctx, ctx.Aulas[0]);
+
+            // Assert
+            candidatos.Should().ContainSingle();
+            var candidato = candidatos[0];
+            candidato.IdAsignatura.Should().Be(1, "solo la asignatura con origen LEGADO debe ser ofrecida");
+            candidato.OrigenAnterior.Should().Be("LEGADO");
+            candidato.OrigenPropuesto.Should().Be("AUTOMATICO");
+            candidatos.Should().NotContain(c => c.IdAsignatura == 2, "las asignaturas FIJO son inmutables y nunca deben ser ofrecidas como candidatas");
+            ctx.AulaAsignaturaPorAulaAsig[(1, 2)].OrigenPatron.Should().Be("FIJO", "el patrón FIJO debe permanecer inalterado en el contexto");
+        }
+
+        [Fact]
+        public void Evaluar_WhenReclasificacionResuelveEnMismaVentana_ShouldNoEscalarDias()
+        {
+            // Arrange: Ventana de 4 semanas en LUN-VIE (20 ranuras disponibles).
+            // Asignatura 1: LEGADO en Viernes (DiasPatron "5"), 6 sesiones (24h).
+            // En 4 semanas solo hay 4 viernes (2 sesiones pendientes).
+            // Sin embargo, en la ventana completa LUN-VIE hay 20 ranuras disponibles (sobran 14 ranuras para 6 sesiones).
+            var ctx = CrearContextoSintetico(4, "LUN-VIE", numAsignaturas: 1, sesionesPorAsignatura: 6);
+            ctx.AulaAsignaturas[0].OrigenPatron = "LEGADO";
+            ctx.AulaAsignaturas[0].DiasPatron = "5";
+            ctx.AulaAsignaturaPorAulaAsig[(1, 1)].OrigenPatron = "LEGADO";
+            ctx.AulaAsignaturaPorAulaAsig[(1, 1)].DiasPatron = "5";
+            ctx.ConstruirIndices();
+
+            var sut = new AgEscaladorRanuraAula(() => null);
+
+            // Evaluación previa sin autorizar: identifica candidata con déficit
+            var decisionesIniciales = sut.Evaluar(ctx);
+            decisionesIniciales.Should().ContainSingle();
+            var dInicial = decisionesIniciales[0];
+            dInicial.ReclasificacionesPropuestas.Should().ContainSingle();
+            dInicial.ReclasificacionesPropuestas[0].SesionesPendientes.Should().Be(2);
+
+            // Autorizar reclasificación de la materia pendiente
+            var autorizada = dInicial.ReclasificacionesPropuestas[0].Clone();
+            autorizada.Autorizado = true;
+
+            // Act: Evaluar con la reclasificación autorizada
+            var decisiones = sut.Evaluar(ctx, 0, new[] { autorizada });
+
+            // Assert: Resuelve en la misma ventana sin ampliar días
+            decisiones.Should().ContainSingle();
+            var d = decisiones[0];
+            d.Desde.Should().Be("LUN-VIE");
+            d.Hacia.Should().Be("LUN-VIE", "al reclasificar la materia se resuelve el déficit en la misma ventana sin necesidad de escalar días");
+            d.DemandaPendiente.Should().Be(0, "todas las 6 sesiones caben holgadamente en las 20 ranuras de la ventana");
+            d.DeficitHoras.Should().Be(0.0);
+            d.Aplica.Should().BeTrue();
+            d.ReclasificacionesAutorizadas.Should().ContainSingle();
+            d.ReclasificacionesAutorizadas[0].IdAsignatura.Should().Be(1);
+            d.ReclasificacionesAutorizadas[0].OrigenPropuesto.Should().Be("AUTOMATICO");
+        }
+
+        [Fact]
+        public void Evaluar_WhenAutomaticoPendiente_ShouldProponerEscaleraSinReclasificaciones()
+        {
+            // Arrange: 17 semanas en LUN-JUE (68 ranuras disponibles). Demanda = 5 materias AUTOMATICO * 16 sesiones = 80 sesiones (12 pendientes)
+            var ctx = CrearContextoSintetico(17, "LUN-JUE", numAsignaturas: 5, sesionesPorAsignatura: 16);
+            var sut = new AgEscaladorRanuraAula(() => null);
+
+            // Act
+            var candidatos = sut.IdentificarPatronesRedistribuibles(ctx, ctx.Aulas[0]);
+            var decisiones = sut.Evaluar(ctx);
+
+            // Assert: Al ser AUTOMATICO no se ofrecen candidatos de reclasificación pero sí avanza la escalera
+            candidatos.Should().BeEmpty("las materias AUTOMATICO no requieren ni admiten reclasificación");
+            decisiones.Should().ContainSingle();
+            var d = decisiones[0];
+            d.Desde.Should().Be("LUN-JUE");
+            d.Hacia.Should().Be("LUN-VIE");
+            d.ReclasificacionesPropuestas.Should().BeEmpty();
+            d.ReclasificacionesAutorizadas.Should().BeEmpty();
+            d.Aplica.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task Aplicar_WhenSegundaAplicacion_ShouldSerIdempotenteYSinCambios()
+        {
+            // Arrange: Base SQLite temporal con aula y asignatura LEGADO
+            string dbPath = Path.Combine(Path.GetTempPath(), "AgAceptacion_" + Guid.NewGuid().ToString("N") + ".sqlite");
+            SQLiteConnection.CreateFile(dbPath);
+            string connectionString = $"Data Source={dbPath};Version=3;";
+            Func<IDbConnection> connectionFactory = () => new SQLiteConnection(connectionString);
+
+            try
+            {
+                using (var conn = connectionFactory())
+                {
+                    conn.Open();
+                    conn.Execute(@"
+CREATE TABLE ag_aula (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    aula_ref TEXT NOT NULL,
+    jornada TEXT NOT NULL,
+    horas_dia INTEGER NOT NULL,
+    dias_ventana TEXT,
+    subunidad TEXT DEFAULT '',
+    id_programa INTEGER DEFAULT 1,
+    capacidad INTEGER DEFAULT 35,
+    estado INTEGER DEFAULT 1
+);
+CREATE TABLE ag_aula_asignatura (
+    id_aula INTEGER NOT NULL,
+    id_asignatura INTEGER NOT NULL,
+    horas_objetivo REAL NOT NULL,
+    orden_curricular INTEGER NOT NULL,
+    dias_patron TEXT,
+    origen_patron TEXT,
+    PRIMARY KEY (id_aula, id_asignatura)
+);
+INSERT INTO ag_aula (id, aula_ref, jornada, horas_dia, dias_ventana, subunidad, id_programa, estado)
+VALUES (1, 'A101', 'MANANA', 4, 'LUN-VIE', '', 1, 1);
+INSERT INTO ag_aula_asignatura (id_aula, id_asignatura, horas_objetivo, orden_curricular, dias_patron, origen_patron)
+VALUES (1, 1, 24, 1, '5', 'LEGADO');");
+                }
+
+                // Contexto idéntico al estado persistido
+                var ctx = CrearContextoSintetico(4, "LUN-VIE", numAsignaturas: 1, sesionesPorAsignatura: 6, aulaRef: "A101");
+                ctx.AulaAsignaturas[0].OrigenPatron = "LEGADO";
+                ctx.AulaAsignaturas[0].DiasPatron = "5";
+                ctx.AulaAsignaturaPorAulaAsig[(1, 1)].OrigenPatron = "LEGADO";
+                ctx.AulaAsignaturaPorAulaAsig[(1, 1)].DiasPatron = "5";
+                ctx.ConstruirIndices();
+
+                var sut = new AgEscaladorRanuraAula(connectionFactory);
+
+                // Identificar candidata y autorizar la reclasificación
+                var candidatos = sut.IdentificarPatronesRedistribuibles(ctx, ctx.Aulas[0]);
+                candidatos.Should().ContainSingle();
+                candidatos[0].Autorizado = true;
+
+                var decisiones = sut.Evaluar(ctx, 0, candidatos);
+                decisiones.Should().ContainSingle();
+                decisiones[0].Aplica.Should().BeTrue();
+
+                // Act 1: Primera aplicación -> Persiste los cambios en ag_aula_asignatura
+                var res1 = await sut.AplicarDetalladoAsync(decisiones, 0, CancellationToken.None);
+
+                // Assert 1: Primera aplicación confirma y modifica 1 registro
+                res1.Exito.Should().BeTrue(res1.Error);
+                res1.Confirmadas.Should().Be(1);
+                res1.Modificadas.Should().Be(1);
+
+                // Act 2: Segunda aplicación con el mismo lote de decisiones
+                var res2 = await sut.AplicarDetalladoAsync(decisiones, 0, CancellationToken.None);
+
+                // Assert 2: Idempotencia estricta: confirmada sin nuevas escrituras
+                res2.Exito.Should().BeTrue(res2.Error);
+                res2.Confirmadas.Should().Be(1);
+                res2.Modificadas.Should().Be(0, "la segunda aplicación debe ser idempotente y no ejecutar escrituras redundantes");
+
+                // Act 3: Re-evaluación en el contexto actualizado ya no tiene déficit ni candidatas -> SinCambios
+                ctx.AulaAsignaturas[0].OrigenPatron = "AUTOMATICO";
+                ctx.AulaAsignaturas[0].DiasPatron = string.Empty;
+                ctx.AulaAsignaturaPorAulaAsig[(1, 1)].OrigenPatron = "AUTOMATICO";
+                ctx.AulaAsignaturaPorAulaAsig[(1, 1)].DiasPatron = string.Empty;
+                ctx.ConstruirIndices();
+
+                var decisionesSinCambios = sut.Evaluar(ctx, 0);
+                var res3 = await sut.AplicarDetalladoAsync(decisionesSinCambios, 0, CancellationToken.None);
+
+                // Assert 3: Sin propuestas aplicables resulta en SinCambios (0 confirmadas, 0 modificadas)
+                decisionesSinCambios.Should().BeEmpty();
+                res3.Exito.Should().BeTrue();
+                res3.Confirmadas.Should().Be(0);
+                res3.Modificadas.Should().Be(0);
+            }
+            finally
+            {
+                SQLiteConnection.ClearAllPools();
+                try
+                {
+                    if (File.Exists(dbPath))
+                    {
+                        File.Delete(dbPath);
+                    }
+                }
+                catch
+                {
+                    // Limpieza defensiva en temp
+                }
+            }
         }
 
         private static AgContexto CrearContextoSintetico(
