@@ -59,3 +59,23 @@ En la versión anterior de `ConversorPDF.XLL.Academic`:
 | 7 | 382 | T9 | 1796 | Pruebas de aceptación end-to-end (20 tests) | `done` | `_evidence/20261114-191600` | `56774e0` |
 | 8 | 383 | T10 | 1797 | Certificación Gate Full (1356 tests PASS) y calibración de baseline | `done` | `_evidence/20261114-192003` | `93137d3` |
 | — | — | — | — | Sellado oficial de R-077 en `REGISTRY.md` | `closed` | `scripts/verify.ps1 -Mode Full` | `0b5e906` |
+| — | — | — | — | Correcciones pre-release [P1, P1, P2] | `done` | `_evidence/20261114-195640` | `10a3802` |
+
+---
+
+## 4. Correcciones Pre-Release Verificadas
+
+Se aplicaron 3 correcciones críticas identificadas previas al release:
+1. **[P1] Inclusión de `IdAula` en Huella de Acción e Invariante de Escritura**:
+   - `AgEscaladorRanuraAula.HuellaAccion` migrado a `"propuesta-escalado-v4"` incluyendo `d.IdAula.ToString()`.
+   - `AplicarDetalladoAsync` valida `d.IdAula == aulas[0].Id` y `rec.IdAula == idAula`, lanzando `InvalidOperationException` y abortando toda escritura si difiere.
+   - Nueva prueba unitaria: `Aplicar_WhenIdAulaManipulado_ShouldRechazarYNoEscribir`.
+2. **[P1] UI Bloqueante ante Rechazo o ArgumentException**:
+   - `AgFormGeneradorHorarios.EvaluarYAplicarEscaladoInternoAsync` retorna `AgResultadoEscaladoUI.FalloAlAplicar` ante fallo de validación o excepción de argumentos.
+   - Detiene de forma preventiva el avance del pipeline genético hacia pre-vuelo y optimización, exigiendo recalcular.
+3. **[P2] Validación Estricta contra Déficit en `ValidarSelecciones`**:
+   - `ValidarSelecciones` valida que toda materia seleccionada pertenezca a las candidatas con déficit positivo (`sesionesPendientes > 0`).
+   - Retorna `AgResultadoValidacionSeleccion.Rechazo("MATERIA_SIN_DEFICIT", ...)` evitando que llamadas directas autoricen materias ya completas.
+   - Nueva prueba unitaria: `ValidarSelecciones_WhenMateriaCompletaSinDeficit_ShouldRetornarRechazoMateriaSinDeficit`.
+
+**Certificación de la suite**: 1358/1358 PASS (0 fallos, 0 regresiones) con baseline calibrado.
