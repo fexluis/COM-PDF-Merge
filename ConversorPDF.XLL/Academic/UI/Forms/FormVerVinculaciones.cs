@@ -37,6 +37,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
         private IReadOnlyCollection<SalvedadConflicto> _salvedades;
         private Dictionary<int, EstadoConflicto> _estadoSesiones;
         private readonly Dictionary<int, List<ViolacionSesionInfo>> _violacionesPorSesion;
+        private readonly List<ViolacionSesionInfo> _violacionesGlobales;
         private int _totalViolacionesHard;
         private int _sesionesConViolacionHard;
         private ContextMenuStrip _contextMenu;
@@ -46,6 +47,10 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
         private Font _boldFont;
         private Font _regularFont;
         private Font _monoFont;
+
+        internal IReadOnlyDictionary<int, List<ViolacionSesionInfo>> ViolacionesPorSesion => _violacionesPorSesion;
+        internal IReadOnlyList<ViolacionSesionInfo> ViolacionesGlobales => _violacionesGlobales;
+        internal TreeView TreeVinculaciones => treeVinculaciones;
 
         public FormVerVinculaciones(List<SesionListItem> items, IDbConnection dbConnection, dynamic excelApp, AgModoDatos modo = null)
         {
@@ -60,15 +65,23 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             _salvedades = new List<SalvedadConflicto>().AsReadOnly();
             _estadoSesiones = new Dictionary<int, EstadoConflicto>();
             _violacionesPorSesion = new Dictionary<int, List<ViolacionSesionInfo>>();
+            _violacionesGlobales = new List<ViolacionSesionInfo>();
 
             if (_modo.EsModoAg)
             {
                 this.Text = $"{this.Text} [MODO AG - STAGING]";
             }
 
-            var gastosRepo = new GastosTerrestresRepository(_dbConnection);
-            var configRepo = new ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.ConfigRepository(ConversorPDF.XLL.Core.Helpers.SqliteHelper.GetContext());
-            _trayectoEncoderService = new TrayectoEncoderService(gastosRepo, configRepo);
+            try
+            {
+                var gastosRepo = new GastosTerrestresRepository(_dbConnection);
+                var configRepo = new ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.ConfigRepository(ConversorPDF.XLL.Core.Helpers.SqliteHelper.GetContext());
+                _trayectoEncoderService = new TrayectoEncoderService(gastosRepo, configRepo);
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Warning($"[FormVerVinculaciones] No se pudo inicializar TrayectoEncoderService: {ex.Message}");
+            }
 
             ConfigurarMenuContextual();
 
@@ -77,6 +90,10 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             treeVinculaciones.DrawNode += TreeVinculaciones_DrawNode;
             treeVinculaciones.Indent = 25;   // Reducido de 35 a 25 para un look más compacto
             treeVinculaciones.ItemHeight = 18; // Reducido de 22 a 18 para un interlineado más justo
+
+            _regularFont = new Font("Consolas", 9f);
+            _boldFont = new Font(_regularFont, FontStyle.Bold);
+            _monoFont = new Font("Consolas", 9f);
         }
 
         /// <summary>
@@ -109,7 +126,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
                 dynamic wbInicial = null;
                 try
                 {
-                    wbInicial = _excelApp.ActiveWorkbook;
+                    wbInicial = _excelApp != null ? _excelApp.ActiveWorkbook : null;
                     _nombreLibroInicial = wbInicial == null ? null : (string)wbInicial.Name;
                 }
                 catch (Exception ex)
@@ -617,7 +634,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             }
         }
 
-        private void ConstruirArbol()
+        internal void ConstruirArbol()
         {
             if (_vistaActual == VistaVinculaciones.PorAsignaturas)
                 ConstruirArbolPorAsignaturas();
@@ -627,6 +644,8 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
                 ConstruirArbolPorFechas();
             else if (_vistaActual == VistaVinculaciones.Viaticos)
                 ConstruirArbolViaticos();
+
+            AgregarNodoViolacionesGlobales();
 
             // M3: Actualizar estado visual de botones de vista
             ActualizarEstadoBotones();
@@ -746,6 +765,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             lblTotal.Text = $"{_items.Count} sesiones · Vista: ASIGNATURAS";
             lblTotal.ForeColor = Color.Black;
             ExpandirHastaNivel(1);
+            AgregarNodoViolacionesGlobales();
         }
 
         private void ConstruirArbolPorSemestres()
@@ -807,19 +827,22 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             lblTotal.Text = $"{_items.Count} sesiones · Vista: SEMESTRES";
             lblTotal.ForeColor = Color.Black;
             ExpandirHastaNivel(1);
+            AgregarNodoViolacionesGlobales();
         }
 
         /// <summary>
         /// Carga el detalle persistido en ag_violacion para la corrida mostrada y lo indexa por sesión
-        /// (Fase 1529, Fase 1535). Solo aplica en Modo AG (staging) y soporta múltiples corridas (IN @IdCorridas).
+        /// o como violaciones generales si no tienen id_gen o sesión asociada (Fase 1812).
+        /// Solo aplica en Modo AG (staging) y soporta múltiples corridas (IN @IdCorridas).
         /// </summary>
-        private async Task CargarViolacionesAsync()
+        internal async Task CargarViolacionesAsync()
         {
             _violacionesPorSesion.Clear();
+            _violacionesGlobales.Clear();
             _totalViolacionesHard = 0;
             _sesionesConViolacionHard = 0;
 
-            // Fase 1535: En modo Producción no existe ag_violacion ni staging de AG
+            // En modo Producción no existe ag_violacion ni staging de AG
             if (!_modo.EsModoAg) return;
 
             try
@@ -827,21 +850,23 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
                 var idsCorrida = _items.Select(i => i.IdCorrida).Where(id => id > 0).Distinct().ToList();
                 if (idsCorrida.Count == 0) return;
 
-                // Fase 1567: ag_violacion.regla está declarada INTEGER pero almacena el nombre de la regla;
-                // sin CAST el proveedor devuelve 0 y la vista por fechas perdía el identificador de la regla.
-
                 const string sql = @"
-SELECT s.id AS IdSesion, CAST(v.regla AS TEXT) AS Regla, v.es_dura AS EsDura, v.mensaje AS Mensaje
-FROM ag_violacion v
-INNER JOIN ag_sesiones s ON s.idgen = v.id_gen AND s.idindividuo = v.id_individuo
-INNER JOIN ag_vinculaciones av ON av.id = s.idvinculacion
-WHERE av.id_corrida IN @IdCorridas
-ORDER BY v.es_dura DESC, v.regla;";
+SELECT v.id AS Id, v.id_individuo AS IdIndividuo, v.id_gen AS IdGen,
+       CAST(v.regla AS TEXT) AS Regla, v.es_dura AS EsDura,
+       v.mensaje AS Mensaje, v.detalle_json AS DetalleJson,
+       c.id AS IdCorrida
+FROM ag_corrida c
+JOIN ag_individuo i ON i.id = c.id_individuo_optimo AND i.id_corrida = c.id
+JOIN ag_violacion v ON v.id_individuo = i.id
+WHERE c.id IN @IdCorridas AND (@Subunidad = '' OR COALESCE(c.subunidad, '') IN ('', @Subunidad))
+ORDER BY v.es_dura DESC, v.regla, v.id;";
 
-                var conn = UnwrapSqlite(_dbConnection);
+                var conn = UnwrapSqlite(_dbConnection) ?? _dbConnection;
                 if (conn == null) return;
 
-                var filas = (await conn.QueryAsync(new CommandDefinition(sql, new { IdCorridas = idsCorrida }))).ToList();
+                string subunidad = _items.Select(i => i.Subunidad).FirstOrDefault(s => !string.IsNullOrWhiteSpace(s)) ?? string.Empty;
+
+                var filas = (await conn.QueryAsync(new CommandDefinition(sql, new { IdCorridas = idsCorrida, Subunidad = subunidad }))).ToList();
                 if (filas.Count == 0)
                 {
                     string corridasTexto = string.Join(", ", idsCorrida);
@@ -851,27 +876,93 @@ ORDER BY v.es_dura DESC, v.regla;";
 
                 foreach (var fila in filas)
                 {
-                    int idSesion = Convert.ToInt32(fila.IdSesion);
-                    if (!_violacionesPorSesion.TryGetValue(idSesion, out var lista))
+                    object idGenRaw = fila.IdGen;
+                    int? idGen = (idGenRaw != null && !(idGenRaw is DBNull)) ? Convert.ToInt32(idGenRaw) : (int?)null;
+
+                    object esDuraRaw = fila.EsDura;
+                    bool esDura = esDuraRaw != null && !(esDuraRaw is DBNull) && Convert.ToInt32(esDuraRaw) == 1;
+
+                    object reglaRaw = fila.Regla;
+                    string regla = reglaRaw != null && !(reglaRaw is DBNull) ? reglaRaw.ToString() : "?";
+
+                    object mensajeRaw = fila.Mensaje;
+                    string mensaje = mensajeRaw != null && !(mensajeRaw is DBNull) ? mensajeRaw.ToString() : string.Empty;
+
+                    object detalleRaw = fila.DetalleJson;
+                    string detalleJson = detalleRaw != null && !(detalleRaw is DBNull) ? detalleRaw.ToString() : null;
+
+                    object idRaw = fila.Id;
+                    long id = idRaw != null && !(idRaw is DBNull) ? Convert.ToInt64(idRaw) : 0;
+
+                    object idIndividuoRaw = fila.IdIndividuo;
+                    long idIndividuo = idIndividuoRaw != null && !(idIndividuoRaw is DBNull) ? Convert.ToInt64(idIndividuoRaw) : 0;
+
+                    object idCorridaRaw = fila.IdCorrida;
+                    long idCorridaFila = idCorridaRaw != null && !(idCorridaRaw is DBNull) ? Convert.ToInt64(idCorridaRaw) : 0;
+
+                    var info = new ViolacionSesionInfo
                     {
-                        lista = new List<ViolacionSesionInfo>();
-                        _violacionesPorSesion[idSesion] = lista;
+                        Id = id,
+                        IdIndividuo = idIndividuo,
+                        IdGen = idGen,
+                        Regla = regla,
+                        EsDura = esDura,
+                        Mensaje = mensaje,
+                        DetalleJson = detalleJson,
+                        IdCorrida = idCorridaFila
+                    };
+
+                    if (esDura)
+                    {
+                        _totalViolacionesHard++;
                     }
 
-                    bool esDura = Convert.ToInt32(fila.EsDura) == 1;
-                    lista.Add(new ViolacionSesionInfo
+                    List<SesionListItem> sesionesAsociadas = null;
+                    if (idGen.HasValue && idGen.Value > 0)
                     {
-                        Regla = fila.Regla?.ToString() ?? "?",
-                        EsDura = esDura,
-                        Mensaje = fila.Mensaje?.ToString() ?? string.Empty
-                    });
+                        sesionesAsociadas = _items.Where(s => s.IdGen == idGen.Value).ToList();
 
-                    if (esDura) _totalViolacionesHard++;
+                        if (sesionesAsociadas.Count == 0)
+                        {
+                            try
+                            {
+                                var idsSesionDb = (await conn.QueryAsync<int>(
+                                    "SELECT id FROM ag_sesiones WHERE idgen = @IdGen;",
+                                    new { IdGen = idGen.Value })).ToList();
+
+                                if (idsSesionDb.Count > 0)
+                                {
+                                    sesionesAsociadas = _items.Where(s => idsSesionDb.Contains(s.IdSesion)).ToList();
+                                }
+                            }
+                            catch
+                            {
+                                // Si ag_sesiones no existe o no tiene registros
+                            }
+                        }
+                    }
+
+                    if (sesionesAsociadas != null && sesionesAsociadas.Count > 0)
+                    {
+                        foreach (var sesion in sesionesAsociadas)
+                        {
+                            if (!_violacionesPorSesion.TryGetValue(sesion.IdSesion, out var lista))
+                            {
+                                lista = new List<ViolacionSesionInfo>();
+                                _violacionesPorSesion[sesion.IdSesion] = lista;
+                            }
+                            lista.Add(info);
+                        }
+                    }
+                    else
+                    {
+                        _violacionesGlobales.Add(info);
+                    }
                 }
 
                 _sesionesConViolacionHard = _violacionesPorSesion.Count(kv => kv.Value.Any(v => v.EsDura));
                 string corridasReporte = string.Join(", ", idsCorrida);
-                LoggerHelper.Info($"[FormVerVinculaciones] Corrida(s) #{corridasReporte}: {filas.Count} violaciones ({_totalViolacionesHard} HARD) en {_sesionesConViolacionHard} sesiones.");
+                LoggerHelper.Info($"[FormVerVinculaciones] Corrida(s) #{corridasReporte}: {filas.Count} violaciones ({_totalViolacionesHard} HARD, {_violacionesGlobales.Count} globales) en {_sesionesConViolacionHard} sesiones.");
             }
             catch (Exception ex)
             {
@@ -879,15 +970,20 @@ ORDER BY v.es_dura DESC, v.regla;";
             }
         }
 
-        /// <summary>Detalle de una violación asociada a una sesión (proyección de ag_violacion).</summary>
-        private sealed class ViolacionSesionInfo
+        /// <summary>Detalle de una violación asociada a una sesión o corrida (proyección de ag_violacion).</summary>
+        internal sealed class ViolacionSesionInfo
         {
+            public long Id { get; set; }
+            public long IdIndividuo { get; set; }
+            public int? IdGen { get; set; }
             public string Regla { get; set; }
             public bool EsDura { get; set; }
             public string Mensaje { get; set; }
+            public string DetalleJson { get; set; }
+            public long IdCorrida { get; set; }
         }
 
-        private void ConstruirArbolPorFechas()
+        internal void ConstruirArbolPorFechas()
         {
             treeVinculaciones.Nodes.Clear();
             treeVinculaciones.BeginUpdate();
@@ -1056,6 +1152,7 @@ ORDER BY v.es_dura DESC, v.regla;";
                 lblTotal.ForeColor = Color.DarkRed;
             }
             ExpandirHastaNivel(0);
+            AgregarNodoViolacionesGlobales();
         }
 
         private void ConstruirArbolViaticos()
@@ -1139,6 +1236,40 @@ ORDER BY v.es_dura DESC, v.regla;";
             lblTotal.Text = $"{totalViajes} bloques de viáticos.";
             lblTotal.ForeColor = Color.Black;
             ExpandirHastaNivel(1);
+            AgregarNodoViolacionesGlobales();
+        }
+
+        private void AgregarNodoViolacionesGlobales()
+        {
+            if (_violacionesGlobales == null || _violacionesGlobales.Count == 0) return;
+
+            for (int i = 0; i < treeVinculaciones.Nodes.Count; i++)
+            {
+                if (treeVinculaciones.Nodes[i].Text.StartsWith("⚠️ Violaciones Generales de la Corrida"))
+                    return;
+            }
+
+            TreeNode nodoGlobales = new TreeNode("⚠️ Violaciones Generales de la Corrida")
+            {
+                ForeColor = Color.DarkRed,
+                NodeFont = _boldFont
+            };
+
+            foreach (var v in _violacionesGlobales)
+            {
+                string prefijo = v.EsDura ? "⛔ [HARD] " : "⚠️ [SOFT] ";
+                var hijo = new TreeNode($"{prefijo}{v.Regla}: {v.Mensaje}")
+                {
+                    ForeColor = v.EsDura ? Color.Firebrick : Color.DarkOrange,
+                    NodeFont = v.EsDura ? _boldFont : _regularFont,
+                    Tag = v,
+                    ToolTipText = !string.IsNullOrWhiteSpace(v.DetalleJson) ? $"{v.Mensaje}\n\nDetalle: {v.DetalleJson}" : v.Mensaje
+                };
+                nodoGlobales.Nodes.Add(hijo);
+            }
+
+            nodoGlobales.Expand();
+            treeVinculaciones.Nodes.Insert(0, nodoGlobales);
         }
 
         private (string Origen, string Escala, string Destino, string RutaFormateada, string Verificacion) ConstruirRutaViaje(ViaticoBloque bloque, string residenciaDocente)

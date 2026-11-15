@@ -2584,9 +2584,43 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     }
                 }
 
-                // Fase 587: estado coherente con el resultado real de optimización y staging
-                corrida.Estado = stagingOk ? _ultimoResultado.Estado : AgEstadoCorrida.Error;
+                var sesiones = await _scheduleRepository.GetSesionesStagingAsync(idCorrida, _ctsEjecucion.Token);
+                int sesionesVacantes = sesiones.IsSuccess ? sesiones.Value.Count(s => s.EsVacante == 1) : 0;
+                double horasVacantes = sesiones.IsSuccess ? sesiones.Value.Where(s => s.EsVacante == 1).Sum(s => s.Horas) : 0;
+
+                // Cobertura multiconjunto:
+                bool cobertura = false;
+                if (sesiones.IsSuccess && _ultimoResultado.MejorIndividuo != null && _contextoActual != null)
+                {
+                    var calendario = AgCalendarioConflictos.Crear(_ultimoResultado.MejorIndividuo.Genes, _contextoActual);
+                    if (calendario.IsSuccess)
+                    {
+                        string Clave(long gId, DateTime f, double h) =>
+                            gId + "|" + f.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) + "|" + h.ToString("R", CultureInfo.InvariantCulture);
+                        var previstas = calendario.Value.Select(o => Clave(o.Gen.Id, o.Fecha,
+                            _contextoActual.BloquesPorId.ContainsKey(o.Gen.IdBloqueHorario) ? _contextoActual.BloquesPorId[o.Gen.IdBloqueHorario].DuracionHoras : o.Gen.HorasSemanales))
+                            .OrderBy(k => k, StringComparer.Ordinal);
+                        bool fechasValidas = sesiones.Value.All(s => s.FechaSesion.HasValue);
+                        var efectivas = sesiones.Value.Where(s => s.FechaSesion.HasValue)
+                            .Select(s => Clave(s.IdGen, s.FechaSesion.Value, s.Horas))
+                            .OrderBy(k => k, StringComparer.Ordinal);
+                        cobertura = fechasValidas && previstas.SequenceEqual(efectivas);
+                    }
+                }
+
+                var mejor = _ultimoResultado.MejorIndividuo;
+                bool factible = stagingOk && cobertura && mejor != null && mejor.HardViolations == 0 && mejor.Vacantes == 0 && sesionesVacantes == 0;
+                if (mejor != null)
+                {
+                    corrida.Vacantes = mejor.Vacantes;
+                }
+                corrida.Estado = stagingOk ? (factible ? AgEstadoCorrida.Completada : AgEstadoCorrida.Completada) : AgEstadoCorrida.Error;
                 await _scheduleRepository.UpdateCorridaAsync(corrida, _ctsEjecucion.Token);
+
+                btnPromoverProduccion.Enabled = factible;
+                lblStatusAG.Text = factible ? "Estado: Horario factible."
+                    : $"Estado: Resultado parcial. HARD={mejor?.HardViolations ?? 0}; vacantes={mejor?.Vacantes ?? 0}; sesiones vacantes={sesionesVacantes}; horas vacantes={horasVacantes:0.#}.";
+                lblStatusAG.ForeColor = factible ? Color.DarkGreen : Color.DarkOrange;
 
                 // Fase 599: Resumen de fin de corrida
                 LoggerHelper.Resumen("FinCorridaAG",
@@ -2605,8 +2639,6 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
 
                     Log($"\n{_ultimoResultado.Mensaje}");
                     progressBarAG.Value = 100;
-                    lblStatusAG.Text = "Estado: Completado exitosamente.";
-                    lblStatusAG.ForeColor = Color.DarkGreen;
                 }
                 else
                 {
@@ -2621,6 +2653,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
 
                 // 4. Mostrar Resultados en Módulo R
                 await CargarModuloResultadosAsync(idCorrida);
+                btnPromoverProduccion.Enabled = factible;
                 tabControlPrincipal.SelectedTab = tabResultados;
             }
             catch (OperationCanceledException)
@@ -2790,28 +2823,23 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             traza.Paso("P09_CargarResultados", $"Fitness={ind.Fitness:F4}, HardViolations={ind.HardViolations}, SoftViolations={ind.SoftViolations:F2}");
 
             lblMejorFitness.Text = $"Aptitud (Fitness): {ind.Fitness:F4}";
-            // Fase 1524: el detalle (ag_violacion) puede no estar materializado; el escalar persistido manda
             var viols = ind.Violaciones ?? new List<AgViolacion>();
-            int hardDetalle = viols.Count(v => v.EsDura);
-            int softDetalle = viols.Count(v => !v.EsDura);
-            int hardCount = Math.Max(ind.HardViolations, hardDetalle);
-            int softCount = Math.Max((int)Math.Round(ind.SoftViolations), softDetalle);
-            int totalViol = hardCount + softCount;
-            string sufijoSinDetalle = (hardCount + softCount) > viols.Count ? " · detalle no disponible" : string.Empty;
-            lblHardViolaciones.Text = $"Violaciones: {totalViol} (HARD {hardCount}, SOFT {softCount}){sufijoSinDetalle}";
-            lblHardViolaciones.ForeColor = hardCount == 0 ? Color.DarkGreen : Color.DarkRed;
-            if (sufijoSinDetalle.Length > 0)
+            int registrosHard = viols.Count(v => v.EsDura);
+            int registrosSoft = viols.Count(v => !v.EsDura);
+            lblHardViolaciones.Text =
+                $"Registros HARD={registrosHard}, SOFT={registrosSoft}; " +
+                $"infracciones HARD={ind.HardViolations}; penalización SOFT={ind.SoftViolations:0.##}.";
+            lblHardViolaciones.ForeColor = ind.HardViolations == 0 ? Color.DarkGreen : Color.DarkRed;
+            if (ind.Violaciones != null && ind.Violaciones.Count > 0 && viols.Count != ind.Violaciones.Count)
             {
-                LoggerHelper.Warning(
-                    $"[AG] Corrida #{idCorrida}: hard_violations={ind.HardViolations}, soft={ind.SoftViolations} " +
-                    $"pero solo {viols.Count} violación(es) en ag_violacion. El detalle no quedó persistido.");
+                LoggerHelper.Warning("[AG] Cantidad de registros persistidos distinta de la evaluada.");
             }
 
             // Fase 320: Métrica y visualización de Vacantes
             lblVacantes.Text = $"Vacantes: {ind.Vacantes}";
             lblVacantes.ForeColor = ind.Vacantes == 0 ? Color.DarkGreen : Color.DarkOrange;
 
-            btnPromoverProduccion.Enabled = ind.HardViolations == 0;
+            btnPromoverProduccion.Enabled = ind.HardViolations == 0 && ind.Vacantes == 0;
             // Fase 1531: Habilitar recálculo de violaciones si la corrida tiene individuo persistido (cubre ruta AG y rehidratación)
             btnRecalcularViolaciones.Enabled = ind.Id > 0;
             btnAprobarCorrida.Enabled = ind.Id > 0;
@@ -3317,8 +3345,12 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 // donde es la única vía de reparación sin volver a ejecutar el AG.
                 bool esHuerfana = _ultimoResultado == null;
                 btnRecalcularViolaciones.Enabled = (ind != null && ind.Id > 0) || esHuerfana;
-                // Fase 1522: el estado del botón se recalcula tras cada carga (antes quedaba heredado del AG)
-                btnPromoverProduccion.Enabled = ind != null && ind.HardViolations == 0;
+                // Fase 1522 & 1813: el estado del botón se recalcula tras cada carga aplicando la compuerta estricta
+                var corridaDbRes = await _scheduleRepository.GetCorridaByIdAsync(corrida.IdCorrida, CancellationToken.None);
+                int vacantesCorrida = corridaDbRes.IsSuccess && corridaDbRes.Value != null ? corridaDbRes.Value.Vacantes : (ind?.Vacantes ?? 0);
+                var sesionesRes = await _scheduleRepository.GetSesionesStagingAsync(corrida.IdCorrida, CancellationToken.None);
+                int sesVac = sesionesRes.IsSuccess ? sesionesRes.Value.Count(s => s.EsVacante == 1) : 0;
+                btnPromoverProduccion.Enabled = ind != null && ind.HardViolations == 0 && vacantesCorrida == 0 && sesVac == 0;
                 LoggerHelper.Info($"[AG] Corrida #{corrida.IdCorrida} cargada: individuo #{ind?.Id ?? 0}, HARD={ind?.HardViolations ?? 0}, promover={btnPromoverProduccion.Enabled}.");
                 Log($"[AG] Corrida #{corrida.IdCorrida} cargada desde el selector ({corrida.TotalSesiones} sesiones en staging).");
             }

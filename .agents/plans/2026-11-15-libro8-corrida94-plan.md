@@ -209,10 +209,12 @@ Wave 6 (Ronda 397) [Gate]:     T9 (Full Gate e Integración Global)
   - **Convención de testing (regla `test-convention.md`)**: El archivo de pruebas `ConversorPDF.Tests/Academic/UI/Forms/FormVerVinculacionesViolacionesTests.cs` debe implementarse con **MSTest 3.3.1** bajo hilo STA (`[TestClass]`, `[STATestMethod]`), evitando xUnit en la carpeta de UI.
 - **validation**: Las pruebas MSTest en STA validan que las violaciones de la corrida se cargan y son visibles en el visor aun cuando no tengan sesión específica enlazada (`id_gen IS NULL`).
 - **verification**: powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "FormVerVinculacionesViolacionesTests"
-- **evidence**: (la llena build-verifier)
-- **status**: pending
-- **log**: (lo llena el orquestador)
-- **files edited/created**: (lo llena el orquestador)
+- **evidence**: _evidence/20261115-150433/summary.md
+- **status**: done
+- **log**: Modificado CargarViolacionesAsync sin INNER JOIN ag_sesiones, nodo raíz dedicado para violaciones globales en TreeView, y filtro tolerante de subunidad. 6/6 tests MSTest STA superados en FormVerVinculacionesViolacionesTests. Auditado y aprobado por task-reviewer.
+- **files edited/created**:
+  - ConversorPDF.XLL/Academic/UI/Forms/FormVerVinculaciones.cs
+  - ConversorPDF.Tests/Academic/UI/Forms/FormVerVinculacionesViolacionesTests.cs
 
 ### T8: A4/A5 — Conteos/puntuaciones separados y compuerta estricta de factibilidad/promoción en AgFormGeneradorHorarios
 - **id**: T8
@@ -236,8 +238,12 @@ Wave 6 (Ronda 397) [Gate]:     T9 (Full Gate e Integración Global)
   - **Convención de testing (regla `test-convention.md`)**: El archivo de pruebas `ConversorPDF.Tests/Academic/UI/Forms/AgFormGeneradorHorariosResultadosTests.cs` debe implementarse con **MSTest 3.3.1** bajo hilo STA (`[TestClass]`, `[STATestMethod]`).
 - **validation**: Pruebas MSTest STA confirman que el módulo de resultados muestra separadamente registros y puntuaciones sin generar warnings espurios, y que la promoción a producción queda bloqueada tanto tras optimización como tras recargar desde el combo si existen HARD > 0, vacantes > 0 o falta de cobertura.
 - **verification**: powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "AgFormGeneradorHorariosResultadosTests"
-- **evidence**: (la llena build-verifier)
-- **status**: pending
+- **evidence**: _evidence/20261115-145842/summary.md
+- **status**: done
+- **log**: Implementada separación de conteos y penalizaciones en CargarModuloResultadosAsync, compuerta estricta de promoción/factibilidad con cobertura multiconjunto en post-materialización y en CargarCorridaDesdeComboAsync. 5/5 pruebas MSTest STA superadas en AgFormGeneradorHorariosResultadosTests. Auditado y aprobado por task-reviewer.
+- **files edited/created**:
+  - ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs
+  - ConversorPDF.Tests/Academic/UI/Forms/AgFormGeneradorHorariosResultadosTests.cs
 - **log**: (lo llena el orquestador)
 - **files edited/created**: (lo llena el orquestador)
 
