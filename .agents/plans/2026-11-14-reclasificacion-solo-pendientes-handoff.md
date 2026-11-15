@@ -60,12 +60,13 @@ En la versión anterior de `ConversorPDF.XLL.Academic`:
 | 8 | 383 | T10 | 1797 | Certificación Gate Full (1356 tests PASS) y calibración de baseline | `done` | `_evidence/20261114-192003` | `93137d3` |
 | — | — | — | — | Sellado oficial de R-077 en `REGISTRY.md` | `closed` | `scripts/verify.ps1 -Mode Full` | `0b5e906` |
 | — | — | — | — | Correcciones pre-release [P1, P1, P2] | `done` | `_evidence/20261114-195640` | `10a3802` |
+| — | — | — | — | Corrección [P2 · T3, P2 · T4]: Diagnóstico sellado y resultado tipado | `done` | `_evidence/20261114-202146` | `e90d5af` |
 
 ---
 
 ## 4. Correcciones Pre-Release Verificadas
 
-Se aplicaron 3 correcciones críticas identificadas previas al release:
+Se aplicaron las correcciones identificadas previas al release:
 1. **[P1] Inclusión de `IdAula` en Huella de Acción e Invariante de Escritura**:
    - `AgEscaladorRanuraAula.HuellaAccion` migrado a `"propuesta-escalado-v4"` incluyendo `d.IdAula.ToString()`.
    - `AplicarDetalladoAsync` valida `d.IdAula == aulas[0].Id` y `rec.IdAula == idAula`, lanzando `InvalidOperationException` y abortando toda escritura si difiere.
@@ -77,5 +78,15 @@ Se aplicaron 3 correcciones críticas identificadas previas al release:
    - `ValidarSelecciones` valida que toda materia seleccionada pertenezca a las candidatas con déficit positivo (`sesionesPendientes > 0`).
    - Retorna `AgResultadoValidacionSeleccion.Rechazo("MATERIA_SIN_DEFICIT", ...)` evitando que llamadas directas autoricen materias ya completas.
    - Nueva prueba unitaria: `ValidarSelecciones_WhenMateriaCompletaSinDeficit_ShouldRetornarRechazoMateriaSinDeficit`.
+4. **[P2 · T3] Reutilización de Evaluación Inicial y Diagnóstico Sellado**:
+   - `AgFormGeneradorHorarios` obtiene candidatas directamente desde `decisionesEscalado.ReclasificacionesPropuestas` de la evaluación inicial, eliminando la re-evaluación redundante de aulas.
+   - `ValidarSelecciones` valida en memoria contra las candidatas selladas sin recalcular.
+   - Simulación recalculada únicamente cuando existen cambios autorizados; de lo contrario reutiliza la evaluación inicial.
+   - Se propaga cancelación `CancellationToken` en todas las rutas de evaluación y filtrado.
+5. **[P2 · T4] Eliminación de Excepciones para Rechazos Esperados (Resultado Tipado)**:
+   - `AgEscaladorRanuraAula.Evaluar` devuelve `AgResultadoEvaluacionEscalado : IReadOnlyList<Decision>`, encapsulando `.EsValido`, `.Motivo`, `.Mensaje`, `.IdAulaRechazada`, `.IdAsignaturaRechazada`.
+   - `EvaluarInterno` retorna `AgResultadoEvaluacionEscalado.Rechazo(validacion)` sin lanzar `ArgumentException`.
+   - La UI propaga motivo e identidades rechazadas al usuario.
+   - Pruebas unitarias adaptadas para verificar el resultado tipado sin excepciones de flujo.
 
-**Certificación de la suite**: 1358/1358 PASS (0 fallos, 0 regresiones) con baseline calibrado.
+**Certificación de la suite**: **1359/1359 PASS** (0 fallos, 0 regresiones) con baseline calibrado.
