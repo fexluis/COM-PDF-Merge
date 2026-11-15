@@ -214,6 +214,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 ct.ThrowIfCancellationRequested();
                 var sesiones = new List<AgSesionPlanificada>();
                 var dias = restricciones[a.IdAsignatura];
+                if (dias.Any(d => !ranuras.Any(r => r.Dia == d)))
+                {
+                    porId[a.IdAsignatura] = sesiones;
+                    continue;
+                }
                 for (int i = 0; i < calendario.Count && sesiones.Count < requeridas[a.IdAsignatura]; i++)
                 {
                     ct.ThrowIfCancellationRequested();
@@ -228,6 +233,15 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 porId[a.IdAsignatura] = sesiones;
             }
 
+            var carrilPorId = new Dictionary<int, int>();
+            if (referencia != null)
+            {
+                foreach (var p in referencia.Planes)
+                {
+                    carrilPorId[p.IdAsignatura] = p.Carril;
+                }
+            }
+
             var planes = new List<AgPlanOleada>();
             foreach (var a in orden)
             {
@@ -238,18 +252,40 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 DateTime ultima = sesiones.Last().Fecha;
                 int capacidad = calendario.Count(c => c.Fecha >= primera && c.Fecha <= ultima
                     && usadas.Any(r => r.Equals(c.Ranura)));
-                planes.Add(new AgPlanOleada(a.IdAsignatura, 0, planes.Count,
+                int carril = carrilPorId.TryGetValue(a.IdAsignatura, out var cId) ? cId : 0;
+                planes.Add(new AgPlanOleada(a.IdAsignatura, carril, planes.Count,
                     usadas.Select(r => r.Dia).Distinct().ToList(), primera, ultima,
                     (ultima - primera).Days / 7 + 1, requeridas[a.IdAsignatura], capacidad,
                     usadas, sesiones));
             }
             var pendientes = orden.Where(a => !porId.ContainsKey(a.IdAsignatura) || porId[a.IdAsignatura].Count < requeridas[a.IdAsignatura])
                 .Select(a => a.IdAsignatura).ToList();
-            var resultado = new AgPlanOleadasResultado(planes, pendientes,
-                pendientes.Select(id => "Asig " + id + ": sesiones no ubicadas; el completado no acredita imposibilidad.").ToList(),
+            var detalle = new List<string>();
+            foreach (var id in pendientes)
+            {
+                if (referencia != null && referencia.Infactibles.Contains(id))
+                {
+                    var dRef = referencia.DetalleInfactibles.FirstOrDefault(x => x.Contains("Asig " + id));
+                    if (!string.IsNullOrEmpty(dRef))
+                    {
+                        detalle.Add(dRef);
+                        continue;
+                    }
+                }
+                detalle.Add("Asig " + id + ": sesiones no ubicadas; el completado no acredita imposibilidad.");
+            }
+            string ventanaSugerida = (referencia != null && !string.IsNullOrEmpty(referencia.VentanaSugerida))
+                ? referencia.VentanaSugerida
+                : (pendientes.Count > 0 ? AgEscaleraVentanas.Siguiente(string.Join(",", ranuras.Select(r => r.Dia).Distinct())) : string.Empty);
+
+            var resultado = new AgPlanOleadasResultado(
+                planes,
+                pendientes,
+                detalle,
                 new List<IReadOnlyList<int>> { ranuras.Select(r => r.Dia).Distinct().ToList() },
-                ocupacionPorcentaje: calendario.Count == 0 ? 0.0
-                    : 100.0 * planes.Sum(p => p.Sesiones.Count) / calendario.Count);
+                ventanaSugerida,
+                0,
+                calendario.Count == 0 ? 0.0 : 100.0 * planes.Sum(p => p.Sesiones.Count) / calendario.Count);
             var comprobacion = ValidarFechado(resultado, demandas, ranuras,
                 ini, fin, unidad, festivo, patrones, ct);
             return comprobacion.IsSuccess ? Result.Success(resultado)
@@ -300,6 +336,10 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     && !string.IsNullOrWhiteSpace(texto) && dias.Count == 0)
                 {
                     return Result.Failure("I1_PATRON_INVALIDO");
+                }
+                if (dias.Any(d => !ranuras.Any(r => r.Dia == d)))
+                {
+                    return Result.Failure("I5_PLAN_SESION_INVALIDA");
                 }
                 foreach (var s in p.Sesiones)
                 {

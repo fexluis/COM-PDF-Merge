@@ -1,5 +1,5 @@
-# Baseline medido 2026-11-14 con scripts/verify.ps1 -Mode Full tras corregir reutilizacion de diagnostico sellado y resultado tipado sin excepciones en evaluacion
-TOTAL: 1359
-PASSED: 1359
+# Baseline medido 2026-11-14 con scripts/verify.ps1 -Mode Full tras completar Corrida 92 (completar huecos y unificar evaluacion/generacion)
+TOTAL: 1387
+PASSED: 1387
 FAILED: 0
 SKIPPED: 0

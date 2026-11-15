@@ -99,12 +99,36 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 referenciaValida = referencia.Value;
                 alternativas.Add(referenciaValida);
             }
-            var completado = AgPlanificadorRanuras.CompletarReferencia(asignaturas, ranuras,
-                fechaInicio, fechaFin, unidadSesion, esFestivo, patrones, referenciaValida, ct);
-            if (completado.IsSuccess) { alternativas.Add(completado.Value); }
+            bool tienePatrones = patrones != null && patrones.Values.Any(v => !string.IsNullOrWhiteSpace(v));
+            bool hayAutomaticas = asignaturas.Any(a => patrones == null
+                || !patrones.TryGetValue(a.IdAsignatura, out var p)
+                || string.IsNullOrWhiteSpace(p));
 
-            // Primero un pase barato sobre huecos. Búsqueda acotada solo cuando no lo resuelve.
-            if (completado.IsFailure || completado.Value.Infactibles.Count > 0)
+            if (!permitirParcial && tienePatrones && !hayAutomaticas && referencia.IsSuccess && referencia.Value.Infactibles.Count == 0)
+            {
+                return referencia;
+            }
+
+            if (tienePatrones)
+            {
+                var completado = AgPlanificadorRanuras.CompletarReferencia(asignaturas, ranuras,
+                    fechaInicio, fechaFin, unidadSesion, esFestivo, patrones, referenciaValida, ct);
+                if (completado.IsSuccess) { alternativas.Add(completado.Value); }
+
+                // Primero un pase barato sobre huecos. Búsqueda acotada solo cuando no lo resuelve.
+                if (completado.IsFailure || completado.Value.Infactibles.Count > 0)
+                {
+                    var buscado = AgPlanificadorRanuras.Construir(asignaturas, ranuras,
+                        fechaInicio.Date, fechaFin.Date, unidadSesion, esFestivo, patrones,
+                        ct: ct, diagnostico: diagnostico);
+                    if (AgPlanificadorRanuras.ValidarFechado(buscado, asignaturas, ranuras,
+                        fechaInicio, fechaFin, unidadSesion, esFestivo, patrones, ct).IsSuccess)
+                    {
+                        alternativas.Add(buscado);
+                    }
+                }
+            }
+            else
             {
                 var buscado = AgPlanificadorRanuras.Construir(asignaturas, ranuras,
                     fechaInicio.Date, fechaFin.Date, unidadSesion, esFestivo, patrones,
@@ -124,24 +148,60 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             var elegibles = alternativas.Where(p => completasPrevias.All(id =>
                 p.Planes.Any(x => x.IdAsignatura == id && x.Sesiones.Count == requeridas[id]))).ToList();
             var completos = elegibles.Where(p => p.Infactibles.Count == 0).ToList();
-            if (completos.Count > 0) { elegibles = completos; }
-            else if (!permitirParcial)
+
+            if (completos.Count > 0)
             {
-                // Conservar contrato de generación: factibles previas y cuarentena de infactibles.
-                return referenciaValida != null ? Result.Success(referenciaValida)
-                    : Result.Failure<AgPlanOleadasResultado>("I5_SIN_PLAN_COMPLETO: quedan sesiones sin ubicar.");
+                // Si la referencia ya era completa, solo preferir alternativa si termina estrictamente antes
+                if (referenciaValida != null && referenciaValida.Infactibles.Count == 0)
+                {
+                    DateTime finRef = referenciaValida.Planes.SelectMany(p => p.Sesiones)
+                        .Select(s => s.Fecha).DefaultIfEmpty(DateTime.MaxValue).Max();
+                    var mejorAntes = completos.Where(p =>
+                    {
+                        DateTime finCand = p.Planes.SelectMany(x => x.Sesiones)
+                            .Select(s => s.Fecha).DefaultIfEmpty(DateTime.MaxValue).Max();
+                        return tienePatrones ? (finCand < finRef) : (finRef - finCand > TimeSpan.FromDays(7));
+                    }).OrderBy(p => p.Planes.SelectMany(x => x.Sesiones).Select(s => s.Fecha).Max()).FirstOrDefault();
+
+                    if (mejorAntes != null)
+                    {
+                        LoggerHelper.Debug($"[AG-RANURAS-TMP] ELEGIR {diagnostico} plan=alternativa_completa_adelantada " +
+                            $"sesiones={mejorAntes.Planes.Sum(p => p.Sesiones.Count)}");
+                        return Result.Success(mejorAntes);
+                    }
+
+                    LoggerHelper.Debug($"[AG-RANURAS-TMP] ELEGIR {diagnostico} plan=referencia_completa_canonico " +
+                        $"sesiones={referenciaValida.Planes.Sum(p => p.Sesiones.Count)}");
+                    return Result.Success(referenciaValida);
+                }
+
+                // Si la referencia no era completa, elegir el completo que termine más temprano
+                var mejorCompleto = completos.OrderBy(p => p.Planes.SelectMany(x => x.Sesiones)
+                    .Select(s => s.Fecha).DefaultIfEmpty(DateTime.MaxValue).Max()).First();
+                LoggerHelper.Debug($"[AG-RANURAS-TMP] ELEGIR {diagnostico} plan=completo_rescate " +
+                    $"sesiones={mejorCompleto.Planes.Sum(p => p.Sesiones.Count)}");
+                return Result.Success(mejorCompleto);
             }
+
+            // No hay plan 100% completo
+            if (!permitirParcial)
+            {
+                return referencia;
+            }
+
             var elegido = elegibles.OrderByDescending(p => p.Planes.Sum(x => x.Sesiones.Count))
                 .ThenBy(p => p.Infactibles.Count)
                 .ThenBy(p => p.Planes.SelectMany(x => x.Sesiones).Select(s => s.Fecha)
                     .DefaultIfEmpty(DateTime.MaxValue).Max()).FirstOrDefault();
-            if (elegido == null)
+
+            if (elegido != null)
             {
-                return Result.Failure<AgPlanOleadasResultado>("I5_SIN_PLAN_FECHADO_VALIDO");
+                LoggerHelper.Debug($"[AG-RANURAS-TMP] ELEGIR {diagnostico} plan=parcial_optimo " +
+                    $"sesiones={elegido.Planes.Sum(p => p.Sesiones.Count)} infactibles={elegido.Infactibles.Count}");
+                return Result.Success(elegido);
             }
-            LoggerHelper.Debug($"[AG-RANURAS-TMP] ELEGIR {diagnostico} pendientes={elegido.Infactibles.Count} " +
-                $"sesiones={elegido.Planes.Sum(p => p.Sesiones.Count)} parcial={permitirParcial}");
-            return Result.Success(elegido);
+
+            return referencia;
         }
 
         /// <summary>

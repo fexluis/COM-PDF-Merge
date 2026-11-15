@@ -1,5 +1,5 @@
 # Plan: Corrida 92 — Completar Huecos y Unificar Evaluación y Generación
-**Generado**: 2026-11-14 · **Autor**: Antigravity/Swarm-Planner · **Estado**: executing
+**Generado**: 2026-11-14 · **Autor**: Antigravity/Swarm-Planner · **Estado**: closed
 
 ## Execution envelope
 - branch: codex/huellas-escalado-20261114
@@ -9,7 +9,7 @@
   - min_xll_cs: 300
   - min_tests_cs: 100
   - required_slice: Academic
-- baseline: tests/baseline/test_baseline.txt (TOTAL: 1359)
+- baseline: tests/baseline/test_baseline.txt (TOTAL: 1387)
 - verify: powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Full
 - build_gate: serializado
 - max_parallel_writers: 2
@@ -205,13 +205,18 @@ Wave 8: T8 (Fase 1805) [Certificación Gate Full & Calibración Baseline]
 - **location**: tests/baseline/test_baseline.txt
 - **files_lock**:
   - tests/baseline/test_baseline.txt
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgPlanificadorRanuras.cs
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgPlanificadorOleadas.cs
 - **description**: Ejecutar la certificación global en modo Full con `scripts/verify.ps1 -Mode Full`, validar que no exista ninguna regresión en los 1359+ tests de la suite y calibrar el nuevo baseline con los tests adicionales creados.
 - **validation**: `scripts/verify.ps1 -Mode Full` devuelve código de salida 0; 0 fallos, 0 errores, total ejecutado >= 1359.
 - **verification**: powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Full
-- **evidence**: _evidence/pending/summary.md
-- **status**: pending
-- **log**: ""
-- **files edited/created**: []
+- **evidence**: _evidence/20261114-223346/summary.md
+- **status**: done
+- **log**: "Certificación Full completada con 1387/1387 tests en GREEN (0 fallos, 0 omitidos). Baseline calibrado a TOTAL: 1387, PASSED: 1387. Evidencia _evidence/20261114-223346/summary.md."
+- **files edited/created**:
+  - tests/baseline/test_baseline.txt
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgPlanificadorRanuras.cs
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgPlanificadorOleadas.cs
 
 ## Context pack
 - Slice: Academic / Genetica (Planificador de Ranuras, Oleadas, Fábrica y Materialización).
