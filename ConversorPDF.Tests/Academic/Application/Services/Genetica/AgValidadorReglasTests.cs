@@ -14,6 +14,20 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
     {
         private readonly AgValidadorReglas _sut = new AgValidadorReglas();
 
+        private static AgBloqueHorario CrearBloque(int id, int diaSemana = 2, string horaInicio = "08:00", string horaFin = "12:00", string franja = "MANANA")
+        {
+            return new AgBloqueHorario
+            {
+                Id = id,
+                DiaSemanaNumero = diaSemana,
+                HoraInicio = horaInicio,
+                HoraFin = horaFin,
+                DuracionHoras = 4.0,
+                Franja = franja,
+                Activo = 1
+            };
+        }
+
         [Fact]
         public void Evaluar_WhenEmptyGenesAndRequiredSubjectsExist_ShouldRecordHardViolations()
         {
@@ -43,10 +57,11 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             // Arrange
             var contexto = new AgContexto();
             contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
-            contexto.AulasPorId[1] = new AgAula { Id = 1, Estado = AgEstadoAula.Disponible };
-            contexto.AulasPorId[2] = new AgAula { Id = 2, Estado = AgEstadoAula.Disponible };
+            contexto.AulasPorId[1] = new AgAula { Id = 1, Estado = AgEstadoAula.Disponible, Grupo = null };
+            contexto.AulasPorId[2] = new AgAula { Id = 2, Estado = AgEstadoAula.Disponible, Grupo = null };
             contexto.RegistrarDocenteHabilitado(10, 1, 1, "I");
             contexto.RegistrarDocenteHabilitado(10, 1, 2, "I");
+            contexto.BloquesPorId[5] = CrearBloque(5, diaSemana: 2);
 
             var individuo = new AgIndividuo();
             individuo.Genes.Add(new AgGen
@@ -88,9 +103,10 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             // Arrange
             var contexto = new AgContexto();
             contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
-            contexto.AulasPorId[1] = new AgAula { Id = 1, Estado = AgEstadoAula.Disponible };
+            contexto.AulasPorId[1] = new AgAula { Id = 1, Estado = AgEstadoAula.Disponible, Grupo = null };
             contexto.RegistrarDocenteHabilitado(10, 1, 1, "I");
             contexto.RegistrarDocenteHabilitado(20, 1, 2, "I");
+            contexto.BloquesPorId[3] = CrearBloque(3, diaSemana: 2);
 
             var individuo = new AgIndividuo();
             individuo.Genes.Add(new AgGen
@@ -132,8 +148,9 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             // Arrange
             var contexto = new AgContexto();
             contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
-            contexto.AulasPorId[1] = new AgAula { Id = 1, Estado = AgEstadoAula.Disponible };
+            contexto.AulasPorId[1] = new AgAula { Id = 1, Estado = AgEstadoAula.Disponible, Grupo = null };
             contexto.RegistrarDocenteHabilitado(10, 1, 1, "I");
+            contexto.BloquesPorId[1] = CrearBloque(1, diaSemana: 2);
 
             var individuo = new AgIndividuo();
             individuo.Genes.Add(new AgGen
@@ -163,7 +180,8 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             // Arrange (Fase 320: R5 relajada para vacantes)
             var contexto = new AgContexto();
             contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
-            contexto.AulasPorId[1] = new AgAula { Id = 1, Estado = AgEstadoAula.Disponible };
+            contexto.AulasPorId[1] = new AgAula { Id = 1, Estado = AgEstadoAula.Disponible, Grupo = null };
+            contexto.BloquesPorId[1] = CrearBloque(1, diaSemana: 2);
             contexto.Pesos.PesoVacante = 50.0;
 
             var individuo = new AgIndividuo();
@@ -200,7 +218,8 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             var contexto = new AgContexto();
             contexto.IdTerceroVacante = 192;
             contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
-            contexto.AulasPorId[1] = new AgAula { Id = 1, Estado = AgEstadoAula.Disponible };
+            contexto.AulasPorId[1] = new AgAula { Id = 1, Estado = AgEstadoAula.Disponible, Grupo = null };
+            contexto.BloquesPorId[1] = CrearBloque(1, diaSemana: 2);
 
             var individuo = new AgIndividuo();
             individuo.Genes.Add(new AgGen
@@ -231,8 +250,10 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             // Arrange (Fase 456 / Fase 470)
             var contexto = new AgContexto();
             contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
-            contexto.AulasPorId[1] = new AgAula { Id = 1, Estado = AgEstadoAula.Disponible };
+            contexto.AulasPorId[1] = new AgAula { Id = 1, Estado = AgEstadoAula.Disponible, Grupo = "A" };
             contexto.RegistrarDocenteHabilitado(10, 1, 1, "I");
+            contexto.BloquesPorId[1] = CrearBloque(1, diaSemana: 5, horaInicio: "08:00", horaFin: "12:00", franja: "MANANA");
+            contexto.BloquesPorId[2] = CrearBloque(2, diaSemana: 5, horaInicio: "08:00", horaFin: "12:00", franja: "MANANA");
 
             var individuo = new AgIndividuo();
             individuo.Genes.Add(new AgGen
@@ -282,6 +303,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
             contexto.AulasPorId[1] = new AgAula { Id = 1, Codigo = "AULA-II-A", Semestre = "II", Grupo = "A", Estado = AgEstadoAula.Disponible };
             contexto.RegistrarDocenteHabilitado(10, 1, 1, "I");
+            contexto.BloquesPorId[1] = CrearBloque(1, diaSemana: 2);
 
             var individuo = new AgIndividuo();
             individuo.Genes.Add(new AgGen
@@ -314,6 +336,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
             contexto.AulasPorId[1] = new AgAula { Id = 1, Codigo = "AULA-GRAL", Semestre = null, Grupo = null, Estado = AgEstadoAula.Disponible };
             contexto.RegistrarDocenteHabilitado(10, 1, 1, "I");
+            contexto.BloquesPorId[1] = CrearBloque(1, diaSemana: 2);
 
             var individuo = new AgIndividuo();
             individuo.Genes.Add(new AgGen
@@ -1056,11 +1079,12 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
         {
             var contexto = new AgContexto();
             contexto.Ventana = VentanaSemestre.Crear(1, "2027-1", new DateTime(2027, 2, 1), new DateTime(2027, 6, 30), AgOrigenVentana.Presencial).Value;
-            contexto.AulasPorId[12] = new AgAula { Id = 12, Estado = AgEstadoAula.Disponible };
+            contexto.AulasPorId[12] = new AgAula { Id = 12, Estado = AgEstadoAula.Disponible, Grupo = null };
             contexto.RegistrarDocenteHabilitado(10, 1, 154, "X");
             contexto.RegistrarDocenteHabilitado(20, 1, 156, "X");
-            contexto.BloquesPorId[29] = new AgBloqueHorario { Id = 29, DiaSemanaNumero = 5, HoraInicio = "08:00", HoraFin = "12:00", Franja = "M" };
+            contexto.BloquesPorId[29] = new AgBloqueHorario { Id = 29, DiaSemanaNumero = 5, HoraInicio = "08:00", HoraFin = "12:00", Franja = "M", Activo = 1 };
 
+            var fechaCruce = new DateTime(2027, 4, 9);
             var individuo = new AgIndividuo();
             individuo.Genes.Add(new AgGen
             {
@@ -1075,7 +1099,8 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
                 IdBloqueHorario = 29,
                 DiaSemana = 5,
                 FechaInicioEstimada = new DateTime(2027, 2, 2),
-                FechaFinEstimada = new DateTime(2027, 4, 10)
+                FechaFinEstimada = new DateTime(2027, 4, 10),
+                FechasGen = new List<DateTime> { fechaCruce }
             });
             individuo.Genes.Add(new AgGen
             {
@@ -1090,7 +1115,8 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
                 IdBloqueHorario = 29,
                 DiaSemana = 5,
                 FechaInicioEstimada = new DateTime(2027, 4, 5), // Solape 05/04 a 10/04
-                FechaFinEstimada = new DateTime(2027, 4, 19)
+                FechaFinEstimada = new DateTime(2027, 4, 19),
+                FechasGen = new List<DateTime> { fechaCruce }
             });
 
             _sut.Evaluar(individuo, contexto);
@@ -1103,10 +1129,10 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
         {
             var contexto = new AgContexto();
             contexto.Ventana = VentanaSemestre.Crear(1, "2027-1", new DateTime(2027, 2, 1), new DateTime(2027, 6, 30), AgOrigenVentana.Presencial).Value;
-            contexto.AulasPorId[12] = new AgAula { Id = 12, Estado = AgEstadoAula.Disponible };
+            contexto.AulasPorId[12] = new AgAula { Id = 12, Estado = AgEstadoAula.Disponible, Grupo = null };
             contexto.RegistrarDocenteHabilitado(10, 1, 154, "X");
             contexto.RegistrarDocenteHabilitado(20, 1, 156, "X");
-            contexto.BloquesPorId[29] = new AgBloqueHorario { Id = 29, DiaSemanaNumero = 5, HoraInicio = "08:00", HoraFin = "12:00", Franja = "M" };
+            contexto.BloquesPorId[29] = new AgBloqueHorario { Id = 29, DiaSemanaNumero = 5, HoraInicio = "08:00", HoraFin = "12:00", Franja = "M", Activo = 1 };
 
             var individuo = new AgIndividuo();
             individuo.Genes.Add(new AgGen
@@ -1150,10 +1176,10 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
         {
             var contexto = new AgContexto();
             contexto.Ventana = VentanaSemestre.Crear(1, "2027-1", new DateTime(2027, 2, 1), new DateTime(2027, 6, 30), AgOrigenVentana.Presencial).Value;
-            contexto.AulasPorId[12] = new AgAula { Id = 12, Estado = AgEstadoAula.Disponible };
+            contexto.AulasPorId[12] = new AgAula { Id = 12, Estado = AgEstadoAula.Disponible, Grupo = null };
             contexto.RegistrarDocenteHabilitado(10, 1, 154, "X");
             contexto.RegistrarDocenteHabilitado(20, 1, 156, "X");
-            contexto.BloquesPorId[29] = new AgBloqueHorario { Id = 29, DiaSemanaNumero = 5, HoraInicio = "08:00", HoraFin = "12:00", Franja = "M" };
+            contexto.BloquesPorId[29] = new AgBloqueHorario { Id = 29, DiaSemanaNumero = 5, HoraInicio = "08:00", HoraFin = "12:00", Franja = "M", Activo = 1 };
 
             var individuo = new AgIndividuo();
             individuo.Genes.Add(new AgGen
@@ -1192,6 +1218,90 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             individuo.Violaciones.Should().Contain(v => v.Regla == AgReglaViolacion.R2_SuperposicionAula);
             individuo.Violaciones.Should().NotContain(v => v.Regla == AgReglaViolacion.R14_BloqueSolapadoPorIntervalo,
                 "R14 no debe duplicar la colisión si tienen exactamente el mismo bloque horario");
+        }
+
+        [Fact]
+        public void Evaluar_MateriasIntercaladasSinCruceReal_EstadisticaVsTeorias_CeroHard()
+        {
+            // Arrange (Fase 1809 / Libro 8 Corrida 94):
+            // Estadística vs Teorías con semanas alternas/intercaladas en el mismo bloque y aula/cohorte.
+            // Aunque sus ventanas [FechaInicio..FechaFin] se solapen temporalmente a nivel macro,
+            // no comparten ninguna fecha de sesión real en AgCalendarioConflictos -> 0 HARD.
+            var contexto = new AgContexto();
+            contexto.IdPrograma = 1;
+            contexto.Programas.Add(new Programa { Id = 1, Modalidad = "PREGRADO" });
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
+            contexto.AulasPorId[10] = new AgAula { Id = 10, IdPrograma = 1, Semestre = "I", Grupo = "A", Estado = AgEstadoAula.Disponible };
+            contexto.RegistrarDocenteHabilitado(101, 1, 1, "I"); // Docente Estadística
+            contexto.RegistrarDocenteHabilitado(102, 1, 2, "I"); // Docente Teorías
+
+            var bloqueSabado = new AgBloqueHorario
+            {
+                Id = 1,
+                DiaSemanaNumero = 6, // Sábado
+                HoraInicio = "08:00",
+                HoraFin = "12:00",
+                DuracionHoras = 4.0,
+                Franja = "MANANA",
+                Activo = 1
+            };
+            contexto.BloquesPorId[1] = bloqueSabado;
+
+            var individuo = new AgIndividuo();
+            individuo.Genes.Add(new AgGen
+            {
+                Id = 1,
+                IdTercero = 101,
+                IdAsignatura = 1, // Estadística
+                IdPrograma = 1,
+                IdSede = 1,
+                Semestre = "I",
+                Grupo = "A",
+                IdAula = 10,
+                DiasPatron = "CARRIL_1",
+                IdBloqueHorario = 1,
+                DiaSemana = 6,
+                HorasGen = 8.0,
+                HorasSemanales = 4.0,
+                FechaInicioEstimada = new DateTime(2026, 2, 7),
+                FechaFinEstimada = new DateTime(2026, 2, 21),
+                FechasGen = new List<DateTime>
+                {
+                    new DateTime(2026, 2, 7),  // Semana 1 (Sábado)
+                    new DateTime(2026, 2, 21)  // Semana 3 (Sábado)
+                }
+            });
+            individuo.Genes.Add(new AgGen
+            {
+                Id = 2,
+                IdTercero = 102,
+                IdAsignatura = 2, // Teorías
+                IdPrograma = 1,
+                IdSede = 1,
+                Semestre = "I",
+                Grupo = "A",
+                IdAula = 10,
+                DiasPatron = "CARRIL_2",
+                IdBloqueHorario = 1,
+                DiaSemana = 6,
+                HorasGen = 8.0,
+                HorasSemanales = 4.0,
+                FechaInicioEstimada = new DateTime(2026, 2, 14),
+                FechaFinEstimada = new DateTime(2026, 2, 28),
+                FechasGen = new List<DateTime>
+                {
+                    new DateTime(2026, 2, 14), // Semana 2 (Sábado)
+                    new DateTime(2026, 2, 28)  // Semana 4 (Sábado)
+                }
+            });
+
+            // Act
+            _sut.Evaluar(individuo, contexto);
+
+            // Assert
+            individuo.HardViolations.Should().Be(0);
+            individuo.Violaciones.Should().NotContain(v => v.EsDura);
+            individuo.Estado.Should().Be(AgEstadoIndividuo.Factible);
         }
     }
 }

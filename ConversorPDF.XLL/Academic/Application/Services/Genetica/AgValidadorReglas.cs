@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Web.Script.Serialization;
 using ConversorPDF.XLL.Academic.Domain.Enums;
 using ConversorPDF.XLL.Academic.Domain.Interfaces;
 using ConversorPDF.XLL.Academic.Domain.Models;
@@ -72,10 +73,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 }
             }
 
-            // Mapas para detección eficiente de colisiones
-            var docenteBloques = new Dictionary<string, List<AgGen>>();
-            var aulaBloques = new Dictionary<string, List<AgGen>>();
-            var grupoBloques = new Dictionary<string, List<AgGen>>();
+            // Mapa para desplazamientos inter-sede (S2)
             var docenteDias = new Dictionary<string, HashSet<int>>(); // Docente-Dia -> Set de Sedes
 
             for (int i = 0; i < genes.Count; i++)
@@ -206,53 +204,18 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     }
                 }
 
-                // Indexar para colisiones horarias
-                if (gen.IdBloqueHorario > 0)
+                // S2 / S4: Docente en el día (ignorar vacante o centinela)
+                if (gen.IdBloqueHorario > 0 && gen.EsVacante == 0 && gen.IdTercero > 0 &&
+                    (contexto.IdTerceroVacante <= 0 || gen.IdTercero != contexto.IdTerceroVacante) &&
+                    contexto.BloquesPorId != null && contexto.BloquesPorId.TryGetValue(gen.IdBloqueHorario, out var blk))
                 {
-                    // R1: Docente superpuesto (ignorar si es vacante o centinela)
-                    if (gen.EsVacante == 0 && gen.IdTercero > 0 && (contexto.IdTerceroVacante <= 0 || gen.IdTercero != contexto.IdTerceroVacante))
+                    string docDiaKey = $"{gen.IdTercero}_{blk.DiaSemanaNumero}";
+                    if (!docenteDias.TryGetValue(docDiaKey, out var sedesDoc))
                     {
-                        string docKey = $"{gen.IdTercero}_{gen.IdBloqueHorario}";
-                        if (!docenteBloques.TryGetValue(docKey, out var lDoc))
-                        {
-                            lDoc = new List<AgGen>();
-                            docenteBloques[docKey] = lDoc;
-                        }
-                        lDoc.Add(gen);
+                        sedesDoc = new HashSet<int>();
+                        docenteDias[docDiaKey] = sedesDoc;
                     }
-
-                    // R2: Aula superpuesta
-                    if (gen.IdAula > 0)
-                    {
-                        string aulaKey = $"{gen.IdAula}_{gen.IdBloqueHorario}";
-                        if (!aulaBloques.TryGetValue(aulaKey, out var lAula))
-                        {
-                            lAula = new List<AgGen>();
-                            aulaBloques[aulaKey] = lAula;
-                        }
-                        lAula.Add(gen);
-                    }
-
-                    // R3: Grupo de estudiantes superpuesto (Fase 532: incluir IdSede para no colisionar grupos homónimos en distintas sedes)
-                    string grpKey = $"{gen.IdSede}_{gen.IdPrograma}_{gen.Semestre}_{gen.Grupo}_{gen.IdBloqueHorario}";
-                    if (!grupoBloques.TryGetValue(grpKey, out var lGrp))
-                    {
-                        lGrp = new List<AgGen>();
-                        grupoBloques[grpKey] = lGrp;
-                    }
-                    lGrp.Add(gen);
-
-                    // S2 / S4: Docente en el día (ignorar vacante o centinela)
-                    if (gen.EsVacante == 0 && gen.IdTercero > 0 && (contexto.IdTerceroVacante <= 0 || gen.IdTercero != contexto.IdTerceroVacante) && contexto.BloquesPorId.TryGetValue(gen.IdBloqueHorario, out var blk))
-                    {
-                        string docDiaKey = $"{gen.IdTercero}_{blk.DiaSemanaNumero}";
-                        if (!docenteDias.TryGetValue(docDiaKey, out var sedesDoc))
-                        {
-                            sedesDoc = new HashSet<int>();
-                            docenteDias[docDiaKey] = sedesDoc;
-                        }
-                        sedesDoc.Add(gen.IdSede);
-                    }
+                    sedesDoc.Add(gen.IdSede);
                 }
             }
 
@@ -269,115 +232,13 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 }
             }
 
-            // --- Evaluar colisiones R1 (Docente) (Fase 1569: respeta oleadas por solape temporal) ---
-            foreach (var kvp in docenteBloques)
-            {
-                var clusters = AgVentanaSolape.AgruparPorSolape(kvp.Value, g => g.FechaInicioEstimada, g => g.FechaFinEstimada);
-                foreach (var cluster in clusters)
-                {
-                    if (cluster.Count > 1)
-                    {
-                        int cruces = cluster.Count - 1;
-                        hardCount += cruces;
-                        individuo.Violaciones.Add(new AgViolacion(
-                            AgReglaViolacion.R1_SuperposicionDocente,
-                            esDura: true,
-                            mensaje: $"El docente tiene {cluster.Count} asignaturas asignadas simultáneamente en el bloque {cluster[0].IdBloqueHorario}."));
-                    }
-                }
-            }
+            // Clave canónica de cohorte
+            string Cohorte(AgGen g) => AgCalendarioConflictos.Cohorte(g);
 
-            // --- Evaluar colisiones R2 (Aula) (Fase 1569: respeta oleadas por solape temporal) ---
-            foreach (var kvp in aulaBloques)
-            {
-                var clusters = AgVentanaSolape.AgruparPorSolape(kvp.Value, g => g.FechaInicioEstimada, g => g.FechaFinEstimada);
-                foreach (var cluster in clusters)
-                {
-                    if (cluster.Count > 1)
-                    {
-                        int cruces = cluster.Count - 1;
-                        hardCount += cruces;
-                        individuo.Violaciones.Add(new AgViolacion(
-                            AgReglaViolacion.R2_SuperposicionAula,
-                            esDura: true,
-                            mensaje: $"El aula {cluster[0].IdAula} está asignada a {cluster.Count} cursos en el mismo bloque horario {cluster[0].IdBloqueHorario}."));
-                    }
-                }
-            }
-
-            // --- Evaluar colisiones R3 (Grupo) (Fase 1569: respeta oleadas por solape temporal) ---
-            foreach (var kvp in grupoBloques)
-            {
-                var clusters = AgVentanaSolape.AgruparPorSolape(kvp.Value, g => g.FechaInicioEstimada, g => g.FechaFinEstimada);
-                foreach (var cluster in clusters)
-                {
-                    if (cluster.Count > 1)
-                    {
-                        int cruces = cluster.Count - 1;
-                        hardCount += cruces;
-                        individuo.Violaciones.Add(new AgViolacion(
-                            AgReglaViolacion.R3_SuperposicionGrupo,
-                            esDura: true,
-                            mensaje: $"El grupo tiene {cluster.Count} clases en simultáneo en el bloque horario {cluster[0].IdBloqueHorario}."));
-                    }
-                }
-            }
-
-            // F1027 / F939 / F953: clave canónica de cohorte (evita colisiones falsas entre sedes/programas homónimos)
-            string Cohorte(AgGen g)
-            {
-                string sem = AgFormatoAsignatura.SemestreRomano(g.Semestre);
-                if (string.IsNullOrWhiteSpace(sem) || sem == "SIN ASIGNAR")
-                {
-                    sem = (g.Semestre ?? string.Empty).Trim();
-                }
-                return $"{g.IdSede}|{g.IdPrograma}|{sem}|{(g.Grupo ?? string.Empty).Trim()}";
-            }
-
-            // --- R4: Unicidad por (Cohorte, Día, Franja) y tope de bloques diarios (Fase 1162 / Fase 1569) ---
             string FranjaDe(AgGen g) =>
                 (contexto.BloquesPorId != null && g.IdBloqueHorario > 0
                  && contexto.BloquesPorId.TryGetValue(g.IdBloqueHorario, out var b) && b != null)
                     ? (b.Franja ?? string.Empty).Trim().ToUpperInvariant() : string.Empty;
-
-            var porGrupoDiaFranja = genes.Where(g => g.EsVacante == 0)
-                                         .GroupBy(g => new { Cohorte = Cohorte(g), g.DiaSemana, Franja = FranjaDe(g) });
-
-            foreach (var gdf in porGrupoDiaFranja)
-            {
-                var clusters = AgVentanaSolape.AgruparPorSolape(gdf, g => g.FechaInicioEstimada, g => g.FechaFinEstimada);
-                foreach (var cluster in clusters)
-                {
-                    if (cluster.Count > 1)
-                    {
-                        hardCount += (cluster.Count - 1);
-                        individuo.Violaciones.Add(new AgViolacion(
-                            AgReglaViolacion.R4_DosAsignaturasMismoDia,
-                            esDura: true,
-                            mensaje: $"La cohorte '{gdf.Key.Cohorte}' tiene {cluster.Count} asignaturas el día {gdf.Key.DiaSemana} en la misma franja '{gdf.Key.Franja}'."));
-                    }
-                }
-            }
-
-            // Tope por día: 2 en SÁBADO (M+T si 4h), 1 en el resto (Fase 1162 / Fase 1175 / Fase 1569: solo cuenta franjas con solape temporal)
-            foreach (var gd in genes.Where(g => g.EsVacante == 0).GroupBy(g => new { Cohorte = Cohorte(g), g.DiaSemana }))
-            {
-                int tope = gd.Key.DiaSemana == 6 ? 2 : 1;
-                var clustersSolape = AgVentanaSolape.AgruparPorSolape(gd, g => g.FechaInicioEstimada, g => g.FechaFinEstimada);
-                foreach (var cluster in clustersSolape)
-                {
-                    var franjas = cluster.Select(FranjaDe).Distinct().ToList();
-                    if (franjas.Count > tope)
-                    {
-                        hardCount++;
-                        individuo.Violaciones.Add(new AgViolacion(
-                            AgReglaViolacion.R4_DosAsignaturasMismoDia,
-                            esDura: true,
-                            mensaje: $"La cohorte '{gd.Key.Cohorte}' tiene {franjas.Count} bloques el día {gd.Key.DiaSemana} ({string.Join("/", franjas)}); tope {tope}."));
-                    }
-                }
-            }
-
 
             // --- R5: Máximo de asignaturas activas concurrentes por cohorte por día real (Fase 1056 / Fase 1087 / Fase 1167 / Fase 1570) ---
             var porGrupo = genes.Where(g => g.EsVacante == 0).GroupBy(x => Cohorte(x));
@@ -609,46 +470,6 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     idGen: gen.Id));
             }
 
-            // --- R7: Tercero en dos grupos a la misma fecha/bloque horario ---
-            var docenteBloqueGrupos = genes.Where(g => g.EsVacante == 0 && g.IdTercero > 0 && g.IdBloqueHorario > 0)
-                                           .GroupBy(g => new { g.IdTercero, g.IdBloqueHorario });
-            foreach (var col in docenteBloqueGrupos)
-            {
-                int distinctGrupos = col.Select(Cohorte).Distinct().Count();
-                if (distinctGrupos > 1)
-                {
-                    hardCount += (distinctGrupos - 1);
-                    individuo.Violaciones.Add(new AgViolacion(
-                        AgReglaViolacion.R7_TerceroOtroGrupoFechaHora,
-                        esDura: true,
-                        mensaje: $"El docente {col.Key.IdTercero} está asignado a {distinctGrupos} cohortes distintas en el mismo bloque horario {col.Key.IdBloqueHorario}."));
-                }
-            }
-
-            // --- R7 (continuación): Ocupación externa del docente (sesiones de producción o staging aprobadas) ---
-            if (contexto.OcupacionExterna != null && contexto.OcupacionExterna.Count > 0)
-            {
-                foreach (var gen in genes.Where(g => g.EsVacante == 0 && g.IdTercero > 0 && g.IdBloqueHorario > 0))
-                {
-                    if (gen.FechaInicioEstimada.HasValue && contexto.BloquesPorId != null && contexto.BloquesPorId.TryGetValue(gen.IdBloqueHorario, out var bloque))
-                    {
-                        if (TimeSpan.TryParse(bloque.HoraInicio, out var tIni) && TimeSpan.TryParse(bloque.HoraFin, out var tFin) && tIni < tFin)
-                        {
-                            var franja = new ConversorPDF.XLL.Academic.Domain.Models.FranjaHoraria(tIni, tFin);
-                            if (contexto.TerceroOcupado(gen.IdTercero, gen.FechaInicioEstimada.Value, franja))
-                            {
-                                hardCount++;
-                                individuo.Violaciones.Add(new AgViolacion(
-                                    AgReglaViolacion.R7_TerceroOtroGrupoFechaHora,
-                                    esDura: true,
-                                    mensaje: $"El docente {gen.IdTercero} ya tiene una sesión externa en producción el {gen.FechaInicioEstimada.Value:yyyy-MM-dd} en la franja {bloque.HoraInicio} - {bloque.HoraFin}.",
-                                    idGen: gen.Id));
-                            }
-                        }
-                    }
-                }
-            }
-
             // --- Fase 456 & Fase 1298: R8_DiasDuplicadosGrupo y R8_DiaFueraDePatron (Multi-Día) ---
             foreach (var gr in genes.Where(g => !string.IsNullOrWhiteSpace(g.ClaveGrupo)).GroupBy(g => g.ClaveGrupo))
             {
@@ -684,6 +505,87 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         idGen: genFuera.Id));
                 }
             }
+
+            // --- Fase 1809: Evaluación temporal autoritativa con AgCalendarioConflictos (R1, R2, R3, R4, R7) ---
+            if (contexto.BloquesPorId != null && contexto.BloquesPorId.Count > 0)
+            {
+                var genesProgramables = genes.Where(g => g.MotivoVacante != AgMotivoVacante.SIN_BLOQUE_NIVEL.Codigo()
+                                                      && g.MotivoVacante != AgMotivoVacante.SIN_PLAN_OLEADA.Codigo()).ToList();
+                var proyeccion = AgCalendarioConflictos.Crear(genesProgramables, contexto);
+                if (proyeccion.IsFailure)
+                {
+                    individuo.Violaciones.Add(new AgViolacion(
+                        AgReglaViolacion.R14_BloqueHorarioNoAsignado, true,
+                        "Calendario no verificable: " + proyeccion.Error));
+                    individuo.HardViolations = hardCount + 1;
+                    individuo.SoftViolations = softScore;
+                    individuo.Estado = AgEstadoIndividuo.Infactible;
+                    return;
+                }
+                var ocupaciones = proyeccion.Value;
+                var serializador = new JavaScriptSerializer();
+
+                void Registrar(AgReglaViolacion regla, IEnumerable<AgCalendarioConflictos.Ocupacion> implicadas, string mensaje)
+                {
+                    var lista = implicadas.ToList();
+                    var indices = lista.Select(o => genes.IndexOf(o.Gen)).Distinct().ToArray();
+                    string detalle = serializador.Serialize(new {
+                        indicesGenes = indices,
+                        fecha = lista[0].Fecha.ToString("yyyy-MM-dd"),
+                        intervalos = lista.Select(o => new {
+                            o.Gen.IdAula, o.Gen.IdAsignatura, o.Gen.IdTercero,
+                            inicio = o.Inicio.ToString(), fin = o.Fin.ToString()
+                        }).ToArray()
+                    });
+                    individuo.Violaciones.Add(new AgViolacion(regla, true, mensaje, detalleJson: detalle));
+                    hardCount++;
+                }
+
+                foreach (var dia in ocupaciones.GroupBy(o => o.Fecha))
+                {
+                    var lista = dia.ToList();
+                    for (int i = 0; i < lista.Count; i++)
+                    for (int j = i + 1; j < lista.Count; j++)
+                    {
+                        var a = lista[i]; var b = lista[j];
+                        if (!AgCalendarioConflictos.SeCruzan(a, b)) continue;
+                        var par = new[] { a, b };
+                        string mensaje = $"Cruce real {dia.Key:yyyy-MM-dd}: asignaturas {a.Gen.IdAsignatura}/{b.Gen.IdAsignatura}.";
+                        bool docente = AgCalendarioConflictos.DocenteReal(a.Gen, contexto)
+                            && AgCalendarioConflictos.DocenteReal(b.Gen, contexto)
+                            && a.Gen.IdTercero == b.Gen.IdTercero;
+                        bool mismaCohorte = AgCalendarioConflictos.Cohorte(a.Gen) == AgCalendarioConflictos.Cohorte(b.Gen);
+                        if (docente)
+                        {
+                            Registrar(AgReglaViolacion.R1_SuperposicionDocente, par, mensaje);
+                            if (!mismaCohorte)
+                                Registrar(AgReglaViolacion.R7_TerceroOtroGrupoFechaHora, par, mensaje);
+                        }
+                        if (a.Gen.IdAula > 0 && a.Gen.IdAula == b.Gen.IdAula)
+                            Registrar(AgReglaViolacion.R2_SuperposicionAula, par, mensaje);
+                        if (mismaCohorte)
+                            Registrar(AgReglaViolacion.R3_SuperposicionGrupo, par, mensaje);
+                    }
+                }
+
+                // R4
+                foreach (var dia in ocupaciones.Where(o => o.Gen.EsVacante == 0).GroupBy(o => new { Cohorte = AgCalendarioConflictos.Cohorte(o.Gen), o.Fecha }))
+                {
+                    foreach (var franja in dia.GroupBy(o => o.Franja.Trim().ToUpperInvariant()))
+                        if (franja.Count() > 1)
+                            Registrar(AgReglaViolacion.R4_DosAsignaturasMismoDia, franja, $"Más de una sesión en la franja {franja.Key} el {dia.Key.Fecha:yyyy-MM-dd}.");
+                    int tope = dia.Key.Fecha.DayOfWeek == DayOfWeek.Saturday ? 2 : 1;
+                    if (dia.Select(o => o.Franja.Trim().ToUpperInvariant()).Distinct().Count() > tope)
+                        Registrar(AgReglaViolacion.R4_DosAsignaturasMismoDia, dia, $"Tope diario excedido el {dia.Key.Fecha:yyyy-MM-dd}.");
+                }
+
+                // R7 Externa
+                foreach (var o in ocupaciones.Where(o => AgCalendarioConflictos.DocenteReal(o.Gen, contexto)))
+                    if (contexto.TerceroOcupado(o.Gen.IdTercero, o.Fecha, new ConversorPDF.XLL.Academic.Domain.Models.FranjaHoraria(o.Inicio, o.Fin)))
+                        Registrar(AgReglaViolacion.R7_TerceroOtroGrupoFechaHora, new[] { o }, $"Ocupación externa del docente {o.Gen.IdTercero} el {o.Fecha:yyyy-MM-dd}.");
+            }
+
+
 
             // --- Evaluar S2: Desplazamientos inter-sede en el mismo día ---
             foreach (var kvp in docenteDias)

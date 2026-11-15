@@ -139,10 +139,12 @@ Wave 6 (Ronda 397) [Gate]:     T9 (Full Gate e Integración Global)
   3. Añade regresión específica demostrando que asignaturas con fechas alternadas sin cruce real (como Estadística y Teorías en CALI III-A) arrojan 0 HARD, mientras cruces efectivos por día/hora generan la violación correspondiente.
 - **validation**: Toda la suite existente y nueva de `AgValidadorReglasTests` pasa en verde; elimina los falsos positivos por solapamiento de rangos envolventes y preserva la detección de cruces reales.
 - **verification**: powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "AgValidadorReglasTests"
-- **evidence**: (la llena build-verifier)
-- **status**: pending
-- **log**: (lo llena el orquestador)
-- **files edited/created**: (lo llena el orquestador)
+- **evidence**: _evidence/20261115-143048/summary.md
+- **status**: done
+- **log**: Sustituidos bloques temporales por proyección fechada AgCalendarioConflictos en AgValidadorReglas (R1, R2, R3, R4, R7). Calibrados fixtures preexistentes con bloques activos en contexto.BloquesPorId. Añadida regresión Estadística vs Teorías con 0 HARD. 32/32 tests superados en AgValidadorReglasTests. Auditado y aprobado por task-reviewer.
+- **files edited/created**:
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgValidadorReglas.cs
+  - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgValidadorReglasTests.cs
 
 ### T5: A3 — Disponibilidad para el grupo completo en AgAsignadorTercero
 - **id**: T5
@@ -160,8 +162,12 @@ Wave 6 (Ronda 397) [Gate]:     T9 (Full Gate e Integración Global)
   - Añade pruebas unitarias xUnit en `AgAsignadorTerceroTests.cs` cubriendo asignación multi-día, consistencia de grupo y prevención de choques posteriores.
 - **validation**: `AgAsignadorTerceroTests` pasa verificando que un docente no es asignado si tiene cruces en fechas intermedias o posteriores de la asignatura y que el grupo hermano se mantiene sincronizado.
 - **verification**: powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "AgAsignadorTerceroTests"
-- **evidence**: (la llena build-verifier)
-- **status**: pending
+- **evidence**: _evidence/20261115-142233/summary.md
+- **status**: done
+- **log**: Implementado MismoGrupo, DisponibleGrupo, actualización sincronizada de grupo hermano en BuscarAlterno y helper BuscarYAsignarAlternoGrupo en AgAsignadorTercero. 8/8 pruebas superadas en AgAsignadorTerceroTests. Auditado y aprobado por task-reviewer.
+- **files edited/created**:
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgAsignadorTercero.cs
+  - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgAsignadorTerceroTests.cs
 - **log**: (lo llena el orquestador)
 - **files edited/created**: (lo llena el orquestador)
 

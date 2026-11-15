@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ConversorPDF.XLL.Academic.Domain.Enums;
+using ConversorPDF.XLL.Academic.Domain.Models;
 using ConversorPDF.XLL.Academic.Domain.Models.Genetica;
 
 namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
@@ -16,6 +17,43 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         public AgAsignadorTercero(Random random = null)
         {
             _random = random ?? new Random();
+        }
+
+        private static bool MismoGrupo(AgGen a, AgGen b) =>
+            a != null && b != null
+            && a.IdAula == b.IdAula && a.IdAsignatura == b.IdAsignatura
+            && a.IdPrograma == b.IdPrograma && a.IdSede == b.IdSede
+            && string.Equals(a.Grupo ?? "", b.Grupo ?? "", StringComparison.Ordinal);
+
+        private static bool DisponibleGrupo(int docente, AgGen gen, AgIndividuo individuo, AgContexto contexto)
+        {
+            if (gen == null || contexto == null) return false;
+            if (docente <= 0 || docente == contexto.IdTerceroVacante) return false;
+            var grupo = (individuo != null && individuo.Genes != null)
+                ? individuo.Genes.Where(g => MismoGrupo(g, gen)).ToList()
+                : new List<AgGen>();
+            if (grupo.Count == 0) grupo.Add(gen);
+            if (grupo.Any(g => g.Estado == AgEstadoGen.Fijado && g.IdTercero != docente))
+                return false;
+            if (grupo.Any(g => !contexto.EsDocenteHabilitado(docente, g.IdPrograma, g.IdAsignatura, g.Semestre)))
+                return false;
+
+            var propias = AgCalendarioConflictos.Crear(grupo, contexto);
+            if (propias.IsFailure) return false;
+
+            var otrosGenes = (individuo != null && individuo.Genes != null)
+                ? individuo.Genes.Where(g => !MismoGrupo(g, gen) && AgCalendarioConflictos.DocenteReal(g, contexto) && g.IdTercero == docente)
+                : Enumerable.Empty<AgGen>();
+            var ajenas = AgCalendarioConflictos.Crear(otrosGenes, contexto);
+            if (ajenas.IsFailure) return false;
+
+            foreach (var o in propias.Value)
+            {
+                if (ajenas.Value.Any(a => AgCalendarioConflictos.SeCruzan(o, a))) return false;
+                if (contexto.TerceroOcupado(docente, o.Fecha, new ConversorPDF.XLL.Academic.Domain.Models.FranjaHoraria(o.Inicio, o.Fin)))
+                    return false;
+            }
+            return true;
         }
 
         public bool AsignarDocente(AgGen gen, AgContexto contexto, HashSet<int> docentesExcluidos = null)
@@ -55,42 +93,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         public bool DocenteDisponible(AgGen gen, AgIndividuo individuo, AgContexto contexto)
         {
             if (gen == null || contexto == null || gen.IdTercero <= 0) return false;
-
-            // 1. Validar habilitación en pool
-            if (!contexto.EsDocenteHabilitado(gen.IdTercero, gen.IdPrograma, gen.IdAsignatura, gen.Semestre))
-            {
-                return false;
-            }
-
-            // 2. Validar superposición interna en el individuo
-            if (individuo != null && individuo.Genes != null && gen.IdBloqueHorario > 0)
-            {
-                foreach (var other in individuo.Genes)
-                {
-                    if (ReferenceEquals(other, gen)) continue;
-                    if (other.IdTercero == gen.IdTercero && other.IdBloqueHorario == gen.IdBloqueHorario)
-                    {
-                        return false;
-                    }
-                }
-            }
-
-            // 3. Validar ocupación externa (sesiones de producción o staging aprobadas)
-            if (contexto.OcupacionExterna != null && contexto.OcupacionExterna.Count > 0 &&
-                gen.FechaInicioEstimada.HasValue && gen.IdBloqueHorario > 0 &&
-                contexto.BloquesPorId != null && contexto.BloquesPorId.TryGetValue(gen.IdBloqueHorario, out var bloque))
-            {
-                if (TimeSpan.TryParse(bloque.HoraInicio, out var tIni) && TimeSpan.TryParse(bloque.HoraFin, out var tFin) && tIni < tFin)
-                {
-                    var franja = new ConversorPDF.XLL.Academic.Domain.Models.FranjaHoraria(tIni, tFin);
-                    if (contexto.TerceroOcupado(gen.IdTercero, gen.FechaInicioEstimada.Value, franja))
-                    {
-                        return false;
-                    }
-                }
-            }
-
-            return true;
+            return DisponibleGrupo(gen.IdTercero, gen, individuo, contexto);
         }
 
         public int BuscarAlterno(AgGen gen, AgContexto contexto, AgIndividuo individuo)
@@ -104,35 +107,22 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 {
                     if (cand.IdTercero == gen.IdTercero) continue;
 
-                    bool tieneConflictoInterno = false;
-                    if (individuo != null && individuo.Genes != null && gen.IdBloqueHorario > 0)
+                    if (DisponibleGrupo(cand.IdTercero, gen, individuo, contexto))
                     {
-                        foreach (var other in individuo.Genes)
+                        if (individuo != null && individuo.Genes != null)
                         {
-                            if (ReferenceEquals(other, gen)) continue;
-                            if (other.IdTercero == cand.IdTercero && other.IdBloqueHorario == gen.IdBloqueHorario)
+                            foreach (var m in individuo.Genes.Where(g => MismoGrupo(g, gen) && g.Estado != AgEstadoGen.Fijado))
                             {
-                                tieneConflictoInterno = true;
-                                break;
+                                m.IdTercero = cand.IdTercero;
+                                m.EsVacante = 0;
+                                m.MotivoVacante = string.Empty;
                             }
                         }
-                    }
-
-                    if (!tieneConflictoInterno)
-                    {
-                        // Validar ocupación externa para el candidato alterno
-                        if (contexto.OcupacionExterna != null && contexto.OcupacionExterna.Count > 0 &&
-                            gen.FechaInicioEstimada.HasValue && gen.IdBloqueHorario > 0 &&
-                            contexto.BloquesPorId != null && contexto.BloquesPorId.TryGetValue(gen.IdBloqueHorario, out var blk))
+                        else if (gen.Estado != AgEstadoGen.Fijado)
                         {
-                            if (TimeSpan.TryParse(blk.HoraInicio, out var tI) && TimeSpan.TryParse(blk.HoraFin, out var tF) && tI < tF)
-                            {
-                                var fr = new ConversorPDF.XLL.Academic.Domain.Models.FranjaHoraria(tI, tF);
-                                if (contexto.TerceroOcupado(cand.IdTercero, gen.FechaInicioEstimada.Value, fr))
-                                {
-                                    continue;
-                                }
-                            }
+                            gen.IdTercero = cand.IdTercero;
+                            gen.EsVacante = 0;
+                            gen.MotivoVacante = string.Empty;
                         }
 
                         return cand.IdTercero;
@@ -141,6 +131,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             }
 
             return 0;
+        }
+
+        public int BuscarYAsignarAlternoGrupo(AgGen gen, AgContexto contexto, AgIndividuo individuo)
+        {
+            return BuscarAlterno(gen, contexto, individuo);
         }
 
         public string DiagnosticarMotivo(AgGen gen, AgContexto contexto)
