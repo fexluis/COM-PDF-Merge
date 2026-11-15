@@ -271,6 +271,16 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                 {
                     return RechazoConLog("CONFIGURACION_MODIFICADA", "Reclasificación ajena o configuración modificada. Recalcular propuesta.", rec.IdAula, rec.IdAsignatura);
                 }
+
+                // Corrección [P2]: Comprobar pertenencia a las candidatas del diagnóstico vigente y sellado (materia con déficit positivo)
+                var candidatasAula = IdentificarPatronesRedistribuibles(contexto, aulasCoincidentes[0]);
+                var candidataValida = candidatasAula.FirstOrDefault(c => c.IdAsignatura == rec.IdAsignatura);
+                if (candidataValida == null || candidataValida.SesionesPendientes <= 0)
+                {
+                    return RechazoConLog("MATERIA_SIN_DEFICIT",
+                        $"La asignatura {rec.IdAsignatura} no presenta déficit de sesiones pendientes en el aula {rec.AulaRef} dentro del plazo evaluado.",
+                        rec.IdAula, rec.IdAsignatura);
+                }
             }
 
             return AgResultadoValidacionSeleccion.Valido();
@@ -627,7 +637,11 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                             var aulas = contexto.Aulas.Where(a => string.Equals(a.AulaRef, d.AulaRef, StringComparison.Ordinal)
                                 && string.Equals(a.Subunidad ?? string.Empty, d.Subunidad ?? string.Empty, StringComparison.Ordinal)).ToList();
                             if (aulas.Count != 1) { throw new InvalidOperationException("Configuración modificada: cambió el aula."); }
-                            int idAula = d.IdAula > 0 ? d.IdAula : aulas[0].Id;
+                            if (d.IdAula <= 0 || d.IdAula != aulas[0].Id)
+                            {
+                                throw new InvalidOperationException($"La propuesta fue modificada: IdAula ({d.IdAula}) no coincide con el aula esperada ({aulas[0].Id}). Recalcular.");
+                            }
+                            int idAula = d.IdAula;
 
                             string huellaContexto = AgHuellaPlanVentana.Calcular(contexto, aulas[0]);
                             string huellaSql = AgHuellaEscaladoPersistido.Calcular(db, tx, d.AulaRef, d.Subunidad, idArbol);
@@ -687,7 +701,11 @@ AND id_asignatura IN @Ids AND UPPER(COALESCE(origen_patron,''))='AUTOMATICO';",
                             {
                                 foreach (var rec in d.ReclasificacionesAutorizadas)
                                 {
-                                    int targetIdAula = rec.IdAula > 0 ? rec.IdAula : idAula;
+                                    if (rec.IdAula <= 0 || rec.IdAula != idAula)
+                                    {
+                                        throw new InvalidOperationException($"La propuesta fue modificada: IdAula de la reclasificación ({rec.IdAula}) no coincide con el aula esperada ({idAula}). Recalcular.");
+                                    }
+                                    int targetIdAula = idAula;
                                     int afectoRec = await db.ExecuteAsync(new CommandDefinition(@"
 UPDATE ag_aula_asignatura
 SET origen_patron=@OrigenNuevo, dias_patron=@DiasNuevo
@@ -756,7 +774,7 @@ AND COALESCE(dias_patron,'')=@DiasAntes;",
         {
             var partes = new List<string>
             {
-                "propuesta-escalado-v3", d.AulaRef, d.Subunidad, d.Desde, d.Hacia,
+                "propuesta-escalado-v4", d.IdAula.ToString(CultureInfo.InvariantCulture), d.AulaRef, d.Subunidad, d.Desde, d.Hacia,
                 d.Mejora.ToString(), d.CapacidadAntes.ToString(CultureInfo.InvariantCulture),
                 d.CapacidadDespues.ToString(CultureInfo.InvariantCulture),
                 d.DemandaPendiente.ToString(CultureInfo.InvariantCulture),

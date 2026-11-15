@@ -1666,12 +1666,12 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     if (!validacion.EsValido)
                     {
                         MessageBox.Show(this,
-                            $"No se pudo autorizar la reclasificación: {validacion.Mensaje}",
+                            $"No se pudo autorizar la reclasificación: {validacion.Mensaje}\n\nDebe recalcular la propuesta para continuar.",
                             "Reclasificación no aplicable",
                             MessageBoxButtons.OK,
                             MessageBoxIcon.Warning);
                         Log($"[ESCALADO-WARN] Validación de reclasificación rechazada: {validacion.Motivo} - {validacion.Mensaje}");
-                        return AgResultadoEscaladoUI.SinCambios;
+                        return AgResultadoEscaladoUI.FalloAlAplicar;
                     }
                 }
 
@@ -1824,12 +1824,12 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             catch (ArgumentException ex)
             {
                 MessageBox.Show(this,
-                    $"Error al procesar el escalado o la reclasificación: {ex.Message}",
+                    $"Error al procesar el escalado o la reclasificación: {ex.Message}\n\nDebe recalcular la propuesta para continuar.",
                     "Reclasificación no aplicable",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Warning);
                 Log($"[ESCALADO-WARN] Excepción controlada de validación de reclasificación: {ex.Message}");
-                return AgResultadoEscaladoUI.SinCambios;
+                return AgResultadoEscaladoUI.FalloAlAplicar;
             }
         }
 

@@ -413,6 +413,82 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
         }
 
         [Fact]
+        public void ValidarSelecciones_WhenMateriaCompletaSinDeficit_ShouldRetornarRechazoMateriaSinDeficit()
+        {
+            // Arrange: Contexto con ventana holgada (16 semanas = 16 viernes disponibles) y 16h requeridas (4 sesiones) -> 0 déficit
+            var ctx = Contexto(new DateTime(2027, 5, 30));
+            ctx.AulaAsignaturaPorAulaAsig[(1, 1)] = new AgAulaAsignatura
+            {
+                IdAula = 1, IdAsignatura = 1, HorasObjetivo = 16,
+                OrigenPatron = "LEGADO", DiasPatron = "5"
+            };
+            ctx.AulaAsignaturas = ctx.AulaAsignaturaPorAulaAsig.Values.ToList();
+            ctx.ConstruirIndices();
+
+            var sut = new AgEscaladorRanuraAula(() => null);
+
+            // Act 1: Identificar candidatos debe retornar 0
+            var candidatos = sut.IdentificarPatronesRedistribuibles(ctx, ctx.Aulas[0]);
+            candidatos.Should().BeEmpty();
+
+            // Act 2: Intento de forzar autorización directa de la materia completa sin déficit
+            var recDirecto = new AgReclasificacionPatron
+            {
+                IdAula = 1,
+                AulaRef = "A1",
+                Subunidad = "VALLE",
+                IdAsignatura = 1,
+                NombreAsignatura = "Asig 1",
+                OrigenAnterior = "LEGADO",
+                OrigenPropuesto = "AUTOMATICO",
+                DiasPatronAnterior = "5",
+                DiasPatronPropuesto = string.Empty,
+                Autorizado = true
+            };
+
+            var validacion = sut.ValidarSelecciones(ctx, new[] { recDirecto });
+
+            // Assert 2: Rechazo tipado con motivo MATERIA_SIN_DEFICIT
+            validacion.EsValido.Should().BeFalse();
+            validacion.Motivo.Should().Be("MATERIA_SIN_DEFICIT");
+            validacion.Mensaje.Should().Contain("déficit");
+
+            // Act 3: EvaluarInterno debe arrojar ArgumentException impidiendo continuar
+            Action evaluar = () => sut.Evaluar(ctx, 0, new[] { recDirecto });
+            evaluar.Should().Throw<ArgumentException>().WithMessage("*déficit*");
+        }
+
+        [Fact]
+        public async Task Aplicar_WhenIdAulaManipulado_ShouldRechazarYNoEscribir()
+        {
+            // Arrange: Contexto con déficit real (2 viernes vs 4 sesiones requeridas)
+            var ctx = CrearContextoConPatrones();
+            var sut = new AgEscaladorRanuraAula(() => null);
+            var rec = sut.IdentificarPatronesRedistribuibles(ctx, ctx.Aulas[0]).Single();
+            rec.Autorizado = true;
+            var decisiones = sut.Evaluar(ctx, 0, new[] { rec });
+
+            decisiones.Should().NotBeEmpty();
+            var decOriginal = decisiones[0];
+            decOriginal.IdAula.Should().Be(1);
+
+            // SUT con factory que fallaría si se intentara abrir conexión a BD
+            var sutSinDb = new AgEscaladorRanuraAula(() => throw new InvalidOperationException("No debe abrir conexión a BD"));
+
+            // Act 1: Manipular IdAula en la decisión alterando la huella o el target
+            var decisionManipulada = decOriginal;
+            decisionManipulada.IdAula = 999; // ID ajeno al aula esperada (1)
+
+            var resultadoRechazado = await sutSinDb.AplicarDetalladoAsync(new[] { decisionManipulada }, 0, CancellationToken.None);
+
+            // Assert 1: Rechazo con fallo controlado y 0 escrituras
+            resultadoRechazado.Exito.Should().BeFalse();
+            resultadoRechazado.Error.Should().MatchRegex("(modificada|IdAula)");
+            resultadoRechazado.Modificadas.Should().Be(0);
+            resultadoRechazado.Confirmadas.Should().Be(0);
+        }
+
+        [Fact]
         public void Sellar_CompletaHuecosAnterioresALaUltimaFecha()
         {
             var ctx = Contexto();

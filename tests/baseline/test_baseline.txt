@@ -1,5 +1,5 @@
-# Baseline medido 2026-11-14 con scripts/verify.ps1 -Mode Full tras Fases 1788-1797 (R-077)
-TOTAL: 1356
-PASSED: 1356
+# Baseline medido 2026-11-14 con scripts/verify.ps1 -Mode Full tras correcciones pre-release R-077
+TOTAL: 1358
+PASSED: 1358
 FAILED: 0
 SKIPPED: 0
