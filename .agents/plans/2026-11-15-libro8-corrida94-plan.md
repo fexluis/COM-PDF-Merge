@@ -1,6 +1,6 @@
 # Plan: Correcciones Libro 8 / Corrida 94 — Aulas Aprobadas, Autoridad de Conflictos Fechados y Consistencia Staging/UI
 
-**Generado**: 2026-11-15 · **Autor**: Swarm-Planner · **Estado**: executing
+**Generado**: 2026-11-15 · **Autor**: Swarm-Planner · **Estado**: closed
 
 ## Execution envelope
 - branch: codex/huellas-escalado-20261114
@@ -261,10 +261,12 @@ Wave 6 (Ronda 397) [Gate]:     T9 (Full Gate e Integración Global)
   - Actualiza `tests/baseline/test_baseline.txt` con la nueva cardinalidad neta de pruebas aprobadas sin regresiones.
 - **validation**: Suite completa en verde (Full Mode), 0 fallos, 0 omitidos, `TOTAL >= 1391`.
 - **verification**: powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Full
-- **evidence**: (la llena build-verifier)
-- **status**: pending
-- **log**: (lo llena el orquestador)
-- **files edited/created**: (lo llena el orquestador)
+- **evidence**: _evidence/20261115-151059/summary.md
+- **status**: done
+- **log**: Implementada prueba de aceptación Criterio14 en AgPlanificadorRanurasAceptacionTests validando las soluciones de Libro 8 / Corrida 94. Verificación Full completada exitosamente: 1446/1446 pruebas superadas (0 fallos, 0 omitidos, 0 regresiones). Baseline actualizado a 1446.
+- **files edited/created**:
+  - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgPlanificadorRanurasAceptacionTests.cs
+  - tests/baseline/test_baseline.txt
 
 ## Parallel execution groups
 | Wave | Ronda | Tasks | Can start when |

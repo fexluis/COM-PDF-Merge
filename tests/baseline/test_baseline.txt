@@ -1,5 +1,5 @@
-# Baseline medido 2026-11-14 con scripts/verify.ps1 -Mode Full tras completar Corrida 92 (completar huecos y unificar evaluacion/generacion)
-TOTAL: 1387
-PASSED: 1387
+# Baseline medido 2026-11-15 con scripts/verify.ps1 -Mode Full tras implementar Libro 8 / Corrida 94 (Ronda 397 / Fase 1814)
+TOTAL: 1446
+PASSED: 1446
 FAILED: 0
 SKIPPED: 0

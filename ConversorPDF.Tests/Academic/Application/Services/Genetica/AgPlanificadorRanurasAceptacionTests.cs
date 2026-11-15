@@ -985,6 +985,262 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             }
         }
 
+        /// <summary>
+        /// Criterio 14: Validación integral de hallazgos de Corrida 94 (Fase 1814):
+        /// 1. Aula aprobada con déficit es bloqueada en ValidarAprobadas sin mutar estado.
+        /// 2. Asignaturas con semanas intercaladas sin solape horario arrojan 0 HARD en AgValidadorReglas.
+        /// 3. AgScheduleRepository persiste vacantes en ag_corrida y resuelve indicesGenes a id_gen.
+        /// </summary>
+        [Fact]
+        public async Task Criterio14_Corrida94_CalendarioConflictos_Aprobadas_Y_ConsistenciaStaging()
+        {
+            // 1. ValidarAprobadas pre-vuelo
+            var ctxAprobadas = new AgContexto
+            {
+                Ventana = new VentanaSemestre
+                {
+                    FechaInicio = new DateTime(2027, 2, 1),
+                    FechaFin = new DateTime(2027, 5, 30)
+                }
+            };
+            ctxAprobadas.Programas.Add(new Programa { Id = 1, Nombre = "Prog Test", Modalidad = "PREGRADO" });
+            var aulaDeficit = new AgAula
+            {
+                Id = 13,
+                AulaRef = "CALI I-A",
+                Estado = AgEstadoAula.Aprobado,
+                DiasVentana = "5,6",
+                Jornada = "NOCHE",
+                HorasDia = 4,
+                IdPrograma = 1
+            };
+            ctxAprobadas.Aulas.Add(aulaDeficit);
+
+            for (int i = 1; i <= 4; i++)
+            {
+                ctxAprobadas.Asignaturas.Add(new Asignatura { Id = i, Nombre = "Materia " + i, IntHoraria = 64, IdPrograma = 1 });
+                var aa = new AgAulaAsignatura
+                {
+                    IdAula = 13,
+                    IdAsignatura = i,
+                    HorasObjetivo = 64.0
+                };
+                ctxAprobadas.AulaAsignaturas.Add(aa);
+                ctxAprobadas.AulaAsignaturaPorAulaAsig[(13, i)] = aa;
+            }
+            ctxAprobadas.ConstruirIndices();
+
+            var resAprobadas = AgGeneradorHorarios.ValidarAprobadas(ctxAprobadas);
+            resAprobadas.IsFailure.Should().BeTrue();
+            resAprobadas.Error.Should().Contain("I5_AULA_APROBADA_CON_DEFICIT");
+
+            // 2. AgCalendarioConflictos & AgValidadorReglas: Materias intercaladas sin cruce real
+            var ctxReglas = new AgContexto
+            {
+                IdPrograma = 1,
+                Ventana = VentanaSemestre.Crear(1, "2027-1", new DateTime(2027, 4, 1), new DateTime(2027, 5, 30), AgOrigenVentana.Presencial).Value
+            };
+            ctxReglas.Programas.Add(new Programa { Id = 1, Modalidad = "PREGRADO" });
+            ctxReglas.AulasPorId[36] = new AgAula { Id = 36, IdPrograma = 1, Semestre = "III", Grupo = "A", Estado = AgEstadoAula.Disponible };
+            ctxReglas.RegistrarDocenteHabilitado(10, 1, 201, "III");
+            ctxReglas.RegistrarDocenteHabilitado(20, 1, 202, "III");
+
+            var bloqueViernes = new AgBloqueHorario
+            {
+                Id = 50,
+                DiaSemanaNumero = 5,
+                Franja = "TARDE",
+                HoraInicio = "14:00",
+                HoraFin = "18:00",
+                DuracionHoras = 4.0,
+                Activo = 1
+            };
+            ctxReglas.Bloques.Add(bloqueViernes);
+            ctxReglas.BloquesPorId[50] = bloqueViernes;
+            ctxReglas.ConstruirIndices();
+
+            var genEstadistica = new AgGen
+            {
+                Id = 1,
+                IdAula = 36,
+                IdAsignatura = 201,
+                IdPrograma = 1,
+                IdSede = 1,
+                Semestre = "III",
+                Grupo = "A",
+                DiasPatron = "CARRIL_1",
+                IdTercero = 10,
+                IdBloqueHorario = 50,
+                DiaSemana = 5,
+                HorasGen = 8.0,
+                HorasSemanales = 4.0,
+                FechaInicioEstimada = new DateTime(2027, 4, 2),
+                FechaFinEstimada = new DateTime(2027, 4, 16),
+                EsVacante = 0,
+                FechasGen = new List<DateTime>
+                {
+                    new DateTime(2027, 4, 2),  // Semana 1 (Viernes)
+                    new DateTime(2027, 4, 16)  // Semana 3 (Viernes)
+                }
+            };
+
+            var genTeorias = new AgGen
+            {
+                Id = 2,
+                IdAula = 36,
+                IdAsignatura = 202,
+                IdPrograma = 1,
+                IdSede = 1,
+                Semestre = "III",
+                Grupo = "A",
+                DiasPatron = "CARRIL_2",
+                IdTercero = 20,
+                IdBloqueHorario = 50,
+                DiaSemana = 5,
+                HorasGen = 8.0,
+                HorasSemanales = 4.0,
+                FechaInicioEstimada = new DateTime(2027, 4, 9),
+                FechaFinEstimada = new DateTime(2027, 4, 23),
+                EsVacante = 0,
+                FechasGen = new List<DateTime>
+                {
+                    new DateTime(2027, 4, 9),  // Semana 2 (Viernes)
+                    new DateTime(2027, 4, 23)  // Semana 4 (Viernes)
+                }
+            };
+
+            var ind = new AgIndividuo();
+            ind.Genes.Add(genEstadistica);
+            ind.Genes.Add(genTeorias);
+
+            var validador = new AgValidadorReglas();
+            validador.Evaluar(ind, ctxReglas);
+
+            ind.HardViolations.Should().Be(0, "Estadística y Teorías usan semanas alternadas en el mismo bloque y aula sin cruce real");
+            ind.Estado.Should().Be(AgEstadoIndividuo.Factible);
+
+            // 3. Persistencia de vacantes y resolución de indicesGenes a id_gen
+            string dbPath = Path.Combine(Path.GetTempPath(), "esap_criterio14_" + Guid.NewGuid().ToString("N") + ".db");
+            string connStr = "Data Source=" + dbPath + ";Version=3;";
+
+            try
+            {
+                using (var conn = new SQLiteConnection(connStr))
+                {
+                    conn.Open();
+                    conn.Execute(@"
+                        CREATE TABLE ag_corrida (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            idperiodo INTEGER NOT NULL DEFAULT 0,
+                            idprograma INTEGER NOT NULL DEFAULT 0,
+                            idaula INTEGER NOT NULL DEFAULT 0,
+                            fecha_inicio_corrida TEXT NOT NULL DEFAULT '',
+                            fecha_fin_corrida TEXT NOT NULL DEFAULT '',
+                            estado INTEGER NOT NULL DEFAULT 0,
+                            poblacion_tamano INTEGER NOT NULL DEFAULT 0,
+                            generaciones_max INTEGER NOT NULL DEFAULT 0,
+                            generaciones_ejecutadas INTEGER NOT NULL DEFAULT 0,
+                            tasa_cruce REAL NOT NULL DEFAULT 0,
+                            tasa_mutacion REAL NOT NULL DEFAULT 0,
+                            elitismo INTEGER NOT NULL DEFAULT 0,
+                            mejor_fitness REAL NOT NULL DEFAULT 0,
+                            hard_violations INTEGER NOT NULL DEFAULT 0,
+                            soft_violations REAL NOT NULL DEFAULT 0,
+                            vacantes INTEGER NOT NULL DEFAULT 0,
+                            id_individuo_optimo INTEGER NULL,
+                            parametros_json TEXT NOT NULL DEFAULT '{}',
+                            subunidad TEXT NOT NULL DEFAULT ''
+                        );
+                        CREATE TABLE ag_individuo (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            id_corrida INTEGER NOT NULL,
+                            generacion INTEGER NOT NULL DEFAULT 0,
+                            fitness REAL NOT NULL DEFAULT 0,
+                            hard_violations INTEGER NOT NULL DEFAULT 0,
+                            soft_violations REAL NOT NULL DEFAULT 0,
+                            estado INTEGER NOT NULL DEFAULT 0,
+                            subunidad TEXT NOT NULL DEFAULT ''
+                        );
+                        CREATE TABLE ag_gen (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            id_individuo INTEGER NOT NULL,
+                            idperiodo INTEGER NOT NULL DEFAULT 0,
+                            idasignatura INTEGER NOT NULL DEFAULT 0,
+                            idprograma INTEGER NOT NULL DEFAULT 0,
+                            idsede INTEGER NOT NULL DEFAULT 0,
+                            semestre TEXT NOT NULL DEFAULT '',
+                            grupo TEXT NOT NULL DEFAULT '',
+                            idtercero INTEGER NOT NULL DEFAULT 0,
+                            id_aula INTEGER NOT NULL DEFAULT 0,
+                            id_bloque_horario INTEGER NOT NULL DEFAULT 0,
+                            dia_semana INTEGER NOT NULL DEFAULT 0,
+                            horas_semanales REAL NOT NULL DEFAULT 0,
+                            total_horas_asignatura REAL NOT NULL DEFAULT 0,
+                            fecha_inicio_estimada TEXT NOT NULL DEFAULT '',
+                            fecha_fin_estimada TEXT NOT NULL DEFAULT '',
+                            es_fijo INTEGER NOT NULL DEFAULT 0,
+                            es_vacante INTEGER NOT NULL DEFAULT 0,
+                            motivo_vacante TEXT NOT NULL DEFAULT '',
+                            dentro_de_ventana INTEGER NOT NULL DEFAULT 0,
+                            estado INTEGER NOT NULL DEFAULT 0,
+                            subunidad TEXT NOT NULL DEFAULT '',
+                            indice_dia_patron INTEGER NOT NULL DEFAULT 0,
+                            patron_semanal TEXT NOT NULL DEFAULT '',
+                            dias_patron TEXT NOT NULL DEFAULT '',
+                            clave_grupo TEXT NOT NULL DEFAULT '',
+                            horas_gen REAL NOT NULL DEFAULT 0
+                        );
+                        CREATE TABLE ag_violacion (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            id_individuo INTEGER NOT NULL,
+                            id_gen INTEGER NULL,
+                            regla TEXT NOT NULL DEFAULT '',
+                            es_dura INTEGER NOT NULL DEFAULT 1,
+                            mensaje TEXT NOT NULL DEFAULT '',
+                            detalle_json TEXT NOT NULL DEFAULT '{}',
+                            subunidad TEXT NOT NULL DEFAULT ''
+                        );
+                    ");
+                    conn.Execute("INSERT INTO ag_corrida (id, estado, vacantes) VALUES (1, 1, 0);");
+                }
+
+                var repo = new AgScheduleRepository(() => new SQLiteConnection(connStr));
+
+                // Prueba UpdateCorridaAsync persistiendo vacantes
+                var corrida = (await repo.GetCorridaByIdAsync(1, CancellationToken.None)).Value;
+                corrida.Vacantes = 7;
+                corrida.HardViolations = 0;
+                corrida.Estado = AgEstadoCorrida.Completada;
+                var resUpd = await repo.UpdateCorridaAsync(corrida, CancellationToken.None);
+                resUpd.IsSuccess.Should().BeTrue();
+
+                var corridaLeida = (await repo.GetCorridaByIdAsync(1, CancellationToken.None)).Value;
+                corridaLeida.Vacantes.Should().Be(7);
+
+                // Prueba SaveIndividuoAsync mapeando indicesGenes a id_gen
+                var indPersist = new AgIndividuo { IdCorrida = 1, Generacion = 1, Fitness = 0.95 };
+                indPersist.Genes.Add(new AgGen { IdAsignatura = 10, HorasGen = 4.0, IdBloqueHorario = 1 });
+                indPersist.Genes.Add(new AgGen { IdAsignatura = 20, HorasGen = 4.0, IdBloqueHorario = 1 });
+
+                var violacionConIndices = new AgViolacion(AgReglaViolacion.R2_SuperposicionAula, true, "Cruce de aula",
+                    detalleJson: "{\"indicesGenes\":[1],\"fecha\":\"2027-04-16\"}");
+                indPersist.Violaciones.Add(violacionConIndices);
+
+                var saveRes = await repo.SaveIndividuoAsync(indPersist, CancellationToken.None);
+                saveRes.IsSuccess.Should().BeTrue();
+
+                // Verificar que el gen 1 obtuvo un ID y la violacion fue enlazada a él
+                long idGenEsperado = indPersist.Genes[1].Id;
+                idGenEsperado.Should().BeGreaterThan(0);
+                violacionConIndices.IdGen.Should().Be(idGenEsperado);
+                violacionConIndices.DetalleJson.Should().Contain("\"idGenes\":[" + idGenEsperado + "]");
+            }
+            finally
+            {
+                try { if (File.Exists(dbPath)) File.Delete(dbPath); } catch { }
+            }
+        }
+
         #region Métodos Auxiliares
 
         private static List<AgBloqueHorario> CrearBloquesLunesViernes(double duracion, string franja)
