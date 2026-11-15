@@ -250,3 +250,14 @@ Wave 8: T8 (Fase 1805) [Certificación Gate Full & Calibración Baseline]
    - **Mitigación**: T3 estipula que la condición de parada evalúe compactación continua sin corte anticipado en la primera partición factible.
 4. **Riesgo**: Regresiones en la suite global de 1359 pruebas.
    - **Mitigación**: T8 ejecuta `scripts/verify.ps1 -Mode Full` garantizando que ninguna funcionalidad existente se degrade.
+
+## Post-Review Audit & Fixes (2026-11-15)
+1. **[P1] Fábrica de Individuos — Preservación Estricta de Plan Fechado**:
+   - `AgFabricaIndividuos.cs`: Corregido para que `sesionesPlanificadas` nunca se asigne a `null` ni se limite artificialmente a 2 ranuras cuando existe un plan fechado válido (`tienePlanFechadoValido = sesionesPlanificadas != null && sesionesPlanificadas.Count > 0`). El reparto canónico de carriles se aplica exclusivamente cuando no existe un plan previo.
+   - `AgPlanificadorRanurasAceptacionTests.cs`: Incorporado `Criterio13_AutomaticoSinPatron_ConMasDeDosRanuras_ConservaPlanFechadoHastaStaging` verificando que materias automáticas sin patrón con más de 2 ranuras persisten todas sus sesiones hasta SQLite staging sin truncamientos.
+2. **[P2] Reproducibilidad Integral — Snapshot Completo en ParametrosJson**:
+   - `AgFormGeneradorHorarios.cs`: Ampliado el snapshot para serializar la configuración completa de todas las aulas (`_contextoActual.Aulas`, incluyendo `VentanaOrigen`, fechas inicio/fin, jornada, horas día), la demanda efectiva con `HorasObjetivo`, `OrigenPatron`, `DiasPatron`, y las relaciones por `(IdAula, IdAsignatura)`.
+   - Control de excepciones mejorado: ante errores de cálculo de huella, no se presenta `"ERROR: ..."` como huella válida sino que se registra en `errorCaptura` y la huella queda nula/vacía de forma segura.
+3. **[P2] Contrato Sabatino 4h — Bloqueo de Franja NOCHE en Fallback**:
+   - `AgRanuras.cs`: En el mecanismo de fallback F1189 por catálogo, se aplica el filtro estricto de sábado 4h a `MANANA` y `TARDE`, impidiendo que un catálogo con únicamente bloques nocturnos admita NOCHE en sábado.
+   - `AgRanurasTests.cs`: Añadido test unitario `PorVentana_WhenSabadoSoloTieneBloqueNoche_ShouldNoDevolverRanurasSabadoNiFallbackNoche`.

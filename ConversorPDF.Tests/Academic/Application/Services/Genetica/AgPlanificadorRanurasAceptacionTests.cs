@@ -1,14 +1,20 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Data.SQLite;
+using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using ConversorPDF.XLL.Academic.Application.Services.Genetica;
 using ConversorPDF.XLL.Academic.Domain.Enums;
+using ConversorPDF.XLL.Academic.Domain.Interfaces;
 using ConversorPDF.XLL.Academic.Domain.Models;
 using ConversorPDF.XLL.Academic.Domain.Models.Genetica;
 using ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories;
 using CSharpFunctionalExtensions;
+using Dapper;
 using FluentAssertions;
+using Moq;
 using Xunit;
 
 namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
@@ -26,8 +32,8 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
 
         /// <summary>
         /// Criterio 1: Cali III y IV completan horas exactas (256/272 h) antes del límite estipulado
-        /// (13/05 para III, 19/05 para IV), cero sesiones posteriores al 30/05/2027 y conservan las
-        /// fechas exactas de las 5 materias restringidas previas.
+        /// (13/05 para III, 19/05 para IV) y cero sesiones posteriores al 30/05/2027 en un plan nuevo.
+        /// El completado con referencia explícita conserva las fechas exactas de las 5 materias restringidas.
         /// </summary>
         [Theory]
         [InlineData(false, 13)] // Cali III: 32, 48, 48, 48, 32, 48 h -> 256 h (64 sesiones) -> límite 13/05/2027
@@ -83,12 +89,35 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             // 3. Terminación antes del límite previsto (13/05 o 19/05)
             sesionesMixtas.Max(s => s.Fecha).Should().BeOnOrBefore(fLimiteEsperado);
 
-            // 4. Fechas de las cinco materias restringidas conservadas por el completado
+            // 4. El plan nuevo respeta los días restringidos, sin heredar fechas de otra llamada.
+            foreach (var patron in patrones)
+            {
+                sesionesMixtas.Where(s => s.IdAsignatura == patron.Key).Should()
+                    .OnlyContain(s => AgCarriles.Ventana(patron.Value).Contains(s.Ranura.Dia));
+            }
+
+            // 5. La preservación exacta requiere suministrar la referencia protegida al completado.
+            resPrevio.Value.Infactibles.Should().BeEmpty();
+            var ranuras = AgRanuras.PorVentana("LUN-VIE", bloques, "TARDE", 4.0);
+            // La demanda ampliada declara pendientes solo las materias ausentes de la referencia previa.
+            var previo = resPrevio.Value;
+            var nuevasPendientes = demandas.Select(d => d.IdAsignatura)
+                .Except(previo.Planes.Select(p => p.IdAsignatura).Union(previo.Infactibles));
+            var referenciaAmpliada = new AgPlanOleadasResultado(previo.Planes,
+                previo.Infactibles.Union(nuevasPendientes).ToList(), previo.DetalleInfactibles,
+                previo.Particion, previo.VentanaSugerida, previo.PatronesRenormalizados,
+                previo.OcupacionPorcentaje, previo.BusquedaAgotada);
+            var completado = AgPlanificadorRanuras.CompletarReferencia(demandas, ranuras,
+                fInicio, fFin, 4.0, EsFestivoCanonico, patrones, referenciaAmpliada, CancellationToken.None);
+            completado.IsSuccess.Should().BeTrue(completado.IsFailure ? completado.Error : string.Empty);
+            completado.Value.Infactibles.Should().BeEmpty();
+            completado.Value.Planes.Sum(p => p.Sesiones.Count).Should().Be(sesionesEsperadas);
+            completado.Value.Planes.SelectMany(p => p.Sesiones).Sum(s => s.Ranura.Horas).Should().Be(horasTotales);
             for (int asigId = 1; asigId <= 5; asigId++)
             {
                 var fechasPrevias = resPrevio.Value.Planes.Single(p => p.IdAsignatura == asigId).Sesiones.Select(s => s.Fecha).OrderBy(d => d).ToList();
-                var fechasMixtas = resMixto.Value.Planes.Single(p => p.IdAsignatura == asigId).Sesiones.Select(s => s.Fecha).OrderBy(d => d).ToList();
-                fechasMixtas.Should().Equal(fechasPrevias);
+                var fechasCompletadas = completado.Value.Planes.Single(p => p.IdAsignatura == asigId).Sesiones.Select(s => s.Fecha).OrderBy(d => d).ToList();
+                fechasCompletadas.Should().Equal(fechasPrevias);
             }
         }
 
@@ -543,44 +572,206 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
         }
 
         /// <summary>
-        /// Criterio 11: Fidelidad de fechas entre la fábrica de individuos (FechasGen) y el expansor
-        /// de sesiones (AgExpansorSesiones), garantizando que no existan mutaciones espurias ni truncamientos.
+        /// Criterio 11: Cobertura integral y trazabilidad estricta de extremo a extremo:
+        /// Plan Original -> Fábrica -> AgCoherenciaGrupo -> AgExpansorSesiones -> AgMaterializadorSesiones (Staging).
+        /// Verifica paridad exacta en asignatura, fecha, bloque y horas hasta la persistencia en staging.
         /// </summary>
         [Fact]
-        public void Criterio11_FidelidadFechas_FabricaYExpansor()
+        public async Task Criterio11_TrazabilidadYFidelidadDeFechas_PlanCoherenciaStaging()
         {
             // Arrange
             var ctx = CrearContexto(new int[] { 32, 48, 48 });
+            ctx.AulaAsignaturas[0].DiasPatron = "1,2";
+            ctx.AulaAsignaturas[1].DiasPatron = "3,4";
+            ctx.AulaAsignaturas[2].DiasPatron = "5";
+            foreach (var aa in ctx.AulaAsignaturas) { aa.OrigenPatron = "LEGADO"; }
+            ctx.ConstruirIndices();
             var planificador = new AgPlanificadorOleadas();
+
+            // 1. Obtener el Plan Original
+            var aula = ctx.Aulas[0];
+            var demandas = ctx.AulaAsignaturas.Where(a => a.IdAula == aula.Id)
+                .OrderBy(a => a.OrdenCurricular)
+                .Select(a => (IdAsignatura: a.IdAsignatura, Horas: a.HorasObjetivo, OrdenCurricular: a.OrdenCurricular))
+                .ToList();
+            var patrones = ctx.AulaAsignaturas.Where(a => a.IdAula == aula.Id)
+                .ToDictionary(a => a.IdAsignatura, a => a.DiasPatron);
+
+            var planOriginalRes = planificador.Construir(
+                demandas, aula.DiasVentana, ctx.Ventana.FechaInicio, ctx.Ventana.FechaFin,
+                4.0, ctx.EsFestivo, ctx.Bloques, aula.Jornada, patrones, diagnostico: "Criterio11");
+            planOriginalRes.IsSuccess.Should().BeTrue();
+            var planOriginal = planOriginalRes.Value;
+
+            // 2. Generar individuo con la Fábrica
             var fabrica = new AgFabricaIndividuos(new Random(42), null, planificador);
-            var expansor = new AgExpansorSesiones();
-
-            // Act
             var individuo = fabrica.CrearAleatorio(ctx, 1, 0);
-
-            // Assert
             individuo.Should().NotBeNull();
-            var genesActivos = individuo.Genes.Where(g => g.HorasGen > 0.0).ToList();
-            genesActivos.Should().NotBeEmpty();
 
-            foreach (var gen in genesActivos)
+            // 3. Pasar por Coherencia de Grupo (Sellar)
+            AgCoherenciaGrupo.Sellar(individuo, ctx);
+
+            // 4. Materializar y persistir en Staging usando persistencia SQLite real
+            string dbPath = Path.Combine(Path.GetTempPath(), "AgStagingCriterio11_" + Guid.NewGuid().ToString("N") + ".sqlite");
+            SQLiteConnection.CreateFile(dbPath);
+            string connStr = $"Data Source={dbPath};Version=3;";
+
+            try
             {
-                gen.FechasGen.Should().NotBeNullOrEmpty();
-                double unidad = ctx.BloquesPorId[gen.IdBloqueHorario].DuracionHoras;
-                int sesionesEsperadas = (int)Math.Round(gen.HorasGen / unidad);
-                gen.FechasGen.Count.Should().Be(sesionesEsperadas);
+                using (var conn = new SQLiteConnection(connStr))
+                {
+                    conn.Open();
+                    conn.Execute(@"
+                        CREATE TABLE ag_vinculaciones (
+                            id                      INTEGER PRIMARY KEY AUTOINCREMENT,
+                            id_corrida              INTEGER NOT NULL DEFAULT 0,
+                            id_individuo            INTEGER NOT NULL DEFAULT 0,
+                            idtercero               INTEGER NOT NULL DEFAULT 0,
+                            idprograma              INTEGER NOT NULL DEFAULT 0,
+                            idsede                  INTEGER NOT NULL DEFAULT 0,
+                            idasignatura            INTEGER NOT NULL DEFAULT 0,
+                            idperiodo               INTEGER NOT NULL DEFAULT 0,
+                            semestre                TEXT    NOT NULL DEFAULT '',
+                            grupo                   TEXT    NOT NULL DEFAULT '',
+                            dia_horas_semanales     TEXT    NOT NULL DEFAULT '',
+                            modalidadVinculacion    TEXT    NOT NULL DEFAULT 'Presencial',
+                            total_horas             INTEGER NOT NULL DEFAULT 0,
+                            fecha_inicio            TEXT    NOT NULL DEFAULT '',
+                            fecha_fin               TEXT    NOT NULL DEFAULT '',
+                            estado                  INTEGER NOT NULL DEFAULT 0,
+                            isTerminalAereo         INTEGER NOT NULL DEFAULT 0,
+                            idTerminales            INTEGER NOT NULL DEFAULT 0,
+                            gastoTerminalAerea      REAL    NOT NULL DEFAULT 0.0,
+                            es_vacante              INTEGER NOT NULL DEFAULT 0,
+                            motivo_vacante          TEXT    NOT NULL DEFAULT '',
+                            candidatos_pool         INTEGER NOT NULL DEFAULT 0,
+                            subunidad               TEXT    NOT NULL DEFAULT ''
+                        );
+                        CREATE TABLE ag_vinculacion_gen (
+                            id                      INTEGER PRIMARY KEY AUTOINCREMENT,
+                            idagvinculacion         INTEGER NOT NULL,
+                            idgen                   INTEGER NOT NULL,
+                            subunidad               TEXT    DEFAULT ''
+                        );
+                        CREATE TABLE ag_sesiones (
+                            id                      INTEGER PRIMARY KEY AUTOINCREMENT,
+                            idvinculacion           INTEGER NOT NULL,
+                            idtercero               INTEGER NOT NULL,
+                            id_aula                 INTEGER NOT NULL DEFAULT 0,
+                            fechasesion             TEXT    NOT NULL,
+                            horariosesion           TEXT    NOT NULL DEFAULT '',
+                            horas                   REAL    NOT NULL DEFAULT 0.0,
+                            viatica                 INTEGER NOT NULL DEFAULT 0,
+                            subunidad               TEXT    NOT NULL DEFAULT '',
+                            idindividuo             INTEGER NULL,
+                            idgen                   INTEGER NULL,
+                            origen_ag               INTEGER NOT NULL DEFAULT 1,
+                            estado_ag               TEXT    NOT NULL DEFAULT 'BORRADOR',
+                            es_vacante              INTEGER NOT NULL DEFAULT 0,
+                            motivo_vacante          TEXT    NOT NULL DEFAULT '',
+                            candidatos_pool         INTEGER NOT NULL DEFAULT 0,
+                            fecha_creacion          TEXT    NOT NULL DEFAULT (datetime('now'))
+                        );
+                    ");
+                }
 
-                // Expansión a sesiones cronológicas reales
-                var resExp = expansor.Expandir(gen, 1, ctx);
-                resExp.IsSuccess.Should().BeTrue();
+                var repoReal = new AgScheduleRepository(() => new SQLiteConnection(connStr));
+                var expansor = new AgExpansorSesiones();
+                var materializador = new AgMaterializadorSesiones(repoReal, expansor);
 
-                // Las fechas de las sesiones coinciden exactamente con FechasGen
-                var fechasExpandidas = resExp.Value.Select(s => s.FechaSesion.Value).OrderBy(d => d).ToList();
-                var fechasGenOrdenadas = gen.FechasGen.OrderBy(d => d).ToList();
-                fechasExpandidas.Should().Equal(fechasGenOrdenadas);
+                // Act
+                var resMat = await materializador.MaterializarEnStagingAsync(1, individuo, ctx, CancellationToken.None);
 
-                // La suma de duraciones coincide exactamente con HorasGen
-                resExp.Value.Sum(s => s.Horas).Should().Be(gen.HorasGen);
+                // Assert
+                resMat.IsSuccess.Should().BeTrue(resMat.IsFailure ? resMat.Error : string.Empty);
+
+                // 5. Consultar los datos persistidos en SQLite
+                List<AgVinculacion> guardadasVinc;
+                List<AgSesion> guardadasSes;
+                using (var conn = new SQLiteConnection(connStr))
+                {
+                    conn.Open();
+                    guardadasVinc = (await conn.QueryAsync<AgVinculacion>(
+                        "SELECT id as Id, id_corrida as IdCorrida, id_individuo as IdIndividuo, idasignatura as IdAsignatura, total_horas as TotalHoras, grupo as Grupo, subunidad as Subunidad FROM ag_vinculaciones WHERE id_individuo = @IdIndividuo",
+                        new { IdIndividuo = individuo.Id })).ToList();
+
+                    guardadasSes = (await conn.QueryAsync<AgSesion>(
+                        "SELECT id as Id, idvinculacion as IdVinculacion, id_aula as IdAula, fechasesion as FechaSesion, horariosesion as HorarioSesion, horas as Horas, idindividuo as IdIndividuo, idgen as IdGen FROM ag_sesiones WHERE idindividuo = @IdIndividuo",
+                        new { IdIndividuo = individuo.Id })).ToList();
+                }
+
+                guardadasVinc.Should().NotBeNullOrEmpty();
+                guardadasSes.Should().NotBeNullOrEmpty();
+
+                int totalSesionesPlan = planOriginal.Planes.Sum(p => p.Sesiones.Count);
+                double totalHorasPlan = planOriginal.Planes.Sum(p => p.Sesiones.Sum(s => s.Ranura.Horas));
+
+                guardadasSes.Count.Should().Be(totalSesionesPlan);
+                guardadasSes.Sum(s => s.Horas).Should().Be(totalHorasPlan);
+
+                foreach (var planAsig in planOriginal.Planes)
+                {
+                    var vinculacion = guardadasVinc.FirstOrDefault(v => v.IdAsignatura == planAsig.IdAsignatura);
+                    vinculacion.Should().NotBeNull();
+
+                    var sesionesStagingAsig = guardadasSes
+                        .Where(s => s.IdVinculacion == vinculacion.Id)
+                        .OrderBy(s => s.FechaSesion.Value)
+                        .ToList();
+
+                    sesionesStagingAsig.Count.Should().Be(planAsig.Sesiones.Count);
+
+                    var sesionesPlanOrdenadas = planAsig.Sesiones.OrderBy(s => s.Fecha).ToList();
+
+                    for (int sIdx = 0; sIdx < sesionesPlanOrdenadas.Count; sIdx++)
+                    {
+                        var planSesion = sesionesPlanOrdenadas[sIdx];
+                        var stagingSesion = sesionesStagingAsig[sIdx];
+
+                        // Comparar asignatura, fecha, horas
+                        stagingSesion.FechaSesion.Value.Date.Should().Be(planSesion.Fecha.Date);
+                        stagingSesion.Horas.Should().Be(planSesion.Ranura.Horas);
+                        stagingSesion.IdAula.Should().Be(aula.Id);
+
+                        // Comparar bloque, franja e intervalo horario exactos
+                        var bloqueEsperado = ctx.Bloques.First(b =>
+                            b.DiaSemanaNumero == planSesion.Ranura.Dia
+                            && string.Equals(b.Franja, planSesion.Ranura.Franja, StringComparison.OrdinalIgnoreCase)
+                            && Math.Abs(b.DuracionHoras - planSesion.Ranura.Horas) < 0.001);
+
+                        stagingSesion.HorarioSesion.Should().Be(bloqueEsperado.ObtenerHorarioTexto());
+
+                        // Comparar con el gen del individuo (IdBloqueHorario exacto, Día, Franja, Horas)
+                        var genCorrespondiente = individuo.Genes.FirstOrDefault(g =>
+                            g.IdAsignatura == planAsig.IdAsignatura
+                            && g.DiaSemana == planSesion.Ranura.Dia);
+                        genCorrespondiente.Should().NotBeNull();
+                        genCorrespondiente.FechasGen.Select(d => d.Date).Should().Contain(stagingSesion.FechaSesion.Value.Date);
+                        genCorrespondiente.IdAsignatura.Should().Be(planAsig.IdAsignatura);
+                        genCorrespondiente.IdBloqueHorario.Should().Be(bloqueEsperado.Id);
+                        genCorrespondiente.DiaSemana.Should().Be(planSesion.Ranura.Dia);
+                        genCorrespondiente.HorasSemanales.Should().Be(planSesion.Ranura.Horas);
+                        bloqueEsperado.Franja.Should().Be(planSesion.Ranura.Franja);
+                    }
+
+                    // Paridad con los genes del individuo tras Coherencia
+                    var genesAsig = individuo.Genes.Where(g => g.IdAsignatura == planAsig.IdAsignatura).ToList();
+                    genesAsig.Should().NotBeEmpty();
+                    var fechasGenes = genesAsig.SelectMany(g => g.FechasGen).OrderBy(d => d).Select(d => d.Date).ToList();
+                    var fechasEsperadas = planAsig.Sesiones.Select(s => s.Fecha.Date).OrderBy(d => d).ToList();
+                    fechasGenes.Should().Equal(fechasEsperadas);
+                }
+            }
+            finally
+            {
+                try
+                {
+                    if (File.Exists(dbPath))
+                    {
+                        File.Delete(dbPath);
+                    }
+                }
+                catch { }
             }
         }
 
@@ -626,6 +817,174 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             paso3.Should().BeEmpty(); // Idempotencia y tope alcanzado
         }
 
+        /// <summary>
+        /// Criterio 13: Materia con OrigenPatron = "AUTOMATICO" y patrón vacío (DiasPatron = "")
+        /// planificada con más de dos ranuras (> 2 ranuras por carril).
+        /// La fábrica conserva íntegramente las sesiones planificadas fechadas (no las trunca a 2 ranuras
+        /// ni asigna sesionesPlanificadas = null) y persiste la totalidad de las sesiones a SQLite staging.
+        /// </summary>
+        [Fact]
+        public async Task Criterio13_AutomaticoSinPatron_ConMasDeDosRanuras_ConservaPlanFechadoHastaStaging()
+        {
+            // Arrange: contexto con 1 aula multi-carril (JUE-DOM tiene cinco ranuras de 4 h, incluyendo domingo: JUE, VIE, SAB_M, SAB_T, DOM_M)
+            var ctx = new AgContexto();
+            ctx.IdPeriodo = 1;
+            ctx.IdPrograma = 1;
+            ctx.IdSede = 1;
+            ctx.Ventana = VentanaSemestre.Crear(1, "2027-1", new DateTime(2027, 2, 4), new DateTime(2027, 2, 28), AgOrigenVentana.Presencial).Value;
+
+            var aula = new AgAula
+            {
+                Id = 1,
+                IdPrograma = 1,
+                IdSede = 1,
+                DiasVentana = "JUE-DOM",
+                Jornada = "NOCHE",
+                HorasDia = 4,
+                Estado = AgEstadoAula.Disponible
+            };
+            ctx.Aulas.Add(aula);
+
+            ctx.Bloques.Add(new AgBloqueHorario { Id = 40, DiaSemanaNumero = 4, Franja = "NOCHE", HoraInicio = "18:00", HoraFin = "22:00", DuracionHoras = 4.0, Activo = 1 });
+            ctx.Bloques.Add(new AgBloqueHorario { Id = 50, DiaSemanaNumero = 5, Franja = "NOCHE", HoraInicio = "18:00", HoraFin = "22:00", DuracionHoras = 4.0, Activo = 1 });
+            ctx.Bloques.Add(new AgBloqueHorario { Id = 61, DiaSemanaNumero = 6, Franja = "MANANA", HoraInicio = "08:00", HoraFin = "12:00", DuracionHoras = 4.0, Activo = 1 });
+            ctx.Bloques.Add(new AgBloqueHorario { Id = 62, DiaSemanaNumero = 6, Franja = "TARDE", HoraInicio = "14:00", HoraFin = "18:00", DuracionHoras = 4.0, Activo = 1 });
+            ctx.Bloques.Add(new AgBloqueHorario { Id = 70, DiaSemanaNumero = 7, Franja = "MANANA", HoraInicio = "08:00", HoraFin = "12:00", DuracionHoras = 4.0, Activo = 1 });
+
+            // 1 Asignatura de 32 horas (8 sesiones) con patrón vacío y origen AUTOMATICO
+            ctx.Asignaturas.Add(new Asignatura { Id = 1, Nombre = "MateriaHuecos", Horas = 32, IntHoraria = 32 });
+            ctx.AulaAsignaturas.Add(new AgAulaAsignatura
+            {
+                IdAula = 1,
+                IdAsignatura = 1,
+                HorasObjetivo = 32,
+                OrdenCurricular = 1,
+                DiasPatron = string.Empty, // Patrón vacío
+                OrigenPatron = "AUTOMATICO"
+            });
+            ctx.Docentes.Add(new Tercero { Id = 10, Nombre = "Docente Huecos", Activo = 1 });
+            ctx.PoolDocentes.Add(new TerceroAsignatura { IdTercero = 10, IdAsignatura = 1 });
+            ctx.ConstruirIndices();
+
+            var planificador = new AgPlanificadorOleadas();
+            var demandas = new List<(int IdAsignatura, double Horas, int OrdenCurricular)>
+            {
+                (IdAsignatura: 1, Horas: 32, OrdenCurricular: 1)
+            };
+            var patrones = new Dictionary<int, string>
+            {
+                { 1, string.Empty }
+            };
+
+            // 1. Plan original: distribuye en las ranuras de JUE-DOM
+            var planOriginalRes = planificador.Construir(
+                demandas, aula.DiasVentana, ctx.Ventana.FechaInicio, ctx.Ventana.FechaFin,
+                4.0, ctx.EsFestivo, ctx.Bloques, aula.Jornada, patrones, diagnostico: "Criterio13");
+            planOriginalRes.IsSuccess.Should().BeTrue();
+            var planAsig = planOriginalRes.Value.Planes.First(p => p.IdAsignatura == 1);
+            planAsig.Sesiones.Should().HaveCount(8);
+            var ranurasPlan = planAsig.Sesiones.Select(s => s.Ranura).Distinct().ToList();
+            ranurasPlan.Count.Should().BeGreaterThan(2);
+
+            // 2. Generar con fábrica
+            var fabrica = new AgFabricaIndividuos(new Random(42), null, planificador);
+            var individuo = fabrica.CrearAleatorio(ctx, 1, 0);
+            individuo.Should().NotBeNull();
+
+            // Sellar coherencia
+            AgCoherenciaGrupo.Sellar(individuo, ctx);
+
+            // 3. Persistir en SQLite Staging
+            string dbPath = Path.Combine(Path.GetTempPath(), "AgStagingCriterio13_" + Guid.NewGuid().ToString("N") + ".sqlite");
+            SQLiteConnection.CreateFile(dbPath);
+            string connStr = $"Data Source={dbPath};Version=3;";
+
+            try
+            {
+                using (var conn = new SQLiteConnection(connStr))
+                {
+                    conn.Open();
+                    conn.Execute(@"
+                        CREATE TABLE ag_vinculaciones (
+                            id                      INTEGER PRIMARY KEY AUTOINCREMENT,
+                            id_corrida              INTEGER NOT NULL DEFAULT 0,
+                            id_individuo            INTEGER NOT NULL DEFAULT 0,
+                            idtercero               INTEGER NOT NULL DEFAULT 0,
+                            idprograma              INTEGER NOT NULL DEFAULT 0,
+                            idsede                  INTEGER NOT NULL DEFAULT 0,
+                            idasignatura            INTEGER NOT NULL DEFAULT 0,
+                            idperiodo               INTEGER NOT NULL DEFAULT 0,
+                            semestre                TEXT    NOT NULL DEFAULT '',
+                            grupo                   TEXT    NOT NULL DEFAULT '',
+                            dia_horas_semanales     TEXT    NOT NULL DEFAULT '',
+                            modalidadVinculacion    TEXT    NOT NULL DEFAULT 'Presencial',
+                            total_horas             INTEGER NOT NULL DEFAULT 0,
+                            fecha_inicio            TEXT    NOT NULL DEFAULT '',
+                            fecha_fin               TEXT    NOT NULL DEFAULT '',
+                            estado                  INTEGER NOT NULL DEFAULT 0,
+                            isTerminalAereo         INTEGER NOT NULL DEFAULT 0,
+                            idTerminales            INTEGER NOT NULL DEFAULT 0,
+                            gastoTerminalAerea      REAL    NOT NULL DEFAULT 0.0,
+                            es_vacante              INTEGER NOT NULL DEFAULT 0,
+                            motivo_vacante          TEXT    NOT NULL DEFAULT '',
+                            candidatos_pool         INTEGER NOT NULL DEFAULT 0,
+                            subunidad               TEXT    NOT NULL DEFAULT ''
+                        );
+                        CREATE TABLE ag_vinculacion_gen (
+                            id                      INTEGER PRIMARY KEY AUTOINCREMENT,
+                            idagvinculacion         INTEGER NOT NULL,
+                            idgen                   INTEGER NOT NULL,
+                            subunidad               TEXT    DEFAULT ''
+                        );
+                        CREATE TABLE ag_sesiones (
+                            id                      INTEGER PRIMARY KEY AUTOINCREMENT,
+                            idvinculacion           INTEGER NOT NULL,
+                            idtercero               INTEGER NOT NULL,
+                            id_aula                 INTEGER NOT NULL DEFAULT 0,
+                            fechasesion             TEXT    NOT NULL,
+                            horariosesion           TEXT    NOT NULL DEFAULT '',
+                            horas                   REAL    NOT NULL DEFAULT 0.0,
+                            viatica                 INTEGER NOT NULL DEFAULT 0,
+                            subunidad               TEXT    NOT NULL DEFAULT '',
+                            idindividuo             INTEGER NULL,
+                            idgen                   INTEGER NULL,
+                            origen_ag               INTEGER NOT NULL DEFAULT 1,
+                            estado_ag               TEXT    NOT NULL DEFAULT 'BORRADOR',
+                            es_vacante              INTEGER NOT NULL DEFAULT 0,
+                            motivo_vacante          TEXT    NOT NULL DEFAULT '',
+                            candidatos_pool         INTEGER NOT NULL DEFAULT 0,
+                            fecha_creacion          TEXT    NOT NULL DEFAULT (datetime('now'))
+                        );
+                    ");
+                }
+
+                var repoReal = new AgScheduleRepository(() => new SQLiteConnection(connStr));
+                var expansor = new AgExpansorSesiones();
+                var materializador = new AgMaterializadorSesiones(repoReal, expansor);
+
+                var resMat = await materializador.MaterializarEnStagingAsync(100, individuo, ctx, CancellationToken.None);
+                resMat.IsSuccess.Should().BeTrue(resMat.IsFailure ? resMat.Error : string.Empty);
+
+                List<AgSesion> guardadasSes;
+                using (var conn = new SQLiteConnection(connStr))
+                {
+                    conn.Open();
+                    guardadasSes = (await conn.QueryAsync<AgSesion>(
+                        "SELECT id as Id, idvinculacion as IdVinculacion, id_aula as IdAula, fechasesion as FechaSesion, horariosesion as HorarioSesion, horas as Horas, idindividuo as IdIndividuo, idgen as IdGen FROM ag_sesiones WHERE idindividuo = @IdIndividuo",
+                        new { IdIndividuo = individuo.Id })).ToList();
+                }
+
+                // Assert: Las 8 sesiones están presentes en SQLite sin haber sido descartadas por la fábrica
+                guardadasSes.Should().HaveCount(8);
+                guardadasSes.Select(s => s.FechaSesion.Value.Date).OrderBy(d => d).Should().Equal(
+                    planAsig.Sesiones.Select(s => s.Fecha.Date).OrderBy(d => d));
+            }
+            finally
+            {
+                try { if (File.Exists(dbPath)) File.Delete(dbPath); } catch { }
+            }
+        }
+
         #region Métodos Auxiliares
 
         private static List<AgBloqueHorario> CrearBloquesLunesViernes(double duracion, string franja)
@@ -667,6 +1026,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
         {
             var ctx = new AgContexto
             {
+                IdSede = 1,
                 Ventana = new VentanaSemestre
                 {
                     FechaInicio = new DateTime(2027, 2, 5),
@@ -677,6 +1037,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             ctx.Aulas.Add(new AgAula
             {
                 Id = 1,
+                IdSede = 1,
                 IdPrograma = 1,
                 AulaRef = "CALI-TEST",
                 Semestre = "III",
@@ -693,6 +1054,8 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
                     DiaSemanaNumero = dia,
                     DuracionHoras = 4,
                     Franja = dia >= 6 ? "MANANA" : "TARDE",
+                    HoraInicio = dia >= 6 ? "08:00" : "14:00",
+                    HoraFin = dia >= 6 ? "12:00" : "18:00",
                     Activo = 1
                 });
                 if (dia == 6)
@@ -703,6 +1066,8 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
                         DiaSemanaNumero = 6,
                         DuracionHoras = 4,
                         Franja = "TARDE",
+                        HoraInicio = "13:00",
+                        HoraFin = "17:00",
                         Activo = 1
                     });
                 }

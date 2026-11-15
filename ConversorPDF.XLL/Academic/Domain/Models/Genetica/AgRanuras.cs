@@ -65,10 +65,40 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
                 }
                 else if (dia == 6)
                 {
-                    // Fase 1165: Sábado con 8h es 1 ranura (08:00-17:00); con 4h son 2 ranuras (MANANA 08-12 y TARDE 13-17)
+                    // Fase 1165 / Corrida 92 - P1: Sábado con 8h es 1 ranura (MANANA); con 4h toma bloques reales activos
                     if (unidadEfectiva >= 8.0)
                     {
                         candidatas.Add(new AgRanura(6, AgFranjaJornada.MANANA, unidadEfectiva));
+                    }
+                    else if (bloques != null && bloques.Count > 0)
+                    {
+                        // Corrida 92 - P1: Sábado 4h limitado estrictamente a MANANA y TARDE (contrato máximo 2 ranuras).
+                        var bloquesSab = bloques
+                            .Where(b => b.Activo == 1 && b.DiaSemanaNumero == 6
+                                        && Math.Abs(b.DuracionHoras - unidadEfectiva) < 0.001
+                                        && (string.Equals(b.Franja, AgFranjaJornada.MANANA, StringComparison.OrdinalIgnoreCase)
+                                            || string.Equals(b.Franja, AgFranjaJornada.TARDE, StringComparison.OrdinalIgnoreCase)))
+                            .OrderBy(b => b.Id)
+                            .ToList();
+                        if (bloquesSab.Count > 0)
+                        {
+                            foreach (var b in bloquesSab)
+                            {
+                                string franjaSab = string.Equals(b.Franja, AgFranjaJornada.TARDE, StringComparison.OrdinalIgnoreCase)
+                                    ? AgFranjaJornada.TARDE
+                                    : AgFranjaJornada.MANANA;
+                                if (!candidatas.Any(r => r.Dia == 6 && string.Equals(r.Franja, franjaSab, StringComparison.OrdinalIgnoreCase)))
+                                {
+                                    candidatas.Add(new AgRanura(6, franjaSab, unidadEfectiva));
+                                }
+                            }
+                        }
+                        else if (!bloques.Any(b => b.Activo == 1 && b.DiaSemanaNumero == 6 && Math.Abs(b.DuracionHoras - unidadEfectiva) < 0.001))
+                        {
+                            // Solo si el catálogo no contiene ningún bloque para sábado de 4h
+                            candidatas.Add(new AgRanura(6, AgFranjaJornada.MANANA, unidadEfectiva));
+                            candidatas.Add(new AgRanura(6, AgFranjaJornada.TARDE, unidadEfectiva));
+                        }
                     }
                     else
                     {
@@ -96,13 +126,13 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
                     }
 
                     var permitidas = FranjasDe(ranura.Dia, jornada, ranura.Horas);
-                    bool existeBloque = bloques.Any(b =>
+                    bool franjaPermitida = permitidas.Count == 0
+                        || permitidas.Any(f => string.Equals(f, ranura.Franja, StringComparison.OrdinalIgnoreCase));
+                    bool existeBloque = franjaPermitida && bloques.Any(b =>
                         b.Activo == 1
                         && b.DiaSemanaNumero == ranura.Dia
                         && Math.Abs(b.DuracionHoras - ranura.Horas) < 0.001
-                        && (permitidas.Count == 0
-                            ? string.Equals(b.Franja, ranura.Franja, StringComparison.OrdinalIgnoreCase)
-                            : permitidas.Any(f => string.Equals(f, b.Franja, StringComparison.OrdinalIgnoreCase))));
+                        && string.Equals(b.Franja, ranura.Franja, StringComparison.OrdinalIgnoreCase));
 
                     if (existeBloque)
                     {
@@ -115,9 +145,19 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
                     // F1189: reparar por día con el catálogo real; nunca devolver ranuras sin bloque
                     foreach (var dia in diasOrdenados)
                     {
-                        var delDia = bloques
+                        var queryDelDia = bloques
                             .Where(b => b.Activo == 1 && b.DiaSemanaNumero == dia
-                                        && Math.Abs(b.DuracionHoras - unidadEfectiva) < 0.001)
+                                        && Math.Abs(b.DuracionHoras - unidadEfectiva) < 0.001);
+
+                        // Corrida 92 / Revisión: Sábado 4h limitado estrictamente a MANANA/TARDE (filtro también en fallback)
+                        if (dia == 6 && unidadEfectiva < 8.0)
+                        {
+                            queryDelDia = queryDelDia.Where(b =>
+                                string.Equals(b.Franja, AgFranjaJornada.MANANA, StringComparison.OrdinalIgnoreCase)
+                                || string.Equals(b.Franja, AgFranjaJornada.TARDE, StringComparison.OrdinalIgnoreCase));
+                        }
+
+                        var delDia = queryDelDia
                             .GroupBy(b => (b.Franja ?? string.Empty).Trim().ToUpperInvariant())
                             .Select(g => g.OrderBy(b => b.HoraInicio).First())
                             .OrderBy(b => b.HoraInicio)

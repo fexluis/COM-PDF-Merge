@@ -17,9 +17,9 @@
     <ExcelDnaCreate64BitAddIn>true</ExcelDnaCreate64BitAddIn>
     <!-- Excluir dependencias que no existen en .NET 4.8 y no deben empaquetarse -->
     <ExcelDnaExcludedDependencies>Microsoft.Bcl.HashCode.dll</ExcelDnaExcludedDependencies>
-    <Version>1.6.4.14</Version>
-    <AssemblyVersion>1.6.4.14</AssemblyVersion>
-    <FileVersion>1.6.4.14</FileVersion>
+    <Version>1.6.4.15</Version>
+    <AssemblyVersion>1.6.4.15</AssemblyVersion>
+    <FileVersion>1.6.4.15</FileVersion>
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <Import Project="obj\ConversorPDF.XLL.csproj.nuget.g.props" Condition="Exists('obj\ConversorPDF.XLL.csproj.nuget.g.props')" />

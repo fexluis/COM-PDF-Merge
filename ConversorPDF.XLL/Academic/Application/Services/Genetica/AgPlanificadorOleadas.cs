@@ -104,11 +104,6 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 || !patrones.TryGetValue(a.IdAsignatura, out var p)
                 || string.IsNullOrWhiteSpace(p));
 
-            if (!permitirParcial && tienePatrones && !hayAutomaticas && referencia.IsSuccess && referencia.Value.Infactibles.Count == 0)
-            {
-                return referencia;
-            }
-
             if (tienePatrones)
             {
                 var completado = AgPlanificadorRanuras.CompletarReferencia(asignaturas, ranuras,
@@ -160,7 +155,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     {
                         DateTime finCand = p.Planes.SelectMany(x => x.Sesiones)
                             .Select(s => s.Fecha).DefaultIfEmpty(DateTime.MaxValue).Max();
-                        return tienePatrones ? (finCand < finRef) : (finRef - finCand > TimeSpan.FromDays(7));
+                        return finCand < finRef;
                     }).OrderBy(p => p.Planes.SelectMany(x => x.Sesiones).Select(s => s.Fecha).Max()).FirstOrDefault();
 
                     if (mejorAntes != null)
@@ -601,6 +596,24 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 
                 int S = resPatron.Value.SesionesPorSemana != null ? resPatron.Value.SesionesPorSemana.Sum() : SRequeridas;
 
+                int demandaRestanteCarril = 0;
+                for (int next = i + 1; next < ctx.Ordenadas.Count; next++)
+                {
+                    if (carrilDe[next] == c)
+                    {
+                        demandaRestanteCarril += ctx.Demanda[next];
+                    }
+                }
+                int semanasMinimasRestantes = (int)Math.Ceiling(demandaRestanteCarril / (double)slotsCarril[c]);
+
+                var sesiones = AgPlanificadorRanuras.Materializar(asig.IdAsignatura, ranurasEfectivas, SRequeridas, ini, fin, ctx.EsFestivo);
+                while (sesiones.Count < SRequeridas && cursor[c] + k + semanasMinimasRestantes < ctx.W)
+                {
+                    k++;
+                    fin = ctx.SemanasValidas[cursor[c] + k - 1].Fin;
+                    sesiones = AgPlanificadorRanuras.Materializar(asig.IdAsignatura, ranurasEfectivas, SRequeridas, ini, fin, ctx.EsFestivo);
+                }
+
                 planes.Add(new AgPlanOleada(
                     asig.IdAsignatura,
                     c,
@@ -612,7 +625,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     S > 0 ? S : SRequeridas,
                     slotsCarril[c] * k,
                     ranurasCarril[c],
-                    AgPlanificadorRanuras.Materializar(asig.IdAsignatura, ranurasEfectivas, SRequeridas, ini, fin, ctx.EsFestivo)));
+                    sesiones));
 
                 cursor[c] += k;
                 oleada[c]++;

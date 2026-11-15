@@ -244,7 +244,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             {
                 new AgBloqueHorario { Id = 1, DiaSemanaNumero = 4, Franja = "NOCHE",  DuracionHoras = 4, Activo = 1 },
                 new AgBloqueHorario { Id = 2, DiaSemanaNumero = 5, Franja = "NOCHE",  DuracionHoras = 4, Activo = 1 },
-                new AgBloqueHorario { Id = 3, DiaSemanaNumero = 6, Franja = "NOCHE",  DuracionHoras = 4, Activo = 1 },
+                new AgBloqueHorario { Id = 3, DiaSemanaNumero = 6, Franja = "MANANA", DuracionHoras = 4, Activo = 1 },
                 new AgBloqueHorario { Id = 4, DiaSemanaNumero = 6, Franja = "TARDE",  DuracionHoras = 4, Activo = 1 }
             };
             var sut = new AgPlanificadorOleadas();

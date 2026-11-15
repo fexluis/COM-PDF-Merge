@@ -110,5 +110,54 @@ namespace ConversorPDF.Tests.Academic.Domain
                    .Should().Equal("5:NOCHE", "6:MANANA", "6:TARDE", "7:MANANA");
             AgCarriles.Cantidad(ranuras).Should().Be(2);
         }
+
+        [Fact]
+        public void PorVentana_WhenSabadoSoloTieneBloqueManana_ShouldProduceOnlyMananaSlot()
+        {
+            // Corrida 92 - P1: Sábado solo con bloque de mañana no debe admitir franja de tarde ficticia
+            var bloques = new List<AgBloqueHorario>
+            {
+                new AgBloqueHorario { Id = 1, DiaSemanaNumero = 6, Franja = "MANANA", DuracionHoras = 4.0, Activo = 1 }
+            };
+
+            var ranuras = AgRanuras.PorVentana(new[] { 6 }, bloques, "MANANA", 4.0);
+
+            ranuras.Should().ContainSingle();
+            ranuras[0].Dia.Should().Be(6);
+            ranuras[0].Franja.Should().Be(AgFranjaJornada.MANANA);
+        }
+
+        [Fact]
+        public void PorVentana_WhenSabadoTieneBloqueNocheAdicional_ShouldLimitarAMananaYTarde()
+        {
+            // Corrida 92 - P1: Sábado 4h debe limitarse estrictamente a MANANA y TARDE; no debe producir 3 ranuras con NOCHE
+            var bloques = new List<AgBloqueHorario>
+            {
+                new AgBloqueHorario { Id = 1, DiaSemanaNumero = 6, Franja = "MANANA", DuracionHoras = 4.0, Activo = 1 },
+                new AgBloqueHorario { Id = 2, DiaSemanaNumero = 6, Franja = "TARDE", DuracionHoras = 4.0, Activo = 1 },
+                new AgBloqueHorario { Id = 3, DiaSemanaNumero = 6, Franja = "NOCHE", DuracionHoras = 4.0, Activo = 1 }
+            };
+
+            var ranuras = AgRanuras.PorVentana(new[] { 6 }, bloques, null, 4.0);
+
+            ranuras.Should().HaveCount(2);
+            ranuras.Select(r => r.Franja).Should().Equal(AgFranjaJornada.MANANA, AgFranjaJornada.TARDE);
+            ranuras.All(r => r.Dia == 6).Should().BeTrue();
+        }
+
+        [Fact]
+        public void PorVentana_WhenSabadoSoloTieneBloqueNoche_ShouldNoDevolverRanurasSabadoNiFallbackNoche()
+        {
+            // Corrida 92 - P2: Si la ventana incluye sábado y el catálogo solo contiene NOCHE para sábado 4h,
+            // no debe admitirse NOCHE ni por candidatos ni por fallback F1189.
+            var bloques = new List<AgBloqueHorario>
+            {
+                new AgBloqueHorario { Id = 3, DiaSemanaNumero = 6, Franja = "NOCHE", DuracionHoras = 4.0, Activo = 1 }
+            };
+
+            var ranuras = AgRanuras.PorVentana(new[] { 6 }, bloques, null, 4.0);
+
+            ranuras.Should().BeEmpty();
+        }
     }
 }

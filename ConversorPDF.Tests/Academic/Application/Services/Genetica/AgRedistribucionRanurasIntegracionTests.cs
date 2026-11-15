@@ -550,16 +550,42 @@ VALUES (@IdB, 2, 48, 1, '7', 'LEGADO');", new { IdA = idA, IdB = idB });
 
             for (int d = 1; d <= 7; d++)
             {
-                contexto.Bloques.Add(new AgBloqueHorario
+                if (d == 6)
                 {
-                    Id = d,
-                    DiaSemanaNumero = d,
-                    Franja = "MANANA",
-                    HoraInicio = "08:00",
-                    HoraFin = "12:00",
-                    DuracionHoras = horasDia,
-                    Activo = 1
-                });
+                    contexto.Bloques.Add(new AgBloqueHorario
+                    {
+                        Id = 61,
+                        DiaSemanaNumero = 6,
+                        Franja = "MANANA",
+                        HoraInicio = "08:00",
+                        HoraFin = "12:00",
+                        DuracionHoras = horasDia,
+                        Activo = 1
+                    });
+                    contexto.Bloques.Add(new AgBloqueHorario
+                    {
+                        Id = 62,
+                        DiaSemanaNumero = 6,
+                        Franja = "TARDE",
+                        HoraInicio = "13:00",
+                        HoraFin = "17:00",
+                        DuracionHoras = horasDia,
+                        Activo = 1
+                    });
+                }
+                else
+                {
+                    contexto.Bloques.Add(new AgBloqueHorario
+                    {
+                        Id = d,
+                        DiaSemanaNumero = d,
+                        Franja = "MANANA",
+                        HoraInicio = "08:00",
+                        HoraFin = "12:00",
+                        DuracionHoras = horasDia,
+                        Activo = 1
+                    });
+                }
             }
 
             for (int i = 1; i <= numAsignaturas; i++)

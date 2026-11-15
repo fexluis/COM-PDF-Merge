@@ -244,7 +244,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
                 demandasAntes, "JUE-DOM", fInicio, fFin, 4.0,
                 EsFestivoCanonico, bloques, "NOCHE", patrones);
 
-            // Act - "Después": Planificación conjunta con la materia automática ocupando huecos
+            // Act - "Después": Plan nuevo por prioridad de horas, sin fechas implícitas de otra llamada.
             var resDespues = sut.Construir(
                 demandasDespues, "JUE-DOM", fInicio, fFin, 4.0,
                 EsFestivoCanonico, bloques, "NOCHE", patrones);
@@ -269,17 +269,38 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             sesionesDespues.Where(s => s.IdAsignatura == 2).Should().OnlyContain(s => s.Ranura.Dia == 6);
             sesionesDespues.Where(s => s.IdAsignatura == 3).Should().OnlyContain(s => s.Ranura.Dia == 4 || s.Ranura.Dia == 5);
 
-            // Las materias restringidas previas conservan idéntica distribución de fechas que en "Antes"
+            sesionesDespues.Where(s => s.IdAsignatura == 4).Should().HaveCount(28);
+            sesionesDespues.Should().HaveCount(60);
+
+            // El completado recibe explícitamente "Antes": ahora sí debe preservar sus fechas exactas.
+            var ranuras = AgRanuras.PorVentana("JUE-DOM", bloques, "NOCHE", 4.0);
+            // La demanda ampliada declara pendientes solo las materias ausentes de la referencia previa.
+            var antes = resAntes.Value;
+            var nuevasPendientes = demandasDespues.Select(d => d.IdAsignatura)
+                .Except(antes.Planes.Select(p => p.IdAsignatura).Union(antes.Infactibles));
+            var referenciaAmpliada = new AgPlanOleadasResultado(antes.Planes,
+                antes.Infactibles.Union(nuevasPendientes).ToList(), antes.DetalleInfactibles,
+                antes.Particion, antes.VentanaSugerida, antes.PatronesRenormalizados,
+                antes.OcupacionPorcentaje, antes.BusquedaAgotada);
+            var completado = AgPlanificadorRanuras.CompletarReferencia(demandasDespues, ranuras,
+                fInicio, fFin, 4.0, EsFestivoCanonico, patrones, referenciaAmpliada,
+                System.Threading.CancellationToken.None);
+            completado.IsSuccess.Should().BeTrue(completado.IsFailure ? completado.Error : string.Empty);
+            completado.Value.Infactibles.Should().BeEmpty();
+            var sesionesCompletadas = completado.Value.Planes.SelectMany(p => p.Sesiones).ToList();
+            sesionesCompletadas.Should().HaveCount(60);
+            sesionesCompletadas.Where(s => s.IdAsignatura == 4).Should().HaveCount(28);
+
             var fechasAntes1 = sesionesAntes.Where(s => s.IdAsignatura == 1).Select(s => s.Fecha).OrderBy(d => d).ToList();
-            var fechasDespues1 = sesionesDespues.Where(s => s.IdAsignatura == 1).Select(s => s.Fecha).OrderBy(d => d).ToList();
+            var fechasDespues1 = sesionesCompletadas.Where(s => s.IdAsignatura == 1).Select(s => s.Fecha).OrderBy(d => d).ToList();
             fechasDespues1.Should().Equal(fechasAntes1);
 
             var fechasAntes2 = sesionesAntes.Where(s => s.IdAsignatura == 2).Select(s => s.Fecha).OrderBy(d => d).ToList();
-            var fechasDespues2 = sesionesDespues.Where(s => s.IdAsignatura == 2).Select(s => s.Fecha).OrderBy(d => d).ToList();
+            var fechasDespues2 = sesionesCompletadas.Where(s => s.IdAsignatura == 2).Select(s => s.Fecha).OrderBy(d => d).ToList();
             fechasDespues2.Should().Equal(fechasAntes2);
 
             var fechasAntes3 = sesionesAntes.Where(s => s.IdAsignatura == 3).Select(s => s.Fecha).OrderBy(d => d).ToList();
-            var fechasDespues3 = sesionesDespues.Where(s => s.IdAsignatura == 3).Select(s => s.Fecha).OrderBy(d => d).ToList();
+            var fechasDespues3 = sesionesCompletadas.Where(s => s.IdAsignatura == 3).Select(s => s.Fecha).OrderBy(d => d).ToList();
             fechasDespues3.Should().Equal(fechasAntes3);
         }
     }

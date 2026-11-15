@@ -2174,6 +2174,212 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 }
 
                 // 1. Crear registro de corrida (Fase 219: anclado al aula de la corrida)
+                // Corrida 92 - T6: persistir configuración reproducible en ParametrosJson (ventana, snapshot con demanda, patrones, bloques y festivos, versión, huella)
+                var aulaCorrida = _contextoActual.Aulas?.FirstOrDefault(a => a.Id == _contextoActual.IdAulaCorrida)
+                                  ?? _contextoActual.Aulas?.FirstOrDefault();
+                string huellaContexto = null;
+                string errorCaptura = null;
+                try
+                {
+                    if (aulaCorrida == null)
+                    {
+                        throw new InvalidOperationException("No se encontró un aula configurada para la corrida.");
+                    }
+                    huellaContexto = AgHuellaPlanVentana.Calcular(_contextoActual, aulaCorrida);
+                    if (string.IsNullOrWhiteSpace(huellaContexto))
+                    {
+                        throw new InvalidOperationException("Huella calculada vacía para el plan de ventana.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    errorCaptura = ex.Message;
+                    LoggerHelper.Error($"[AgFormGeneradorHorarios] Error al calcular huella de plan de ventana: {ex.Message}", ex);
+                    huellaContexto = null; // No presentar ERROR: ... como huella válida
+                }
+
+                var ventanaEfectiva = _contextoActual.Ventana ?? _ventanaResuelta;
+
+                // Contenido recuperable: configuración completa de todas las aulas (incluyendo origen y configuración temporal)
+                var aulasLista = (_contextoActual.Aulas ?? new List<AgAula>()).Select(au => new Dictionary<string, object>
+                {
+                    { "id", au.Id },
+                    { "codigo", au.Codigo ?? string.Empty },
+                    { "nombre", au.Nombre ?? string.Empty },
+                    { "idPrograma", au.IdPrograma },
+                    { "idSede", au.IdSede },
+                    { "capacidad", au.Capacidad },
+                    { "semestre", au.Semestre ?? string.Empty },
+                    { "grupo", au.Grupo ?? string.Empty },
+                    { "modalidadVinculacion", au.ModalidadVinculacion ?? string.Empty },
+                    { "diasVentana", au.DiasVentana ?? string.Empty },
+                    { "jornada", au.Jornada ?? string.Empty },
+                    { "horasDia", au.HorasDia },
+                    { "fechaInicio", au.FechaInicio ?? string.Empty },
+                    { "fechaFin", au.FechaFin ?? string.Empty },
+                    { "semestreInicio", au.SemestreInicio ?? string.Empty },
+                    { "semestreFin", au.SemestreFin ?? string.Empty },
+                    { "ventanaOrigen", au.VentanaOrigen ?? string.Empty },
+                    { "aulaRef", au.AulaRef ?? string.Empty },
+                    { "subunidad", au.Subunidad ?? string.Empty }
+                }).ToList();
+
+                // Contenido recuperable: demanda efectiva de asignaturas (con HorasObjetivo y OrigenPatron calculados como el evaluador)
+                var demandaLista = (_contextoActual.Asignaturas ?? new List<Asignatura>()).Select(a =>
+                {
+                    AgAulaAsignatura aa = null;
+                    if (aulaCorrida != null && _contextoActual.AulaAsignaturaPorAulaAsig != null)
+                    {
+                        _contextoActual.AulaAsignaturaPorAulaAsig.TryGetValue((aulaCorrida.Id, a.Id), out aa);
+                    }
+                    if (aa == null && _contextoActual.AulaAsignaturasPorId != null)
+                    {
+                        _contextoActual.AulaAsignaturasPorId.TryGetValue(a.Id, out aa);
+                    }
+
+                    double horasObj = AgEvaluadorDemandaVentana.HorasObjetivo(a, aa);
+                    string origPatron = aa?.OrigenPatron ?? "AUTOMATICO";
+                    string diasPat = aa?.DiasPatron ?? string.Empty;
+
+                    return new Dictionary<string, object>
+                    {
+                        { "idAsignatura", a.Id },
+                        { "codigo", a.Codigo ?? string.Empty },
+                        { "nombre", a.Nombre ?? string.Empty },
+                        { "horas", a.Horas },
+                        { "horasObjetivo", horasObj },
+                        { "horasSemanales", a.HorasSemanales },
+                        { "ordenCurricular", aa?.OrdenCurricular ?? 0 },
+                        { "diasPatron", diasPat },
+                        { "origenPatron", origPatron }
+                    };
+                }).ToList();
+
+                // Contenido recuperable: relaciones por (IdAula, IdAsignatura) con HorasObjetivo evaluadas
+                var relacionesAulaAsigLista = (_contextoActual.AulaAsignaturas ?? new List<AgAulaAsignatura>()).Select(aa =>
+                {
+                    var asigRel = _contextoActual.Asignaturas?.FirstOrDefault(a => a.Id == aa.IdAsignatura);
+                    double horasObjRel = asigRel != null
+                        ? AgEvaluadorDemandaVentana.HorasObjetivo(asigRel, aa)
+                        : (aa.HorasObjetivo > 0 ? aa.HorasObjetivo : 64.0);
+
+                    return new Dictionary<string, object>
+                    {
+                        { "idAula", aa.IdAula },
+                        { "idAsignatura", aa.IdAsignatura },
+                        { "horasObjetivo", horasObjRel },
+                        { "ordenCurricular", aa.OrdenCurricular },
+                        { "diasPatron", aa.DiasPatron ?? string.Empty },
+                        { "origenPatron", aa.OrigenPatron ?? string.Empty },
+                        { "prioridad", aa.Prioridad },
+                        { "exclusivo", aa.Exclusivo },
+                        { "requerida", aa.Requerida },
+                        { "subunidad", aa.Subunidad ?? string.Empty }
+                    };
+                }).ToList();
+
+                // Contenido recuperable: patrones por asignatura
+                var patronesDict = new Dictionary<string, string>();
+                if (_contextoActual.Asignaturas != null)
+                {
+                    foreach (var a in _contextoActual.Asignaturas)
+                    {
+                        AgAulaAsignatura aa = null;
+                        if (aulaCorrida != null && _contextoActual.AulaAsignaturaPorAulaAsig != null)
+                        {
+                            _contextoActual.AulaAsignaturaPorAulaAsig.TryGetValue((aulaCorrida.Id, a.Id), out aa);
+                        }
+                        if (aa == null && _contextoActual.AulaAsignaturasPorId != null)
+                        {
+                            _contextoActual.AulaAsignaturasPorId.TryGetValue(a.Id, out aa);
+                        }
+                        string pat = aa?.DiasPatron ?? string.Empty;
+                        if (!string.IsNullOrWhiteSpace(pat))
+                        {
+                            patronesDict[a.Id.ToString()] = pat;
+                        }
+                    }
+                }
+
+                // Contenido recuperable: bloques horarios activos
+                var bloquesLista = (_contextoActual.Bloques ?? new List<AgBloqueHorario>())
+                    .Where(b => b.Activo == 1)
+                    .Select(b => new Dictionary<string, object>
+                    {
+                        { "id", b.Id },
+                        { "dia", b.DiaSemanaNumero },
+                        { "franja", b.Franja ?? string.Empty },
+                        { "horaInicio", b.HoraInicio ?? string.Empty },
+                        { "horaFin", b.HoraFin ?? string.Empty },
+                        { "duracionHoras", b.DuracionHoras },
+                        { "activo", b.Activo }
+                    }).ToList();
+
+                // Contenido recuperable: festivos en la ventana
+                var festivosLista = (_contextoActual.Festivos ?? new List<(DateTime Inicio, DateTime Fin)>())
+                    .Select(f => new Dictionary<string, string>
+                    {
+                        { "inicio", f.Inicio.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) },
+                        { "fin", f.Fin.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) }
+                    }).ToList();
+
+                var parametrosDict = new Dictionary<string, object>
+                {
+                    { "version", App.APP_VERSION },
+                    { "huella", huellaContexto ?? string.Empty },
+                    { "errorCaptura", errorCaptura },
+                    { "ventana", new Dictionary<string, object>
+                        {
+                            { "fechaInicio", ventanaEfectiva?.FechaInicio.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? string.Empty },
+                            { "fechaFin", ventanaEfectiva?.FechaFin.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? string.Empty },
+                            { "origen", ventanaEfectiva != null ? ventanaEfectiva.Origen.ToString() : string.Empty },
+                            { "duracionDias", ventanaEfectiva?.DuracionDias ?? 0 },
+                            { "diasVentana", aulaCorrida?.DiasVentana ?? string.Empty },
+                            { "jornada", aulaCorrida?.Jornada ?? string.Empty }
+                        }
+                    },
+                    { "snapshot", new Dictionary<string, object>
+                        {
+                            { "idPeriodo", _contextoActual.IdPeriodo },
+                            { "idPrograma", _contextoActual.IdPrograma },
+                            { "idAula", _contextoActual.IdAulaCorrida },
+                            { "aulaRef", aulaCorrida?.AulaRef ?? string.Empty },
+                            { "subunidad", _contextoActual.Subunidad ?? string.Empty },
+                            { "totalAulas", _contextoActual.Aulas?.Count ?? 0 },
+                            { "totalAsignaturas", _contextoActual.Asignaturas?.Count ?? 0 },
+                            { "totalBloques", _contextoActual.Bloques?.Count ?? 0 },
+                            { "aulas", aulasLista },
+                            { "demanda", demandaLista },
+                            { "relacionesAulaAsignatura", relacionesAulaAsigLista },
+                            { "patrones", patronesDict },
+                            { "bloques", bloquesLista },
+                            { "festivos", festivosLista }
+                        }
+                    },
+                    { "algoritmo", new Dictionary<string, object>
+                        {
+                            { "poblacion", (int)numPoblacion.Value },
+                            { "generacionesMax", (int)numGeneraciones.Value },
+                            { "tasaCruce", (double)numTasaCruce.Value },
+                            { "tasaMutacion", (double)numTasaMutacion.Value },
+                            { "elitismo", (int)numElitismo.Value }
+                        }
+                    }
+                };
+
+                string parametrosJson;
+                try
+                {
+                    var serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+                    serializer.MaxJsonLength = int.MaxValue;
+                    parametrosJson = serializer.Serialize(parametrosDict);
+                }
+                catch (Exception ex)
+                {
+                    LoggerHelper.Error($"[AgFormGeneradorHorarios] Error al serializar ParametrosJson: {ex.Message}", ex);
+                    parametrosJson = "{\"errorCaptura\":\"" + ex.Message.Replace("\"", "'") + "\",\"version\":\"" + App.APP_VERSION + "\",\"huella\":\"" + (huellaContexto ?? string.Empty).Replace("\"", "'") + "\"}";
+                }
+
                 var corrida = new AgCorrida
                 {
                     IdPeriodo = _contextoActual.IdPeriodo,
@@ -2184,7 +2390,8 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     TasaCruce = (double)numTasaCruce.Value,
                     TasaMutacion = (double)numTasaMutacion.Value,
                     Elitismo = (int)numElitismo.Value,
-                    Subunidad = _contextoActual.Subunidad
+                    Subunidad = _contextoActual.Subunidad,
+                    ParametrosJson = parametrosJson
                 };
 
                 var idCorridaResult = await _scheduleRepository.InsertCorridaAsync(corrida, _ctsEjecucion.Token);

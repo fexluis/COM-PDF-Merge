@@ -399,9 +399,30 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     int horasEfectivas = (int)AgUnidadesSemanales.HorasSesionAula(aula, nivelAula);
 
                     // Fase 1157: Resolver ranuras directamente si no vinieron en el plan
-                    if (ranurasPatron == null || ranurasPatron.Count == 0)
+                    // Corrida 92 / Revisión: Conservar SIEMPRE sesiones fechadas válidas provenientes del planificador.
+                    // Si ya existe un plan fechado con sesiones planificadas para un aula-asignatura real, no debe
+                    // descartarse ni limitarse artificialmente a 2 ranuras (preservando huecos recuperados).
+                    // Únicamente cuando NO exista un plan fechado válido (o en fixtures sin relación aa) se recurre
+                    // al reparto canónico de carriles.
+                    bool tienePlanFechadoValido = aa != null && sesionesPlanificadas != null && sesionesPlanificadas.Count > 0;
+                    if (tienePlanFechadoValido && (ranurasPatron == null || ranurasPatron.Count == 0))
                     {
-                        ranurasPatron = AgPlanificadorPatronSemanal.RanurasDe(aa, aula, idxAsig, contexto.Bloques, horasEfectivas);
+                        ranurasPatron = sesionesPlanificadas.Select(s => s.Ranura).Distinct().ToList();
+                    }
+
+                    if (!tienePlanFechadoValido)
+                    {
+                        bool tienePatronDeclarado = aa != null && !string.IsNullOrWhiteSpace(aa.DiasPatron);
+                        bool esAutomatica = !tienePatronDeclarado && string.IsNullOrWhiteSpace(ObtenerDiasPatron(asig.Id));
+                        int cantCarriles = aula != null && !string.IsNullOrWhiteSpace(aula.DiasVentana)
+                            ? AgCarriles.Cantidad(AgCarriles.Ventana(aula.DiasVentana)) : 1;
+
+                        if (ranurasPatron == null || ranurasPatron.Count == 0
+                            || (esAutomatica && cantCarriles > 1 && ranurasPatron.Count > AgCarriles.RanurasPorCarril))
+                        {
+                            ranurasPatron = AgPlanificadorPatronSemanal.RanurasDe(aa, aula, idxAsig, contexto.Bloques, horasEfectivas);
+                            sesionesPlanificadas = null;
+                        }
                     }
 
                     if (ranurasPatron != null && ranurasPatron.Count > 0)
@@ -459,7 +480,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                             }
 
                             // Fase 1300 & Fase 1802: catálogo sin bloque de la franja exacta -> conservar comportamiento legacy y avisar
-                            if (bloqueRanura == null && franjaExactaPrioritaria)
+                            // Corrida 92: impedir fallback de franja cuando existen sesiones planificadas para evitar superposiciones
+                            if (bloqueRanura == null && franjaExactaPrioritaria && !tienePlanFechado)
                             {
                                 Func<AgBloqueHorario, bool> coincideLegacy = b =>
                                     b.Activo == 1
