@@ -140,10 +140,11 @@ Wave 8: T8 (Fase 1805) [Certificación Gate Full & Calibración Baseline]
 - **description**: Reemplazar la selección en `AgPlanificadorOleadas.ConstruirInterno`. Eliminar la regla que forzaba referencia en presencia de patrones (`generacion_con_patrones`) y el requisito de 7 días de diferencia. Ensamblar lista de alternativas (`referenciaValida`, `completado`, y búsqueda acotada como rescate si `completado` es parcial), filtrar aquellas que preserven materias previamente completas, priorizar planes 100% completos, ordenar determinísticamente por mayor cantidad de sesiones ubicadas, menor número de infactibles y menor fecha fin máxima. Asegurar que evaluación y generación elijan exactamente el mismo plan completo ante entradas idénticas.
 - **validation**: `Construir` y `ConstruirEvaluacion` seleccionan el mismo plan; la prueba `Mixta_ConservaRestriccionesYCompletaAntesDelLimite` en `AgPlanificadorRanurasRegresionTests.cs` (T1) pasa de RED a GREEN sin ampliar fechas.
 - **verification**: powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "ConversorPDF.Tests.Academic.Application.Services.Genetica.AgPlanificadorRanurasRegresionTests"
-- **evidence**: _evidence/pending/summary.md
-- **status**: pending
-- **log**: ""
-- **files edited/created**: []
+- **evidence**: _evidence/20261114-213030/summary.md
+- **status**: done
+- **log**: "Selección unificada implementada en ConstruirInterno integrando referenciaValida, completado y búsqueda acotada de rescate con ValidarFechado. Eliminado forzamiento de patrones y umbral de 7 días. 4/4 pruebas de regresión en GREEN. Evidencia _evidence/20261114-213030/summary.md. Aprobado por task-reviewer."
+- **files edited/created**:
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgPlanificadorOleadas.cs
 
 ### T5: Consumo Fiel del Plan Fechado en Fabrica y Coherencia de Grupo
 - **id**: T5

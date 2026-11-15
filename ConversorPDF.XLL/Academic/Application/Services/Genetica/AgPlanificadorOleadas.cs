@@ -91,90 +91,57 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 return referencia;
             }
             // También se buscan mejoras cuando la referencia ya es factible en una ventana ampliada.
-            var candidato = AgPlanificadorRanuras.Construir(asignaturas, ranuras, fechaInicio.Date,
-                fechaFin.Date, unidadSesion, esFestivo, patrones, ct: ct, diagnostico: diagnostico);
-            if (LoggerHelper.ModoVerboso)
+            var alternativas = new List<AgPlanOleadasResultado>();
+            AgPlanOleadasResultado referenciaValida = null;
+            if (referencia.IsSuccess && AgPlanificadorRanuras.ValidarFechado(referencia.Value,
+                asignaturas, ranuras, fechaInicio, fechaFin, unidadSesion, esFestivo, patrones, ct).IsSuccess)
             {
-                LoggerHelper.Debug($"[AG-RANURAS-TMP] COMPARAR {diagnostico} plazo={fechaInicio:yyyy-MM-dd}..{fechaFin:yyyy-MM-dd} parcial={permitirParcial} " +
-                    $"referenciaError={(referencia.IsFailure ? referencia.Error : "ninguno")} " +
-                    $"refSesiones={(referencia.IsSuccess ? referencia.Value.Planes.Sum(p => p.Sesiones.Count) : 0)} refPendientes={(referencia.IsSuccess ? referencia.Value.Infactibles.Count : -1)} " +
-                    $"refFin={(referencia.IsSuccess ? referencia.Value.Planes.SelectMany(p => p.Sesiones).Select(s => (DateTime?)s.Fecha).Max() : null):yyyy-MM-dd} " +
-                    $"candidatoSesiones={candidato.Planes.Sum(p => p.Sesiones.Count)} candidatoPendientes={candidato.Infactibles.Count} candidatoFin={candidato.Planes.SelectMany(p => p.Sesiones).Select(s => (DateTime?)s.Fecha).Max():yyyy-MM-dd}");
+                referenciaValida = referencia.Value;
+                alternativas.Add(referenciaValida);
             }
-            if (!permitirParcial)
+            var completado = AgPlanificadorRanuras.CompletarReferencia(asignaturas, ranuras,
+                fechaInicio, fechaFin, unidadSesion, esFestivo, patrones, referenciaValida, ct);
+            if (completado.IsSuccess) { alternativas.Add(completado.Value); }
+
+            // Primero un pase barato sobre huecos. Búsqueda acotada solo cuando no lo resuelve.
+            if (completado.IsFailure || completado.Value.Infactibles.Count > 0)
             {
-                if (patrones != null && patrones.Count > 0)
+                var buscado = AgPlanificadorRanuras.Construir(asignaturas, ranuras,
+                    fechaInicio.Date, fechaFin.Date, unidadSesion, esFestivo, patrones,
+                    ct: ct, diagnostico: diagnostico);
+                if (AgPlanificadorRanuras.ValidarFechado(buscado, asignaturas, ranuras,
+                    fechaInicio, fechaFin, unidadSesion, esFestivo, patrones, ct).IsSuccess)
                 {
-                    LoggerHelper.Debug($"[AG-RANURAS-TMP] ELEGIR {diagnostico} plan=referencia motivo=generacion_con_patrones");
-                    return referencia;
+                    alternativas.Add(buscado);
                 }
-                if (candidato.Infactibles.Count == 0)
-                {
-                    bool refCompleta = referencia.IsSuccess && referencia.Value.Infactibles.Count == 0;
-                    DateTime finCandidato = candidato.Planes.SelectMany(p => p.Sesiones).Select(s => (DateTime?)s.Fecha).Max() ?? DateTime.MaxValue;
-                    DateTime finRef = refCompleta
-                        ? referencia.Value.Planes.Select(p => p.Sesiones != null && p.Sesiones.Count > 0 ? p.Sesiones.Max(s => s.Fecha) : p.FechaFin).DefaultIfEmpty(DateTime.MaxValue).Max()
-                        : DateTime.MaxValue;
-                    if (!refCompleta || (finRef - finCandidato >= TimeSpan.FromDays(7)))
-                    {
-                        LoggerHelper.Debug($"[AG-RANURAS-TMP] ELEGIR {diagnostico} plan=ranuras motivo=completo_o_fin_anterior");
-                        return Result.Success(candidato);
-                    }
-                }
-                return referencia;
             }
 
-            if (referencia.IsSuccess)
+            var requeridas = asignaturas.ToDictionary(a => a.IdAsignatura,
+                a => (int)Math.Ceiling(a.Horas / unidadSesion));
+            var completasPrevias = referenciaValida == null ? new List<int>()
+                : referenciaValida.Planes.Where(p => !referenciaValida.Infactibles.Contains(p.IdAsignatura))
+                    .Select(p => p.IdAsignatura).ToList();
+            var elegibles = alternativas.Where(p => completasPrevias.All(id =>
+                p.Planes.Any(x => x.IdAsignatura == id && x.Sesiones.Count == requeridas[id]))).ToList();
+            var completos = elegibles.Where(p => p.Infactibles.Count == 0).ToList();
+            if (completos.Count > 0) { elegibles = completos; }
+            else if (!permitirParcial)
             {
-                int sesionesRef = referencia.Value.Planes.Sum(p => p.Sesiones.Count);
-                int sesionesCand = candidato.Planes.Sum(p => p.Sesiones.Count);
-
-                if (sesionesCand > sesionesRef)
-                {
-                    LoggerHelper.Debug($"[AG-RANURAS-TMP] ELEGIR {diagnostico} plan=ranuras motivo=mayor_cobertura ({sesionesCand}>{sesionesRef})");
-                    return Result.Success(candidato);
-                }
-                if (sesionesCand < sesionesRef)
-                {
-                    LoggerHelper.Debug($"[AG-RANURAS-TMP] ELEGIR {diagnostico} plan=referencia motivo=referencia_mayor_cobertura ({sesionesRef}>{sesionesCand})");
-                    return referencia;
-                }
-
-                // Misma cobertura: comparar infactibles
-                int infactiblesRef = referencia.Value.Infactibles.Count;
-                int infactiblesCand = candidato.Infactibles.Count;
-
-                if (infactiblesCand > infactiblesRef)
-                {
-                    LoggerHelper.Debug($"[AG-RANURAS-TMP] ELEGIR {diagnostico} plan=referencia motivo=candidato_mas_infactibles ({infactiblesCand}>{infactiblesRef})");
-                    return referencia;
-                }
-                if (infactiblesCand < infactiblesRef)
-                {
-                    LoggerHelper.Debug($"[AG-RANURAS-TMP] ELEGIR {diagnostico} plan=ranuras motivo=candidato_menos_infactibles ({infactiblesCand}<{infactiblesRef})");
-                    return Result.Success(candidato);
-                }
-
-                // Misma cobertura y mismos infactibles: comparar fin proyectado
-                DateTime finRef = referencia.Value.Planes.SelectMany(p => p.Sesiones).Select(s => s.Fecha).DefaultIfEmpty(DateTime.MaxValue).Max();
-                DateTime finCand = candidato.Planes.SelectMany(p => p.Sesiones).Select(s => s.Fecha).DefaultIfEmpty(DateTime.MaxValue).Max();
-                if (finCand < finRef)
-                {
-                    LoggerHelper.Debug($"[AG-RANURAS-TMP] ELEGIR {diagnostico} plan=ranuras motivo=completo_y_fin_menor ({finCand:yyyy-MM-dd}<{finRef:yyyy-MM-dd})");
-                    return Result.Success(candidato);
-                }
-
-                LoggerHelper.Debug($"[AG-RANURAS-TMP] ELEGIR {diagnostico} plan=referencia motivo=referencia_conserva_o_fin_menor");
-                return referencia;
+                // Conservar contrato de generación: factibles previas y cuarentena de infactibles.
+                return referenciaValida != null ? Result.Success(referenciaValida)
+                    : Result.Failure<AgPlanOleadasResultado>("I5_SIN_PLAN_COMPLETO: quedan sesiones sin ubicar.");
             }
-
-            if (candidato.Infactibles.Count == 0 || permitirParcial)
+            var elegido = elegibles.OrderByDescending(p => p.Planes.Sum(x => x.Sesiones.Count))
+                .ThenBy(p => p.Infactibles.Count)
+                .ThenBy(p => p.Planes.SelectMany(x => x.Sesiones).Select(s => s.Fecha)
+                    .DefaultIfEmpty(DateTime.MaxValue).Max()).FirstOrDefault();
+            if (elegido == null)
             {
-                LoggerHelper.Debug($"[AG-RANURAS-TMP] ELEGIR {diagnostico} plan=ranuras motivo=parcial_o_completo_sin_referencia");
-                return Result.Success(candidato);
+                return Result.Failure<AgPlanOleadasResultado>("I5_SIN_PLAN_FECHADO_VALIDO");
             }
-
-            return referencia;
+            LoggerHelper.Debug($"[AG-RANURAS-TMP] ELEGIR {diagnostico} pendientes={elegido.Infactibles.Count} " +
+                $"sesiones={elegido.Planes.Sum(p => p.Sesiones.Count)} parcial={permitirParcial}");
+            return Result.Success(elegido);
         }
 
         /// <summary>
