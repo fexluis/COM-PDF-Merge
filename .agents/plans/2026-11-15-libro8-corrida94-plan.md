@@ -90,10 +90,12 @@ Wave 6 (Ronda 397) [Gate]:     T9 (Full Gate e Integración Global)
   Escribe pruebas unitarias xUnit en `AgCalendarioConflictosTests.cs`.
 - **validation**: Pruebas unitarias pasan validando proyección correcta de fechas intercaladas, detección de cruces reales y descarte de falsos positivos temporales.
 - **verification**: powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "AgCalendarioConflictosTests"
-- **evidence**: (la llena build-verifier)
-- **status**: pending
-- **log**: (lo llena el orquestador)
-- **files edited/created**: (lo llena el orquestador)
+- **evidence**: _evidence/20261115-141028/summary.md
+- **status**: done
+- **log**: Implementada lógica completa en AgCalendarioConflictos (Ocupacion, Crear con AgExpansorSesiones, SeCruzan, Cohorte, DocenteReal). 27 pruebas unitarias en AgCalendarioConflictosTests ejecutadas y superadas al 100% (código 0). Auditado y aprobado por task-reviewer.
+- **files edited/created**:
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgCalendarioConflictos.cs
+  - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgCalendarioConflictosTests.cs
 
 ### T3: A1 — Bloqueo específico de aula aprobada con déficit
 - **id**: T3
@@ -106,8 +108,12 @@ Wave 6 (Ronda 397) [Gate]:     T9 (Full Gate e Integración Global)
 - **description**: Rol Implementer. Implementa `ValidarAprobadas(AgContexto contexto)` en `AgGeneradorHorarios` invocado antes de `ValidarFactibilidadAsync` en `EjecutarOptimizacionAsync`. Si un aula con `Estado == AgEstadoAula.Aprobado` no cabe en plazo bajo la ventana efectiva recibida, retorna error explícito: `I5_AULA_APROBADA_CON_DEFICIT: {aula.AulaRef}; requiere revisión explícita de aprobación para replanificar. El escalador no modifica aulas aprobadas.`. Protege el estado aprobado sin convertirlo automáticamente a Disponible ni omitir aulas silenciosamente. Añade pruebas unitarias xUnit en `AgGeneradorHorariosAprobadasTests.cs`.
 - **validation**: Si un aula aprobada presenta déficit respecto a la ventana efectiva, la optimización falla de inmediato con el código de error `I5_AULA_APROBADA_CON_DEFICIT` y el mensaje prescriptivo.
 - **verification**: powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "AgGeneradorHorariosAprobadasTests"
-- **evidence**: (la llena build-verifier)
-- **status**: pending
+- **evidence**: _evidence/20261115-141050/summary.md
+- **status**: done
+- **log**: Implementado ValidarAprobadas en AgGeneradorHorarios antes del pre-vuelo. 6 pruebas unitarias en AgGeneradorHorariosAprobadasTests más 3 en AgGeneradorHorariosTests ejecutadas y aprobadas (9/9 PASS). Auditado y aprobado por task-reviewer.
+- **files edited/created**:
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgGeneradorHorarios.cs
+  - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgGeneradorHorariosAprobadasTests.cs
 - **log**: (lo llena el orquestador)
 - **files edited/created**: (lo llena el orquestador)
 

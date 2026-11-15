@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ConversorPDF.XLL.Academic.Domain.Enums;
 using ConversorPDF.XLL.Academic.Domain.Interfaces;
+using ConversorPDF.XLL.Academic.Domain.Models;
 using ConversorPDF.XLL.Academic.Domain.Models.Genetica;
 using ConversorPDF.XLL.Core.Helpers;
 using CSharpFunctionalExtensions;
@@ -56,10 +57,14 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             try
             {
                 var stopwatch = Stopwatch.StartNew();
-            var resultado = new AgResultadoCorrida();
+                var resultado = new AgResultadoCorrida();
 
-            // 1. Diagnóstico de Factibilidad Pre-vuelo
-            var factibilidadResult = await _validadorVentana.ValidarFactibilidadAsync(contexto, ct);
+                var aprobadas = ValidarAprobadas(contexto);
+                if (aprobadas.IsFailure)
+                    return Result.Failure<AgResultadoCorrida>(aprobadas.Error);
+
+                // 1. Diagnóstico de Factibilidad Pre-vuelo
+                var factibilidadResult = await _validadorVentana.ValidarFactibilidadAsync(contexto, ct);
             if (factibilidadResult.IsFailure)
             {
                 return Result.Failure<AgResultadoCorrida>($"Fallo en validación de factibilidad: {factibilidadResult.Error}");
@@ -228,6 +233,40 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 LoggerHelper.Error("[AgGeneradorHorarios] Error no controlado durante la optimización", ex);
                 return Result.Failure<AgResultadoCorrida>($"Error durante la optimización: {ex.Message}");
             }
+        }
+
+        internal static Result ValidarAprobadas(AgContexto contexto)
+        {
+            if (contexto == null)
+                return Result.Failure("El contexto del AG no puede ser nulo.");
+
+            var aulasAprobadas = (contexto.Aulas ?? Enumerable.Empty<AgAula>())
+                .Where(a => a.Estado == AgEstadoAula.Aprobado)
+                .ToList();
+
+            if (aulasAprobadas.Count == 0)
+                return Result.Success();
+
+            if (contexto.Ventana == null)
+                return Result.Failure("I1_VENTANA_NO_DEFINIDA");
+
+            foreach (var aula in aulasAprobadas)
+            {
+                var programa = contexto.Programas != null ? contexto.Programas.FirstOrDefault(p => p.Id == aula.IdPrograma) : null;
+                double unidad = AgUnidadesSemanales.HorasSesionAula(aula,
+                    AgNivelAcademicoCatalogo.Desde(programa?.Modalidad));
+                var evaluacion = AgEvaluadorDemandaVentana.Evaluar(
+                    aula.DiasVentana, aula.Jornada, unidad, contexto, aula,
+                    contexto.Ventana.FechaInicio, contexto.Ventana.FechaFin);
+                if (!string.IsNullOrWhiteSpace(evaluacion.Error))
+                    return Result.Failure(evaluacion.Error);
+                if (!evaluacion.CabeEnPlazo)
+                    return Result.Failure(
+                        $"I5_AULA_APROBADA_CON_DEFICIT: {aula.AulaRef}; " +
+                        "requiere revisión explícita de aprobación para replanificar. " +
+                        "El escalador no modifica aulas aprobadas.");
+            }
+            return Result.Success();
         }
     }
 }
