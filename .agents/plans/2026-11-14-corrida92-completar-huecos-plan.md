@@ -192,10 +192,11 @@ Wave 8: T8 (Fase 1805) [Certificación Gate Full & Calibración Baseline]
 - **description**: Implementar y ejecutar las 12 comprobaciones exhaustivas de aceptación descritas en T7: 1) Cali III y IV sin sesiones post-30/05 y horas exactas; 2) Paridad estricta entre generación y evaluación en mezclas LEGADO/AUTOMATICO; 3) Asignaturas que aprovechan múltiples días/bandas sin exclusividad artificial; 4) Compartición de calendario sin colisiones; 5) Invariantes de días permitidos para materias no reclasificadas; 6) Selección de plan más temprano aunque la diferencia sea < 7 días; 7) Preservación de materias previamente completas en planes parciales; 8) Rechazo controlado de anomalías de calendario/sesión; 9) Soporte para semanas incompletas, sábado M/T y unidades de 8h; 10) Independencia de años o constantes rígidas; 11) Fidelidad de fechas entre fábrica, coherencia y staging; 12) Ausencia de regresiones en escalado de ventanas 4->5 y 4->5->6.
 - **validation**: 12/12 pruebas de aceptación pasan en GREEN con 100% de éxito.
 - **verification**: powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "ConversorPDF.Tests.Academic.Application.Services.Genetica.AgPlanificadorRanurasAceptacionTests"
-- **evidence**: _evidence/pending/summary.md
-- **status**: pending
-- **log**: ""
-- **files edited/created**: []
+- **evidence**: _evidence/20261114-220557/summary.md
+- **status**: done
+- **log**: "Suite de aceptación implementada cubriendo al 100% los 12 criterios funcionales y arquitectónicos. 13/13 tests en GREEN. Evidencia _evidence/20261114-220557/summary.md. Aprobado por task-reviewer."
+- **files edited/created**:
+  - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgPlanificadorRanurasAceptacionTests.cs
 
 ### T8: Certificación Gate Full y Calibración de Baseline
 - **id**: T8
