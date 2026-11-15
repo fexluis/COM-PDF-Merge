@@ -642,6 +642,7 @@
     <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV74_SembrarBloques4hFaltantes.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgSemanaIso.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgBloqueSolape.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgCalendarioConflictos.cs" />
     <Compile Include="Academic\Domain\Enums\AgNivelAcademico.cs" />
     <Compile Include="Academic\Domain\Models\AgNivelAcademicoCatalogo.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgUnidadesSemanales.cs" />
