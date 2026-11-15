@@ -196,10 +196,11 @@ Wave 8:                 T10 (Fase 1797) [Gate Full Baseline]
 - **description**: Invertir y ordenar el flujo en AgFormGeneradorHorarios: 1) Evaluar plan fechado con el contexto actual. 2) Extraer candidatas exclusivamente de las materias con déficit en esa evaluación reutilizando el resultado fechado. 3) Si no existen candidatas, no abrir FormAutorizarReclasificacion y continuar con propuesta regular. 4) Si hay candidatas, abrir diálogo modal. Si el usuario cancela, terminar sin guardar. 5) Si el usuario confirma, simular en copia, evaluar misma ventana y avanzar a escalera solo si persiste déficit y aporta mejora. 6) Gestionar errores de validación de forma controlada sin propagar excepciones no capturadas.
 - **validation**: Compilación correcta en Debug/x64; AgFormGeneradorHorarios no invoca FormAutorizarReclasificacion si la evaluación inicial no arroja materias pendientes elegibles; captura de errores muestra aviso informativo al operador.
 - **verification**: powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Build
-- **evidence**: (la llena build-verifier)
-- **status**: pending
-- **log**: (lo llena el orquestador)
-- **files edited/created**: (lo llena el orquestador)
+- **evidence**: _evidence/20261114-191000/summary.md
+- **status**: done
+- **log**: Reordenado flujo en AgFormGeneradorHorarios.cs (evaluar primero fechado, extraer candidatas con déficit, modal condicional, validación tipada con aviso explicativo y try/catch de excepciones de negocio sin ExcepcionNoControlada). Compilación limpia y 48/48 PASS.
+- **files edited/created**:
+  - ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs
 
 ### T9: Cobertura de Pruebas de Aceptación End-to-End
 - **id**: T9
