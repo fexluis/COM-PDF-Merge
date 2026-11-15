@@ -122,10 +122,12 @@ Wave 8: T8 (Fase 1805) [Certificación Gate Full & Calibración Baseline]
 - **description**: Implementar `internal static Result<AgPlanOleadasResultado> CompletarReferencia(...)` en `AgPlanificadorRanuras.cs`. Conserva exactamente las sesiones de materias restringidas completas de la referencia validada con `ValidarFechado`. Para las materias restantes, aplica una heurística Most-Constrained-First (ordenando primero aquellas con restricciones de días `diasPatron.Count > 0` por menor grado de libertad, y al final las `AUTOMATICO`), ubicando sesión por sesión en los huecos libres del calendario común sin segregación por carril. En la búsqueda acotada de `AgPlanificadorRanuras.Construir`, eliminar la constante fija `limiteMayo = 30/05/2027` garantizando que el bucle de particiones continúe buscando compactaciones con menor `mejorFin` sin corte prematuro en la primera partición completa. Añadir tests unitarios específicos para `CompletarReferencia` en `AgPlanificadorRanurasTests.cs`.
 - **validation**: `CompletarReferencia` rescata y completa materias aprovechando huecos entre bandas; el test existente `Construir_WhenReferenciaCabeEnVentanaAmpliada_ShouldBuscarFinMasTemprano` sigue pasando sin depender de `limiteMayo`.
 - **verification**: powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "ConversorPDF.Tests.Academic.Application.Services.Genetica.AgPlanificadorRanurasTests"
-- **evidence**: _evidence/pending/summary.md
-- **status**: pending
-- **log**: ""
-- **files edited/created**: []
+- **evidence**: _evidence/20261114-212655/summary.md
+- **status**: done
+- **log**: "CompletarReferencia implementado con heurística Most-Constrained-First y validación canónica. Desacoplado limiteMayo de AgPlanificadorRanuras.Construir sin truncar compactación. 27/27 tests en GREEN. Evidencia _evidence/20261114-212655/summary.md. Aprobado por task-reviewer."
+- **files edited/created**:
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgPlanificadorRanuras.cs
+  - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgPlanificadorRanurasTests.cs
 
 ### T4: Selección Común y Unificada de Planes en AgPlanificadorOleadas
 - **id**: T4

@@ -386,6 +386,119 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             result.Error.Should().Be("I1_PATRON_INVALIDO");
         }
 
+        [Fact]
+        public void CompletarReferencia_WhenReferenciaConPatronRestringido_ShouldPreservarSesionesIdenticas()
+        {
+            // Arrange
+            var demandas = new List<(int IdAsignatura, double Horas, int OrdenCurricular)>
+            {
+                (1, 8.0, 1),
+                (2, 8.0, 2)
+            };
+            var ranuraLunes = new AgRanura(1, "TARDE", 4.0);
+            var ranuraViernes = new AgRanura(5, "TARDE", 4.0);
+            var ranuras = new List<AgRanura> { ranuraLunes, ranuraViernes };
+            var ini = new DateTime(2027, 2, 1);
+            var fin = new DateTime(2027, 2, 14);
+            var patrones = new Dictionary<int, string> { { 1, "5" } };
+
+            var sesionesAsig1 = new List<AgSesionPlanificada>
+            {
+                new AgSesionPlanificada(1, new DateTime(2027, 2, 5), ranuraViernes),
+                new AgSesionPlanificada(1, new DateTime(2027, 2, 12), ranuraViernes)
+            };
+            var oleada1 = new AgPlanOleada(1, 0, 0, new List<int> { 5 },
+                new DateTime(2027, 2, 5), new DateTime(2027, 2, 12), 2, 2, 2,
+                new List<AgRanura> { ranuraViernes }, sesionesAsig1);
+            var referencia = new AgPlanOleadasResultado(
+                new List<AgPlanOleada> { oleada1 },
+                new List<int> { 2 });
+
+            // Act
+            var result = AgPlanificadorRanuras.CompletarReferencia(
+                demandas, ranuras, ini, fin, 4.0, null, patrones, referencia, System.Threading.CancellationToken.None);
+
+            // Assert
+            result.IsSuccess.Should().BeTrue();
+            result.Value.Infactibles.Should().BeEmpty();
+            var plan1 = result.Value.Planes.Single(p => p.IdAsignatura == 1);
+            plan1.Sesiones.Should().BeEquivalentTo(sesionesAsig1);
+        }
+
+        [Fact]
+        public void CompletarReferencia_WhenMateriaAutomaticaEnHuecosRestantes_ShouldCombinarDiasSinColision()
+        {
+            // Arrange
+            var demandas = new List<(int IdAsignatura, double Horas, int OrdenCurricular)>
+            {
+                (1, 4.0, 1),
+                (2, 12.0, 2)
+            };
+            var ranuraLunes = new AgRanura(1, "TARDE", 4.0);
+            var ranuraMartes = new AgRanura(2, "TARDE", 4.0);
+            var ranuraViernes = new AgRanura(5, "TARDE", 4.0);
+            var ranuras = new List<AgRanura> { ranuraLunes, ranuraMartes, ranuraViernes };
+            var ini = new DateTime(2027, 2, 1);
+            var fin = new DateTime(2027, 2, 8);
+            var patrones = new Dictionary<int, string> { { 1, "5" } };
+
+            var sesionesAsig1 = new List<AgSesionPlanificada>
+            {
+                new AgSesionPlanificada(1, new DateTime(2027, 2, 5), ranuraViernes)
+            };
+            var oleada1 = new AgPlanOleada(1, 0, 0, new List<int> { 5 },
+                new DateTime(2027, 2, 5), new DateTime(2027, 2, 5), 1, 1, 1,
+                new List<AgRanura> { ranuraViernes }, sesionesAsig1);
+            var referencia = new AgPlanOleadasResultado(
+                new List<AgPlanOleada> { oleada1 },
+                new List<int> { 2 });
+
+            // Act
+            var result = AgPlanificadorRanuras.CompletarReferencia(
+                demandas, ranuras, ini, fin, 4.0, null, patrones, referencia, System.Threading.CancellationToken.None);
+
+            // Assert
+            result.IsSuccess.Should().BeTrue();
+            result.Value.Infactibles.Should().BeEmpty();
+            var plan2 = result.Value.Planes.Single(p => p.IdAsignatura == 2);
+            plan2.Sesiones.Should().HaveCount(3);
+            plan2.Sesiones.Select(s => s.Fecha).Should().Equal(
+                new DateTime(2027, 2, 1),
+                new DateTime(2027, 2, 2),
+                new DateTime(2027, 2, 8));
+            plan2.DiasPatron.Should().BeEquivalentTo(new[] { 1, 2 });
+            var todasSesiones = result.Value.Planes.SelectMany(p => p.Sesiones).ToList();
+            todasSesiones.Select(s => s.Fecha.ToString("yyyyMMdd") + s.Ranura.Franja).Should().OnlyHaveUniqueItems();
+        }
+
+        [Fact]
+        public void CompletarReferencia_WhenReferenciaInvalida_ShouldRetornarFallo()
+        {
+            // Arrange
+            var demandas = new List<(int IdAsignatura, double Horas, int OrdenCurricular)>
+            {
+                (1, 4.0, 1),
+                (2, 4.0, 2)
+            };
+            var ranura = new AgRanura(1, "TARDE", 4.0);
+            var ranuras = new List<AgRanura> { ranura };
+            DateTime ini = new DateTime(2027, 2, 1);
+            DateTime fin = new DateTime(2027, 2, 1);
+            var sesionColisionada1 = new AgSesionPlanificada(1, ini, ranura);
+            var sesionColisionada2 = new AgSesionPlanificada(2, ini, ranura);
+            var oleada1 = new AgPlanOleada(1, 0, 0, new List<int> { 1 }, ini, fin, 1, 1, 1, ranuras, new List<AgSesionPlanificada> { sesionColisionada1 });
+            var oleada2 = new AgPlanOleada(2, 0, 0, new List<int> { 1 }, ini, fin, 1, 1, 1, ranuras, new List<AgSesionPlanificada> { sesionColisionada2 });
+            var referenciaInvalida = new AgPlanOleadasResultado(new List<AgPlanOleada> { oleada1, oleada2 }, new List<int>());
+
+            // Act
+            var result = AgPlanificadorRanuras.CompletarReferencia(
+                demandas, ranuras, ini, fin, 4.0, null, null, referenciaInvalida, System.Threading.CancellationToken.None);
+
+            // Assert
+            result.IsFailure.Should().BeTrue();
+            result.Error.Should().Be("I5_PLAN_FECHA_O_COLISION");
+        }
+
         private static CSharpFunctionalExtensions.Result<AgPlanOleadasResultado> Plan(AgContexto ctx)
         {
             return new AgPlanificadorOleadas().Construir(ctx.AulaAsignaturas.Select(a =>

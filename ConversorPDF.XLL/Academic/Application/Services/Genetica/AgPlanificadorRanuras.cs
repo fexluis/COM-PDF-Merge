@@ -41,6 +41,10 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             var requeridas = orden.ToDictionary(a => a.IdAsignatura, a => (int)Math.Ceiling(a.Horas / unidad));
             var calendario = Calendario(ranuras, ini, fin, festivo, ct);
             bool sinPatrones = patrones == null || patrones.Count == 0;
+            int totalSesiones = requeridas.Values.Sum();
+            DateTime cotaMinimaFin = (totalSesiones > 0 && totalSesiones <= calendario.Count)
+                ? calendario[totalSesiones - 1].Fecha
+                : ini.Date;
             var mejor = new List<AgPlanOleada>();
             var mejorParticion = new List<IReadOnlyList<int>>();
             int mejorSesiones = -1;
@@ -75,8 +79,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             foreach (var bandas in particiones)
             {
                 ct.ThrowIfCancellationRequested();
-                DateTime limiteMayo = new DateTime(2027, 5, 30);
-                if (agotada || (sinPatrones && ((mejorCompletas == orden.Count && mejorFin <= limiteMayo) || mejorSesiones == calendario.Count))) { break; }
+                if (agotada || mejorSesiones == calendario.Count) { break; }
+                if (sinPatrones && mejorCompletas == orden.Count && mejorFin <= cotaMinimaFin) { break; }
                 var calendarios = bandas.Select(b => calendario.Where(s => b.Contains(s.Ranura)).ToList()).ToList();
                 var cursores = new int[bandas.Count];
                 var oleadas = new int[bandas.Count];
@@ -148,6 +152,108 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 pendientes.Select(id => "Asig " + id + ": sesiones pendientes dentro del plazo.").ToList(), mejorParticion,
                 ocupacionPorcentaje: calendario.Count > 0 ? 100.0 * Math.Max(0, mejorSesiones) / calendario.Count : 0,
                 busquedaAgotada: agotada);
+        }
+
+        internal static Result<AgPlanOleadasResultado> CompletarReferencia(
+            IReadOnlyList<(int IdAsignatura, double Horas, int OrdenCurricular)> demandas,
+            IReadOnlyList<AgRanura> ranuras, DateTime ini, DateTime fin, double unidad,
+            Func<DateTime, bool> festivo, IReadOnlyDictionary<int, string> patrones,
+            AgPlanOleadasResultado referencia, CancellationToken ct)
+        {
+            var orden = demandas.OrderBy(a => Math.Max(0, a.OrdenCurricular))
+                .ThenBy(a => a.IdAsignatura).ToList();
+            var requeridas = orden.ToDictionary(a => a.IdAsignatura,
+                a => (int)Math.Ceiling(a.Horas / unidad));
+            var restricciones = orden.ToDictionary(a => a.IdAsignatura, a =>
+            {
+                string texto;
+                return new HashSet<int>(patrones != null
+                    && patrones.TryGetValue(a.IdAsignatura, out texto)
+                    ? AgDiasVentana.Dias(texto) : new List<int>());
+            });
+            var calendario = Calendario(ranuras, ini.Date, fin.Date, festivo, ct);
+            var ocupadas = new bool[calendario.Count];
+            var porId = new Dictionary<int, List<AgSesionPlanificada>>();
+
+            if (referencia != null)
+            {
+                var validacion = ValidarFechado(referencia, demandas, ranuras,
+                    ini, fin, unidad, festivo, patrones, ct);
+                if (validacion.IsFailure)
+                {
+                    return Result.Failure<AgPlanOleadasResultado>(validacion.Error);
+                }
+                foreach (var p in referencia.Planes.Where(p =>
+                    restricciones[p.IdAsignatura].Count > 0
+                    && !referencia.Infactibles.Contains(p.IdAsignatura)))
+                {
+                    ct.ThrowIfCancellationRequested();
+                    var sesiones = p.Sesiones.OrderBy(s => s.Fecha)
+                        .ThenBy(s => s.Ranura.Franja, StringComparer.Ordinal).ToList();
+                    foreach (var s in sesiones)
+                    {
+                        int indice = calendario.FindIndex(c => c.Fecha == s.Fecha
+                            && c.Ranura.Equals(s.Ranura));
+                        if (indice >= 0)
+                        {
+                            ocupadas[indice] = true;
+                        }
+                    }
+                    porId[p.IdAsignatura] = sesiones;
+                }
+            }
+
+            // Heurística Most-Constrained-First: primero materias con patrones restringidos (menor número de días disponibles), luego libres
+            var restantes = orden.Where(a => !porId.ContainsKey(a.IdAsignatura))
+                .OrderBy(a => restricciones[a.IdAsignatura].Count == 0 ? 1 : 0)
+                .ThenBy(a => restricciones[a.IdAsignatura].Count > 0 ? restricciones[a.IdAsignatura].Count : int.MaxValue)
+                .ThenBy(a => Math.Max(0, a.OrdenCurricular))
+                .ThenBy(a => a.IdAsignatura);
+            foreach (var a in restantes)
+            {
+                ct.ThrowIfCancellationRequested();
+                var sesiones = new List<AgSesionPlanificada>();
+                var dias = restricciones[a.IdAsignatura];
+                for (int i = 0; i < calendario.Count && sesiones.Count < requeridas[a.IdAsignatura]; i++)
+                {
+                    ct.ThrowIfCancellationRequested();
+                    var hueco = calendario[i];
+                    if (ocupadas[i] || (dias.Count > 0 && !dias.Contains(hueco.Ranura.Dia)))
+                    {
+                        continue;
+                    }
+                    ocupadas[i] = true;
+                    sesiones.Add(new AgSesionPlanificada(a.IdAsignatura, hueco.Fecha, hueco.Ranura));
+                }
+                porId[a.IdAsignatura] = sesiones;
+            }
+
+            var planes = new List<AgPlanOleada>();
+            foreach (var a in orden)
+            {
+                List<AgSesionPlanificada> sesiones;
+                if (!porId.TryGetValue(a.IdAsignatura, out sesiones) || sesiones.Count == 0) { continue; }
+                var usadas = ranuras.Where(r => sesiones.Any(s => s.Ranura.Equals(r))).ToList();
+                DateTime primera = sesiones.First().Fecha;
+                DateTime ultima = sesiones.Last().Fecha;
+                int capacidad = calendario.Count(c => c.Fecha >= primera && c.Fecha <= ultima
+                    && usadas.Any(r => r.Equals(c.Ranura)));
+                planes.Add(new AgPlanOleada(a.IdAsignatura, 0, planes.Count,
+                    usadas.Select(r => r.Dia).Distinct().ToList(), primera, ultima,
+                    (ultima - primera).Days / 7 + 1, requeridas[a.IdAsignatura], capacidad,
+                    usadas, sesiones));
+            }
+            var pendientes = orden.Where(a => !porId.ContainsKey(a.IdAsignatura) || porId[a.IdAsignatura].Count < requeridas[a.IdAsignatura])
+                .Select(a => a.IdAsignatura).ToList();
+            var resultado = new AgPlanOleadasResultado(planes, pendientes,
+                pendientes.Select(id => "Asig " + id + ": sesiones no ubicadas; el completado no acredita imposibilidad.").ToList(),
+                new List<IReadOnlyList<int>> { ranuras.Select(r => r.Dia).Distinct().ToList() },
+                ocupacionPorcentaje: calendario.Count == 0 ? 0.0
+                    : 100.0 * planes.Sum(p => p.Sesiones.Count) / calendario.Count);
+            var comprobacion = ValidarFechado(resultado, demandas, ranuras,
+                ini, fin, unidad, festivo, patrones, ct);
+            return comprobacion.IsSuccess ? Result.Success(resultado)
+                : Result.Failure<AgPlanOleadasResultado>(comprobacion.Error);
         }
 
         internal static Result ValidarFechado(
