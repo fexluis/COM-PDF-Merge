@@ -323,6 +323,7 @@ UPDATE ag_corrida SET
     mejor_fitness = @MejorFitness,
     hard_violations = @HardViolations,
     soft_violations = @SoftViolations,
+    vacantes = @Vacantes,
     id_individuo_optimo = @IdIndividuoOptimo
 WHERE id = @Id;";
 
@@ -334,6 +335,7 @@ WHERE id = @Id;";
                         corrida.MejorFitness,
                         corrida.HardViolations,
                         corrida.SoftViolations,
+                        corrida.Vacantes,
                         corrida.IdIndividuoOptimo,
                         corrida.Id
                     };
@@ -493,6 +495,40 @@ SELECT last_insert_rowid();";
                                     g.HorasGen
                                 };
                                 g.Id = await db.ExecuteScalarAsync<long>(new CommandDefinition(sqlGen, genParam, trans, cancellationToken: ct));
+                            }
+                        }
+
+                        if (individuo.Violaciones != null && individuo.Violaciones.Count > 0 && individuo.Genes != null && individuo.Genes.Count > 0)
+                        {
+                            var serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+                            foreach (var violacion in individuo.Violaciones)
+                            {
+                                if (string.IsNullOrWhiteSpace(violacion.DetalleJson)) continue;
+                                Dictionary<string, object> detalle = null;
+                                try
+                                {
+                                    detalle = serializer.DeserializeObject(violacion.DetalleJson) as Dictionary<string, object>;
+                                }
+                                catch
+                                {
+                                    detalle = null;
+                                }
+                                if (detalle == null || !detalle.ContainsKey("indicesGenes")) continue;
+                                var indices = detalle["indicesGenes"] as object[]
+                                    ?? (detalle["indicesGenes"] as System.Collections.IEnumerable)?.Cast<object>().ToArray();
+                                if (indices == null || indices.Length == 0) continue;
+                                var ids = indices.Select(x => Convert.ToInt32(x)).Select(indice =>
+                                {
+                                    if (indice >= 0 && indice < individuo.Genes.Count && individuo.Genes[indice].Id > 0)
+                                        return (long)individuo.Genes[indice].Id;
+                                    return 0L;
+                                }).Where(id => id > 0).Distinct().ToArray();
+                                if (ids.Length > 0)
+                                {
+                                    detalle["idGenes"] = ids;
+                                    violacion.IdGen = ids[0];
+                                    violacion.DetalleJson = serializer.Serialize(detalle);
+                                }
                             }
                         }
 

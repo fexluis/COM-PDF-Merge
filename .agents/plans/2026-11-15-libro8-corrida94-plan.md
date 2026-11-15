@@ -185,8 +185,12 @@ Wave 6 (Ronda 397) [Gate]:     T9 (Full Gate e Integración Global)
   - Añade pruebas unitarias xUnit en `AgScheduleRepositoryCorridaVacantesTests.cs` verificando la persistencia de vacantes y el mapeo de `id_gen` en las violaciones.
 - **validation**: Las pruebas de persistencia confirman que `vacantes` se actualiza en base de datos y que `ag_violacion` queda poblada con `id_gen` válido cuando el detalle contiene `indicesGenes`.
 - **verification**: powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "AgScheduleRepositoryCorridaVacantesTests"
-- **evidence**: (la llena build-verifier)
-- **status**: pending
+- **evidence**: _evidence/20261115-144154/summary.md
+- **status**: done
+- **log**: Incorporada persistencia de vacantes en UpdateCorridaAsync y resolución transaccional de indicesGenes hacia idGenes/id_gen en SaveIndividuoAsync. 4/4 pruebas unitarias superadas en AgScheduleRepositoryCorridaVacantesTests. Auditado y aprobado por task-reviewer.
+- **files edited/created**:
+  - ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgScheduleRepository.cs
+  - ConversorPDF.Tests/Academic/Infrastructure/Persistence/AgScheduleRepositoryCorridaVacantesTests.cs
 - **log**: (lo llena el orquestador)
 - **files edited/created**: (lo llena el orquestador)
 
