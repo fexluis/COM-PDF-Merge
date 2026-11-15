@@ -114,6 +114,304 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             resultado.Modificadas.Should().Be(0);
         }
 
+        [Theory]
+        [InlineData(AgEstadoAula.Aprobado)]
+        [InlineData(AgEstadoAula.Inactiva)]
+        [InlineData(AgEstadoAula.Mantenimiento)]
+        [InlineData(AgEstadoAula.Reservada)]
+        public void IdentificarPatrones_WhenAulaNoElegible_ShouldNoGenerarCandidatos(AgEstadoAula estadoNoElegible)
+        {
+            // Arrange
+            var ctx = CrearContextoConPatrones();
+            var aula = ctx.Aulas[0];
+            aula.Estado = estadoNoElegible;
+            var sut = new AgEscaladorRanuraAula(() => null);
+
+            // Act
+            var candidatos = sut.IdentificarPatronesRedistribuibles(ctx, aula);
+            var candidatosTodos = sut.IdentificarPatronesRedistribuibles(ctx);
+
+            // Assert
+            candidatos.Should().BeEmpty();
+            candidatosTodos.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void ValidarSelecciones_WhenAulaEstadoAprobado_ShouldRetornarRechazoAulaNoElegible()
+        {
+            // Arrange
+            var ctx = CrearContextoConPatrones();
+            var aula = ctx.Aulas[0];
+            aula.Estado = AgEstadoAula.Aprobado;
+            var sut = new AgEscaladorRanuraAula(() => null);
+
+            var rec = new AgReclasificacionPatron
+            {
+                IdAula = aula.Id,
+                AulaRef = aula.AulaRef,
+                Subunidad = aula.Subunidad ?? string.Empty,
+                IdAsignatura = 1,
+                NombreAsignatura = "Asig 1",
+                OrigenAnterior = "LEGADO",
+                OrigenPropuesto = "AUTOMATICO",
+                DiasPatronAnterior = "5",
+                DiasPatronPropuesto = string.Empty,
+                SesionesPendientes = 2,
+                HorasPendientes = 8,
+                Autorizado = true
+            };
+
+            // Act
+            var validacion = sut.ValidarSelecciones(ctx, new[] { rec });
+            Action act = () => sut.Evaluar(ctx, 0, new[] { rec });
+
+            // Assert
+            validacion.EsValido.Should().BeFalse();
+            validacion.Motivo.Should().Be("AULA_NO_ELEGIBLE");
+            validacion.IdAulaRechazada.Should().Be(aula.Id);
+            act.Should().Throw<ArgumentException>()
+                .WithMessage($"*{aula.AulaRef}*");
+        }
+
+        [Fact]
+        public void IdentificarYValidar_WhenDosAulasMismaMateriaDistintoEstado_ShouldAislarDisponibleDeAprobada()
+        {
+            // Arrange
+            var ctx = CrearContextoConPatrones();
+            var aulaDisponible = ctx.Aulas[0];
+            aulaDisponible.Estado = AgEstadoAula.Disponible;
+
+            var aulaAprobada = new AgAula
+            {
+                Id = 2,
+                AulaRef = "A2",
+                Subunidad = "VALLE",
+                IdPrograma = 1,
+                Semestre = "I",
+                DiasVentana = "LUN-VIE",
+                Jornada = "MANANA",
+                HorasDia = 4,
+                Estado = AgEstadoAula.Aprobado
+            };
+            ctx.Aulas.Add(aulaAprobada);
+            ctx.AulaAsignaturas.Add(new AgAulaAsignatura
+            {
+                IdAula = 2,
+                IdAsignatura = 1,
+                HorasObjetivo = 16,
+                OrigenPatron = "LEGADO",
+                DiasPatron = "5"
+            });
+            ctx.ConstruirIndices();
+
+            var sut = new AgEscaladorRanuraAula(() => null);
+
+            // Act
+            var candidatosDisponible = sut.IdentificarPatronesRedistribuibles(ctx, aulaDisponible);
+            var candidatosAprobada = sut.IdentificarPatronesRedistribuibles(ctx, aulaAprobada);
+            var todosCandidatos = sut.IdentificarPatronesRedistribuibles(ctx);
+
+            // Assert candidatos
+            candidatosDisponible.Should().HaveCount(1);
+            candidatosDisponible[0].IdAula.Should().Be(aulaDisponible.Id);
+            candidatosAprobada.Should().BeEmpty();
+            todosCandidatos.Should().HaveCount(1);
+            todosCandidatos[0].IdAula.Should().Be(aulaDisponible.Id);
+
+            // Autorizar candidato de aula disponible
+            var rec = candidatosDisponible[0].Clone();
+            rec.Autorizado = true;
+
+            var validacion = sut.ValidarSelecciones(ctx, new[] { rec });
+            validacion.EsValido.Should().BeTrue();
+
+            string huellaAprobadaAntes = AgHuellaPlanVentana.Calcular(ctx, aulaAprobada);
+            var decisiones = sut.Evaluar(ctx, 0, new[] { rec });
+
+            // Assert decisiones y aislamiento
+            var decisionDisponible = decisiones.SingleOrDefault(d => d.IdAula == aulaDisponible.Id);
+            decisionDisponible.Should().NotBeNull();
+            decisionDisponible.ReclasificacionesAutorizadas.Should().HaveCount(1);
+
+            decisiones.Any(d => d.IdAula == aulaAprobada.Id).Should().BeFalse();
+            ctx.AulaAsignaturaPorAulaAsig[(2, 1)].OrigenPatron.Should().Be("LEGADO");
+            ctx.AulaAsignaturaPorAulaAsig[(2, 1)].DiasPatron.Should().Be("5");
+            AgHuellaPlanVentana.Calcular(ctx, aulaAprobada).Should().Be(huellaAprobadaAntes);
+        }
+
+        [Fact]
+        public void ValidarSelecciones_WhenDosProgramasHomonimosMismaSede_ShouldMantenerIdentidadesAisladas()
+        {
+            // Arrange
+            var fechaFin = new DateTime(2027, 2, 15);
+            var ctx = new AgContexto
+            {
+                IdSede = 1,
+                Subunidad = "SEDE_CENTRAL",
+                Ventana = VentanaSemestre.Crear(1, "2027-01", new DateTime(2027, 2, 1),
+                    fechaFin, AgOrigenVentana.Presencial).Value
+            };
+            ctx.Sedes.Add(new Sede { Id = 1, Ciudad = "SEDE CENTRAL" });
+
+            // Dos programas con el mismo nombre pero diferente IdPrograma
+            ctx.Programas.Add(new Programa { Id = 1, Nombre = "ADMINISTRACION PUBLICA", Modalidad = "PREGRADO" });
+            ctx.Programas.Add(new Programa { Id = 2, Nombre = "ADMINISTRACION PUBLICA", Modalidad = "PREGRADO" });
+
+            // Asignatura para cada programa con Id distinto
+            ctx.Asignaturas.Add(new Asignatura { Id = 10, IdPrograma = 1, Nombre = "MATEMATICAS", Semestre = "I", IntHoraria = 16 });
+            ctx.Asignaturas.Add(new Asignatura { Id = 20, IdPrograma = 2, Nombre = "MATEMATICAS", Semestre = "I", IntHoraria = 16 });
+
+            var aula1 = new AgAula
+            {
+                Id = 1,
+                AulaRef = "A1",
+                Subunidad = "SEDE_CENTRAL",
+                IdSede = 1,
+                IdPrograma = 1,
+                Semestre = "I",
+                DiasVentana = "LUN-VIE",
+                Jornada = "MANANA",
+                HorasDia = 4,
+                Estado = AgEstadoAula.Disponible
+            };
+            var aula2 = new AgAula
+            {
+                Id = 2,
+                AulaRef = "A2",
+                Subunidad = "SEDE_CENTRAL",
+                IdSede = 1,
+                IdPrograma = 2,
+                Semestre = "I",
+                DiasVentana = "LUN-VIE",
+                Jornada = "MANANA",
+                HorasDia = 4,
+                Estado = AgEstadoAula.Disponible
+            };
+            ctx.Aulas.Add(aula1);
+            ctx.Aulas.Add(aula2);
+
+            ctx.AulaAsignaturas.Add(new AgAulaAsignatura
+            {
+                IdAula = 1,
+                IdAsignatura = 10,
+                HorasObjetivo = 16,
+                DiasPatron = "5",
+                OrigenPatron = "LEGADO"
+            });
+            ctx.AulaAsignaturas.Add(new AgAulaAsignatura
+            {
+                IdAula = 2,
+                IdAsignatura = 20,
+                HorasObjetivo = 16,
+                DiasPatron = "5",
+                OrigenPatron = "LEGADO"
+            });
+
+            for (int dia = 1; dia <= 5; dia++)
+            {
+                ctx.Bloques.Add(new AgBloqueHorario
+                {
+                    Id = dia,
+                    DiaSemanaNumero = dia,
+                    HoraInicio = "08:00",
+                    HoraFin = "12:00",
+                    DuracionHoras = 4
+                });
+            }
+            ctx.ConstruirIndices();
+
+            var sut = new AgEscaladorRanuraAula(() => null);
+
+            // Act 1: Obtener candidatas
+            var candidatosAula1 = sut.IdentificarPatronesRedistribuibles(ctx, aula1);
+            var candidatosAula2 = sut.IdentificarPatronesRedistribuibles(ctx, aula2);
+
+            // Assert 1: Identidades estrictas
+            candidatosAula1.Should().HaveCount(1);
+            candidatosAula1[0].IdAula.Should().Be(1);
+            candidatosAula1[0].IdAsignatura.Should().Be(10);
+            candidatosAula1[0].Programa.Should().Be("ADMINISTRACION PUBLICA");
+
+            candidatosAula2.Should().HaveCount(1);
+            candidatosAula2[0].IdAula.Should().Be(2);
+            candidatosAula2[0].IdAsignatura.Should().Be(20);
+            candidatosAula2[0].Programa.Should().Be("ADMINISTRACION PUBLICA");
+
+            // Act 2: Cruzar selección (asignar Asignatura 20 a Aula 1)
+            var recCruzado = candidatosAula1[0].Clone();
+            recCruzado.IdAsignatura = 20;
+            recCruzado.Autorizado = true;
+
+            var valCruzado = sut.ValidarSelecciones(ctx, new[] { recCruzado });
+
+            // Assert 2: Rechazado por CONFIGURACION_MODIFICADA
+            valCruzado.EsValido.Should().BeFalse();
+            valCruzado.Motivo.Should().Be("CONFIGURACION_MODIFICADA");
+
+            // Act 3: Intentar asociar Aula 1 con AulaRef ajeno de Aula 2
+            var recRefCruzada = candidatosAula1[0].Clone();
+            recRefCruzada.AulaRef = aula2.AulaRef;
+            recRefCruzada.Autorizado = true;
+
+            var valRefCruzada = sut.ValidarSelecciones(ctx, new[] { recRefCruzada });
+
+            // Assert 3: Rechazado por AULA_NO_ELEGIBLE (no existe combinación)
+            valRefCruzada.EsValido.Should().BeFalse();
+            valRefCruzada.Motivo.Should().Be("AULA_NO_ELEGIBLE");
+
+            // Act 4: Autorización legítima individual de Aula 1
+            var recAula1 = candidatosAula1[0].Clone();
+            recAula1.Autorizado = true;
+            var valValida = sut.ValidarSelecciones(ctx, new[] { recAula1 });
+            var decisiones = sut.Evaluar(ctx, 0, new[] { recAula1 });
+
+            // Assert 4: Válido y decisiones aisladas
+            valValida.EsValido.Should().BeTrue();
+            var decAula1 = decisiones.Single(d => d.IdAula == 1);
+            var decAula2 = decisiones.Single(d => d.IdAula == 2);
+            decAula1.ReclasificacionesAutorizadas.Should().HaveCount(1);
+            decAula1.ReclasificacionesAutorizadas[0].IdAsignatura.Should().Be(10);
+            decAula2.ReclasificacionesAutorizadas.Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task Aplicar_WhenCanceladoORechazado_ShouldTenerCeroEscrituras()
+        {
+            // Arrange
+            var ctx = CrearContextoConPatrones();
+            var sut = new AgEscaladorRanuraAula(() => null);
+            var rec = sut.IdentificarPatronesRedistribuibles(ctx, ctx.Aulas[0]).Single();
+            rec.Autorizado = true;
+            var decisiones = sut.Evaluar(ctx, 0, new[] { rec });
+
+            // SUT con factory que fallaría si se intentara abrir conexión a BD
+            var sutSinDb = new AgEscaladorRanuraAula(() => throw new InvalidOperationException("No debe abrir conexion a BD"));
+
+            // Act 1: Cancelación vía CancellationToken
+            using (var cts = new CancellationTokenSource())
+            {
+                cts.Cancel();
+                var resultadoCancelado = await sutSinDb.AplicarDetalladoAsync(decisiones, 0, cts.Token);
+
+                // Assert 1: Cancelado y cero escrituras
+                resultadoCancelado.Exito.Should().BeFalse();
+                resultadoCancelado.Error.Should().Be("Operación cancelada.");
+                resultadoCancelado.Modificadas.Should().Be(0);
+                resultadoCancelado.Confirmadas.Should().Be(0);
+            }
+
+            // Act 2: Rechazo por huella corrupta o manipulada
+            var decisionManipulada = decisiones[0];
+            decisionManipulada.HuellaDecision = "HUELLA_ALTERADA";
+            var resultadoRechazado = await sutSinDb.AplicarDetalladoAsync(new[] { decisionManipulada }, 0, CancellationToken.None);
+
+            // Assert 2: Falla controlada y cero escrituras
+            resultadoRechazado.Exito.Should().BeFalse();
+            resultadoRechazado.Error.Should().Contain("modificada");
+            resultadoRechazado.Modificadas.Should().Be(0);
+            resultadoRechazado.Confirmadas.Should().Be(0);
+        }
+
         [Fact]
         public void Sellar_CompletaHuecosAnterioresALaUltimaFecha()
         {

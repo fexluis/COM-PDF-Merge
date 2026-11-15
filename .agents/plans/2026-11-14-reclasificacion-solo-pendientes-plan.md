@@ -180,10 +180,11 @@ Wave 8:                 T10 (Fase 1797) [Gate Full Baseline]
 - **description**: Escribir pruebas unitarias exhaustivas en AgRedistribucionCorreccionesTests adaptadas a la nueva validación tipada de T6: 1) Aula elegible (Disponible) genera candidatos solo para materias con déficit. 2) Aula no elegible (Estado=4 Aprobado, caso aula 12) nunca genera candidatos y su autorización forzada se rechaza con motivo controlado 'aula no elegible'. 3) Dos aulas con misma materia y distinto estado. 4) Dos programas homónimos en misma sede mantienen identidades aisladas. 5) Cero escrituras ante rechazo o cancelación.
 - **validation**: Todos los tests de AgRedistribucionCorreccionesTests pasan satisfactoriamente verificando el aislamiento y la política de rechazo.
 - **verification**: powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Mode Fast -Filter "AgRedistribucionCorreccionesTests"
-- **evidence**: (la llena build-verifier)
-- **status**: pending
-- **log**: (lo llena el orquestador)
-- **files edited/created**: (lo llena el orquestador)
+- **evidence**: _evidence/20261114-190300/summary.md
+- **status**: done
+- **log**: Pruebas unitarias completadas para aulas no elegibles (Aprobado/Inactiva/Mantenimiento/Reservada), motivo AULA_NO_ELEGIBLE, aislamiento de aulas Disponible vs Aprobado, programas homónimos y cero escrituras. 28/28 tests PASS.
+- **files edited/created**:
+  - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgRedistribucionCorreccionesTests.cs
 
 ### T8: Orquestación del Flujo UI en Generador de Horarios
 - **id**: T8
