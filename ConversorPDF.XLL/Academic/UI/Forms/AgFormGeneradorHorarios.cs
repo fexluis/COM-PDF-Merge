@@ -1636,13 +1636,26 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             {
                 // Paso 1: Evaluar plan fechado primero
                 var decisionesEscalado = await Task.Run(() => escalador.Evaluar(contextoPropuesta, idArbolActivo, ct), ct);
+                if (!decisionesEscalado.EsValido)
+                {
+                    MessageBox.Show(this,
+                        $"No se pudo evaluar la propuesta inicial: {decisionesEscalado.Mensaje}\n\nMotivo: {decisionesEscalado.Motivo}\nAula: {decisionesEscalado.IdAulaRechazada}\nAsignatura: {decisionesEscalado.IdAsignaturaRechazada}\n\nDebe revisar la configuración.",
+                        "Evaluación no aplicable",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                    Log($"[ESCALADO-WARN] Evaluación inicial rechazada: motivo={decisionesEscalado.Motivo} aula={decisionesEscalado.IdAulaRechazada} asig={decisionesEscalado.IdAsignaturaRechazada} mensaje={decisionesEscalado.Mensaje}");
+                    return AgResultadoEscaladoUI.FalloAlAplicar;
+                }
 
-                // Paso 2: Obtener candidatas de reclasificación basadas en las aulas elegibles y materias con déficit positivo
-                var candidatosReclasificacion = (await Task.Run(() => escalador.IdentificarPatronesRedistribuibles(contextoPropuesta), ct))
-                    .Select(r => r.Clone())
+                // Paso 2: Obtener candidatas exclusivamente desde el diagnóstico inicial sellado (ReclasificacionesPropuestas)
+                var candidatosReclasificacion = decisionesEscalado
+                    .Where(d => d != null && d.ReclasificacionesPropuestas != null)
+                    .SelectMany(d => d.ReclasificacionesPropuestas)
+                    .GroupBy(r => (r.IdAula, r.IdAsignatura))
+                    .Select(g => g.First().Clone())
                     .ToList();
 
-                bool hayDecisionesAplicables = decisionesEscalado != null && decisionesEscalado.Any(d => d != null && d.Aplica);
+                bool hayDecisionesAplicables = decisionesEscalado.Any(d => d != null && d.Aplica);
                 if (!hayDecisionesAplicables && candidatosReclasificacion.Count == 0)
                 {
                     return AgResultadoEscaladoUI.SinCambios;
@@ -1662,23 +1675,39 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 var autorizadas = candidatosReclasificacion.Where(c => c.Autorizado).ToList();
                 if (autorizadas.Count > 0)
                 {
-                    var validacion = escalador.ValidarSelecciones(contextoPropuesta, autorizadas);
+                    var validacion = escalador.ValidarSelecciones(contextoPropuesta, autorizadas, candidatosReclasificacion, ct);
                     if (!validacion.EsValido)
                     {
                         MessageBox.Show(this,
-                            $"No se pudo autorizar la reclasificación: {validacion.Mensaje}\n\nDebe recalcular la propuesta para continuar.",
+                            $"No se pudo autorizar la reclasificación: {validacion.Mensaje}\n\nMotivo: {validacion.Motivo}\nAula: {validacion.IdAulaRechazada}\nAsignatura: {validacion.IdAsignaturaRechazada}\n\nDebe recalcular la propuesta para continuar.",
                             "Reclasificación no aplicable",
                             MessageBoxButtons.OK,
                             MessageBoxIcon.Warning);
-                        Log($"[ESCALADO-WARN] Validación de reclasificación rechazada: {validacion.Motivo} - {validacion.Mensaje}");
+                        Log($"[ESCALADO-WARN] Validación de reclasificación rechazada: motivo={validacion.Motivo} aula={validacion.IdAulaRechazada} asig={validacion.IdAsignaturaRechazada} mensaje={validacion.Mensaje}");
                         return AgResultadoEscaladoUI.FalloAlAplicar;
                     }
                 }
 
-                // Evaluar con las autorizadas (si las hay) y simular
-                var propuestaDefinitiva = autorizadas.Count > 0
-                    ? await Task.Run(() => escalador.Evaluar(contextoPropuesta, idArbolActivo, autorizadas, ct), ct)
-                    : decisionesEscalado;
+                // Recalcular únicamente al simular cambios autorizados; de lo contrario reutilizar la evaluación inicial
+                AgEscaladorRanuraAula.AgResultadoEvaluacionEscalado propuestaDefinitiva;
+                if (autorizadas.Count > 0)
+                {
+                    propuestaDefinitiva = await Task.Run(() => escalador.Evaluar(contextoPropuesta, idArbolActivo, autorizadas, candidatosReclasificacion, ct), ct);
+                    if (!propuestaDefinitiva.EsValido)
+                    {
+                        MessageBox.Show(this,
+                            $"No se pudo aplicar la simulación de reclasificación: {propuestaDefinitiva.Mensaje}\n\nMotivo: {propuestaDefinitiva.Motivo}\nAula: {propuestaDefinitiva.IdAulaRechazada}\nAsignatura: {propuestaDefinitiva.IdAsignaturaRechazada}\n\nDebe recalcular la propuesta para continuar.",
+                            "Simulación no aplicable",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Warning);
+                        Log($"[ESCALADO-WARN] Simulación de reclasificación rechazada: motivo={propuestaDefinitiva.Motivo} aula={propuestaDefinitiva.IdAulaRechazada} asig={propuestaDefinitiva.IdAsignaturaRechazada} mensaje={propuestaDefinitiva.Mensaje}");
+                        return AgResultadoEscaladoUI.FalloAlAplicar;
+                    }
+                }
+                else
+                {
+                    propuestaDefinitiva = decisionesEscalado;
+                }
 
                 // Separar candidatos de decisiones aplicables; selección vacía devuelve SinCambios
                 var decisionesAplicables = propuestaDefinitiva.Where(d => d != null && d.Aplica).ToList();

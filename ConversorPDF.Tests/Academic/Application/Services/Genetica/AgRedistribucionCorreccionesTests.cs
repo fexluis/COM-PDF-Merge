@@ -58,8 +58,10 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
                 case "relacion": rec.IdAsignatura = 999; break;
                 case "sinIdentidad": rec.IdAula = 0; break;
             }
-            Action evaluar = () => sut.Evaluar(ctx, 0, seleccion);
-            evaluar.Should().Throw<ArgumentException>();
+            // Act: EvaluarInterno devuelve resultado tipado de rechazo sin lanzar excepciones
+            var resultado = sut.Evaluar(ctx, 0, seleccion);
+            resultado.EsValido.Should().BeFalse();
+            resultado.Motivo.Should().NotBeNullOrWhiteSpace();
             ctx.AulaAsignaturaPorAulaAsig[(1, 1)].OrigenPatron.Should().Be("LEGADO");
         }
 
@@ -163,14 +165,16 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
 
             // Act
             var validacion = sut.ValidarSelecciones(ctx, new[] { rec });
-            Action act = () => sut.Evaluar(ctx, 0, new[] { rec });
+            var resultadoEval = sut.Evaluar(ctx, 0, new[] { rec });
 
             // Assert
             validacion.EsValido.Should().BeFalse();
             validacion.Motivo.Should().Be("AULA_NO_ELEGIBLE");
             validacion.IdAulaRechazada.Should().Be(aula.Id);
-            act.Should().Throw<ArgumentException>()
-                .WithMessage($"*{aula.AulaRef}*");
+            resultadoEval.EsValido.Should().BeFalse();
+            resultadoEval.Motivo.Should().Be("AULA_NO_ELEGIBLE");
+            resultadoEval.IdAulaRechazada.Should().Be(aula.Id);
+            resultadoEval.Mensaje.Should().Contain(aula.AulaRef);
         }
 
         [Fact]
@@ -453,9 +457,51 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             validacion.Motivo.Should().Be("MATERIA_SIN_DEFICIT");
             validacion.Mensaje.Should().Contain("déficit");
 
-            // Act 3: EvaluarInterno debe arrojar ArgumentException impidiendo continuar
-            Action evaluar = () => sut.Evaluar(ctx, 0, new[] { recDirecto });
-            evaluar.Should().Throw<ArgumentException>().WithMessage("*déficit*");
+            // Act 3: EvaluarInterno devuelve resultado tipado de rechazo sin excepciones
+            var resultadoEval = sut.Evaluar(ctx, 0, new[] { recDirecto });
+            resultadoEval.EsValido.Should().BeFalse();
+            resultadoEval.Motivo.Should().Be("MATERIA_SIN_DEFICIT");
+            resultadoEval.Mensaje.Should().Contain("déficit");
+            resultadoEval.IdAsignaturaRechazada.Should().Be(recDirecto.IdAsignatura);
+        }
+
+        [Fact]
+        public void ValidarSelecciones_WhenContraCandidatasSelladas_ShouldValidarEnMemoria()
+        {
+            // Arrange
+            var ctx = CrearContextoConPatrones();
+            var sut = new AgEscaladorRanuraAula(() => null);
+
+            var rec = sut.IdentificarPatronesRedistribuibles(ctx, ctx.Aulas[0]).Single();
+            rec.Autorizado = true;
+
+            var seleccionValida = new[] { rec.Clone() };
+            var seleccionAjena = new[]
+            {
+                new AgReclasificacionPatron
+                {
+                    IdAula = rec.IdAula,
+                    AulaRef = rec.AulaRef,
+                    Subunidad = rec.Subunidad,
+                    IdAsignatura = 999, // no presente en candidatas selladas ni en relaciones
+                    NombreAsignatura = "Asig Inexistente",
+                    OrigenAnterior = "LEGADO",
+                    OrigenPropuesto = "AUTOMATICO",
+                    DiasPatronAnterior = "5",
+                    DiasPatronPropuesto = string.Empty,
+                    SesionesPendientes = 2,
+                    Autorizado = true
+                }
+            };
+
+            // Act & Assert 1: Selección válida contra selladas
+            var valOk = sut.ValidarSelecciones(ctx, seleccionValida, new[] { rec });
+            valOk.EsValido.Should().BeTrue();
+
+            // Act & Assert 2: Selección ajena rechazada contra selladas
+            var valAjena = sut.ValidarSelecciones(ctx, seleccionAjena, new[] { rec });
+            valAjena.EsValido.Should().BeFalse();
+            valAjena.Motivo.Should().Be("CONFIGURACION_MODIFICADA"); // 999 no existe en ctx.AulaAsignaturaPorAulaAsig
         }
 
         [Fact]

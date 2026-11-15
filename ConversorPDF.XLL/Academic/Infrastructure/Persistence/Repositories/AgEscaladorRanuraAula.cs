@@ -75,6 +75,42 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                 new AgResultadoValidacionSeleccion { EsValido = false, Motivo = motivo, Mensaje = mensaje, IdAulaRechazada = idAula, IdAsignaturaRechazada = idAsig };
         }
 
+        public sealed class AgResultadoEvaluacionEscalado : IReadOnlyList<Decision>
+        {
+            private readonly IReadOnlyList<Decision> _decisiones;
+
+            public bool EsValido { get; }
+            public string Motivo { get; }
+            public string Mensaje { get; }
+            public int? IdAulaRechazada { get; }
+            public int? IdAsignaturaRechazada { get; }
+            public IReadOnlyList<Decision> Decisiones => _decisiones;
+
+            public AgResultadoEvaluacionEscalado(bool esValido, string motivo, string mensaje, int? idAula, int? idAsig, IReadOnlyList<Decision> decisiones)
+            {
+                EsValido = esValido;
+                Motivo = motivo ?? string.Empty;
+                Mensaje = mensaje ?? string.Empty;
+                IdAulaRechazada = idAula;
+                IdAsignaturaRechazada = idAsig;
+                _decisiones = decisiones ?? new List<Decision>();
+            }
+
+            public static AgResultadoEvaluacionEscalado Exito(IReadOnlyList<Decision> decisiones) =>
+                new AgResultadoEvaluacionEscalado(true, string.Empty, string.Empty, null, null, decisiones);
+
+            public static AgResultadoEvaluacionEscalado Rechazo(AgResultadoValidacionSeleccion val) =>
+                new AgResultadoEvaluacionEscalado(false, val?.Motivo, val?.Mensaje, val?.IdAulaRechazada, val?.IdAsignaturaRechazada, new List<Decision>());
+
+            public static AgResultadoEvaluacionEscalado Rechazo(string motivo, string mensaje, int? idAula = null, int? idAsig = null) =>
+                new AgResultadoEvaluacionEscalado(false, motivo, mensaje, idAula, idAsig, new List<Decision>());
+
+            public int Count => _decisiones.Count;
+            public Decision this[int index] => _decisiones[index];
+            public IEnumerator<Decision> GetEnumerator() => _decisiones.GetEnumerator();
+            System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => _decisiones.GetEnumerator();
+        }
+
         /// <summary>
         /// Predicado canónico de elegibilidad de aula para propuesta y autorización de reclasificación.
         /// Aulas con Estado Aprobado (4), Inactiva (0), Mantenimiento (2) o Reservada (3) nunca son elegibles.
@@ -87,27 +123,40 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
         /// </summary>
         public IReadOnlyList<AgReclasificacionPatron> IdentificarPatronesRedistribuibles(AgContexto contexto)
         {
+            return IdentificarPatronesRedistribuibles(contexto, CancellationToken.None);
+        }
+
+        public IReadOnlyList<AgReclasificacionPatron> IdentificarPatronesRedistribuibles(AgContexto contexto, CancellationToken ct)
+        {
             var resultado = new List<AgReclasificacionPatron>();
             if (contexto?.Aulas == null) return resultado;
             foreach (var aula in contexto.Aulas)
             {
-                resultado.AddRange(IdentificarPatronesRedistribuibles(contexto, aula));
+                ct.ThrowIfCancellationRequested();
+                resultado.AddRange(IdentificarPatronesRedistribuibles(contexto, aula, null, ct));
             }
             return resultado;
         }
 
         public IReadOnlyList<AgReclasificacionPatron> IdentificarPatronesRedistribuibles(AgContexto contexto, AgAula aula)
         {
-            return IdentificarPatronesRedistribuibles(contexto, aula, null);
+            return IdentificarPatronesRedistribuibles(contexto, aula, null, CancellationToken.None);
         }
 
-        public IReadOnlyList<AgReclasificacionPatron> IdentificarPatronesRedistribuibles(AgContexto contexto, AgAula aula, AgResultadoEvaluacionVentana evaluacion = null)
+        public IReadOnlyList<AgReclasificacionPatron> IdentificarPatronesRedistribuibles(AgContexto contexto, AgAula aula, AgResultadoEvaluacionVentana evaluacion)
+        {
+            return IdentificarPatronesRedistribuibles(contexto, aula, evaluacion, CancellationToken.None);
+        }
+
+        public IReadOnlyList<AgReclasificacionPatron> IdentificarPatronesRedistribuibles(AgContexto contexto, AgAula aula, AgResultadoEvaluacionVentana evaluacion, CancellationToken ct)
         {
             var resultado = new List<AgReclasificacionPatron>();
             if (contexto == null || !EsAulaElegible(aula))
             {
                 return resultado;
             }
+
+            ct.ThrowIfCancellationRequested();
 
             if (evaluacion == null)
             {
@@ -119,7 +168,7 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                 var prog = contexto.Programas != null ? contexto.Programas.FirstOrDefault(p => p.Id == aula.IdPrograma) : null;
                 double u = AgUnidadesSemanales.HorasSesionAula(aula, AgNivelAcademicoCatalogo.Desde(prog?.Modalidad));
                 evaluacion = AgEvaluadorDemandaVentana.Evaluar(aula.DiasVentana, aula.Jornada, u,
-                    contexto, aula, contexto.Ventana.FechaInicio, contexto.Ventana.FechaFin);
+                    contexto, aula, contexto.Ventana.FechaInicio, contexto.Ventana.FechaFin, ct);
             }
 
             if (evaluacion == null || !string.IsNullOrEmpty(evaluacion.Error) || evaluacion.CabeEnPlazo)
@@ -211,8 +260,18 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
         /// <summary>
         /// Valida tipadamente las selecciones de reclasificación sin lanzar excepciones de control de flujo.
         /// Retorna un resultado estructurado diferenciando los motivos concretos de rechazo.
+        /// Valida contra el conjunto de candidatas selladas si se proporciona; en su defecto realiza búsqueda acotada con caché por aula.
         /// </summary>
         public AgResultadoValidacionSeleccion ValidarSelecciones(AgContexto contexto, IReadOnlyCollection<AgReclasificacionPatron> reclasificacionesAutorizadas)
+        {
+            return ValidarSelecciones(contexto, reclasificacionesAutorizadas, null, CancellationToken.None);
+        }
+
+        public AgResultadoValidacionSeleccion ValidarSelecciones(
+            AgContexto contexto,
+            IReadOnlyCollection<AgReclasificacionPatron> reclasificacionesAutorizadas,
+            IReadOnlyCollection<AgReclasificacionPatron> candidatasSelladas,
+            CancellationToken ct = default(CancellationToken))
         {
             if (reclasificacionesAutorizadas == null || reclasificacionesAutorizadas.Count == 0)
             {
@@ -224,9 +283,26 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                 return RechazoConLog("CONFIGURACION_MODIFICADA", "Contexto no inicializado o incompleto.", null, null);
             }
 
+            Dictionary<(int IdAula, int IdAsignatura), AgReclasificacionPatron> mapSelladas = null;
+            if (candidatasSelladas != null && candidatasSelladas.Count > 0)
+            {
+                mapSelladas = new Dictionary<(int IdAula, int IdAsignatura), AgReclasificacionPatron>();
+                foreach (var c in candidatasSelladas)
+                {
+                    if (c != null)
+                    {
+                        mapSelladas[(c.IdAula, c.IdAsignatura)] = c;
+                    }
+                }
+            }
+
+            var cacheCandidatasAula = new Dictionary<int, IReadOnlyList<AgReclasificacionPatron>>();
             var identidades = new HashSet<(int, int)>();
+
             foreach (var rec in reclasificacionesAutorizadas)
             {
+                ct.ThrowIfCancellationRequested();
+
                 if (rec == null)
                 {
                     return RechazoConLog("RECLASIFICACION_NULA", "Reclasificación nula.", null, null);
@@ -273,13 +349,30 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                 }
 
                 // Corrección [P2]: Comprobar pertenencia a las candidatas del diagnóstico vigente y sellado (materia con déficit positivo)
-                var candidatasAula = IdentificarPatronesRedistribuibles(contexto, aulasCoincidentes[0]);
-                var candidataValida = candidatasAula.FirstOrDefault(c => c.IdAsignatura == rec.IdAsignatura);
-                if (candidataValida == null || candidataValida.SesionesPendientes <= 0)
+                if (mapSelladas != null)
                 {
-                    return RechazoConLog("MATERIA_SIN_DEFICIT",
-                        $"La asignatura {rec.IdAsignatura} no presenta déficit de sesiones pendientes en el aula {rec.AulaRef} dentro del plazo evaluado.",
-                        rec.IdAula, rec.IdAsignatura);
+                    if (!mapSelladas.TryGetValue((rec.IdAula, rec.IdAsignatura), out var candidataSellada) || candidataSellada.SesionesPendientes <= 0)
+                    {
+                        return RechazoConLog("MATERIA_SIN_DEFICIT",
+                            $"La asignatura {rec.IdAsignatura} no presenta déficit de sesiones pendientes en el aula {rec.AulaRef} dentro del plazo evaluado.",
+                            rec.IdAula, rec.IdAsignatura);
+                    }
+                }
+                else
+                {
+                    if (!cacheCandidatasAula.TryGetValue(rec.IdAula, out var candidatasAula))
+                    {
+                        candidatasAula = IdentificarPatronesRedistribuibles(contexto, aulasCoincidentes[0], null, ct);
+                        cacheCandidatasAula[rec.IdAula] = candidatasAula;
+                    }
+
+                    var candidataValida = candidatasAula.FirstOrDefault(c => c.IdAsignatura == rec.IdAsignatura);
+                    if (candidataValida == null || candidataValida.SesionesPendientes <= 0)
+                    {
+                        return RechazoConLog("MATERIA_SIN_DEFICIT",
+                            $"La asignatura {rec.IdAsignatura} no presenta déficit de sesiones pendientes en el aula {rec.AulaRef} dentro del plazo evaluado.",
+                            rec.IdAula, rec.IdAsignatura);
+                    }
                 }
             }
 
@@ -293,43 +386,51 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
             return res;
         }
 
-        public IReadOnlyList<Decision> Evaluar(AgContexto contexto)
+        public AgResultadoEvaluacionEscalado Evaluar(AgContexto contexto)
         {
-            return EvaluarInterno(contexto, null, null, CancellationToken.None);
+            return EvaluarInterno(contexto, null, null, null, CancellationToken.None);
         }
 
-        public IReadOnlyList<Decision> Evaluar(AgContexto contexto, int idArbol)
+        public AgResultadoEvaluacionEscalado Evaluar(AgContexto contexto, int idArbol)
         {
-            return EvaluarInterno(contexto, idArbol, null, CancellationToken.None);
+            return EvaluarInterno(contexto, idArbol, null, null, CancellationToken.None);
         }
 
-        public IReadOnlyList<Decision> Evaluar(AgContexto contexto, int idArbol, CancellationToken ct)
+        public AgResultadoEvaluacionEscalado Evaluar(AgContexto contexto, int idArbol, CancellationToken ct)
         {
-            return EvaluarInterno(contexto, idArbol, null, ct);
+            return EvaluarInterno(contexto, idArbol, null, null, ct);
         }
 
-        public IReadOnlyList<Decision> Evaluar(AgContexto contexto, int idArbol,
+        public AgResultadoEvaluacionEscalado Evaluar(AgContexto contexto, int idArbol,
             IReadOnlyCollection<AgReclasificacionPatron> reclasificacionesAutorizadas)
         {
-            return EvaluarInterno(contexto, idArbol, reclasificacionesAutorizadas, CancellationToken.None);
+            return EvaluarInterno(contexto, idArbol, reclasificacionesAutorizadas, null, CancellationToken.None);
         }
 
-        public IReadOnlyList<Decision> Evaluar(AgContexto contexto, int idArbol,
+        public AgResultadoEvaluacionEscalado Evaluar(AgContexto contexto, int idArbol,
             IReadOnlyCollection<AgReclasificacionPatron> reclasificacionesAutorizadas, CancellationToken ct)
         {
-            return EvaluarInterno(contexto, idArbol, reclasificacionesAutorizadas, ct);
+            return EvaluarInterno(contexto, idArbol, reclasificacionesAutorizadas, null, ct);
         }
 
-        private IReadOnlyList<Decision> EvaluarInterno(AgContexto contexto, int? perfil,
-            IReadOnlyCollection<AgReclasificacionPatron> reclasificacionesAutorizadas, CancellationToken ct)
+        public AgResultadoEvaluacionEscalado Evaluar(AgContexto contexto, int idArbol,
+            IReadOnlyCollection<AgReclasificacionPatron> reclasificacionesAutorizadas,
+            IReadOnlyCollection<AgReclasificacionPatron> candidatasSelladas, CancellationToken ct)
+        {
+            return EvaluarInterno(contexto, idArbol, reclasificacionesAutorizadas, candidatasSelladas, ct);
+        }
+
+        private AgResultadoEvaluacionEscalado EvaluarInterno(AgContexto contexto, int? perfil,
+            IReadOnlyCollection<AgReclasificacionPatron> reclasificacionesAutorizadas,
+            IReadOnlyCollection<AgReclasificacionPatron> candidatasSelladas, CancellationToken ct)
         {
             var decisiones = new List<Decision>();
-            if (contexto == null || contexto.Ventana == null) { return decisiones; }
+            if (contexto == null || contexto.Ventana == null) { return AgResultadoEvaluacionEscalado.Exito(decisiones); }
 
-            var validacion = ValidarSelecciones(contexto, reclasificacionesAutorizadas);
+            var validacion = ValidarSelecciones(contexto, reclasificacionesAutorizadas, candidatasSelladas, ct);
             if (!validacion.EsValido)
             {
-                throw new ArgumentException(validacion.Mensaje);
+                return AgResultadoEvaluacionEscalado.Rechazo(validacion);
             }
 
             var seleccionadas = new List<AgReclasificacionPatron>();
@@ -361,7 +462,7 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                     contexto, aula, contexto.Ventana.FechaInicio, contexto.Ventana.FechaFin, ct);
 
                 // Paso 2: Siempre consultar candidatos de reclasificación independientemente del siguiente escalón y de la saturación
-                var candidatos = IdentificarPatronesRedistribuibles(contexto, aula, antes);
+                var candidatos = IdentificarPatronesRedistribuibles(contexto, aula, antes, ct);
 
                 var autorizadasAula = seleccionadas.Where(r => r.IdAula == aula.Id).ToList();
 
@@ -499,7 +600,7 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                 LoggerHelper.Debug($"[AG-RANURAS-TMP] PROPUESTA aula={aula.Id} ref={aula.AulaRef} desde={d.Desde} hacia={d.Hacia} capacidad={d.CapacidadAntes}->{d.CapacidadDespues} pendientes={d.DemandaPendiente} autorizadas={autorizadasAula.Count} candidatas={candidatos.Count} sellada=true");
             }
 
-            return decisiones;
+            return AgResultadoEvaluacionEscalado.Exito(decisiones);
         }
 
         private static AgContexto ClonarContextoParaSimulacion(AgContexto ctx)
