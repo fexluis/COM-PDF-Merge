@@ -115,5 +115,6 @@ b. Sin Fases nuevas obligatorias / No se requieren más correcciones / Fase opci
 - Reporta siempre `Fase {n} (T{k})` con el número global del registro.
 - Si la ronda se cierra fuera de un plan swarm (revisión manual), actualiza una sola vez §2 de `.agents/plans/REGISTRY.md` con la última `ronda`/`fase` usada; dentro de un plan lo hace la Fase C (`swarm-verify`).
 - No inventes números ni recicles rangos: el registro es append-only.
+- Antes de responder, verifica los umbrales de `.agents/rules/history-rotation.md`; si `implementation_plan.md` o `walkthrough.md` los superan, ejecuta la escisión con `.agents/tools/split-history.ps1` y actualiza el índice antes de cerrar la ronda.
 
 

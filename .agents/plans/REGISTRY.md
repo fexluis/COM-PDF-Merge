@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 402 | 403 | 2026-11-16 |
-| `fase` | 1830 | 1831 | 2026-11-16 |
+| `ronda` | 403 | 404 | 2026-11-16 |
+| `fase` | 1832 | 1833 | 2026-11-16 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -114,9 +114,9 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-077 | 2026-11-14 | `2026-11-14-reclasificacion-solo-pendientes-plan.md` | `Wave 1..8` → `Ronda 376–383` | `T1..T10` → `Fase 1788–1797` | closed | PASS (Full 1356) | `93137d3` |
 | R-078 | 2026-11-14 | `2026-11-14-corrida92-completar-huecos-plan.md` | `Wave 1..8` → `Ronda 384–391` | `T1..T8` → `Fase 1798–1805` | closed | PASS (Full 1387) | `2587279` |
 | R-079 | 2026-11-15 | `2026-11-15-libro8-corrida94-plan.md` | `Wave 1..6` → `Ronda 392–397` | `T1..T9` → `Fase 1806–1814` | closed | PASS (Full 1446) | `f3e95be` |
-| R-080 | 2026-11-16 | `2026-11-15-planificador-limite-ventana-design.md` | `Wave —` → `Ronda 398` | `Fase 1815–1819` | executing | pendiente (gate Full) | `82da703` |
-| R-081 | 2026-11-16 | `(revisión Ronda 399 — Fases 1820–1824: gate verify.ps1, citas vivas, cierres sin evidencia, registro)` | `Wave —` → `Ronda 399` | `Fase 1820–1824` | executing | pendiente (gate Full) | `82da703` |
-| R-082 | 2026-11-16 | `(revisión Rondas 400–401 — Fases 1825–1828: gate verify.ps1 (ACL DENY DC), sha ancestro, fila faltante)` | `Wave —` → `Ronda 400–401` | `Fase 1825–1828` | executing | `BLOCKED-ACL` (gate sin restaurar) | `82da703` |
+| R-080 | 2026-11-16 | `2026-11-15-planificador-limite-ventana-design.md` | `Wave —` → `Ronda 398` | `Fase 1815–1819` | executing | `BLOCKED-ACL (verify.ps1); gate alternativo: dotnet build+test TRX` | `d0ee6fe` |
+| R-081 | 2026-11-16 | `(revisión Ronda 399 — Fases 1820–1824: gate verify.ps1, citas vivas, cierres sin evidencia, registro)` | `Wave —` → `Ronda 399` | `Fase 1820–1824` | executing | `BLOCKED-ACL (verify.ps1); gate alternativo: dotnet build+test TRX` | `d0ee6fe` |
+| R-082 | 2026-11-16 | `(revisión Rondas 400–401 — Fases 1825–1828: gate verify.ps1 (ACL DENY DC), sha ancestro, fila faltante)` | `Wave —` → `Ronda 400–401` | `Fase 1825–1828` | executing | `BLOCKED-ACL (verify.ps1); gate alternativo: dotnet build+test TRX` | `d0ee6fe` |
 
 
 Estados: `reserved` (Fase A) · `executing` (Fase B) · `closed` (Fase C, sellado) · `abandoned` (plan descartado: los números **no** se reciclan).
@@ -125,6 +125,12 @@ Estados: `reserved` (Fase A) · `executing` (Fase B) · `closed` (Fase C, sellad
 
 > **R-048..R-053**: revisiones manuales de las Rondas 332–337 (Fases 1651–1686) sobre el plan de ranuras dinámicas. No ejecutaron código: solo reporte y correcciones documentales. Se registran para fijar la numeración consumida. `R-047` sigue `executing` y su commit es precondición de cualquier reserva nueva.
 > **Plan pendiente de reserva**: `.agents/plans/2026-11-12-ranuras-dinamicas-4-a-8-horas-plan.md` (`T1..T10`, 8 olas). Sin fila en este registro hasta que `preflight` devuelva 0; su `ronda_base`/`fase_base` se calculan entonces a partir de §2.
+
+> `HEAD` se escribe **solo** después del último `commit`/`amend` de la ola y tras `git merge-base --is-ancestor <sha> HEAD` = 0.
+> Desviación autorizada: `verify.ps1` irrecuperable por ACL heredado `Todos:(I)(CI)(DENY)(DC)`.
+> Hasta `icacls scripts /remove:d Todos`, el gate es `dotnet build` + `dotnet test` con TRX; `preflight.ps1:81` fallará por diseño.
+
+> **History rotation**: `implementation_plan.md` y `walkthrough.md` se escinden por rangos de fase según `.agents/rules/history-rotation.md` (herramienta `.agents/tools/split-history.ps1`; trozos en `docs/plans/history/`). Los archivos vivos conservan el índice y las últimas rondas.
 
 Los planes anteriores al registro (`2026-10-27-*`) quedan como `pre-registro`: sus `Wave`/`T{n}` nunca tuvieron número global y no se les asigna uno retroactivo.
 
