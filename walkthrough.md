@@ -220,3 +220,24 @@ Las citas `walkthrough.md:NNNN` anteriores al corte apuntan al archivo monolitic
 | F1839 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `.agents/plans/REGISTRY.md:132` (regla de commit de contenido) |
 | F1840 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `docs/plans/2026-11-15-planificador-limite-ventana-design.md:85-88` (`[x]`) |
 | F1841 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `_evidence/.../verify.ps1.bak` (hash `1ed9da9`, fila R-086) |
+
+---
+
+## Ronda 407 — Revisión de la Ola de Cierre Documental (Fases 1842–1843)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1842 — Corrección de SHA Canónico Propio en R-086 y Regla de No-Herencia
+- **Archivo:** `.agents/plans/REGISTRY.md`
+- **Cambio:** Sustituido el SHA de R-086 por su commit de contenido real `534931d` (verificado como ancestro de HEAD con exit 0). Añadida la regla operativa que obliga a cada nueva fila a citar su propio commit de contenido.
+
+#### 2. Fase 1843 — Política .gitattributes para Protección de Binarios y Evidencia EOL
+- **Archivo:** `.gitattributes`, `_evidence/20261116-gate-alt/`, `.agents/plans/REGISTRY.md`
+- **Cambio:** Creado `.gitattributes` en raíz declarando `-text` para extensiones `.trx`, `.bak`, `.png` y `.log` en `_evidence/`. Renormalizado el árbol y generado el commit `d97bc8a`. Verificado que `verify.ps1.bak` preserva hash SHA-1 idéntico al blob histórico (`1ed9da9347a03ec0652a83d9c34aa653b1faefeb`). Asentada la fila `R-087` y contadores sincronizados a `ronda: 407 / 408`, `fase: 1843 / 1844`.
+
+### Verificación de Principios (Ronda 407)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1842 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `.agents/plans/REGISTRY.md:123` (`534931d`, ancestro exit=0) |
+| F1843 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `.gitattributes`, hash `1ed9da9`, fila R-087 (`d97bc8a`) |

@@ -132,3 +132,15 @@ Las citas `implementation_plan.md:NNNN` anteriores al corte apuntan al archivo m
 1. **Fase 1839 (`.agents/plans/REGISTRY.md`):** Actualizada la nota de §3 fijando el concepto de "commit de contenido" y verificando relación de ancestro exitosa (`ancestor=0`).
 2. **Fase 1840 (`docs/plans/2026-11-15-planificador-limite-ventana-design.md`):** Criterios de cierre marcados con `[x]` y enlazados a la evidencia formal del TRX.
 3. **Fase 1841 (`_evidence/20261116-gate-alt/verify.ps1.bak`, `.agents/plans/REGISTRY.md`):** Respaldo byte-a-byte idéntico extraído directamente del blob git. Añadida fila `R-086` en `REGISTRY.md` y contadores avanzados a `ronda: 406 / 407`, `fase: 1841 / 1842`.
+
+---
+
+## Ronda 407: Revisión de la Ola de Cierre Documental (Fases 1842–1843)
+
+### Contexto y Diagnóstico
+1. **Fase 1842:** R-086 citaba el commit `5676f5b`, el cual precedía a la inclusión de su propia fila e hitos documentales (introducidos formalmente en `534931d`). Se actualiza R-086 para registrar su commit de contenido específico y se formaliza la regla de que cada fila nueva debe citar su propio commit de contenido sin heredar ciegamente el anterior.
+2. **Fase 1843:** El repositorio carecía de `.gitattributes`, de modo que bajo `core.autocrlf = true`, clonaciones o checkouts futuros convertirían los archivos de evidencia (`.trx`, `.bak`, `.log`) de LF a CRLF, destruyendo la paridad byte a byte del respaldo. Se incorpora `.gitattributes` marcando `-text` para la carpeta `_evidence/` y renormalizando el repositorio.
+
+### Cambios Aplicados
+1. **Fase 1842 (`.agents/plans/REGISTRY.md`):** Fila `R-086` actualizada con SHA `534931d` y regla operativa añadida en notas de §3.
+2. **Fase 1843 (`.gitattributes`, `_evidence/`, `REGISTRY.md`):** Creado archivo `.gitattributes` en la raíz con política `-text` para evidencia, renormalizados y versionados los archivos en el commit `d97bc8a`. Incorporada fila `R-087` y contadores avanzados a `ronda: 407 / 408`, `fase: 1843 / 1844`.
