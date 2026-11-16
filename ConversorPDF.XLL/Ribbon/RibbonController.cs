@@ -1371,7 +1371,9 @@ namespace ConversorPDF.XLL
 
                 using (var session = new AcademicDbSession())
                 {
-                    using (var form = new AgFormGeneradorHorarios(() => session.Connection))
+                    using (var form = new AgFormGeneradorHorarios(() => session.Connection,
+                        sesionRatificacion: session,
+                        vaultRatificacion: SqliteHelper.TryGetSharedContextWithoutInit()))
                     {
                         form.ShowDialog();
                     }

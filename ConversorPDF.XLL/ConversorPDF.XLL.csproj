@@ -17,9 +17,9 @@
     <ExcelDnaCreate64BitAddIn>true</ExcelDnaCreate64BitAddIn>
     <!-- Excluir dependencias que no existen en .NET 4.8 y no deben empaquetarse -->
     <ExcelDnaExcludedDependencies>Microsoft.Bcl.HashCode.dll</ExcelDnaExcludedDependencies>
-    <Version>1.6.4.16</Version>
-    <AssemblyVersion>1.6.4.16</AssemblyVersion>
-    <FileVersion>1.6.4.16</FileVersion>
+    <Version>1.6.4.17</Version>
+    <AssemblyVersion>1.6.4.17</AssemblyVersion>
+    <FileVersion>1.6.4.17</FileVersion>
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <Import Project="obj\ConversorPDF.XLL.csproj.nuget.g.props" Condition="Exists('obj\ConversorPDF.XLL.csproj.nuget.g.props')" />
@@ -563,6 +563,17 @@
     <Compile Include="Academic\Domain\Models\Genetica\AgBitacora.cs" />
     <Compile Include="Academic\Domain\Models\Genetica\AgSalvedad.cs" />
     <Compile Include="Academic\Domain\Models\Genetica\AgContexto.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\AgManifiestoCobertura.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\AgPlanAprobadoSnapshot.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\AgValidacionPlanAprobado.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\AgPropuestaEscaladoAprobada.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgSimuladorEscaladoAprobadas.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgValidadorPlanAprobado.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgValidadorCoberturaSeleccion.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgProyectorSolucionCobertura.cs" />
+    <Compile Include="Academic\Domain\Interfaces\IAgPlanAprobadoRepository.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgConstructorManifiestoCobertura.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Repositories\AgPlanAprobadoRepository.cs" />
     <Compile Include="Academic\Domain\Models\Genetica\AgPesosFitness.cs" />
     <Compile Include="Academic\Domain\Models\Genetica\AgResultadoCorrida.cs" />
     <Compile Include="Academic\Domain\Models\Genetica\InformeFactibilidad.cs" />
@@ -739,6 +750,13 @@
     <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV79_NormalizeUsuariosIds.cs" />
     <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV80_AddOrigenPatronAgAulaAsignatura.cs" />
     <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV81_AddAgGenFechasGen.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV82_AddAgCandidatoPlanAprobado.cs" />
+    <Compile Include="Academic\Domain\Models\Genetica\AgCandidatoPlanAprobado.cs" />
+    <Compile Include="Academic\Domain\Interfaces\IAgCandidatoPlanAprobadoRepository.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Repositories\AgCandidatoPlanAprobadoRepository.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgPersistenciaRatificacion.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgConfirmadorPlanAprobado.cs" />
+    <Compile Include="Academic\UI\Forms\AgFormConfirmacionPlanAprobado.cs" />
     <Compile Include="Academic\Domain\Enums\AgOrigenPatron.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgEvaluadorDemandaVentana.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgResultadoEvaluacionVentana.cs" />
@@ -758,6 +776,12 @@
     <PackageReference Include="PDFsharp" Version="1.50.5147" />
     <PackageReference Include="PdfPig" Version="0.1.9" />
     <PackageReference Include="Dapper" Version="2.1.35" />
+    <!-- T3: copia profunda de modelos para simulación aislada. Referencia directa porque este proyecto
+         importa obj\*.nuget.g.props de forma duplicada y la compilación omite los activos del paquete. -->
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>$(UserProfile)\.nuget\packages\newtonsoft.json\13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
     <PackageReference Include="Stub.System.Data.SQLite.Core.NetFramework" Version="1.0.119.0" />
     <PackageReference Include="CSharpFunctionalExtensions" Version="2.40.3" />
   </ItemGroup>

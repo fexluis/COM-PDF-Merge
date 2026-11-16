@@ -1,0 +1,15 @@
+# Propuesta informativa de escalado para aulas aprobadas (T3)
+
+En **Diagnóstico Pre-Vuelo** y **Optimización**, después de leer y validar el origen canónico, se muestran todas las propuestas de las aulas aprobadas con déficit real antes del aviso terminal de preparación. Cada mensaje se cierra con **OK**: no acepta, confirma ni aplica el paso. La ratificación y el consentimiento auditados siguen pendientes de T4.
+
+El detalle muestra identidad completa por relación, ventana actual → siguiente, días añadidos, sesiones canónicas anteriores, sesiones fechadas simuladas antes/después, nuevas ranuras y déficit residual por relación. Compara por separado el siguiente paso sin redistribución y con redistribución LEGADO hipotética; muestra los patrones afectados. FIJO no se libera. Una fecha nueva puede ser una reubicación: la ganancia neta de sesiones se distingue de las fechas nuevas. Es capacidad de calendario, **no garantía de disponibilidad docente ni de ausencia de conflictos externos**. Una búsqueda acotada agotada no demuestra imposibilidad.
+
+MAR-VIE propone sólo LUN-VIE (lunes añadido). Las escaleras históricas mantienen sus etiquetas y semántica, incluido sábado mañana/tarde: VIE-SAB → JUE-SAB → `4,5,6,7` no se confunde con JUE-DOM. Sólo se prepara el siguiente paso de `AgEscaleraVentanas.Siguiente`; nunca se encadena el segundo. Un terminal informa que no hay siguiente escalón. El límite absoluto sigue siendo **30/05/2027**; una ventana más corta no se amplía.
+
+Un plan canónico completo no recibe oferta aunque una simulación desde cero no quepa. Una vinculación única reconciliada permite evaluar déficit temporal (por ejemplo, sesiones fuera de plazo) aun cuando la validación de cobertura lo diagnostique como no verificable. Esto no ratifica el origen histórico: únicamente distingue identidad estructural de cobertura y consentimiento. Una relación ausente, ambigua, extra, con identidad/sesión no verificable o con manifiesto desligado sigue bloqueada como `PLAN_NO_VERIFICABLE`; no se simula sobre un origen desconocido. Una vinculación identificable sin sesiones puede diagnosticarse como déficit, nunca como cobertura autorizada.
+
+La simulación usa copias aisladas de los modelos y patrones. No cambia configuración aprobada, estado, permisos, producción ni genes. Las propuestas tienen un DTO distinto de las decisiones persistibles. La admisión heredada de escritura y reclasificación continúa siendo exclusivamente Disponible; se conserva su confirmación/persistencia. Después de informar, la preparación de aprobadas sigue detenida por ratificación pendiente o por origen desconocido, sin crear una corrida ejecutable.
+
+## Verificación pendiente
+
+S2 y los pasos informativos 1–3 de S3/S4 están escritos; T4–T6 (consentimiento durable, generación autorizada y reemplazo) no están implementados aquí. Bajo S8 se escribieron pruebas focalizadas y regresiones, **sin ejecutarlas**, sin RED/GREEN, build, aplicación ni SQL real. La lectura estructural no acredita compilación, corrección funcional ni entrega completa.

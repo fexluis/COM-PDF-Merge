@@ -54,6 +54,13 @@ namespace ConversorPDF.XLL.Academic.Domain.Models
         public int IsTerminalAereo { get; set; }
         public int IdTerminales { get; set; }
         public string TerminalAereaNombre { get; set; }
+
+        /// <summary>
+        /// Origen de la fila cuando se audita una corrida del AG: NUEVA (staging) o CONSERVADA
+        /// (horario aprobado verificado). Null en los flujos que no usan manifiesto de cobertura.
+        /// No altera la persistencia de la sesión.
+        /// </summary>
+        public string OrigenSesion { get; set; }
         
         /// <summary>
         /// Valor del gasto de terminal aérea asignado a la vinculación.

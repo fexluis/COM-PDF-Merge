@@ -1,9 +1,9 @@
 ---
 name: task-reviewer
 description: Reviews task deliverables for ConversorPDF. Performs two-stage review checking specification compliance, YAGNI, test hygiene, architectural rules, and absence of regressions.
+model: openrouter/deepseek/deepseek-v4.1-flash-1017
 subagent: true
 mainAgent: false
-model: pro
 commandExecutionPolicy: off
 tools: [view_file, grep_search]
 ---

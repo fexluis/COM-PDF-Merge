@@ -379,7 +379,8 @@ namespace ConversorPDF.XLL.Core.Helpers
                 new MigrationV78_AddAgFiltroSeleccion(),              // FASE 1315 / 1390: ag_filtro_seleccion
                 new MigrationV79_NormalizeUsuariosIds(),              // Normalización determinista de usuarios y deduplicación
                 new MigrationV80_AddOrigenPatronAgAulaAsignatura(),    // FASE 1735: columna origen_patron en ag_aula_asignatura
-                new MigrationV81_AddAgGenFechasGen()                  // FASE 1815: columna fechas_gen en ag_gen
+                new MigrationV81_AddAgGenFechasGen(),                 // FASE 1815: columna fechas_gen en ag_gen
+                new MigrationV82_AddAgCandidatoPlanAprobado()       // T4: candidato y ratificación aditivos
             };
             return new SchemaMigrator(migrations, new VaultPersister(), new LoggerAdapter());
         }
@@ -963,6 +964,14 @@ LEFT JOIN periodos   pe ON v.idperiodo   = pe.idperiodo;";
         public static void UpdateVaultDirectly(byte[] plainData, string customPath = null, IProgress<string> progress = null)
         {
             EncryptedSQLiteContext.ReEncryptAndPersistStatic(plainData, customPath ?? DbPathEnc, GetSecurePassword(), progress);
+        }
+
+        /// <summary>Publicación T4 condicionada a identidad capturada; no altera a los escritores externos.</summary>
+        internal static bool UpdateVaultIfUnchanged(byte[] bytes, string path,
+            EncryptedSQLiteContext.VaultIdentity expected, System.Threading.CancellationToken ct)
+        {
+            using (var password = GetSecurePassword())
+                return EncryptedSQLiteContext.ReEncryptAndPersistIfUnchanged(bytes, path, password, expected, ct);
         }
 
         /// <summary>

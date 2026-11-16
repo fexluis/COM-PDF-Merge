@@ -224,6 +224,12 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     : (contexto.Asignaturas?.ToDictionary(a => a.Id) ?? new Dictionary<int, Asignatura>());
                 foreach (var au in contexto.Aulas)
                 {
+                    // La capacidad hipotética no invalida un horario canónico completo ya verificado.
+                    if (contexto.ManifiestoCobertura != null &&
+                        contexto.ManifiestoCobertura.Relaciones.Where(r => r.Clave.IdAula == au.Id)
+                            .All(r => Math.Abs(contexto.SesionesConservadas.Where(s => s.Clave.Valor == r.Clave.Valor)
+                                .Sum(s => s.Horas) - r.HorasEfectivas) <= 0.001))
+                        continue;
                     var asigsAula = contexto.AulaAsignaturas.Where(aa => aa.IdAula == au.Id && aa.IdAsignatura > 0).ToList();
                     if (asigsAula.Count == 0) continue;
 

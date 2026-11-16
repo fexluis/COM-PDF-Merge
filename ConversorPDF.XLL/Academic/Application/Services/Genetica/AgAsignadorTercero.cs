@@ -55,6 +55,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             foreach (var o in propias.Value)
             {
                 if (ajenas.Value.Any(a => AgCalendarioConflictos.SeCruzan(o, a))) return false;
+                if (contexto.SesionesConservadas.Any(s => s.IdTercero == docente && s.Fecha.Date == o.Fecha &&
+                    s.Inicio < o.Fin && o.Inicio < s.Fin)) return false;
                 if (contexto.TerceroOcupado(docente, o.Fecha, new ConversorPDF.XLL.Academic.Domain.Models.FranjaHoraria(o.Inicio, o.Fin)))
                     return false;
             }

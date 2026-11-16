@@ -19,6 +19,7 @@ using ConversorPDF.XLL.Academic.Domain.Interfaces;
 using ConversorPDF.XLL.Academic.Domain.Models;
 using ConversorPDF.XLL.Academic.Domain.Models.Genetica;
 using ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories;
+using ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context;
 using ConversorPDF.XLL.Core.Enums;
 using ConversorPDF.XLL.Core.Helpers;
 using ConversorPDF.XLL.Core.Sync;
@@ -39,6 +40,9 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
         private readonly IAgValidadorVentana _validadorVentana;
         private readonly IAgGeneradorHorarios _generadorHorarios;
         private readonly IAgScheduleRepository _scheduleRepository;
+        private readonly IAgPlanAprobadoRepository _planAprobadoRepository;
+        private readonly AgConfirmadorPlanAprobado _confirmadorPlanAprobado;
+        private readonly HashSet<int> _aulasConfirmadasEnIntento = new HashSet<int>();
         private readonly IAgSalvedadRepository _salvedadRepository;
         private readonly IAgMaterializadorSesiones _materializador;
         private readonly IAgPromotorVinculaciones _promotor;
@@ -62,6 +66,17 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
         private bool _diagnosticoEnCurso; // Fase 1727: exclusión de reentrada concurrente en diagnóstico pre-vuelo
 
         private CancellationTokenSource _ctsEjecucion;
+        private Guid? _intentoOptimizacion;
+        private bool _aceptaProgresoOptimizacion;
+        private enum EstadoVisualOptimizacion
+        {
+            Preparando, Validando, RequiereDecision, Optimizando, Materializando,
+            Completado, Bloqueado, Cancelado, Error
+        }
+        private EstadoVisualOptimizacion _estadoVisualOptimizacion;
+        private bool _terminalVisualOptimizacion;
+        private string _faseFinOptimizacion;
+        private string _motivoFinOptimizacion;
         private AgContexto _contextoActual;
         private AgResultadoCorrida _ultimoResultado;
         private long _idCorridaCargada;
@@ -87,7 +102,9 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
         private List<AgArbol> _perfilesArbol = new List<AgArbol>();
         private List<AgVacanteGridDto> _todasLasVacantes = new List<AgVacanteGridDto>();
 
-        public AgFormGeneradorHorarios(Func<IDbConnection> connectionFactory)
+        /// <summary>Compone servicios con la fábrica académica existente y un lector canónico opcional para pruebas.</summary>
+        public AgFormGeneradorHorarios(Func<IDbConnection> connectionFactory, IAgPlanAprobadoRepository planAprobadoRepository = null,
+            AcademicDbSession sesionRatificacion = null, EncryptedSQLiteContext vaultRatificacion = null)
         {
             _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
@@ -99,6 +116,10 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             _generadorHorarios = new AgGeneradorHorarios(_validadorVentana, evaluadorAptitud);
 
             _scheduleRepository = new AgScheduleRepository(_connectionFactory);
+            _planAprobadoRepository = planAprobadoRepository ?? new AgPlanAprobadoRepository(_connectionFactory);
+            // Sin sesión y contexto de publicación explícitos, toda confirmación aprobada falla cerrada.
+            _confirmadorPlanAprobado = sesionRatificacion == null || vaultRatificacion == null ? null
+                : new AgConfirmadorPlanAprobado(sesionRatificacion, vaultRatificacion);
             _salvedadRepository = new AgSalvedadRepository(_connectionFactory);
             _arbolRepository = new AgArbolRepository(_connectionFactory);
             _arbolService = new AgArbolService(_arbolRepository);
@@ -1118,11 +1139,12 @@ ORDER BY nombre";
                 string fiStr = fi.ToString("yyyy-MM-dd");
                 string ffStr = ff.ToString("yyyy-MM-dd");
 
-                var ocupaciones = new List<(int IdTercero, DateTime Fecha, FranjaHoraria Franja)>();
+                var ocupacionesProduccion = new List<(long IdSesion, int IdTercero, DateTime Fecha, FranjaHoraria Franja)>();
+                var ocupacionesStaging = new List<(int IdTercero, DateTime Fecha, FranjaHoraria Franja)>();
 
                 // Sesiones de Producción en el rango
                 string sqlProdSes = @"
-SELECT idtercero AS IdTercero, fechasesion AS FechaSesion, horariosesion AS HorarioSesion
+SELECT id AS IdSesion, idtercero AS IdTercero, fechasesion AS FechaSesion, horariosesion AS HorarioSesion
 FROM sesiones
 WHERE fechasesion BETWEEN @fi AND @ff
   AND (subunidad = @Sub OR subunidad = '' OR subunidad IS NULL);";
@@ -1138,14 +1160,14 @@ WHERE fechasesion BETWEEN @fi AND @ff
                         var frRes = HorarioSesionParser.TryParse(s.HorarioSesion?.ToString());
                         if (frRes.IsSuccess)
                         {
-                            ocupaciones.Add((idTercero, fSes.Date, frRes.Value));
+                            ocupacionesProduccion.Add((Convert.ToInt64(s.IdSesion), idTercero, fSes.Date, frRes.Value));
                         }
                     }
                 }
 
                 // Sesiones de Staging de Aulas/Corridas ya aprobadas
                 string sqlAgSes = @"
-SELECT s.idtercero AS IdTercero, s.fechasesion AS FechaSesion, s.horariosesion AS HorarioSesion
+SELECT s.id_aula AS IdAula, s.idtercero AS IdTercero, s.fechasesion AS FechaSesion, s.horariosesion AS HorarioSesion
 FROM ag_sesiones s
 INNER JOIN ag_aula a ON s.id_aula = a.id
 WHERE a.estado = 4 AND s.fechasesion BETWEEN @fi AND @ff;";
@@ -1155,6 +1177,8 @@ WHERE a.estado = 4 AND s.fechasesion BETWEEN @fi AND @ff;";
                     var agSes = (await db.QueryAsync(new CommandDefinition(sqlAgSes, new { fi = fiStr, ff = ffStr }, cancellationToken: ct))).ToList();
                     foreach (var s in agSes)
                     {
+                        // Staging previo del aula aprobada seleccionada no es producción ni ocupación externa.
+                        if (ctx.Aulas.Any(a => a.Id == Convert.ToInt32(s.IdAula) && a.Estado == AgEstadoAula.Aprobado)) continue;
                         int idTercero = s.IdTercero != null ? Convert.ToInt32(s.IdTercero) : 0;
                         if (idTercero <= 0) continue;
 
@@ -1163,7 +1187,7 @@ WHERE a.estado = 4 AND s.fechasesion BETWEEN @fi AND @ff;";
                             var frRes = HorarioSesionParser.TryParse(s.HorarioSesion?.ToString());
                             if (frRes.IsSuccess)
                             {
-                                ocupaciones.Add((idTercero, fSes.Date, frRes.Value));
+                                ocupacionesStaging.Add((idTercero, fSes.Date, frRes.Value));
                             }
                         }
                     }
@@ -1173,7 +1197,7 @@ WHERE a.estado = 4 AND s.fechasesion BETWEEN @fi AND @ff;";
                     LoggerHelper.Warning($"[AgFormGeneradorHorarios] Ocupaciones de staging omitidas: {ex.Message}");
                 }
 
-                ctx.CargarOcupacionExterna(ocupaciones);
+                ctx.CargarOcupacionesIdentificadas(ocupacionesProduccion, ocupacionesStaging);
 
                 // 8. Cargar AulaAsignaturas para todo el alcance de aulas (Fases 293 & 473)
                 var idsAulas = ctx.Aulas != null ? ctx.Aulas.Select(a => a.Id).ToList() : new List<int>();
@@ -1213,6 +1237,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     if (poolAntes > 0 && (ctx.PoolDocentes == null || ctx.PoolDocentes.Count == 0))
                     {
                         traza.Advertencia("P06_FiltroTercerosVacio", "La selección de terceros no intersecta el pool docente del alcance.");
+                        MarcarErrorPreparacion("P06_FiltroTercerosVacio");
                         MessageBox.Show(this,
                             "La selección de terceros no intersecta el pool docente disponible para el alcance actual.\nAmplíe la selección o revise asignaturas habilitadas.",
                             "Sin docentes disponibles", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -1301,23 +1326,6 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
 
             try
             {
-                // Fase 1722, Fase 1726 & Fase 1731: Vaciar y sincronizar pendientes con la subunidad capturada antes de construir el contexto
-                if (_dimensionesPendientes != null)
-                {
-                    var pend = _dimensionesPendientes.Value;
-                    var resSync = await _aulaDimSync.SincronizarConfirmadoAsync(pend.AulaRef, pend.Jornada, pend.HorasDia, pend.DiasVentana, pend.Subunidad, CancellationToken.None);
-                    if (resSync.IsFailure)
-                    {
-                        Log($"[ERROR PRE-VUELO] Fallo en sincronización pendiente de {pend.AulaRef}: {resSync.Error}");
-                        MessageBox.Show(this, resSync.Error, "Sincronización de dimensiones", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        return;
-                    }
-
-                    _dimensionesPendientes = null;
-                    int nSync = resSync.Value;
-                    Log($"[DIM PRE-VUELO] Sincronización pendiente de {pend.AulaRef} completada (filas={nSync}).");
-                }
-
                 var ctxRes = await ConstruirContextoAsync(CancellationToken.None);
                 if (ctxRes.IsFailure)
                 {
@@ -1328,12 +1336,27 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     return;
                 }
                 _contextoActual = ctxRes.Value;
+                if (!await PrepararCoberturaAntesDeCambiosAsync(_contextoActual, CancellationToken.None)) return;
+                // Sólo Disponible alcanza la escritura heredada; aprobadas esperan ratificación T4.
+                if (_dimensionesPendientes != null)
+                {
+                    var pend = _dimensionesPendientes.Value;
+                    var resSync = await _aulaDimSync.SincronizarConfirmadoAsync(pend.AulaRef, pend.Jornada, pend.HorasDia, pend.DiasVentana, pend.Subunidad, CancellationToken.None);
+                    if (resSync.IsFailure)
+                    {
+                        Log($"[ERROR PRE-VUELO] {resSync.Error}");
+                        MessageBox.Show(this, resSync.Error, "Sincronización de dimensiones", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+                    _dimensionesPendientes = null;
+                    var recarga = await ConstruirContextoAsync(CancellationToken.None);
+                    if (recarga.IsFailure) { MostrarFalloPlan(TipoPreparacionPlan.ErrorTecnico, recarga.Error); return; }
+                    _contextoActual = recarga.Value;
+                    if (!await PrepararCoberturaAntesDeCambiosAsync(_contextoActual, CancellationToken.None)) return;
+                }
 
                 var combinaciones = ObtenerCombinacionesSeleccionadas();
-                if (combinaciones.Count > 1)
-                {
-                    Log($"[AVISO] {combinaciones.Count} combinaciones seleccionadas. El diagnóstico se enfoca en la primera: {combinaciones.First().AulaRef}");
-                }
+                Log($"[ALCANCE] Diagnóstico: {combinaciones.Count} combinaciones confirmadas.");
 
                 // Fase 213 & 231: Diagnóstico pre-vuelo defensivo
                 if (_contextoActual.Aulas == null || _contextoActual.Aulas.Count == 0)
@@ -1601,6 +1624,267 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             }
         }
 
+        private enum TipoPreparacionPlan { AlcanceInvalido, ErrorTecnico, Cancelada, NoVerificable, RatificacionPendiente,
+            CandidatoListo, CoberturaInsuficiente, FlushFallido, Rechazado }
+
+        private async Task<bool> PrepararCoberturaAntesDeCambiosAsync(AgContexto contexto, CancellationToken ct)
+        {
+            contexto.ManifiestoCobertura = null;
+            contexto.PlanAprobadoSnapshot = null;
+            contexto.ValidacionPlanAprobado = null;
+            contexto.ReiniciarCandidatosCobertura();
+            try
+            {
+                ct.ThrowIfCancellationRequested();
+                var seleccion = ObtenerCombinacionesSeleccionadas();
+                var ids = new List<int>();
+                if (seleccion.Count == 0)
+                    return MostrarFalloPlan(TipoPreparacionPlan.AlcanceInvalido, "SELECCION_EXPLICITA_REQUERIDA");
+                foreach (var c in seleccion)
+                {
+                    var exactas = contexto.Aulas.Where(a => a.IdPeriodo == c.IdPeriodo && a.IdSede == c.IdSede
+                        && a.IdPrograma == c.IdPrograma && string.Equals(a.AulaRef, c.AulaRef, StringComparison.OrdinalIgnoreCase)).ToList();
+                    if (exactas.Count != 1 || ids.Contains(exactas[0].Id))
+                        return MostrarFalloPlan(TipoPreparacionPlan.AlcanceInvalido, "SELECCION_NO_EXACTA:" + c.AulaRef);
+                    ids.Add(exactas[0].Id);
+                }
+                if (contexto.Aulas.Count != ids.Count)
+                    return MostrarFalloPlan(TipoPreparacionPlan.AlcanceInvalido, "AULAS_FUERA_DE_SELECCION");
+                if (_dimensionesPendientes.HasValue)
+                {
+                    var pend = _dimensionesPendientes.Value;
+                    if (!contexto.Aulas.Any(a => a.Estado == AgEstadoAula.Disponible
+                        && string.Equals(a.AulaRef, pend.AulaRef, StringComparison.OrdinalIgnoreCase)
+                        && string.Equals(a.Subunidad, pend.Subunidad, StringComparison.OrdinalIgnoreCase)))
+                        return MostrarFalloPlan(TipoPreparacionPlan.AlcanceInvalido, "DIMENSION_PENDIENTE_FUERA_DE_ALCANCE_DISPONIBLE");
+                }
+                var ventana = contexto.Ventana;
+                if (ventana == null || ventana.FechaFin.Date > new DateTime(2027, 5, 30))
+                    return MostrarFalloPlan(TipoPreparacionPlan.AlcanceInvalido, "VENTANA_EXCEDE_LIMITE_30_05_2027");
+                List<int> territoriales;
+                using (var db = _connectionFactory())
+                {
+                    if (db.State != ConnectionState.Open) db.Open();
+                    territoriales = (await db.QueryAsync<int>(new CommandDefinition(
+                        "SELECT id FROM territoriales WHERE UPPER(TRIM(subunidad))=UPPER(TRIM(@Sub)) ORDER BY id",
+                        new { Sub = contexto.Subunidad }, cancellationToken: ct))).ToList();
+                }
+                if (territoriales.Count != 1)
+                    return MostrarFalloPlan(TipoPreparacionPlan.AlcanceInvalido, "TERRITORIAL_AUSENTE_O_AMBIGUA");
+                var manifiesto = new AgConstructorManifiestoCobertura().Construir(contexto, ids, territoriales[0],
+                    contexto.Subunidad, ventana.FechaInicio, ventana.FechaFin);
+                if (manifiesto.IsFailure) return MostrarFalloPlan(TipoPreparacionPlan.AlcanceInvalido, manifiesto.Error);
+                contexto.ManifiestoCobertura = manifiesto.Value;
+                if (!manifiesto.Value.Relaciones.Any(r => r.EstadoAula == (int)AgEstadoAula.Aprobado))
+                {
+                    // Sin lectura canónica obligatoria para Disponible; conserva su escalado/generación actuales.
+                    contexto.ValidacionPlanAprobado = new AgValidacionPlanAprobado(null,
+                        manifiesto.Value.Relaciones.GroupBy(r => r.Clave.IdAula).Select(g => new AgValidacionAulaPlan(g.Key,
+                            AgEstadoValidacionPlan.NoRequerida, g.Select(r => new AgValidacionRelacionPlan(r, 0, 0, new string[0])))), new string[0]);
+                    return true;
+                }
+                var lectura = await _planAprobadoRepository.ObtenerAsync(manifiesto.Value, ct);
+                ct.ThrowIfCancellationRequested();
+                if (lectura.IsFailure)
+                    return MostrarFalloPlan(lectura.Error == "LECTURA_PLAN_CANCELADA" ? TipoPreparacionPlan.Cancelada
+                        : TipoPreparacionPlan.ErrorTecnico, lectura.Error);
+                if (lectura.Value == null || lectura.Value.Manifiesto.Huella != manifiesto.Value.Huella)
+                    return MostrarFalloPlan(TipoPreparacionPlan.ErrorTecnico, "LECTURA_PLAN_MANIFIESTO_NO_COINCIDE");
+                contexto.PlanAprobadoSnapshot = lectura.Value;
+                var validacion = new AgValidadorPlanAprobado().Validar(lectura.Value, contexto);
+                contexto.ValidacionPlanAprobado = validacion;
+                foreach (var d in validacion.Diagnosticos) Log("[PLAN CANÓNICO] " + d);
+                foreach (var aula in validacion.Aulas.Where(a => a.Estado != AgEstadoValidacionPlan.NoRequerida))
+                {
+                    Log($"[PLAN CANÓNICO] aula={aula.IdAula} estado={aula.Estado} esperadas={aula.HorasEsperadas} preservadas={aula.HorasPreservadas} déficit={aula.Deficit} exceso={aula.Exceso} fuera={aula.HorasFueraVentana}");
+                    foreach (var r in aula.Relaciones)
+                    {
+                        Log($"[PLAN CANÓNICO] aula={aula.IdAula} asignatura={r.Clave.IdAsignatura} esperadas={r.HorasEsperadas} válidasSinRatificar={r.HorasValidasEnVentana} déficit={r.Deficit} exceso={r.Exceso} fuera={r.HorasFueraVentana}");
+                        foreach (var d in r.Diagnosticos) Log("[PLAN CANÓNICO] " + d);
+                    }
+                }
+                // Ofrecer todas las aulas; ninguna confirmación habilita todavía la generación/promoción T5/T6.
+                EstablecerEstadoOptimizacion(EstadoVisualOptimizacion.Validando, "SIMULANDO_PROPUESTAS_APROBADAS",
+                    "Estado: Evaluando escalado informativo de aulas aprobadas.");
+                var propuestas = new AgSimuladorEscaladoAprobadas().Evaluar(contexto, ct);
+                var aprobadas = contexto.Aulas.Where(a => a.Estado == AgEstadoAula.Aprobado).OrderBy(a => a.Id).ToList();
+                if (_confirmadorPlanAprobado == null)
+                    return MostrarFalloPlan(TipoPreparacionPlan.ErrorTecnico, "PUBLICACION_NO_DISPONIBLE");
+                var intentoRatificacion = _intentoOptimizacion ?? Guid.NewGuid();
+                var terminales = new List<string>();
+                var terminal = TipoPreparacionPlan.CandidatoListo;
+                foreach (var aula in aprobadas)
+                {
+                    ct.ThrowIfCancellationRequested();
+                    if (_aulasConfirmadasEnIntento.Contains(aula.Id))
+                    {
+                        terminales.Add("aula=" + aula.Id + ":PASO_YA_CONFIRMADO_EN_INTENTO");
+                        terminal = TipoPreparacionPlan.Rechazado;
+                        continue;
+                    }
+                    var propuesta = propuestas.SingleOrDefault(p => p.IdAula == aula.Id);
+                    var diagnostico = validacion.Aulas.Single(v => v.IdAula == aula.Id);
+                    if (diagnostico.Estado == AgEstadoValidacionPlan.PlanNoVerificable)
+                    {
+                        terminales.Add("aula=" + aula.Id + ":PLAN_NO_VERIFICABLE: origen ambiguo o relación extra");
+                        terminal = TipoPreparacionPlan.Rechazado;
+                        continue;
+                    }
+                    if (diagnostico.Deficit > 0.001 && propuesta == null)
+                    {
+                        terminales.Add("aula=" + aula.Id + ":I5_COBERTURA_INSUFICIENTE: sin escalón verificable");
+                        terminal = TipoPreparacionPlan.CoberturaInsuficiente;
+                        continue;
+                    }
+                    string detalle = propuesta == null
+                        ? "Plan canónico completo: sólo ratificación, sin propuesta de cambio de días.\n" +
+                            string.Join("\n", diagnostico.Relaciones.Select(r => r.Clave.Valor + " " + r.HorasEsperadas + "h"))
+                        : ConstruirDetallePropuestaAprobada(propuesta);
+                    Log(detalle);
+                    string huellaSql = await _confirmadorPlanAprobado.CapturarConfiguracionAsync(contexto, aula.Id, propuesta, ct);
+                    if (huellaSql == null)
+                    {
+                        terminales.Add("aula=" + aula.Id + ":CONFIGURACION_O_PUBLICACION_NO_DISPONIBLE");
+                        terminal = TipoPreparacionPlan.FlushFallido;
+                        continue;
+                    }
+                    var archivada = await _confirmadorPlanAprobado.BuscarArchivadoAsync(contexto, aula.Id, propuesta, huellaSql, ct);
+                    if (archivada != null)
+                        detalle += "\nOPERACION_ARCHIVADA:" + archivada.Operacion +
+                            "; ratifique de nuevo el mismo efecto para recuperar publicación. No se autoriza otro paso.";
+                    using (var formulario = new AgFormConfirmacionPlanAprobado(aula.Id, lectura.Value, propuesta, detalle, archivada))
+                    {
+                        EstablecerEstadoOptimizacion(EstadoVisualOptimizacion.RequiereDecision,
+                            "RATIFICACION_PENDIENTE", "Estado: Ratificación y paso candidato pendientes de confirmación.");
+                        if (formulario.ShowDialog(this) != DialogResult.OK)
+                        {
+                            terminales.Add("aula=" + aula.Id + ":I5_REVISION_RECHAZADA; sin escrituras");
+                            terminal = TipoPreparacionPlan.Rechazado;
+                            continue;
+                        }
+                        var confirmada = await _confirmadorPlanAprobado.ConfirmarAsync(contexto, propuesta, aula.Id,
+                            archivada?.Intento ?? intentoRatificacion, archivada?.Operacion ?? Guid.NewGuid(), huellaSql, formulario.Motivo,
+                            formulario.Ratifica, formulario.AutorizaPaso, formulario.LegadoConsentido, ct);
+                        if (confirmada.Codigo != "CANDIDATO_PUBLICADO" && confirmada.Codigo != "REPLAY_PUBLICADO")
+                        {
+                            terminales.Add("aula=" + aula.Id + ":" + confirmada.Codigo);
+                            terminal = confirmada.Codigo.StartsWith("FLUSH_FALLIDO", StringComparison.Ordinal)
+                                ? TipoPreparacionPlan.FlushFallido : TipoPreparacionPlan.Rechazado;
+                            continue;
+                        }
+                        _aulasConfirmadasEnIntento.Add(aula.Id);
+                        contexto.RegistrarCandidatoCobertura(confirmada.Candidato);
+                        int residual = propuesta == null ? 0 : ReevaluarCandidatoConfirmado(contexto, propuesta,
+                            formulario.LegadoConsentido, ct);
+                        if (residual > 0)
+                        {
+                            terminales.Add("aula=" + aula.Id + ":I5_COBERTURA_INSUFICIENTE: " + residual + " sesiones; siguiente paso sólo en otra corrida.");
+                            terminal = TipoPreparacionPlan.CoberturaInsuficiente;
+                        }
+                        else terminales.Add("aula=" + aula.Id + ":" + (propuesta == null
+                            ? "RATIFICACION_SOLO_CONSERVACION_PENDIENTE_T5" : "CANDIDATO_COMPLETO_PENDIENTE_T5"));
+                    }
+                }
+                if (terminal == TipoPreparacionPlan.CandidatoListo && contexto.CandidatosCobertura.Count == aprobadas.Count)
+                {
+                    var conservadas = new AgProyectorSolucionCobertura().Conservar(contexto);
+                    if (conservadas.IsFailure)
+                        return MostrarFalloPlan(TipoPreparacionPlan.NoVerificable, conservadas.Error);
+                    contexto.SesionesConservadas = conservadas.Value;
+                    // Se omite autocruce productivo sólo por ID canónico; las demás ocupaciones permanecen.
+                    contexto.ExcluirOcupacionesCanonicas(contexto.PlanAprobadoSnapshot.Relaciones
+                        .Where(r => r.ClavesCandidatas.Count == 1 && contexto.CandidatosCobertura.Any(c => c.IdAula == r.ClavesCandidatas[0].IdAula))
+                        .SelectMany(r => r.Sesiones).Select(s => s.IdSesion));
+                    // En alcance exclusivamente conservado, comprobar la unión ahora; la ruta de generación
+                    // validará después de materializar cuando haya relaciones por replanificar.
+                    if (contexto.ManifiestoCobertura.Relaciones.All(r => conservadas.Value.Any(s => s.Clave.Valor == r.Clave.Valor)))
+                    {
+                        var cobertura = new AgValidadorCoberturaSeleccion().Validar(contexto.ManifiestoCobertura,
+                            conservadas.Value, Array.Empty<AgSesionCobertura>(), contexto.IdTerceroVacante, contexto.Festivos);
+                        if (cobertura.IsFailure) return MostrarFalloPlan(TipoPreparacionPlan.NoVerificable, cobertura.Error);
+                    }
+                    return true;
+                }
+                return MostrarFalloPlan(terminal, string.Join("; ", terminales));
+            }
+            catch (OperationCanceledException) { return MostrarFalloPlan(TipoPreparacionPlan.Cancelada, "LECTURA_PLAN_CANCELADA"); }
+            catch (Exception ex) { return MostrarFalloPlan(TipoPreparacionPlan.ErrorTecnico, "PREPARACION_PLAN_ERROR:" + ex.GetType().Name); }
+        }
+
+        /// <summary>Replanifica una sola vez el candidato aislado, con exactamente el LEGADO consentido.</summary>
+        private static int ReevaluarCandidatoConfirmado(AgContexto origen, AgPropuestaEscaladoAprobada propuesta,
+            IReadOnlyCollection<int> legado, CancellationToken ct)
+        {
+            var copia = AgEscaladorRanuraAula.ClonarContextoParaSimulacion(origen);
+            var aula = copia.Aulas.Single(a => a.Id == propuesta.IdAula);
+            aula.DiasVentana = propuesta.Hacia;
+            copia.AulaAsignaturas = copia.AulaAsignaturas.Where(r => r.Requerida == 1).ToList();
+            copia.ConstruirIndices();
+            foreach (var detalle in propuesta.Relaciones.Where(r => r.RedistribuyeLegado
+                && legado.Contains(r.Clave.IdAsignatura)))
+            {
+                var relacion = copia.AulaAsignaturaPorAulaAsig[(aula.Id, detalle.Clave.IdAsignatura)];
+                relacion.OrigenPatron = "AUTOMATICO";
+                relacion.DiasPatron = null;
+            }
+            double unidad = AgUnidadesSemanales.HorasSesionAula(aula,
+                AgNivelAcademicoCatalogo.Desde(copia.Programas.Single(p => p.Id == aula.IdPrograma).Modalidad));
+            var patrones = copia.AulaAsignaturaPorAulaAsig.Values.Where(r => r.IdAula == aula.Id
+                && !string.Equals(r.OrigenPatron, "AUTOMATICO", StringComparison.OrdinalIgnoreCase)
+                && !string.IsNullOrWhiteSpace(r.DiasPatron)).ToDictionary(r => r.IdAsignatura, r => r.DiasPatron);
+            var resultado = new AgPlanificadorOleadas().ConstruirEvaluacion(AgEvaluadorDemandaVentana.Demandas(copia, aula),
+                aula.DiasVentana, copia.Ventana.FechaInicio, copia.Ventana.FechaFin, unidad,
+                copia.EsFestivo, copia.Bloques, aula.Jornada, patrones, ct);
+            if (resultado.IsFailure) throw new InvalidOperationException("REEVALUACION_CANDIDATO:" + resultado.Error);
+            return propuesta.Relaciones.Sum(r => Math.Max(0, (int)Math.Ceiling(
+                origen.ValidacionPlanAprobado.Aulas.Single(a => a.IdAula == aula.Id).Relaciones
+                    .Single(v => v.Clave.IdAsignatura == r.Clave.IdAsignatura).HorasEsperadas / unidad)
+                - resultado.Value.Planes.Where(p => p.IdAsignatura == r.Clave.IdAsignatura).Sum(p => p.Sesiones.Count)));
+        }
+
+        internal static string ConstruirDetallePropuestaAprobada(AgPropuestaEscaladoAprobada propuesta)
+        {
+            var texto = new StringBuilder();
+            texto.AppendLine($"Aula {propuesta.IdAula} — {propuesta.AulaRef}: {propuesta.Desde} → {(string.IsNullOrEmpty(propuesta.Hacia) ? "sin siguiente escalón" : propuesta.Hacia)}");
+            string[] dias = { "", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo" };
+            texto.AppendLine("Días añadidos: " + string.Join(", ", propuesta.DiasAnadidos.Select(d => dias[d])));
+            texto.AppendLine($"Fecha final: {propuesta.FechaLimite:dd/MM/yyyy}; límite absoluto fijo 30/05/2027. Terminal: {propuesta.Terminal}.");
+            texto.AppendLine("Sólo capacidad de calendario; no acredita disponibilidad docente ni ausencia de conflictos externos.");
+            texto.AppendLine("No autoriza revisión, ratificación, redistribución ni aplicación. T4 pendiente; horario aprobado intacto.");
+            if (propuesta.BusquedaAgotada) texto.AppendLine("Búsqueda acotada agotada: el residual no acredita imposibilidad.");
+            foreach (var r in propuesta.Relaciones)
+            {
+                texto.AppendLine($"Relación: {r.Clave.Valor}; déficit canónico: {r.DeficitCanonicoHoras:0.##} h.");
+                texto.AppendLine($"Patrón afectado {r.OrigenPatron}: '{r.PatronAntes}' → sin LEGADO '{r.PatronSinRedistribucion}' / con LEGADO '{r.PatronConRedistribucion}'. Redistribución LEGADO simulada: {r.RedistribuyeLegado}; FIJO intacto.");
+                texto.AppendLine("Sesiones canónicas anteriores: " + string.Join(", ", r.SesionesOrigen.Select(s => $"{s.Fecha:dd/MM/yyyy} {s.HoraInicio}-{s.HoraFin} ({s.HorasLectivas:0.##}h)")));
+                texto.AppendLine("Simulación actual: " + FechasPropuesta(r.Antes));
+                texto.AppendLine($"Siguiente sin redistribución LEGADO: {FechasPropuesta(r.SinRedistribucion)}; residual {r.ResidualSinRedistribucion} sesiones.");
+                texto.AppendLine($"Sesiones recuperadas sin LEGADO (ganancia neta): {r.GananciaNetaSinRedistribucion}. Fechas nuevas, incluidas reubicaciones: {FechasPropuesta(r.RecuperadasSinRedistribucion)}");
+                texto.AppendLine($"Siguiente con redistribución LEGADO hipotética: {FechasPropuesta(r.ConRedistribucion)}; residual {r.ResidualConRedistribucion} sesiones.");
+                texto.AppendLine($"Sesiones recuperadas con LEGADO (ganancia neta): {r.GananciaNetaConRedistribucion}. Fechas nuevas, incluidas reubicaciones: {FechasPropuesta(r.RecuperadasConRedistribucion)}");
+            }
+            return texto.ToString();
+        }
+
+        private static string FechasPropuesta(IEnumerable<AgSesionPropuestaAprobada> sesiones) =>
+            string.Join(", ", sesiones.Select(s => $"{s.Fecha:dd/MM/yyyy} {s.Franja} ({s.Horas:0.##}h)"));
+
+        private bool MostrarFalloPlan(TipoPreparacionPlan tipo, string detalle)
+        {
+            string codigo = tipo == TipoPreparacionPlan.NoVerificable ? "PLAN_NO_VERIFICABLE"
+                : tipo == TipoPreparacionPlan.RatificacionPendiente ? "REQUIERE_RATIFICACION"
+                : tipo == TipoPreparacionPlan.CandidatoListo ? "CANDIDATO_LISTO_PENDIENTE_T5"
+                : tipo == TipoPreparacionPlan.CoberturaInsuficiente ? "I5_COBERTURA_INSUFICIENTE"
+                : tipo == TipoPreparacionPlan.FlushFallido ? "FLUSH_FALLIDO"
+                : tipo == TipoPreparacionPlan.Rechazado ? "REVISION_RECHAZADA" : tipo.ToString();
+            EstablecerEstadoOptimizacion(tipo == TipoPreparacionPlan.Cancelada ? EstadoVisualOptimizacion.Cancelado
+                : tipo == TipoPreparacionPlan.ErrorTecnico ? EstadoVisualOptimizacion.Error : EstadoVisualOptimizacion.Bloqueado,
+                codigo + ":" + detalle, "Estado: " + codigo + ". Revise el diagnóstico.");
+            Log("[PREPARACIÓN] " + codigo + ":" + detalle);
+            MessageBox.Show(this, codigo + "\n" + detalle, "Preparación de cobertura", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return false;
+        }
+
         private enum AgResultadoEscaladoUI
         {
             SinCambios,
@@ -1638,6 +1922,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 var decisionesEscalado = await Task.Run(() => escalador.Evaluar(contextoPropuesta, idArbolActivo, ct), ct);
                 if (!decisionesEscalado.EsValido)
                 {
+                    MarcarErrorPreparacion("ESCALADO_EVALUACION_" + decisionesEscalado.Motivo);
                     MessageBox.Show(this,
                         $"No se pudo evaluar la propuesta inicial: {decisionesEscalado.Mensaje}\n\nMotivo: {decisionesEscalado.Motivo}\nAula: {decisionesEscalado.IdAulaRechazada}\nAsignatura: {decisionesEscalado.IdAsignaturaRechazada}\n\nDebe revisar la configuración.",
                         "Evaluación no aplicable",
@@ -1665,10 +1950,12 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 {
                     using (var dlg = new FormAutorizarReclasificacion(candidatosReclasificacion))
                     {
+                        MarcarDecisionPreparacion();
                         if (dlg.ShowDialog(this) != DialogResult.OK)
                         {
                             return AgResultadoEscaladoUI.RechazadoPorUsuario;
                         }
+                        ReanudarValidacionPreparacion();
                     }
                 }
 
@@ -1678,6 +1965,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     var validacion = escalador.ValidarSelecciones(contextoPropuesta, autorizadas, candidatosReclasificacion, ct);
                     if (!validacion.EsValido)
                     {
+                        MarcarErrorPreparacion("ESCALADO_SELECCION_" + validacion.Motivo);
                         MessageBox.Show(this,
                             $"No se pudo autorizar la reclasificación: {validacion.Mensaje}\n\nMotivo: {validacion.Motivo}\nAula: {validacion.IdAulaRechazada}\nAsignatura: {validacion.IdAsignaturaRechazada}\n\nDebe recalcular la propuesta para continuar.",
                             "Reclasificación no aplicable",
@@ -1695,6 +1983,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     propuestaDefinitiva = await Task.Run(() => escalador.Evaluar(contextoPropuesta, idArbolActivo, autorizadas, candidatosReclasificacion, ct), ct);
                     if (!propuestaDefinitiva.EsValido)
                     {
+                        MarcarErrorPreparacion("ESCALADO_SIMULACION_" + propuestaDefinitiva.Motivo);
                         MessageBox.Show(this,
                             $"No se pudo aplicar la simulación de reclasificación: {propuestaDefinitiva.Mensaje}\n\nMotivo: {propuestaDefinitiva.Motivo}\nAula: {propuestaDefinitiva.IdAulaRechazada}\nAsignatura: {propuestaDefinitiva.IdAsignaturaRechazada}\n\nDebe recalcular la propuesta para continuar.",
                             "Simulación no aplicable",
@@ -1772,6 +2061,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     ? $"\n\nAVISO DE PATRONES: Se recalcularán los patrones AUTOMÁTICOS de {totalAsigsReset} asignatura(s) en las aulas afectadas para distribuirlas en los nuevos días."
                     : string.Empty;
 
+                MarcarDecisionPreparacion();
                 var respuesta = MessageBox.Show(this,
                     "Se detectaron aulas cuya demanda excede la capacidad o saturación de su ventana actual:\n\n" + detalleEsc +
                     advertenciaPendiente +
@@ -1787,25 +2077,31 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     return AgResultadoEscaladoUI.RechazadoPorUsuario;
                 }
 
+                ReanudarValidacionPreparacion();
                 // Paso 5 - Guardado del mismo lote sellado sin recalcular
                 var vigente = await ConstruirContextoAsync(ct);
                 if (vigente.IsFailure)
                 {
+                    MarcarErrorPreparacion("ESCALADO_LECTURA_VIGENTE");
                     Log(vigente.Error);
                     return AgResultadoEscaladoUI.FalloAlAplicar;
                 }
                 int perfilVigente = cmbArboles.SelectedItem is AgArbol perfilActual ? (int)perfilActual.Id : 0;
                 if (perfilVigente != idArbolActivo)
                 {
+                    MarcarErrorPreparacion("ESCALADO_PERFIL_OBSOLETO");
                     MessageBox.Show(this, "Cambió el perfil. Recalcule la propuesta.", "Escalado", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return AgResultadoEscaladoUI.FalloAlAplicar;
                 }
 
+                if (!await PrepararCoberturaAntesDeCambiosAsync(vigente.Value, ct))
+                    return AgResultadoEscaladoUI.FalloAlAplicar;
                 int esperadas = decisionesAplicables.Count;
                 var resultado = await escalador.AplicarDetalladoAsync(decisionesAplicables, idArbolActivo, vigente.Value, ct);
                 if (!resultado.Exito || resultado.Confirmadas != esperadas)
                 {
                     Log("[ESCALADO] " + resultado.Error);
+                    MarcarErrorPreparacion("ESCALADO_APLICACION");
                     MessageBox.Show(this, string.IsNullOrEmpty(resultado.Error) ? "No se confirmó el escalado completo." : resultado.Error,
                         "Escalado", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return AgResultadoEscaladoUI.FalloAlAplicar;
@@ -1816,17 +2112,21 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 var recarga = await ConstruirContextoAsync(ct);
                 if (recarga.IsFailure)
                 {
+                    MarcarErrorPreparacion("ESCALADO_RECARGA_CONTEXTO");
                     MessageBox.Show(this, "El escalado quedó guardado, pero no se pudo recargar el contexto: " + recarga.Error,
                         "Escalado", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return AgResultadoEscaladoUI.FalloAlAplicar;
                 }
                 _contextoActual = recarga.Value;
+                if (!await PrepararCoberturaAntesDeCambiosAsync(_contextoActual, ct))
+                    return AgResultadoEscaladoUI.FalloAlAplicar;
 
                 // Recargar dimensiones del perfil activo en el árbol
                 if (idArbolActivo > 0)
                 {
                     if (!await RecargarDimensionesPerfilActivoTrasEscaladoAsync(idArbolActivo, ct).ConfigureAwait(true))
                     {
+                        MarcarErrorPreparacion("ESCALADO_RECARGA_DIMENSIONES");
                         MessageBox.Show(this,
                             "No se pudieron actualizar las dimensiones. Recargue el perfil.",
                             "Escalado de ventana", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -1844,6 +2144,8 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     Log($"[AVISO RE-VALIDACIÓN] {msgReval}");
                     if (!algunaPendiente)
                     {
+                        // Aviso no terminal: el flujo heredado continúa y el motor conserva sus guardas.
+                        ReanudarValidacionPreparacion();
                         MessageBox.Show(this, msgReval, "Re-validación Pre-Vuelo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     }
                 }
@@ -1852,6 +2154,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             }
             catch (ArgumentException ex)
             {
+                MarcarErrorPreparacion("ESCALADO_ARGUMENTO_INVALIDO");
                 MessageBox.Show(this,
                     $"Error al procesar el escalado o la reclasificación: {ex.Message}\n\nDebe recalcular la propuesta para continuar.",
                     "Reclasificación no aplicable",
@@ -1865,10 +2168,18 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
         private async Task IniciarOptimizacionAsync()
         {
             // Fase 1727: No permitir optimización si el diagnóstico está en curso
-            if (_diagnosticoEnCurso)
+            if (_diagnosticoEnCurso || _intentoOptimizacion.HasValue)
             {
                 return;
             }
+
+            // Identidad local anterior a cualquier await; no autoriza revisar horarios aprobados.
+            var intento = Guid.NewGuid();
+            _intentoOptimizacion = intento;
+            _aceptaProgresoOptimizacion = false;
+            _terminalVisualOptimizacion = false;
+            _faseFinOptimizacion = null;
+            _motivoFinOptimizacion = null;
 
             // Fase 1716, Fase 1727 & Fase 1739: Bloquear controles y acciones de perfil/árbol, detener temporizador y adquirir semáforo
             bool arbolHabilitado = treeContextoAcademico.Enabled;
@@ -1888,70 +2199,77 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             btnSobrescribirArbol.Enabled = false;
             btnCancelar.Enabled = true;
             progressBarAG.Value = 0;
-            lblStatusAG.Text = "Estado: Optimizando...";
-            lblStatusAG.ForeColor = Color.DarkBlue;
+            EstablecerEstadoOptimizacion(EstadoVisualOptimizacion.Preparando);
 
             _timerSyncDimensiones.Stop();
-            await _semaforoSyncDimensiones.WaitAsync();
-
             _ctsEjecucion = new CancellationTokenSource();
             LoggerHelper.ReiniciarDedupe(); // Fase 594/598: Reinicio centralizado de dedupe por proceso
             AgCoherenciaGrupo.ReiniciarIncidencias(); // Fase 852: Limpiar incidencias entre corridas
             _ultimoResultado = null; // Fase 850: Reiniciar estado para evitar retener corrida previa tras fallos
             _idCorridaCargada = 0;   // Fase 850: Evita apuntar a corrida previa si falla la optimización
             _contextoActual = null;                  // Fase 856: Limpiar contexto previo para evitar resolución con catálogos obsoletos
+            _aulasConfirmadasEnIntento.Clear();
             btnPromoverProduccion.Enabled = false;   // Fase 856: Deshabilitar promoción hasta que la nueva corrida sea exitosa
             var traza = CrearTraza("EjecucionCorridaAG"); // Fase 606 (antes: "OptimizacionAG")
             traza.Inicio();
+            RegistrarEventoIntento("INICIO", intento, 0);
             traza.Paso("P08_IniciarOptimizacion", "Preparación de corrida y ejecución evolutiva del Algoritmo Genético");
 
             long idCorridaCreada = 0;
+            AgCorrida corrida = null;
+            bool corridaFinalizada = false;
+            bool cancelacionDetectada = false;
+            bool semaforoAdquirido = false;
 
             try
             {
-                // Fase 1722, Fase 1726, Fase 1731 & Fase 1739: Vaciar y sincronizar pendientes con la subunidad capturada antes de construir el contexto
-                if (_dimensionesPendientes != null)
-                {
-                    var pend = _dimensionesPendientes.Value;
-                    var resSync = await _aulaDimSync.SincronizarConfirmadoAsync(pend.AulaRef, pend.Jornada, pend.HorasDia, pend.DiasVentana, pend.Subunidad, _ctsEjecucion.Token);
-                    if (resSync.IsFailure)
-                    {
-                        Log($"[ERROR PRE-VUELO] Fallo en sincronización pendiente de {pend.AulaRef}: {resSync.Error}");
-                        MessageBox.Show(this, resSync.Error, "Sincronización de dimensiones", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        return;
-                    }
-
-                    _dimensionesPendientes = null;
-                    int nSync = resSync.Value;
-                    Log($"[DIM PRE-VUELO] Sincronización pendiente de {pend.AulaRef} completada (filas={nSync}).");
-                }
-
+                await _semaforoSyncDimensiones.WaitAsync(_ctsEjecucion.Token);
+                semaforoAdquirido = true;
+                _ctsEjecucion.Token.ThrowIfCancellationRequested();
                 txtLogAG.Clear();
                 Log("================================================================================");
                 Log(" INICIANDO OPTIMIZACIÓN EVOLUTIVA (Algoritmo Genético)");
                 Log("================================================================================");
 
+                EstablecerEstadoOptimizacion(EstadoVisualOptimizacion.Validando);
                 var ctxRes = await ConstruirContextoAsync(_ctsEjecucion.Token);
                 if (ctxRes.IsFailure)
                 {
                     traza.Fallo("P08_ValidarContexto", new Exception(ctxRes.Error), AgCausaFallo.SinAsignaturas);
                     traza.Fin(false, ctxRes.Error);
                     Log($"[ERROR] {ctxRes.Error}");
+                    MarcarErrorPreparacion("P08_ValidarContexto");
                     MessageBox.Show(this, ctxRes.Error, "Validación Pre-Vuelo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
                 _contextoActual = ctxRes.Value;
+                if (!await PrepararCoberturaAntesDeCambiosAsync(_contextoActual, _ctsEjecucion.Token)) return;
+                if (_dimensionesPendientes != null)
+                {
+                    var pend = _dimensionesPendientes.Value;
+                    var resSync = await _aulaDimSync.SincronizarConfirmadoAsync(pend.AulaRef, pend.Jornada, pend.HorasDia, pend.DiasVentana, pend.Subunidad, _ctsEjecucion.Token);
+                    if (resSync.IsFailure)
+                    {
+                        Log($"[ERROR PRE-VUELO] {resSync.Error}");
+                        MarcarErrorPreparacion("P08_SincronizarDimensiones");
+                        MessageBox.Show(this, resSync.Error, "Sincronización de dimensiones", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+                    _dimensionesPendientes = null;
+                    var recarga = await ConstruirContextoAsync(_ctsEjecucion.Token);
+                    if (recarga.IsFailure) { MostrarFalloPlan(TipoPreparacionPlan.ErrorTecnico, recarga.Error); return; }
+                    _contextoActual = recarga.Value;
+                    if (!await PrepararCoberturaAntesDeCambiosAsync(_contextoActual, _ctsEjecucion.Token)) return;
+                }
 
                 var combinaciones = ObtenerCombinacionesSeleccionadas();
-                if (combinaciones.Count > 1)
-                {
-                    Log($"[AVISO] {combinaciones.Count} combinaciones seleccionadas. Se optimizará la primera combinación: {combinaciones.First().AulaRef}");
-                }
+                Log($"[ALCANCE] Optimización: {combinaciones.Count} combinaciones confirmadas.");
 
                 // Fase 213 & 231: Pre-vuelo defensivo antes de ejecutar AG
                 if (_contextoActual.Aulas == null || _contextoActual.Aulas.Count == 0)
                 {
                     string msg = "No existe Aula (ag_aula) para la combinación seleccionada. Use 'Generar Aulas (N)'.";
+                    MarcarErrorPreparacion("P08_ValidarAulas");
                     traza.Fallo("P08_ValidarAulas", null, AgCausaFallo.SinAulas);
                     traza.Fin(false, msg);
                     Log($"[ERROR] {msg}");
@@ -1978,6 +2296,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                         var err = $"Faltan aulas (ag_aula) para {faltantes.Count} combinación(es):\n• {string.Join("\n• ", faltantes)}\n" +
                                   $"Alcance cargado: {_contextoActual.Aulas.Count} aulas, semestres {string.Join(",", semestresCombinaciones)}.\n" +
                                   "Ejecute 'Generar Aulas (N)' para el período objetivo.";
+                        MarcarErrorPreparacion("P08_ValidarAnclajeAula");
                         traza.Fallo("P08_ValidarAnclajeAula", new Exception(err), AgCausaFallo.SinAnclajeAula);
                         traza.Fin(false, err);
                         Log($"[ERROR] {err}");
@@ -1990,6 +2309,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 {
                     string refEsp = combinaciones.Any() ? combinaciones.First().AulaRef : "seleccionada";
                     string msg = $"No existe Aula (ag_aula) exacta para la combinación '{refEsp}'. Use 'Generar Aulas (N)' antes de optimizar.";
+                    MarcarErrorPreparacion("P08_ValidarAnclajeAula");
                     traza.Fallo("P08_ValidarAnclajeAula", null, AgCausaFallo.SinAnclajeAula);
                     traza.Fin(false, msg);
                     Log($"[ERROR] {msg}");
@@ -2004,6 +2324,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     string semestreRama = comb?.Semestre ?? "";
                     string detalle = $"idprograma={_contextoActual.IdPrograma} semestre='{semestreRama}' subunidad='{_contextoActual.Subunidad}'";
                     string msg = $"Sin asignaturas para {detalle}. Verifique el catálogo 'asignaturas' (idprograma/semestre/subunidad) o cargue el pensum.";
+                    MarcarErrorPreparacion("P08_ValidarAsignaturas");
                     traza.Fallo("P08_ValidarAsignaturas", null, AgCausaFallo.SinAsignaturas);
                     traza.Fin(false, msg);
                     Log($"[ERROR] {msg}");
@@ -2032,6 +2353,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 if (aulasSinMateriasOpt.Count > 0 || _contextoActual.AulaAsignaturas == null || _contextoActual.AulaAsignaturas.Count == 0)
                 {
                     var msg = $"Sin ag_aula_asignatura para {aulasSinMateriasOpt.Count} aula(s):\n• {string.Join("\n• ", aulasSinMateriasOpt)}\nEjecute 'Generar Aulas (N)'.";
+                    MarcarErrorPreparacion("P08_ValidarAulaAsignaturas");
                     traza.Fallo("P08_ValidarAulaAsignaturas", new Exception(msg), AgCausaFallo.SinAulaAsignaturas);
                     traza.Fin(false, msg);
                     Log($"[ERROR] {msg}");
@@ -2057,6 +2379,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                         {
                             var errD4 = $"Aula '{aula.AulaRef}': 8 h/día no permitido en PREGRADO (unidad canónica 4 h). Seleccione 4h en el árbol y ejecute 'Generar Aulas'.";
                             // Fase 1120: Causa de fallo específica para incoherencia horas/día ↔ nivel
+                            MarcarErrorPreparacion("P08_HorasDiaNivel");
                             traza.Fallo("P08_HorasDiaNivel", new Exception(errD4), AgCausaFallo.HorasDiaInvalidoNivel);
                             traza.Fin(false, errD4);
                             Log($"[ERROR] {errD4}");
@@ -2100,6 +2423,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                         string msgLog = msgModal.Replace("\r", " ").Replace("\n", " ¶ ");
                         var causa = aulasSinDim.Count > 0 ? AgCausaFallo.VentanaAulaVacia : AgCausaFallo.SinBloques;
 
+                        MarcarErrorPreparacion("P08_ValidarVentanaBloques");
                         traza.Fallo("P08_ValidarVentanaBloques", new Exception(msgLog), causa);
                         traza.Dato("AulasSinDimensiones", aulasSinDim.Count);
                         traza.Dato("AulaSinDimensionesDetalle", string.Join(",", aulasSinDim.Take(50)));
@@ -2115,20 +2439,25 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 var resEscaladoOpt = await EvaluarYAplicarEscaladoAsync(traza, _ctsEjecucion.Token);
                 if (resEscaladoOpt == AgResultadoEscaladoUI.FalloAlAplicar)
                 {
+                    if (!_terminalVisualOptimizacion) MarcarErrorPreparacion("ESCALADO_NO_APLICABLE");
                     return;
                 }
                 if (resEscaladoOpt == AgResultadoEscaladoUI.RechazadoPorUsuario)
                 {
+                    MarcarDecisionPreparacion();
                     var cont = MessageBox.Show(this,
                         "Ha rechazado el escalado de ventana sugerido. La capacidad actual es insuficiente para la demanda y la optimización resultará con sesiones sin ubicar o violaciones.\n\n¿Desea continuar con la optimización de todos modos?",
                         "Escalado Rechazado", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                     if (cont != DialogResult.Yes)
                     {
                         Log("[OPTIMIZACIÓN] Cancelada por el usuario tras rechazar el escalado.");
+                        cancelacionDetectada = true;
+                        EstablecerEstadoOptimizacion(EstadoVisualOptimizacion.Cancelado, "ESCALADO_CONTINUACION_RECHAZADA");
                         return;
                     }
                 }
 
+                ReanudarValidacionPreparacion();
                 // Fase 295, 296, 303 & 321: Validar cobertura de pool docente (Consentimiento de Vacante)
                 int totalAsigOpt = _contextoActual.Asignaturas.Count;
                 var asignaturasSinPoolOpt = _contextoActual.Asignaturas
@@ -2148,6 +2477,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     traza.Causa(AgCausaFallo.SinPoolDocente, $"{asigSinPoolOpt}/{totalAsigOpt} → VACANTE");
                     Log($"[OPTIMIZACIÓN] {asigSinPoolOpt}/{totalAsigOpt} asignaturas SIN docente habilitado en 'terceros_asignaturas':\n• {listaSinOpt}");
 
+                    MarcarDecisionPreparacion();
                     var dialogRes = MessageBox.Show(this,
                         $"Hay {asigSinPoolOpt} de {totalAsigOpt} asignaturas sin docente habilitado en el pool:\n• {listaSinOpt}\n\n" +
                         "Se marcarán como VACANTE (es_vacante=1) con penalización suave y podrá resolverlas después en el Panel de Vacantes.\n\n" +
@@ -2160,18 +2490,20 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     {
                         traza.Fin(false, "Cancelado por cobertura incompleta");
                         Log($"[OPTIMIZACIÓN] Cancelado por el usuario debido a {asigSinPoolOpt}/{totalAsigOpt} asignaturas sin pool.");
+                        cancelacionDetectada = true;
+                        EstablecerEstadoOptimizacion(EstadoVisualOptimizacion.Cancelado, "POOL_CONTINUACION_RECHAZADA");
                         return;
                     }
 
+                    ReanudarValidacionPreparacion();
                     Log($"[OPTIMIZACIÓN] Aceptado por el usuario: {asigSinPoolOpt}/{totalAsigOpt} asignaturas pasarán a VACANTE.");
                 }
 
-                // Fase 502: purgar staging y corridas previas del período+programa ANTES de crear la nueva corrida
-                if (_contextoActual.IdPeriodo > 0 && _contextoActual.IdPrograma > 0)
-                {
-                    await _scheduleRepository.LimpiarStagingAsync(
-                        _contextoActual.IdPeriodo, _contextoActual.IdPrograma, _ctsEjecucion.Token);
-                }
+                // Captura final tras cualquier recarga de escalado; ninguna corrida pierde su manifiesto.
+                if (_contextoActual.ManifiestoCobertura == null || _contextoActual.ValidacionPlanAprobado == null)
+                    throw new InvalidOperationException("PREPARACION_COBERTURA_AUSENTE");
+                // T1: una nueva corrida no purga staging, histórico ni auditoría de corridas anteriores.
+                _ctsEjecucion.Token.ThrowIfCancellationRequested();
 
                 // 1. Crear registro de corrida (Fase 219: anclado al aula de la corrida)
                 // Corrida 92 - T6: persistir configuración reproducible en ParametrosJson (ventana, snapshot con demanda, patrones, bloques y festivos, versión, huella)
@@ -2195,7 +2527,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 {
                     errorCaptura = ex.Message;
                     LoggerHelper.Error($"[AgFormGeneradorHorarios] Error al calcular huella de plan de ventana: {ex.Message}", ex);
-                    huellaContexto = null; // No presentar ERROR: ... como huella válida
+                    throw new InvalidOperationException("SNAPSHOT_HUELLA_ERROR", ex);
                 }
 
                 var ventanaEfectiva = _contextoActual.Ventana ?? _ventanaResuelta;
@@ -2370,7 +2702,13 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
 
                 var parametrosDict = new Dictionary<string, object>
                 {
+                    { "intentoId", intento.ToString("D") },
                     { "version", App.APP_VERSION },
+                    { "manifiestoCobertura", _contextoActual.ManifiestoCobertura },
+                    { "planCanonico", _contextoActual.PlanAprobadoSnapshot },
+                    { "validacionPlan", _contextoActual.ValidacionPlanAprobado },
+                    { "decisionesCobertura", _contextoActual.CandidatosCobertura },
+                    { "sesionesConservadas", _contextoActual.SesionesConservadas },
                     { "huella", huellaContexto ?? string.Empty },
                     { "errorCaptura", errorCaptura },
                     { "ventana", new Dictionary<string, object>
@@ -2382,16 +2720,17 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                             { "origen", ventanaEfectiva != null ? ventanaEfectiva.Origen.ToString() : null },
                             { "observaciones", ventanaEfectiva?.Observaciones },
                             { "duracionDias", ventanaEfectiva?.DuracionDias ?? 0 },
-                            { "diasVentana", aulaCorrida?.DiasVentana },
-                            { "jornada", aulaCorrida?.Jornada }
+                            { "diasVentana", combinaciones.Count == 1 ? aulaCorrida?.DiasVentana : null },
+                            { "jornada", combinaciones.Count == 1 ? aulaCorrida?.Jornada : null }
                         }
                     },
                     { "snapshot", new Dictionary<string, object>
                         {
                             { "idPeriodo", _contextoActual.IdPeriodo },
                             { "idPrograma", _contextoActual.IdPrograma },
-                            { "idAula", _contextoActual.IdAulaCorrida },
-                            { "aulaRef", aulaCorrida?.AulaRef ?? string.Empty },
+                            { "idAula", combinaciones.Count == 1 ? _contextoActual.IdAulaCorrida : 0 },
+                            { "aulaRef", combinaciones.Count == 1 ? aulaCorrida?.AulaRef ?? string.Empty : string.Empty },
+                            { "aulasSeleccionadas", _contextoActual.ManifiestoCobertura.Relaciones.Select(r => r.Clave.IdAula).Distinct().OrderBy(id => id).ToList() },
                             { "subunidad", _contextoActual.Subunidad ?? string.Empty },
                             { "totalAulas", _contextoActual.Aulas?.Count ?? 0 },
                             { "totalAsignaturas", _contextoActual.Asignaturas?.Count ?? 0 },
@@ -2427,10 +2766,11 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 catch (Exception ex)
                 {
                     LoggerHelper.Error($"[AgFormGeneradorHorarios] Error al serializar ParametrosJson: {ex.Message}", ex);
-                    parametrosJson = "{\"errorCaptura\":\"" + ex.Message.Replace("\"", "'") + "\",\"version\":\"" + App.APP_VERSION + "\",\"huella\":\"" + (huellaContexto ?? string.Empty).Replace("\"", "'") + "\"}";
+                    MarcarErrorPreparacion("SNAPSHOT_SERIALIZACION_ERROR");
+                    throw new InvalidOperationException("SNAPSHOT_SERIALIZACION_ERROR", ex);
                 }
 
-                var corrida = new AgCorrida
+                corrida = new AgCorrida
                 {
                     IdPeriodo = _contextoActual.IdPeriodo,
                     IdPrograma = _contextoActual.IdPrograma,
@@ -2450,11 +2790,13 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     traza.Fallo("P08_InsertCorridaAsync", new Exception(idCorridaResult.Error));
                     traza.Fin(false, idCorridaResult.Error);
                     Log($"[ERROR] No se pudo crear la corrida: {idCorridaResult.Error}");
+                    MarcarErrorPreparacion("P08_InsertCorridaAsync");
                     return;
                 }
 
                 long idCorrida = idCorridaResult.Value;
                 idCorridaCreada = idCorrida;
+                corrida.Id = idCorrida;
                 traza.Dato("IdCorrida", idCorrida);
                 _contextoActual.IdCorrida = idCorrida; // Fase 585
                 traza.Dato("Poblacion", corrida.PoblacionTamano);
@@ -2476,8 +2818,36 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
 
                 Log($"[CORRIDA #{idCorrida}] Población={corrida.PoblacionTamano}, Generaciones={corrida.GeneracionesMax}, Cruce={corrida.TasaCruce:P0}, Mut={corrida.TasaMutacion:P0}, Genes Esperados={_contextoActual.Asignaturas.Count}");
 
+                bool soloConservacion = _contextoActual.ManifiestoCobertura.Relaciones.All(r =>
+                    _contextoActual.SesionesConservadas.Any(s => s.Clave.Valor == r.Clave.Valor)) &&
+                    _contextoActual.ManifiestoCobertura.Relaciones.All(r => r.EstadoAula == (int)AgEstadoAula.Aprobado);
+                if (soloConservacion)
+                {
+                    var certificado = new AgValidadorCoberturaSeleccion().Validar(_contextoActual.ManifiestoCobertura,
+                        _contextoActual.SesionesConservadas, Array.Empty<AgSesionCobertura>(), _contextoActual.IdTerceroVacante, _contextoActual.Festivos);
+                    if (certificado.IsFailure) throw new InvalidOperationException(certificado.Error);
+                    // No se crea población, individuo ni staging; la producción anterior no se toca.
+                    corrida.FechaFinCorrida = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                    corrida.Estado = AgEstadoCorrida.Completada;
+                    var cierreConservado = await _scheduleRepository.UpdateCorridaAsync(corrida, _ctsEjecucion.Token);
+                    if (cierreConservado.IsFailure) throw new InvalidOperationException(cierreConservado.Error);
+                    corridaFinalizada = true;
+                    _idCorridaCargada = idCorrida;
+                    _ultimoResultado = new AgResultadoCorrida { IdCorrida = idCorrida, Estado = AgEstadoCorrida.Completada,
+                        Mensaje = "Sólo conservación: cobertura canónica validada; sin sesiones nuevas." };
+                    btnPromoverProduccion.Enabled = false; // No existe reemplazo ni promoción T6.
+                    EstablecerEstadoOptimizacion(EstadoVisualOptimizacion.Completado, "SOLO_CONSERVACION",
+                        "Estado: Sólo conservación; horario aprobado anterior intacto.");
+                    await CargarModuloResultadosAsync(idCorrida);
+                    btnPromoverProduccion.Enabled = false;
+                    btnAprobarCorrida.Enabled = false;
+                    tabControlPrincipal.SelectedTab = tabResultados;
+                    return;
+                }
+
                 var progressReporter = new Progress<(int Generacion, double MejorFitness, int HardViolations, string Mensaje)>(p =>
                 {
+                    if (!PuedeRecibirProgresoOptimizacion(intento)) return;
                     int pct = Math.Min(100, (int)((p.Generacion / (double)corrida.GeneracionesMax) * 100));
                     progressBarAG.Value = pct;
                     lblStatusAG.Text = p.Mensaje;
@@ -2491,6 +2861,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 var trazaOpt = CrearTraza("OptimizacionAG");
                 trazaOpt.Inicio($"Poblacion={corrida.PoblacionTamano}, Generaciones={corrida.GeneracionesMax}, IdCorrida={idCorrida}");
 
+                EstablecerEstadoOptimizacion(EstadoVisualOptimizacion.Optimizando);
                 var optResult = await _generadorHorarios.EjecutarOptimizacionAsync(
                     _contextoActual,
                     corrida.PoblacionTamano,
@@ -2501,8 +2872,14 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     progressReporter,
                     _ctsEjecucion.Token);
 
+                _aceptaProgresoOptimizacion = false;
                 if (optResult.IsFailure)
                 {
+                    bool cancelada = _ctsEjecucion.IsCancellationRequested;
+                    CerrarEstadoVisualOptimizacion(cancelada);
+                    if (!cancelada) EstablecerEstadoOptimizacion(EstadoVisualOptimizacion.Error, "P08_EjecutarOptimizacionAsync");
+                    await CerrarCorridaFallidaAsync(corrida, cancelada);
+                    corridaFinalizada = true;
                     trazaOpt.Fin(false, optResult.Error);
                     traza.Fallo("P08_EjecutarOptimizacionAsync", new Exception(optResult.Error));
                     traza.Fin(false, optResult.Error);
@@ -2581,15 +2958,20 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     traza.Fallo("P08_UpdateCorridaAsync", new Exception(updCorrida.Error));
                     traza.Fin(false, updCorrida.Error);
                     LoggerHelper.Error($"[AG] Corrida #{idCorrida}: {updCorrida.Error}");
+                    CerrarEstadoVisualOptimizacion(_ctsEjecucion.IsCancellationRequested);
+                    await CerrarCorridaFallidaAsync(corrida, _ctsEjecucion.IsCancellationRequested);
+                    corridaFinalizada = true;
+                    EstablecerEstadoOptimizacion(_ctsEjecucion.IsCancellationRequested
+                            ? EstadoVisualOptimizacion.Cancelado : EstadoVisualOptimizacion.Error,
+                        "P08_UpdateCorridaAsync", "Estado: Corrida sin cabecera en ag_corrida.");
                     MessageBox.Show(this,
                         $"No se pudo consolidar la cabecera de la corrida #{idCorrida}:\n{updCorrida.Error}\n\n" +
                         "La corrida no se materializará en staging para no dejar datos huérfanos.",
                         "Corrida inconsistente", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    lblStatusAG.Text = "Estado: Corrida sin cabecera en ag_corrida.";
-                    lblStatusAG.ForeColor = Color.DarkRed;
                     return;
                 }
 
+                EstablecerEstadoOptimizacion(EstadoVisualOptimizacion.Materializando);
                 // 3. Materializar en Staging (Fase 383 / Fase 404 / Fase 587 / Fase 598)
                 bool stagingOk = true;
                 string stagingError = null;
@@ -2612,6 +2994,12 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                         trazaMat.Fin(false, matRes.Error);
                         traza.Fallo("P08_MaterializarStaging", new Exception(matRes.Error), AgCausaFallo.StagingVacio);
                         Log($"[ERROR] Fallo en staging: {matRes.Error}");
+                        CerrarEstadoVisualOptimizacion(_ctsEjecucion.IsCancellationRequested);
+                        if (!_ctsEjecucion.IsCancellationRequested)
+                            EstablecerEstadoOptimizacion(EstadoVisualOptimizacion.Error, "P08_MaterializarStaging");
+                        await CerrarCorridaFallidaAsync(corrida, _ctsEjecucion.IsCancellationRequested);
+                        corridaFinalizada = true;
+                        _ctsEjecucion.Token.ThrowIfCancellationRequested();
                         MessageBox.Show(this, $"La solución se calculó pero no se pudo materializar en staging:\n{matRes.Error}", "Fallo en Staging", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     }
                     else
@@ -2680,17 +3068,34 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     }
                     catch (Exception ex)
                     {
-                        LoggerHelper.Warning($"[AgFormGeneradorHorarios] Error al agregar planFechado en ParametrosJson: {ex.Message}");
+                        throw new InvalidOperationException("SNAPSHOT_PLAN_FECHADO_SERIALIZACION_ERROR", ex);
                     }
                 }
+                // La compuerta genes ↔ staging sigue intacta; la segunda compuerta detecta relaciones enteras omitidas.
                 bool factible = stagingOk && AgCompuertaPromocion.EsPromovible(corrida, mejor, sesiones, _contextoActual);
+                if (stagingOk)
+                {
+                    if (sesiones.IsFailure) throw new InvalidOperationException("LECTURA_STAGING_ERROR:" + sesiones.Error);
+                    var nuevas = new AgProyectorSolucionCobertura().Nuevas(_contextoActual, mejor, sesiones.Value);
+                    if (nuevas.IsFailure) throw new InvalidOperationException(nuevas.Error);
+                    var cobertura = new AgValidadorCoberturaSeleccion().Validar(_contextoActual.ManifiestoCobertura,
+                        _contextoActual.SesionesConservadas, nuevas.Value, _contextoActual.IdTerceroVacante, _contextoActual.Festivos);
+                    if (cobertura.IsFailure) throw new InvalidOperationException(cobertura.Error);
+                }
                 corrida.Estado = stagingOk ? (factible ? AgEstadoCorrida.Completada : AgEstadoCorrida.Completada) : AgEstadoCorrida.Error;
-                await _scheduleRepository.UpdateCorridaAsync(corrida, _ctsEjecucion.Token);
+                var cierreCorrida = await _scheduleRepository.UpdateCorridaAsync(corrida, _ctsEjecucion.Token);
+                if (cierreCorrida.IsFailure) throw new InvalidOperationException(cierreCorrida.Error);
+                corridaFinalizada = true;
 
-                btnPromoverProduccion.Enabled = factible;
-                lblStatusAG.Text = factible ? "Estado: Horario factible."
-                    : $"Estado: Resultado parcial. HARD={mejor?.HardViolations ?? 0}; vacantes={mejor?.Vacantes ?? 0}; sesiones vacantes={sesionesVacantes}; horas vacantes={horasVacantes:0.#}.";
-                lblStatusAG.ForeColor = factible ? Color.DarkGreen : Color.DarkOrange;
+                if (stagingOk)
+                {
+                    EstablecerEstadoOptimizacion(EstadoVisualOptimizacion.Completado,
+                        factible ? "HORARIO_FACTIBLE" : "RESULTADO_PARCIAL",
+                        factible ? "Estado: Horario factible."
+                            : $"Estado: Resultado parcial. HARD={mejor?.HardViolations ?? 0}; vacantes={mejor?.Vacantes ?? 0}; sesiones vacantes={sesionesVacantes}; horas vacantes={horasVacantes:0.#}.");
+                }
+                // T6 requiere sustitución transaccional con ratificación vigente; no habilitar promoción aquí.
+                btnPromoverProduccion.Enabled = _contextoActual.CandidatosCobertura.Count == 0 && factible;
 
                 // Fase 599: Resumen de fin de corrida
                 LoggerHelper.Resumen("FinCorridaAG",
@@ -2717,33 +3122,44 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
 
                     Log($"\n[ERROR] Corrida #{idCorrida} sin staging: {stagingError}");
                     progressBarAG.Value = 100;
-                    lblStatusAG.Text = "Estado: Finalizado con errores en staging.";
-                    lblStatusAG.ForeColor = Color.DarkRed;
+                    EstablecerEstadoOptimizacion(EstadoVisualOptimizacion.Error, "P08_MaterializarStaging",
+                        "Estado: Finalizado con errores en staging.");
                 }
 
                 // 4. Mostrar Resultados en Módulo R
                 await CargarModuloResultadosAsync(idCorrida);
-                btnPromoverProduccion.Enabled = factible;
+                btnPromoverProduccion.Enabled = _contextoActual.CandidatosCobertura.Count == 0 && factible;
                 tabControlPrincipal.SelectedTab = tabResultados;
             }
             catch (OperationCanceledException)
             {
                 traza.Fin(false, "Cancelado por el usuario");
                 Log("\n[CANCELADO] Ejecución abortada por el usuario.");
-                lblStatusAG.Text = "Estado: Cancelado por el usuario.";
-                lblStatusAG.ForeColor = Color.DarkOrange;
+                cancelacionDetectada = true;
+                CerrarEstadoVisualOptimizacion(true);
+                // Un fallo de presentación no invalida un terminal ya persistido.
             }
             catch (Exception ex)
             {
                 traza.Fallo("P08_EjecutarOptimizacionAsync", ex, AgCausaFallo.ExcepcionNoControlada);
                 traza.Fin(false, ex.Message);
                 Log($"\n[EXCEPCIÓN NO CONTROLADA] {ex.Message}");
-                lblStatusAG.Text = "Estado: Error en ejecución.";
-                lblStatusAG.ForeColor = Color.DarkRed;
+                CerrarEstadoVisualOptimizacion(_ctsEjecucion.IsCancellationRequested);
+                // Conservar corridaFinalizada si la persistencia terminal ya tuvo éxito.
             }
             finally
             {
-                _semaforoSyncDimensiones.Release();
+                _aceptaProgresoOptimizacion = false;
+                if (!corridaFinalizada)
+                {
+                    bool cancelada = cancelacionDetectada || _ctsEjecucion.IsCancellationRequested;
+                    if (!_terminalVisualOptimizacion) CerrarEstadoVisualOptimizacion(cancelada);
+                    if (idCorridaCreada > 0)
+                        await CerrarCorridaFallidaAsync(corrida, cancelada);
+                }
+                // Un único evento terminal por intento, también si nunca se insertó ag_corrida.
+                RegistrarEventoIntento("FIN", intento, idCorridaCreada);
+                if (semaforoAdquirido) _semaforoSyncDimensiones.Release();
                 treeContextoAcademico.Enabled = arbolHabilitado;
                 cmbArboles.Enabled = perfilesHabilitados;
                 btnValidarFactibilidad.Enabled = btnValidarHabilitado;
@@ -2753,6 +3169,9 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 btnSobrescribirArbol.Enabled = btnSobrescribirHabilitado;
                 btnCancelar.Enabled = false;
 
+                _ctsEjecucion.Dispose();
+                _ctsEjecucion = null;
+                // Mantener la compuerta hasta terminar también el refresco asíncrono.
                 if (idCorridaCreada > 0)
                 {
                     try
@@ -2763,6 +3182,118 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     {
                         LoggerHelper.Warning($"[AG] Error al refrescar el combo de corridas tras optimización: {ex.Message}");
                     }
+                }
+                _intentoOptimizacion = null;
+            }
+        }
+
+        private bool PuedeRecibirProgresoOptimizacion(Guid intento)
+        {
+            return _intentoOptimizacion == intento && _aceptaProgresoOptimizacion &&
+                !IsDisposed && !Disposing && IsHandleCreated;
+        }
+
+        private void CerrarEstadoVisualOptimizacion(bool cancelada)
+        {
+            // Catch/finally sólo aportan un respaldo: conservar fase y causa específica para FIN.
+            // Cada intento limpia este terminal y su motivo antes del primer await.
+            if (_terminalVisualOptimizacion) return;
+            EstablecerEstadoOptimizacion(cancelada ? EstadoVisualOptimizacion.Cancelado : EstadoVisualOptimizacion.Error,
+                cancelada ? "CANCELACION" : "FALLO_EJECUCION");
+        }
+
+        // Los helpers compartidos con diagnóstico sólo afectan a un intento de optimización vigente.
+        private void MarcarErrorPreparacion(string motivo)
+        {
+            if (!_intentoOptimizacion.HasValue || _terminalVisualOptimizacion) return;
+            if (_ctsEjecucion?.IsCancellationRequested == true)
+                CerrarEstadoVisualOptimizacion(true);
+            else
+                EstablecerEstadoOptimizacion(EstadoVisualOptimizacion.Error, motivo);
+        }
+
+        private void MarcarDecisionPreparacion()
+        {
+            if (_intentoOptimizacion.HasValue)
+                EstablecerEstadoOptimizacion(EstadoVisualOptimizacion.RequiereDecision);
+        }
+
+        private void ReanudarValidacionPreparacion()
+        {
+            if (_intentoOptimizacion.HasValue)
+                EstablecerEstadoOptimizacion(EstadoVisualOptimizacion.Validando);
+        }
+
+        private void EstablecerEstadoOptimizacion(EstadoVisualOptimizacion estado, string motivo = null, string texto = null)
+        {
+            bool terminal = estado == EstadoVisualOptimizacion.Completado || estado == EstadoVisualOptimizacion.Bloqueado ||
+                estado == EstadoVisualOptimizacion.Cancelado || estado == EstadoVisualOptimizacion.Error;
+            if (terminal)
+            {
+                if (!_terminalVisualOptimizacion) _faseFinOptimizacion = _estadoVisualOptimizacion.ToString();
+                _motivoFinOptimizacion = motivo;
+            }
+            _estadoVisualOptimizacion = estado;
+            _terminalVisualOptimizacion = terminal;
+            _aceptaProgresoOptimizacion = estado == EstadoVisualOptimizacion.Optimizando;
+            if (IsDisposed || Disposing) return;
+            if (terminal) btnPromoverProduccion.Enabled = false;
+            Color color = Color.DarkBlue;
+            switch (estado)
+            {
+                case EstadoVisualOptimizacion.Preparando: texto = texto ?? "Estado: Preparando..."; break;
+                case EstadoVisualOptimizacion.Validando: texto = texto ?? "Estado: Validando..."; break;
+                case EstadoVisualOptimizacion.RequiereDecision:
+                    texto = texto ?? "Estado: Decisión pendiente de confirmación."; color = Color.DarkOrange; break;
+                case EstadoVisualOptimizacion.Optimizando: texto = texto ?? "Estado: Optimizando..."; break;
+                case EstadoVisualOptimizacion.Materializando: texto = texto ?? "Estado: Materializando..."; break;
+                case EstadoVisualOptimizacion.Completado:
+                    texto = texto ?? "Estado: Completado.";
+                    color = motivo == "RESULTADO_PARCIAL" ? Color.DarkOrange : Color.DarkGreen; break;
+                case EstadoVisualOptimizacion.Bloqueado:
+                    texto = texto ?? "Estado: Bloqueado. Revise el diagnóstico."; color = Color.DarkOrange; break;
+                case EstadoVisualOptimizacion.Cancelado:
+                    texto = texto ?? "Estado: Cancelado por el usuario."; color = Color.DarkOrange; break;
+                case EstadoVisualOptimizacion.Error:
+                    texto = texto ?? "Estado: Error en ejecución."; color = Color.DarkRed; break;
+            }
+            lblStatusAG.Text = texto;
+            lblStatusAG.ForeColor = color;
+        }
+
+        private void RegistrarEventoIntento(string evento, Guid intento, long idCorrida)
+        {
+            // LoggerHelper es el canal durable existente (cola a archivo), no txtLogAG ni autorización T4.
+            // Sólo metadatos de control: no mensajes libres, snapshots ni datos personales.
+            LoggerHelper.Info($"[AG-INTENTO] evento={evento} intentoId={intento:D} corridaId={idCorrida} " +
+                $"fase={_faseFinOptimizacion ?? _estadoVisualOptimizacion.ToString()} " +
+                $"estado={_estadoVisualOptimizacion} motivo={_motivoFinOptimizacion ?? "NINGUNO"}");
+        }
+
+        private async Task CerrarCorridaFallidaAsync(AgCorrida corrida, bool cancelada)
+        {
+            if (corrida == null || corrida.Id <= 0) return;
+            corrida.Estado = cancelada ? AgEstadoCorrida.Cancelada : AgEstadoCorrida.Error;
+            corrida.FechaFinCorrida = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            // Independiente del token de trabajo cancelado, pero con presupuesto propio de cierre.
+            using (var ctsCierre = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+            {
+                try
+                {
+                    var cierre = await _scheduleRepository.UpdateCorridaAsync(corrida, ctsCierre.Token);
+                    if (cierre.IsFailure)
+                    {
+                        string motivo = ctsCierre.IsCancellationRequested ? "Timeout de cierre (5 s)" : "Fallo de cierre";
+                        LoggerHelper.Error($"[AG] {motivo} de la corrida #{corrida.Id} como {corrida.Estado}: {cierre.Error}");
+                    }
+                }
+                catch (OperationCanceledException ex) when (ctsCierre.IsCancellationRequested)
+                {
+                    LoggerHelper.Error($"[AG] Timeout de cierre (5 s) de la corrida #{corrida.Id} como {corrida.Estado}", ex);
+                }
+                catch (Exception ex)
+                {
+                    LoggerHelper.Error($"[AG] Excepción al cerrar la corrida #{corrida.Id} como {corrida.Estado}", ex);
                 }
             }
         }
@@ -2909,7 +3440,13 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             lblVacantes.Text = $"Vacantes: {ind.Vacantes}";
             lblVacantes.ForeColor = ind.Vacantes == 0 ? Color.DarkGreen : Color.DarkOrange;
 
-            btnPromoverProduccion.Enabled = ind.HardViolations == 0 && ind.Vacantes == 0;
+            // Regla histórica de la carga de resultados: sólo una corrida sin vacantes ni violaciones duras
+            // habilita la promoción. T5/T6 añaden que una corrida con manifiesto o decisiones de cobertura
+            // pendientes no habilita promoción desde esta ruta.
+            bool sinPendientesHistoricos = ind.Vacantes == 0 && ind.HardViolations == 0;
+            bool tieneAlcanceCobertura = _contextoActual?.ManifiestoCobertura != null
+                || (_contextoActual?.CandidatosCobertura?.Count ?? 0) > 0;
+            btnPromoverProduccion.Enabled = sinPendientesHistoricos && !tieneAlcanceCobertura;
             // Fase 1531: Habilitar recálculo de violaciones si la corrida tiene individuo persistido (cubre ruta AG y rehidratación)
             btnRecalcularViolaciones.Enabled = ind.Id > 0;
             btnAprobarCorrida.Enabled = ind.Id > 0;
@@ -2954,7 +3491,8 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 return false;
             }
 
-            if (sesionesResult.Value.Count == 0)
+            if (sesionesResult.Value.Count == 0 &&
+                !(_contextoActual?.IdCorrida == idCorrida && _contextoActual.SesionesConservadas.Count > 0))
             {
                 dgvHorariosGenerados.DataSource = null;
                 _todasLasVacantes = new List<AgVacanteGridDto>(); // Fase 847: Limpiar vacantes previas
@@ -3022,10 +3560,11 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     // Fase 461: Trazabilidad completa en grid Módulo R
                     return new
                     {
-                        IdSesionGlobal = s.Id,
+                        IdSesionGlobal = (long)s.Id,
                         IdCorrida = idCorrida,
                         IdGen = s.IdGen,
-                        IdVinculacion = s.IdVinculacion,
+                        IdVinculacion = (long)s.IdVinculacion,
+                        Origen = "NUEVA",
                         Fecha = s.FechaSesion.HasValue ? s.FechaSesion.Value.ToString("dd/MM/yyyy") : "S/F",
                         Dia = s.DiaSemanaTexto,
                         Horario = s.HorarioSesion,
@@ -3047,6 +3586,40 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     };
                 }).ToList();
 
+                // La unión es sólo una vista; no inserta ni duplica sesiones conservadas en staging.
+                if (_contextoActual?.IdCorrida == idCorrida && _contextoActual.SesionesConservadas != null)
+                {
+                    foreach (var fija in _contextoActual.SesionesConservadas)
+                    {
+                        var clave = fija.Clave;
+                        var aulaFija = _contextoActual.Aulas?.FirstOrDefault(a => a.Id == clave.IdAula);
+                        var docenteFijo = _contextoActual.Docentes?.FirstOrDefault(d => d.Id == fija.IdTercero);
+                        lista.Add(new
+                        {
+                            IdSesionGlobal = fija.Id, IdCorrida = idCorrida, IdGen = 0L,
+                            IdVinculacion = 0L, Origen = "CONSERVADA",
+                            Fecha = fija.Fecha.ToString("dd/MM/yyyy"), Dia = fija.Fecha.ToString("dddd"),
+                            Horario = fija.Inicio.ToString(@"hh\:mm") + " A " + fija.Fin.ToString(@"hh\:mm"),
+                            Horas = fija.Horas,
+                            Periodo = _periodos.FirstOrDefault(p => p.Id == clave.IdPeriodo)?.Nombre ?? clave.IdPeriodo.ToString(),
+                            Sede = _sedes.FirstOrDefault(sd => sd.Id == clave.IdSede)?.Ciudad ?? clave.IdSede.ToString(),
+                            Programa = _programas.FirstOrDefault(pr => pr.Id == clave.IdPrograma)?.NombrePrograma ?? clave.IdPrograma.ToString(),
+                            Semestre = clave.Semestre, Grupo = clave.Grupo,
+                            Modalidad = ModalidadTutoriaCatalog.AEtiqueta(clave.Modalidad),
+                            Asignatura = _contextoActual.Asignaturas?.FirstOrDefault(a => a.Id == clave.IdAsignatura)?.Nombre ?? clave.IdAsignatura.ToString(),
+                            Docente = docenteFijo?.Nombre ?? $"Docente #{fija.IdTercero}",
+                            Aula = aulaFija?.Codigo ?? $"Aula #{clave.IdAula}", AulaRef = aulaFija?.AulaRef ?? "",
+                            Viatica = "No", Vacante = "No", Motivo = "", Candidatos = 0
+                        });
+                    }
+                    var m = _contextoActual.ManifiestoCobertura;
+                    if (m != null)
+                        Log($"[COBERTURA] aulas={m.Relaciones.Select(r => r.Clave.IdAula).Distinct().Count()} " +
+                            $"relaciones={m.Relaciones.Count} conservadas={_contextoActual.SesionesConservadas.Select(s => s.Clave.IdAula).Distinct().Count()} " +
+                            $"replanificadas={_contextoActual.CandidatosCobertura.Count(c => c.Desde != c.Hacia)} " +
+                            $"esperadas={m.Relaciones.Sum(r => r.HorasEfectivas):0.##}h cubiertas={lista.Sum(x => x.Horas):0.##}h " +
+                            $"vacantes={sesionesResult.Value.Count(s => s.EsVacante == 1)}");
+                }
                 dgvHorariosGenerados.DataSource = lista;
 
                 // Fase 322: Poblar el Panel de Vacantes
@@ -3745,6 +4318,26 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
 
         private async Task PromoverAProduccionAsync()
         {
+            // T6: una corrida con manifiesto requiere reemplazo transaccional todavía no implementado.
+            // Comprobar la cabecera persistida también tras reiniciar la aplicación, antes de cualquier escritura.
+            long idParaPromover = _ultimoResultado?.IdCorrida > 0 ? _ultimoResultado.IdCorrida : _idCorridaCargada;
+            if (idParaPromover > 0)
+            {
+                var alcancePersistido = await _scheduleRepository.GetCorridaByIdAsync(idParaPromover, CancellationToken.None);
+                if (alcancePersistido.IsFailure || alcancePersistido.Value == null)
+                {
+                    MessageBox.Show(this, "No se pudo comprobar el alcance persistido de la corrida.",
+                        "Promoción bloqueada", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+                if ((alcancePersistido.Value.ParametrosJson ?? string.Empty).Contains("\"manifiestoCobertura\""))
+                {
+                    btnPromoverProduccion.Enabled = false;
+                    MessageBox.Show(this, "Promoción bloqueada: falta reemplazo transaccional T6 de la corrida con manifiesto.",
+                        "Promoción bloqueada", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+            }
             if ((_ultimoResultado == null || _ultimoResultado.MejorIndividuo == null) && _idCorridaCargada > 0)
             {
                 await CargarModuloResultadosAsync(_idCorridaCargada);
@@ -4384,6 +4977,8 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 }
 
                 var listaItems = res.Value.ToList();
+                // T6: origen visible sin duplicar sesiones ni escribir staging.
+                foreach (var item in listaItems) item.OrigenSesion = "NUEVA";
 
                 using (var db = _connectionFactory())
                 using (var f = new FormVerVinculaciones(listaItems, db, ExcelDnaUtil.Application, modo))

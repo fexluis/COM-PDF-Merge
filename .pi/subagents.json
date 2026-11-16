@@ -1,0 +1,23 @@
+{
+  "model_profiles": {
+    "build-verifier": {
+      "model": "openai-codex/gpt-6.1-sol",
+      "effort": "high"
+    },
+    "implementer": {
+      "model": "openai-codex/gpt-6.1-sol"
+    },
+    "integrator": {
+      "model": "openai-codex/gpt-6.1-sol"
+    },
+    "plan-reviewer": {
+      "model": "openrouter/deepseek/deepseek-v4.1-flash-1017"
+    },
+    "task-reviewer": {
+      "model": "openrouter/deepseek/deepseek-v4.1-flash-1017"
+    },
+    "tdd-red-writer": {
+      "model": "openai-codex/gpt-6.1-sol"
+    }
+  }
+}

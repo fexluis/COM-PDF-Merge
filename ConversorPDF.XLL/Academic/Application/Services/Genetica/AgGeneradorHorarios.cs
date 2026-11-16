@@ -247,6 +247,15 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             if (aulasAprobadas.Count == 0)
                 return Result.Success();
 
+            if (contexto.ManifiestoCobertura != null)
+            {
+                if (contexto.SesionesConservadas == null || contexto.CandidatosCobertura.Count != aulasAprobadas.Count ||
+                    aulasAprobadas.Any(a => !contexto.CandidatosCobertura.Any(c => c.IdAula == a.Id &&
+                        (c.Desde == c.Hacia || contexto.PuedeGenerarAula(a.Id)))))
+                    return Result.Failure("I5_AULA_APROBADA_SIN_RATIFICACION");
+                return Result.Success(); // La cobertura final del manifiesto se comprueba después de materializar.
+            }
+
             if (contexto.Ventana == null)
                 return Result.Failure("I1_VENTANA_NO_DEFINIDA");
 

@@ -1,9 +1,10 @@
 ---
 name: build-verifier
 description: Executes scripts/verify.ps1 to produce official TRX reports and summary.md evidence. Verifies regressions against the baseline and decides RED/GREEN state transitions.
+model: openai-codex/gpt-6.1-sol
+thinking: high
 subagent: true
 mainAgent: false
-model: flash
 commandExecutionPolicy: auto
 tools: [view_file, run_command]
 skills: [development-process]

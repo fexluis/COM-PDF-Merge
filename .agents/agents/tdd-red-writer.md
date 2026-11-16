@@ -1,9 +1,9 @@
 ---
 name: tdd-red-writer
 description: Writes unit and integration tests strictly under ConversorPDF.Tests for a task, ensuring the tests fail for the exact expected reason (RED phase) before implementation begins.
+model: openai-codex/gpt-6.1-sol
 subagent: true
 mainAgent: false
-model: inherit
 commandExecutionPolicy: sandbox
 tools: [view_file, grep_search, replace_file_content, run_command]
 skills: [development-process]

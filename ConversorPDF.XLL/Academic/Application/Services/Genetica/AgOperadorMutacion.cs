@@ -24,12 +24,12 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             if (individuo == null) throw new ArgumentNullException(nameof(individuo));
             if (contexto == null) throw new ArgumentNullException(nameof(contexto));
 
-            var aulasValidas = contexto.Aulas.Where(a => a.Estado == AgEstadoAula.Disponible).ToList();
+            var aulasValidas = contexto.Aulas.Where(a => contexto.PuedeGenerarAula(a.Id)).ToList();
             var bloquesValidos = contexto.Bloques.Where(b => b.Activo == 1).ToList();
 
             // Fase 508: Docente/vacante coherente por ClaveGrupo (no por gen)
             var grupos = individuo.Genes
-                .Where(g => g.Estado != AgEstadoGen.Fijado)
+                .Where(g => g.Estado != AgEstadoGen.Fijado && (contexto.ManifiestoCobertura == null || contexto.PuedeGenerarAula(g.IdAula)))
                 .GroupBy(g => string.IsNullOrWhiteSpace(g.ClaveGrupo) ? $"{g.IdAsignatura}|{g.IdAula}|{g.Grupo}" : g.ClaveGrupo)
                 .ToList();
 
@@ -86,13 +86,17 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 
             foreach (var gen in individuo.Genes)
             {
-                if (gen.Estado == AgEstadoGen.Fijado) continue;
+                if (gen.Estado == AgEstadoGen.Fijado || (contexto.ManifiestoCobertura != null && !contexto.PuedeGenerarAula(gen.IdAula))) continue;
                 if (gen.EsFijoTemporal) continue;   // F658: congela aula y bloque; docente ya mutó en bucle L28-73
 
                 // Mutación de Aula — restringida al mismo grupo (Fase 456)
                 if (_random.NextDouble() < tasaMutacion && aulasValidas.Count > 0)
                 {
-                    if (contexto.IdAulaCorrida > 0)
+                    if (contexto.ManifiestoCobertura != null)
+                    {
+                        // La identidad de relación/aula está sellada por el manifiesto.
+                    }
+                    else if (contexto.IdAulaCorrida > 0)
                     {
                         gen.IdAula = contexto.IdAulaCorrida;
                     }

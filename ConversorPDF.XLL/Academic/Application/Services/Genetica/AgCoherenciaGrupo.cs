@@ -124,7 +124,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             if (ind?.Genes == null) return;
             var genesOcupacion = ocupacion ?? ind.Genes;
 
-            foreach (var grp in ind.Genes.GroupBy(g => string.IsNullOrWhiteSpace(g.ClaveGrupo)
+            foreach (var grp in ind.Genes.Where(g => ctx?.ManifiestoCobertura == null || ctx.PuedeGenerarAula(g.IdAula))
+                .GroupBy(g => string.IsNullOrWhiteSpace(g.ClaveGrupo)
                          ? $"{g.IdAsignatura}|{g.IdAula}|{g.Grupo}" : g.ClaveGrupo))
             {
                 var genes = grp.ToList();

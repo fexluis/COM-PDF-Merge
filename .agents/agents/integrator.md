@@ -1,9 +1,9 @@
 ---
 name: integrator
 description: Sole custodian of global hot paths (Lease L0) in ConversorPDF. Responsible for csproj Compile items, database migrations, composition root wiring, and pre-implementation type skeletons.
+model: openai-codex/gpt-6.1-sol
 subagent: true
 mainAgent: false
-model: pro
 commandExecutionPolicy: auto
 tools: [view_file, grep_search, replace_file_content, run_command]
 skills: [development-process]

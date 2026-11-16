@@ -1,9 +1,9 @@
 ---
 name: plan-reviewer
 description: Reviews swarm implementation plans for ConversorPDF. Detects missing dependencies, ordering issues, lease overlaps, and unverified criteria before execution begins.
+model: openrouter/deepseek/deepseek-v4.1-flash-1017
 subagent: true
 mainAgent: false
-model: pro
 commandExecutionPolicy: off
 tools: [view_file, grep_search]
 ---

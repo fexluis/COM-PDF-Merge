@@ -173,6 +173,16 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                             var mapaVincId = new Dictionary<int, int>(); // StagingId -> ProdId
                             var mapaSesionId = new Dictionary<int, int>(); // StagingId -> ProdId
 
+                            // T6: revalidar DENTRO de la transacción que el alcance con aulas aprobadas sigue
+                            // autorizado y que la corrida no cambió desde la preparación. Cualquier desvío revierte.
+                            var revalidacion = await RevalidarAlcanceAprobadoEnTransaccionAsync(
+                                db, trans, corridaRes.Value, contexto, ct);
+                            if (revalidacion.IsFailure)
+                            {
+                                trans.Rollback();
+                                return Result.Failure<AgPromocion>(revalidacion.Error);
+                            }
+
                             // 1. Insertar o Actualizar Vinculaciones en Producción (Fase 120: Idempotencia)
                             foreach (var sv in stagingVincs)
                             {
@@ -374,6 +384,64 @@ SELECT last_insert_rowid();";
                 return fallback;
             }
             return val?.ToString();
+        }
+
+        /// <summary>
+        /// Revalida dentro de la transacción de promoción que el alcance con aulas aprobadas conserva los
+        /// parámetros sellados, el permiso vigente y la ratificación persistida. Un fallo revierte sin escribir.
+        /// No sustituye la compuerta de cobertura: sólo impide reemplazar producción sin autorización vigente.
+        /// </summary>
+        private static async Task<Result> RevalidarAlcanceAprobadoEnTransaccionAsync(
+            IDbConnection db, IDbTransaction trans, AgCorrida corrida, AgContexto contexto,
+            CancellationToken ct)
+        {
+            var manifiesto = contexto?.ManifiestoCobertura;
+            if (manifiesto == null) return Result.Success(); // sin manifiesto se conserva el flujo anterior
+
+            var aulasAprobadas = new HashSet<int>(contexto.Aulas
+                .Where(a => a.Estado == AgEstadoAula.Aprobado && manifiesto.Relaciones.Any(r => r.Clave.IdAula == a.Id))
+                .Select(a => a.Id));
+            if (aulasAprobadas.Count == 0) return Result.Success();
+
+            // 1. La corrida no debe haber cambiado sus parámetros sellados desde la preparación.
+            string parametrosPersistidos = await db.ExecuteScalarAsync<string>(new CommandDefinition(
+                "SELECT parametros_json FROM ag_corrida WHERE id = @Id LIMIT 1;",
+                new { Id = corrida.Id }, trans, cancellationToken: ct));
+            if (string.IsNullOrWhiteSpace(parametrosPersistidos) || parametrosPersistidos != corrida.ParametrosJson)
+                return Result.Failure("PARAMETROS_CORRIDA_CAMBIADOS: la corrida no coincide con la preparación autorizada.");
+
+            // 2. Permiso vigente del actor real, nunca el texto del llamador.
+            string actor = App.DEFAULT_USER;
+            long habilitado = await db.ExecuteScalarAsync<long>(new CommandDefinition(@"
+SELECT COUNT(1) FROM usuarios u JOIN permisos p ON p.perfil = u.perfil
+WHERE u.nombreusuario = @Actor COLLATE NOCASE AND IFNULL(u.activo,1) = 1
+  AND p.opcionespermitidas LIKE '%AgHorariosAcademicos%';",
+                new { Actor = actor }, trans, cancellationToken: ct));
+            if (habilitado <= 0)
+                return Result.Failure("PERMISO_REVOCADO: el actor ya no puede autorizar la replanificación de aulas aprobadas.");
+
+            // 3. Cada aula aprobada del alcance debe tener ratificación persistida para la revisión actual.
+            foreach (int idAula in aulasAprobadas.OrderBy(x => x))
+            {
+                if (!contexto.PuedeGenerarAula(idAula))
+                    return Result.Failure($"REPLANIFICACION_NO_AUTORIZADA: aula {idAula} sin decisión vigente en el alcance.");
+                long ratificada = await db.ExecuteScalarAsync<long>(new CommandDefinition(@"
+SELECT COUNT(1) FROM ag_candidato_plan_aprobado
+WHERE id_aula = @IdAula AND huella_manifiesto = @Manifiesto AND huella_origen = @Origen
+  AND inicio = @Inicio AND fin = @Fin;",
+                    new
+                    {
+                        IdAula = idAula,
+                        Manifiesto = manifiesto.Huella,
+                        Origen = contexto.PlanAprobadoSnapshot?.HuellaOrigen,
+                        Inicio = manifiesto.Inicio,
+                        Fin = manifiesto.Fin
+                    }, trans, cancellationToken: ct));
+                if (ratificada <= 0)
+                    return Result.Failure($"RATIFICACION_NO_PERSISTIDA: aula {idAula} sin consentimiento auditado para la revisión actual.");
+            }
+
+            return Result.Success();
         }
 
         /// <summary>

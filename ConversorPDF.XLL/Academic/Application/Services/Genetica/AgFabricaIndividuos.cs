@@ -70,7 +70,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 Subunidad = contexto.Subunidad
             };
 
-            var aulasValidas = contexto.Aulas.Where(a => a.Estado == AgEstadoAula.Disponible).ToList();
+            var aulasValidas = contexto.Aulas.Where(a => contexto.PuedeGenerarAula(a.Id)).ToList();
             var bloquesValidos = contexto.Bloques.Where(b => b.Activo == 1).ToList();
 
             int fallbackAulaId = contexto.IdAulaCorrida > 0
@@ -112,7 +112,9 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             // Fase 952 / Fase 953: Preservar carriles concurrentes usando AgClaveCohorte y tupla (Cohorte, Jornada, DiasVentana)
             // Fase 1003: Deduplicar por Id de aula para conservar carriles concurrentes de la misma cohorte
             // Fase 1033: DesdeAula evita colisión de registro de Excel-DNA 1.8.0
-            var gruposAula = contexto.IdAulaCorrida > 0
+            var gruposAula = contexto.ManifiestoCobertura != null
+                ? aulasValidas.GroupBy(a => a.Id).Select(g => g.First()).ToList()
+                : contexto.IdAulaCorrida > 0
                 ? aulasValidas.Where(a => a.Id == contexto.IdAulaCorrida).ToList()
                 : (aulasValidas.Count > 0
                     // Fase 1003: deduplicar por Id de aula conserva carriles concurrentes de la misma cohorte
@@ -142,7 +144,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 foreach (var asig in contexto.Asignaturas)
                 {
                     // 1. Filtrar por asignación explícita del aula si ag_aula_asignatura contiene registros para esta aula
-                    if (asigsValidasAula != null && !asigsValidasAula.Contains(asig.Id))
+                    if ((contexto.ManifiestoCobertura != null && (aula == null || !contexto.ManifiestoCobertura.Relaciones.Any(r => r.Clave.IdAula == aula.Id && r.Clave.IdAsignatura == asig.Id)))
+                        || (asigsValidasAula != null && !asigsValidasAula.Contains(asig.Id)))
                     {
                         continue;
                     }

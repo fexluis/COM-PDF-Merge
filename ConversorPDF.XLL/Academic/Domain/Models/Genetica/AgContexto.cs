@@ -12,6 +12,60 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
     /// </summary>
     public class AgContexto
     {
+        /// <summary>Manifiesto explícito opcional de preparación; null conserva los flujos anteriores.
+        /// No habilita conservación, generación ni autorización por sí mismo.</summary>
+        public AgManifiestoCobertura ManifiestoCobertura { get; set; }
+
+        /// <summary>Admite genes únicamente para relaciones seleccionadas y replanificación ratificada;
+        /// sin manifiesto preserva el filtro histórico Disponible.</summary>
+        public bool PuedeGenerarAula(int idAula)
+        {
+            var aula = Aulas?.SingleOrDefault(a => a.Id == idAula);
+            if (aula == null) return false;
+            if (ManifiestoCobertura == null) return aula.Estado == ConversorPDF.XLL.Academic.Domain.Enums.AgEstadoAula.Disponible;
+            if (!ManifiestoCobertura.Relaciones.Any(r => r.Clave.IdAula == idAula)) return false;
+            if (aula.Estado == ConversorPDF.XLL.Academic.Domain.Enums.AgEstadoAula.Disponible) return true;
+            var c = CandidatosCobertura.SingleOrDefault(x => x.IdAula == idAula);
+            return aula.Estado == ConversorPDF.XLL.Academic.Domain.Enums.AgEstadoAula.Aprobado
+                && c != null && c.Desde != c.Hacia
+                && c.HuellaManifiesto == ManifiestoCobertura.Huella
+                && c.HuellaOrigen == PlanAprobadoSnapshot?.HuellaOrigen
+                && c.Inicio == ManifiestoCobertura.Inicio && c.Fin == ManifiestoCobertura.Fin;
+        }
+
+        /// <summary>Proyección fija de sesiones conservadas, nunca genes ni filas de staging.</summary>
+        public IReadOnlyCollection<AgSesionCobertura> SesionesConservadas { get; set; } =
+            Array.Empty<AgSesionCobertura>();
+
+        /// <summary>Origen canónico capturado antes de cambios; null si no hay aulas aprobadas.</summary>
+        public AgPlanAprobadoSnapshot PlanAprobadoSnapshot { get; set; }
+
+        /// <summary>Decisión candidata aislada; no modifica ag_aula ni concede generación/promoción T5/T6.</summary>
+        public AgCandidatoPlanAprobado CandidatoRatificacion { get; set; }
+
+        /// <summary>Decisiones publicadas por aula de la corrida, sin sesiones productivas mutables.</summary>
+        public IReadOnlyCollection<AgCandidatoPlanAprobado> CandidatosCobertura { get; private set; } =
+            Array.Empty<AgCandidatoPlanAprobado>();
+
+        /// <summary>Descarta decisiones de una preparación anterior al reconstruir el contexto.</summary>
+        public void ReiniciarCandidatosCobertura()
+        {
+            CandidatosCobertura = Array.Empty<AgCandidatoPlanAprobado>();
+            CandidatoRatificacion = null;
+        }
+
+        /// <summary>Registra una decisión única por aula; no sustituye la prueba de publicación del confirmador.</summary>
+        public void RegistrarCandidatoCobertura(AgCandidatoPlanAprobado candidato)
+        {
+            if (candidato == null || CandidatosCobertura.Any(c => c.IdAula == candidato.IdAula))
+                throw new InvalidOperationException("CANDIDATO_AULA_DUPLICADO");
+            CandidatosCobertura = CandidatosCobertura.Concat(new[] { candidato }).ToList().AsReadOnly();
+            CandidatoRatificacion = candidato;
+        }
+
+        /// <summary>Diagnóstico ligado al manifiesto; no concede ratificación ni autorización T4.</summary>
+        public AgValidacionPlanAprobado ValidacionPlanAprobado { get; set; }
+
         public int IdPeriodo { get; set; }
         public int IdPrograma { get; set; }
         public int IdSede { get; set; }
@@ -58,6 +112,10 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
         public Dictionary<int, List<TerceroAsignatura>> PoolPorAsignatura { get; set; }
         public Dictionary<int, List<(DateTime Fecha, FranjaHoraria Franja)>> OcupacionExterna { get; private set; }
         private HashSet<DateTime> _diasFestivos;
+        private IReadOnlyCollection<(long IdSesion, int IdTercero, DateTime Fecha, FranjaHoraria Franja)> _ocupacionesCanonicas =
+            Array.Empty<(long, int, DateTime, FranjaHoraria)>();
+        private IReadOnlyCollection<(int IdTercero, DateTime Fecha, FranjaHoraria Franja)> _ocupacionesStaging =
+            Array.Empty<(int, DateTime, FranjaHoraria)>();
 
         public AgContexto()
         {
@@ -256,6 +314,24 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
                 }
                 l.Add((o.Fecha.Date, o.Franja));
             }
+        }
+
+        /// <summary>Captura ocupaciones externas con identidad canónica sin duplicar sesiones de staging.</summary>
+        public void CargarOcupacionesIdentificadas(
+            IEnumerable<(long IdSesion, int IdTercero, DateTime Fecha, FranjaHoraria Franja)> canonicas,
+            IEnumerable<(int IdTercero, DateTime Fecha, FranjaHoraria Franja)> staging)
+        {
+            _ocupacionesCanonicas = canonicas.ToList().AsReadOnly();
+            _ocupacionesStaging = staging.ToList().AsReadOnly();
+            ExcluirOcupacionesCanonicas(Array.Empty<long>());
+        }
+
+        /// <summary>Excluye sólo sesiones canónicas seleccionadas; las restantes siguen bloqueando al docente.</summary>
+        public void ExcluirOcupacionesCanonicas(IEnumerable<long> idsSeleccionados)
+        {
+            var ids = new HashSet<long>(idsSeleccionados);
+            CargarOcupacionExterna(_ocupacionesCanonicas.Where(o => !ids.Contains(o.IdSesion))
+                .Select(o => (o.IdTercero, o.Fecha, o.Franja)).Concat(_ocupacionesStaging));
         }
 
         public bool TerceroOcupado(int idTercero, DateTime fecha, FranjaHoraria franja)

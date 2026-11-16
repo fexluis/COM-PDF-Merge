@@ -51,7 +51,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 {
                     foreach (var gen in hijo.Genes)
                     {
-                        if (gen.Estado == AgEstadoGen.Fijado) continue;
+                        if (gen.Estado == AgEstadoGen.Fijado || (contexto.ManifiestoCobertura != null && !contexto.PuedeGenerarAula(gen.IdAula))) continue;
 
                         if (gen.EsVacante == 1 || gen.IdBloqueHorario <= 0)
                         {
@@ -108,10 +108,12 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             for (int i = punto1; i <= punto2; i++)
             {
                 var dst = hijo.Genes[i];
-                if (dst.Estado == AgEstadoGen.Fijado) continue;
+                if (dst.Estado == AgEstadoGen.Fijado || (contexto?.ManifiestoCobertura != null && !contexto.PuedeGenerarAula(dst.IdAula))) continue;
                 if (dst.EsFijoTemporal) continue;   // F659: conserva bloque/día/patrón decididos
 
                 var src = donante.Genes[i];
+                if (contexto?.ManifiestoCobertura != null && (src.IdAula != dst.IdAula
+                    || !contexto.ManifiestoCobertura.Relaciones.Any(r => r.Clave.IdAula == dst.IdAula && r.Clave.IdAsignatura == src.IdAsignatura))) continue;
 
                 // Fase 541 & Fase 664: no heredar asignatura de otro semestre ni de otro programa
                 Asignatura asigSrc = null;

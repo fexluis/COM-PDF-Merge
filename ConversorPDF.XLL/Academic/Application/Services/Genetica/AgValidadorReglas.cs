@@ -523,6 +523,23 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     return;
                 }
                 var ocupaciones = proyeccion.Value;
+                // Conservadas no son genes: ocupación fija con intervalo real, sin autocruces productivos.
+                foreach (var o in ocupaciones)
+                foreach (var fija in contexto.SesionesConservadas.Where(s => s.Fecha.Date == o.Fecha &&
+                    s.Inicio < o.Fin && o.Inicio < s.Fin))
+                {
+                    if (fija.Clave.IdAula == o.Gen.IdAula ||
+                        (AgCalendarioConflictos.DocenteReal(o.Gen, contexto) && fija.IdTercero == o.Gen.IdTercero))
+                    {
+                        individuo.Violaciones.Add(new AgViolacion(
+                            fija.Clave.IdAula == o.Gen.IdAula ? AgReglaViolacion.R2_SuperposicionAula
+                                : AgReglaViolacion.R1_SuperposicionDocente,
+                            esDura: true,
+                            mensaje: $"Cruce con sesión CONSERVADA #{fija.Id} el {o.Fecha:yyyy-MM-dd} ({fija.Inicio}-{fija.Fin}).",
+                            idGen: o.Gen.Id));
+                        hardCount++;
+                    }
+                }
                 var serializador = new JavaScriptSerializer();
 
                 void Registrar(AgReglaViolacion regla, IEnumerable<AgCalendarioConflictos.Ocupacion> implicadas, string mensaje)

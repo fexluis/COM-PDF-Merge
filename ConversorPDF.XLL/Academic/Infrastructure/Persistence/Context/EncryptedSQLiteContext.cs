@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Security;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Data.SQLite;
@@ -357,10 +358,56 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context
             ReEncryptAndPersistStatic(plainDatabaseBytes, _encryptedFilePath, _password, progress);
         }
 
+        /// <summary>Identidad observable del vault; no es una exclusión entre procesos.</summary>
+        internal sealed class VaultIdentity
+        {
+            internal readonly long Length;
+            internal readonly DateTime LastWriteUtc;
+            internal readonly string Hash;
+            internal VaultIdentity(long length, DateTime lastWriteUtc, string hash)
+            { Length = length; LastWriteUtc = lastWriteUtc; Hash = hash; }
+            internal bool SameAs(VaultIdentity other) => other != null && Length == other.Length
+                && LastWriteUtc == other.LastWriteUtc && Hash == other.Hash;
+        }
+
+        /// <summary>Descifra una lectura aislada del vault, sin usar el temporal compartido.</summary>
+        internal byte[] ReadPublishedBytes() => DatabaseEncryptionEngine.Decrypt(File.ReadAllBytes(_encryptedFilePath), _password);
+
+        /// <summary>Captura tamaño, fecha y SHA-256; rechaza una lectura que cambie durante la captura.</summary>
+        internal static VaultIdentity CaptureVaultIdentity(string path)
+        {
+            if (!File.Exists(path)) return null;
+            var before = new FileInfo(path);
+            long length = before.Length;
+            DateTime modified = before.LastWriteTimeUtc;
+            string hash;
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
+            using (var sha = SHA256.Create())
+                hash = Convert.ToBase64String(sha.ComputeHash(stream));
+            var after = new FileInfo(path);
+            if (!after.Exists || length != after.Length || modified != after.LastWriteTimeUtc)
+                throw new IOException("VAULT_IDENTIDAD_INESTABLE");
+            return new VaultIdentity(length, modified, hash);
+        }
+
+        /// <summary>Publica sólo si el vault conserva la identidad del snapshot; confirma bytes cifrados publicados.
+        /// La comparación no elimina la ventana TOCTOU entre procesos externos.</summary>
+        internal static bool ReEncryptAndPersistIfUnchanged(byte[] bytes, string path, SecureString password,
+            VaultIdentity expected, CancellationToken ct)
+        {
+            bool verified = false;
+            ReEncryptAndPersistStatic(bytes, path, password, null, expected, ct, () => verified = true);
+            return verified;
+        }
+
         /// <summary>
         /// Versión estática para re-encriptar sin necesidad de instanciar un contexto Dummy.
         /// </summary>
         public static void ReEncryptAndPersistStatic(byte[] plainDatabaseBytes, string vaultPath, SecureString password, IProgress<string> progress = null)
+            => ReEncryptAndPersistStatic(plainDatabaseBytes, vaultPath, password, progress, null, CancellationToken.None, null);
+
+        private static void ReEncryptAndPersistStatic(byte[] plainDatabaseBytes, string vaultPath, SecureString password,
+            IProgress<string> progress, VaultIdentity expected, CancellationToken ct, Action verified)
         {
             if (plainDatabaseBytes == null || plainDatabaseBytes.Length == 0) 
                 throw new ArgumentException("Los bytes de la base de datos no pueden ser nulos o vacíos", nameof(plainDatabaseBytes));
@@ -404,6 +451,13 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context
                 LoggerHelper.Info(string.Format(System.Globalization.CultureInfo.InvariantCulture, "[PERF] [EncryptedSQLiteContext] Escritura de archivo maestro: {0}ms.", swIO.ElapsedMilliseconds));
 
                 string bakPath = vaultPath + ".bak";
+                ct.ThrowIfCancellationRequested();
+                if (verified != null)
+                {
+                    var current = CaptureVaultIdentity(vaultPath);
+                    if (expected == null ? current != null : !expected.SameAs(current))
+                        throw new IOException("VAULT_IDENTIDAD_CAMBIO");
+                }
 
                 if (File.Exists(vaultPath))
                 {
@@ -411,15 +465,22 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context
                     {
                         // File.Replace es atómica a nivel de NTFS: el destino nunca desaparece
                         // y el backup se crea simultáneamente. Previene pérdida de datos en crasheos.
-                        File.Replace(newEncPath, vaultPath, bakPath, true);
+                        File.Replace(newEncPath, vaultPath, File.Exists(bakPath) ? null : bakPath, true);
                     }
                     catch (Exception exReplace)
                     {
                         LoggerHelper.Warning($"[EncryptedSQLiteContext] File.Replace falló (posible FAT32/SMB/Lock parcial). Iniciando fallback manual. Error: {exReplace.Message}");
-                        // Fallback manual para sistemas de archivos que no soporten File.Replace (FAT32, SMB, etc.)
-                        if (File.Exists(bakPath)) File.Delete(bakPath);
+                        // Un .bak previo no se sacrifica; sin reemplazo atómico no se publica en ese caso.
+                        if (File.Exists(bakPath)) throw new IOException("VAULT_BACKUP_PREVIO_PRESERVADO", exReplace);
+                        // Si Replace falló después de crear el backup, tampoco se arriesga su pérdida.
+                        if (!File.Exists(vaultPath)) throw new IOException("VAULT_REPLACE_ESTADO_INCIERTO", exReplace);
                         File.Move(vaultPath, bakPath);
-                        File.Move(newEncPath, vaultPath);
+                        try { File.Move(newEncPath, vaultPath); }
+                        catch
+                        {
+                            File.Move(bakPath, vaultPath); // Restaurar antes de propagar el fallo.
+                            throw;
+                        }
                     }
                 }
                 else
@@ -428,6 +489,15 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context
                     File.Move(newEncPath, vaultPath);
                 }
                 
+                if (verified != null)
+                {
+                    var published = CaptureVaultIdentity(vaultPath);
+                    string hash;
+                    using (var sha = SHA256.Create()) hash = Convert.ToBase64String(sha.ComputeHash(newEncryptedBlob));
+                    if (published == null || published.Length != newEncryptedBlob.Length || published.Hash != hash)
+                        throw new IOException("VAULT_POST_PUBLICACION_NO_COINCIDE");
+                    verified();
+                }
                 swTotal.Stop();
                 LoggerHelper.Info($"[PERF] [EncryptedSQLiteContext] Re-encriptación RAM completada en {swTotal.ElapsedMilliseconds}ms.");
                 progress?.Report("Guardado exitoso.");

@@ -178,6 +178,46 @@ namespace ConversorPDF.Tests.Academic.Infrastructure.Persistence
             decisiones.Should().BeEmpty();
         }
 
+        [Fact]
+        public void CopiaSimulada_DisponibleAislaModelosYPatrones_YConservaSuResultado()
+        {
+            var c = CrearContextoNominal(4, "MAR-VIE", 20);
+            var sut = new AgEscaladorRanuraAula(() => null);
+            var antes = sut.Evaluar(c)[0];
+            var copia = AgEscaladorRanuraAula.ClonarContextoParaSimulacion(c);
+            copia.ConstruirIndices();
+            copia.Aulas[0].DiasVentana = "LUN-VIE";
+            copia.Ventana.FechaFin = copia.Ventana.FechaFin.AddDays(1);
+            copia.Asignaturas[0].Horas = 4;
+            copia.Bloques[0].Activo = 0;
+            copia.AulaAsignaturas[0].DiasPatron = "1";
+            c.Aulas[0].DiasVentana.Should().Be("MAR-VIE");
+            c.AulaAsignaturas[0].DiasPatron.Should().BeEmpty();
+            c.Asignaturas[0].Horas.Should().Be(80);
+            c.Bloques[0].Activo.Should().Be(1);
+            var despues = sut.Evaluar(c)[0];
+            despues.Hacia.Should().Be(antes.Hacia);
+            despues.CapacidadAntes.Should().Be(antes.CapacidadAntes);
+            despues.CapacidadDespues.Should().Be(antes.CapacidadDespues);
+            despues.DemandaPendiente.Should().Be(antes.DemandaPendiente);
+        }
+
+        [Fact]
+        public void DecisionPersistible_ExcluyeAprobadasInclusoConSeleccionAutorizadaEnMemoria()
+        {
+            var c = CrearContextoNominal(1, "MAR-VIE", 5);
+            c.Aulas[0].Estado = AgEstadoAula.Aprobado;
+            var sut = new AgEscaladorRanuraAula(() => throw new InvalidOperationException("No debe abrir SQL"));
+            sut.Evaluar(c).Should().BeEmpty();
+            AgEscaladorRanuraAula.EsAulaElegible(c.Aulas[0]).Should().BeFalse();
+            AgEscaladorRanuraAula.PuedeAplicarPropuesta(c.Aulas[0]).Should().BeFalse();
+            var seleccion = sut.ValidarSelecciones(c, new[] { new AgReclasificacionPatron {
+                IdAula = 1, AulaRef = "A101", Subunidad = "", IdAsignatura = 101,
+                OrigenAnterior = "LEGADO", OrigenPropuesto = "AUTOMATICO", DiasPatronAnterior = "2,3", Autorizado = true } });
+            seleccion.EsValido.Should().BeFalse();
+            seleccion.Motivo.Should().Be("AULA_NO_ELEGIBLE");
+        }
+
         private static AgContexto CrearContextoNominal(
             int w,
             string diasVentana,
