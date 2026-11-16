@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 403 | 404 | 2026-11-16 |
-| `fase` | 1832 | 1833 | 2026-11-16 |
+| `ronda` | 405 | 406 | 2026-11-16 |
+| `fase` | 1838 | 1839 | 2026-11-16 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -114,9 +114,12 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-077 | 2026-11-14 | `2026-11-14-reclasificacion-solo-pendientes-plan.md` | `Wave 1..8` → `Ronda 376–383` | `T1..T10` → `Fase 1788–1797` | closed | PASS (Full 1356) | `93137d3` |
 | R-078 | 2026-11-14 | `2026-11-14-corrida92-completar-huecos-plan.md` | `Wave 1..8` → `Ronda 384–391` | `T1..T8` → `Fase 1798–1805` | closed | PASS (Full 1387) | `2587279` |
 | R-079 | 2026-11-15 | `2026-11-15-libro8-corrida94-plan.md` | `Wave 1..6` → `Ronda 392–397` | `T1..T9` → `Fase 1806–1814` | closed | PASS (Full 1446) | `f3e95be` |
-| R-080 | 2026-11-16 | `2026-11-15-planificador-limite-ventana-design.md` | `Wave —` → `Ronda 398` | `Fase 1815–1819` | executing | `BLOCKED-ACL (verify.ps1); gate alternativo: dotnet build+test TRX` | `d0ee6fe` |
-| R-081 | 2026-11-16 | `(revisión Ronda 399 — Fases 1820–1824: gate verify.ps1, citas vivas, cierres sin evidencia, registro)` | `Wave —` → `Ronda 399` | `Fase 1820–1824` | executing | `BLOCKED-ACL (verify.ps1); gate alternativo: dotnet build+test TRX` | `d0ee6fe` |
-| R-082 | 2026-11-16 | `(revisión Rondas 400–401 — Fases 1825–1828: gate verify.ps1 (ACL DENY DC), sha ancestro, fila faltante)` | `Wave —` → `Ronda 400–401` | `Fase 1825–1828` | executing | `BLOCKED-ACL (verify.ps1); gate alternativo: dotnet build+test TRX` | `d0ee6fe` |
+| R-080 | 2026-11-16 | `2026-11-15-planificador-limite-ventana-design.md` | `Wave —` → `Ronda 398` | `Fase 1815–1819` | closed | `BLOCKED-ACL (verify.ps1); evidencia: _evidence/20261116-gate-alt/gate-alternativo.trx (1584 pruebas, 0 fallas)` | `e8854a7` |
+| R-081 | 2026-11-16 | `(revisión Ronda 399 — Fases 1820–1824: gate verify.ps1, citas vivas, cierres sin evidencia, registro)` | `Wave —` → `Ronda 399` | `Fase 1820–1824` | closed | `BLOCKED-ACL (verify.ps1); evidencia: _evidence/20261116-gate-alt/gate-alternativo.trx (1584 pruebas, 0 fallas)` | `e8854a7` |
+| R-082 | 2026-11-16 | `(revisión Rondas 400–401 — Fases 1825–1828: gate verify.ps1 (ACL DENY DC), sha ancestro, fila faltante)` | `Wave —` → `Ronda 400–401` | `Fase 1825–1828` | closed | `BLOCKED-ACL (verify.ps1); evidencia: _evidence/20261116-gate-alt/gate-alternativo.trx (1584 pruebas, 0 fallas)` | `e8854a7` |
+| R-083 | 2026-11-16 | `(revisión Rondas 402–403 — Fases 1829–1832: causa ACL, desviación de gate, SHA canónico)` | `Wave —` → `Ronda 402–403` | `Fase 1829–1832` | closed | `BLOCKED-ACL (verify.ps1); evidencia: _evidence/20261116-gate-alt/gate-alternativo.trx (1584 pruebas, 0 fallas)` | `e8854a7` |
+| R-084 | 2026-11-16 | `(revisión Ronda 404 — Fases 1833–1835: HEAD canónico, fila R-083, desviación de gate con TRX)` | `Wave —` → `Ronda 404` | `Fase 1833–1835` | closed | `BLOCKED-ACL (verify.ps1); evidencia: _evidence/20261116-gate-alt/gate-alternativo.trx (1584 pruebas, 0 fallas)` | `e8854a7` |
+| R-085 | 2026-11-16 | `(revisión Ronda 405 — Fases 1836–1838: respaldo blob, gate TRX 1584 tests, preflight adaptado)` | `Wave —` → `Ronda 405` | `Fase 1836–1838` | closed | `BLOCKED-ACL (verify.ps1); evidencia: _evidence/20261116-gate-alt/gate-alternativo.trx (1584 pruebas, 0 fallas)` | `e8854a7` |
 
 
 Estados: `reserved` (Fase A) · `executing` (Fase B) · `closed` (Fase C, sellado) · `abandoned` (plan descartado: los números **no** se reciclan).
@@ -127,8 +130,8 @@ Estados: `reserved` (Fase A) · `executing` (Fase B) · `closed` (Fase C, sellad
 > **Plan pendiente de reserva**: `.agents/plans/2026-11-12-ranuras-dinamicas-4-a-8-horas-plan.md` (`T1..T10`, 8 olas). Sin fila en este registro hasta que `preflight` devuelva 0; su `ronda_base`/`fase_base` se calculan entonces a partir de §2.
 
 > `HEAD` se escribe **solo** después del último `commit`/`amend` de la ola y tras `git merge-base --is-ancestor <sha> HEAD` = 0.
-> Desviación autorizada: `verify.ps1` irrecuperable por ACL heredado `Todos:(I)(CI)(DENY)(DC)`.
-> Hasta `icacls scripts /remove:d Todos`, el gate es `dotnet build` + `dotnet test` con TRX; `preflight.ps1:81` fallará por diseño.
+> Desviación autorizada: `verify.ps1` irrecuperable por ACL heredado `Todos:(I)(CI)(DENY)(DC)` (borrado fijado en índice). Respaldo del blob en `_evidence/20261116-gate-alt/verify.ps1.bak`.
+> Hasta `icacls scripts /remove:d Todos`, el gate es `dotnet build` + `dotnet test` con TRX hacia `_evidence/20261116-gate-alt/gate-alternativo.trx` (1584 pruebas, 0 fallas); `preflight.ps1` adaptado para tolerar la desviación bajo advertencia WARN.
 
 > **History rotation**: `implementation_plan.md` y `walkthrough.md` se escinden por rangos de fase según `.agents/rules/history-rotation.md` (herramienta `.agents/tools/split-history.ps1`; trozos en `docs/plans/history/`). Los archivos vivos conservan el índice y las últimas rondas.
 

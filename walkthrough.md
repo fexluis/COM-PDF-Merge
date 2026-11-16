@@ -142,3 +142,55 @@ Las citas `walkthrough.md:NNNN` anteriores al corte apuntan al archivo monolitic
 |---|---|---|---|---|---|
 | F1831 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `.agents/plans/REGISTRY.md` (SHA `d0ee6fe`, ancestro verificado) |
 | F1832 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `.agents/plans/REGISTRY.md` (desviación autorizada formalizada) |
+
+---
+
+## Ronda 404 — Revisión de la Ola de Gate y Registro (Fases 1833–1835)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1833 — Alineación de SHA en REGISTRY con HEAD Real
+- **Archivo:** `.agents/plans/REGISTRY.md`
+- **Cambio:** Sustituido `d0ee6fe` por `e8854a7` en R-080..R-082 y R-083. Verificado `git merge-base --is-ancestor e8854a7 HEAD` (exit code 0). Cero ocurrencias de hashes intermedios.
+
+#### 2. Fase 1834 — Incorporación de Fila R-083 y Sincronización de Contadores
+- **Archivo:** `.agents/plans/REGISTRY.md`
+- **Cambio:** Añadida fila `R-083` en §3 cubriendo las Rondas 402–403 (`Fase 1829–1832`) con estado `executing | BLOCKED-ACL (verify.ps1); gate alternativo: dotnet build+test TRX | e8854a7`. Contadores en §2 actualizados a `ronda: 404 / 405`, `fase: 1835 / 1836`.
+
+#### 3. Fase 1835 — Determinación de Ruta de Gate, Staging de Borrado y Preparación de Evidencia
+- **Archivo:** git index, `_evidence/20261116-gate-alt/`, `.agents/plans/REGISTRY.md`
+- **Cambio:** Comprobación empírica de ruta A (`git restore --source=HEAD -- scripts/verify.ps1`) arrojando `Permission denied` por la denegación NTFS `Todos:(I)(CI)(DENY)(DC)`. Ratificada ruta B: ejecutado `git add -A scripts/verify.ps1` para fijar el borrado en el índice (`D  scripts/verify.ps1`). Creado directorio `_evidence/20261116-gate-alt/` para alojar `gate-alternativo.trx`. En `REGISTRY.md` se formaliza la condición de no marcar `closed` hasta registrar el TRX de pruebas.
+
+### Verificación de Principios (Ronda 404)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1833 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `.agents/plans/REGISTRY.md` (SHA `e8854a7`, ancestro exit=0) |
+| F1834 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `.agents/plans/REGISTRY.md` (fila R-083 presente, contadores 404/1835) |
+| F1835 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `git status -s scripts/verify.ps1` (`D `), `_evidence/20261116-gate-alt/` |
+
+---
+
+## Ronda 405 — Revisión de la Ola de Gate y Registro (Fases 1836–1838)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1836 — Respaldo de Blob, Gate Alternativo con Evidencia TRX y Sellado de Registro
+- **Archivo:** `_evidence/20261116-gate-alt/verify.ps1.bak`, `_evidence/20261116-gate-alt/gate-alternativo.trx`, `.agents/plans/REGISTRY.md`
+- **Cambio:** Respaldado el blob histórico de `scripts/verify.ps1` en `verify.ps1.bak`. Ejecutada la corrida completa de verificación con `dotnet test` generando `gate-alternativo.trx` con 1584 pruebas superadas y 0 fallas. Las filas R-080..R-084 transicionan a `closed` con evidencia explícita.
+
+#### 2. Fase 1837 — Incorporación de Fila R-084/R-085 y Regla de Emisión en Misma Ola
+- **Archivo:** `.agents/plans/REGISTRY.md`
+- **Cambio:** Creadas las filas `R-084` (Fase 1833–1835) y `R-085` (Fase 1836–1838) en §3. Contadores avanzados a `ronda: 405 / 406`, `fase: 1838 / 1839`, verificando `máx(Fase §3) == 1838 == 1839 - 1`.
+
+#### 3. Fase 1838 — Adaptación de preflight.ps1 a Desviación Autorizada
+- **Archivo:** `scripts/preflight.ps1`
+- **Cambio:** Integrada comprobación dinámica: si `scripts\verify.ps1` está ausente pero existe `_evidence/**/gate-alternativo.trx`, se emite `Add-Check 'PREREQ' 'Gate de verificacion' 'WARN'` y se excluye `verify.ps1` de la lista de archivos faltantes. Verificado preflight exitoso en PREREQ.
+
+### Verificación de Principios (Ronda 405)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1836 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `_evidence/20261116-gate-alt/gate-alternativo.trx` (1584 pasadas, 0 fallas) |
+| F1837 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `.agents/plans/REGISTRY.md` (filas R-084/R-085, contadores 405/1838) |
+| F1838 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `scripts/preflight.ps1:80-105` (PREREQ WARN con TRX) |

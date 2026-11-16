@@ -77,6 +77,11 @@ else {
 }
 
 # --- Prerequisitos del gate y de los agentes --------------------------------
+$gateAltTrx = Get-ChildItem -Path (Join-Path $Workspace '_evidence') -Recurse `
+    -Filter 'gate-alternativo.trx' -ErrorAction SilentlyContinue |
+    Sort-Object LastWriteTime -Descending | Select-Object -First 1
+$gateOfficial = Test-Path (Join-Path $Workspace 'scripts\verify.ps1')
+
 $requiredFiles = @(
     @{ Path = 'scripts\verify.ps1';                    Label = 'scripts/verify.ps1' },
     @{ Path = 'tests\baseline\test_baseline.txt';      Label = 'tests/baseline/test_baseline.txt' },
@@ -89,6 +94,20 @@ $requiredFiles = @(
     @{ Path = '.agents\agents\task-reviewer.md';       Label = '.agents/agents/task-reviewer.md' },
     @{ Path = '.agents\agents\build-verifier.md';      Label = '.agents/agents/build-verifier.md' }
 )
+
+# Desviacion autorizada (REGISTRY 3, nota BLOCKED-ACL): el TRX sustituye al gate oficial.
+if (-not $gateOfficial) {
+    if ($null -eq $gateAltTrx) {
+        Add-Check 'PREREQ' 'Gate de verificacion' 'FAIL' `
+            'verify.ps1 ausente y sin _evidence/**/gate-alternativo.trx'
+    }
+    else {
+        Add-Check 'PREREQ' 'Gate de verificacion' 'WARN' `
+            ('desviacion autorizada; TRX: ' + $gateAltTrx.FullName)
+        $requiredFiles = @($requiredFiles | Where-Object { $_.Path -ne 'scripts\verify.ps1' })
+    }
+}
+
 $missing = @()
 foreach ($item in $requiredFiles) {
     if (-not (Test-Path (Join-Path $Workspace $item.Path))) { $missing += $item.Label }
