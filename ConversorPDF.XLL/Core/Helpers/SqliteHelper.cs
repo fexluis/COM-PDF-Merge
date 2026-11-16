@@ -71,7 +71,7 @@ namespace ConversorPDF.XLL.Core.Helpers
             }
         }
 
-        public static void SetTestVaultPath(string path) 
+        public static void SetTestVaultPath(string path)
         {
             lock (_initLock)
             {
@@ -227,7 +227,7 @@ namespace ConversorPDF.XLL.Core.Helpers
 
                     _sharedContext = context;
                     migrationOccurred = WasAnySchemaMigrated();
-                    
+
                     // Fase 46: Activar bandera ANTES de liberar lock para cerrar ventana
                     // donde un hilo entra por el early-return justo después de soltar el lock.
                     if (migrationOccurred)
@@ -262,7 +262,7 @@ namespace ConversorPDF.XLL.Core.Helpers
                         _sharedContext?.Dispose();
                         _sharedContext = new EncryptedSQLiteContext(DbPathEnc, GetSecurePassword());
                         result = _sharedContext;
-                        
+
                         System.Threading.Interlocked.Exchange(ref _regeneratingCrdts, 0);
                     }
                 }
@@ -378,7 +378,8 @@ namespace ConversorPDF.XLL.Core.Helpers
                 new MigrationV77_AddPernoctaAgVinculaciones(),        // FASE 1279: columna isPernoctaUltimoDia en vinculaciones y ag_vinculaciones
                 new MigrationV78_AddAgFiltroSeleccion(),              // FASE 1315 / 1390: ag_filtro_seleccion
                 new MigrationV79_NormalizeUsuariosIds(),              // Normalización determinista de usuarios y deduplicación
-                new MigrationV80_AddOrigenPatronAgAulaAsignatura()    // FASE 1735: columna origen_patron en ag_aula_asignatura
+                new MigrationV80_AddOrigenPatronAgAulaAsignatura(),    // FASE 1735: columna origen_patron en ag_aula_asignatura
+                new MigrationV81_AddAgGenFechasGen()                  // FASE 1815: columna fechas_gen en ag_gen
             };
             return new SchemaMigrator(migrations, new VaultPersister(), new LoggerAdapter());
         }
@@ -389,7 +390,7 @@ namespace ConversorPDF.XLL.Core.Helpers
             // de ejecutar las migraciones (especialmente V24 que requiere crsql_as_crr).
             // Esto es vital para entornos de test donde ExcelAddIn.AutoOpen() no se ejecuta.
             ConversorPDF.XLL.Core.Sync.CrSqliteLoader.Initialize();
-            
+
             _schemaMigrator.Value.EnsureSchemaUpToDate(context);
         }
 
@@ -406,7 +407,7 @@ namespace ConversorPDF.XLL.Core.Helpers
         internal static void ApplyBaseSchemaAndSeeds(IDbConnection connection, IDbTransaction transaction, string subunidadDestino = null)
         {
             LoggerHelper.Info("[SqliteHelper] Ejecutando siembra de esquema base y datos semilla (AcademicSchema, vinculaciones, usuarios)...");
-            
+
             // FASE 76 FIX: Garantizar que si las tablas legadas (v2) existían, contengan las columnas necesarias antes de ejecutar scripts de esquema y datos
             int tercerosExists = connection.QueryFirstOrDefault<int>(
                 "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='terceros';", transaction: transaction);
@@ -1004,7 +1005,7 @@ LEFT JOIN periodos   pe ON v.idperiodo   = pe.idperiodo;";
             // Siempre retornamos un contexto nuevo para que los bloques using() en las
             // rutinas de sincronización no dispongan el _sharedContext.
             var context = new EncryptedSQLiteContext(path, GetSecurePassword());
-            
+
             // Fase 36: Asegurar migraciones en vaults secundarios solo si no se migraron en esta sesión
             if (File.Exists(path) && !WasSchemaMigratedForPath(path))
             {

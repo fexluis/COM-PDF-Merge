@@ -847,6 +847,53 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     idxAsig++;
                 }
             }
+
+            // Fase 1815: Conectar selección y aplicación grupal de disponibilidad docente en siembra
+            if (contexto.PoolPorAsignatura != null && individuo.Genes != null && individuo.Genes.Count > 0)
+            {
+                var gruposSiembra = individuo.Genes
+                    .Where(g => g.EsVacante == 0 && g.IdTercero > 0 && (contexto.IdTerceroVacante <= 0 || g.IdTercero != contexto.IdTerceroVacante))
+                    .GroupBy(g => string.IsNullOrWhiteSpace(g.ClaveGrupo) ? $"{g.IdAsignatura}|{g.IdAula}|{g.Grupo}" : g.ClaveGrupo)
+                    .ToList();
+
+                foreach (var grp in gruposSiembra)
+                {
+                    var genesGrp = grp.ToList();
+                    var primerGen = genesGrp[0];
+                    int docActual = primerGen.IdTercero;
+
+                    if (!AgAsignadorTercero.DisponibleGrupo(docActual, primerGen, individuo, contexto))
+                    {
+                        if (contexto.PoolPorAsignatura.TryGetValue(primerGen.IdAsignatura, out var poolAsig) && poolAsig != null)
+                        {
+                            var candidatos = poolAsig
+                                .Where(p => p.Activo == 1 && (contexto.IdTerceroVacante <= 0 || p.IdTercero != contexto.IdTerceroVacante))
+                                .OrderBy(p => p.Prioridad)
+                                .ThenBy(p => p.VecesAsignada)
+                                .ThenBy(p => p.IdTercero)
+                                .ToList();
+
+                            foreach (var cand in candidatos)
+                            {
+                                if (cand.IdTercero == docActual) continue;
+                                if (AgAsignadorTercero.DisponibleGrupo(cand.IdTercero, primerGen, individuo, contexto))
+                                {
+                                    foreach (var g in genesGrp)
+                                    {
+                                        g.IdTercero = cand.IdTercero;
+                                        g.EsVacante = 0;
+                                        g.MotivoVacante = string.Empty;
+                                    }
+                                    break;
+                                }
+                            }
+                            // Si ningún candidato alterno resulta compatible con el grupo y sus fechas,
+                            // se conserva la asignación existente sin forzar vacante indebidamente.
+                        }
+                    }
+                }
+            }
+
             // Fase 481 & Fase 515: Trazabilidad de incidencias de semestre descartadas (deduplicada en AgDiagnosticoTraza)
             if (trazaEfectiva != null)
             {

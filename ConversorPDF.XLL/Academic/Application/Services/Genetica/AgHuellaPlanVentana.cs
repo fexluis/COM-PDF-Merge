@@ -14,7 +14,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
     {
         internal static string Calcular(AgContexto contexto, AgAula aula,
             string ventana = null, IReadOnlyCollection<int> patronesLiberados = null,
-            IReadOnlyCollection<AgReclasificacionPatron> reclasificaciones = null)
+            IReadOnlyCollection<AgReclasificacionPatron> reclasificaciones = null,
+            IEnumerable<Dictionary<string, object>> planFechado = null)
         {
             var partes = new List<string> { "plan-ventana-v3", Entidad(contexto.Ventana),
                 Entidad(aula, new Dictionary<string, object> { { "DiasVentana", ventana ?? aula.DiasVentana } }) };
@@ -57,6 +58,24 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     fecha = fecha.AddDays(1);
                 }
             }
+
+            if (planFechado != null)
+            {
+                foreach (var pf in planFechado)
+                {
+                    if (pf == null) continue;
+                    long idGen = pf.ContainsKey("idGen") ? Convert.ToInt64(pf["idGen"]) : 0;
+                    int idAsig = pf.ContainsKey("idAsignatura") ? Convert.ToInt32(pf["idAsignatura"]) : 0;
+                    int idAula = pf.ContainsKey("idAula") ? Convert.ToInt32(pf["idAula"]) : 0;
+                    int idBloque = pf.ContainsKey("idBloqueHorario") ? Convert.ToInt32(pf["idBloqueHorario"]) : 0;
+                    var fechasList = pf.ContainsKey("fechas") ? pf["fechas"] as System.Collections.IEnumerable : null;
+                    var fechasStr = fechasList != null
+                        ? string.Join(",", fechasList.Cast<object>().Select(x => x?.ToString()).Where(s => !string.IsNullOrEmpty(s)).OrderBy(s => s, StringComparer.Ordinal))
+                        : string.Empty;
+                    partes.Add(string.Format(CultureInfo.InvariantCulture, "plan:{0}:{1}:{2}:{3}:{4}", idGen, idAsig, idAula, idBloque, fechasStr));
+                }
+            }
+
             return Hash(partes);
         }
 

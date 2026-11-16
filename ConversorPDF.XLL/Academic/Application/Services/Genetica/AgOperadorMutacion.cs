@@ -40,7 +40,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 int vacCanon = genes[0].EsVacante;
                 string motCanon = genes[0].MotivoVacante ?? string.Empty;
 
-                // Fase 519: solo la elección de docente depende de la tasa; la coherencia NO
+                // Fase 519, 533 & 1815: Selección y aplicación grupal con verificación de disponibilidad fechada.
+                // Si ningún candidato alterno resulta compatible con el grupo y sus fechas, se conserva la asignación existente.
                 if (_random.NextDouble() < tasaMutacion
                     && vacCanon == 0
                     && contexto.PoolPorAsignatura.TryGetValue(genes[0].IdAsignatura, out var poolAsig))
@@ -50,14 +51,23 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         .ToList();
                     if (habilitados.Count > 0)
                     {
-                        // Fase 533: priorizar docente con menor carga histórica
                         var orden = habilitados
                             .OrderBy(p => p.VecesAsignada)
                             .ThenBy(p => p.IdTercero)
                             .ToList();
-                        docCanon = orden[0].IdTercero;
-                        vacCanon = 0;
-                        motCanon = string.Empty;
+
+                        foreach (var cand in orden)
+                        {
+                            if (cand.IdTercero == docCanon) continue;
+                            if (AgAsignadorTercero.DisponibleGrupo(cand.IdTercero, genes[0], individuo, contexto))
+                            {
+                                docCanon = cand.IdTercero;
+                                vacCanon = 0;
+                                motCanon = string.Empty;
+                                break;
+                            }
+                        }
+                        // Si ningún candidato alterno resulta compatible, se conserva docCanon previo
                     }
                 }
                 else if (vacCanon == 1 && contexto.IdTerceroVacante > 0)
@@ -65,7 +75,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     docCanon = contexto.IdTerceroVacante;
                 }
 
-                // Fase 519: sellar TODOS los genes del ClaveGrupo (incondicional)
+                // Fase 519 & 1815: sellar TODOS los genes del ClaveGrupo (incondicional)
                 foreach (var g in genes)
                 {
                     g.IdTercero = docCanon;

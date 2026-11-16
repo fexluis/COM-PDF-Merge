@@ -194,7 +194,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             var itemImprimirViatico = new ToolStripMenuItem("Imprimir Viático", null, (s, e) => ImprimirViaticoIndividual());
             var itemPernocta = new ToolStripMenuItem("Pernocta Último Día", null, async (s, e) => await AlternarPernoctaUltimoDiaAsync());
             itemPernocta.CheckOnClick = false;
-            
+
             var sepPool = new ToolStripSeparator();
             var itemHabilitarPool = new ToolStripMenuItem("Habilitar esta combinación en el Pool", null, async (s, e) => await HabilitarEnPoolAsync());
             var itemSyncSemestre = new ToolStripMenuItem("Sincronizar pool del semestre", null, async (s, e) => await SincronizarPoolSemestreAsync());
@@ -234,7 +234,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
                         itemHabilitarPool.Visible = true;
                         itemSyncSemestre.Visible = true;
                         itemVerPoolDocente.Visible = true;
-                        
+
                         // Solo mostrar las opciones de salvedades de viabilidad en los nodos hoja (sesiones individuales)
                         if (e.Node.Nodes.Count == 0 && _estadoSesiones.TryGetValue(sesion.IdSesion, out var estado))
                         {
@@ -247,7 +247,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
                                 itemDesmarcar.Visible = true;
                             }
                         }
-                        
+
                         _contextMenu.Show(treeVinculaciones, e.Location);
                     }
                     else if (e.Node.Tag is ViaticoBloque bloque)
@@ -454,7 +454,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
                     {
                         // Actualizar la lista en memoria
                         var nuevasSesiones = _dbConnection.Query<SesionListItem>(
-                            $"SELECT * FROM {_modo.VistaSesionesDetalle} WHERE IdVinculacion = @IdVinculacion", 
+                            $"SELECT * FROM {_modo.VistaSesionesDetalle} WHERE IdVinculacion = @IdVinculacion",
                             new { IdVinculacion = sesion.IdVinculacion }).ToList();
 
                         _items.RemoveAll(x => x.IdVinculacion == sesion.IdVinculacion);
@@ -587,6 +587,31 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             while (conn is ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context.NonDisposableDbConnection ndc)
                 conn = ndc.Unwrap();
             return conn as System.Data.SQLite.SQLiteConnection;
+        }
+
+        /// <summary>
+        /// Parsea de forma robusta y tipada los intervalos de horario (ej: "14:00 A 18:00", "08:00-12:00").
+        /// </summary>
+        private static bool TryParseIntervalo(string texto, out TimeSpan ini, out TimeSpan fin)
+        {
+            ini = TimeSpan.Zero;
+            fin = TimeSpan.Zero;
+            if (string.IsNullOrWhiteSpace(texto)) return false;
+            string[] seps = new string[] { " A ", " a ", " - ", "-" };
+            foreach (var sep in seps)
+            {
+                int idx = texto.IndexOf(sep, StringComparison.OrdinalIgnoreCase);
+                if (idx > 0)
+                {
+                    string s1 = texto.Substring(0, idx).Trim();
+                    string s2 = texto.Substring(idx + sep.Length).Trim();
+                    if (TimeSpan.TryParse(s1, out ini) && TimeSpan.TryParse(s2, out fin))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
         private void PersistirCambiosAlVault()
@@ -917,28 +942,146 @@ ORDER BY v.es_dura DESC, v.regla, v.id;";
                         _totalViolacionesHard++;
                     }
 
-                    List<SesionListItem> sesionesAsociadas = null;
+                    var idsGenes = new HashSet<int>();
                     if (idGen.HasValue && idGen.Value > 0)
                     {
-                        sesionesAsociadas = _items.Where(s => s.IdGen == idGen.Value).ToList();
+                        idsGenes.Add((int)idGen.Value);
+                    }
 
-                        if (sesionesAsociadas.Count == 0)
+                    DateTime? fechaFiltro = null;
+                    var intervalosFiltro = new List<(TimeSpan Inicio, TimeSpan Fin)>();
+
+                    if (!string.IsNullOrWhiteSpace(detalleJson))
+                    {
+                        try
+                        {
+                            var serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+                            var det = serializer.DeserializeObject(detalleJson) as Dictionary<string, object>;
+                            if (det != null)
+                            {
+                                if (det.TryGetValue("idGenes", out var valIdGenes) && valIdGenes != null)
+                                {
+                                    var arr = valIdGenes as object[] ?? (valIdGenes as System.Collections.IEnumerable)?.Cast<object>().ToArray();
+                                    if (arr != null)
+                                    {
+                                        foreach (var item in arr)
+                                        {
+                                            if (int.TryParse(item?.ToString(), out int gId) && gId > 0)
+                                            {
+                                                idsGenes.Add(gId);
+                                            }
+                                        }
+                                    }
+                                }
+
+                                if (det.TryGetValue("fecha", out var valFecha) && valFecha != null)
+                                {
+                                    if (DateTime.TryParse(valFecha.ToString(), out DateTime fParsed))
+                                    {
+                                        fechaFiltro = fParsed.Date;
+                                    }
+                                }
+
+                                if (det.TryGetValue("intervalos", out var valIntervalos) && valIntervalos != null)
+                                {
+                                    var arrInt = valIntervalos as object[] ?? (valIntervalos as System.Collections.IEnumerable)?.Cast<object>().ToArray();
+                                    if (arrInt != null)
+                                    {
+                                        foreach (var elem in arrInt)
+                                        {
+                                            if (elem is Dictionary<string, object> dictInt)
+                                            {
+                                                if (dictInt.TryGetValue("inicio", out var ini) && ini != null &&
+                                                    dictInt.TryGetValue("fin", out var fin) && fin != null)
+                                                {
+                                                    if (TimeSpan.TryParse(ini.ToString(), out TimeSpan tIni) &&
+                                                        TimeSpan.TryParse(fin.ToString(), out TimeSpan tFin))
+                                                    {
+                                                        intervalosFiltro.Add((tIni, tFin));
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        catch
+                        {
+                            // DetalleJson no parseable o sin campos esperados
+                        }
+                    }
+
+                    List<SesionListItem> sesionesAsociadas = null;
+                    if (idsGenes.Count > 0)
+                    {
+                        var candidatas = _items.Where(s => idsGenes.Contains(s.IdGen)).ToList();
+
+                        if (candidatas.Count == 0)
                         {
                             try
                             {
                                 var idsSesionDb = (await conn.QueryAsync<int>(
-                                    "SELECT id FROM ag_sesiones WHERE idgen = @IdGen;",
-                                    new { IdGen = idGen.Value })).ToList();
+                                    "SELECT id FROM ag_sesiones WHERE idgen IN @IdsGenes;",
+                                    new { IdsGenes = idsGenes.ToList() })).ToList();
 
                                 if (idsSesionDb.Count > 0)
                                 {
-                                    sesionesAsociadas = _items.Where(s => idsSesionDb.Contains(s.IdSesion)).ToList();
+                                    candidatas = _items.Where(s => idsSesionDb.Contains(s.IdSesion)).ToList();
                                 }
                             }
                             catch
                             {
                                 // Si ag_sesiones no existe o no tiene registros
                             }
+                        }
+
+                        // Fase 1815: Asociar ambos genes únicamente en la fecha e intervalo tipados afectados.
+                        // La ausencia de coincidencia exacta se clasifica como violación global, evitando falsos positivos en el resto del semestre.
+                        if (fechaFiltro.HasValue)
+                        {
+                            var porFecha = candidatas.Where(s => s.FechaSesion.HasValue && s.FechaSesion.Value.Date == fechaFiltro.Value).ToList();
+                            if (porFecha.Count > 0)
+                            {
+                                if (intervalosFiltro.Count > 0)
+                                {
+                                    var porIntervalo = porFecha.Where(s =>
+                                    {
+                                        if (TryParseIntervalo(s.HorarioSesion, out var iniSes, out var finSes))
+                                        {
+                                            return intervalosFiltro.Any(inter => iniSes < inter.Fin && finSes > inter.Inicio);
+                                        }
+                                        return false;
+                                    }).ToList();
+
+                                    sesionesAsociadas = porIntervalo.Count > 0 ? porIntervalo : null;
+                                }
+                                else
+                                {
+                                    sesionesAsociadas = porFecha;
+                                }
+                            }
+                            else
+                            {
+                                sesionesAsociadas = null;
+                            }
+                        }
+                        else if (intervalosFiltro.Count > 0)
+                        {
+                            var porIntervalo = candidatas.Where(s =>
+                            {
+                                if (TryParseIntervalo(s.HorarioSesion, out var iniSes, out var finSes))
+                                {
+                                    return intervalosFiltro.Any(inter => iniSes < inter.Fin && finSes > inter.Inicio);
+                                }
+                                return false;
+                            }).ToList();
+
+                            sesionesAsociadas = porIntervalo.Count > 0 ? porIntervalo : null;
+                        }
+                        else
+                        {
+                            sesionesAsociadas = candidatas.Count > 0 ? candidatas : null;
                         }
                     }
 
@@ -1332,7 +1475,7 @@ ORDER BY v.es_dura DESC, v.regla, v.id;";
             string fecha = sesion.FechaSesion.HasValue ? sesion.FechaSesion.Value.ToString("dd/MM/yyyy") : "S/F";
             string diaSemana = (sesion.DiaSemana?.ToUpper() ?? "S/D").PadRight(9);
             bool esPlataforma = ModalidadTutoriaCatalog.EsPlataforma(sesion.Modalidad);
-            
+
             // Construir el texto base de la sesión
             string textoSesion = $"   • {fecha} | {sesion.Horas}h | {diaSemana} | {sesion.HorarioSesion}";
 
@@ -1480,7 +1623,7 @@ ORDER BY v.es_dura DESC, v.regla, v.id;";
                 using (var formCdp = new FormCdpToPDF())
                 {
                     var result = formCdp.ShowDialog(this);
-                    
+
                     if (result == DialogResult.OK)
                     {
                         var bloques = new List<ViaticoBloque>();
@@ -1671,18 +1814,18 @@ ORDER BY v.es_dura DESC, v.regla, v.id;";
             }
 
             var exporter = new ConversorPDF.XLL.Academic.Infrastructure.Excel.ViaticosIndividualExporter();
-            
+
             try
             {
                 Cursor = Cursors.WaitCursor;
                 using (var progress = new ConversorPDF.XLL.UI.ProgressManager("Exportando viáticos a PDF...", bloques.Count))
                 {
-                    int procesados = exporter.Exportar(_excelApp, bloques, fullCfg, _cacheTerceros, new Action<int, int>((actual, total) => 
+                    int procesados = exporter.Exportar(_excelApp, bloques, fullCfg, _cacheTerceros, new Action<int, int>((actual, total) =>
                     {
                         progress.ReportProgress(actual);
                     }));
                     MessageBox.Show($"Exportación finalizada.\n\nSe procesaron {procesados} viáticos.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    
+
                     try
                     {
                         System.Diagnostics.Process.Start("explorer.exe", fullCfg.CarpetaDestino);

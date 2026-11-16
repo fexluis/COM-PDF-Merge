@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ConversorPDF.XLL.Academic.Domain.Enums;
 
 namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
@@ -66,6 +67,33 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
         /// Fechas válidas específicas asignadas a este gen por el planificador semanal (Fase 414).
         /// </summary>
         public List<DateTime> FechasGen { get; set; } = new List<DateTime>();
+
+        /// <summary>
+        /// Cadena serializada de fechas ("yyyy-MM-dd,yyyy-MM-dd") para persistencia y recuperación relacional en ag_gen.fechas_gen.
+        /// </summary>
+        public string FechasGenStr
+        {
+            get => (FechasGen != null && FechasGen.Count > 0)
+                ? string.Join(",", FechasGen.Select(d => d.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)))
+                : string.Empty;
+            set
+            {
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    FechasGen = value
+                        .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(s => DateTime.TryParse(s.Trim(), System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var dt) ? (DateTime?)dt.Date : null)
+                        .Where(d => d.HasValue)
+                        .Select(d => d.Value)
+                        .OrderBy(d => d)
+                        .ToList();
+                }
+                else
+                {
+                    FechasGen = new List<DateTime>();
+                }
+            }
+        }
 
         public AgGen()
         {

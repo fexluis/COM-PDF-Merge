@@ -34,9 +34,23 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             Id = 7,
             IdCorrida = 44,
             Estado = AgEstadoIndividuo.Factible,
-            Genes = new List<AgGen> { new AgGen { Id = 1, IdAsignatura = 10, IdTercero = 20, IdAula = 30 } },
+            Genes = new List<AgGen> { new AgGen { Id = 1, IdAsignatura = 10, IdTercero = 20, IdAula = 30, HorasGen = 4.0 } },
             Violaciones = new List<AgViolacion>()
         };
+
+        private static void SetupStaging(Mock<IAgScheduleRepository> mockRepo, long idCorrida = 44, long idGen = 1, double horas = 4.0)
+        {
+            mockRepo.Setup(r => r.GetSesionesStagingAsync(idCorrida, It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(Result.Success((IReadOnlyCollection<AgSesion>)new List<AgSesion>
+                    {
+                        new AgSesion
+                        {
+                            IdGen = idGen,
+                            Horas = horas,
+                            FechaSesion = new System.DateTime(2026, 3, 1)
+                        }
+                    }));
+        }
 
         [Fact]
         public async Task RecalcularAsync_SinContexto_DevuelveFallo()
@@ -75,6 +89,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
                     .ReturnsAsync(Result.Success(new AgCorrida { Id = 44, IdIndividuoOptimo = 7 }));
             mockRepo.Setup(r => r.GetIndividuoByIdAsync(7, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(Result.Success(IndividuoConGen()));
+            SetupStaging(mockRepo);
 
             IReadOnlyCollection<AgViolacion> persistidas = null;
             int hardPersistido = -1;
@@ -172,6 +187,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
                     .ReturnsAsync(Result.Success(new AgCorrida { Id = 44, IdPeriodo = 0, IdPrograma = 0, IdIndividuoOptimo = 7 }));
             mockRepo.Setup(r => r.GetIndividuoByIdAsync(7, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(Result.Success(IndividuoConGen()));
+            SetupStaging(mockRepo);
 
             var sut = new AgRecalculoViolacionesService(mockRepo.Object, Mock.Of<IAgValidadorReglas>());
             var ctx = ContextoVacio();
@@ -199,6 +215,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
                     .ReturnsAsync(Result.Success(new AgCorrida { Id = 44, IdPeriodo = 0, IdPrograma = 0, Subunidad = "VALLE", IdIndividuoOptimo = 7 }));
             mockRepo.Setup(r => r.GetIndividuoByIdAsync(7, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(Result.Success(IndividuoConGen()));
+            SetupStaging(mockRepo);
             mockRepo.Setup(r => r.ReemplazarViolacionesAsync(
                         It.IsAny<long>(), It.IsAny<IReadOnlyCollection<AgViolacion>>(),
                         It.IsAny<int>(), It.IsAny<double>(), It.IsAny<AgEstadoIndividuo>(),
@@ -225,6 +242,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
                     .ReturnsAsync(Result.Success(new AgCorrida { Id = 44, IdPeriodo = 0, IdPrograma = 0, IdIndividuoOptimo = 7 }));
             mockRepo.Setup(r => r.GetIndividuoByIdAsync(7, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(Result.Success(IndividuoConGen()));
+            SetupStaging(mockRepo);
             mockRepo.Setup(r => r.ReemplazarViolacionesAsync(
                         It.IsAny<long>(), It.IsAny<IReadOnlyCollection<AgViolacion>>(),
                         It.IsAny<int>(), It.IsAny<double>(), It.IsAny<AgEstadoIndividuo>(),
@@ -309,8 +327,9 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
                     {
                         Id = 7,
                         IdCorrida = 44,
-                        Genes = new List<AgGen> { new AgGen { Id = 1, IdAula = 30, IdAsignatura = 10, IdTercero = 999 } }
+                        Genes = new List<AgGen> { new AgGen { Id = 1, IdAula = 30, IdAsignatura = 10, IdTercero = 999, HorasGen = 4.0 } }
                     }));
+            SetupStaging(mockRepo);
             mockRepo.Setup(r => r.ReemplazarViolacionesAsync(
                         It.IsAny<long>(), It.IsAny<IReadOnlyCollection<AgViolacion>>(),
                         It.IsAny<int>(), It.IsAny<double>(), It.IsAny<AgEstadoIndividuo>(),
@@ -321,6 +340,76 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             var ctx = ContextoVacio();   // aula 30 presente, asignatura 10 presente, docente 999 ausente
 
             var res = await sut.RecalcularAsync(44, ctx, CancellationToken.None);
+
+            res.IsSuccess.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task RecalcularAsync_StagingConHorasDiscrepantes_DevuelveFallo()
+        {
+            var mockRepo = new Mock<IAgScheduleRepository>();
+            mockRepo.Setup(r => r.GetCorridaByIdAsync(44, It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(Result.Success(new AgCorrida { Id = 44, IdPeriodo = 0, IdPrograma = 0, IdIndividuoOptimo = 7 }));
+            mockRepo.Setup(r => r.GetIndividuoByIdAsync(7, It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(Result.Success(IndividuoConGen()));
+            // Staging reporta 2.0h cuando gen espera 4.0h
+            SetupStaging(mockRepo, 44, 1, 2.0);
+
+            var sut = new AgRecalculoViolacionesService(mockRepo.Object, Mock.Of<IAgValidadorReglas>());
+
+            var res = await sut.RecalcularAsync(44, ContextoVacio(), CancellationToken.None);
+
+            res.IsFailure.Should().BeTrue();
+            res.Error.Should().Contain("no coinciden");
+        }
+
+        [Fact]
+        public async Task RecalcularAsync_StagingConSesionesHuerfanas_DevuelveFallo()
+        {
+            var mockRepo = new Mock<IAgScheduleRepository>();
+            mockRepo.Setup(r => r.GetCorridaByIdAsync(44, It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(Result.Success(new AgCorrida { Id = 44, IdPeriodo = 0, IdPrograma = 0, IdIndividuoOptimo = 7 }));
+            mockRepo.Setup(r => r.GetIndividuoByIdAsync(7, It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(Result.Success(IndividuoConGen()));
+            mockRepo.Setup(r => r.GetSesionesStagingAsync(44, It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(Result.Success((IReadOnlyCollection<AgSesion>)new List<AgSesion>
+                    {
+                        new AgSesion { IdGen = 1, Horas = 4.0, FechaSesion = new System.DateTime(2026, 3, 1) },
+                        new AgSesion { IdGen = 999, Horas = 4.0, FechaSesion = new System.DateTime(2026, 3, 1) } // Gen desconocido
+                    }));
+
+            var sut = new AgRecalculoViolacionesService(mockRepo.Object, Mock.Of<IAgValidadorReglas>());
+
+            var res = await sut.RecalcularAsync(44, ContextoVacio(), CancellationToken.None);
+
+            res.IsFailure.Should().BeTrue();
+            res.Error.Should().Contain("desconocidos");
+        }
+
+        [Fact]
+        public async Task RecalcularAsync_GenConCeroHorasYSinSesiones_RecalculaExitosamente()
+        {
+            var mockRepo = new Mock<IAgScheduleRepository>();
+            mockRepo.Setup(r => r.GetCorridaByIdAsync(44, It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(Result.Success(new AgCorrida { Id = 44, IdPeriodo = 0, IdPrograma = 0, IdIndividuoOptimo = 7 }));
+            mockRepo.Setup(r => r.GetIndividuoByIdAsync(7, It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(Result.Success(new AgIndividuo
+                    {
+                        Id = 7,
+                        IdCorrida = 44,
+                        Genes = new List<AgGen> { new AgGen { Id = 1, IdAula = 30, IdAsignatura = 10, IdTercero = 20, HorasGen = 0.0 } }
+                    }));
+            mockRepo.Setup(r => r.GetSesionesStagingAsync(44, It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(Result.Success((IReadOnlyCollection<AgSesion>)new List<AgSesion>()));
+            mockRepo.Setup(r => r.ReemplazarViolacionesAsync(
+                        It.IsAny<long>(), It.IsAny<IReadOnlyCollection<AgViolacion>>(),
+                        It.IsAny<int>(), It.IsAny<double>(), It.IsAny<AgEstadoIndividuo>(),
+                        It.IsAny<long>(), It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(Result.Success());
+
+            var sut = new AgRecalculoViolacionesService(mockRepo.Object, Mock.Of<IAgValidadorReglas>());
+
+            var res = await sut.RecalcularAsync(44, ContextoVacio(), CancellationToken.None);
 
             res.IsSuccess.Should().BeTrue();
         }

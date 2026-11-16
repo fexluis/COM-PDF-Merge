@@ -91,7 +91,8 @@ namespace ConversorPDF.Tests.Academic.Infrastructure.Persistence
                         patron_semanal TEXT NOT NULL DEFAULT '',
                         dias_patron TEXT NOT NULL DEFAULT '',
                         clave_grupo TEXT NOT NULL DEFAULT '',
-                        horas_gen REAL NOT NULL DEFAULT 0
+                        horas_gen REAL NOT NULL DEFAULT 0,
+                        fechas_gen TEXT NOT NULL DEFAULT ''
                     );
 
                     CREATE TABLE ag_violacion (

@@ -25,7 +25,12 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             && a.IdPrograma == b.IdPrograma && a.IdSede == b.IdSede
             && string.Equals(a.Grupo ?? "", b.Grupo ?? "", StringComparison.Ordinal);
 
-        private static bool DisponibleGrupo(int docente, AgGen gen, AgIndividuo individuo, AgContexto contexto)
+        /// <summary>
+        /// Determina si un docente está disponible para todo el grupo de genes co-programados de una asignatura/aula,
+        /// comprobando habilitación en pool, ausencia de solapamiento fechado contra otros genes del individuo
+        /// y disponibilidad de agenda externa en AgContexto.TerceroOcupado.
+        /// </summary>
+        public static bool DisponibleGrupo(int docente, AgGen gen, AgIndividuo individuo, AgContexto contexto)
         {
             if (gen == null || contexto == null) return false;
             if (docente <= 0 || docente == contexto.IdTerceroVacante) return false;

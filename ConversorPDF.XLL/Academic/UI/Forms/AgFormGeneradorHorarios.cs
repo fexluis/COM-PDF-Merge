@@ -888,12 +888,12 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
                 // 1. Cargar Aulas (Fase 525: cargar aulas del período SIN filtro de sede ni programa)
                 traza.Sql("ag_aula", "GetAulasPorPeriodoAsync", new { ctx.IdPeriodo, IdSede = (int?)null, IdPrograma = (int?)null, Semestre = (string)null, Grupo = (string)null, Sub = ctx.Subunidad });
                 var aulasRes = await _scheduleRepository.GetAulasPorPeriodoAsync(
-                    ctx.IdPeriodo, 
-                    null, 
-                    null, 
-                    null, 
-                    null, 
-                    ctx.Subunidad, 
+                    ctx.IdPeriodo,
+                    null,
+                    null,
+                    null,
+                    null,
+                    ctx.Subunidad,
                     ct);
 
                 ctx.Aulas = aulasRes.IsSuccess ? aulasRes.Value.ToList() : new List<AgAula>();
@@ -2200,28 +2200,33 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
 
                 var ventanaEfectiva = _contextoActual.Ventana ?? _ventanaResuelta;
 
-                // Contenido recuperable: configuración completa de todas las aulas (incluyendo origen y configuración temporal)
+                // Contenido recuperable: configuración completa de todas las aulas (incluyendo origen, estado y configuración temporal)
                 var aulasLista = (_contextoActual.Aulas ?? new List<AgAula>()).Select(au => new Dictionary<string, object>
                 {
                     { "id", au.Id },
-                    { "codigo", au.Codigo ?? string.Empty },
-                    { "nombre", au.Nombre ?? string.Empty },
-                    { "idPrograma", au.IdPrograma },
                     { "idSede", au.IdSede },
+                    { "idPeriodo", au.IdPeriodo },
+                    { "idPrograma", au.IdPrograma },
+                    { "codigo", au.Codigo },
+                    { "nombre", au.Nombre },
                     { "capacidad", au.Capacidad },
-                    { "semestre", au.Semestre ?? string.Empty },
-                    { "grupo", au.Grupo ?? string.Empty },
-                    { "modalidadVinculacion", au.ModalidadVinculacion ?? string.Empty },
-                    { "diasVentana", au.DiasVentana ?? string.Empty },
-                    { "jornada", au.Jornada ?? string.Empty },
+                    { "tipoAula", au.TipoAula },
+                    { "esVirtual", au.EsVirtual },
+                    { "estado", (int)au.Estado },
+                    { "caracteristicasJson", au.CaracteristicasJson },
+                    { "semestre", au.Semestre },
+                    { "grupo", au.Grupo },
+                    { "modalidadVinculacion", au.ModalidadVinculacion },
+                    { "fechaInicio", au.FechaInicio },
+                    { "fechaFin", au.FechaFin },
+                    { "semestreInicio", au.SemestreInicio },
+                    { "semestreFin", au.SemestreFin },
+                    { "ventanaOrigen", au.VentanaOrigen },
+                    { "aulaRef", au.AulaRef },
+                    { "subunidad", au.Subunidad },
+                    { "jornada", au.Jornada },
                     { "horasDia", au.HorasDia },
-                    { "fechaInicio", au.FechaInicio ?? string.Empty },
-                    { "fechaFin", au.FechaFin ?? string.Empty },
-                    { "semestreInicio", au.SemestreInicio ?? string.Empty },
-                    { "semestreFin", au.SemestreFin ?? string.Empty },
-                    { "ventanaOrigen", au.VentanaOrigen ?? string.Empty },
-                    { "aulaRef", au.AulaRef ?? string.Empty },
-                    { "subunidad", au.Subunidad ?? string.Empty }
+                    { "diasVentana", au.DiasVentana }
                 }).ToList();
 
                 // Contenido recuperable: demanda efectiva de asignaturas (con HorasObjetivo y OrigenPatron calculados como el evaluador)
@@ -2244,8 +2249,8 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     return new Dictionary<string, object>
                     {
                         { "idAsignatura", a.Id },
-                        { "codigo", a.Codigo ?? string.Empty },
-                        { "nombre", a.Nombre ?? string.Empty },
+                        { "codigo", a.Codigo },
+                        { "nombre", a.Nombre },
                         { "horas", a.Horas },
                         { "horasObjetivo", horasObj },
                         { "horasSemanales", a.HorasSemanales },
@@ -2267,14 +2272,15 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     {
                         { "idAula", aa.IdAula },
                         { "idAsignatura", aa.IdAsignatura },
-                        { "horasObjetivo", horasObjRel },
+                        { "horasObjetivo", aa.HorasObjetivo },
+                        { "horasEfectivas", horasObjRel },
                         { "ordenCurricular", aa.OrdenCurricular },
-                        { "diasPatron", aa.DiasPatron ?? string.Empty },
-                        { "origenPatron", aa.OrigenPatron ?? string.Empty },
+                        { "diasPatron", aa.DiasPatron },
+                        { "origenPatron", aa.OrigenPatron },
                         { "prioridad", aa.Prioridad },
                         { "exclusivo", aa.Exclusivo },
                         { "requerida", aa.Requerida },
-                        { "subunidad", aa.Subunidad ?? string.Empty }
+                        { "subunidad", aa.Subunidad }
                     };
                 }).ToList();
 
@@ -2308,11 +2314,12 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     {
                         { "id", b.Id },
                         { "dia", b.DiaSemanaNumero },
-                        { "franja", b.Franja ?? string.Empty },
-                        { "horaInicio", b.HoraInicio ?? string.Empty },
-                        { "horaFin", b.HoraFin ?? string.Empty },
+                        { "franja", b.Franja },
+                        { "horaInicio", b.HoraInicio },
+                        { "horaFin", b.HoraFin },
                         { "duracionHoras", b.DuracionHoras },
-                        { "activo", b.Activo }
+                        { "activo", b.Activo },
+                        { "subunidad", b.Subunidad }
                     }).ToList();
 
                 // Contenido recuperable: festivos en la ventana
@@ -2323,6 +2330,44 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                         { "fin", f.Fin.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) }
                     }).ToList();
 
+                // Contenido recuperable: programas canónicos para snapshot sellado idéntico a la huella
+                var programasLista = (_contextoActual.Programas ?? new List<Programa>()).Select(p => new Dictionary<string, object>
+                {
+                    { "id", p.Id },
+                    { "nombrePrograma", p.NombrePrograma },
+                    { "abreviatura", p.Abreviatura },
+                    { "pensum", p.Pensum },
+                    { "actual", p.Actual },
+                    { "activo", p.Activo },
+                    { "modalidad", p.Modalidad }
+                }).ToList();
+
+                // Contenido recuperable: asignaturas canónicas para snapshot sellado idéntico a la huella
+                var asignaturasLista = (_contextoActual.Asignaturas ?? new List<Asignatura>()).Select(a => new Dictionary<string, object>
+                {
+                    { "id", a.Id },
+                    { "idPrograma", a.IdPrograma },
+                    { "semestre", a.Semestre },
+                    { "numNivel", a.NumNivel },
+                    { "codUnidad", a.CodUnidad },
+                    { "codMateria", a.CodMateria },
+                    { "uniTeorica", a.UniTeorica },
+                    { "metodologia", a.Metodologia },
+                    { "abreviatura", a.Abreviatura },
+                    { "nucleo", a.Nucleo },
+                    { "nombre", a.Nombre },
+                    { "creditos", a.Creditos },
+                    { "intHoraria", a.IntHoraria },
+                    { "tipoAsignatura", a.TipoAsignatura },
+                    { "tipoCredito", a.TipoCredito },
+                    { "prerequisito", a.Prerequisito },
+                    { "horas", a.Horas },
+                    { "horasSemanales", a.HorasSemanales },
+                    { "idSede", a.IdSede },
+                    { "modalidad", a.Modalidad },
+                    { "subunidad", a.Subunidad }
+                }).ToList();
+
                 var parametrosDict = new Dictionary<string, object>
                 {
                     { "version", App.APP_VERSION },
@@ -2330,12 +2375,15 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     { "errorCaptura", errorCaptura },
                     { "ventana", new Dictionary<string, object>
                         {
-                            { "fechaInicio", ventanaEfectiva?.FechaInicio.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? string.Empty },
-                            { "fechaFin", ventanaEfectiva?.FechaFin.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? string.Empty },
-                            { "origen", ventanaEfectiva != null ? ventanaEfectiva.Origen.ToString() : string.Empty },
+                            { "idPeriodo", _contextoActual.IdPeriodo },
+                            { "periodoNombre", ventanaEfectiva?.PeriodoNombre },
+                            { "fechaInicio", ventanaEfectiva?.FechaInicio.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) },
+                            { "fechaFin", ventanaEfectiva?.FechaFin.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) },
+                            { "origen", ventanaEfectiva != null ? ventanaEfectiva.Origen.ToString() : null },
+                            { "observaciones", ventanaEfectiva?.Observaciones },
                             { "duracionDias", ventanaEfectiva?.DuracionDias ?? 0 },
-                            { "diasVentana", aulaCorrida?.DiasVentana ?? string.Empty },
-                            { "jornada", aulaCorrida?.Jornada ?? string.Empty }
+                            { "diasVentana", aulaCorrida?.DiasVentana },
+                            { "jornada", aulaCorrida?.Jornada }
                         }
                     },
                     { "snapshot", new Dictionary<string, object>
@@ -2353,7 +2401,9 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                             { "relacionesAulaAsignatura", relacionesAulaAsigLista },
                             { "patrones", patronesDict },
                             { "bloques", bloquesLista },
-                            { "festivos", festivosLista }
+                            { "festivos", festivosLista },
+                            { "programas", programasLista },
+                            { "asignaturas", asignaturasLista }
                         }
                     },
                     { "algoritmo", new Dictionary<string, object>
@@ -2588,32 +2638,52 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 int sesionesVacantes = sesiones.IsSuccess ? sesiones.Value.Count(s => s.EsVacante == 1) : 0;
                 double horasVacantes = sesiones.IsSuccess ? sesiones.Value.Where(s => s.EsVacante == 1).Sum(s => s.Horas) : 0;
 
-                // Cobertura multiconjunto:
-                bool cobertura = false;
-                if (sesiones.IsSuccess && _ultimoResultado.MejorIndividuo != null && _contextoActual != null)
-                {
-                    var calendario = AgCalendarioConflictos.Crear(_ultimoResultado.MejorIndividuo.Genes, _contextoActual);
-                    if (calendario.IsSuccess)
-                    {
-                        string Clave(long gId, DateTime f, double h) =>
-                            gId + "|" + f.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) + "|" + h.ToString("R", CultureInfo.InvariantCulture);
-                        var previstas = calendario.Value.Select(o => Clave(o.Gen.Id, o.Fecha,
-                            _contextoActual.BloquesPorId.ContainsKey(o.Gen.IdBloqueHorario) ? _contextoActual.BloquesPorId[o.Gen.IdBloqueHorario].DuracionHoras : o.Gen.HorasSemanales))
-                            .OrderBy(k => k, StringComparer.Ordinal);
-                        bool fechasValidas = sesiones.Value.All(s => s.FechaSesion.HasValue);
-                        var efectivas = sesiones.Value.Where(s => s.FechaSesion.HasValue)
-                            .Select(s => Clave(s.IdGen, s.FechaSesion.Value, s.Horas))
-                            .OrderBy(k => k, StringComparer.Ordinal);
-                        cobertura = fechasValidas && previstas.SequenceEqual(efectivas);
-                    }
-                }
-
+                // Fase 1813 & Fase 1815: Cobertura y factibilidad evaluadas por la compuerta centralizada
                 var mejor = _ultimoResultado.MejorIndividuo;
-                bool factible = stagingOk && cobertura && mejor != null && mejor.HardViolations == 0 && mejor.Vacantes == 0 && sesionesVacantes == 0;
                 if (mejor != null)
                 {
                     corrida.Vacantes = mejor.Vacantes;
+                    // Persistir el plan fechado autorizado dentro de ParametrosJson como referencia independiente sellada
+                    try
+                    {
+                        var serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+                        serializer.MaxJsonLength = int.MaxValue;
+                        Dictionary<string, object> dict = null;
+                        if (!string.IsNullOrWhiteSpace(corrida.ParametrosJson))
+                        {
+                            dict = serializer.DeserializeObject(corrida.ParametrosJson) as Dictionary<string, object>;
+                        }
+                        if (dict == null) dict = new Dictionary<string, object>();
+
+                        var planFechado = new List<Dictionary<string, object>>();
+                        if (mejor.Genes != null)
+                        {
+                            foreach (var g in mejor.Genes)
+                            {
+                                var genDict = new Dictionary<string, object>
+                                {
+                                    { "idGen", g.Id },
+                                    { "idAsignatura", g.IdAsignatura },
+                                    { "idAula", g.IdAula },
+                                    { "idBloqueHorario", g.IdBloqueHorario },
+                                    { "fechas", g.FechasGen != null ? g.FechasGen.Select(d => d.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)).ToList() : new List<string>() }
+                                };
+                                planFechado.Add(genDict);
+                            }
+                        }
+                        dict["planFechado"] = planFechado;
+                        if (aulaCorrida != null)
+                        {
+                            dict["huella"] = AgHuellaPlanVentana.Calcular(_contextoActual, aulaCorrida, planFechado: planFechado);
+                        }
+                        corrida.ParametrosJson = serializer.Serialize(dict);
+                    }
+                    catch (Exception ex)
+                    {
+                        LoggerHelper.Warning($"[AgFormGeneradorHorarios] Error al agregar planFechado en ParametrosJson: {ex.Message}");
+                    }
                 }
+                bool factible = stagingOk && AgCompuertaPromocion.EsPromovible(corrida, mejor, sesiones, _contextoActual);
                 corrida.Estado = stagingOk ? (factible ? AgEstadoCorrida.Completada : AgEstadoCorrida.Completada) : AgEstadoCorrida.Error;
                 await _scheduleRepository.UpdateCorridaAsync(corrida, _ctsEjecucion.Token);
 
@@ -3345,12 +3415,22 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 // donde es la única vía de reparación sin volver a ejecutar el AG.
                 bool esHuerfana = _ultimoResultado == null;
                 btnRecalcularViolaciones.Enabled = (ind != null && ind.Id > 0) || esHuerfana;
-                // Fase 1522 & 1813: el estado del botón se recalcula tras cada carga aplicando la compuerta estricta
+                // Fase 1522, 1813 & 1815: compuerta centralizada estricta que rechaza lecturas fallidas y valida cobertura
                 var corridaDbRes = await _scheduleRepository.GetCorridaByIdAsync(corrida.IdCorrida, CancellationToken.None);
-                int vacantesCorrida = corridaDbRes.IsSuccess && corridaDbRes.Value != null ? corridaDbRes.Value.Vacantes : (ind?.Vacantes ?? 0);
                 var sesionesRes = await _scheduleRepository.GetSesionesStagingAsync(corrida.IdCorrida, CancellationToken.None);
-                int sesVac = sesionesRes.IsSuccess ? sesionesRes.Value.Count(s => s.EsVacante == 1) : 0;
-                btnPromoverProduccion.Enabled = ind != null && ind.HardViolations == 0 && vacantesCorrida == 0 && sesVac == 0;
+                var corridaEfectiva = corridaDbRes.IsSuccess ? corridaDbRes.Value : null;
+
+                // Corrección [P1]: Asegurar contexto de la corrida cargada para evaluar factibilidad y compuerta de promoción
+                if (corridaEfectiva != null && (_contextoActual == null || _contextoActual.IdPeriodo != corridaEfectiva.IdPeriodo || _contextoActual.IdPrograma != corridaEfectiva.IdPrograma))
+                {
+                    var ctxRes = await ConstruirContextoAsync(CancellationToken.None, corridaEfectiva.IdPeriodo, corridaEfectiva.IdPrograma, corridaEfectiva.Subunidad);
+                    if (ctxRes.IsSuccess)
+                    {
+                        _contextoActual = ctxRes.Value;
+                    }
+                }
+
+                btnPromoverProduccion.Enabled = corridaDbRes.IsSuccess && AgCompuertaPromocion.EsPromovible(corridaEfectiva, ind, sesionesRes, _contextoActual);
                 LoggerHelper.Info($"[AG] Corrida #{corrida.IdCorrida} cargada: individuo #{ind?.Id ?? 0}, HARD={ind?.HardViolations ?? 0}, promover={btnPromoverProduccion.Enabled}.");
                 Log($"[AG] Corrida #{corrida.IdCorrida} cargada desde el selector ({corrida.TotalSesiones} sesiones en staging).");
             }
@@ -3576,7 +3656,11 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     }).ToList();
                 dgvViolaciones.Refresh();
 
-                btnPromoverProduccion.Enabled = ind != null && ind.HardViolations == 0;
+                // Fase 1815: compuerta centralizada tras recálculo
+                var corridaDbRes = await _scheduleRepository.GetCorridaByIdAsync(idCorrida, CancellationToken.None);
+                var sesionesRes = await _scheduleRepository.GetSesionesStagingAsync(idCorrida, CancellationToken.None);
+                var corridaEfectiva = corridaDbRes.IsSuccess ? corridaDbRes.Value : null;
+                btnPromoverProduccion.Enabled = corridaDbRes.IsSuccess && AgCompuertaPromocion.EsPromovible(corridaEfectiva, ind, sesionesRes, _contextoActual);
 
                 MessageBox.Show(this,
                     $"Recálculo completado para la corrida #{idCorrida}.\n\n" +
@@ -3636,7 +3720,8 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     LoggerHelper.Info($"[AG] Corrida #{idCorrida} aprobada (estado Aprobada). Promoción habilitada.");
 
                     var indActual = _ultimoResultado?.MejorIndividuo;
-                    btnPromoverProduccion.Enabled = indActual != null && indActual.HardViolations == 0;
+                    var sesionesRes = await _scheduleRepository.GetSesionesStagingAsync(idCorrida, CancellationToken.None);
+                    btnPromoverProduccion.Enabled = indActual != null && sesionesRes.IsSuccess && AgCompuertaPromocion.EsPromovible(verif.Value, indActual, sesionesRes, _contextoActual);
                 }
                 else
                 {
@@ -3769,7 +3854,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 // Fase 1520 (G4): deshabilitar sólo cuando la promoción realmente arranca
                 btnPromoverProduccion.Enabled = false;
 
-                var resProm = await _promotor.PromoverAProduccionAsync(_ultimoResultado.IdCorrida, ind.Id, Environment.UserName, justificacionVacante, CancellationToken.None);
+                var resProm = await _promotor.PromoverAProduccionAsync(_ultimoResultado.IdCorrida, ind.Id, Environment.UserName, justificacionVacante, _contextoActual, CancellationToken.None);
                 if (resProm.IsSuccess)
                 {
                     var p = resProm.Value;
@@ -3803,8 +3888,11 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             finally
             {
                 this.Cursor = Cursors.Default;
-                // Fase 1520 (G4): el botón sólo se re-habilita si la solución sigue siendo promovible
-                btnPromoverProduccion.Enabled = ind.HardViolations == 0;
+                // Fase 1520 (G4) & Fase 1815: el botón sólo se re-habilita si la solución sigue siendo promovible bajo compuerta centralizada
+                var corridaDbRes = await _scheduleRepository.GetCorridaByIdAsync(_ultimoResultado.IdCorrida, CancellationToken.None);
+                var sesionesRes = await _scheduleRepository.GetSesionesStagingAsync(_ultimoResultado.IdCorrida, CancellationToken.None);
+                var corridaEfectiva = corridaDbRes.IsSuccess ? corridaDbRes.Value : null;
+                btnPromoverProduccion.Enabled = corridaDbRes.IsSuccess && AgCompuertaPromocion.EsPromovible(corridaEfectiva, ind, sesionesRes, _contextoActual);
             }
         }
 

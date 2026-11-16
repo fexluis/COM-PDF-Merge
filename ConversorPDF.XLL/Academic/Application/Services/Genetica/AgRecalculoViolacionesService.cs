@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -102,6 +103,93 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         $"asignaturas: {string.Join(", ", asignaturasFaltantes.Take(5))}). " +
                         "Seleccione la sede y las cohortes de la corrida antes de recalcular; " +
                         "de lo contrario se persistirían violaciones incompletas.");
+
+                // Fase 1815: Hidratar FechasGen desde ag_sesiones (staging) para preservar las fechas reales materializadas
+                // y evitar que el expansor regenere fechas teóricas que reintroduzcan falsos positivos de cruce.
+                bool requiereSesiones = individuo.Genes.Any(g => g.HorasGen > 0.001);
+                var sesStagingRes = await _scheduleRepository.GetSesionesStagingAsync(idCorrida, ct);
+                if (requiereSesiones && (sesStagingRes.IsFailure || sesStagingRes.Value == null || sesStagingRes.Value.Count == 0))
+                {
+                    return Result.Failure<AgRecalculoResultado>(
+                        $"No se pudieron obtener las sesiones de staging para la corrida #{idCorrida}: {(sesStagingRes.IsFailure ? sesStagingRes.Error : "sin sesiones registradas")}.");
+                }
+
+                var sesionesList = (sesStagingRes.IsSuccess && sesStagingRes.Value != null)
+                    ? sesStagingRes.Value
+                    : (IReadOnlyCollection<AgSesion>)new List<AgSesion>();
+
+                var sesionesPorGen = sesionesList
+                    .GroupBy(s => s.IdGen)
+                    .ToDictionary(g => g.Key, g => g.ToList());
+
+                // Validar que no existan sesiones en staging asociadas a genes que no pertenezcan al individuo
+                if (sesionesList.Count > 0)
+                {
+                    var idsGenesIndividuo = new HashSet<long>(individuo.Genes.Select(g => (long)g.Id));
+                    var sesionesHuerfanas = sesionesList.Where(s => !idsGenesIndividuo.Contains(s.IdGen)).ToList();
+                    if (sesionesHuerfanas.Count > 0)
+                    {
+                        return Result.Failure<AgRecalculoResultado>(
+                            $"Se encontraron {sesionesHuerfanas.Count} sesiones en staging asociadas a genes desconocidos que no pertenecen al individuo.");
+                    }
+                }
+
+                foreach (var gen in individuo.Genes)
+                {
+                    // Corrección [P2]: Usar estrictamente gen.HorasGen sin sustituir por TotalHorasAsignatura.
+                    // Rechazar valores negativos o no finitos; permitir cero horas sin sesiones en staging.
+                    double horasEsperadas = gen.HorasGen;
+                    if (double.IsNaN(horasEsperadas) || double.IsInfinity(horasEsperadas) || horasEsperadas < 0.0)
+                    {
+                        return Result.Failure<AgRecalculoResultado>(
+                            $"El gen #{gen.Id} (Asignatura {gen.IdAsignatura}) tiene un valor de HorasGen no válido ({horasEsperadas}).");
+                    }
+
+                    sesionesPorGen.TryGetValue(gen.Id, out var sesionesGen);
+                    int cantSesiones = sesionesGen?.Count ?? 0;
+
+                    // Fase 1815: el expansor admite genes válidos de cero horas sin sesiones; rechazar sesiones inesperadas
+                    if (horasEsperadas <= 0.001)
+                    {
+                        if (cantSesiones > 0)
+                        {
+                            return Result.Failure<AgRecalculoResultado>(
+                                $"El gen #{gen.Id} (Asignatura {gen.IdAsignatura}) tiene 0 horas asignadas pero presenta {cantSesiones} sesiones inesperadas en staging.");
+                        }
+                        gen.FechasGen = new List<DateTime>();
+                        continue;
+                    }
+
+                    if (cantSesiones == 0)
+                    {
+                        return Result.Failure<AgRecalculoResultado>(
+                            $"El gen #{gen.Id} (Asignatura {gen.IdAsignatura}) tiene {horasEsperadas:0.##}h asignadas pero no tiene sesiones registradas en staging.");
+                    }
+
+                    // Validar cantidades y horas efectivas
+                    double horasStaging = sesionesGen.Sum(s => s.Horas);
+                    if (Math.Abs(horasStaging - horasEsperadas) > 0.01)
+                    {
+                        return Result.Failure<AgRecalculoResultado>(
+                            $"Inconsistencia en gen #{gen.Id} (Asignatura {gen.IdAsignatura}): horas en staging ({horasStaging:0.##}h) no coinciden con horas esperadas ({horasEsperadas:0.##}h).");
+                    }
+
+                    var fechasValidas = sesionesGen
+                        .Where(s => s.FechaSesion.HasValue)
+                        .Select(s => s.FechaSesion.Value.Date)
+                        .OrderBy(d => d)
+                        .ToList();
+
+                    if (fechasValidas.Count != sesionesGen.Count)
+                    {
+                        return Result.Failure<AgRecalculoResultado>(
+                            $"El gen #{gen.Id} tiene {sesionesGen.Count - fechasValidas.Count} sesiones en staging sin fecha asignada.");
+                    }
+
+                    gen.FechasGen = fechasValidas;
+                    gen.FechaInicioEstimada = fechasValidas.First();
+                    gen.FechaFinEstimada = fechasValidas.Last();
+                }
 
                 _validador.Evaluar(individuo, contexto);
             }

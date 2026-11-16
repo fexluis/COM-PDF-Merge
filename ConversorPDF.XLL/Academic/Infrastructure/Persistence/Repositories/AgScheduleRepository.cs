@@ -98,8 +98,8 @@ WHERE estado IN (1, 4)
 ORDER BY id DESC";
 
                     var items = (await db.QueryAsync<AgAula>(new CommandDefinition(
-                        sql, 
-                        new { idPeriodo, idSede, idPrograma, semestre, grupo, subunidad }, 
+                        sql,
+                        new { idPeriodo, idSede, idPrograma, semestre, grupo, subunidad },
                         cancellationToken: ct))).ToList();
 
                     return Result.Success<IReadOnlyCollection<AgAula>>(items.AsReadOnly());
@@ -324,7 +324,8 @@ UPDATE ag_corrida SET
     hard_violations = @HardViolations,
     soft_violations = @SoftViolations,
     vacantes = @Vacantes,
-    id_individuo_optimo = @IdIndividuoOptimo
+    id_individuo_optimo = @IdIndividuoOptimo,
+    parametros_json = @ParametrosJson
 WHERE id = @Id;";
 
                     var param = new
@@ -337,6 +338,7 @@ WHERE id = @Id;";
                         corrida.SoftViolations,
                         corrida.Vacantes,
                         corrida.IdIndividuoOptimo,
+                        ParametrosJson = corrida.ParametrosJson ?? "{}",
                         corrida.Id
                     };
 
@@ -462,8 +464,8 @@ SELECT last_insert_rowid();";
                                 ct.ThrowIfCancellationRequested();
                                 g.IdIndividuo = idInd;
                                 string sqlGen = @"
-INSERT INTO ag_gen (id_individuo, idperiodo, idasignatura, idprograma, idsede, semestre, grupo, idtercero, id_aula, id_bloque_horario, dia_semana, horas_semanales, total_horas_asignatura, fecha_inicio_estimada, fecha_fin_estimada, es_fijo, es_vacante, motivo_vacante, dentro_de_ventana, estado, subunidad, indice_dia_patron, patron_semanal, dias_patron, clave_grupo, horas_gen)
-VALUES (@IdIndividuo, @IdPeriodo, @IdAsignatura, @IdPrograma, @IdSede, @Semestre, @Grupo, @IdTercero, @IdAula, @IdBloqueHorario, @DiaSemana, @HorasSemanales, @TotalHorasAsignatura, @FechaInicioEstimada, @FechaFinEstimada, @EsFijo, @EsVacante, @MotivoVacante, @DentroDeVentana, @Estado, @Subunidad, @IndiceDiaPatron, @PatronSemanal, @DiasPatron, @ClaveGrupo, @HorasGen);
+INSERT INTO ag_gen (id_individuo, idperiodo, idasignatura, idprograma, idsede, semestre, grupo, idtercero, id_aula, id_bloque_horario, dia_semana, horas_semanales, total_horas_asignatura, fecha_inicio_estimada, fecha_fin_estimada, es_fijo, es_vacante, motivo_vacante, dentro_de_ventana, estado, subunidad, indice_dia_patron, patron_semanal, dias_patron, clave_grupo, horas_gen, fechas_gen)
+VALUES (@IdIndividuo, @IdPeriodo, @IdAsignatura, @IdPrograma, @IdSede, @Semestre, @Grupo, @IdTercero, @IdAula, @IdBloqueHorario, @DiaSemana, @HorasSemanales, @TotalHorasAsignatura, @FechaInicioEstimada, @FechaFinEstimada, @EsFijo, @EsVacante, @MotivoVacante, @DentroDeVentana, @Estado, @Subunidad, @IndiceDiaPatron, @PatronSemanal, @DiasPatron, @ClaveGrupo, @HorasGen, @FechasGenStr);
 SELECT last_insert_rowid();";
                                 var genParam = new
                                 {
@@ -492,7 +494,8 @@ SELECT last_insert_rowid();";
                                     PatronSemanal = g.PatronSemanal ?? string.Empty,
                                     DiasPatron = g.DiasPatron ?? string.Empty,
                                     ClaveGrupo = g.ClaveGrupo ?? string.Empty,
-                                    g.HorasGen
+                                    g.HorasGen,
+                                    FechasGenStr = g.FechasGenStr ?? string.Empty
                                 };
                                 g.Id = await db.ExecuteScalarAsync<long>(new CommandDefinition(sqlGen, genParam, trans, cancellationToken: ct));
                             }
@@ -500,36 +503,8 @@ SELECT last_insert_rowid();";
 
                         if (individuo.Violaciones != null && individuo.Violaciones.Count > 0 && individuo.Genes != null && individuo.Genes.Count > 0)
                         {
-                            var serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
-                            foreach (var violacion in individuo.Violaciones)
-                            {
-                                if (string.IsNullOrWhiteSpace(violacion.DetalleJson)) continue;
-                                Dictionary<string, object> detalle = null;
-                                try
-                                {
-                                    detalle = serializer.DeserializeObject(violacion.DetalleJson) as Dictionary<string, object>;
-                                }
-                                catch
-                                {
-                                    detalle = null;
-                                }
-                                if (detalle == null || !detalle.ContainsKey("indicesGenes")) continue;
-                                var indices = detalle["indicesGenes"] as object[]
-                                    ?? (detalle["indicesGenes"] as System.Collections.IEnumerable)?.Cast<object>().ToArray();
-                                if (indices == null || indices.Length == 0) continue;
-                                var ids = indices.Select(x => Convert.ToInt32(x)).Select(indice =>
-                                {
-                                    if (indice >= 0 && indice < individuo.Genes.Count && individuo.Genes[indice].Id > 0)
-                                        return (long)individuo.Genes[indice].Id;
-                                    return 0L;
-                                }).Where(id => id > 0).Distinct().ToArray();
-                                if (ids.Length > 0)
-                                {
-                                    detalle["idGenes"] = ids;
-                                    violacion.IdGen = ids[0];
-                                    violacion.DetalleJson = serializer.Serialize(detalle);
-                                }
-                            }
+                            var geneIds = individuo.Genes.Select(g => (long)g.Id).ToList();
+                            ResolverIndicesGenes(individuo.Violaciones, geneIds);
                         }
 
                         if (individuo.Violaciones != null && individuo.Violaciones.Count > 0)
@@ -587,8 +562,7 @@ VALUES (@IdIndividuo, @IdGen, @Regla, @EsDura, @Mensaje, @DetalleJson, @Subunida
 
                     // Fase 1566: tolerar fechas vacías en genes legados ('' no es convertible a DateTime? y
                     // abortaría la rehidratación justo después de reparar una corrida huérfana).
-
-                    string sqlGenes = "SELECT id as Id, id_individuo as IdIndividuo, idperiodo as IdPeriodo, idasignatura as IdAsignatura, idprograma as IdPrograma, idsede as IdSede, semestre as Semestre, grupo as Grupo, idtercero as IdTercero, id_aula as IdAula, id_bloque_horario as IdBloqueHorario, dia_semana as DiaSemana, horas_semanales as HorasSemanales, total_horas_asignatura as TotalHorasAsignatura, NULLIF(TRIM(fecha_inicio_estimada), '') as FechaInicioEstimada, NULLIF(TRIM(fecha_fin_estimada), '') as FechaFinEstimada, es_fijo as EsFijo, es_vacante as EsVacante, motivo_vacante as MotivoVacante, dentro_de_ventana as DentroDeVentana, estado as Estado, subunidad as Subunidad, indice_dia_patron as IndiceDiaPatron, patron_semanal as PatronSemanal, dias_patron as DiasPatron, clave_grupo as ClaveGrupo, horas_gen as HorasGen FROM ag_gen WHERE id_individuo = @idIndividuo";
+                    string sqlGenes = "SELECT id as Id, id_individuo as IdIndividuo, idperiodo as IdPeriodo, idasignatura as IdAsignatura, idprograma as IdPrograma, idsede as IdSede, semestre as Semestre, grupo as Grupo, idtercero as IdTercero, id_aula as IdAula, id_bloque_horario as IdBloqueHorario, dia_semana as DiaSemana, horas_semanales as HorasSemanales, total_horas_asignatura as TotalHorasAsignatura, NULLIF(TRIM(fecha_inicio_estimada), '') as FechaInicioEstimada, NULLIF(TRIM(fecha_fin_estimada), '') as FechaFinEstimada, es_fijo as EsFijo, es_vacante as EsVacante, motivo_vacante as MotivoVacante, dentro_de_ventana as DentroDeVentana, estado as Estado, subunidad as Subunidad, indice_dia_patron as IndiceDiaPatron, patron_semanal as PatronSemanal, dias_patron as DiasPatron, clave_grupo as ClaveGrupo, horas_gen as HorasGen, fechas_gen AS FechasGenStr FROM ag_gen WHERE id_individuo = @idIndividuo";
                     ind.Genes = (await db.QueryAsync<AgGen>(new CommandDefinition(sqlGenes, new { idIndividuo }, cancellationToken: ct))).ToList();
 
                     return Result.Success(ind);
@@ -1184,7 +1158,7 @@ WHERE idvinculacion IN (SELECT id FROM ag_vinculaciones WHERE id_corrida = @idCo
 
                     // Fase 1566: lectura tolerante para corridas huérfanas. Los genes sobreviven en ag_gen aunque
                     // la fila de ag_individuo haya sido eliminada (purga antigua por período/programa).
-                    string sqlGenes = "SELECT id as Id, id_individuo as IdIndividuo, idperiodo as IdPeriodo, idasignatura as IdAsignatura, idprograma as IdPrograma, idsede as IdSede, semestre as Semestre, grupo as Grupo, idtercero as IdTercero, id_aula as IdAula, id_bloque_horario as IdBloqueHorario, dia_semana as DiaSemana, horas_semanales as HorasSemanales, total_horas_asignatura as TotalHorasAsignatura, NULLIF(TRIM(fecha_inicio_estimada), '') as FechaInicioEstimada, NULLIF(TRIM(fecha_fin_estimada), '') as FechaFinEstimada, es_fijo as EsFijo, es_vacante as EsVacante, motivo_vacante as MotivoVacante, dentro_de_ventana as DentroDeVentana, estado as Estado, subunidad as Subunidad, indice_dia_patron as IndiceDiaPatron, patron_semanal as PatronSemanal, dias_patron as DiasPatron, clave_grupo as ClaveGrupo, horas_gen as HorasGen FROM ag_gen WHERE id_individuo = @idIndividuo";
+                    string sqlGenes = "SELECT id as Id, id_individuo as IdIndividuo, idperiodo as IdPeriodo, idasignatura as IdAsignatura, idprograma as IdPrograma, idsede as IdSede, semestre as Semestre, grupo as Grupo, idtercero as IdTercero, id_aula as IdAula, id_bloque_horario as IdBloqueHorario, dia_semana as DiaSemana, horas_semanales as HorasSemanales, total_horas_asignatura as TotalHorasAsignatura, NULLIF(TRIM(fecha_inicio_estimada), '') as FechaInicioEstimada, NULLIF(TRIM(fecha_fin_estimada), '') as FechaFinEstimada, es_fijo as EsFijo, es_vacante as EsVacante, motivo_vacante as MotivoVacante, dentro_de_ventana as DentroDeVentana, estado as Estado, subunidad as Subunidad, indice_dia_patron as IndiceDiaPatron, patron_semanal as PatronSemanal, dias_patron as DiasPatron, clave_grupo as ClaveGrupo, horas_gen as HorasGen, fechas_gen AS FechasGenStr FROM ag_gen WHERE id_individuo = @idIndividuo";
                     var genes = (await db.QueryAsync<AgGen>(
                         new CommandDefinition(sqlGenes, new { idIndividuo }, cancellationToken: ct))).ToList();
 
@@ -1390,6 +1364,16 @@ VALUES (@Id, @IdPeriodo, @IdPrograma, @IdAula, @FechaInicio, @FechaFin, @Estado,
 
                         if (violaciones != null && violaciones.Count > 0)
                         {
+                            // Fase 1815: Resolver indicesGenes hacia idGenes/id_gen compartiendo la lógica con SaveIndividuoAsync
+                            var geneIds = (await db.QueryAsync<long>(new CommandDefinition(
+                                "SELECT id FROM ag_gen WHERE id_individuo = @IdIndividuo ORDER BY id ASC;",
+                                new { IdIndividuo = idIndividuo }, trans, cancellationToken: ct))).ToList();
+
+                            if (geneIds.Count > 0)
+                            {
+                                ResolverIndicesGenes(violaciones, geneIds);
+                            }
+
                             const string sqlViol = @"
 INSERT INTO ag_violacion (id_individuo, id_gen, regla, es_dura, mensaje, detalle_json, subunidad)
 VALUES (@IdIndividuo, @IdGen, @Regla, @EsDura, @Mensaje, @DetalleJson, @Subunidad);";
@@ -1438,6 +1422,46 @@ VALUES (@IdIndividuo, @IdGen, @Regla, @EsDura, @Mensaje, @DetalleJson, @Subunida
             catch (Exception ex)
             {
                 return Result.Failure($"Error al reemplazar violaciones: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Resuelve índices posicionales de genes ('indicesGenes') contenidos en el DetalleJson
+        /// hacia sus identificadores persistidos ('idGenes' e 'IdGen') para garantizar enlaces referenciales íntegros.
+        /// Compartido entre SaveIndividuoAsync y ReemplazarViolacionesAsync dentro de sus transacciones.
+        /// </summary>
+        private static void ResolverIndicesGenes(IEnumerable<AgViolacion> violaciones, IReadOnlyList<long> geneIds)
+        {
+            if (violaciones == null || geneIds == null || geneIds.Count == 0) return;
+            var serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+            foreach (var violacion in violaciones)
+            {
+                if (string.IsNullOrWhiteSpace(violacion.DetalleJson)) continue;
+                Dictionary<string, object> detalle = null;
+                try
+                {
+                    detalle = serializer.DeserializeObject(violacion.DetalleJson) as Dictionary<string, object>;
+                }
+                catch
+                {
+                    detalle = null;
+                }
+                if (detalle == null || !detalle.ContainsKey("indicesGenes")) continue;
+                var indices = detalle["indicesGenes"] as object[]
+                    ?? (detalle["indicesGenes"] as System.Collections.IEnumerable)?.Cast<object>().ToArray();
+                if (indices == null || indices.Length == 0) continue;
+                var ids = indices.Select(x => Convert.ToInt32(x)).Select(indice =>
+                {
+                    if (indice >= 0 && indice < geneIds.Count && geneIds[indice] > 0)
+                        return geneIds[indice];
+                    return 0L;
+                }).Where(id => id > 0).Distinct().ToArray();
+                if (ids.Length > 0)
+                {
+                    detalle["idGenes"] = ids;
+                    violacion.IdGen = ids[0];
+                    violacion.DetalleJson = serializer.Serialize(detalle);
+                }
             }
         }
     }

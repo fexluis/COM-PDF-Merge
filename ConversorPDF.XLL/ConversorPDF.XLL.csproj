@@ -17,9 +17,9 @@
     <ExcelDnaCreate64BitAddIn>true</ExcelDnaCreate64BitAddIn>
     <!-- Excluir dependencias que no existen en .NET 4.8 y no deben empaquetarse -->
     <ExcelDnaExcludedDependencies>Microsoft.Bcl.HashCode.dll</ExcelDnaExcludedDependencies>
-    <Version>1.6.4.15</Version>
-    <AssemblyVersion>1.6.4.15</AssemblyVersion>
-    <FileVersion>1.6.4.15</FileVersion>
+    <Version>1.6.4.16</Version>
+    <AssemblyVersion>1.6.4.16</AssemblyVersion>
+    <FileVersion>1.6.4.16</FileVersion>
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <Import Project="obj\ConversorPDF.XLL.csproj.nuget.g.props" Condition="Exists('obj\ConversorPDF.XLL.csproj.nuget.g.props')" />
@@ -643,6 +643,7 @@
     <Compile Include="Academic\Application\Services\Genetica\AgSemanaIso.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgBloqueSolape.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgCalendarioConflictos.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgCompuertaPromocion.cs" />
     <Compile Include="Academic\Domain\Enums\AgNivelAcademico.cs" />
     <Compile Include="Academic\Domain\Models\AgNivelAcademicoCatalogo.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgUnidadesSemanales.cs" />
@@ -736,6 +737,7 @@
     <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV78_AddAgFiltroSeleccion.cs" />
     <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV79_NormalizeUsuariosIds.cs" />
     <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV80_AddOrigenPatronAgAulaAsignatura.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV81_AddAgGenFechasGen.cs" />
     <Compile Include="Academic\Domain\Enums\AgOrigenPatron.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgEvaluadorDemandaVentana.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgResultadoEvaluacionVentana.cs" />
