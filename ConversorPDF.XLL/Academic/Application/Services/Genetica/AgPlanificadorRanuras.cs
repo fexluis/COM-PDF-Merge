@@ -36,8 +36,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             Func<DateTime, bool> festivo, IReadOnlyDictionary<int, string> patrones,
             int presupuesto = 12000, CancellationToken ct = default(CancellationToken), string diagnostico = null)
         {
-            var orden = asignaturas.OrderBy(a => a.OrdenCurricular > 0 ? a.OrdenCurricular : 0)
-                .ThenBy(a => a.IdAsignatura).ToList();
+            var orden = AgOrdenAsignaturas.PorHoras(asignaturas);
             var requeridas = orden.ToDictionary(a => a.IdAsignatura, a => (int)Math.Ceiling(a.Horas / unidad));
             var calendario = Calendario(ranuras, ini, fin, festivo, ct);
             bool sinPatrones = patrones == null || patrones.Count == 0;
@@ -160,8 +159,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             Func<DateTime, bool> festivo, IReadOnlyDictionary<int, string> patrones,
             AgPlanOleadasResultado referencia, CancellationToken ct)
         {
-            var orden = demandas.OrderBy(a => Math.Max(0, a.OrdenCurricular))
-                .ThenBy(a => a.IdAsignatura).ToList();
+            var orden = AgOrdenAsignaturas.PorHoras(demandas);
             var requeridas = orden.ToDictionary(a => a.IdAsignatura,
                 a => (int)Math.Ceiling(a.Horas / unidad));
             var restricciones = orden.ToDictionary(a => a.IdAsignatura, a =>
@@ -203,12 +201,10 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 }
             }
 
-            // Heurística Most-Constrained-First: primero materias con patrones restringidos (menor número de días disponibles), luego libres
-            var restantes = orden.Where(a => !porId.ContainsKey(a.IdAsignatura))
-                .OrderBy(a => restricciones[a.IdAsignatura].Count == 0 ? 1 : 0)
-                .ThenBy(a => restricciones[a.IdAsignatura].Count > 0 ? restricciones[a.IdAsignatura].Count : int.MaxValue)
-                .ThenBy(a => Math.Max(0, a.OrdenCurricular))
-                .ThenBy(a => a.IdAsignatura);
+            var cuotas = requeridas.ToDictionary(kv => kv.Key,
+                kv => porId.ContainsKey(kv.Key) ? 0 : kv.Value);
+            var diasDisponibles = new HashSet<int>(ranuras.Select(r => r.Dia));
+            var restantes = orden.Where(a => !porId.ContainsKey(a.IdAsignatura));
             foreach (var a in restantes)
             {
                 ct.ThrowIfCancellationRequested();
@@ -219,17 +215,58 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     porId[a.IdAsignatura] = sesiones;
                     continue;
                 }
-                for (int i = 0; i < calendario.Count && sesiones.Count < requeridas[a.IdAsignatura]; i++)
+                while (cuotas[a.IdAsignatura] > 0)
                 {
                     ct.ThrowIfCancellationRequested();
-                    var hueco = calendario[i];
-                    if (ocupadas[i] || (dias.Count > 0 && !dias.Contains(hueco.Ranura.Dia)))
+                    int elegido = -1;
+                    int primero = -1;
+                    for (int i = 0; i < calendario.Count; i++)
                     {
-                        continue;
+                        ct.ThrowIfCancellationRequested();
+                        if (ocupadas[i] || (dias.Count > 0 && !dias.Contains(calendario[i].Ranura.Dia)))
+                        {
+                            continue;
+                        }
+                        if (primero < 0) { primero = i; }
+                        // La materia actual debe poder completar su cuota en su propio sufijo.
+                        int propiasLibres = 0;
+                        int propiaCuota = cuotas[a.IdAsignatura] - 1;
+                        for (int j = i + 1; j < calendario.Count && propiasLibres < propiaCuota; j++)
+                        {
+                            if (!ocupadas[j] && (dias.Count == 0 || dias.Contains(calendario[j].Ranura.Dia)))
+                            {
+                                propiasLibres++;
+                            }
+                        }
+                        bool factible = propiasLibres >= propiaCuota;
+                        // Las otras materias pueden aprovechar cualquier hueco que quede libre.
+                        foreach (var pendiente in cuotas.Where(kv => kv.Key != a.IdAsignatura && kv.Value > 0))
+                        {
+                            if (!factible) { break; }
+                            var permitidos = restricciones[pendiente.Key];
+                            if (permitidos.Any(d => !diasDisponibles.Contains(d))) { continue; }
+                            int libres = 0;
+                            for (int j = 0; j < calendario.Count && libres < pendiente.Value; j++)
+                            {
+                                if (j != i && !ocupadas[j]
+                                    && (permitidos.Count == 0 || permitidos.Contains(calendario[j].Ranura.Dia)))
+                                {
+                                    libres++;
+                                }
+                            }
+                            if (libres < pendiente.Value) { factible = false; break; }
+                        }
+                        if (factible) { elegido = i; break; }
                     }
-                    ocupadas[i] = true;
+                    if (elegido < 0) { elegido = primero; }
+                    if (elegido < 0) { break; }
+                    var hueco = calendario[elegido];
+                    ocupadas[elegido] = true;
+                    cuotas[a.IdAsignatura]--;
                     sesiones.Add(new AgSesionPlanificada(a.IdAsignatura, hueco.Fecha, hueco.Ranura));
                 }
+                sesiones = sesiones.OrderBy(s => s.Fecha)
+                    .ThenBy(s => s.Ranura.Franja, StringComparer.Ordinal).ToList();
                 porId[a.IdAsignatura] = sesiones;
             }
 

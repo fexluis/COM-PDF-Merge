@@ -24,8 +24,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         {
             var resultado = new List<(int, double, int)>();
             string semestre = AgFormatoAsignatura.SemestreRomano(aula.Semestre);
-            foreach (var aa in contexto.AulaAsignaturaPorAulaAsig.Values.Where(a => a.IdAula == aula.Id)
-                .OrderBy(a => a.OrdenCurricular).ThenBy(a => a.IdAsignatura))
+            foreach (var aa in contexto.AulaAsignaturaPorAulaAsig.Values.Where(a => a.IdAula == aula.Id))
             {
                 var asignatura = contexto.Asignaturas.FirstOrDefault(a => a.Id == aa.IdAsignatura);
                 if (asignatura == null || (aula.IdPrograma > 0 && asignatura.IdPrograma > 0 && aula.IdPrograma != asignatura.IdPrograma)) { continue; }
@@ -36,7 +35,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 double horas = HorasObjetivo(asignatura, aa);
                 if (horas > 0) { resultado.Add((aa.IdAsignatura, horas, aa.OrdenCurricular)); }
             }
-            return resultado;
+            return AgOrdenAsignaturas.PorHoras(resultado);
         }
 
         internal static bool PasoMejora(AgResultadoEvaluacionVentana antes, AgResultadoEvaluacionVentana despues)

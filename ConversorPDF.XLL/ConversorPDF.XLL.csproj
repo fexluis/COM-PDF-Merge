@@ -707,6 +707,7 @@
     <Compile Include="Academic\Domain\Models\Genetica\AgPlanOleada.cs" />
     <Compile Include="Academic\Domain\Models\Genetica\AgPlanOleadasResultado.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgHuellaPlanVentana.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgOrdenAsignaturas.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgPlanificadorRanuras.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgPlanificadorOleadas.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgParticionCarriles.cs" />

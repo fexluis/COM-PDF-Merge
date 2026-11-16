@@ -201,7 +201,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 
         /// <summary>
         /// Construye el plan de carril y oleada para una cohorte/aula (Fases 1057, 1088, 1092, 1095, 1226).
-        /// Orden canónico de asignaturas: (OrdenCurricular, IdAsignatura).
+        /// Prioridad de asignación: horas descendentes, orden curricular normalizado e identificador ascendentes.
         /// </summary>
         private Result<AgPlanOleadasResultado> ConstruirReferencia(
             IReadOnlyList<(int IdAsignatura, double Horas, int OrdenCurricular)> asignaturas,
@@ -299,11 +299,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     $"para ventana '{diasVentana}' (festivos o días fuera de catálogo).");   // Fase 1245
             }
 
-            // 2. Orden canónico de asignaturas: (COALESCE(OrdenCurricular, 0), IdAsignatura)
-            var ordenadas = asignaturas
-                .OrderBy(a => a.OrdenCurricular > 0 ? a.OrdenCurricular : 0)
-                .ThenBy(a => a.IdAsignatura)
-                .ToList();
+            // 2. La prioridad por horas rige la reserva de capacidad y las oleadas.
+            var ordenadas = AgOrdenAsignaturas.PorHoras(asignaturas);
 
             var demanda = ordenadas.Select(a => (int)Math.Ceiling(a.Horas / unidad)).ToList();
             int demandaTotal = demanda.Sum();
@@ -423,9 +420,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 capacidadCarril[c] = rc.Sum(r => ctx.OcurrenciasPorDia[r.Dia]);
             }
 
-            // 3.1 Pasada 1: el patrón sembrado fija el carril cuando cabe íntegro y hay capacidad
-            // F1600: Busca entre todos los carriles compatibles con capacidad efectiva disponible,
-            // en lugar de elegir primero el más específico sin verificar capacidad.
+            // 3.1 Reserva en un único recorrido por prioridad de horas.
+            // Los patrones exigen contención y capacidad; las automáticas equilibran utilización.
             var carrilDe = new int[ctx.Ordenadas.Count];
             for (int i = 0; i < carrilDe.Length; i++) carrilDe[i] = -1;
 
@@ -434,7 +430,27 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             for (int i = 0; i < ctx.Ordenadas.Count; i++)
             {
                 var diasPatron = AgCarriles.Ventana(ctx.Patrones[i]);
-                if (diasPatron.Count == 0) continue;
+                if (diasPatron.Count == 0)
+                {
+                    int elegido = -1;
+                    double mejorScore = double.MaxValue;
+                    for (int c = 0; c < carriles; c++)
+                    {
+                        int proyectada = carga[c] + ctx.Demanda[i];
+                        double uso = proyectada / (double)Math.Max(1, capacidadCarril[c]);
+                        double score = (proyectada > capacidadCarril[c] ? 10.0 : 0.0) + uso;
+                        if (elegido < 0
+                            || score < mejorScore - 1e-9
+                            || (Math.Abs(score - mejorScore) <= 1e-9 && carga[c] < carga[elegido]))
+                        {
+                            elegido = c;
+                            mejorScore = score;
+                        }
+                    }
+                    carrilDe[i] = elegido;
+                    carga[elegido] += ctx.Demanda[i];
+                    continue;
+                }
 
                 int mejor = -1;
                 int mejorTam = int.MaxValue;
@@ -462,46 +478,6 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 {
                     renormalizados++;
                 }
-            }
-
-            // 3.2 Pasada 2: reparto greedy por utilización relativa manteniendo restricciones sembradas
-            // F1600: Asignaturas con patrón sembrado respetan contención de días y capacidad;
-            // si ningún carril compatible tiene capacidad, carrilDe[i] permanece -1 para ser diagnosticado
-            // en Pasada 3 en lugar de desbordarse a un carril incompatible arbitrario.
-            for (int i = 0; i < ctx.Ordenadas.Count; i++)
-            {
-                if (carrilDe[i] >= 0) continue;
-
-                var diasPatron = AgCarriles.Ventana(ctx.Patrones[i]);
-
-                int elegido = -1;
-                double mejorScore = double.MaxValue;
-                for (int c = 0; c < carriles; c++)
-                {
-                    if (diasPatron.Any(d => !diasCarril[c].Contains(d)))
-                        continue;
-
-                    if (diasPatron.Count > 0 &&
-                        carga[c] + ctx.Demanda[i] > capacidadCarril[c])
-                        continue;
-
-                    int proyectada = carga[c] + ctx.Demanda[i];
-                    double uso = proyectada / (double)Math.Max(1, capacidadCarril[c]);
-                    double score = (proyectada > capacidadCarril[c] ? 10.0 : 0.0) + uso;
-                    if (elegido < 0
-                        || score < mejorScore - 1e-9
-                        || (Math.Abs(score - mejorScore) <= 1e-9 && carga[c] < carga[elegido]))
-                    {
-                        elegido = c;
-                        mejorScore = score;
-                    }
-                }
-
-                if (elegido < 0)
-                    continue;
-
-                carrilDe[i] = elegido;
-                carga[elegido] += ctx.Demanda[i];
             }
 
             // 3.3 Pasada 3: cursor secuencial por carril
