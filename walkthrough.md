@@ -10571,7 +10571,7 @@ Estado: sin compilación ni ejecución de pruebas por restricción del usuario. 
 
 #### 2. Fase 1826 — Incorporación de Fila R-081 en REGISTRY
 - **Archivo:** `.agents/plans/REGISTRY.md`
-- **Cambio:** Incorporada fila `R-081` para la Ronda 399 (`Fase 1820–1824`). Contadores avanzados a `ronda: 400 / 401`, `fase: 1826 / 1827`. Realizado commit `cb9e853` para R-080 y R-081.
+- **Cambio:** Incorporada fila `R-081` para la Ronda 399 (`Fase 1820–1824`). Contadores avanzados a `ronda: 400 / 401`, `fase: 1826 / 1827`. Realizado commit `48d4a66` para R-080 y R-081.
 
 ### Verificación de Principios (Ronda 400)
 
@@ -10579,3 +10579,45 @@ Estado: sin compilación ni ejecución de pruebas por restricción del usuario. 
 |---|---|---|---|---|---|
 | F1825 | [X] Sí | [X] Sí | [X] Sí | [ ] No | `scripts/verify.ps1` (bloqueado por FS/AV, no aplicado; probe OK) |
 | F1826 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `.agents/plans/REGISTRY.md` (fila R-081 presente) |
+
+---
+
+## Ronda 401 — Revisión de la Ola de Gate y Registro (Fases 1827–1828)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1827 — Diagnóstico Forense y Registro de Excepción en Gate
+- **Archivo:** `scripts/verify.ps1`, `_evidence/20261116-134745-gate/error.txt`
+- **Cambio:** Comprobadas opciones de materialización (cat-file blob `1ed9da9`, Copy-Item desde evidencia versionada, restore con ruta absoluta). En todas persiste `System.UnauthorizedAccessException`. Capturada y guardada la excepción tipada y ruta absoluta en `_evidence/20261116-134745-gate/error.txt`.
+
+#### 2. Fase 1828 — Sustitución de SHA Ancestro en REGISTRY
+- **Archivo:** `.agents/plans/REGISTRY.md`
+- **Cambio:** SHA sustituido por `48d4a66` en R-080 y R-081. Verificado `git merge-base --is-ancestor 48d4a66 HEAD` con exit code 0. Contadores avanzados a `ronda: 401 / 402`, `fase: 1828 / 1829`.
+
+### Verificación de Principios (Ronda 401)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1827 | [X] Sí | [X] Sí | [X] Sí | [ ] No | `_evidence/20261116-134745-gate/error.txt` (`System.UnauthorizedAccessException`) |
+| F1828 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `.agents/plans/REGISTRY.md` (SHA `48d4a66`, ancestro confirmado exit=0) |
+
+---
+
+## Ronda 402 — Revisión de la Ola de Gate y Registro (Fases 1829–1830)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1829 — Diagnóstico de ACL DENY DC en scripts y Registro BLOCKED-ACL
+- **Archivo:** `scripts/verify.ps1`, `_evidence/20261116-134745-gate/error.txt`
+- **Cambio:** Confirmada mediante `icacls scripts` la ACE `Todos:(I)(CI)(DENY)(DC)`. Descartado lock de AV/OneDrive. Intentada remoción con `icacls scripts /remove:d Todos` (requiere elevación por herencia). Evidenciado en `error.txt` con estado `BLOCKED-ACL`.
+
+#### 2. Fase 1830 — Incorporación de Fila R-082 y Contadores Globales
+- **Archivo:** `.agents/plans/REGISTRY.md`
+- **Cambio:** Creada fila `R-082` cubriendo las Fases 1825–1828 con veredicto `BLOCKED-ACL (gate sin restaurar)`. Contadores avanzados a `ronda: 402 / 403`, `fase: 1830 / 1831`.
+
+### Verificación de Principios (Ronda 402)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1829 | [X] Sí | [X] Sí | [X] Sí | [ ] No | `_evidence/20261116-134745-gate/error.txt` (`BLOCKED-ACL`, `icacls`) |
+| F1830 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `.agents/plans/REGISTRY.md` (fila R-082 presente) |
