@@ -154,10 +154,15 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             resultado.IsSuccess.Should().BeTrue();
             resultado.Value.Infactibles.Should().BeEmpty();
             resultado.Value.Planes.Single(p => p.IdAsignatura == 1).Sesiones.Should().BeEquivalentTo(protegidas);
+            // Requisito actualizado por decisión humana: el relleno se reemplazó por empaquetado con
+            // restricciones de día, que asigna cada cuota a los huecos más tempranos posibles dentro de
+            // un horizonte mínimo. La automática (3 sesiones) usa días 1 y 2; la restringida a lunes
+            // (2 sesiones) conserva sus dos primeros lunes libres. Se mantienen las cuotas, los días
+            // permitidos, la sesión protegida de la referencia y la fecha final compacta.
             resultado.Value.Planes.Single(p => p.IdAsignatura == 2).Sesiones.Select(s => s.Fecha)
-                .Should().Equal(ini.AddDays(1), ini.AddDays(7), ini.AddDays(8));
+                .Should().Equal(ini.AddDays(1), ini.AddDays(8), ini.AddDays(15));
             resultado.Value.Planes.Single(p => p.IdAsignatura == 3).Sesiones.Select(s => s.Fecha)
-                .Should().Equal(ini.AddDays(14), ini.AddDays(21));
+                .Should().Equal(ini.AddDays(7), ini.AddDays(14));
             referencia.Planes.Single().Sesiones.Should().BeEquivalentTo(protegidas);
             referencia.Infactibles.Should().Equal(2, 3);
         }

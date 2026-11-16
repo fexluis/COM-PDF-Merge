@@ -153,6 +153,192 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 busquedaAgotada: agotada);
         }
 
+        /// <summary>
+        /// Empaqueta las cuotas pendientes en los huecos más tempranos posibles respetando los días permitidos
+        /// de cada asignatura. Devuelve false si no hay empaquetado factible (el llamador conserva el relleno previo).
+        /// </summary>
+        private static bool EmpaquetarPendientes(
+            IReadOnlyList<(int IdAsignatura, double Horas, int OrdenCurricular)> restantes,
+            Dictionary<int, int> cuotas, Dictionary<int, HashSet<int>> restricciones,
+            int totalHuecos, Func<int, int> diaDe, Func<int, DateTime> fechaDe, Func<int, AgRanura> ranuraDe,
+            bool[] ocupadas, Dictionary<int, List<AgSesionPlanificada>> porId, CancellationToken ct)
+        {
+            var sujetos = restantes.Where(a => cuotas[a.IdAsignatura] > 0
+                && restricciones[a.IdAsignatura].All(d => diaDeParaValidar(diaDe, totalHuecos, d))).ToList();
+            // Si no queda nada pendiente no hay trabajo; pero si hay pendientes que el guardián de días
+            // válidos excluyó (por ejemplo un día de patrón sin ocurrencia en la ventana), se devuelve
+            // false para que el relleno previo siga cubriendo lo que sí puede cubrirse.
+            if (sujetos.Count == 0) return !restantes.Any(a => cuotas[a.IdAsignatura] > 0);
+
+            int requerido = sujetos.Sum(a => cuotas[a.IdAsignatura]);
+            int libres = 0;
+            for (int i = 0; i < totalHuecos; i++) if (!ocupadas[i]) libres++;
+            if (libres < requerido) return false;
+
+            int s = 0, baseSujeto = 1, baseHueco = 1 + sujetos.Count;
+            int t = baseHueco + totalHuecos;
+
+            // Horizonte mínimo: primer índice donde el flujo consigue colocar todas las cuotas.
+            Dictionary<int, int[]> asignado = null;
+            for (int lim = 0; lim < totalHuecos && asignado == null; lim++)
+            {
+                ct.ThrowIfCancellationRequested();
+                var red = new RedFlujo(t + 1);
+                for (int k = 0; k < sujetos.Count; k++)
+                {
+                    red.Agregar(s, baseSujeto + k, cuotas[sujetos[k].IdAsignatura]);
+                    var dias = restricciones[sujetos[k].IdAsignatura];
+                    for (int i = 0; i <= lim; i++)
+                    {
+                        if (ocupadas[i]) continue;
+                        if (dias.Count > 0 && !dias.Contains(diaDe(i))) continue;
+                        red.Agregar(baseSujeto + k, baseHueco + i, 1);
+                    }
+                }
+                for (int i = 0; i <= lim; i++)
+                {
+                    if (!ocupadas[i]) red.Agregar(baseHueco + i, t, 1);
+                }
+                if (red.MaxFlujo(s, t) != requerido) continue;
+
+                asignado = new Dictionary<int, int[]>();
+                for (int k = 0; k < sujetos.Count; k++) asignado[sujetos[k].IdAsignatura] = new int[cuotas[sujetos[k].IdAsignatura]];
+                var llenado = new Dictionary<int, int>();
+                for (int k = 0; k < sujetos.Count; k++)
+                {
+                    int id = sujetos[k].IdAsignatura;
+                    for (int i = 0; i <= lim; i++)
+                    {
+                        if (ocupadas[i] || !red.Usada(baseSujeto + k, baseHueco + i)) continue;
+                        if (!llenado.ContainsKey(id)) llenado[id] = 0;
+                        if (llenado[id] < asignado[id].Length) asignado[id][llenado[id]++] = i;
+                    }
+                }
+            }
+
+            if (asignado == null) return false;
+
+            // Contrato de respaldo: si alguna pendiente no pudo empaquetarse (por ejemplo un día de patrón
+            // sin hueco en el calendario), se devuelve false SIN mutar cuotas, ocupadas ni porId, para que el
+            // llamador ejecute el relleno previo desde el estado intacto.
+            foreach (var a in restantes)
+            {
+                if (cuotas[a.IdAsignatura] > 0 && !asignado.ContainsKey(a.IdAsignatura)) return false;
+            }
+
+            foreach (var a in restantes)
+            {
+                int[] huecos;
+                if (!asignado.TryGetValue(a.IdAsignatura, out huecos)) continue;
+                var sesiones = new List<AgSesionPlanificada>();
+                foreach (int i in huecos)
+                {
+                    ocupadas[i] = true;
+                    cuotas[a.IdAsignatura]--;
+                    sesiones.Add(new AgSesionPlanificada(a.IdAsignatura, fechaDe(i), ranuraDe(i)));
+                }
+                sesiones = sesiones.OrderBy(x => x.Fecha)
+                    .ThenBy(x => x.Ranura.Franja, StringComparer.Ordinal).ToList();
+                porId[a.IdAsignatura] = sesiones;
+            }
+            return true;
+        }
+
+        private static bool diaDeParaValidar(Func<int, int> diaDe, int totalHuecos, int dia)
+        {
+            for (int i = 0; i < totalHuecos; i++) if (diaDe(i) == dia) return true;
+            return false;
+        }
+
+        /// <summary>Flujo máximo mínimo para el empaquetado de cuotas en huecos.</summary>
+        private sealed class RedFlujo
+        {
+            private readonly int[] _inicio;
+            private readonly List<int>[] _adyacencia;
+            private readonly List<int> _destino = new List<int>();
+            private readonly List<int> _capacidad = new List<int>();
+            private readonly int[] _nivel;
+            private readonly int[] _iterador;
+            private readonly int _nodos;
+
+            internal RedFlujo(int nodos)
+            {
+                _nodos = nodos;
+                _adyacencia = new List<int>[nodos];
+                for (int i = 0; i < nodos; i++) _adyacencia[i] = new List<int>();
+                _nivel = new int[nodos];
+                _iterador = new int[nodos];
+                _inicio = new int[nodos];
+            }
+
+            internal void Agregar(int desde, int hacia, int capacidad)
+            {
+                _adyacencia[desde].Add(_destino.Count);
+                _destino.Add(hacia);
+                _capacidad.Add(capacidad);
+                _adyacencia[hacia].Add(_destino.Count);
+                _destino.Add(desde);
+                _capacidad.Add(0);
+            }
+
+            internal bool Usada(int desde, int hacia)
+            {
+                foreach (int e in _adyacencia[desde])
+                {
+                    if (_destino[e] == hacia) return _capacidad[e] == 0;
+                }
+                return false;
+            }
+
+            private bool ConstruirNiveles(int origen, int sumidero)
+            {
+                for (int i = 0; i < _nodos; i++) _nivel[i] = -1;
+                var cola = new Queue<int>();
+                _nivel[origen] = 0;
+                cola.Enqueue(origen);
+                while (cola.Count > 0)
+                {
+                    int u = cola.Dequeue();
+                    foreach (int e in _adyacencia[u])
+                    {
+                        if (_capacidad[e] <= 0 || _nivel[_destino[e]] >= 0) continue;
+                        _nivel[_destino[e]] = _nivel[u] + 1;
+                        cola.Enqueue(_destino[e]);
+                    }
+                }
+                return _nivel[sumidero] >= 0;
+            }
+
+            private int Empujar(int u, int sumidero, int flujo)
+            {
+                if (u == sumidero) return flujo;
+                for (; _iterador[u] < _adyacencia[u].Count; _iterador[u]++)
+                {
+                    int e = _adyacencia[u][_iterador[u]];
+                    int v = _destino[e];
+                    if (_capacidad[e] <= 0 || _nivel[v] != _nivel[u] + 1) continue;
+                    int enviado = Empujar(v, sumidero, Math.Min(flujo, _capacidad[e]));
+                    if (enviado <= 0) continue;
+                    _capacidad[e] -= enviado;
+                    _capacidad[e ^ 1] += enviado;
+                    return enviado;
+                }
+                return 0;
+            }
+
+            internal int MaxFlujo(int origen, int sumidero)
+            {
+                int total = 0;
+                while (ConstruirNiveles(origen, sumidero))
+                {
+                    for (int i = 0; i < _nodos; i++) _iterador[i] = 0;
+                    int enviado;
+                    while ((enviado = Empujar(origen, sumidero, int.MaxValue)) > 0) total += enviado;
+                }
+                return total;
+            }
+        }
+
         internal static Result<AgPlanOleadasResultado> CompletarReferencia(
             IReadOnlyList<(int IdAsignatura, double Horas, int OrdenCurricular)> demandas,
             IReadOnlyList<AgRanura> ranuras, DateTime ini, DateTime fin, double unidad,
@@ -204,9 +390,22 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             var cuotas = requeridas.ToDictionary(kv => kv.Key,
                 kv => porId.ContainsKey(kv.Key) ? 0 : kv.Value);
             var diasDisponibles = new HashSet<int>(ranuras.Select(r => r.Dia));
-            var restantes = orden.Where(a => !porId.ContainsKey(a.IdAsignatura));
+            var restantes = orden.Where(a => !porId.ContainsKey(a.IdAsignatura)).ToList();
+
+            // Empaquetado con restricciones de día: se asigna cada cuota a los huecos más tempranos posibles
+            // resolviendo un flujo máximo sobre los huecos hasta un horizonte mínimo. Si no hay empaquetado
+            // factible se conserva el relleno anterior como respaldo.
+            bool empaquetado = EmpaquetarPendientes(restantes, cuotas, restricciones,
+                calendario.Count, i => calendario[i].Ranura.Dia, i => calendario[i].Fecha,
+                i => calendario[i].Ranura, ocupadas, porId, ct);
+            if (empaquetado)
+            {
+                // Sesiones asignadas por el empaquetado; no se ejecuta el relleno por cuotas.
+            }
+            else
             foreach (var a in restantes)
             {
+                if (porId.ContainsKey(a.IdAsignatura)) continue;
                 ct.ThrowIfCancellationRequested();
                 var sesiones = new List<AgSesionPlanificada>();
                 var dias = restricciones[a.IdAsignatura];

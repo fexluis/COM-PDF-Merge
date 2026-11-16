@@ -9081,3 +9081,51 @@ La revisión en disco constató discrepancias entre el informe previo y el estad
 Implementación editada: plan compartido con sesiones fechadas; aprovechamiento de ranuras sobrantes; fábrica consume las mismas fechas; fecha proyectada sin promesa de mínimo; huella completa de contexto/BD; idempotencia y contadores posteriores al commit; recarga de UI y caché por contenido. Pruebas de aceptación y consistencia añadidas.
 
 Estado: sin compilación ni ejecución de pruebas por restricción del usuario. Fases 1792–1793 sin evidencia de aprobación. No se declara release listo ni smoke superado. Detalle vigente: docs/plans/2026-11-12-escalado-tres-casos-revision-ronda-376.md. Sin nueva reserva en REGISTRY.
+
+---
+
+## Ronda 398: Sincronización Documental, Trazabilidad e Invariantes del Planificador con Límite de Ventana (Fases 1815–1819)
+
+### Contexto y Diagnóstico
+1. **Fase 1815:** El plan v2 (`2026-11-15-planificador-limite-ventana-design.md`) se redactó contra HEAD previo antes de que se implementara la solución con `EmpaquetarPendientes` y `RedFlujo`. Mantenía citas de líneas obsoletas/muertas (`carrilDe` en `:425`, `:241-258`, etc.) y figuraba como «Sin implementar».
+2. **Fase 1816:** El paso 4 del orden de trabajo prescribía revertir con `git checkout --` los archivos del planificador ante fallo, lo cual destruiría la implementación ya presente y funcional de `EmpaquetarPendientes`, `RedFlujo` y la re-baseline autorizada.
+3. **Fase 1817:** El criterio de cierre exigía «Ninguna aserción debilitada ni re-baselineada», lo que colisionaba con el re-baseline autorizado en `AgPrioridadHorasTests:157-165` (fechas de asignaturas 2 y 3 por decisión humana para respetar cuotas compactas).
+4. **Fase 1818:** Las superficies omitían `AgPlanificadorRanurasFallbackTests.cs` y `.agents/plans/REGISTRY.md` carecía de fila para registrar esta unidad (última asignación histórica R-079).
+5. **Fase 1819:** Los invariantes de respaldo sin mutación estaban clasificados como sostenidos «por inspección», cuando en realidad cuentan con pruebas directas en `AgPlanificadorRanurasFallbackTests:20-56` y `:59-83`.
+
+### Cambios Aplicados
+1. **Fase 1815 (`docs/plans/2026-11-15-planificador-limite-ventana-design.md`):** Estado actualizado a `IMPLEMENTADO (empaquetado con flujo máximo de horizonte mínimo + respaldo al relleno)`. Reemplazo de citas por líneas obsoletas por citas por símbolo (`reparto por carril en Construir`, `carrilPorId` en `:472-479`, relleno de respaldo en `AgPlanificadorRanuras.cs:433-439`, sustitución por `EmpaquetarPendientes` `:160-245`, `ValidarFechado` `:531-605`, huella 2 ranuras en `AgCarriles.cs:13`, y objetivo de 64 casos).
+2. **Fase 1816 (`docs/plans/2026-11-15-planificador-limite-ventana-design.md`):** Paso 4 de orden de trabajo modificado para prohibir `git checkout --` y ordenar la reversión quirúrgica exclusivamente de los símbolos nuevos (`EmpaquetarPendientes`, `RedFlujo`, `asignado`), borrado de `AgPlanificadorRanurasFallbackTests.cs` y restauración de la expectativa en `AgPrioridadHorasTests`.
+3. **Fase 1817 (`docs/plans/2026-11-15-planificador-limite-ventana-design.md`):** Criterio de cierre actualizado explicitando la excepción autorizada para `CompletarReferencia_WhenMayorCargaPendiente`; familia de 64 casos pendiente de corrida (sin evidencia todavía).
+4. **Fase 1818 (`docs/plans/2026-11-15-planificador-limite-ventana-design.md`, `.agents/plans/REGISTRY.md`):** Adición de `AgPlanificadorRanurasFallbackTests.cs` en las superficies previstas. Incorporación de la fila `R-080` en `REGISTRY.md` y avance de contadores a `ronda: 398 / 399`, `fase: 1819 / 1820`.
+5. **Fase 1819 (`docs/plans/2026-11-15-planificador-limite-ventana-design.md`):** Inclusión en la tabla de invariantes de las filas correspondientes a `AgPlanificadorRanurasFallbackTests:20-56` (respaldo sin mutación cuando día de patrón no tiene hueco) y `:59-83` (día de patrón ausente en ventana pero presente en ranuras).
+
+---
+
+## Ronda 399: Revisión de la Ola Documental y Trazabilidad de Gate (Fases 1820–1824)
+
+### Contexto y Diagnóstico
+1. **Fase 1820:** `scripts/verify.ps1` eliminado del working tree (`D scripts/verify.ps1`). Su ausencia rompe los contratos de verificación de agentes (`build-verifier.md`, `implementer.md`, `integrator.md`). Al intentar `git checkout -- scripts/verify.ps1`, el sistema operativo reporta `Permission denied` (bloqueo externo de I/O por lock residual de OneDrive/AVG en dicha ruta).
+2. **Fase 1821:** Barrido incompleto de citas en `docs/plans/2026-11-15-planificador-limite-ventana-design.md`: persistían líneas obsoletas en `RegresionTests:117-320` (archivo de 307 líneas), `AgPrioridadHorasTests` (:64-65, :72-73/76, :108-118, :156-167, :68-73), `Criterio2:168-178`, `CompletarReferencia_*` (:162-165), y menciones a `carrilDe (:425)` y cursores `:484,:497`.
+3. **Fase 1822:** Falsos cierres en doc L85, `walkthrough.md:10506` e `implementation_plan.md:9099`, donde se afirmaba que la familia de 64 casos estaba «en verde» sin haberse ejecutado la corrida de evidencia.
+4. **Fase 1823:** En `.agents/plans/REGISTRY.md`, la fila `R-080` fue sembrada con estado `open` (inválido según contrato `reserved|executing|closed|abandoned`), columna `verify` con texto no estructurado y formato de ola irregular.
+5. **Fase 1824:** Los artefactos centrales de `R-080` (`docs/plans/2026-11-15-planificador-limite-ventana-design.md`, `AgPlanificadorRanurasFallbackTests.cs`, `AgPlanificadorRanuras.cs`, `AgPrioridadHorasTests.cs`, `REGISTRY.md`, `implementation_plan.md`, `walkthrough.md`) se encontraban sin trackear (`??`) o sin staging (`M`), adelantando el registro al commit.
+
+### Cambios Aplicados
+1. **Fase 1820 (`scripts/verify.ps1`):** Diagnosticado bloqueo de I/O en filesystem/antivirus (`Permission denied`); probe en `scripts/__probe.txt` arroja True pero `verify.ps1` permanece bloqueado; pendiente de desbloqueo externo antes de smoke.
+2. **Fase 1821 (`docs/plans/2026-11-15-planificador-limite-ventana-design.md`):** Reemplazo integral de todas las citas obsoletas por líneas reales vivas (`Criterio2:168-178`, `AgPrioridadHorasTests:64-65, 72-73/76, 108-118, 156-167, 68-73`, `RegresionTests:116-307`, `CompletarReferencia_*(:162-165)`, reparto por carril en `Construir (:115-137)`, planes `:482-496` y redacción de orden de llenado resuelto por empaquetado).
+3. **Fase 1822 (`docs/plans/2026-11-15-planificador-limite-ventana-design.md`, `walkthrough.md`, `implementation_plan.md`):** Casillas y descripciones corregidas a «pendiente de corrida (sin evidencia todavía)» con enlace a `_evidence/<stamp>/summary.md`.
+4. **Fase 1823 (`.agents/plans/REGISTRY.md`):** Fila `R-080` ajustada a `executing | pendiente (gate Full) | pendiente`; contadores avanzados a ronda 399 / fase 1824.
+5. **Fase 1824 (`git add`):** Staging exitoso (`git add`) de los 7 artefactos de la unidad (`docs/plans/2026-11-15-planificador-limite-ventana-design.md`, `AgPlanificadorRanurasFallbackTests.cs`, `AgPlanificadorRanuras.cs`, `AgPrioridadHorasTests.cs`, `REGISTRY.md`, `implementation_plan.md`, `walkthrough.md`), eliminando el estado untracked (`??`).
+
+---
+
+## Ronda 400: Revisión de la Ola de Gate y Trazabilidad (Fases 1825–1826)
+
+### Contexto y Diagnóstico
+1. **Fase 1825:** `scripts/verify.ps1` continúa ausente en working tree (`Test-Path scripts/verify.ps1` → `False`, `git status` → ` D scripts/verify.ps1`). El intento de restauración mediante `git restore`, `git checkout` y `git cat-file | Set-Content` falla sistemáticamente con `UnauthorizedAccessException: Acceso denegado a la ruta de acceso ...\scripts\verify.ps1`, a pesar de que probes arbitrarios (`scripts/__probe.txt`) escriben `True`. Se confirma bloqueo externo de filesystem (AVG/OneDrive tombstone) que requiere intervención externa (pausar sincronización o mover repo).
+2. **Fase 1826:** La Ronda 399 (Fases 1820–1824) consumió contadores en §2 de `.agents/plans/REGISTRY.md` sin registrar su fila correspondiente en §3 de asignaciones, dejando un vacío de auditoría. Además, `HEAD` figuraba como pendiente.
+
+### Cambios Aplicados
+1. **Fase 1825 (`scripts/verify.ps1`):** Confirmada y evidenciada la imposibilidad de restauración automática por lock de filesystem/antivirus en la ruta exacta de `scripts/verify.ps1` (probe genérico exitoso; target bloqueado). El gate permanece inoperante hasta la liberación externa del archivo.
+2. **Fase 1826 (`.agents/plans/REGISTRY.md`):** Incorporada la fila `R-081` en §3 de `REGISTRY.md` cubriendo la Ronda 399 (Fases 1820–1824) en estado `executing | pendiente (gate Full) | cb9e853`; contadores avanzados a `ronda: 400 / 401`, `fase: 1826 / 1827`. Realizado commit `cb9e853` para R-080 y R-081.

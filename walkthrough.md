@@ -10363,7 +10363,8 @@ evaluación nueva.
 
 #### 3. Fase 1774 — Actualización Registral de Rondas y Fases
 - **Archivo:** .agents/plans/REGISTRY.md
-- **Cambio:** Incorporación de fila R-073 y avance de contadores globales (onda: 372 / 373, ase: 1774 / 1775).
+- **Cambio:** Incorporación de fila R-073 y avance de contadores globales (
+onda: 372 / 373, ase: 1774 / 1775).
 
 ### Verificación de Principios (Ronda 372)
 
@@ -10397,7 +10398,8 @@ evaluación nueva.
 
 #### 5. Fase 1779 — Registro y Trazabilidad
 - **Archivo:** .agents/plans/REGISTRY.md
-- **Cambio:** Incorporación de fila R-074 y actualización de contadores globales (onda: 373 / 374, ase: 1779 / 1780).
+- **Cambio:** Incorporación de fila R-074 y actualización de contadores globales (
+onda: 373 / 374, ase: 1779 / 1780).
 
 ### Verificación de Principios (Ronda 373)
 
@@ -10429,7 +10431,8 @@ evaluación nueva.
 
 #### 4. Numeración y Registro
 - **Archivo:** .agents/plans/REGISTRY.md
-- **Cambio:** Incorporación de fila R-075 y avance de contadores globales (onda: 374 / 375, ase: 1783 / 1784).
+- **Cambio:** Incorporación de fila R-075 y avance de contadores globales (
+onda: 374 / 375, ase: 1783 / 1784).
 
 ### Verificación de Principios (Ronda 374)
 
@@ -10465,7 +10468,8 @@ ew ResultadoAplicacion() en lugar de devolver contadores incrementados antes del
 
 #### 5. Numeración y Registro
 - **Archivo:** .agents/plans/REGISTRY.md
-- **Cambio:** Incorporación de fila R-076 y avance de contadores globales (onda: 375 / 376, ase: 1787 / 1788).
+- **Cambio:** Incorporación de fila R-076 y avance de contadores globales (
+onda: 375 / 376, ase: 1787 / 1788).
 
 ### Verificación de Principios (Ronda 375)
 
@@ -10482,3 +10486,96 @@ ew ResultadoAplicacion() en lugar de devolver contadores incrementados antes del
 Implementación editada: plan compartido con sesiones fechadas; aprovechamiento de ranuras sobrantes; fábrica consume las mismas fechas; fecha proyectada sin promesa de mínimo; huella completa de contexto/BD; idempotencia y contadores posteriores al commit; recarga de UI y caché por contenido. Pruebas de aceptación y consistencia añadidas.
 
 Estado: sin compilación ni ejecución de pruebas por restricción del usuario. Fases 1792–1793 sin evidencia de aprobación. No se declara release listo ni smoke superado. Detalle vigente: docs/plans/2026-11-12-escalado-tres-casos-revision-ronda-376.md. Sin nueva reserva en REGISTRY.
+
+---
+
+## Ronda 398 — Sincronización Documental, Trazabilidad e Invariantes del Planificador con Límite de Ventana (Fases 1815–1819)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1815 — Citas por Símbolo y Estado Implementado
+- **Archivo:** docs/plans/2026-11-15-planificador-limite-ventana-design.md
+- **Cambio:** Marcado como IMPLEMENTADO, citas de líneas sustituidas por referencias canónicas por símbolo (`EmpaquetarPendientes`, `RedFlujo`, `carrilPorId`, `ValidarFechado`, `AgCarriles.cs:13`) y recuento a 64 casos.
+
+#### 2. Fase 1816 — Reversión Quirúrgica sin Destruir Fix
+- **Archivo:** docs/plans/2026-11-15-planificador-limite-ventana-design.md
+- **Cambio:** Paso 4 de orden de trabajo modificado para restringir reversión a símbolos nuevos (`EmpaquetarPendientes`, `RedFlujo`, `asignado`) evitando `git checkout --`.
+
+#### 3. Fase 1817 — Criterio de Cierre con Re-baseline Autorizado
+- **Archivo:** docs/plans/2026-11-15-planificador-limite-ventana-design.md
+- **Cambio:** Aserciones marcadas con excepción explícita aprobada en `AgPrioridadHorasTests:157-165` para `CompletarReferencia_WhenMayorCargaPendiente`; familia de 64 casos pendiente de corrida (sin evidencia todavía).
+
+#### 4. Fase 1818 — Envelope y Registro Formal en Libro
+- **Archivo:** docs/plans/2026-11-15-planificador-limite-ventana-design.md, .agents/plans/REGISTRY.md
+- **Cambio:** Inclusión de `AgPlanificadorRanurasFallbackTests.cs` en superficies. Creación de fila `R-080` en `REGISTRY.md` y avance de contadores (`ronda: 398 / 399`, `fase: 1819 / 1820`).
+
+#### 5. Fase 1819 — Invariantes de Respaldo en Tabla
+- **Archivo:** docs/plans/2026-11-15-planificador-limite-ventana-design.md
+- **Cambio:** Adición formal en la tabla de invariantes de las aserciones de respaldo sin mutación cubiertas por `AgPlanificadorRanurasFallbackTests:20-56` y `:59-83`.
+
+### Verificación de Principios (Ronda 398)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1815 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `docs/plans/2026-11-15-planificador-limite-ventana-design.md` |
+| F1816 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `docs/plans/2026-11-15-planificador-limite-ventana-design.md` |
+| F1817 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `docs/plans/2026-11-15-planificador-limite-ventana-design.md` |
+| F1818 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `docs/plans/2026-11-15-planificador-limite-ventana-design.md`, `.agents/plans/REGISTRY.md` |
+| F1819 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `docs/plans/2026-11-15-planificador-limite-ventana-design.md` |
+
+---
+
+## Ronda 399 — Revisión de la Ola Documental y Trazabilidad de Gate (Fases 1820–1824)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1820 — Diagnóstico de Bloqueo de Gate verify.ps1
+- **Archivo:** `scripts/verify.ps1`
+- **Cambio:** Confirmada ausencia en working tree (`D scripts/verify.ps1`) y bloqueo a nivel de filesystem/antivirus (`Permission denied` en checkout/create/cat-file; probe `scripts/__probe.txt` arroja `True`). Bloqueado, no aplicado; documentado como prerrequisito de desbloqueo externo para smoke.
+
+#### 2. Fase 1821 — Barrido Integral de Citas Vivas en Doc de Diseño
+- **Archivo:** `docs/plans/2026-11-15-planificador-limite-ventana-design.md`
+- **Cambio:** Sustitución de citas muertas por líneas vivas comprobadas: `Criterio2:168-178`, `AgPrioridadHorasTests:64-65, 72-73/76, 108-118, 156-167, 68-73`, `RegresionTests:116-307`, `CompletarReferencia_*(:162-165)`, reparto por carril en `Construir (:115-137)`, planes `:482-496` y redacción de orden de llenado.
+
+#### 3. Fase 1822 — Sinceramiento de Estado de Verificación
+- **Archivo:** `docs/plans/2026-11-15-planificador-limite-ventana-design.md`, `walkthrough.md`, `implementation_plan.md`
+- **Cambio:** Desmarcado de checkbox en doc L85 a `[ ]` y menciones actualizadas a «pendiente de corrida (sin evidencia todavía)» apuntando a `_evidence/<stamp>/summary.md`.
+
+#### 4. Fase 1823 — Estado Canónico y Contadores en REGISTRY
+- **Archivo:** `.agents/plans/REGISTRY.md`
+- **Cambio:** Fila `R-080` ajustada de `open` a `executing | pendiente (gate Full) | pendiente`. Contadores actualizados a `ronda: 399 / 400`, `fase: 1824 / 1825`.
+
+#### 5. Fase 1824 — Staging de Artefactos de R-080
+- **Archivo:** git index
+- **Cambio:** Ejecutado `git add` sobre los 7 archivos de la unidad, removiendo su estado untracked (`??`) previo al commit.
+
+### Verificación de Principios (Ronda 399)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1820 | [X] Sí | [X] Sí | [X] Sí | [ ] No | `scripts/verify.ps1` (bloqueado por FS/AV, no aplicado; probe OK) |
+| F1821 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `docs/plans/2026-11-15-planificador-limite-ventana-design.md` |
+| F1822 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `docs/plans/2026-11-15-planificador-limite-ventana-design.md`, `walkthrough.md`, `implementation_plan.md` |
+| F1823 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `.agents/plans/REGISTRY.md` |
+| F1824 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `git status --short` (7 archivos en stage) |
+
+---
+
+## Ronda 400 — Revisión de la Ola de Gate y Trazabilidad (Fases 1825–1826)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1825 — Evidencia de Bloqueo en Gate scripts/verify.ps1
+- **Archivo:** `scripts/verify.ps1`
+- **Cambio:** Verificación reproducible: `git restore`, `git checkout` y `git cat-file | Set-Content` arrojan `Permission denied / UnauthorizedAccessException`. Probe `scripts/__probe.txt` arroja `True`. La restauración automática queda bloqueada por lock de filesystem (OneDrive/AVG); requiere acción externa del usuario.
+
+#### 2. Fase 1826 — Incorporación de Fila R-081 en REGISTRY
+- **Archivo:** `.agents/plans/REGISTRY.md`
+- **Cambio:** Incorporada fila `R-081` para la Ronda 399 (`Fase 1820–1824`). Contadores avanzados a `ronda: 400 / 401`, `fase: 1826 / 1827`. Realizado commit `cb9e853` para R-080 y R-081.
+
+### Verificación de Principios (Ronda 400)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1825 | [X] Sí | [X] Sí | [X] Sí | [ ] No | `scripts/verify.ps1` (bloqueado por FS/AV, no aplicado; probe OK) |
+| F1826 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `.agents/plans/REGISTRY.md` (fila R-081 presente) |

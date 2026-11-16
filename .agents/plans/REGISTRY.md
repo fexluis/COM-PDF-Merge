@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 397 | 398 | 2026-11-15 |
-| `fase` | 1814 | 1815 | 2026-11-15 |
+| `ronda` | 400 | 401 | 2026-11-16 |
+| `fase` | 1826 | 1827 | 2026-11-16 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -114,6 +114,8 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-077 | 2026-11-14 | `2026-11-14-reclasificacion-solo-pendientes-plan.md` | `Wave 1..8` → `Ronda 376–383` | `T1..T10` → `Fase 1788–1797` | closed | PASS (Full 1356) | `93137d3` |
 | R-078 | 2026-11-14 | `2026-11-14-corrida92-completar-huecos-plan.md` | `Wave 1..8` → `Ronda 384–391` | `T1..T8` → `Fase 1798–1805` | closed | PASS (Full 1387) | `2587279` |
 | R-079 | 2026-11-15 | `2026-11-15-libro8-corrida94-plan.md` | `Wave 1..6` → `Ronda 392–397` | `T1..T9` → `Fase 1806–1814` | closed | PASS (Full 1446) | `f3e95be` |
+| R-080 | 2026-11-16 | `2026-11-15-planificador-limite-ventana-design.md` | `Wave —` → `Ronda 398` | `Fase 1815–1819` | executing | pendiente (gate Full) | `cb9e853` |
+| R-081 | 2026-11-16 | `(revisión Ronda 399 — Fases 1820–1824: gate verify.ps1, citas vivas, cierres sin evidencia, registro)` | `Wave —` → `Ronda 399` | `Fase 1820–1824` | executing | pendiente (gate Full) | `cb9e853` |
 
 
 Estados: `reserved` (Fase A) · `executing` (Fase B) · `closed` (Fase C, sellado) · `abandoned` (plan descartado: los números **no** se reciclan).
