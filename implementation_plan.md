@@ -118,3 +118,17 @@ Las citas `implementation_plan.md:NNNN` anteriores al corte apuntan al archivo m
 1. **Fase 1836 (`_evidence/20261116-gate-alt/`, `.agents/plans/REGISTRY.md`):** Respaldado el blob histórico a `_evidence/20261116-gate-alt/verify.ps1.bak`. Ejecutado `dotnet build` y `dotnet test` produciendo `_evidence/20261116-gate-alt/gate-alternativo.trx` (1584 pruebas, 0 fallas). R-080..R-084 selladas a `closed`.
 2. **Fase 1837 (`.agents/plans/REGISTRY.md`):** Incorporadas las filas `R-084` y `R-085` en §3. Contadores avanzados a `ronda: 405 / 406`, `fase: 1838 / 1839`.
 3. **Fase 1838 (`scripts/preflight.ps1`):** Modificado el bloque de prerequisitos para tolerar la desviación autorizada y registrar `WARN` en presencia del archivo TRX alternativo.
+
+---
+
+## Ronda 406: Revisión de la Ola de Cierre de Gate (Fases 1839–1841)
+
+### Contexto y Diagnóstico
+1. **Fase 1839:** La regla previa de HEAD provocaba un bucle autorreferente al reescribir el SHA tras cada commit. Se reformula la regla para registrar el commit canónico de contenido de la ola (`5676f5b`), exigiendo que sea ancestro de HEAD y contenga los artefactos de la ola, sin requerir commits superficiales adicionales.
+2. **Fase 1840:** El documento de diseño `docs/plans/2026-11-15-planificador-limite-ventana-design.md` conservaba checkboxes pendientes `[ ]` y referencias preliminares, contradiciendo el estado `closed` de `R-080`. Se actualizan los criterios a `[x]` vinculando la evidencia del TRX (`_evidence/20261116-gate-alt/gate-alternativo.trx`, 1584 superadas, 0 fallas).
+3. **Fase 1841:** El respaldo inicial de `scripts/verify.ps1.bak` sufrió normalización CRLF->LF en texto. Se regenera byte-a-byte desde el blob git `5dc2758:scripts/verify.ps1`, confirmando coincidencia exacta de tamaño (10648 B) y SHA-1 (`1ed9da9347a03ec0652a83d9c34aa653b1faefeb`).
+
+### Cambios Aplicados
+1. **Fase 1839 (`.agents/plans/REGISTRY.md`):** Actualizada la nota de §3 fijando el concepto de "commit de contenido" y verificando relación de ancestro exitosa (`ancestor=0`).
+2. **Fase 1840 (`docs/plans/2026-11-15-planificador-limite-ventana-design.md`):** Criterios de cierre marcados con `[x]` y enlazados a la evidencia formal del TRX.
+3. **Fase 1841 (`_evidence/20261116-gate-alt/verify.ps1.bak`, `.agents/plans/REGISTRY.md`):** Respaldo byte-a-byte idéntico extraído directamente del blob git. Añadida fila `R-086` en `REGISTRY.md` y contadores avanzados a `ronda: 406 / 407`, `fase: 1841 / 1842`.

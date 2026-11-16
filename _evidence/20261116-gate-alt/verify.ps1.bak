@@ -1,4 +1,4 @@
-﻿[CmdletBinding()]
+[CmdletBinding()]
 param(
     [ValidateSet('Build','Fast','Full')][string]$Mode = 'Fast',
     [string]$Filter,

@@ -194,3 +194,29 @@ Las citas `walkthrough.md:NNNN` anteriores al corte apuntan al archivo monolitic
 | F1836 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `_evidence/20261116-gate-alt/gate-alternativo.trx` (1584 pasadas, 0 fallas) |
 | F1837 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `.agents/plans/REGISTRY.md` (filas R-084/R-085, contadores 405/1838) |
 | F1838 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `scripts/preflight.ps1:80-105` (PREREQ WARN con TRX) |
+
+---
+
+## Ronda 406 — Revisión de la Ola de Cierre de Gate (Fases 1839–1841)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1839 — Reformulación de Regla de SHA Canónico y Verificación de Contenido
+- **Archivo:** `.agents/plans/REGISTRY.md`
+- **Cambio:** Sustituida la nota al pie en §3 para registrar el commit de contenido (`5676f5b`). Comprobado `git merge-base --is-ancestor 5676f5b HEAD` (exit 0) y validada la inclusión de TRX y registro en dicho commit.
+
+#### 2. Fase 1840 — Reconciliación Documental del Criterio de Cierre en Doc de Diseño
+- **Archivo:** `docs/plans/2026-11-15-planificador-limite-ventana-design.md`
+- **Cambio:** Marcadas con `[x]` las aserciones de cierre de familia (64 casos esperados) y suite completa (1584 pruebas, 0 fallas), enlazando formalmente a `_evidence/20261116-gate-alt/gate-alternativo.trx`.
+
+#### 3. Fase 1841 — Respaldo Byte-a-Byte de verify.ps1 y Fila R-086
+- **Archivo:** `_evidence/20261116-gate-alt/verify.ps1.bak`, `.agents/plans/REGISTRY.md`
+- **Cambio:** Extraído el blob exacto sin conversión de fin de línea (10648 bytes, hash `1ed9da9347a03ec0652a83d9c34aa653b1faefeb`). Asentada la fila `R-086` en §3 de `REGISTRY.md` y contadores sincronizados a `ronda: 406 / 407`, `fase: 1841 / 1842`.
+
+### Verificación de Principios (Ronda 406)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1839 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `.agents/plans/REGISTRY.md:132` (regla de commit de contenido) |
+| F1840 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `docs/plans/2026-11-15-planificador-limite-ventana-design.md:85-88` (`[x]`) |
+| F1841 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `_evidence/.../verify.ps1.bak` (hash `1ed9da9`, fila R-086) |

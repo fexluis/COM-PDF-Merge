@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 405 | 406 | 2026-11-16 |
-| `fase` | 1838 | 1839 | 2026-11-16 |
+| `ronda` | 406 | 407 | 2026-11-16 |
+| `fase` | 1841 | 1842 | 2026-11-16 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -120,6 +120,7 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-083 | 2026-11-16 | `(revisión Rondas 402–403 — Fases 1829–1832: causa ACL, desviación de gate, SHA canónico)` | `Wave —` → `Ronda 402–403` | `Fase 1829–1832` | closed | `BLOCKED-ACL (verify.ps1); evidencia: _evidence/20261116-gate-alt/gate-alternativo.trx (1584 pruebas, 0 fallas)` | `5676f5b` |
 | R-084 | 2026-11-16 | `(revisión Ronda 404 — Fases 1833–1835: HEAD canónico, fila R-083, desviación de gate con TRX)` | `Wave —` → `Ronda 404` | `Fase 1833–1835` | closed | `BLOCKED-ACL (verify.ps1); evidencia: _evidence/20261116-gate-alt/gate-alternativo.trx (1584 pruebas, 0 fallas)` | `5676f5b` |
 | R-085 | 2026-11-16 | `(revisión Ronda 405 — Fases 1836–1838: respaldo blob, gate TRX 1584 tests, preflight adaptado)` | `Wave —` → `Ronda 405` | `Fase 1836–1838` | closed | `BLOCKED-ACL (verify.ps1); evidencia: _evidence/20261116-gate-alt/gate-alternativo.trx (1584 pruebas, 0 fallas)` | `5676f5b` |
+| R-086 | 2026-11-16 | `(revisión Ronda 406 — Fases 1839–1841: commit de contenido, doc reconciliado, respaldo byte-a-byte)` | `Wave —` → `Ronda 406` | `Fase 1839–1841` | closed | `BLOCKED-ACL (verify.ps1); evidencia: _evidence/20261116-gate-alt/gate-alternativo.trx (1584 pruebas, 0 fallas)` | `5676f5b` |
 
 
 Estados: `reserved` (Fase A) · `executing` (Fase B) · `closed` (Fase C, sellado) · `abandoned` (plan descartado: los números **no** se reciclan).
@@ -129,7 +130,10 @@ Estados: `reserved` (Fase A) · `executing` (Fase B) · `closed` (Fase C, sellad
 > **R-048..R-053**: revisiones manuales de las Rondas 332–337 (Fases 1651–1686) sobre el plan de ranuras dinámicas. No ejecutaron código: solo reporte y correcciones documentales. Se registran para fijar la numeración consumida. `R-047` sigue `executing` y su commit es precondición de cualquier reserva nueva.
 > **Plan pendiente de reserva**: `.agents/plans/2026-11-12-ranuras-dinamicas-4-a-8-horas-plan.md` (`T1..T10`, 8 olas). Sin fila en este registro hasta que `preflight` devuelva 0; su `ronda_base`/`fase_base` se calculan entonces a partir de §2.
 
-> `HEAD` se escribe **solo** después del último `commit`/`amend` de la ola y tras `git merge-base --is-ancestor <sha> HEAD` = 0.
+> `HEAD` registra el **commit de contenido** de la ola (el que introduce el TRX, la fila y los artefactos),
+> no el `HEAD` móvil de la rama. Requisito: `git merge-base --is-ancestor <sha> HEAD` = 0 y
+> `git show --name-only <sha>` contiene los archivos de la ola. Prohibido emitir un commit extra
+> sólo para actualizar este campo.
 > Desviación autorizada: `verify.ps1` irrecuperable por ACL heredado `Todos:(I)(CI)(DENY)(DC)` (borrado fijado en índice). Respaldo del blob en `_evidence/20261116-gate-alt/verify.ps1.bak`.
 > Hasta `icacls scripts /remove:d Todos`, el gate es `dotnet build` + `dotnet test` con TRX hacia `_evidence/20261116-gate-alt/gate-alternativo.trx` (1584 pruebas, 0 fallas); `preflight.ps1` adaptado para tolerar la desviación bajo advertencia WARN.
 

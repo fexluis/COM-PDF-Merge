@@ -82,9 +82,10 @@ Descartada salvo que A y B fallen: puede violar la firma estable y la paridad.
 ## Criterio de cierre
 
 - [x] Aserciones intactas salvo la excepción registrada: `CompletarReferencia_WhenMayorCargaPendiente` (fechas de asigs. 2 y 3), autorizada por decisión humana; quedan intactos cuotas, días permitidos, sesión protegida y fin compacto.
-- [ ] Familia `AgPlanificadorRanuras|AgPrioridadHorasTests` verde (64 casos esperados; incluye `AgPlanificadorRanurasFallbackTests`).
-      Evidencia: `_evidence/<stamp>/summary.md` (pendiente de corrida).
-- [ ] Suite completa sin fallas y build Debug correcto.
+- [x] Familia `AgPlanificadorRanuras|AgPrioridadHorasTests` verde (64 casos esperados; incluye `AgPlanificadorRanurasFallbackTests`).
+      Evidencia: `_evidence/20261116-gate-alt/gate-alternativo.trx` (suite completa 1584/1584, 0 fallas, 2026-11-16T17:23:32-05:00).
+- [x] Suite completa sin fallas y build Debug correcto.
+      Evidencia: mismo TRX (`outcome=Completed`, `failed=0`, `error=0`).
 
 ## Límites de evidencia
 
