@@ -128,21 +128,25 @@ function Format-Range($list) {
     return ($arr[0].ToString() + '..' + $arr[$arr.Count - 1].ToString())
 }
 
-function New-Chunks($lines, $heads, [int]$target, [int]$liveRondas) {
+function New-Chunks($lines, $heads, [int]$target, [int]$liveRondas, [int]$from) {
     $rondaHeads = @($heads | Where-Object { $_.Level -eq 2 -and $_.Text -match '^Ronda\s+[0-9]+' })
     $liveStart = $lines.Count
     if ($rondaHeads.Count -gt $liveRondas) {
         $candidate = $rondaHeads[$rondaHeads.Count - $liveRondas].Index
-        if (($lines.Count - $candidate) -le 400) { $liveStart = $candidate }
+        if ($candidate -ge $from -and ($lines.Count - $candidate) -le 400) { $liveStart = $candidate }
+    }
+    elseif ($rondaHeads.Count -gt 0) {
+        $candidate = $rondaHeads[$rondaHeads.Count - 1].Index
+        if ($candidate -ge $from) { $liveStart = $candidate }
     }
     $cutMap = @{}
     foreach ($h in $heads) {
-        if ($h.Index -gt 0 -and $h.Index -lt $liveStart) { $cutMap[$h.Index] = $h.Level }
+        if ($h.Index -ge $from -and $h.Index -lt $liveStart) { $cutMap[$h.Index] = $h.Level }
     }
     $cuts = @($cutMap.Keys | Sort-Object)
 
     $chunks = New-Object System.Collections.ArrayList
-    $start = 0
+    $start = $from
     while ($start -lt $liveStart) {
         if (($liveStart - $start) -le [int]($target * 1.3)) {
             [void]$chunks.Add([pscustomobject]@{ Start = $start; End = $liveStart })
@@ -178,11 +182,25 @@ function New-Chunks($lines, $heads, [int]$target, [int]$liveRondas) {
 function Invoke-Base([string]$name, [int]$target, [int]$liveRondas, [bool]$apply, [string]$sha, [string]$stamp) {
     $path = Join-Path $root "$name.md"
     $doc = Read-Doc $path
+    $preRows = @()
+    $from = 0
     if ($doc.Lines.Count -gt 0 -and $doc.Lines[0] -match '^#\s+Indice de Historial') {
-        throw "$name.md ya esta escindido (indice detectado). Restaurar el monolitico antes de volver a escindir."
+        $tbl = -1
+        for ($i = 0; $i -lt $doc.Lines.Count; $i++) {
+            if ($doc.Lines[$i] -match '^\| Archivo \| Fases \| Rondas \| Lineas \|') { $tbl = $i; break }
+        }
+        if ($tbl -lt 0) { throw "Indice corrupto en $name.md (tabla no encontrada)." }
+        $sep = -1
+        for ($i = $tbl; $i -lt $doc.Lines.Count; $i++) {
+            if ($doc.Lines[$i] -eq '---') { $sep = $i; break }
+        }
+        if ($sep -lt 0) { throw "Indice corrupto en $name.md (separador no encontrado)." }
+        $preRows = @($doc.Lines[($tbl + 2)..($sep - 1)] | Where-Object { $_ -match '^\|\s*\[' -and $_ -notmatch '\(vivo\)' })
+        $from = $sep + 2
+        if ($from -ge $doc.Lines.Count) { throw "$name.md sin contenido nuevo que escindir." }
     }
     $heads = Get-Heads $doc.Lines
-    $plan = New-Chunks $doc.Lines $heads $target $liveRondas
+    $plan = New-Chunks $doc.Lines $heads $target $liveRondas $from
     $historyDir = Join-Path $root ("docs\plans\history\" + $name)
     if ($apply -and -not (Test-Path $historyDir)) { [void](New-Item -ItemType Directory -Path $historyDir -Force) }
 
@@ -221,11 +239,14 @@ function Invoke-Base([string]$name, [int]$target, [int]$liveRondas, [bool]$apply
         foreach ($l in $doc.Lines[$plan.LiveStart..($doc.Lines.Count - 1)]) { [void]$rebuilt.Add($l) }
     }
     $rebuiltText = if ($rebuilt.Count -gt 0) { ($rebuilt -join $doc.Eol) + $doc.Eol } else { '' }
-    if ($rebuiltText -ne $doc.Original) {
-        throw "Validacion fallida en $name.md: trozos + vivo no reproducen el original. No se escribio nada."
+    $region = New-Object System.Collections.ArrayList
+    if ($doc.Lines.Count -gt $from) { foreach ($l in $doc.Lines[$from..($doc.Lines.Count - 1)]) { [void]$region.Add($l) } }
+    $regionText = if ($region.Count -gt 0) { ($region -join $doc.Eol) + $doc.Eol } else { '' }
+    if ($rebuiltText -ne $regionText) {
+        throw "Validacion fallida en $name.md: trozos + vivo no reproducen el contenido escindible. No se escribio nada."
     }
     return [pscustomobject]@{
-        Name = $name; Doc = $doc; Items = $items; LiveStart = $plan.LiveStart
+        Name = $name; Doc = $doc; Items = $items; LiveStart = $plan.LiveStart; From = $from; PreRows = $preRows
         Header = $header; Dir = $historyDir; LiveLines = $doc.Lines.Count - $plan.LiveStart
     }
 }
@@ -271,6 +292,7 @@ foreach ($r in $results) {
     [void]$index.Add('')
     [void]$index.Add('| Archivo | Fases | Rondas | Lineas |')
     [void]$index.Add('|---|---|---|---|')
+    foreach ($row in $r.PreRows) { [void]$index.Add($row) }
     foreach ($it in $r.Items) {
         $rel = "docs/plans/history/$name/" + $it.File
         $ph = if ($it.Min -gt 0) { "$($it.Min)-$($it.Max)" } else { 'sin fase' }
@@ -329,6 +351,12 @@ foreach ($f in $scan) {
     }
 }
 $mlines = New-Object System.Collections.ArrayList
+$mapPath = Join-Path $root 'docs\plans\history\LINE_MAP.md'
+if (Test-Path $mapPath) {
+    foreach ($old in (Get-Content $mapPath -Encoding UTF8)) {
+        if ($old -match '^\|\s*`') { [void]$rows.Add($old.Trim()) }
+    }
+}
 [void]$mlines.Add('# LINE_MAP - citas historicas')
 [void]$mlines.Add('')
 [void]$mlines.Add("Escision: $stamp - commit ``$sha``")
@@ -338,7 +366,7 @@ $mlines = New-Object System.Collections.ArrayList
 [void]$mlines.Add('| Cita original | Ubicacion actual |')
 [void]$mlines.Add('|---|---|')
 foreach ($row in ($rows | Sort-Object -Unique)) { [void]$mlines.Add($row) }
-[System.IO.File]::WriteAllText((Join-Path $root 'docs\plans\history\LINE_MAP.md'), (($mlines -join "`r`n") + "`r`n"), $utf8NoBom)
+[System.IO.File]::WriteAllText($mapPath, (($mlines -join "`r`n") + "`r`n"), $utf8NoBom)
 
 Write-Host ''
 Write-Host ("LINE_MAP: {0} citas mapeadas" -f ($rows | Sort-Object -Unique).Count) -ForegroundColor Green
