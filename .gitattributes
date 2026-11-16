@@ -1,0 +1,5 @@
+# Evidencia: binarios, sin normalizacion de fin de linea
+_evidence/**/*.trx  -text
+_evidence/**/*.bak  -text
+_evidence/**/*.png  -text
+_evidence/**/*.log  -text
