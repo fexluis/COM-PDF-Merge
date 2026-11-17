@@ -1650,13 +1650,32 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 }
                 if (contexto.Aulas.Count != ids.Count)
                     return MostrarFalloPlan(TipoPreparacionPlan.AlcanceInvalido, "AULAS_FUERA_DE_SELECCION");
+                // Fase 1850: Validar alcance ANTES de sincronizar dimensiones y proteger con semáforo
                 if (_dimensionesPendientes.HasValue)
                 {
                     var pend = _dimensionesPendientes.Value;
-                    if (!contexto.Aulas.Any(a => a.Estado == AgEstadoAula.Disponible
+                    bool enAlcance = contexto.Aulas.Any(a =>
+                        (a.Estado == AgEstadoAula.Disponible || contexto.PuedeGenerarAula(a.Id))
                         && string.Equals(a.AulaRef, pend.AulaRef, StringComparison.OrdinalIgnoreCase)
-                        && string.Equals(a.Subunidad, pend.Subunidad, StringComparison.OrdinalIgnoreCase)))
-                        return MostrarFalloPlan(TipoPreparacionPlan.AlcanceInvalido, "DIMENSION_PENDIENTE_FUERA_DE_ALCANCE_DISPONIBLE");
+                        && string.Equals(a.Subunidad, pend.Subunidad, StringComparison.OrdinalIgnoreCase));
+                    if (!enAlcance)
+                        return MostrarFalloPlan(TipoPreparacionPlan.AlcanceInvalido, "DIMENSION_PENDIENTE_FUERA_DE_ALCANCE");
+
+                    _timerSyncDimensiones.Stop();
+                    await _semaforoSyncDimensiones.WaitAsync(ct);
+                    try
+                    {
+                        var resFlush = await _aulaDimSync.SincronizarConfirmadoAsync(
+                            pend.AulaRef, pend.Jornada, pend.HorasDia, pend.DiasVentana,
+                            pend.Subunidad, ct);
+                        if (resFlush.IsFailure)
+                            return MostrarFalloPlan(TipoPreparacionPlan.ErrorTecnico, "ERROR_FLUSH_DIMENSIONES:" + resFlush.Error);
+                        _dimensionesPendientes = null;
+                    }
+                    finally
+                    {
+                        _semaforoSyncDimensiones.Release();
+                    }
                 }
                 // El límite es la fecha de fin de la ventana semestral seleccionada, no una fecha fija.
                 var ventana = contexto.Ventana;

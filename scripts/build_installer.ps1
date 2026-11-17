@@ -1,4 +1,4 @@
-﻿param(
+param(
     [string]$NewVersion,
     [switch]$SkipTests,
     [string]$CommitMessage,
@@ -84,6 +84,8 @@ $packages = "$env:USERPROFILE\.nuget\packages"
 Copy-Item "$packages\system.reflection.metadata\6.0.0\lib\net461\System.Reflection.Metadata.dll" -Destination "$outputPath\" -Force
 Copy-Item "$packages\system.collections.immutable\6.0.0\lib\net461\System.Collections.Immutable.dll" -Destination "$outputPath\" -Force
 Copy-Item "$packages\csharpfunctionalextensions\2.40.3\lib\net461\CSharpFunctionalExtensions.dll" -Destination "$outputPath\" -Force
+$newtonsoftDll = "$packages\newtonsoft.json\13.0.1\lib\net45\Newtonsoft.Json.dll"
+if (Test-Path $newtonsoftDll) { Copy-Item $newtonsoftDll -Destination "$outputPath\" -Force }
 
 dotnet build ConversorPDF.XLL\ConversorPDF.XLL.csproj -c Release -p:Platform=x64 --no-restore
 if ($LASTEXITCODE -ne 0) { throw "Error al compilar el proyecto XLL." }

@@ -117,8 +117,26 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
         /// </summary>
         public static bool EsAulaElegible(AgAula aula) => aula != null && aula.Id > 0 && !string.IsNullOrWhiteSpace(aula.AulaRef) && aula.Estado == AgEstadoAula.Disponible;
 
-        /// <summary>Admisión estricta para aplicar decisiones; T3 nunca habilita escritura en Aprobado.</summary>
-        public static bool PuedeAplicarPropuesta(AgAula aula) => EsAulaElegible(aula);
+        /// <summary>Legado estricto: sólo Disponible. No usar como permiso de escritura.</summary>
+        public static bool PuedeAplicarPropuestaHeredada(AgAula aula) => EsAulaElegible(aula);
+
+        /// <summary>Legado estricto: redirige a PuedeAplicarPropuestaHeredada.</summary>
+        public static bool PuedeAplicarPropuesta(AgAula aula) => PuedeAplicarPropuestaHeredada(aula);
+
+        /// <summary>
+        /// Única vía de escritura: Disponible o Aprobada verificada sin origen conservable
+        /// (PendienteDeProgramar con 0 filas productivas de la cohorte). Las aprobadas con origen nunca admiten escritura.
+        /// </summary>
+        public static bool PuedeAplicarPropuesta(AgContexto contexto, AgAula aula)
+        {
+            if (aula == null || aula.Id <= 0 || string.IsNullOrWhiteSpace(aula.AulaRef)) return false;
+            if (aula.Estado == AgEstadoAula.Disponible) return true;
+            return aula.Estado == AgEstadoAula.Aprobado
+                && contexto != null
+                && contexto.PuedeGenerarAula(aula.Id)
+                && contexto.PlanAprobadoSnapshot != null
+                && !contexto.TieneOrigenConservable(aula.Id);
+        }
 
         /// <summary>Evaluación informativa: aprobadas sólo con manifiesto/snapshot reconciliado y vigente.</summary>
         public static bool PuedeEvaluarPropuesta(AgContexto contexto, AgAula aula) => EsAulaElegible(aula)
@@ -336,7 +354,7 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                     && string.Equals(a.AulaRef, rec.AulaRef, StringComparison.Ordinal)
                     && string.Equals(a.Subunidad ?? string.Empty, rec.Subunidad ?? string.Empty, StringComparison.Ordinal)).ToList();
 
-                if (aulasCoincidentes.Count != 1 || !PuedeAplicarPropuesta(aulasCoincidentes[0]))
+                if (aulasCoincidentes.Count != 1 || !PuedeAplicarPropuesta(contexto, aulasCoincidentes[0]))
                 {
                     string mensajeAula = aulasCoincidentes.Count == 0
                         ? $"Aula {rec.AulaRef} (id={rec.IdAula}) no encontrada en el contexto."
@@ -456,9 +474,9 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                 }
             }
 
-            // Decision es aplicable/persistible. Las aprobadas recorren el simulador informativo separado,
-            // nunca este conjunto de confirmación heredada ni su sellado SQL.
-            foreach (var aula in contexto.Aulas.Where(PuedeAplicarPropuesta).OrderBy(a => a.Id))
+            // Decision es aplicable/persistible. Las aprobadas con origen recorren el simulador informativo separado.
+            // Las pendientes verificadas (aprobadas sin origen) se escalan directamente para habilitar su factibilidad.
+            foreach (var aula in contexto.Aulas.Where(a => PuedeAplicarPropuesta(contexto, a)).OrderBy(a => a.Id))
             {
                 ct.ThrowIfCancellationRequested();
                 LoggerHelper.Debug($"[AG-RANURAS-TMP] ESCALADOR_ENTRADA corrida={contexto.IdCorrida} traza={contexto.Traza?.Correlacion} perfil={perfil} aula={aula.Id} ref={aula.AulaRef} dias={aula.DiasVentana} plazoEfectivo={contexto.Ventana.FechaInicio:yyyy-MM-dd}..{contexto.Ventana.FechaFin:yyyy-MM-dd} plazoAula={aula.FechaInicio}..{aula.FechaFin}");
@@ -581,6 +599,13 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                 };
 
                 d.HuellaDecision = HuellaAccion(d);
+
+                if (aula.Estado == AgEstadoAula.Aprobado)
+                {
+                    contexto.Traza?.Dato("ESCALON_SIN_ORIGEN",
+                        $"aula={aula.Id} desde={aula.DiasVentana} hacia={destino} origen=AUSENTE filas=0");
+                    LoggerHelper.Info($"[ESCALON SIN ORIGEN] corrida={contexto.IdCorrida} aula={aula.Id} ref={aula.AulaRef} subunidad={aula.Subunidad} desde={d.Desde} hacia={d.Hacia} demanda={d.DemandaSesiones} mejora={d.Mejora}");
+                }
 
                 using (var db = _connectionFactory())
                 {
@@ -755,8 +780,19 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                             {
                                 throw new InvalidOperationException($"La propuesta fue modificada: IdAula ({d.IdAula}) no coincide con el aula esperada ({aulas[0].Id}). Recalcular.");
                             }
-                            if (!PuedeAplicarPropuesta(aulas[0]))
-                                throw new InvalidOperationException("AULA_NO_ELEGIBLE: sólo Disponible admite escritura heredada.");
+                            if (!PuedeAplicarPropuesta(contexto, aulas[0]))
+                                throw new InvalidOperationException("AULA_NO_ELEGIBLE: sólo Disponible o Aprobada sin origen verificada admiten escalado.");
+
+                            // Postcondición estricta: 0 filas productivas de la cohorte para aulas Aprobado
+                            if (aulas[0].Estado == AgEstadoAula.Aprobado)
+                            {
+                                if (contexto.PlanAprobadoSnapshot == null || contexto.TieneOrigenConservable(aulas[0].Id))
+                                {
+                                    throw new InvalidOperationException("INVARIANTE_VIOLADO: Aula aprobada con origen existente no admite escalado de escritura.");
+                                }
+                                contexto.Traza?.Dato("ESCALON_SIN_ORIGEN",
+                                    $"aula={aulas[0].Id} desde={d.Desde} hacia={d.Hacia} origen=AUSENTE filas=0");
+                            }
                             int idAula = d.IdAula;
 
                             string huellaContexto = AgHuellaPlanVentana.Calcular(contexto, aulas[0]);

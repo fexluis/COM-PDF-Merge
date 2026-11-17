@@ -27,7 +27,9 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
             if (aula.Estado == ConversorPDF.XLL.Academic.Domain.Enums.AgEstadoAula.Disponible) return true;
             // Regla general: el estado Aprobado sólo puede conservar lo que existe. Sin ninguna fila
             // productiva para la cohorte no hay origen que preservar y el aula es demanda obligatoria.
+            // Requiere snapshot no nulo para acreditar ausencia comprobada; snapshot nulo nunca autoriza (fail-closed).
             if (aula.Estado == ConversorPDF.XLL.Academic.Domain.Enums.AgEstadoAula.Aprobado
+                && PlanAprobadoSnapshot != null
                 && !TieneOrigenConservable(idAula)) return true;
             var c = CandidatosCobertura.SingleOrDefault(x => x.IdAula == idAula);
             return aula.Estado == ConversorPDF.XLL.Academic.Domain.Enums.AgEstadoAula.Aprobado

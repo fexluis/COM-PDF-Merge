@@ -41,11 +41,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 return Result.Success(informe);
             }
 
-            // 2. Validar disponibilidad de aulas y bloques
-            var aulasDisponibles = contexto.Aulas.Where(a => a.Estado == AgEstadoAula.Disponible).ToList();
-            if (aulasDisponibles.Count == 0)
+            // 2. Validar disponibilidad de aulas y bloques (Fase 1846: incluye aulas autorizadas PuedeGenerarAula)
+            var aulasProgramables = contexto.Aulas.Where(a => a.Estado == AgEstadoAula.Disponible || contexto.PuedeGenerarAula(a.Id)).ToList();
+            if (aulasProgramables.Count == 0)
             {
-                informe.AgregarBloqueo("No hay aulas disponibles configuradas para la sede/subunidad.");
+                informe.AgregarBloqueo("No hay aulas programables configuradas para la sede/subunidad.");
             }
 
             var bloquesActivos = contexto.Bloques.Where(b => b.Activo == 1).ToList();
@@ -63,8 +63,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             var ini = contexto.Ventana.FechaInicio.Date;
             var fin = contexto.Ventana.FechaFin.Date;
 
-            // Fase 418: Mismo alcance para oferta que para la demanda evaluada (aulasDisponibles para semestre/grupo)
-            var aulasOferta = aulasDisponibles;
+            // Fase 418 & Fase 1846: Mismo alcance para oferta que para la demanda evaluada (aulas programables para semestre/grupo)
+            var aulasOferta = aulasProgramables;
 
             double ofertaSemestre = aulasOferta.Sum(_ => bloquesActivos.Sum(b =>
                 b.DuracionHoras * AgPlanificadorTemporal.ContarOcurrencias(b.DiaSemana, ini, fin, contexto.EsFestivo)));

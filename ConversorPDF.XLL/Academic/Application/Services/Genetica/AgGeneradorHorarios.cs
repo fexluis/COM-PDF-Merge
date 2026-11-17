@@ -240,6 +240,19 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             if (contexto == null)
                 return Result.Failure("El contexto del AG no puede ser nulo.");
 
+            // Fase 1848 & Fase 1851: Fail-closed si el manifiesto declara aulas Aprobado pero no hay snapshot canónico o es divergente.
+            if (contexto.ManifiestoCobertura != null)
+            {
+                bool declaraAprobadas = contexto.ManifiestoCobertura.Relaciones.Any(r => r.EstadoAula == (int)AgEstadoAula.Aprobado);
+                var s = contexto.PlanAprobadoSnapshot;
+                if (declaraAprobadas && s == null)
+                    return Result.Failure("I5_SNAPSHOT_APROBADO_REQUERIDO: manifiesto con aulas Aprobado sin snapshot canónico.");
+                if (declaraAprobadas && (s.Manifiesto.Huella != contexto.ManifiestoCobertura.Huella
+                    || !s.Manifiesto.Relaciones.Select(r => r.Clave.Valor)
+                         .SequenceEqual(contexto.ManifiestoCobertura.Relaciones.Select(r => r.Clave.Valor))))
+                    return Result.Failure("I5_SNAPSHOT_DIVERGENTE: el snapshot canónico no corresponde al manifiesto vigente.");
+            }
+
             var aulasAprobadas = (contexto.Aulas ?? Enumerable.Empty<AgAula>())
                 .Where(a => a.Estado == AgEstadoAula.Aprobado
                     && (contexto.ManifiestoCobertura == null || contexto.TieneOrigenConservable(a.Id)))

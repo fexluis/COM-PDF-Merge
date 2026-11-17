@@ -195,3 +195,85 @@ Las citas `implementation_plan.md:NNNN` anteriores al corte apuntan al archivo m
 - Despliegue local en `%APPDATA%\Microsoft\AddIns` con `Newtonsoft.Json.dll`, `.dna` nuevo y ensamblado Release.
 - Evidencia: `_evidence/20261117-empaquetado-newtonsoft/summary.md`.
 
+---
+
+## Ronda 411: Validación crítica Ronda 410 (Fases 1846–1849)
+
+### Resultado de la revisión
+
+1. **Fase 1846 — VALIDADA:**
+   - `AgValidadorVentana.cs:45`: sustituir filtro `Estado == AgEstadoAula.Disponible` por aulas programables (`Disponible || PuedeGenerarAula(a.Id)`).
+   - `AgValidadorVentana.cs:46-49`: actualizar mensaje a "No hay aulas programables configuradas para la sede/subunidad.".
+   - `AgValidadorVentana.cs:67`: `aulasOferta` calculado con universo de aulas programables.
+   - `AgValidadorVentana.cs:73-76`: preservado bloqueo de capacidad insuficiente contra oferta recalculada.
+
+2. **Fase 1847 — VALIDADA PARCIAL (2 Falsos Positivos descartados):**
+   - **Rechazado (FP-A):** No tocar `AgSimuladorEscaladoAprobadas` ni admitir pendientes en `PuedeAplicarPropuesta` bajo T4 (`AgConfirmadorPlanAprobado:200` causaría `ALCANCE_OBSOLETO` por `PLAN_NO_VERIFICABLE`; violaría invariante T3).
+   - **Rechazado (FP-B):** Guard `:1656` en `AgFormGeneradorHorarios.cs` es buffer debounce de dimensiones, no compuerta de elegibilidad. Arreglo: ejecutar flush previo (`:264-280`) y alinear guard con estado programable.
+   - **Aceptado:** Incorporar pendientes al `Decision` del escalador (`AgEscaladorRanuraAula.cs:461,339,758`) con predicado dependiente de contexto (`PuedeGenerarAula`), registro de auditoría `[ESCALON SIN ORIGEN]` y postcondición de 0 filas productivas.
+
+3. **Fase 1848 — DIAGNÓSTICO VALIDADO, REMEDIACIÓN RECHAZADA:**
+   - **Diagnóstico:** `fail-open` mecánico confirmado en `AgContexto.cs:30-31,43-48` y `AgGeneradorHorarios.cs:243-249` (defensa en profundidad).
+   - **Remediación rechazada:** Prohibido rechazar snapshot nulo incondicionalmente (rompe flujo legítimo todo-`Disponible`). Prohibido acoplar `AgContexto` a `ValidacionPlanAprobado` (rompe pruebas directas e inversión de dependencias).
+   - **Condición corregida:** Snapshot nulo es fallo sólo si `ManifiestoCobertura` declara $\ge 1$ relación `Aprobado` (`AgGeneradorHorarios.ValidarAprobadas`). `AgContexto.PuedeGenerarAula` deriva de `PlanAprobadoSnapshot != null && !TieneOrigenConservable(idAula)`.
+
+4. **Fase 1849 — VALIDADA (Alcance acotado):**
+   - Cobertura integradora en memoria sin BD (`AgGeneradorHorariosTests.cs:58-110`): preparación de contexto con pendiente sin origen $\to$ propuesta de escalado $\to$ factibilidad $\to$ generación genética con resultado exitoso.
+   - Preparación UI y ausencia de mutación no autorizada protegida vía source-guard (`AgFormGeneradorHorariosPreservacionSourceTests`).
+   - Casos unitarios de borde: manifiesto con aprobadas y snapshot nulo (fallo cerrado), y diagnóstico global.
+
+### Secuencia de ejecución
+1. **Fase 1848** (fail-closed en `AgContexto` y `AgGeneradorHorarios`).
+2. **Fase 1846** (factibilidad y oferta horaria en `AgValidadorVentana`).
+3. **Fase 1847** (escalado `Decision` en `AgEscaladorRanuraAula` + flush de dimensiones).
+4. **Fase 1849** (pruebas integradoras sin BD y tests de regresión).
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 1846 | `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgValidadorVentana.cs` | Realizado |
+| 1847 | `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgEscaladorRanuraAula.cs`, `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs` | Realizado |
+| 1848 | `ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgContexto.cs`, `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgGeneradorHorarios.cs` | Realizado |
+| 1849 | `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgAprobadaSinOrigenTests.cs` | Realizado |
+
+---
+
+## Ronda 412: Verificación y Fortalecimiento Ronda 410 (Fases 1850–1853)
+
+### Contexto y Diagnóstico
+1. **Fase 1850 (Flush y Alcance de Dimensiones):** En `AgFormGeneradorHorarios.cs:1653-1675`, el flush se ejecutaba antes de verificar si `pend.AulaRef` estaba dentro de la selección de aulas elegibles/programables, provocando persistencia fuera de alcance y dejando un segundo bloque `if (_dimensionesPendientes.HasValue)` como código muerto sin protección de semáforo.
+2. **Fase 1851 (Detección de Snapshot Divergente):** `AgGeneradorHorarios.cs:243-252` solo comprobaba `snapshot == null`. Un snapshot existente pero divergente en huella o relaciones con respecto al manifiesto vigente inducía una falsa clasificación de `PendienteDeProgramar`, eludiendo el régimen T4 sobre aulas con origen real.
+3. **Fase 1852 (Contrato de Escalado y Trazabilidad):** `AgEscaladorRanuraAula.cs` exponía sobrecargas ambiguas de `PuedeAplicarPropuesta` y omitía el registro `ESCALON_SIN_ORIGEN` en `contexto.Traza` exigido como condición de aceptación al aplicar decisiones de escritura.
+4. **Fase 1853 (Acreditación Efectiva de Pruebas):** En `AgAprobadaSinOrigenTests.cs`, las pruebas de optimización y factibilidad afirmaban existencia genérica sin poblar relaciones ni verificar que las sesiones y la oferta correspondieran exactamente al aula pendiente evaluada.
+
+### Cambios Aplicados por Fase
+
+#### 1. Fase 1850 — Validación de Alcance Previa al Flush con Semáforo
+- **Archivo:** `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
+- **Cambio:** Comprobación estricta de pertenencia al alcance (`Disponible || PuedeGenerarAula`) antes del flush. Sincronización protegida con `_semaforoSyncDimensiones` y eliminación del bloque condicional redundante.
+
+#### 2. Fase 1851 — Control de Snapshot Divergente en Generador
+- **Archivo:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgGeneradorHorarios.cs`
+- **Cambio:** Validación de paridad entre `snapshot.Manifiesto` y `contexto.ManifiestoCobertura` (huella y orden de claves). Falla cerrado con `I5_SNAPSHOT_DIVERGENTE` si no coinciden.
+
+#### 3. Fase 1852 — Desambiguación de Métodos de Escalado y Auditoría
+- **Archivo:** `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgEscaladorRanuraAula.cs`
+- **Cambio:** Distinción canónica: `PuedeAplicarPropuestaHeredada(AgAula)` para legado Disponible, y `PuedeAplicarPropuesta(AgContexto, AgAula)` como única vía de admisión con contexto. Registro en `contexto.Traza.Dato("ESCALON_SIN_ORIGEN", ...)` tanto en evaluación como en aplicación.
+
+#### 4. Fase 1853 — Pruebas Rigurosas de Efecto y Caso Divergente
+- **Archivo:** `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgAprobadaSinOrigenTests.cs`
+- **Cambio:** Poblamiento de `AulaAsignaturas` e índices en optimización completa; verificación de que los genes pertenezcan exclusivamente al aula 13. Verificación exacta de `TotalCapacidadHorariaAulas` según ocurrencias de martes en factibilidad. Incorporada prueba unitaria para snapshot divergente (`ValidarAprobadas_WhenSnapshotDivergenteConManifiesto_ShouldFallarCerrado`).
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 1850 | `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs` | Realizado |
+| 1851 | `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgGeneradorHorarios.cs` | Realizado |
+| 1852 | `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgEscaladorRanuraAula.cs` | Realizado |
+| 1853 | `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgAprobadaSinOrigenTests.cs` | Realizado |
+
+
+
+

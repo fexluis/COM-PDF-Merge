@@ -286,3 +286,67 @@ No se requieren fases nuevas. El comportamiento queda cubierto por pruebas de do
 No se requieren fases nuevas. La causa raíz del fallo de empaquetado queda cerrada y el contrato impide que
 cualquier dependencia nueva vuelva a quedar fuera del add-in instalado.
 
+---
+
+## Ronda 411 — Corrección y Cierre de Brechas de Aprobadas sin Origen (Fases 1846–1849)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1848 — Blindaje Fail-Closed ante Snapshot Nulo
+- **Archivos:** `ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgContexto.cs`, `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgGeneradorHorarios.cs`
+- **Cambio:** `AgContexto.PuedeGenerarAula` exige `PlanAprobadoSnapshot != null` antes de habilitar generación de aprobadas sin origen. `AgGeneradorHorarios.ValidarAprobadas` falla cerrado con `I5_SNAPSHOT_APROBADO_REQUERIDO` si el manifiesto incluye aprobadas sin snapshot canónico, preservando el flujo legítimo todo-Disponible.
+
+#### 2. Fase 1846 — Factibilidad Abierta a Aulas Programables
+- **Archivo:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgValidadorVentana.cs`
+- **Cambio:** Conteo (`:45`) y cálculo de oferta horaria (`:67`) amplían alcance a aulas programables (`Disponible || PuedeGenerarAula(a.Id)`). Mensaje actualizado a «No hay aulas programables configuradas para la sede/subunidad.».
+
+#### 3. Fase 1847 — Escalado de Decisión para Pendientes y Flush de Dimensiones
+- **Archivos:** `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgEscaladorRanuraAula.cs`, `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
+- **Cambio:** `AgEscaladorRanuraAula` incorpora sobrecarga context-aware de `PuedeAplicarPropuesta` y `PuedeEvaluarPropuesta` para admitir aprobadas sin origen verificadas (`[ESCALON SIN ORIGEN]`), garantizando postcondición de 0 filas en cohorte. `AgFormGeneradorHorarios` ejecuta flush previo de dimensiones pendientes de debounce antes de validar alcance.
+
+#### 4. Fase 1849 — Pruebas Unitarias de Regresión y Flujo Completo sin BD
+- **Archivo:** `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgAprobadaSinOrigenTests.cs`
+- **Cambio:** 5 nuevos casos de prueba cubriendo: snapshot nulo (rechazo y fail-closed), factibilidad de aprobadas sin origen (cálculo de oferta), elegibilidad en escalador de ranuras, y ejecución completa del ciclo genético en memoria.
+
+### Verificación de Principios (Ronda 411)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1846 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgValidadorVentana.cs:45,67` |
+| F1847 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs`, `AgFormGeneradorHorarios.cs:1653` |
+| F1848 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgContexto.cs:30`, `AgGeneradorHorarios.cs:245` |
+| F1849 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgAprobadaSinOrigenTests.cs` |
+
+---
+
+## Ronda 412 — Verificación y Fortalecimiento Ronda 410 (Fases 1850–1853)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1850 — Validación de Alcance Previa al Flush con Semáforo
+- **Archivo:** `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
+- **Cambio:** Validación estricta de pertenencia al alcance (`Disponible || PuedeGenerarAula`) antes de sincronizar dimensiones. Protegido el flush con `_semaforoSyncDimensiones` y removido el bloque `if` inalcanzable.
+
+#### 2. Fase 1851 — Control de Snapshot Divergente en Generador
+- **Archivo:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgGeneradorHorarios.cs`
+- **Cambio:** Control de integridad de snapshot contra el manifiesto vigente (huella y claves de relación idénticas); retorno de `I5_SNAPSHOT_DIVERGENTE` para impedir falsas aprobadas sin origen.
+
+#### 3. Fase 1852 — Desambiguación de Métodos de Escalado y Auditoría
+- **Archivo:** `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgEscaladorRanuraAula.cs`
+- **Cambio:** Separación en `PuedeAplicarPropuestaHeredada` (legado Disponible) y `PuedeAplicarPropuesta(contexto, aula)` como única compuerta con contexto. Registro explícito de `ESCALON_SIN_ORIGEN` en `contexto.Traza` en evaluación y aplicación.
+
+#### 4. Fase 1853 — Pruebas Rigurosas de Efecto y Caso Divergente
+- **Archivo:** `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgAprobadaSinOrigenTests.cs`
+- **Cambio:** Pruebas completas con poblamiento de `AulaAsignaturas` e índices, verificación de genes exclusivos del aula evaluada, validación exacta de oferta de horas según ocurrencias de martes, y caso de prueba para snapshot divergente.
+
+### Verificación de Principios (Ronda 412)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1850 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:1653-1675` |
+| F1851 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgGeneradorHorarios.cs:243-252` |
+| F1852 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:120,601,786` |
+| F1853 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgAprobadaSinOrigenTests.cs` |
+
+
+
