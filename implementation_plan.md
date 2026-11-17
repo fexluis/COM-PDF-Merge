@@ -168,3 +168,30 @@ Las citas `implementation_plan.md:NNNN` anteriores al corte apuntan al archivo m
 - Gate alternativo por lotes (`scripts/verify.ps1` bloqueado por ACL, desviación de Rondas 404–405): **1629 pruebas ejecutadas, 0 fallos**; baseline 1446 → suite crece, sin `SUITE_SHRUNK`.
 - Evidencia: `_evidence/20261117-aprobada-sin-origen/summary.md` (TRX `fase-green`, `int-a`, `int-b`, `root`).
 
+
+---
+
+## Ronda 409: Empaquetado declarado y contrato de consistencia (Fase 1845)
+
+### Contexto y Diagnóstico
+1. **Síntoma:** tras habilitar la planificación de aulas `PendienteDeProgramar`, la corrida llega al escalador y falla con `FileNotFoundException` de `Newtonsoft.Json, Version=13.0.0.0` en `P08_EjecutarOptimizacionAsync`.
+2. **Causa raíz:** dependencia de tiempo de ejecución no declarada ni desplegada. `AgEscaladorRanuraAula.CopiarModelo` clona el contexto con `JsonConvert`; la DLL se copiaba a `bin` (compilaba con `HintPath` a `$(UserProfile)`), pero no estaba en el `.dna`, no se instalaba por MSI y no existía en `%APPDATA%\Microsoft\AddIns`. Defecto latente: el bloqueo previo impedía llegar al escalador.
+3. **Desincronización sistémica:** `.dna` declaraba `System.Buffers`/`System.Memory`/`System.Numerics.Vectors` inexistentes en `bin`, el instalador mantenía su propia lista manual y `build_project.ps1` copiaba a mano tres dependencias. Nada validaba las cuatro fuentes entre sí.
+
+### Cambios Aplicados
+1. **Fase 1845 (`ConversorPDF.XLL-AddIn64.dna`, `ConversorPDF.XLL.csproj`, `installer/InstaladorConversorPDF.wxs`, `build_project.ps1`, `scripts/check-addin-packaging.ps1`):**
+   - `Reference Newtonsoft.Json.dll` en el `.dna`; retiradas las tres referencias fantasma.
+   - `PackageReference Newtonsoft.Json 13.0.1` + `Reference` con `HintPath=$(NuGetPackageRoot)` (sin `$(UserProfile)`); eliminadas las importaciones duplicadas de `obj\*.nuget.g.props/.targets` (MSB4011 y bloqueo de `PackageReference`).
+   - Componente `cmpNewtonsoft` en `DllComponents` del MSI.
+   - Copia explícita en `build_project.ps1`.
+   - Contrato ejecutable `check-addin-packaging.ps1`: `.dna` ⊆ bin, `Source` del WiX existentes, bin ⊆ (`.dna` ∪ WiX).
+2. **Doc:** `docs/articles/changes/2026-11-17-empaquetado-newtonsoft-consistencia.md`.
+
+### Verificación
+- Build XLL (Release y Debug) y tests: **0 errores**, sin MSB4011.
+- `check-addin-packaging.ps1 -Configuration Release`: **EMPACADO_OK** (bin 20 · `.dna` 16 · WiX 21).
+- MSI (`InstaladorConversorPDF.wixproj`): generado, 0 errores.
+- Suite por lotes: **1629 ejecutadas, 0 fallos**; baseline 1446 sin `SUITE_SHRUNK`.
+- Despliegue local en `%APPDATA%\Microsoft\AddIns` con `Newtonsoft.Json.dll`, `.dna` nuevo y ensamblado Release.
+- Evidencia: `_evidence/20261117-empaquetado-newtonsoft/summary.md`.
+

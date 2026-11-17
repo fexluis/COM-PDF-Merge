@@ -22,7 +22,6 @@
     <FileVersion>1.6.4.19</FileVersion>
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
-  <Import Project="obj\ConversorPDF.XLL.csproj.nuget.g.props" Condition="Exists('obj\ConversorPDF.XLL.csproj.nuget.g.props')" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
@@ -777,10 +776,12 @@
     <PackageReference Include="PDFsharp" Version="1.50.5147" />
     <PackageReference Include="PdfPig" Version="0.1.9" />
     <PackageReference Include="Dapper" Version="2.1.35" />
-    <!-- T3: copia profunda de modelos para simulación aislada. Referencia directa porque este proyecto
-         importa obj\*.nuget.g.props de forma duplicada y la compilación omite los activos del paquete. -->
+    <!-- T3: clon profundo de modelos para simulación aislada. PackageReference garantiza la restauración y
+         la referencia explícita garantiza la compilación (proyecto legacy: los activos no se materializan).
+         $(NuGetPackageRoot) lo define NuGet en obj\*.nuget.g.props; nunca la ruta del perfil. -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <Reference Include="Newtonsoft.Json">
-      <HintPath>$(UserProfile)\.nuget\packages\newtonsoft.json\13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>$(NuGetPackageRoot)newtonsoft.json\13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>true</Private>
     </Reference>
     <PackageReference Include="Stub.System.Data.SQLite.Core.NetFramework" Version="1.0.119.0" />
@@ -801,7 +802,6 @@
     </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="obj\ConversorPDF.XLL.csproj.nuget.g.targets" Condition="Exists('obj\ConversorPDF.XLL.csproj.nuget.g.targets')" />
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\NuGet\Microsoft.NuGet.targets" Condition="Exists('$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\NuGet\Microsoft.NuGet.targets')" />
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v17.0\NuGet\Microsoft.NuGet.targets" Condition="Exists('$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v17.0\NuGet\Microsoft.NuGet.targets')" />
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v16.0\NuGet\Microsoft.NuGet.targets" Condition="Exists('$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v16.0\NuGet\Microsoft.NuGet.targets')" />

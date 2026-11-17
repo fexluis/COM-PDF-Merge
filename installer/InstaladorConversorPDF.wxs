@@ -116,6 +116,10 @@
       <Component Id="cmpCsharpFE" Guid="0C8A7F41-1153-487D-8DA1-F2B3E12D3A1F">
         <File Id="filCsharpFE" Name="CSharpFunctionalExtensions.dll" Source="..\ConversorPDF.XLL\bin\x64\Release\CSharpFunctionalExtensions.dll" />
       </Component>
+      <!-- T3: clon profundo de modelos del escalador; requerido en tiempo de ejecución -->
+      <Component Id="cmpNewtonsoft" Guid="7A1F5E23-9C4D-4B8E-A1F6-2D3C4B5A6E71">
+        <File Id="filNewtonsoft" Name="Newtonsoft.Json.dll" Source="..\ConversorPDF.XLL\bin\x64\Release\Newtonsoft.Json.dll" />
+      </Component>
 
     </ComponentGroup>
 

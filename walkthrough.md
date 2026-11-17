@@ -265,3 +265,24 @@ Las citas `walkthrough.md:NNNN` anteriores al corte apuntan al archivo monolitic
 ### Decisión
 No se requieren fases nuevas. El comportamiento queda cubierto por pruebas de dominio y de fuente; el caso productivo (aulas aprobadas sin plan) deja de bloquear y se planifica en sus oleadas.
 
+
+---
+
+## Ronda 409 — Empaquetado declarado y contrato de consistencia (Fase 1845)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1845 — Dependencia de tiempo de ejecución declarada y verificada
+- **Archivos:** `ConversorPDF.XLL/ConversorPDF.XLL-AddIn64.dna`, `ConversorPDF.XLL/ConversorPDF.XLL.csproj`, `installer/InstaladorConversorPDF.wxs`, `build_project.ps1`, `scripts/check-addin-packaging.ps1` (nuevo), `docs/articles/changes/2026-11-17-empaquetado-newtonsoft-consistencia.md`
+- **Cambio:** `Newtonsoft.Json` queda declarado en el `.dna`, instalado por el MSI y copiado por el build. La referencia usa `$(NuGetPackageRoot)` (restaurable) en lugar de `$(UserProfile)`, y se eliminan las importaciones duplicadas de NuGet que impedían materializar el `PackageReference` y generaban MSB4011. El nuevo contrato verifica que `.dna`, instalador y `bin` coincidan, y falla el build ante cualquier DLL no desplegada. Se retiran tres referencias fantasma (`System.Buffers`, `System.Memory`, `System.Numerics.Vectors`).
+
+### Verificación de Principios (Ronda 409)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1845 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `_evidence/20261117-empaquetado-newtonsoft/summary.md` (1629 pruebas, 0 fallas; EMPACADO_OK) |
+
+### Decisión
+No se requieren fases nuevas. La causa raíz del fallo de empaquetado queda cerrada y el contrato impide que
+cualquier dependencia nueva vuelva a quedar fuera del add-in instalado.
+

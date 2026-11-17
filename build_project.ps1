@@ -42,6 +42,10 @@ if ($msbuild) {
             $functionalDll = "$env:USERPROFILE\.nuget\packages\csharpfunctionalextensions\2.40.3\lib\net461\CSharpFunctionalExtensions.dll"
             if (Test-Path $functionalDll) { Copy-Item $functionalDll -Destination "$outputPath\" -Force }
 
+            # T3: clon profundo del escalador; debe existir junto al add-in para resolver en tiempo de ejecución
+            $newtonsoftDll = "$env:USERPROFILE\.nuget\packages\newtonsoft.json\13.0.1\lib\net45\Newtonsoft.Json.dll"
+            if (Test-Path $newtonsoftDll) { Copy-Item $newtonsoftDll -Destination "$outputPath\" -Force }
+
             Write-Host "Iniciando compilación de ConversorPDF.XLL..."
             & $msbuild ".\ConversorPDF.XLL\ConversorPDF.XLL.csproj" /p:Configuration=$config /p:Platform=$plat /m /v:m
         }

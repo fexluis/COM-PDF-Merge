@@ -14,10 +14,7 @@
   <Reference Path="UglyToad.PdfPig.Tokenization.dll" Pack="false" />
   <Reference Path="UglyToad.PdfPig.Tokens.dll" Pack="false" />
   
-  <!-- Dependencias de sistema / infraestructura -->
-  <Reference Path="System.Buffers.dll" Pack="false" />
-  <Reference Path="System.Memory.dll" Pack="false" />
-  <Reference Path="System.Numerics.Vectors.dll" Pack="false" />
+  <!-- Dependencias de sistema / infraestructura (las que realmente existen en bin) -->
   <Reference Path="System.Reflection.Metadata.dll" Pack="false" />
   <Reference Path="System.Collections.Immutable.dll" Pack="false" />
   
@@ -25,6 +22,9 @@
   <Reference Path="CSharpFunctionalExtensions.dll" Pack="false" />
   <Reference Path="Dapper.dll" Pack="false" LoadFromBytes="false" />
   <Reference Path="System.Data.SQLite.dll" Pack="false" LoadFromBytes="false" />
+  <!-- T3: clon profundo de modelos para la simulación aislada del escalador. Sin esta referencia el
+       add-in instalado no puede resolver Newtonsoft.Json en tiempo de ejecución. -->
+  <Reference Path="Newtonsoft.Json.dll" Pack="false" />
 
   <CustomUI>
     <customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui" onLoad="Ribbon_Load" loadImage="GetImage">
