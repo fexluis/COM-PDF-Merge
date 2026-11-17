@@ -14,10 +14,15 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         /// y la verificación del origen deben haberse comprobado antes de proporcionar conservadas.</summary>
         public Result Validar(AgManifiestoCobertura manifiesto,
             IReadOnlyCollection<AgSesionCobertura> conservadas, IReadOnlyCollection<AgSesionCobertura> nuevas,
-            int idTerceroVacante = 0, IReadOnlyCollection<(DateTime Inicio, DateTime Fin)> festivos = null)
+            int idTerceroVacante = 0, IReadOnlyCollection<(DateTime Inicio, DateTime Fin)> festivos = null,
+            IReadOnlyCollection<int> asignaturasVacantesConsentidas = null)
         {
             if (manifiesto == null || conservadas == null || nuevas == null)
                 return Result.Failure("COBERTURA_ENTRADA_INVALIDA");
+
+            var consentidas = asignaturasVacantesConsentidas as ISet<int>
+                              ?? new HashSet<int>(asignaturasVacantesConsentidas ?? Enumerable.Empty<int>());
+
             // El límite es la ventana semestral seleccionada, no una fecha fija. El manifiesto ya garantiza
             // Inicio <= Fin en su constructor, así que aquí sólo se contrastan las sesiones contra él.
             var requeridas = manifiesto.Relaciones.ToDictionary(r => r.Clave.Valor, StringComparer.Ordinal);
@@ -47,18 +52,23 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     s.Horas <= 0 || double.IsNaN(s.Horas) || double.IsInfinity(s.Horas) ||
                     s.Horas > (s.Fin - s.Inicio).TotalHours + 0.001)
                     return Result.Failure("SESION_NO_VERIFICABLE");
-                // VACANTE no equivale a demanda ausente: la cobertura horaria se cuenta y el docente falta.
-                if (s.IdTercero <= 0 || s.IdTercero == idTerceroVacante || s.EsVacante)
+                // FASE 1870/1875: VACANTE consentida: la cobertura horaria se cuenta y el docente falta por autorización explícita.
+                bool consentida = consentidas.Contains(s.Clave.IdAsignatura);
+                if (s.IdTercero <= 0 && !consentida) return Result.Failure("DOCENTE_VACANTE");
+                if ((s.EsVacante || (idTerceroVacante > 0 && s.IdTercero == idTerceroVacante))
+                    && !consentida)
                     return Result.Failure("DOCENTE_VACANTE");
             }
             for (int i = 0; i < sesiones.Count; i++)
-            for (int j = i + 1; j < sesiones.Count; j++)
-            {
-                var a = sesiones[i]; var b = sesiones[j];
-                if (a.Fecha.Date != b.Fecha.Date || a.Inicio >= b.Fin || b.Inicio >= a.Fin) continue;
-                if (a.Clave.IdAula == b.Clave.IdAula) return Result.Failure("CRUCE_AULA");
-                if (a.IdTercero == b.IdTercero) return Result.Failure("CRUCE_DOCENTE");
-            }
+                for (int j = i + 1; j < sesiones.Count; j++)
+                {
+                    var a = sesiones[i]; var b = sesiones[j];
+                    if (a.Fecha.Date != b.Fecha.Date || a.Inicio >= b.Fin || b.Inicio >= a.Fin) continue;
+                    if (a.Clave.IdAula == b.Clave.IdAula) return Result.Failure("CRUCE_AULA");
+                    bool aVacante = a.EsVacante || (idTerceroVacante > 0 && a.IdTercero == idTerceroVacante) || a.IdTercero <= 0;
+                    bool bVacante = b.EsVacante || (idTerceroVacante > 0 && b.IdTercero == idTerceroVacante) || b.IdTercero <= 0;
+                    if (!aVacante && !bVacante && a.IdTercero == b.IdTercero) return Result.Failure("CRUCE_DOCENTE");
+                }
             foreach (var r in manifiesto.Relaciones)
             {
                 double horas = sesiones.Where(s => s.Clave.Valor == r.Clave.Valor).Sum(s => s.Horas);

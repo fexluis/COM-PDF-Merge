@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 415 | 416 | 2026-11-17 |
-| `fase` | 1869 | 1870 | 2026-11-17 |
+| `ronda` | 422 | 423 | 2026-11-17 |
+| `fase` | 1894 | 1895 | 2026-11-17 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -128,7 +128,14 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-091 | 2026-11-17 | `(revisión Ronda 412 — Fases 1850–1853: flush alcance semáforo, snapshot divergente, trazabilidad y tests)` | `Wave —` → `Ronda 412` | `Fase 1850–1853` | closed | revisión y correcciones; sin build/tests | pendiente |
 | R-092 | 2026-11-17 | `(revisión Ronda 413 — Fases 1854–1857: extensión de período, fallo cerrado ventana, paridad demanda escalador)` | `Wave —` → `Ronda 413` | `Fase 1854–1857` | closed | revisión y correcciones; sin build/tests | pendiente |
 | R-093 | 2026-11-17 | `(revisión Ronda 414 — Fases 1858–1866: corrección tipado Result, asigsAula, Marcar combo, contabilidad demanda y no pérdida)` | `Wave —` → `Ronda 414` | `Fase 1858–1866` | closed | revisión y correcciones; sin build/tests | pendiente |
-| R-094 | 2026-11-17 | `(revisión Ronda 415 — Fases 1867–1869: filtro catálogo en simulación, DtpVentana tipado y escritura fuera de UI)` | `Wave —` → `Ronda 415` | `Fase 1867–1869` | executing | revisión y correcciones; sin build/tests | pendiente |
+| R-094 | 2026-11-17 | `(revisión Ronda 415 — Fases 1867–1869: filtro catálogo en simulación, DtpVentana tipado y escritura fuera de UI)` | `Wave —` → `Ronda 415` | `Fase 1867–1869` | closed | PASS (Full 1641, Release v1.6.4.21) | `60ea604` |
+| R-095 | 2026-11-17 | `(revisión Ronda 416 — Fases 1870–1873: vacantes consentidas en certificado, propagación contexto y no throw post-staging)` | `Wave —` → `Ronda 416` | `Fase 1870–1873` | closed | revisión y correcciones; sin build/tests | pendiente |
+| R-096 | 2026-11-17 | `(revisión Ronda 417 — Fases 1874–1878: rehidratación consentimiento en compuerta, IdTercero <= 0 en cobertura, asserts estrictos y purga staging)` | `Wave —` → `Ronda 417` | `Fase 1874–1878` | closed | revisión y correcciones; sin build/tests | pendiente |
+| R-097 | 2026-11-17 | `(revisión Ronda 418 — Fases 1879–1883: corrección compilación tests, purga staging no certificable y columna tipada vacantes_consentidas)` | `Wave —` → `Ronda 418` | `Fase 1879–1883` | closed | revisión y correcciones; sin build/tests | pendiente |
+| R-098 | 2026-11-17 | `(revisión Ronda 419 — Fases 1884–1886: using AgCorrida, migración V84 vacantes_consentidas, persistencia repo y hot path tipado)` | `Wave —` → `Ronda 419` | `Fase 1884–1886` | closed | revisión y correcciones (1884-1886); sin build/tests | pendiente |
+| R-099 | 2026-11-17 | `(revisión Ronda 420 — Fases 1887–1888: serialización segura vacantes_consentidas, helper introspección unificado y test compatibilidad)` | `Wave —` → `Ronda 420` | `Fase 1887–1888` | closed | sin escisión (bajo umbral); sin build/tests | pendiente |
+| R-100 | 2026-11-17 | `(revisión Ronda 421 — Fases 1889–1891: tri-estado ExistenciaSql, TablaExiste unificado y saneamiento de identificador)` | `Wave —` → `Ronda 421` | `Fase 1889–1891` | closed | sin escisión (bajo umbral); sin build/tests | pendiente |
+| R-101 | 2026-11-17 | `(revisión Ronda 422 — Fases 1892–1894: propagación Indeterminada en V84, degradación segura en repositorio y exclusión prefijo sqlite_)` | `Wave —` → `Ronda 422` | `Fase 1892–1894` | closed | sin escisión (bajo umbral); sin build/tests | pendiente |
 
 
 

@@ -116,6 +116,17 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
         public List<(DateTime Inicio, DateTime Fin)> Festivos { get; set; }
         public List<(DateTime Inicio, DateTime Fin)> Presenciales { get; set; }
 
+        private HashSet<int> _vacantesConsentidas = new HashSet<int>();
+        /// <summary>
+        /// FASE 1871/1877: Asignaturas autorizadas por el usuario para admitir docente VACANTE sin fallar el certificado de cobertura.
+        /// </summary>
+        public HashSet<int> AsignaturasVacantesConsentidas
+        {
+            get => _vacantesConsentidas ?? (_vacantesConsentidas = new HashSet<int>());
+            set => _vacantesConsentidas = value ?? new HashSet<int>();
+        }
+        public bool PermiteVacantes => AsignaturasVacantesConsentidas != null && AsignaturasVacantesConsentidas.Count > 0;
+
         // Índices O(1) para evaluación rápida
         public Dictionary<int, AgAula> AulasPorId { get; private set; }
         public Dictionary<int, AgBloqueHorario> BloquesPorId { get; private set; }

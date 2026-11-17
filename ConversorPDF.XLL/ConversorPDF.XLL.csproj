@@ -17,9 +17,9 @@
     <ExcelDnaCreate64BitAddIn>true</ExcelDnaCreate64BitAddIn>
     <!-- Excluir dependencias que no existen en .NET 4.8 y no deben empaquetarse -->
     <ExcelDnaExcludedDependencies>Microsoft.Bcl.HashCode.dll</ExcelDnaExcludedDependencies>
-    <Version>1.6.4.21</Version>
-    <AssemblyVersion>1.6.4.21</AssemblyVersion>
-    <FileVersion>1.6.4.21</FileVersion>
+    <Version>1.6.4.22</Version>
+    <AssemblyVersion>1.6.4.22</AssemblyVersion>
+    <FileVersion>1.6.4.22</FileVersion>
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
@@ -49,6 +49,7 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
     <Reference Include="System.Security" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Runtime.CompilerServices.Unsafe">
       <HintPath>$(UserProfile)\.nuget\packages\system.runtime.compilerservices.unsafe\6.0.0\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
       <Private>True</Private>
@@ -287,6 +288,7 @@
     <Compile Include="Core\Helpers\FirmasGeneradorHelper.cs" />
     <Compile Include="Core\Helpers\FirmaPDFsHelper.cs" />
     <Compile Include="Core\Helpers\SqliteHelper.cs" />
+    <Compile Include="Core\Helpers\ExistenciaSql.cs" />
     <Compile Include="Core\Helpers\DatabaseBootstrapper.cs" />
     <Compile Include="Core\Helpers\ConstantsHelper.cs" />
     <Compile Include="Core\Helpers\DatabaseEncryptionEngine.cs" />
@@ -752,6 +754,7 @@
     <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV81_AddAgGenFechasGen.cs" />
     <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV82_AddAgCandidatoPlanAprobado.cs" />
     <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV83_AddAgPeriodoVentanaAuditoria.cs" />
+    <Compile Include="Academic\Infrastructure\Persistence\Migrations\MigrationV84_AddAgCorridaVacantesConsentidas.cs" />
     <Compile Include="Academic\Domain\Models\Genetica\AgCandidatoPlanAprobado.cs" />
     <Compile Include="Academic\Domain\Interfaces\IAgCandidatoPlanAprobadoRepository.cs" />
     <Compile Include="Academic\Infrastructure\Persistence\Repositories\AgCandidatoPlanAprobadoRepository.cs" />

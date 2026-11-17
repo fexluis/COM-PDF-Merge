@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using ConversorPDF.XLL.Academic.Domain.Enums;
 
 namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
@@ -29,6 +31,40 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
         public long? IdIndividuoOptimo { get; set; }
         public string ParametrosJson { get; set; }
         public string Subunidad { get; set; }
+
+        private HashSet<int> _vacantesConsentidas = new HashSet<int>();
+
+        /// <summary>
+        /// FASE 1883/1884/1885: Asignaturas autorizadas para docente vacante en esta corrida.
+        /// </summary>
+        public HashSet<int> VacantesConsentidas
+        {
+            get => _vacantesConsentidas ?? (_vacantesConsentidas = new HashSet<int>());
+            set => _vacantesConsentidas = value ?? new HashSet<int>();
+        }
+
+        /// <summary>
+        /// FASE 1885/1887: Columna tipada 'vacantes_consentidas' en ag_corrida ("101,102") para mapeo automático Dapper.
+        /// Se ignora en cualquier serialización para evitar duplicar el estado del dominio.
+        /// </summary>
+        [System.Runtime.Serialization.IgnoreDataMember]
+        [Newtonsoft.Json.JsonIgnore]
+        public string vacantes_consentidas
+        {
+            get => string.Join(",", VacantesConsentidas.OrderBy(x => x));
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    _vacantesConsentidas = new HashSet<int>();
+                    return;
+                }
+                _vacantesConsentidas = new HashSet<int>(
+                    value.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                         .Select(s => int.TryParse(s.Trim(), out var v) ? v : 0)
+                         .Where(v => v > 0));
+            }
+        }
 
         public AgCorrida()
         {

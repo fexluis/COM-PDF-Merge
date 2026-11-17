@@ -261,9 +261,13 @@ ORDER BY CASE WHEN COALESCE(subunidad, '') = @Subunidad THEN 0 ELSE 1 END, dia_s
                 {
                     if (db.State != ConnectionState.Open) db.Open();
 
-                    string sql = @"
-INSERT INTO ag_corrida (idperiodo, idprograma, idaula, fecha_inicio_corrida, fecha_fin_corrida, estado, poblacion_tamano, generaciones_max, generaciones_ejecutadas, tasa_cruce, tasa_mutacion, elitismo, mejor_fitness, hard_violations, soft_violations, vacantes, id_individuo_optimo, parametros_json, subunidad)
-VALUES (@IdPeriodo, @IdPrograma, @IdAula, @FechaInicioCorrida, @FechaFinCorrida, @Estado, @PoblacionTamano, @GeneracionesMax, @GeneracionesEjecutadas, @TasaCruce, @TasaMutacion, @Elitismo, @MejorFitness, @HardViolations, @SoftViolations, @Vacantes, @IdIndividuoOptimo, @ParametrosJson, @Subunidad);
+                    bool hayColVac = ColumnaExiste(db, null, "ag_corrida", "vacantes_consentidas");
+                    string cols = hayColVac ? ", vacantes_consentidas" : "";
+                    string vals = hayColVac ? ", @VacantesConsentidas" : "";
+
+                    string sql = $@"
+INSERT INTO ag_corrida (idperiodo, idprograma, idaula, fecha_inicio_corrida, fecha_fin_corrida, estado, poblacion_tamano, generaciones_max, generaciones_ejecutadas, tasa_cruce, tasa_mutacion, elitismo, mejor_fitness, hard_violations, soft_violations, vacantes, id_individuo_optimo, parametros_json, subunidad{cols})
+VALUES (@IdPeriodo, @IdPrograma, @IdAula, @FechaInicioCorrida, @FechaFinCorrida, @Estado, @PoblacionTamano, @GeneracionesMax, @GeneracionesEjecutadas, @TasaCruce, @TasaMutacion, @Elitismo, @MejorFitness, @HardViolations, @SoftViolations, @Vacantes, @IdIndividuoOptimo, @ParametrosJson, @Subunidad{vals});
 SELECT last_insert_rowid();";
 
                     var param = new
@@ -286,7 +290,8 @@ SELECT last_insert_rowid();";
                         corrida.Vacantes,
                         corrida.IdIndividuoOptimo,
                         ParametrosJson = corrida.ParametrosJson ?? "{}",
-                        Subunidad = corrida.Subunidad ?? string.Empty
+                        Subunidad = corrida.Subunidad ?? string.Empty,
+                        VacantesConsentidas = corrida.vacantes_consentidas ?? string.Empty
                     };
 
                     long id = await db.ExecuteScalarAsync<long>(new CommandDefinition(sql, param, cancellationToken: ct));
@@ -315,7 +320,10 @@ SELECT last_insert_rowid();";
                 {
                     if (db.State != ConnectionState.Open) db.Open();
 
-                    string sql = @"
+                    bool hayColVac = ColumnaExiste(db, null, "ag_corrida", "vacantes_consentidas");
+                    string setVac = hayColVac ? ",\n    vacantes_consentidas = @VacantesConsentidas" : "";
+
+                    string sql = $@"
 UPDATE ag_corrida SET
     fecha_fin_corrida = @FechaFinCorrida,
     estado = @Estado,
@@ -325,7 +333,7 @@ UPDATE ag_corrida SET
     soft_violations = @SoftViolations,
     vacantes = @Vacantes,
     id_individuo_optimo = @IdIndividuoOptimo,
-    parametros_json = @ParametrosJson
+    parametros_json = @ParametrosJson{setVac}
 WHERE id = @Id;";
 
                     var param = new
@@ -339,6 +347,7 @@ WHERE id = @Id;";
                         corrida.Vacantes,
                         corrida.IdIndividuoOptimo,
                         ParametrosJson = corrida.ParametrosJson ?? "{}",
+                        VacantesConsentidas = corrida.vacantes_consentidas ?? string.Empty,
                         corrida.Id
                     };
 
@@ -377,7 +386,9 @@ WHERE id = @Id;";
                 {
                     if (db.State != ConnectionState.Open) db.Open();
 
-                    string sql = "SELECT id as Id, idperiodo as IdPeriodo, idprograma as IdPrograma, idaula as IdAula, fecha_inicio_corrida as FechaInicioCorrida, fecha_fin_corrida as FechaFinCorrida, estado as Estado, poblacion_tamano as PoblacionTamano, generaciones_max as GeneracionesMax, generaciones_ejecutadas as GeneracionesEjecutadas, tasa_cruce as TasaCruce, tasa_mutacion as TasaMutacion, elitismo as Elitismo, mejor_fitness as MejorFitness, hard_violations as HardViolations, soft_violations as SoftViolations, vacantes as Vacantes, id_individuo_optimo as IdIndividuoOptimo, parametros_json as ParametrosJson, subunidad as Subunidad FROM ag_corrida WHERE id = @idCorrida";
+                    bool hayColVac = ColumnaExiste(db, null, "ag_corrida", "vacantes_consentidas");
+                    string colVac = hayColVac ? ", vacantes_consentidas as vacantes_consentidas" : "";
+                    string sql = $"SELECT id as Id, idperiodo as IdPeriodo, idprograma as IdPrograma, idaula as IdAula, fecha_inicio_corrida as FechaInicioCorrida, fecha_fin_corrida as FechaFinCorrida, estado as Estado, poblacion_tamano as PoblacionTamano, generaciones_max as GeneracionesMax, generaciones_ejecutadas as GeneracionesEjecutadas, tasa_cruce as TasaCruce, tasa_mutacion as TasaMutacion, elitismo as Elitismo, mejor_fitness as MejorFitness, hard_violations as HardViolations, soft_violations as SoftViolations, vacantes as Vacantes, id_individuo_optimo as IdIndividuoOptimo, parametros_json as ParametrosJson, subunidad as Subunidad{colVac} FROM ag_corrida WHERE id = @idCorrida";
                     var item = await db.QuerySingleOrDefaultAsync<AgCorrida>(new CommandDefinition(sql, new { idCorrida }, cancellationToken: ct));
                     if (item == null) return Result.Failure<AgCorrida>("Corrida no encontrada.");
                     return Result.Success(item);
@@ -402,13 +413,15 @@ WHERE id = @Id;";
                 {
                     if (db.State != ConnectionState.Open) db.Open();
 
+                    bool hayColVac = ColumnaExiste(db, null, "ag_corrida", "vacantes_consentidas");
+                    string colVac = hayColVac ? ", vacantes_consentidas as vacantes_consentidas" : "";
                     string sql = "SELECT id as Id, idperiodo as IdPeriodo, idprograma as IdPrograma, idaula as IdAula, " +
                                  "fecha_inicio_corrida as FechaInicioCorrida, fecha_fin_corrida as FechaFinCorrida, estado as Estado, " +
                                  "poblacion_tamano as PoblacionTamano, generaciones_max as GeneracionesMax, " +
                                  "generaciones_ejecutadas as GeneracionesEjecutadas, tasa_cruce as TasaCruce, tasa_mutacion as TasaMutacion, " +
                                  "elitismo as Elitismo, mejor_fitness as MejorFitness, hard_violations as HardViolations, " +
                                  "soft_violations as SoftViolations, vacantes as Vacantes, id_individuo_optimo as IdIndividuoOptimo, " +
-                                 "parametros_json as ParametrosJson, subunidad as Subunidad " +
+                                 $"parametros_json as ParametrosJson, subunidad as Subunidad{colVac} " +
                                  "FROM ag_corrida WHERE idperiodo = @idPeriodo AND idprograma = @idPrograma " +
                                  "AND (@subunidad IS NULL OR subunidad = @subunidad) ORDER BY id DESC LIMIT 1";
 
@@ -1331,20 +1344,22 @@ VALUES (@Id, @IdPeriodo, @IdPrograma, @IdAula, @FechaInicio, @FechaFin, @Estado,
 
         /// <summary>
         /// Indica si una tabla existe en el vault. Permite purgar vaults legados que aún no tienen
-        /// las tablas opcionales del AG (Fase 1563).
+        /// las tablas opcionales del AG (Fase 1563/1890/1892).
         /// </summary>
         private static bool TablaExiste(IDbConnection db, IDbTransaction trans, string tabla)
         {
-            try
-            {
-                return db.ExecuteScalar<int>(new CommandDefinition(
-                    "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name = @tabla;",
-                    new { tabla }, trans)) > 0;
-            }
-            catch
-            {
-                return false;
-            }
+            return SqliteHelper.TablaExiste(db, tabla, trans) == ExistenciaSql.Existe;
+        }
+
+        /// <summary>
+        /// Comprueba de forma segura si una columna existe confirmadamente en una tabla SQLite (Fase 1885/1888/1889/1893).
+        /// Solo retorna true si la columna fue fehacientemente comprobada (Existe). Ante Indeterminada o NoExiste
+        /// retorna false para no abortar Insert/Update con 'no such column'. El consentimiento de vacantes
+        /// se conserva íntegro en parametros_json como mecanismo de respaldo.
+        /// </summary>
+        private static bool ColumnaExiste(IDbConnection db, IDbTransaction trans, string tabla, string columna)
+        {
+            return SqliteHelper.ColumnaExiste(db, tabla, columna, trans) == ExistenciaSql.Existe;
         }
 
 

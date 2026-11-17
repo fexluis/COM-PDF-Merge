@@ -249,5 +249,77 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
         private static AgSesionCanonica Canonica(long id, long vinculacion, long docente, int inicio)
             => new AgSesionCanonica(id, vinculacion, docente, new DateTime(2027, 2, 5),
                 TimeSpan.FromHours(inicio), TimeSpan.FromHours(inicio + 4), 4, "VALLE", "sesion:" + id);
+
+        [Fact]
+        public void VacanteConsentida_AutorizaSesionConDocenteVacante()
+        {
+            // Arrange (Fase 1870): Sesión con docente centinela vacante
+            var m = Manifiesto(1);
+            int idAsignatura = m.Relaciones.First().Clave.IdAsignatura;
+            int idVacante = 99;
+            var sesionVacante = new AgSesionCobertura(
+                m.Relaciones.First().Clave, "NUEVA", 1, idVacante,
+                new DateTime(2027, 2, 5), TimeSpan.FromHours(8), TimeSpan.FromHours(12), 4, esVacante: true);
+
+            var validador = new AgValidadorCoberturaSeleccion();
+
+            // Act 1: Sin consentimiento, debe rechazar DOCENTE_VACANTE
+            var sinConsentimiento = validador.Validar(m, Array.Empty<AgSesionCobertura>(), new[] { sesionVacante }, idTerceroVacante: idVacante);
+            Assert.True(sinConsentimiento.IsFailure);
+            Assert.Equal("DOCENTE_VACANTE", sinConsentimiento.Error);
+
+            // Act 2: Con consentimiento para la asignatura, debe validar con éxito
+            var conConsentimiento = validador.Validar(m, Array.Empty<AgSesionCobertura>(), new[] { sesionVacante },
+                idTerceroVacante: idVacante, asignaturasVacantesConsentidas: new[] { idAsignatura });
+            Assert.True(conConsentimiento.IsSuccess, conConsentimiento.IsFailure ? conConsentimiento.Error : string.Empty);
+        }
+
+        [Fact]
+        public void VacantesConcurrentes_EnDiferentesAulas_NoGeneranCruceDocente()
+        {
+            // Arrange (Fase 1870): 2 aulas con sesiones concurrentes el mismo día y hora, ambas con centinela vacante
+            var m = Manifiesto(2);
+            int idVacante = 99;
+            var rel1 = m.Relaciones.First(r => r.Clave.IdAula == 1);
+            var rel2 = m.Relaciones.First(r => r.Clave.IdAula == 2);
+
+            var sesion1 = new AgSesionCobertura(rel1.Clave, "NUEVA", 1, idVacante,
+                new DateTime(2027, 2, 5), TimeSpan.FromHours(8), TimeSpan.FromHours(12), 4, esVacante: true);
+            var sesion2 = new AgSesionCobertura(rel2.Clave, "NUEVA", 2, idVacante,
+                new DateTime(2027, 2, 5), TimeSpan.FromHours(8), TimeSpan.FromHours(12), 4, esVacante: true);
+
+            var validador = new AgValidadorCoberturaSeleccion();
+            var consentidas = new[] { rel1.Clave.IdAsignatura, rel2.Clave.IdAsignatura };
+
+            // Act
+            var r = validador.Validar(m, Array.Empty<AgSesionCobertura>(), new[] { sesion1, sesion2 },
+                idTerceroVacante: idVacante, asignaturasVacantesConsentidas: consentidas);
+
+            // Assert: no debe fallar por CRUCE_DOCENTE
+            Assert.True(r.IsSuccess, r.IsFailure ? r.Error : string.Empty);
+        }
+
+        [Fact]
+        public void VacanteConsentida_SinCentinelaDocente_AutorizaSesionConIdTerceroCero()
+        {
+            // Arrange (Fase 1875/1879): Sesión vacante sin centinela configurado (IdTercero == 0)
+            var m = Manifiesto(1);
+            int idAsignatura = m.Relaciones.First().Clave.IdAsignatura;
+            var sesionSinCentinela = new AgSesionCobertura(
+                m.Relaciones.First().Clave, "NUEVA", 1, idTercero: 0,
+                fecha: new DateTime(2027, 2, 5), inicio: TimeSpan.FromHours(8), fin: TimeSpan.FromHours(12), horas: 4, esVacante: true);
+
+            var validador = new AgValidadorCoberturaSeleccion();
+
+            // Act 1: Sin consentimiento, debe rechazar DOCENTE_VACANTE
+            var sinConsentimiento = validador.Validar(m, Array.Empty<AgSesionCobertura>(), new[] { sesionSinCentinela }, idTerceroVacante: 0);
+            Assert.True(sinConsentimiento.IsFailure);
+            Assert.Equal("DOCENTE_VACANTE", sinConsentimiento.Error);
+
+            // Act 2: Con consentimiento para la asignatura, no debe abortar en s.IdTercero <= 0 y debe validar con éxito
+            var conConsentimiento = validador.Validar(m, Array.Empty<AgSesionCobertura>(), new[] { sesionSinCentinela },
+                idTerceroVacante: 0, asignaturasVacantesConsentidas: new[] { idAsignatura });
+            Assert.True(conConsentimiento.IsSuccess, conConsentimiento.IsFailure ? conConsentimiento.Error : string.Empty);
+        }
     }
 }

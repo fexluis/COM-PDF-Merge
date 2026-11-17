@@ -13,7 +13,8 @@ namespace ConversorPDF.Tests.Academic.UI.Forms
         public void Inicio_NoPurgaHistorico_YAdquiereIdentidadAntesDelPrimerAwait()
         {
             var inicio = Inicio();
-            inicio.Should().NotContain("LimpiarStagingAsync(");
+            var antesDelPrimerAwait = Entre(inicio, "private async Task IniciarOptimizacionAsync()", "await _semaforoSyncDimensiones.WaitAsync(");
+            antesDelPrimerAwait.Should().NotContain("LimpiarStagingAsync(");
             inicio.Should().Contain("_diagnosticoEnCurso || _intentoOptimizacion.HasValue");
             Antes(inicio, "_intentoOptimizacion = intento;", "await _semaforoSyncDimensiones.WaitAsync(");
             inicio.Should().Contain("if (semaforoAdquirido) _semaforoSyncDimensiones.Release();");
@@ -262,7 +263,7 @@ namespace ConversorPDF.Tests.Academic.UI.Forms
             inicio.Should().Contain("Array.Empty<AgSesionCobertura>(), _contextoActual.IdTerceroVacante");
             inicio.Should().Contain("new AgProyectorSolucionCobertura().Nuevas(_contextoActual, mejor, sesiones.Value)");
             inicio.Should().Contain("new AgValidadorCoberturaSeleccion().Validar(_contextoActual.ManifiestoCobertura,");
-            inicio.Should().Contain("AgCompuertaPromocion.EsPromovible(corrida, mejor, sesiones, _contextoActual)");
+            inicio.Should().Contain("AgCompuertaPromocion.EsPromovible(corrida, mejor, sesiones, _contextoActual");
             inicio.Should().Contain("{ \"decisionesCobertura\", _contextoActual.CandidatosCobertura }");
             inicio.Should().Contain("{ \"sesionesConservadas\", _contextoActual.SesionesConservadas }");
             Fuente().Should().Contain("Promoción bloqueada: falta reemplazo transaccional T6");

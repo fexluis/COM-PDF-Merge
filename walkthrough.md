@@ -461,6 +461,213 @@ cualquier dependencia nueva vuelva a quedar fuera del add-in instalado.
 | F1868 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:378-385,550-565` |
 | F1869 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:736-745`, `AcademicRepository.cs:1-15,804-890` |
 
+---
+
+## Ronda 416 — DOCENTE_VACANTE aborta la corrida después de materializar staging (Fases 1870–1873)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1870 — Vacantes Consentidas en Certificado de Cobertura
+- **Archivos:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgValidadorCoberturaSeleccion.cs`, `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgValidadorCoberturaSeleccionTests.cs`
+- **Cambio:** `AgValidadorCoberturaSeleccion.Validar` admite `asignaturasVacantesConsentidas`. Sesiones vacantes consentidas no retornan `DOCENTE_VACANTE` y no generan falsos `CRUCE_DOCENTE` concurrentes entre aulas. Añadidas pruebas unitarias para validación con y sin consentimiento y cruces entre vacantes en distintas aulas.
+
+#### 2. Fase 1871 — Persistencia y Propagación del Consentimiento en Contexto y Parámetros
+- **Archivos:** `ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgContexto.cs`, `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`, `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgCompuertaPromocionTests.cs`
+- **Cambio:** `AgContexto` almacena `AsignaturasVacantesConsentidas` y expone `PermiteVacantes`. Se actualiza tras el diálogo de pre-vuelo, se propaga al certificado de cobertura y a `AgCompuertaPromocion.EsPromovible`, y se serializa/deserializa en `corrida.ParametrosJson`.
+
+#### 3. Fase 1872 — Cierre Garantizado de Corrida sin Throw en Post-Staging
+- **Archivo:** `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
+- **Cambio:** Eliminado `throw new InvalidOperationException` post-staging. Si la cobertura no certifica, se marca `stagingOk = false` y la corrida se actualiza normalmente en base de datos como `AgEstadoCorrida.Error` mediante `UpdateCorridaAsync`.
+
+#### 4. Fase 1873 — Causa Tipada CoberturaNoCertificada en Diagnóstico
+- **Archivos:** `ConversorPDF.XLL/Academic/Domain/Enums/AgCausaFallo.cs`, `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
+- **Cambio:** Declarado `AgCausaFallo.CoberturaNoCertificada`. Registrado en traza ante rechazo del certificado de cobertura, evitando degradar a `ExcepcionNoControlada`.
+
+### Verificación de Principios (Ronda 416)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1870 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgValidadorCoberturaSeleccion.cs:15-68`, `AgValidadorCoberturaSeleccionTests.cs:250-295` |
+| F1871 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgContexto.cs:115-122`, `AgFormGeneradorHorarios.cs:1680,2670,2890,3240,4230`, `AgCompuertaPromocionTests.cs` |
+| F1872 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:3260-3290` |
+| F1873 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgCausaFallo.cs:55-58`, `AgFormGeneradorHorarios.cs:3280-3290` |
+
+---
+
+## Ronda 417 — Consentimiento de vacantes no restaurado fuera del combo (Fases 1874–1878)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1874 — Rehidratación Autónoma de Vacantes en AgCompuertaPromocion
+- **Archivos:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgCompuertaPromocion.cs`
+- **Cambio:** Se dotó a `AgCompuertaPromocion` del método `VacantesConsentidasEnCorrida` para rehidratar el consentimiento directamente desde `corrida.ParametrosJson`. `EsPromovible` y `ValidarPromocion` determinan autónomamente si existen vacantes autorizadas y sincronizan `contexto.AsignaturasVacantesConsentidas` si este se encontraba vacío, desacoplando la promoción del estado transitorio de la UI.
+
+#### 2. Fase 1875 — Soporte de Vacantes Consentidas sin Centinela en Certificado
+- **Archivos:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgValidadorCoberturaSeleccion.cs`, `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgValidadorCoberturaSeleccionTests.cs`
+- **Cambio:** Se reordenó la evaluación en `AgValidadorCoberturaSeleccion` para que la guarda `s.IdTercero <= 0` evalúe primero si la asignatura está consentida antes de devolver `DOCENTE_VACANTE`. Se incluyó `IdTercero <= 0` como condición de vacante en la detección de `CRUCE_DOCENTE`. Añadido test unitario validando que una sesión vacante con `IdTercero = 0` y sin centinela es aceptada con consentimiento.
+
+#### 3. Fase 1876 — Calibración Rigurosa de Tests de Compuerta de Promoción
+- **Archivos:** `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgCompuertaPromocionTests.cs`
+- **Cambio:** Se eliminó el `Assert.True(valResult.IsSuccess || valResult.Error.Contains("genes"))` tolerante, sustituyéndolo por la aserción estricta de que la causa de fallo no es vacante. Se añadió un caso de prueba positivo end-to-end con gen y sesión en vacante consentida que valida `EsPromovible(...) == true`.
+
+#### 4. Fase 1877 — Nulabilidad Segura en AsignaturasVacantesConsentidas
+- **Archivos:** `ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgContexto.cs`, `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
+- **Cambio:** Se respaldó `AsignaturasVacantesConsentidas` en un campo privado con instanciación perezosa `?? new HashSet<int>()` tanto en lectura como en escritura, blindando el modelo ante clonación o deserialización. En `AgFormGeneradorHorarios`, se añadieron navegaciones seguras `?.` en `Clear()` y `Count`.
+
+#### 5. Fase 1878 — Purga de Staging Huérfano y Protección de Módulo R ante Fallo de Cobertura
+- **Archivos:** `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
+- **Cambio:** Si el staging o la certificación de cobertura fallan (`!stagingOk`), se invoca inmediatamente `_scheduleRepository.LimpiarStagingAsync(idCorrida)` para no dejar registros huérfanos en la base de datos. Se protegió `CargarModuloResultadosAsync` y la selección de pestaña para ejecutarse exclusivamente cuando `stagingOk == true`.
+
+### Verificación de Principios (Ronda 417)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1874 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgCompuertaPromocion.cs:255-330` |
+| F1875 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgValidadorCoberturaSeleccion.cs:55-70`, `AgValidadorCoberturaSeleccionTests.cs:302-323` |
+| F1876 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgCompuertaPromocionTests.cs:35-125` |
+| F1877 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgContexto.cs:119-126`, `AgFormGeneradorHorarios.cs:1678,2672,2683,3296` |
+| F1878 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:3300-3315,3350-3360` |
+
+---
+
+## Ronda 418 — Dos errores de compilación en tests y purga destructiva de staging (Fases 1879–1883)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1879 — Corrección de Parámetro Nombrado idTercero en AgSesionCobertura
+- **Archivos:** `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgValidadorCoberturaSeleccionTests.cs`
+- **Cambio:** Se reemplazó el argumento nombrado `docente: 0` por `idTercero: 0`, resolviendo el error de compilación CS1739 en los tests.
+
+#### 2. Fase 1880 — Asignación Canónica a DiaSemanaNumero en AgBloqueHorario
+- **Archivos:** `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgCompuertaPromocionTests.cs`
+- **Cambio:** Se sustituyó la asignación a la propiedad con setter privado `DiaSemana` por la asignación a `DiaSemanaNumero = fecha.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)fecha.DayOfWeek`, resolviendo el error CS0272.
+
+#### 3. Fase 1881 — Purga Restringida a Soluciones no Certificables
+- **Archivos:** `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
+- **Cambio:** Se condicionó la purga del staging huérfano con `noCertificada`, ejecutándose únicamente ante fallos de certificación (`COBERTURA_NO_CERTIFICADA` o `PROYECCION_COBERTURA_ERROR`) y protegiendo el staging de eliminaciones destructivas ante fallos transitorios de lectura.
+
+#### 4. Fase 1882 — Manejo Tipado de Result en Purga de Staging
+- **Archivos:** `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
+- **Cambio:** Se eliminó el bloque `try/catch` redundante en `LimpiarStagingAsync` y se incorporó el chequeo de `limpieza.IsFailure` con registro explícito de advertencia.
+
+#### 5. Fase 1883 — Preparación de Modelo Tipado y Mitigación de Deserialización
+- **Archivos:** `ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgCorrida.cs`, `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgCompuertaPromocion.cs`
+- **Cambio:** Se declaró `AgCorrida.VacantesConsentidas` en el dominio, se amplió `ser.MaxJsonLength = int.MaxValue` en `AgCompuertaPromocion` con logging diagnóstico de advertencia ante excepciones de deserialización, y se programó la migración V84 en lote R-097.
+
+### Verificación de Principios (Ronda 418)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1879 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgValidadorCoberturaSeleccionTests.cs:308-311` |
+| F1880 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgCompuertaPromocionTests.cs:72-82` |
+| F1881 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:3304-3310` |
+| F1882 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:3311-3320` |
+| F1883 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgCorrida.cs:33-36`, `AgCompuertaPromocion.cs:257-261,330-360` |
+
+---
+
+## Ronda 419 — AgCorrida no compila y la columna tipada de vacantes no existe (Fases 1884–1886)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1884 — Inclusión de System.Collections.Generic y Mapeo Dapper en AgCorrida
+- **Archivos:** `ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgCorrida.cs`
+- **Cambio:** Se importó `System.Collections.Generic` resolviendo el error de compilación CS0246. Se encapsuló `VacantesConsentidas` con inicialización segura y se expuso la propiedad `vacantes_consentidas` para auto-mapeo Dapper con cadenas separadas por coma.
+
+#### 2. Fase 1885 — Migración V84, Persistencia y Mapeo en Repositorio
+- **Archivos:** `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Migrations/MigrationV84_AddAgCorridaVacantesConsentidas.cs`, `ConversorPDF.XLL/ConversorPDF.XLL.csproj`, `ConversorPDF.XLL/Core/Helpers/SqliteHelper.cs`, `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgScheduleRepository.cs`, `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`, `ConversorPDF.Tests/Academic/Infrastructure/Persistence/AgScheduleRepositoryCorridaVacantesTests.cs`
+- **Cambio:** Se creó `MigrationV84_AddAgCorridaVacantesConsentidas` aditiva y tolerante (`IMigrationTolerante`) para agregar la columna `vacantes_consentidas TEXT NULL` en `ag_corrida`. Se registró en `SqliteHelper.cs` y en el proyecto csproj. En `AgScheduleRepository`, `InsertCorridaAsync`, `UpdateCorridaAsync`, `GetCorridaByIdAsync` y `GetUltimaCorridaAsync` persisten y leen la columna tipada mediante la comprobación `ColumnaExiste`. En `AgFormGeneradorHorarios`, se puebla al instanciar la corrida y se rehidrata preferentemente de la entidad. Se incorporó prueba unitaria de roundtrip.
+
+#### 3. Fase 1886 — Ruta Caliente Tipada en Compuerta y Límite Acotado en Fallback
+- **Archivos:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgCompuertaPromocion.cs`, `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgCompuertaPromocionTests.cs`
+- **Cambio:** `EsPromovible` y `ValidarPromocion` verifican `(corrida?.VacantesConsentidas?.Count ?? 0) > 0` evitando cualquier deserialización JSON en el camino caliente. El helper `VacantesConsentidasEnCorrida` acota `MaxJsonLength = 512 * 1024` como fallback para corridas históricas y puebla la entidad para prevenir dobles evaluaciones. Se añadió test unitario comprobando que la compuerta no requiere JSON cuando la propiedad tipada está presente.
+
+### Verificación de Principios (Ronda 419)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1884 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgCorrida.cs:1-3,35-60` |
+| F1885 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `MigrationV84_AddAgCorridaVacantesConsentidas.cs`, `ConversorPDF.XLL.csproj:755`, `SqliteHelper.cs:385`, `AgScheduleRepository.cs:265-420,1360-1380`, `AgScheduleRepositoryCorridaVacantesTests.cs:51,332-358` |
+| F1886 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgCompuertaPromocion.cs:257-261,315-375`, `AgCompuertaPromocionTests.cs:140-210` |
+
+---
+
+## Ronda 420 — Propiedad pública vacantes_consentidas en el modelo de dominio y rama de compatibilidad sin columna sin prueba (Fases 1887–1888)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1887 — Decoración de Ignorado de Serialización en vacantes_consentidas
+- **Archivos:** `ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgCorrida.cs`, `ConversorPDF.XLL/ConversorPDF.XLL.csproj`
+- **Cambio:** Se decoró la propiedad `vacantes_consentidas` con `[System.Runtime.Serialization.IgnoreDataMember]` y `[Newtonsoft.Json.JsonIgnore]` para impedir que los serializadores dupliquen el estado de `VacantesConsentidas` o permitan manipulaciones que desincronicen el modelo. Se incorporó la referencia a `System.Runtime.Serialization` en el archivo de proyecto csproj.
+
+#### 2. Fase 1888 — Unificación de Helper ColumnaExiste y Test de Compatibilidad sin Columna
+- **Archivos:** `ConversorPDF.XLL/Core/Helpers/SqliteHelper.cs`, `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Migrations/MigrationV84_AddAgCorridaVacantesConsentidas.cs`, `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgScheduleRepository.cs`, `ConversorPDF.Tests/Academic/Infrastructure/Persistence/AgScheduleRepositoryCorridaVacantesTests.cs`
+- **Cambio:** Se centralizó el método utilitario de introspección `ColumnaExiste` en `SqliteHelper` haciéndolo estático y público para evitar duplicación entre migraciones y repositorios. Se añadió la prueba unitaria `InsertCorridaAsync_WhenColumnaAusente_ShouldInsertarSinErrorYDevolverSetVacio` comprobando que contra un vault que no disponga de la columna (pre-V84), las inserciones y lecturas funcionan sin excepciones SQLite y devuelven un conjunto vacío.
+
+### Verificación de Principios (Ronda 420)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1887 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgCorrida.cs:46-52`, `ConversorPDF.XLL.csproj:216` |
+| F1888 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `SqliteHelper.cs:400-425`, `AgScheduleRepository.cs:1360-1370`, `AgScheduleRepositoryCorridaVacantesTests.cs:359-425` |
+
+---
+
+## Ronda 421 — Revisión de robustez en introspección de esquema SQL (Fases 1889–1891)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1889 — Enum ExistenciaSql y Manejo Tolerante en Repositorio
+- **Archivos:** `ConversorPDF.XLL/Core/Helpers/ExistenciaSql.cs`, `ConversorPDF.XLL/ConversorPDF.XLL.csproj`, `ConversorPDF.XLL/Core/Helpers/SqliteHelper.cs`, `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgScheduleRepository.cs`, `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Migrations/MigrationV84_AddAgCorridaVacantesConsentidas.cs`
+- **Cambio:** Se introdujo el enum tri-estado `ExistenciaSql` (`Existe`, `NoExiste`, `Indeterminada`). `SqliteHelper.ColumnaExiste` retorna `Indeterminada` ante fallos de conexión o excepciones en el PRAGMA. En `AgScheduleRepository`, `ColumnaExiste` evalúa `!= ExistenciaSql.NoExiste` para intentar escribir y leer ante indeterminación, evitando omisiones silenciosas del consentimiento. En `MigrationV84`, la alteración de tabla se condiciona estrictamente a `NoExiste`.
+
+#### 2. Fase 1890 — Centralización de TablaExiste en SqliteHelper
+- **Archivos:** `ConversorPDF.XLL/Core/Helpers/SqliteHelper.cs`, `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgScheduleRepository.cs`, `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Migrations/MigrationV84_AddAgCorridaVacantesConsentidas.cs`
+- **Cambio:** Se centralizó `SqliteHelper.TablaExiste` y se delegó desde `AgScheduleRepository.TablaExiste` y `MigrationV84.AgregarColumnaSiNoExiste`, unificando la introspección de tablas de SQLite en un único punto.
+
+#### 3. Fase 1891 — Validación de Identificador SQL Mediante Regex
+- **Archivos:** `ConversorPDF.XLL/Core/Helpers/SqliteHelper.cs`, `ConversorPDF.Tests/Academic/Infrastructure/Persistence/AgScheduleRepositoryCorridaVacantesTests.cs`
+- **Cambio:** Se implementó `IdentificadorSql` (`^[A-Za-z_][A-Za-z0-9_]{0,63}$`) para sanear los identificadores pasados a `PRAGMA table_info` y `sqlite_master`, retornando `Indeterminada` o `false` respectivamente ante identificadores malformados. Se agregaron pruebas unitarias en `AgScheduleRepositoryCorridaVacantesTests`.
+
+### Verificación de Principios (Ronda 421)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1889 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `ExistenciaSql.cs`, `SqliteHelper.cs:425`, `AgScheduleRepository.cs:1358` |
+| F1890 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `SqliteHelper.cs:407`, `AgScheduleRepository.cs:1349`, `MigrationV84...cs:26` |
+| F1891 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `SqliteHelper.cs:400`, `AgScheduleRepositoryCorridaVacantesTests.cs:420-465` |
+
+---
+
+## Ronda 422 — Corrección de fallos en migración y degradación segura en repositorio (Fases 1892–1894)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1892 — Propagación de Indeterminada en V84 y Reintento Garantizado
+- **Archivos:** `ConversorPDF.XLL/Core/Helpers/SqliteHelper.cs`, `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Migrations/MigrationV84_AddAgCorridaVacantesConsentidas.cs`, `ConversorPDF.Tests/Academic/Infrastructure/Persistence/AgScheduleRepositoryCorridaVacantesTests.cs`
+- **Cambio:** `SqliteHelper.TablaExiste` retorna `ExistenciaSql`. `MigrationV84` arroja `InvalidOperationException` si tabla o columna reportan `Indeterminada`, evitando que `SchemaMigrator` registre erróneamente la versión en `__SchemaVersion` y garantizando que se reintente.
+
+#### 2. Fase 1893 — Degradación Segura en Repositorio ante Indeterminación
+- **Archivos:** `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgScheduleRepository.cs`, `ConversorPDF.Tests/Academic/Infrastructure/Persistence/AgScheduleRepositoryCorridaVacantesTests.cs`
+- **Cambio:** `AgScheduleRepository.ColumnaExiste` evalúa estrictamente `== ExistenciaSql.Existe`. Ante indeterminación, se omite la columna sin abortar la corrida con error de SQL, garantizando el guardado con respaldo en `parametros_json`.
+
+#### 3. Fase 1894 — Descarte de Prefijo Reservado sqlite_
+- **Archivos:** `ConversorPDF.XLL/Core/Helpers/SqliteHelper.cs`, `ConversorPDF.Tests/Academic/Infrastructure/Persistence/AgScheduleRepositoryCorridaVacantesTests.cs`
+- **Cambio:** Descartado el prefijo `sqlite_` en `TablaExiste` y `ColumnaExiste` retornando `ExistenciaSql.Indeterminada`. Documentada la constancia arquitectural para no reescribir migraciones históricas (V54-V81).
+
+### Verificación de Principios (Ronda 422)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1892 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `SqliteHelper.cs:407`, `MigrationV84...cs:26-36`, `AgScheduleRepositoryCorridaVacantesTests.cs:495` |
+| F1893 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgScheduleRepository.cs:1356-1362`, `AgScheduleRepositoryCorridaVacantesTests.cs:510-570` |
+| F1894 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `SqliteHelper.cs:416,437`, `AgScheduleRepositoryCorridaVacantesTests.cs:475-485` |
+
+
+
+
+
+
 
 
 

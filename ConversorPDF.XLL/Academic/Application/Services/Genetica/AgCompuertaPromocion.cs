@@ -254,7 +254,12 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 return Result.Failure($"La solución presenta {individuo.HardViolations} restricciones duras (HARD).");
             }
 
-            if (!permitirVacantes)
+            // FASE 1874/1883/1885/1886: Ruta caliente tipada; solo evalúa JSON si la propiedad tipada no tiene datos
+            bool permitir = permitirVacantes
+                || (corrida?.VacantesConsentidas != null && corrida.VacantesConsentidas.Count > 0)
+                || VacantesConsentidasEnCorrida(corrida).Count > 0;
+
+            if (!permitir)
             {
                 if (individuo.Vacantes > 0)
                 {
@@ -272,7 +277,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 return Result.Failure("La información de la corrida en base de datos es nula.");
             }
 
-            if (!permitirVacantes && corrida.Vacantes > 0)
+            if (!permitir && corrida.Vacantes > 0)
             {
                 return Result.Failure($"La corrida tiene {corrida.Vacantes} vacantes registradas.");
             }
@@ -288,7 +293,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 return Result.Failure("No se encontraron sesiones en staging para promover.");
             }
 
-            if (!permitirVacantes)
+            if (!permitir)
             {
                 int sesVac = sesiones.Count(s => s.EsVacante == 1);
                 if (sesVac > 0)
@@ -297,7 +302,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 }
             }
 
-            return ValidarCobertura(individuo.Genes, sesiones, contexto, permitirVacantes);
+            return ValidarCobertura(individuo.Genes, sesiones, contexto, permitir);
         }
 
         /// <summary>
@@ -310,7 +315,72 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             AgContexto contexto = null,
             bool permitirVacantes = false)
         {
-            return ValidarPromocion(corrida, individuo, sesionesResult, contexto, permitirVacantes).IsSuccess;
+            // FASE 1885/1886: Ruta caliente sin deserialización JSON si la propiedad tipada ya está poblada
+            bool permitir = permitirVacantes || (corrida?.VacantesConsentidas != null && corrida.VacantesConsentidas.Count > 0);
+            if (!permitir)
+            {
+                var vacsHistoricas = VacantesConsentidasEnCorrida(corrida);
+                if (vacsHistoricas.Count > 0)
+                {
+                    permitir = true;
+                    if (corrida != null)
+                    {
+                        corrida.VacantesConsentidas = vacsHistoricas;
+                    }
+                }
+            }
+
+            if (corrida != null && corrida.VacantesConsentidas.Count > 0 && contexto != null &&
+                (contexto.AsignaturasVacantesConsentidas == null || contexto.AsignaturasVacantesConsentidas.Count == 0))
+            {
+                contexto.AsignaturasVacantesConsentidas = corrida.VacantesConsentidas;
+            }
+
+            return ValidarPromocion(corrida, individuo, sesionesResult, contexto, permitir).IsSuccess;
+        }
+
+        /// <summary>
+        /// FASE 1874/1883/1886: Obtiene las vacantes consentidas de la corrida (fallback acotado a 512KB para datos históricos).
+        /// </summary>
+        internal static HashSet<int> VacantesConsentidasEnCorrida(AgCorrida corrida)
+        {
+            var res = new HashSet<int>();
+            if (corrida == null)
+            {
+                return res;
+            }
+
+            if (corrida.VacantesConsentidas != null && corrida.VacantesConsentidas.Count > 0)
+            {
+                return corrida.VacantesConsentidas;
+            }
+
+            if (string.IsNullOrWhiteSpace(corrida.ParametrosJson))
+            {
+                return res;
+            }
+
+            try
+            {
+                var ser = new System.Web.Script.Serialization.JavaScriptSerializer { MaxJsonLength = 512 * 1024 };
+                var dict = ser.DeserializeObject(corrida.ParametrosJson) as Dictionary<string, object>;
+                if (dict != null && dict.TryGetValue("vacantesConsentidas", out var vacObj) && vacObj is System.Collections.IEnumerable list)
+                {
+                    foreach (var item in list)
+                    {
+                        if (item != null && int.TryParse(item.ToString(), out int id))
+                        {
+                            res.Add(id);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Warning($"[AG] Error al deserializar vacantes consentidas de corrida #{corrida.Id}: {ex.Message}");
+            }
+
+            return res;
         }
 
         /// <summary>

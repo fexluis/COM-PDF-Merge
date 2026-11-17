@@ -51,6 +51,9 @@ namespace ConversorPDF.XLL.Academic.Domain.Enums
         HorasDiaInvalidoNivel = 13,
 
         /// <summary> El aula no tiene jornada/horas/días de ventana persistidos en ag_aula (I1, Fase 1192). </summary>
-        VentanaAulaVacia = 14
+        VentanaAulaVacia = 14,
+
+        /// <summary> La solución no satisface el certificado de cobertura del manifiesto (Fase 1873). </summary>
+        CoberturaNoCertificada = 15
     }
 }

@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using ConversorPDF.XLL.Academic.Domain.Enums;
 using ConversorPDF.XLL.Academic.Domain.Models.Genetica;
 using ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories;
+using ConversorPDF.XLL.Core.Helpers;
 using Dapper;
 using FluentAssertions;
 using Xunit;
@@ -48,6 +49,7 @@ namespace ConversorPDF.Tests.Academic.Infrastructure.Persistence
                         hard_violations INTEGER NOT NULL,
                         soft_violations REAL NOT NULL,
                         vacantes INTEGER NOT NULL DEFAULT 0,
+                        vacantes_consentidas TEXT NULL,
                         id_individuo_optimo INTEGER NULL,
                         parametros_json TEXT NOT NULL DEFAULT '{}',
                         subunidad TEXT NOT NULL DEFAULT ''
@@ -326,6 +328,248 @@ namespace ConversorPDF.Tests.Academic.Infrastructure.Persistence
             var violDb = violacionesRes.Value.First();
             violDb.IdGen.Should().Be(gen1.Id);
             violDb.DetalleJson.Should().Contain("\"idGenes\":[" + gen1.Id + "]");
+        }
+
+        [Fact]
+        public async Task InsertCorridaAsync_WhenVacantesConsentidasPresentes_ShouldPersistirYRecuperarConGetCorridaByIdAsync()
+        {
+            // Arrange (Fase 1885): Corrida con conjunto tipado de asignaturas vacantes consentidas
+            var corrida = new AgCorrida
+            {
+                IdPeriodo = 1,
+                IdPrograma = 1,
+                IdAula = 1,
+                Estado = AgEstadoCorrida.Completada,
+                VacantesConsentidas = new HashSet<int> { 101, 202, 303 }
+            };
+
+            // Act: Insertar y luego recuperar por ID
+            var insertRes = await _sut.InsertCorridaAsync(corrida, CancellationToken.None);
+            insertRes.IsSuccess.Should().BeTrue();
+            long idCorrida = insertRes.Value;
+
+            var getRes = await _sut.GetCorridaByIdAsync(idCorrida, CancellationToken.None);
+
+            // Assert: Las vacantes consentidas se recuperan íntegras en el HashSet
+            getRes.IsSuccess.Should().BeTrue();
+            var corridaDb = getRes.Value;
+            corridaDb.VacantesConsentidas.Should().BeEquivalentTo(new[] { 101, 202, 303 });
+            corridaDb.vacantes_consentidas.Should().Be("101,202,303");
+        }
+
+        [Fact]
+        public async Task InsertCorridaAsync_WhenColumnaAusente_ShouldInsertarSinErrorYDevolverSetVacio()
+        {
+            // Arrange (Fase 1888): Base de datos SQLite temporal sin la columna vacantes_consentidas (esquema pre-V84)
+            string dbPathSinCol = Path.Combine(Path.GetTempPath(), "AgScheduleRepoSinCol_" + Guid.NewGuid().ToString("N") + ".sqlite");
+            SQLiteConnection.CreateFile(dbPathSinCol);
+            string connStrSinCol = $"Data Source={dbPathSinCol};Version=3;";
+
+            try
+            {
+                using (var conn = new SQLiteConnection(connStrSinCol))
+                {
+                    conn.Open();
+                    conn.Execute(@"
+                        CREATE TABLE ag_corrida (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            idperiodo INTEGER NOT NULL,
+                            idprograma INTEGER NOT NULL,
+                            idaula INTEGER NOT NULL,
+                            fecha_inicio_corrida TEXT NOT NULL DEFAULT '',
+                            fecha_fin_corrida TEXT NOT NULL DEFAULT '',
+                            estado INTEGER NOT NULL,
+                            poblacion_tamano INTEGER NOT NULL,
+                            generaciones_max INTEGER NOT NULL,
+                            generaciones_ejecutadas INTEGER NOT NULL,
+                            tasa_cruce REAL NOT NULL,
+                            tasa_mutacion REAL NOT NULL,
+                            elitismo INTEGER NOT NULL,
+                            mejor_fitness REAL NOT NULL,
+                            hard_violations INTEGER NOT NULL,
+                            soft_violations REAL NOT NULL,
+                            vacantes INTEGER NOT NULL DEFAULT 0,
+                            id_individuo_optimo INTEGER NULL,
+                            parametros_json TEXT NOT NULL DEFAULT '{}',
+                            subunidad TEXT NOT NULL DEFAULT ''
+                        );");
+                }
+
+                var sut = new AgScheduleRepository(() => new SQLiteConnection(connStrSinCol));
+                var corrida = new AgCorrida
+                {
+                    IdPeriodo = 1,
+                    IdPrograma = 1,
+                    IdAula = 1,
+                    Estado = AgEstadoCorrida.Completada,
+                    VacantesConsentidas = new HashSet<int> { 101, 202 }
+                };
+
+                // Act: Insertar en esquema sin columna y consultar
+                var ins = await sut.InsertCorridaAsync(corrida, CancellationToken.None);
+                ins.IsSuccess.Should().BeTrue();
+
+                var get = await sut.GetCorridaByIdAsync(ins.Value, CancellationToken.None);
+
+                // Assert: No lanza excepción por columna faltante y devuelve conjunto vacío (a resolver por fallback ParametrosJson)
+                get.IsSuccess.Should().BeTrue();
+                get.Value.VacantesConsentidas.Should().BeEmpty();
+            }
+            finally
+            {
+                try
+                {
+                    SQLiteConnection.ClearAllPools();
+                    if (File.Exists(dbPathSinCol)) File.Delete(dbPathSinCol);
+                }
+                catch { }
+            }
+        }
+
+        [Fact]
+        public void ColumnaExiste_WhenConexionCerrada_ShouldRetornarIndeterminada()
+        {
+            // Arrange (Fase 1889): Conexión sin abrir (Closed)
+            using (var conn = new SQLiteConnection(_connectionString))
+            {
+                // Act
+                var res = SqliteHelper.ColumnaExiste(conn, "ag_corrida", "vacantes_consentidas");
+
+                // Assert: No confunde fallo con NoExiste
+                res.Should().Be(ExistenciaSql.Indeterminada);
+            }
+        }
+
+        [Fact]
+        public void ColumnaExiste_WhenIdentificadorInvalido_ShouldRetornarIndeterminadaSinEjecutarSql()
+        {
+            // Arrange (Fase 1891): Identificador malicioso o malformado
+            using (var conn = new SQLiteConnection(_connectionString))
+            {
+                conn.Open();
+
+                // Act
+                var res = SqliteHelper.ColumnaExiste(conn, "ag_corrida; DROP TABLE ag_corrida", "vacantes_consentidas");
+
+                // Assert: Retorna Indeterminada sin ejecutar la sentencia
+                res.Should().Be(ExistenciaSql.Indeterminada);
+            }
+        }
+
+        [Fact]
+        public void TablaExiste_WhenTablaValida_ShouldRetornarExisteYDetectarAusencia()
+        {
+            // Arrange (Fase 1890/1891/1892/1894): Tabla conocida vs inexistente vs identificador inválido vs sqlite_
+            using (var conn = new SQLiteConnection(_connectionString))
+            {
+                conn.Open();
+
+                // Act & Assert
+                SqliteHelper.TablaExiste(conn, "ag_corrida").Should().Be(ExistenciaSql.Existe);
+                SqliteHelper.TablaExiste(conn, "tabla_fantasma_inexistente").Should().Be(ExistenciaSql.NoExiste);
+                SqliteHelper.TablaExiste(conn, "invalida; DROP TABLE x").Should().Be(ExistenciaSql.Indeterminada);
+                SqliteHelper.TablaExiste(null, "ag_corrida").Should().Be(ExistenciaSql.Indeterminada);
+                SqliteHelper.TablaExiste(conn, "sqlite_master").Should().Be(ExistenciaSql.Indeterminada);
+            }
+        }
+
+        [Fact]
+        public void ColumnaExiste_WhenColumnaPresenteOAusente_ShouldRetornarExisteONoExiste()
+        {
+            // Arrange (Fase 1889/1894): Esquema con 'ag_corrida' y 'vacantes_consentidas', y descarte de prefijo sqlite_
+            using (var conn = new SQLiteConnection(_connectionString))
+            {
+                conn.Open();
+
+                // Act & Assert
+                SqliteHelper.ColumnaExiste(conn, "ag_corrida", "vacantes_consentidas").Should().Be(ExistenciaSql.Existe);
+                SqliteHelper.ColumnaExiste(conn, "ag_corrida", "columna_que_no_existe").Should().Be(ExistenciaSql.NoExiste);
+                SqliteHelper.ColumnaExiste(conn, "sqlite_master", "name").Should().Be(ExistenciaSql.Indeterminada);
+            }
+        }
+
+        [Fact]
+        public void MigrationV84_WhenConexionCerrada_ShouldLanzarInvalidOperationException()
+        {
+            // Arrange (Fase 1892): Conexión cerrada provoca estado Indeterminada
+            using (var conn = new SQLiteConnection(_connectionString))
+            {
+                var migration = new ConversorPDF.XLL.Academic.Infrastructure.Persistence.Migrations.MigrationV84_AddAgCorridaVacantesConsentidas();
+
+                // Act & Assert: Debe fallar con excepción para que SchemaMigrator no registre versión en __SchemaVersion
+                Action act = () => migration.Up(conn);
+                act.Should().Throw<InvalidOperationException>().WithMessage("*V84_ESQUEMA_INDETERMINADO*");
+            }
+        }
+
+        [Fact]
+        public async Task UpdateCorridaAsync_WhenColumnaAusente_ShouldActualizarSinError()
+        {
+            // Arrange (Fase 1893): Base de datos temporal sin vacantes_consentidas (pre-V84)
+            string dbPathSinCol = Path.Combine(Path.GetTempPath(), "AgScheduleRepoSinColUpdate_" + Guid.NewGuid().ToString("N") + ".sqlite");
+            SQLiteConnection.CreateFile(dbPathSinCol);
+            string connStrSinCol = $"Data Source={dbPathSinCol};Version=3;";
+
+            try
+            {
+                using (var conn = new SQLiteConnection(connStrSinCol))
+                {
+                    conn.Open();
+                    conn.Execute(@"
+                        CREATE TABLE ag_corrida (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            idperiodo INTEGER NOT NULL,
+                            idprograma INTEGER NOT NULL,
+                            idaula INTEGER NOT NULL,
+                            fecha_inicio_corrida TEXT NOT NULL DEFAULT '',
+                            fecha_fin_corrida TEXT NOT NULL DEFAULT '',
+                            estado INTEGER NOT NULL,
+                            poblacion_tamano INTEGER NOT NULL,
+                            generaciones_max INTEGER NOT NULL,
+                            generaciones_ejecutadas INTEGER NOT NULL,
+                            tasa_cruce REAL NOT NULL,
+                            tasa_mutacion REAL NOT NULL,
+                            elitismo INTEGER NOT NULL,
+                            mejor_fitness REAL NOT NULL,
+                            hard_violations INTEGER NOT NULL,
+                            soft_violations REAL NOT NULL,
+                            vacantes INTEGER NOT NULL DEFAULT 0,
+                            id_individuo_optimo INTEGER NULL,
+                            parametros_json TEXT NOT NULL DEFAULT '{}',
+                            subunidad TEXT NOT NULL DEFAULT ''
+                        );");
+                }
+
+                var sut = new AgScheduleRepository(() => new SQLiteConnection(connStrSinCol));
+                var corrida = new AgCorrida
+                {
+                    IdPeriodo = 1,
+                    IdPrograma = 1,
+                    IdAula = 1,
+                    Estado = AgEstadoCorrida.Completada,
+                    VacantesConsentidas = new HashSet<int> { 505 }
+                };
+
+                var ins = await sut.InsertCorridaAsync(corrida, CancellationToken.None);
+                ins.IsSuccess.Should().BeTrue();
+                corrida.Id = ins.Value;
+                corrida.Estado = AgEstadoCorrida.Completada;
+
+                // Act: Cierre / actualización de corrida en esquema sin columna
+                var upd = await sut.UpdateCorridaAsync(corrida, CancellationToken.None);
+
+                // Assert: La actualización no aborta con 'no such column'
+                upd.IsSuccess.Should().BeTrue();
+            }
+            finally
+            {
+                try
+                {
+                    SQLiteConnection.ClearAllPools();
+                    if (File.Exists(dbPathSinCol)) File.Delete(dbPathSinCol);
+                }
+                catch { }
+            }
         }
 
         public void Dispose()

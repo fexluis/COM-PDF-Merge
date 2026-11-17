@@ -381,7 +381,8 @@ namespace ConversorPDF.XLL.Core.Helpers
                 new MigrationV80_AddOrigenPatronAgAulaAsignatura(),    // FASE 1735: columna origen_patron en ag_aula_asignatura
                 new MigrationV81_AddAgGenFechasGen(),                 // FASE 1815: columna fechas_gen en ag_gen
                 new MigrationV82_AddAgCandidatoPlanAprobado(),       // T4: candidato y ratificación aditivos
-                new MigrationV83_AddAgPeriodoVentanaAuditoria()      // FASE 1854: auditoría de extensión de ventana en periodos
+                new MigrationV83_AddAgPeriodoVentanaAuditoria(),     // FASE 1854: auditoría de extensión de ventana en periodos
+                new MigrationV84_AddAgCorridaVacantesConsentidas()   // FASE 1885: columna vacantes_consentidas en ag_corrida
             };
             return new SchemaMigrator(migrations, new VaultPersister(), new LoggerAdapter());
         }
@@ -394,6 +395,81 @@ namespace ConversorPDF.XLL.Core.Helpers
             ConversorPDF.XLL.Core.Sync.CrSqliteLoader.Initialize();
 
             _schemaMigrator.Value.EnsureSchemaUpToDate(context);
+        }
+
+        private static readonly System.Text.RegularExpressions.Regex IdentificadorSql =
+            new System.Text.RegularExpressions.Regex(@"^[A-Za-z_][A-Za-z0-9_]{0,63}$", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+        /// <summary>
+        /// Comprueba de forma segura si una tabla existe en la base de datos SQLite (Fase 1890/1891/1892/1894).
+        /// Retorna tri-estado: Existe, NoExiste o Indeterminada.
+        /// Nota de arquitectura: Migraciones previas (V54-V81) conservan consultas inline a sqlite_master;
+        /// se unifica este helper para migraciones y repositorios modernos sin reescritura retroactiva.
+        /// </summary>
+        public static ExistenciaSql TablaExiste(IDbConnection conn, string tabla, IDbTransaction transaction = null)
+        {
+            if (conn == null || conn.State != ConnectionState.Open || string.IsNullOrWhiteSpace(tabla) || !IdentificadorSql.IsMatch(tabla))
+            {
+                return ExistenciaSql.Indeterminada;
+            }
+
+            // Fase 1894: prefijo reservado 'sqlite_' no corresponde a tablas de negocio de la aplicación
+            if (tabla.StartsWith("sqlite_", StringComparison.OrdinalIgnoreCase))
+            {
+                return ExistenciaSql.Indeterminada;
+            }
+
+            try
+            {
+                int count = conn.ExecuteScalar<int>(
+                    "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=@tabla;",
+                    new { tabla }, transaction);
+
+                return count > 0 ? ExistenciaSql.Existe : ExistenciaSql.NoExiste;
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.WarningLimitado($"TablaExiste|{tabla}",
+                    $"[SQL] No se pudo verificar la tabla '{tabla}': {ex.Message}");
+                return ExistenciaSql.Indeterminada;
+            }
+        }
+
+        /// <summary>
+        /// Comprueba de forma segura y tolerante si una columna existe en una tabla SQLite (Fase 1885/1888/1889/1891/1894).
+        /// Retorna tri-estado: Existe, NoExiste o Indeterminada.
+        /// </summary>
+        public static ExistenciaSql ColumnaExiste(IDbConnection conn, string tabla, string columna, IDbTransaction transaction = null)
+        {
+            if (conn == null || conn.State != ConnectionState.Open || string.IsNullOrWhiteSpace(tabla) || string.IsNullOrWhiteSpace(columna))
+            {
+                return ExistenciaSql.Indeterminada;
+            }
+
+            if (!IdentificadorSql.IsMatch(tabla) || tabla.StartsWith("sqlite_", StringComparison.OrdinalIgnoreCase))
+            {
+                return ExistenciaSql.Indeterminada;
+            }
+
+            try
+            {
+                var info = conn.Query($"PRAGMA table_info({tabla});", transaction: transaction);
+                foreach (var row in info)
+                {
+                    var dict = (IDictionary<string, object>)row;
+                    if (dict.TryGetValue("name", out var val) && string.Equals(val?.ToString(), columna, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return ExistenciaSql.Existe;
+                    }
+                }
+                return ExistenciaSql.NoExiste;
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.WarningLimitado($"ColumnaExiste|{tabla}.{columna}",
+                    $"[SQL] No se pudo verificar '{tabla}.{columna}': {ex.Message}");
+                return ExistenciaSql.Indeterminada;
+            }
         }
 
         internal static string ExtraerSubunidadDeRuta(string vaultPath)
