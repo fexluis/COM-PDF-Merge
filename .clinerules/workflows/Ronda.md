@@ -107,6 +107,7 @@ a. Si se requieren correcciones / Nuevas Fases
 b. Sin Fases nuevas obligatorias / No se requieren más correcciones / Fase opcional / Recomendar pasar a build release + smoke test.
  
 5. **Restricciones**
+- No se programan parches ad-hoc ni excepciones para casos específicos (hardcodes de IDs, fechas mágicas o bypasses puntuales). Se debe diagnosticar y resolver siempre la causa raíz a nivel de modelo y arquitectura para que el sistema sea genérico, determinista y el error quede estructuralmente mitigado para siempre.
 - Requiere modo Act para ejecutar build/tests/smoke.
 - No compilar, No editar archivos. Esperar aprobación.
 - `scripts/audit-tasks.ps1` es solo lectura de código (escribe únicamente `_evidence/`); si el modo no permite ejecutarlo, la revisión es 100 % manual y así se declara.
