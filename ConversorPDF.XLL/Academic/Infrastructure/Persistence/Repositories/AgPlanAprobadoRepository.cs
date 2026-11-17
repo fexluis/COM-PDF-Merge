@@ -56,6 +56,8 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                         ct.ThrowIfCancellationRequested();
                         var claves = manifiesto.Relaciones.Select(r => r.Clave).ToList();
                         var relaciones = new List<AgRelacionPlanLeida>();
+                        var extras = new List<AgRelacionPlanLeida>();
+                        var descubiertas = new List<AgClaveRelacionCobertura>();
                         var diagnosticos = new List<string>();
                         var catalogoOrigen = new List<string>();
                         var territoriales = await Filas(db, tx, "SELECT * FROM territoriales WHERE id IN @Ids ORDER BY id",
@@ -134,15 +136,40 @@ ORDER BY s.id", parametros, ct);
                                 if (cohorte.Count == 0) continue; // Otra cohorte conocida no es demanda seleccionada.
                                 long id = Entero(v, "id");
                                 var candidatas = cohorte.Where(k => Exacta(v, k) && Entero(v, "idasignatura") == k.IdAsignatura).ToList();
+                                // Decisión humana 2026-11-15 «B: extras como ocupación fija»: una relación productiva
+                                // declarada como extra no requerida se conserva inmutable y ocupa aula/docente; no bloquea.
+                                var extrasDeclaradas = manifiesto.RelacionesExtra.Where(k => Texto(v, "subunidad") == k.Subunidad
+                                    && Exacta(v, k) && Entero(v, "idasignatura") == k.IdAsignatura).ToList();
+                                // Sólo vincular materia exclusivamente productiva con identidad completa y aula
+                                // única de la cohorte seleccionada. Nunca atribuir a la primera aula compatible.
+                                var aulasCompatibles = aulas.Where(a => cohorte.Any(k => Exacta(a, k)))
+                                    .Select(a => Entero(a, "id")).Distinct().ToList();
+                                if (candidatas.Count == 0 && extrasDeclaradas.Count == 0 && Completa(v)
+                                    && Entero(v, "idasignatura") > 0 && Entero(v, "idasignatura") <= int.MaxValue
+                                    && aulasCompatibles.Count == 1)
+                                {
+                                    var aulaOrigen = cohorte.Where(k => k.IdAula == aulasCompatibles[0] && Exacta(v, k)).ToList();
+                                    if (aulaOrigen.Count > 0)
+                                    {
+                                        var baseClave = aulaOrigen[0];
+                                        var clave = new AgClaveRelacionCobertura(baseClave.IdTerritorial, baseClave.Subunidad,
+                                            baseClave.IdPeriodo, baseClave.IdSede, baseClave.IdPrograma, baseClave.IdAula,
+                                            (int)Entero(v, "idasignatura"), baseClave.Semestre, baseClave.Grupo, baseClave.Modalidad);
+                                        extrasDeclaradas.Add(clave);
+                                        descubiertas.Add(clave);
+                                    }
+                                }
+                                bool esExtra = candidatas.Count == 0 && extrasDeclaradas.Count == 1;
                                 bool identidadCompleta = Completa(v);
                                 if (!identidadCompleta) diagnosticos.Add("IDENTIDAD_INCOMPLETA:" + id);
                                 if (!cohorte.Any(k => Texto(v, "subunidad") == k.Subunidad))
                                     diagnosticos.Add("SUBUNIDAD_NO_COINCIDE:" + id);
-                                if (!cohorte.Any(k => k.IdAsignatura == Entero(v, "idasignatura")))
+                                if (!cohorte.Any(k => k.IdAsignatura == Entero(v, "idasignatura")) && !esExtra)
                                     diagnosticos.Add("RELACION_EXTRA:" + id);
-                                var aulasCompatibles = aulas.Where(a => cohorte.Any(k => Exacta(a, k))).Select(a => Entero(a, "id")).Distinct().ToList();
+                                if (extrasDeclaradas.Count > 1) diagnosticos.Add("IDENTIDAD_AMBIGUA:" + id);
                                 if (aulasCompatibles.Count != 1 || candidatas.Select(k => k.IdAula).Distinct().Count() > 1
-                                    || candidatas.Any(k => !aulasCompatibles.Contains(k.IdAula)))
+                                    || candidatas.Any(k => !aulasCompatibles.Contains(k.IdAula))
+                                    || (esExtra && !aulasCompatibles.Contains(extrasDeclaradas[0].IdAula)))
                                     diagnosticos.Add("IDENTIDAD_AMBIGUA:" + id);
                                 var leidas = new List<AgSesionCanonica>();
                                 foreach (var s in porVinculacion[id])
@@ -165,15 +192,24 @@ ORDER BY s.id", parametros, ct);
                                         franja.IsSuccess ? (TimeSpan?)franja.Value.Fin : null,
                                         horas, Cadena(s, "subunidad"), Origen(s)));
                                 }
-                                relaciones.Add(new AgRelacionPlanLeida(id, candidatas, leidas, Origen(v)));
+                                var leida = new AgRelacionPlanLeida(id, esExtra ? extrasDeclaradas : candidatas, leidas, Origen(v));
+                                if (esExtra) extras.Add(leida); else relaciones.Add(leida);
                             }
                         }
-                        foreach (var repetida in relaciones.SelectMany(r => r.ClavesCandidatas.Select(k => k.Valor))
+                        foreach (var repetida in relaciones.Concat(extras).SelectMany(r => r.ClavesCandidatas.Select(k => k.Valor))
                             .GroupBy(k => k, StringComparer.Ordinal).Where(g => g.Count() > 1))
                             diagnosticos.Add("VINCULACIONES_MULTIPLES:" + repetida.Key);
                         ct.ThrowIfCancellationRequested();
-                        return Result.Success(new AgPlanAprobadoSnapshot(manifiesto, relaciones, diagnosticos,
-                            string.Concat(catalogoOrigen.OrderBy(s => s, StringComparer.Ordinal).Select(s => AgOrigenCanonico.Campos(s)))));
+                        // Sellar extras descubiertas y recibidas en el manifiesto ANTES de construir la
+                        // huella del origen: cualquier cambio posterior invalida ratificaciones anteriores.
+                        var clavesExtra = manifiesto.RelacionesExtra.Concat(descubiertas)
+                            .GroupBy(k => k.Valor, StringComparer.Ordinal).Select(g => g.First()).ToList();
+                        var ligado = clavesExtra.Count == manifiesto.RelacionesExtra.Count
+                            ? manifiesto : new AgManifiestoCobertura(manifiesto.Inicio, manifiesto.Fin,
+                                manifiesto.Relaciones, clavesExtra);
+                        return Result.Success(new AgPlanAprobadoSnapshot(ligado, relaciones, diagnosticos,
+                            string.Concat(catalogoOrigen.OrderBy(s => s, StringComparer.Ordinal).Select(s => AgOrigenCanonico.Campos(s))),
+                            extras));
             }
             catch (OperationCanceledException) { return Result.Failure<AgPlanAprobadoSnapshot>("LECTURA_PLAN_CANCELADA"); }
             catch (Exception ex) { return Result.Failure<AgPlanAprobadoSnapshot>("LECTURA_PLAN_ERROR:" + ex.GetType().Name); }

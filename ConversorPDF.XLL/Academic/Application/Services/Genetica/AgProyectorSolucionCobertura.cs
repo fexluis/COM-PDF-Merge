@@ -48,6 +48,30 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         s.Fecha.Value, s.HoraInicio.Value, s.HoraFin.Value, s.HorasLectivas));
                 }
             }
+            return Extras(snapshot, m, aprobadas, salida);
+        }
+
+        /// <summary>Proyecta las extras declaradas como conservadas inmutables: ocupan aula y docente y nunca
+        /// se insertan en staging ni producción. Decisión humana 2026-11-15 «B: extras como ocupación fija».</summary>
+        private static Result<IReadOnlyCollection<AgSesionCobertura>> Extras(AgPlanAprobadoSnapshot snapshot,
+            AgManifiestoCobertura m, IReadOnlyCollection<int> aprobadas, List<AgSesionCobertura> salida)
+        {
+            foreach (var extra in snapshot.RelacionesExtra)
+            {
+                if (extra.ClavesCandidatas.Count != 1)
+                    return Result.Failure<IReadOnlyCollection<AgSesionCobertura>>("RELACION_NO_RECONCILIADA");
+                var clave = extra.ClavesCandidatas[0];
+                if (!m.EsExtra(clave))
+                    return Result.Failure<IReadOnlyCollection<AgSesionCobertura>>("RELACION_NO_RECONCILIADA");
+                if (!aprobadas.Contains(clave.IdAula)) continue;
+                foreach (var s in extra.Sesiones)
+                {
+                    if (!s.Fecha.HasValue || !s.HoraInicio.HasValue || !s.HoraFin.HasValue || s.IdTercero > int.MaxValue)
+                        return Result.Failure<IReadOnlyCollection<AgSesionCobertura>>("SESION_NO_VERIFICABLE");
+                    salida.Add(new AgSesionCobertura(clave, "CONSERVADA", s.IdSesion, (int)s.IdTercero,
+                        s.Fecha.Value, s.HoraInicio.Value, s.HoraFin.Value, s.HorasLectivas));
+                }
+            }
             return Result.Success<IReadOnlyCollection<AgSesionCobertura>>(salida.AsReadOnly());
         }
 

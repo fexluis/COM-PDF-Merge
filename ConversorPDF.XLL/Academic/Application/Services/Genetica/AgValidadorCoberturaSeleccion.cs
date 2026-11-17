@@ -18,15 +18,20 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         {
             if (manifiesto == null || conservadas == null || nuevas == null)
                 return Result.Failure("COBERTURA_ENTRADA_INVALIDA");
-            if (manifiesto.Inicio < new DateTime(2027, 2, 5) || manifiesto.Fin > new DateTime(2027, 5, 30))
-                return Result.Failure("VENTANA_EXCEDE_LIMITE_30_05_2027");
+            // El límite es la ventana semestral seleccionada, no una fecha fija. El manifiesto ya garantiza
+            // Inicio <= Fin en su constructor, así que aquí sólo se contrastan las sesiones contra él.
             var requeridas = manifiesto.Relaciones.ToDictionary(r => r.Clave.Valor, StringComparer.Ordinal);
+            var extras = new HashSet<string>(manifiesto.RelacionesExtra.Select(k => k.Valor), StringComparer.Ordinal);
             var sesiones = conservadas.Concat(nuevas).ToList();
             var ids = new HashSet<string>(StringComparer.Ordinal);
             var posiciones = new HashSet<string>(StringComparer.Ordinal);
             foreach (var s in sesiones)
             {
-                if (s == null || s.Clave == null || !requeridas.ContainsKey(s.Clave.Valor))
+                if (s == null || s.Clave == null) return Result.Failure("RELACION_INESPERADA");
+                // Decisión humana 2026-11-15 «B: extras como ocupación fija»: una extra declarada sólo se
+                // acepta conservada; nunca se replantea ni suma demanda requerida.
+                if (!requeridas.ContainsKey(s.Clave.Valor)
+                    && !(extras.Contains(s.Clave.Valor) && s.Origen == "CONSERVADA"))
                     return Result.Failure("RELACION_INESPERADA");
                 if ((s.Origen == "CONSERVADA") != conservadas.Contains(s) ||
                     (s.Origen == "NUEVA") != nuevas.Contains(s))
@@ -34,8 +39,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 if (s.Id <= 0 || !ids.Add(s.Origen + ":" + s.Id) ||
                     !posiciones.Add(AgOrigenCanonico.Campos(s.Clave.Valor, s.Fecha.Date, s.Inicio, s.Fin)))
                     return Result.Failure("SESION_DUPLICADA");
-                if (s.Fecha.Date < manifiesto.Inicio || s.Fecha.Date > manifiesto.Fin ||
-                    s.Fecha.Date < new DateTime(2027, 2, 5) || s.Fecha.Date > new DateTime(2027, 5, 30))
+                if (s.Fecha.Date < manifiesto.Inicio || s.Fecha.Date > manifiesto.Fin)
                     return Result.Failure("SESION_FUERA_DE_VENTANA");
                 if (festivos != null && festivos.Any(f => s.Fecha.Date >= f.Inicio.Date && s.Fecha.Date <= f.Fin.Date))
                     return Result.Failure("SESION_EN_FESTIVO");

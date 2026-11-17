@@ -18,7 +18,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             if (aula == null || aula.Estado != AgEstadoAula.Aprobado || string.IsNullOrWhiteSpace(aula.AulaRef)
                 || m == null || s == null || c.Ventana == null || m.Huella != s.Manifiesto.Huella
                 || c.Ventana.FechaInicio.Date != m.Inicio || c.Ventana.FechaFin.Date != m.Fin
-                || m.Fin > new DateTime(2027, 5, 30) || !m.Relaciones.Any(r => r.Clave.IdAula == aula.Id)
+                || !m.Relaciones.Any(r => r.Clave.IdAula == aula.Id)
                 || !c.Aulas.Contains(aula) || c.Aulas.Count(a => a.Id == aula.Id) != 1
                 || c.Programas.Count(p => p.Id == aula.IdPrograma) != 1
                 || AgDiasVentana.Dias(aula.DiasVentana).Count == 0) return false;

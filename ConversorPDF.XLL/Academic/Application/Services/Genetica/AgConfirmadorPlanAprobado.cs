@@ -199,7 +199,6 @@ JOIN permisos p ON p.perfil=u.perfil WHERE u.nombreusuario=@Actor COLLATE NOCASE
             if (p != null && aula != null && aula.Id != p.IdAula) return false;
             if (aula == null || aula.Estado != AgEstadoAula.Aprobado || c.PlanAprobadoSnapshot.EstadoOrigen != "REQUIERE_RATIFICACION"
                 || c.PlanAprobadoSnapshot.Manifiesto.Huella != c.ManifiestoCobertura.Huella
-                || c.ManifiestoCobertura.Fin > new DateTime(2027, 5, 30)
                 || c.ManifiestoCobertura.Inicio != c.Ventana.FechaInicio.Date || c.ManifiestoCobertura.Fin != c.Ventana.FechaFin.Date
                 || !c.ManifiestoCobertura.Relaciones.Any(r => r.Clave.IdAula == aula.Id)
                 || c.Aulas.Count(a => a.Id == aula.Id) != 1) return false;

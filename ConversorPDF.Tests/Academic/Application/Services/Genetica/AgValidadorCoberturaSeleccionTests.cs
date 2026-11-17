@@ -47,6 +47,17 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
         }
 
         [Fact]
+        public void VentanaHastaJunio_NoEsBloqueadaPorUnaFechaFija()
+        {
+            // Requisito: el límite es la fecha de fin de la ventana semestral, no una fecha fija.
+            var m = Manifiesto(fin: new DateTime(2027, 6, 30));
+            var sesion = Sesion(m, fecha: new DateTime(2027, 6, 20));
+            var resultado = new AgValidadorCoberturaSeleccion().Validar(m, Array.Empty<AgSesionCobertura>(),
+                new[] { sesion });
+            Assert.True(resultado.IsSuccess, resultado.IsFailure ? resultado.Error : string.Empty);
+        }
+
+        [Fact]
         public void SoloConservacionNoNecesitaStagingNiPoblacion()
         {
             var m = Manifiesto();
@@ -143,5 +154,100 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             Assert.Equal("DOCENTE_VACANTE", new AgValidadorCoberturaSeleccion().Validar(Manifiesto(),
                 Array.Empty<AgSesionCobertura>(), new[] { Sesion(Manifiesto(), docente: 0) }).Error);
         }
+
+        // Decisión humana 2026-11-15 «B: extras como ocupación fija»: una relación productiva declarada
+        // como extra no requerida se conserva inmutable, ocupa aula/docente y no suma demanda requerida.
+        private static AgClaveRelacionCobertura Clave(int aula, int asignatura)
+            => new AgClaveRelacionCobertura(1, "VALLE", 1, 1, 1, aula, asignatura, "I", "A", "PRESENCIAL");
+
+        private static AgManifiestoCobertura ManifiestoConExtras(int aulas, params AgClaveRelacionCobertura[] extras)
+            => new AgManifiestoCobertura(new DateTime(2027, 2, 5), new DateTime(2027, 5, 30),
+                Enumerable.Range(1, aulas).Select(a => new AgRelacionCobertura(Clave(a, a), 4, 4, 1)), extras);
+
+        private static AgSesionCobertura SesionDe(AgClaveRelacionCobertura clave, string origen = "NUEVA",
+            long id = 1, int docente = 9, int inicio = 8) => new AgSesionCobertura(clave, origen, id, docente,
+                new DateTime(2027, 2, 5), TimeSpan.FromHours(inicio), TimeSpan.FromHours(inicio + 4), 4);
+
+        [Fact]
+        public void ExtraDeclaradaConservadaNoBloqueaNiSumaDemandaRequerida()
+        {
+            var extra = Clave(1, 2);
+            var m = ManifiestoConExtras(1, extra);
+            var r = new AgValidadorCoberturaSeleccion().Validar(m,
+                new[] { SesionDe(extra, "CONSERVADA", 77, 9, 14), Sesion(m, origen: "CONSERVADA") },
+                Array.Empty<AgSesionCobertura>());
+            Assert.True(r.IsSuccess, r.IsFailure ? r.Error : string.Empty);
+        }
+
+        [Fact]
+        public void ExtraNoCubreLaDemandaRequerida()
+        {
+            var extra = Clave(1, 2);
+            var m = ManifiestoConExtras(1, extra);
+            var r = new AgValidadorCoberturaSeleccion().Validar(m,
+                new[] { SesionDe(extra, "CONSERVADA", 77, 9, 14) }, Array.Empty<AgSesionCobertura>());
+            Assert.StartsWith("COBERTURA_INCOMPLETA:", r.Error);
+        }
+
+        [Fact]
+        public void ExtraDeclaradaComoNuevaEsInesperada()
+        {
+            var extra = Clave(1, 2);
+            var m = ManifiestoConExtras(1, extra);
+            Assert.Equal("RELACION_INESPERADA", new AgValidadorCoberturaSeleccion().Validar(m,
+                Array.Empty<AgSesionCobertura>(), new[] { SesionDe(extra, "NUEVA", 77, 9, 14) }).Error);
+        }
+
+        [Fact]
+        public void ExtraConservadaBloqueaCruceDeAulaYDeDocente()
+        {
+            var extra = Clave(1, 2);
+            var m = ManifiestoConExtras(2, extra);
+            Assert.Equal("CRUCE_AULA", new AgValidadorCoberturaSeleccion().Validar(m,
+                new[] { SesionDe(extra, "CONSERVADA", 77, 9, 8) },
+                new[] { Sesion(m, aula: 1, id: 2, docente: 8, inicio: 9) }).Error);
+            Assert.Equal("CRUCE_DOCENTE", new AgValidadorCoberturaSeleccion().Validar(m,
+                new[] { SesionDe(extra, "CONSERVADA", 77, 9, 8) },
+                new[] { Sesion(m, aula: 2, id: 2, docente: 9, inicio: 8) }).Error);
+        }
+
+        [Fact]
+        public void ProyectorConservaExtrasInmutablesSinReplanificarlas()
+        {
+            // Requisito 5: el proyector proyecta las extras como conservadas inmutables (ocupan aula y
+            // docente) y nunca las inserta en staging ni producción. Se cubre aquí porque el proyector no
+            // tiene archivo de pruebas entre las superficies autorizadas.
+            var extra = Clave(1, 2);
+            var m = new AgManifiestoCobertura(new DateTime(2027, 2, 5), new DateTime(2027, 5, 30),
+                new[] { new AgRelacionCobertura(Clave(1, 1), 4, 4, (int)AgEstadoAula.Aprobado) }, new[] { extra });
+            var requerida = m.Relaciones.Single().Clave;
+            var snapshot = new AgPlanAprobadoSnapshot(m,
+                new[] { new AgRelacionPlanLeida(10, new[] { requerida }, new[] { Canonica(1, 10, 9, 8) }, "v10") },
+                new string[0], "catalogo",
+                new[] { new AgRelacionPlanLeida(11, new[] { extra }, new[] { Canonica(2, 11, 9, 14) }, "v11") });
+            var contexto = new AgContexto
+            {
+                ManifiestoCobertura = m,
+                PlanAprobadoSnapshot = snapshot,
+                ValidacionPlanAprobado = new AgValidacionPlanAprobado(snapshot.HuellaOrigen,
+                    new[] { new AgValidacionAulaPlan(1, AgEstadoValidacionPlan.RequiereRatificacion,
+                        new[] { new AgValidacionRelacionPlan(m.Relaciones.Single(), 4, 0, new string[0]) }) },
+                    new string[0]),
+                Ventana = new VentanaSemestre { FechaInicio = m.Inicio, FechaFin = m.Fin }
+            };
+            contexto.RegistrarCandidatoCobertura(new AgCandidatoPlanAprobado(Guid.NewGuid(), Guid.NewGuid(), 1,
+                "actor", "motivo", m, snapshot.HuellaOrigen, "previa", "MAR-VIE", "MAR-VIE", new int[0]));
+            var r = new AgProyectorSolucionCobertura().Conservar(contexto);
+            Assert.True(r.IsSuccess, r.IsFailure ? r.Error : string.Empty);
+            Assert.Equal(2, r.Value.Count);
+            var conservadaExtra = r.Value.Single(s => s.Clave.Valor == extra.Valor);
+            Assert.Equal("CONSERVADA", conservadaExtra.Origen);
+            Assert.Equal(2, conservadaExtra.Id);
+            Assert.Equal(14, conservadaExtra.Inicio.TotalHours);
+        }
+
+        private static AgSesionCanonica Canonica(long id, long vinculacion, long docente, int inicio)
+            => new AgSesionCanonica(id, vinculacion, docente, new DateTime(2027, 2, 5),
+                TimeSpan.FromHours(inicio), TimeSpan.FromHours(inicio + 4), 4, "VALLE", "sesion:" + id);
     }
 }

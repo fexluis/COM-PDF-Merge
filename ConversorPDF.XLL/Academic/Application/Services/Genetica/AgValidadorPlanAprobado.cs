@@ -23,12 +23,16 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 && requeridas.ContainsKey(r.ClavesCandidatas[0].Valor)).ToList();
             foreach (var r in snapshot.Relaciones.Except(reconciliadas))
                 globales.Add("RELACION_NO_RECONCILIADA:" + r.IdVinculacion);
-            foreach (var g in snapshot.Relaciones.GroupBy(r => r.IdVinculacion).Where(g => g.Count() > 1))
+            foreach (var r in snapshot.RelacionesExtra.Where(r => r.ClavesCandidatas.Count != 1
+                || !m.EsExtra(r.ClavesCandidatas[0])))
+                globales.Add("RELACION_NO_RECONCILIADA:" + r.IdVinculacion);
+            foreach (var g in snapshot.Relaciones.Concat(snapshot.RelacionesExtra)
+                .GroupBy(r => r.IdVinculacion).Where(g => g.Count() > 1))
                 globales.Add("VINCULACION_DUPLICADA:" + g.Key);
-            var sesiones = snapshot.Relaciones.SelectMany(r => r.Sesiones).ToList();
+            var sesiones = snapshot.Relaciones.Concat(snapshot.RelacionesExtra).SelectMany(r => r.Sesiones).ToList();
             var repetidas = new HashSet<long>(sesiones.GroupBy(s => s.IdSesion).Where(g => g.Count() > 1).Select(g => g.Key));
             var errores = new Dictionary<AgSesionCanonica, List<string>>();
-            foreach (var r in snapshot.Relaciones)
+            foreach (var r in snapshot.Relaciones.Concat(snapshot.RelacionesExtra))
             foreach (var s in r.Sesiones)
             {
                 if (!errores.ContainsKey(s)) errores[s] = new List<string>();
@@ -54,8 +58,13 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             }
             // Intervalos reales, extremos contiguos permitidos; no compara una sesión consigo misma.
             // Incluye otras aulas reconciliadas (también Disponible) como ocupación docente.
+            // Decisión humana 2026-11-15 «B: extras como ocupación fija»: las extras declaradas son
+            // ocupación fija de aula y docente, pero no suman demanda requerida ni distorsionan déficit/exceso.
             var conocidas = reconciliadas.SelectMany(r => r.Sesiones.Select(s => new
-                { Clave = r.ClavesCandidatas[0], Sesion = s })).Where(x => IntervaloValido(x.Sesion)).ToList();
+                { Clave = r.ClavesCandidatas[0], Sesion = s })).Concat(snapshot.RelacionesExtra
+                .Where(r => r.ClavesCandidatas.Count == 1)
+                .SelectMany(r => r.Sesiones.Select(s => new { Clave = r.ClavesCandidatas[0], Sesion = s })))
+                .Where(x => IntervaloValido(x.Sesion)).ToList();
             foreach (var dia in conocidas.GroupBy(x => x.Sesion.Fecha.Value.Date))
             {
                 var lista = dia.OrderBy(x => x.Sesion.HoraInicio.Value).ToList();
@@ -71,6 +80,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     errores[b.Sesion].Add(tipo + b.Sesion.IdSesion + ":" + a.Sesion.IdSesion);
                 }
             }
+            // Las extras no tienen demanda propia, pero cualquier defecto debe impedir ratificar el aula.
+            // Registrar también cruces extra-extra, que no aparecen en ningún resultado de relación requerida.
+            foreach (var extra in snapshot.RelacionesExtra)
+                foreach (var s in extra.Sesiones)
+                    globales.AddRange(errores[s]);
             var aulas = new List<AgValidacionAulaPlan>();
             foreach (var aula in m.Relaciones.GroupBy(r => r.Clave.IdAula))
             {

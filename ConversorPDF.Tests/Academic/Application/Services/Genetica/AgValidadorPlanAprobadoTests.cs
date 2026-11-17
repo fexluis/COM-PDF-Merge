@@ -154,5 +154,118 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             Assert.False(r.BloqueaPreparacion);
             Assert.Equal(AgEstadoValidacionPlan.NoRequerida, r.Aulas.Single().Estado);
         }
+
+        // Decisión humana 2026-11-15 «B: extras como ocupación fija»: las extras declaradas no suman
+        // demanda requerida pero sí son ocupación fija de aula y docente.
+        private static AgClaveRelacionCobertura Extra(int asignatura = 8)
+            => new AgClaveRelacionCobertura(16, "VALLE", 3, 1, 1, 14, asignatura, "I", "B", "PRESENCIAL");
+
+        private static AgValidacionPlanAprobado ValidarConExtras(AgManifiestoCobertura m,
+            AgRelacionPlanLeida[] relaciones, AgRelacionPlanLeida[] extras)
+            => new AgValidadorPlanAprobado().Validar(new AgPlanAprobadoSnapshot(m, relaciones,
+                new string[0], "catalogo", extras), new AgContexto());
+
+        [Fact]
+        public void ExtrasDeclaradasNoDistorsionanHorasEsperadasDeficitNiExceso()
+        {
+            var k = Clave(); var extra = Extra();
+            var m = new AgManifiestoCobertura(Inicio, Fin,
+                new[] { new AgRelacionCobertura(k, 4, 4, (int)AgEstadoAula.Aprobado) }, new[] { extra });
+            var r = ValidarConExtras(m, new[] { Relacion(k, Sesion()) },
+                new[] { new AgRelacionPlanLeida(11, new[] { extra },
+                    new[] { Sesion(2, inicio: 13, fin: 17, vinculacion: 11) }, "extra") });
+            var aula = r.Aulas.Single();
+            Assert.Equal(AgEstadoValidacionPlan.RequiereRatificacion, aula.Estado);
+            Assert.Equal(4, aula.HorasEsperadas);
+            Assert.Equal(0, aula.Deficit);
+            Assert.Equal(0, aula.Exceso);
+            Assert.Single(aula.Relaciones);
+            Assert.Empty(r.Diagnosticos);
+        }
+
+        [Fact]
+        public void ExtraConservadaOcupaAulaYDocenteAunqueNoSumeDemanda()
+        {
+            var k = Clave(); var extra = Extra();
+            var m = new AgManifiestoCobertura(Inicio, Fin,
+                new[] { new AgRelacionCobertura(k, 4, 4, (int)AgEstadoAula.Aprobado) }, new[] { extra });
+            var r = ValidarConExtras(m, new[] { Relacion(k, Sesion()) },
+                new[] { new AgRelacionPlanLeida(11, new[] { extra }, new[] { Sesion(2, vinculacion: 11) }, "extra") });
+            var aula = r.Aulas.Single();
+            Assert.Contains(aula.Relaciones.Single().Diagnosticos, x => x.StartsWith("CRUCE_AULA:"));
+            Assert.Equal(AgEstadoValidacionPlan.PlanNoVerificable, aula.Estado);
+            Assert.Equal(4, aula.HorasEsperadas);
+            Assert.Equal(0, aula.Exceso);
+        }
+
+        [Fact]
+        public void CruceEntreDosExtrasSinCruceConRequeridaBloqueaAntesDeConsentir()
+        {
+            var k = Clave(); var e1 = Extra(8); var e2 = Extra(9);
+            var m = new AgManifiestoCobertura(Inicio, Fin,
+                new[] { new AgRelacionCobertura(k, 4, 4, (int)AgEstadoAula.Aprobado) }, new[] { e1, e2 });
+            var r = ValidarConExtras(m, new[] { Relacion(k, Sesion(inicio: 13, fin: 17)) },
+                new[] { new AgRelacionPlanLeida(11, new[] { e1 }, new[] { Sesion(2, inicio: 8, fin: 12, vinculacion: 11) }, "e1"),
+                    new AgRelacionPlanLeida(12, new[] { e2 }, new[] { Sesion(3, inicio: 8, fin: 12, vinculacion: 12) }, "e2") });
+            Assert.Equal(AgEstadoValidacionPlan.PlanNoVerificable, r.Aulas.Single().Estado);
+            Assert.Contains(r.Diagnosticos, d => d.StartsWith("CRUCE_AULA:"));
+            Assert.Equal(4, r.Aulas.Single().HorasEsperadas);
+            Assert.Equal(0, r.Aulas.Single().Deficit);
+            Assert.Equal(0, r.Aulas.Single().Exceso);
+        }
+
+        [Fact]
+        public void ExtraInvalidaTemporalOIdentidadBloqueaAntesDeConsentir()
+        {
+            var k = Clave(); var extra = Extra();
+            var m = new AgManifiestoCobertura(Inicio, Fin,
+                new[] { new AgRelacionCobertura(k, 4, 4, (int)AgEstadoAula.Aprobado) }, new[] { extra });
+            foreach (var s in new[] {
+                Sesion(2, Inicio.AddDays(-1), inicio: 8, fin: 12, vinculacion: 11),
+                Sesion(2, inicio: 8, fin: 10, vinculacion: 11),
+                Sesion(2, inicio: 8, fin: 12, docente: 0, vinculacion: 11),
+                Sesion(2, inicio: 8, fin: 12, vinculacion: 99) })
+            {
+                var r = ValidarConExtras(m, new[] { Relacion(k, Sesion(inicio: 13, fin: 17)) },
+                    new[] { new AgRelacionPlanLeida(11, new[] { extra }, new[] { s }, "extra") });
+                Assert.Equal(AgEstadoValidacionPlan.PlanNoVerificable, r.Aulas.Single().Estado);
+                Assert.NotEmpty(r.Diagnosticos);
+                Assert.Equal(4, r.Aulas.Single().HorasEsperadas);
+                Assert.Equal(0, r.Aulas.Single().Deficit);
+                Assert.Equal(0, r.Aulas.Single().Exceso);
+            }
+        }
+
+        [Fact]
+        public void ExtrasNoOcultanAmbiguedadNiRelacionRequeridaAusente()
+        {
+            var k = Clave(); var otra = Clave(asignatura: 9); var extra = Extra();
+            var m = new AgManifiestoCobertura(Inicio, Fin, new[] {
+                new AgRelacionCobertura(k, 4, 4, (int)AgEstadoAula.Aprobado),
+                new AgRelacionCobertura(otra, 4, 4, (int)AgEstadoAula.Aprobado) }, new[] { extra });
+            var r = ValidarConExtras(m, new[] { Relacion(k, Sesion()) },
+                new[] { new AgRelacionPlanLeida(11, new[] { extra },
+                    new[] { Sesion(2, inicio: 13, fin: 17, vinculacion: 11) }, "extra") });
+            var aula = r.Aulas.Single();
+            Assert.Equal(AgEstadoValidacionPlan.PlanNoVerificable, aula.Estado);
+            Assert.Contains(aula.Relaciones.Single(x => x.Clave.Valor == otra.Valor).Diagnosticos,
+                x => x.StartsWith("RELACION_AUSENTE:"));
+        }
+
+        // Escenario productivo 2026-11-16: período sin plan. El motivo debe nombrarse por relación
+        // ausente, no con la etiqueta genérica del terminal.
+        [Fact]
+        public void PeriodoSinPlan_NombraRelacionesAusentesEnLugarDeUnaEtiquetaGenerica()
+        {
+            var k = Clave(); var otra = Clave(asignatura: 8);
+            var r = Validar(Manifiesto(k, otra), new AgRelacionPlanLeida[0]);
+            var aula = r.Aulas.Single();
+            Assert.Equal(AgEstadoValidacionPlan.PlanNoVerificable, aula.Estado);
+            Assert.All(aula.Relaciones, x =>
+                Assert.Contains(x.Diagnosticos, d => d.StartsWith("RELACION_AUSENTE:")));
+            var texto = AgDescriptorDiagnosticoPlan.Describir(aula, r.Diagnosticos);
+            Assert.StartsWith("RELACIONES_AUSENTES=2/2", texto);
+            Assert.Contains("RELACION_AUSENTE:", texto);
+        }
     }
 }

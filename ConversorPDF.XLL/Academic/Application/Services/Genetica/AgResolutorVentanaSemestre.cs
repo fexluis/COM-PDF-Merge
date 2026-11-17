@@ -64,13 +64,22 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                             var manualIni = fechaInicioManual.Value.Date;
                             var manualFin = fechaFinManual.Value.Date;
 
+                            // El período es el límite superior real (fecha_inicio..fecha_fin): una ventana manual
+                            // no puede ampliarlo, porque ampliaría la cobertura temporal sin autorización.
+                            if (manualIni < perIni.Date || manualFin > perFin.Date)
+                            {
+                                return Result.Failure<VentanaSemestre>(
+                                    $"VENTANA_FUERA_DE_PERIODO:{manualIni:yyyy-MM-dd}..{manualFin:yyyy-MM-dd};" +
+                                    $"periodo={perIni:yyyy-MM-dd}..{perFin:yyyy-MM-dd}");
+                            }
+
                             return VentanaSemestre.Crear(
                                 resolvedIdPeriodo,
                                 nombrePeriodo,
                                 manualIni,
                                 manualFin,
                                 AgOrigenVentana.Manual,
-                                $"Rango manual acotado dentro del periodo {nombrePeriodo} (Base periodo: {perIni:yyyy-MM-dd} a {perFin:yyyy-MM-dd})");
+                                $"Rango manual dentro del periodo {nombrePeriodo} (Base periodo: {perIni:yyyy-MM-dd} a {perFin:yyyy-MM-dd})");
                         }
 
                         return VentanaSemestre.Crear(

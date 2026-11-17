@@ -21,6 +21,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             if (ids.Count == 0 || ids.Any(i => i <= 0) || ids.Distinct().Count() != ids.Count)
                 return Result.Failure<AgManifiestoCobertura>("SELECCION_VACIA_O_DUPLICADA");
             var items = new List<AgRelacionCobertura>();
+            var extras = new List<AgClaveRelacionCobertura>();
             foreach (int id in ids.OrderBy(i => i))
             {
                 var aulas = (contexto.Aulas ?? new List<AgAula>()).Where(a => a.Id == id).ToList();
@@ -62,8 +63,50 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     }
                     catch (ArgumentException ex) { return Fallo(ex.Message, id); }
                 }
+                // Decisión humana 2026-11-15 «B: extras como ocupación fija»: las relaciones no requeridas
+                // del aula seleccionada se declaran extras. Se conservan inmutables y ocupan aula/docente,
+                // pero no suman demanda requerida. Una extra con identidad no verificable no se declara:
+                // su relación productiva queda como no reconciliable y sí bloquea.
+                foreach (var relacion in (contexto.AulaAsignaturas ?? new List<AgAulaAsignatura>())
+                    .Where(r => r.IdAula == id && r.Requerida != 1).OrderBy(r => r.IdAsignatura))
+                {
+                    var clave = ClaveExtra(contexto, aula, relacion, subunidad, idTerritorial);
+                    if (clave != null && !items.Any(i => i.Clave.Valor == clave.Valor)
+                        && !extras.Any(k => k.Valor == clave.Valor)) extras.Add(clave);
+                }
             }
-            return Result.Success(new AgManifiestoCobertura(inicio, fin, items));
+            // La lectura canónica puede haber descubierto materias exclusivamente productivas. En la
+            // revalidación del mismo contexto (simulación T3) conservar esas claves ya selladas, nunca
+            // inventarlas desde el catálogo AG ni aceptar un origen de otra ventana o demanda.
+            var ligado = contexto.PlanAprobadoSnapshot?.Manifiesto;
+            if (ligado != null && ReferenceEquals(ligado, contexto.ManifiestoCobertura)
+                && ligado.Inicio == inicio.Date && ligado.Fin == fin.Date
+                && ligado.Relaciones.Select(r => r.Clave.Valor).SequenceEqual(
+                    items.OrderBy(r => r.Clave.Valor, StringComparer.Ordinal).Select(r => r.Clave.Valor)))
+                extras.AddRange(ligado.RelacionesExtra.Where(k => !extras.Any(e => e.Valor == k.Valor)));
+            return Result.Success(new AgManifiestoCobertura(inicio, fin, items, extras));
+        }
+
+        private static AgClaveRelacionCobertura ClaveExtra(AgContexto contexto, AgAula aula,
+            AgAulaAsignatura relacion, string subunidad, int idTerritorial)
+        {
+            if (AgClaveRelacionCobertura.Texto(relacion.Subunidad) != AgClaveRelacionCobertura.Texto(subunidad)) return null;
+            var asignaturas = contexto.Asignaturas.Where(a => a.Id == relacion.IdAsignatura).ToList();
+            if (asignaturas.Count != 1) return null;
+            var asignatura = asignaturas[0];
+            string semestre = AgFormatoAsignatura.SemestreRomano(aula.Semestre);
+            if (semestre == "SIN ASIGNAR" || asignatura.IdPrograma != aula.IdPrograma
+                || (!string.IsNullOrWhiteSpace(asignatura.Semestre)
+                    && AgFormatoAsignatura.SemestreRomano(asignatura.Semestre) != semestre)
+                || (!string.IsNullOrWhiteSpace(asignatura.Subunidad)
+                    && AgClaveRelacionCobertura.Texto(asignatura.Subunidad) != AgClaveRelacionCobertura.Texto(subunidad)))
+                return null;
+            try
+            {
+                return new AgClaveRelacionCobertura(idTerritorial, subunidad, aula.IdPeriodo, aula.IdSede,
+                    aula.IdPrograma, aula.Id, asignatura.Id, semestre, aula.Grupo, aula.ModalidadVinculacion);
+            }
+            catch (ArgumentException) { return null; }
         }
 
         private static Result<AgManifiestoCobertura> Fallo(string codigo, int id)

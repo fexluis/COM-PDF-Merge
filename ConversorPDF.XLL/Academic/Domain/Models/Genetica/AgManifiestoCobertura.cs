@@ -83,10 +83,15 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
         public DateTime Fin { get; }
         /// <summary>Relaciones requeridas ordenadas, sin duplicados.</summary>
         public IReadOnlyList<AgRelacionCobertura> Relaciones { get; }
-        /// <summary>Huella de identidad, demanda original/efectiva, estados y ventana.</summary>
+        /// <summary>Claves productivas declaradas no requeridas (extras): se conservan inmutables y ocupan
+        /// aula y docente, pero no suman demanda requerida ni se replantean.</summary>
+        public IReadOnlyList<AgClaveRelacionCobertura> RelacionesExtra { get; }
+        /// <summary>Huella de identidad, demanda original/efectiva, estados, ventana y extras declaradas.</summary>
         public string Huella { get; }
+        private readonly HashSet<string> _extras;
         /// <summary>Copia y valida el manifiesto; nunca completa selecciones faltantes por fallback.</summary>
-        public AgManifiestoCobertura(DateTime inicio, DateTime fin, IEnumerable<AgRelacionCobertura> relaciones)
+        public AgManifiestoCobertura(DateTime inicio, DateTime fin, IEnumerable<AgRelacionCobertura> relaciones,
+            IEnumerable<AgClaveRelacionCobertura> extras = null)
         {
             if (fin.Date < inicio.Date) throw new ArgumentException("VENTANA_INVALIDA");
             Inicio = inicio.Date; Fin = fin.Date;
@@ -94,10 +99,22 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
             if (lista.Count == 0 || lista.Any(r => r == null) || lista.GroupBy(r => r.Clave.Valor).Any(g => g.Count() != 1))
                 throw new ArgumentException("MANIFIESTO_VACIO_O_DUPLICADO");
             Relaciones = lista.OrderBy(r => r.Clave.Valor, StringComparer.Ordinal).ToList().AsReadOnly();
+            // Decisión humana 2026-11-15 «B: extras como ocupación fija»: colección explícita y sellada.
+            var declaradas = (extras ?? Enumerable.Empty<AgClaveRelacionCobertura>()).ToList();
+            if (declaradas.Any(k => k == null) || declaradas.GroupBy(k => k.Valor).Any(g => g.Count() != 1)
+                || declaradas.Any(k => Relaciones.Any(r => r.Clave.Valor == k.Valor)))
+                throw new ArgumentException("EXTRAS_INVALIDAS");
+            RelacionesExtra = declaradas.OrderBy(k => k.Valor, StringComparer.Ordinal).ToList().AsReadOnly();
+            _extras = new HashSet<string>(RelacionesExtra.Select(k => k.Valor), StringComparer.Ordinal);
             Huella = AgOrigenCanonico.Huella(AgOrigenCanonico.Campos(Version, Inicio, Fin) +
                 string.Concat(Relaciones.Select(r => AgOrigenCanonico.Campos(r.Clave.Valor,
-                    r.HorasOriginales, r.HorasEfectivas, r.EstadoAula))));
+                    r.HorasOriginales, r.HorasEfectivas, r.EstadoAula))) +
+                string.Concat(RelacionesExtra.Select(k => AgOrigenCanonico.Campos("EXTRA", k.Valor))));
         }
+        /// <summary>Indica si la clave está declarada como extra no requerida.</summary>
+        public bool EsExtra(AgClaveRelacionCobertura clave) => clave != null && _extras.Contains(clave.Valor);
+        /// <summary>Indica si el valor canónico está declarado como extra no requerida.</summary>
+        public bool EsExtra(string valor) => !string.IsNullOrEmpty(valor) && _extras.Contains(valor);
         /// <summary>Detecta relaciones enteras omitidas aunque genes y staging coincidan entre sí.</summary>
         public IReadOnlyList<AgClaveRelacionCobertura> DetectarOmisiones(IEnumerable<AgClaveRelacionCobertura> presentes)
         {

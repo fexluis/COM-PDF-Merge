@@ -1658,9 +1658,10 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                         && string.Equals(a.Subunidad, pend.Subunidad, StringComparison.OrdinalIgnoreCase)))
                         return MostrarFalloPlan(TipoPreparacionPlan.AlcanceInvalido, "DIMENSION_PENDIENTE_FUERA_DE_ALCANCE_DISPONIBLE");
                 }
+                // El límite es la fecha de fin de la ventana semestral seleccionada, no una fecha fija.
                 var ventana = contexto.Ventana;
-                if (ventana == null || ventana.FechaFin.Date > new DateTime(2027, 5, 30))
-                    return MostrarFalloPlan(TipoPreparacionPlan.AlcanceInvalido, "VENTANA_EXCEDE_LIMITE_30_05_2027");
+                if (ventana == null || ventana.FechaFin.Date < ventana.FechaInicio.Date)
+                    return MostrarFalloPlan(TipoPreparacionPlan.AlcanceInvalido, "VENTANA_SEMESTRAL_INVALIDA");
                 List<int> territoriales;
                 using (var db = _connectionFactory())
                 {
@@ -1688,17 +1689,30 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 if (lectura.IsFailure)
                     return MostrarFalloPlan(lectura.Error == "LECTURA_PLAN_CANCELADA" ? TipoPreparacionPlan.Cancelada
                         : TipoPreparacionPlan.ErrorTecnico, lectura.Error);
-                if (lectura.Value == null || lectura.Value.Manifiesto.Huella != manifiesto.Value.Huella)
+                // El lector puede descubrir extras únicamente productivas; no se aceptan cambios en
+                // demanda, ventana ni claves AG ya declaradas al ligar su huella antes del consentimiento.
+                if (lectura.Value == null || lectura.Value.Manifiesto.Inicio != manifiesto.Value.Inicio
+                    || lectura.Value.Manifiesto.Fin != manifiesto.Value.Fin
+                    || !lectura.Value.Manifiesto.Relaciones.Select(r => r.Clave.Valor)
+                        .SequenceEqual(manifiesto.Value.Relaciones.Select(r => r.Clave.Valor))
+                    || manifiesto.Value.RelacionesExtra.Any(k => !lectura.Value.Manifiesto.EsExtra(k)))
                     return MostrarFalloPlan(TipoPreparacionPlan.ErrorTecnico, "LECTURA_PLAN_MANIFIESTO_NO_COINCIDE");
+                contexto.ManifiestoCobertura = lectura.Value.Manifiesto;
                 contexto.PlanAprobadoSnapshot = lectura.Value;
                 var validacion = new AgValidadorPlanAprobado().Validar(lectura.Value, contexto);
                 contexto.ValidacionPlanAprobado = validacion;
                 foreach (var d in validacion.Diagnosticos) Log("[PLAN CANÓNICO] " + d);
+                // Decisión humana 2026-11-15 «B: extras como ocupación fija»: las extras declaradas no
+                // bloquean; se conservan inmutables y ocupan aula/docente sin sumar demanda requerida.
+                foreach (var extra in lectura.Value.RelacionesExtra)
+                    Log($"[PLAN CANÓNICO] extra aulas={string.Join(",", extra.ClavesCandidatas.Select(k => k.IdAula))} vinculacion={extra.IdVinculacion} sesiones={extra.Sesiones.Count} conservada=inmutable sin_replanificar");
                 foreach (var aula in validacion.Aulas.Where(a => a.Estado != AgEstadoValidacionPlan.NoRequerida))
                 {
                     Log($"[PLAN CANÓNICO] aula={aula.IdAula} estado={aula.Estado} esperadas={aula.HorasEsperadas} preservadas={aula.HorasPreservadas} déficit={aula.Deficit} exceso={aula.Exceso} fuera={aula.HorasFueraVentana}");
                     foreach (var r in aula.Relaciones)
                     {
+                        // El resumen por aula ya quedó registrado; el detalle sólo se emite cuando exige revisión.
+                        if (r.Diagnosticos.Count == 0 && r.Deficit <= 0.001 && r.Exceso <= 0.001) continue;
                         Log($"[PLAN CANÓNICO] aula={aula.IdAula} asignatura={r.Clave.IdAsignatura} esperadas={r.HorasEsperadas} válidasSinRatificar={r.HorasValidasEnVentana} déficit={r.Deficit} exceso={r.Exceso} fuera={r.HorasFueraVentana}");
                         foreach (var d in r.Diagnosticos) Log("[PLAN CANÓNICO] " + d);
                     }
@@ -1726,7 +1740,8 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     var diagnostico = validacion.Aulas.Single(v => v.IdAula == aula.Id);
                     if (diagnostico.Estado == AgEstadoValidacionPlan.PlanNoVerificable)
                     {
-                        terminales.Add("aula=" + aula.Id + ":PLAN_NO_VERIFICABLE: origen ambiguo o relación extra");
+                        terminales.Add("aula=" + aula.Id + ":PLAN_NO_VERIFICABLE:" +
+                            AgDescriptorDiagnosticoPlan.Describir(diagnostico, validacion.Diagnosticos));
                         terminal = TipoPreparacionPlan.Rechazado;
                         continue;
                     }
@@ -1740,6 +1755,12 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                         ? "Plan canónico completo: sólo ratificación, sin propuesta de cambio de días.\n" +
                             string.Join("\n", diagnostico.Relaciones.Select(r => r.Clave.Valor + " " + r.HorasEsperadas + "h"))
                         : ConstruirDetallePropuestaAprobada(propuesta);
+                    int extrasConservadas = lectura.Value.RelacionesExtra.Count(r => r.ClavesCandidatas.Count == 1
+                        && r.ClavesCandidatas[0].IdAula == aula.Id);
+                    if (extrasConservadas > 0)
+                        detalle += "\nExtras conservadas: " + extrasConservadas +
+                            " relación(es) no requerida(s) que se conservan inmutables y ocupan aula y docente; " +
+                            "no se replantean ni suman demanda requerida.";
                     Log(detalle);
                     string huellaSql = await _confirmadorPlanAprobado.CapturarConfiguracionAsync(contexto, aula.Id, propuesta, ct);
                     if (huellaSql == null)
@@ -1848,7 +1869,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             texto.AppendLine($"Aula {propuesta.IdAula} — {propuesta.AulaRef}: {propuesta.Desde} → {(string.IsNullOrEmpty(propuesta.Hacia) ? "sin siguiente escalón" : propuesta.Hacia)}");
             string[] dias = { "", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo" };
             texto.AppendLine("Días añadidos: " + string.Join(", ", propuesta.DiasAnadidos.Select(d => dias[d])));
-            texto.AppendLine($"Fecha final: {propuesta.FechaLimite:dd/MM/yyyy}; límite absoluto fijo 30/05/2027. Terminal: {propuesta.Terminal}.");
+            texto.AppendLine($"Fecha final: {propuesta.FechaLimite:dd/MM/yyyy}; límite = fin de la ventana semestral seleccionada. Terminal: {propuesta.Terminal}.");
             texto.AppendLine("Sólo capacidad de calendario; no acredita disponibilidad docente ni ausencia de conflictos externos.");
             texto.AppendLine("No autoriza revisión, ratificación, redistribución ni aplicación. T4 pendiente; horario aprobado intacto.");
             if (propuesta.BusquedaAgotada) texto.AppendLine("Búsqueda acotada agotada: el residual no acredita imposibilidad.");
@@ -5081,6 +5102,8 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             txtLogAG.AppendText($"{prefijo}{mensaje}\r\n");
             txtLogAG.SelectionStart = txtLogAG.Text.Length;
             txtLogAG.ScrollToCaret();
+            // Durable: LoggerHelper.Minimo es Info, así que Debug se descartaría y el detalle se perdería al cerrar.
+            if (!string.IsNullOrWhiteSpace(mensaje)) LoggerHelper.Info(mensaje);
         }
 
         /// <summary>

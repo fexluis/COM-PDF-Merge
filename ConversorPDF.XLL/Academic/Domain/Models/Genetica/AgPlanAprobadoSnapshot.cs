@@ -66,11 +66,15 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
     {
         /// <summary>Manifiesto esperado, incluso donde producción está ausente.</summary>
         public AgManifiestoCobertura Manifiesto { get; }
-        /// <summary>Vinculaciones leídas, incluidas extras y ambiguas.</summary>
+        /// <summary>Vinculaciones requeridas leídas; las extras declaradas se exponen aparte.</summary>
         public IReadOnlyList<AgRelacionPlanLeida> Relaciones { get; }
+        /// <summary>Vinculaciones productivas declaradas como extras no requeridas: se conservan inmutables y
+        /// ocupan aula y docente, pero no suman demanda requerida ni bloquean la preparación.</summary>
+        public IReadOnlyList<AgRelacionPlanLeida> RelacionesExtra { get; }
         /// <summary>Requeridas sin ninguna vinculación reconciliada; distinto de vinculación sin sesiones.</summary>
         public IReadOnlyList<AgClaveRelacionCobertura> RelacionesAusentes { get; }
-        /// <summary>Diagnósticos estructurales; el validador futuro debe bloquear extras/ambigüedad.</summary>
+        /// <summary>Diagnósticos estructurales que impiden reconciliar el origen. Las extras declaradas no son
+        /// un diagnóstico: sólo bloquean ambigüedad, ausencia, identidad incompleta o sesión no verificable.</summary>
         public IReadOnlyList<string> Diagnosticos { get; }
         /// <summary>Huella completa de manifiesto, filas productivas y catálogo de reconciliación.</summary>
         public string HuellaOrigen { get; }
@@ -79,14 +83,19 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
             ? "PLAN_NO_VERIFICABLE" : "REQUIERE_RATIFICACION";
         /// <summary>Construye un snapshot reproducible; la ratificación durable pertenece a T4.</summary>
         public AgPlanAprobadoSnapshot(AgManifiestoCobertura manifiesto, IEnumerable<AgRelacionPlanLeida> relaciones,
-            IEnumerable<string> diagnosticos, string origenCatalogo)
+            IEnumerable<string> diagnosticos, string origenCatalogo, IEnumerable<AgRelacionPlanLeida> extras = null)
         {
             Manifiesto = manifiesto ?? throw new ArgumentNullException(nameof(manifiesto));
             Relaciones = relaciones.OrderBy(r => r.IdVinculacion).ToList().AsReadOnly();
+            RelacionesExtra = (extras ?? Enumerable.Empty<AgRelacionPlanLeida>())
+                .OrderBy(r => r.IdVinculacion).ToList().AsReadOnly();
             RelacionesAusentes = manifiesto.DetectarOmisiones(Relaciones.SelectMany(r => r.ClavesCandidatas));
             Diagnosticos = diagnosticos.Distinct(StringComparer.Ordinal).OrderBy(d => d, StringComparer.Ordinal).ToList().AsReadOnly();
             HuellaOrigen = AgOrigenCanonico.Huella(AgOrigenCanonico.Campos(1, manifiesto.Huella, origenCatalogo) +
                 string.Concat(Relaciones.Select(r => AgOrigenCanonico.Campos(r.IdVinculacion, r.OrigenCanonico,
+                    string.Concat(r.ClavesCandidatas.Select(k => AgOrigenCanonico.Campos(k.Valor))),
+                    string.Concat(r.Sesiones.Select(s => AgOrigenCanonico.Campos(s.IdSesion, s.OrigenCanonico)))))) +
+                string.Concat(RelacionesExtra.Select(r => AgOrigenCanonico.Campos("EXTRA", r.IdVinculacion, r.OrigenCanonico,
                     string.Concat(r.ClavesCandidatas.Select(k => AgOrigenCanonico.Campos(k.Valor))),
                     string.Concat(r.Sesiones.Select(s => AgOrigenCanonico.Campos(s.IdSesion, s.OrigenCanonico)))))));
         }

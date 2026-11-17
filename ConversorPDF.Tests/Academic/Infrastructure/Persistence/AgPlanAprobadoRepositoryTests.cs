@@ -225,6 +225,83 @@ INSERT INTO sesiones VALUES (50,50,900,'AJENO','AJENO',99,'CAUCA',1),
             Assert.True(r.IsFailure); Assert.StartsWith("LECTURA_PLAN_ERROR:", r.Error);
         }
 
+        // Decisión humana 2026-11-15 «B: extras como ocupación fija»: una relación productiva declarada
+        // como extra no requerida deja de bloquear la preparación; se conserva inmutable.
+        [Fact]
+        public async Task MateriaSoloProductivaSeDeclaraExtraSinEscribirNiSumarDemanda()
+        {
+            var m = AgManifiestoCoberturaTests.Crear(AgManifiestoCoberturaTests.Contexto());
+            Sql(@"INSERT INTO vinculaciones VALUES (4,1,1,3,8,93,'I','A','Presencial',32,'VALLE','','');
+INSERT INTO sesiones VALUES (20,4,93,'2027-02-06','18:00 A 22:00',4,'VALLE',0);");
+            var r = await _repo.ObtenerAsync(m, CancellationToken.None);
+            Assert.True(r.IsSuccess, r.IsFailure ? r.Error : "");
+            Assert.Equal("REQUIERE_RATIFICACION", r.Value.EstadoOrigen);
+            Assert.Empty(r.Value.Diagnosticos);
+            var extra = Assert.Single(r.Value.RelacionesExtra);
+            Assert.Equal(4, extra.IdVinculacion);
+            Assert.Equal(8, Assert.Single(r.Value.Manifiesto.RelacionesExtra).IdAsignatura);
+            Assert.NotEqual(m.Huella, r.Value.Manifiesto.Huella);
+            Assert.Equal(m.Relaciones.Sum(x => x.HorasEfectivas), r.Value.Manifiesto.Relaciones.Sum(x => x.HorasEfectivas));
+            Assert.Empty(r.Value.RelacionesAusentes);
+            using (var db = new SQLiteConnection(_cs))
+            {
+                db.Open();
+                Assert.Equal(3, db.ExecuteScalar<int>("SELECT COUNT(*) FROM vinculaciones"));
+                Assert.Equal(2, db.ExecuteScalar<int>("SELECT COUNT(*) FROM sesiones"));
+            }
+        }
+
+        [Fact]
+        public async Task ExtraDeclaradaSeConservaSinBloquearElPlan()
+        {
+            var m = AgManifiestoCoberturaTests.Crear(AgManifiestoCoberturaTests.ContextoConExtra());
+            Sql(@"INSERT INTO vinculaciones VALUES (4,1,1,3,8,93,'I','A','Presencial',32,'VALLE','','');
+INSERT INTO sesiones VALUES (20,4,93,'2027-02-06','18:00 A 22:00',4,'VALLE',0);");
+            var r = await _repo.ObtenerAsync(m, CancellationToken.None);
+            Assert.True(r.IsSuccess);
+            Assert.Equal("REQUIERE_RATIFICACION", r.Value.EstadoOrigen);
+            Assert.Empty(r.Value.Diagnosticos);
+            Assert.Empty(r.Value.RelacionesAusentes);
+            var extra = Assert.Single(r.Value.RelacionesExtra);
+            Assert.Equal(4, extra.IdVinculacion);
+            Assert.Equal(8, Assert.Single(extra.ClavesCandidatas).IdAsignatura);
+            Assert.Equal(20, Assert.Single(extra.Sesiones).IdSesion);
+            Assert.DoesNotContain(r.Value.Relaciones, v => v.IdVinculacion == 4);
+        }
+
+        [Fact]
+        public async Task ExtraDeclaradaNoOcultaAmbiguedadNiRelacionRequeridaAusente()
+        {
+            var m = AgManifiestoCoberturaTests.Crear(AgManifiestoCoberturaTests.ContextoConExtra());
+            Sql(@"INSERT INTO vinculaciones VALUES (4,1,1,3,8,93,'I','A','Presencial',32,'VALLE','','');
+INSERT INTO ag_aula VALUES (15,1,1,3,'I','A','Presencial','VALLE');
+UPDATE vinculaciones SET subunidad='CAUCA' WHERE id=2;");
+            var r = await _repo.ObtenerAsync(m, CancellationToken.None);
+            Assert.True(r.IsSuccess);
+            Assert.Single(r.Value.RelacionesExtra);
+            Assert.Contains(r.Value.Diagnosticos, d => d == "IDENTIDAD_AMBIGUA:1");
+            Assert.Equal(14, Assert.Single(r.Value.RelacionesAusentes).IdAula);
+            Assert.Equal("PLAN_NO_VERIFICABLE", r.Value.EstadoOrigen);
+        }
+
+        // Escenario productivo 2026-11-16 (aulas 12/13/14): el período seleccionado no tiene plan cargado.
+        // El lector no debe inventar relaciones ni ocultar la ausencia.
+        [Fact]
+        public async Task SinFilasProductivasEnElPeriodo_MarcaTodasRequeridasComoAusentesYNoVerificable()
+        {
+            Sql("DELETE FROM sesiones; DELETE FROM vinculaciones;");
+            var m = AgManifiestoCoberturaTests.Crear(AgManifiestoCoberturaTests.Contexto());
+            var r = await _repo.ObtenerAsync(m, CancellationToken.None);
+            Assert.True(r.IsSuccess);
+            Assert.Empty(r.Value.Relaciones);
+            Assert.Empty(r.Value.RelacionesExtra);
+            Assert.Empty(r.Value.Diagnosticos);
+            Assert.Equal(2, r.Value.RelacionesAusentes.Count);
+            Assert.All(r.Value.RelacionesAusentes,
+                k => Assert.Contains(k.Valor, m.Relaciones.Select(x => x.Clave.Valor)));
+            Assert.Equal("PLAN_NO_VERIFICABLE", r.Value.EstadoOrigen);
+        }
+
         public void Dispose() { Directory.Delete(_dir, true); }
     }
 }

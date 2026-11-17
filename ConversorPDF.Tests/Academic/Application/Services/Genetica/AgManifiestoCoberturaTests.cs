@@ -85,6 +85,58 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             Assert.Equal(65, c.AulaAsignaturas[0].HorasObjetivo);
         }
 
+        // Decisión humana 2026-11-15 «B: extras como ocupación fija»: las relaciones productivas de un
+        // aula aprobada que no forman parte del manifiesto requerido se declaran no requeridas, se
+        // conservan inmutables y ocupan aula/docente, pero no suman demanda requerida.
+        internal static AgContexto ContextoConExtra()
+        {
+            var c = Contexto();
+            c.Asignaturas.Add(new Asignatura { Id = 8, IdPrograma = 1, Semestre = "I", IntHoraria = 32 });
+            c.AulaAsignaturas.Add(new AgAulaAsignatura { IdAula = 13, IdAsignatura = 8,
+                HorasObjetivo = 32, Requerida = 0, Subunidad = "VALLE" });
+            return c;
+        }
+
+        [Fact]
+        public void ExtrasDeclaradasSeSeparanDeLaDemandaRequeridaYNoSonOmision()
+        {
+            var m = Crear(ContextoConExtra());
+            Assert.Equal(2, m.Relaciones.Count);
+            var extra = Assert.Single(m.RelacionesExtra);
+            Assert.Equal(8, extra.IdAsignatura);
+            Assert.Equal(13, extra.IdAula);
+            Assert.True(m.EsExtra(extra));
+            Assert.True(m.EsExtra(extra.Valor));
+            Assert.False(m.EsExtra(m.Relaciones.Single(r => r.Clave.IdAula == 13).Clave));
+            Assert.Empty(m.DetectarOmisiones(m.Relaciones.Select(r => r.Clave)));
+            Assert.Equal(2, m.Relaciones.Count);
+            Assert.All(m.Relaciones, r => Assert.Equal(68, r.HorasEfectivas));
+        }
+
+        [Fact]
+        public void HuellaDelManifiestoCambiaCuandoCambianLasExtras()
+        {
+            var c = ContextoConExtra();
+            var conExtra = Crear(c);
+            var sinExtra = new AgManifiestoCobertura(conExtra.Inicio, conExtra.Fin, conExtra.Relaciones);
+            Assert.Empty(sinExtra.RelacionesExtra);
+            Assert.NotEqual(sinExtra.Huella, conExtra.Huella);
+            c.Asignaturas.Add(new Asignatura { Id = 9, IdPrograma = 1, Semestre = "I", IntHoraria = 32 });
+            c.AulaAsignaturas.Single(r => r.IdAsignatura == 8).IdAsignatura = 9;
+            var otraExtra = Crear(c);
+            Assert.Equal(9, Assert.Single(otraExtra.RelacionesExtra).IdAsignatura);
+            Assert.NotEqual(conExtra.Huella, otraExtra.Huella);
+        }
+
+        [Fact]
+        public void ExtraQueDuplicaUnaRequeridaEsRechazada()
+        {
+            var m = Crear(ContextoConExtra());
+            var requerida = m.Relaciones.Single(r => r.Clave.IdAula == 13).Clave;
+            Assert.Throws<ArgumentException>(() => new AgManifiestoCobertura(m.Inicio, m.Fin, m.Relaciones,
+                new[] { requerida }));
+        }
+
         [Fact]
         public void DisponibleMantienePrioridadActualDeHoras()
         {

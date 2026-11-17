@@ -207,5 +207,62 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             result.IsFailure.Should().BeTrue();
             result.Error.Should().Contain("No se encontró ningún periodo");
         }
+
+        [Theory]
+        [InlineData("2027-01-01", "2027-05-30")] // inicia antes del período
+        [InlineData("2027-02-05", "2027-07-01")] // termina después del período
+        [InlineData("2027-01-01", "2027-07-01")] // ambos extremos fuera
+        public async Task ResolverVentanaAsync_WhenManualExcedeElPeriodo_ShouldFail(string ini, string fin)
+        {
+            // Arrange
+            using (var conn = new SQLiteConnection(_connectionString))
+            {
+                conn.Open();
+                conn.Execute(@"
+                    INSERT INTO periodos (idperiodo, periodo, periodo_inicio, periodo_fin, activo)
+                    VALUES (5, '2027-01', '2027-02-05', '2027-05-30', 1);
+                ");
+            }
+
+            var sut = new AgResolutorVentanaSemestre(() => new SQLiteConnection(_connectionString));
+
+            // Act
+            var result = await sut.ResolverVentanaAsync(5,
+                DateTime.ParseExact(ini, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
+                DateTime.ParseExact(fin, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
+                CancellationToken.None);
+
+            // Assert - el período es el límite real, no una fecha fija ni una ventana ampliada
+            result.IsFailure.Should().BeTrue();
+            result.Error.Should().StartWith("VENTANA_FUERA_DE_PERIODO:");
+            result.Error.Should().Contain("periodo=2027-02-05..2027-05-30");
+        }
+
+        [Fact]
+        public async Task ResolverVentanaAsync_WhenManualCoincideConElPeriodo_ShouldReturn115Dias()
+        {
+            // Arrange
+            using (var conn = new SQLiteConnection(_connectionString))
+            {
+                conn.Open();
+                conn.Execute(@"
+                    INSERT INTO periodos (idperiodo, periodo, periodo_inicio, periodo_fin, activo)
+                    VALUES (6, '2027-01', '2027-02-05', '2027-05-30', 1);
+                ");
+            }
+
+            var sut = new AgResolutorVentanaSemestre(() => new SQLiteConnection(_connectionString));
+
+            // Act
+            var result = await sut.ResolverVentanaAsync(6, new DateTime(2027, 2, 5), new DateTime(2027, 5, 30),
+                CancellationToken.None);
+
+            // Assert
+            result.IsSuccess.Should().BeTrue();
+            result.Value.Origen.Should().Be(AgOrigenVentana.Manual);
+            result.Value.FechaInicio.Should().Be(new DateTime(2027, 2, 5));
+            result.Value.FechaFin.Should().Be(new DateTime(2027, 5, 30));
+            result.Value.DuracionDias.Should().Be(115);
+        }
     }
 }
