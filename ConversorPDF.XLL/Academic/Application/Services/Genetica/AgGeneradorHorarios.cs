@@ -241,7 +241,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 return Result.Failure("El contexto del AG no puede ser nulo.");
 
             var aulasAprobadas = (contexto.Aulas ?? Enumerable.Empty<AgAula>())
-                .Where(a => a.Estado == AgEstadoAula.Aprobado)
+                .Where(a => a.Estado == AgEstadoAula.Aprobado
+                    && (contexto.ManifiestoCobertura == null || contexto.TieneOrigenConservable(a.Id)))
                 .ToList();
 
             if (aulasAprobadas.Count == 0)

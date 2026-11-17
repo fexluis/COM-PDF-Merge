@@ -12,7 +12,11 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
         /// <summary>Lectura exitosa con identidad, sesiones o cobertura no verificables.</summary>
         PlanNoVerificable,
         /// <summary>Origen reconciliado; falta ratificación auditada T4, incluso si hay déficit.</summary>
-        RequiereRatificacion
+        RequiereRatificacion,
+        /// <summary>Aula aprobada sin ninguna fila productiva para su cohorte en la ventana: no existe
+        /// origen que conservar, por lo que su demanda es obligatoria y se planifica igual que una
+        /// Disponible. No autoriza conservación, no reemplaza T4 y no borra el aula.</summary>
+        PendienteDeProgramar
     }
 
     /// <summary>Cobertura diagnóstica por identidad completa; no compensa déficit entre relaciones.</summary>
@@ -80,8 +84,11 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
         public IReadOnlyList<AgValidacionAulaPlan> Aulas { get; }
         /// <summary>Incertidumbres globales del lector y claves no reconciliadas.</summary>
         public IReadOnlyList<string> Diagnosticos { get; }
-        /// <summary>Las aprobadas siempre esperan T4; las disponibles no se bloquean por origen canónico.</summary>
-        public bool BloqueaPreparacion => Aulas.Any(a => a.Estado != AgEstadoValidacionPlan.NoRequerida);
+        /// <summary>Sólo bloquean las aulas con origen no verificable o pendientes de T4; una aprobada sin
+        /// origen productivo es demanda pendiente y no detiene la preparación.</summary>
+        public bool BloqueaPreparacion => Aulas.Any(a =>
+            a.Estado == AgEstadoValidacionPlan.PlanNoVerificable ||
+            a.Estado == AgEstadoValidacionPlan.RequiereRatificacion);
         /// <summary>Copia evidencia de validación sin elevarla a aprobación.</summary>
         public AgValidacionPlanAprobado(string huellaOrigen, IEnumerable<AgValidacionAulaPlan> aulas, IEnumerable<string> diagnosticos)
         {

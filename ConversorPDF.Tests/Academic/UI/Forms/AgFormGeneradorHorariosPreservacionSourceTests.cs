@@ -191,7 +191,10 @@ namespace ConversorPDF.Tests.Academic.UI.Forms
             preparacion.Should().Contain("formulario.ShowDialog(this)");
             preparacion.Should().Contain("BuscarArchivadoAsync(");
             preparacion.Should().Contain("_aulasConfirmadasEnIntento.Contains(aula.Id)");
-            preparacion.Should().Contain("contexto.CandidatosCobertura.Count == aprobadas.Count");
+            // Requisito 2026-11-17: sólo las aprobadas CON origen exigen publicación; una aprobada sin
+            // origen productivo es demanda pendiente y no abre ni cierra la compuerta de ratificación.
+            preparacion.Should().Contain("contexto.CandidatosCobertura.Count == conservables.Count");
+            preparacion.Should().Contain("var conservables = aprobadas.Where(a => contexto.TieneOrigenConservable(a.Id)).ToList();");
             preparacion.Should().NotContain("UPDATE ag_aula").And.NotContain("AgEstadoAula.Disponible;");
             preparacion.Should().Contain("TipoPreparacionPlan.FlushFallido : TipoPreparacionPlan.Rechazado;");
             preparacion.Should().Contain("contexto.SesionesConservadas = conservadas.Value;");
@@ -202,7 +205,10 @@ namespace ConversorPDF.Tests.Academic.UI.Forms
         {
             var preparacion = Entre(Fuente(), "private async Task<bool> PrepararCoberturaAntesDeCambiosAsync(",
                 "internal static string ConstruirDetallePropuestaAprobada(");
-            preparacion.Should().Contain("foreach (var aula in aprobadas)");
+            // Requisito 2026-11-17: se recorren las aprobadas con origen; las pendientes se planifican
+            // como demanda nueva y se registran sin pasar por ratificación.
+            preparacion.Should().Contain("foreach (var aula in conservables)");
+            preparacion.Should().Contain("var pendientesProgramacion = aprobadas.Where(a => !contexto.TieneOrigenConservable(a.Id)).ToList();");
             preparacion.Should().Contain("ReevaluarCandidatoConfirmado(contexto, propuesta,");
             preparacion.Should().Contain("ClonarContextoParaSimulacion(origen)");
             preparacion.Should().Contain("resultado.Value.Planes.Where(");

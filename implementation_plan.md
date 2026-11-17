@@ -144,3 +144,27 @@ Las citas `implementation_plan.md:NNNN` anteriores al corte apuntan al archivo m
 ### Cambios Aplicados
 1. **Fase 1842 (`.agents/plans/REGISTRY.md`):** Fila `R-086` actualizada con SHA `534931d` y regla operativa añadida en notas de §3.
 2. **Fase 1843 (`.gitattributes`, `_evidence/`, `REGISTRY.md`):** Creado archivo `.gitattributes` en la raíz con política `-text` para evidencia, renormalizados y versionados los archivos en el commit `d97bc8a`. Incorporada fila `R-087` y contadores avanzados a `ronda: 407 / 408`, `fase: 1843 / 1844`.
+
+---
+
+## Ronda 408: Aula aprobada sin origen productivo es demanda pendiente (Fase 1844)
+
+### Contexto y Diagnóstico
+1. **Síntoma productivo:** aulas con `ag_aula_asignatura.requerida = 1` y horas quedaban `Bloqueado` con `motivo=REVISION_RECHAZADA … PLAN_NO_VERIFICABLE:RELACIONES_AUSENTES=n/n`, sin ruta de salida: no podían conservarse (no había origen) ni programarse (`PuedeGenerarAula` = `false`).
+2. **Causa raíz:** el modelo no distinguía «aprobada con origen no verificable» de «aprobada sin ninguna fila productiva». `AgContexto.PuedeGenerarAula`, `AgProyectorSolucionCobertura.Conservar` y `AgGeneradorHorarios.ValidarAprobadas` exigían decisión publicada sobre aulas que no existen en producción, y el validador clasificaba la ausencia total de origen como `PlanNoVerificable` (terminal).
+3. **Regla adoptada:** el estado del aula sólo decide si se **conserva** un plan existente; nunca si se **planifica**. Toda aula con relaciones requeridas y horas es demanda obligatoria. No se elimina ni se inactiva ninguna aula.
+
+### Cambios Aplicados
+1. **Fase 1844 (`AgValidacionPlanAprobado.cs`, `AgContexto.cs`, `AgValidadorPlanAprobado.cs`, `AgProyectorSolucionCobertura.cs`, `AgGeneradorHorarios.cs`, `AgFormGeneradorHorarios.cs`):**
+   - Nuevo `AgEstadoValidacionPlan.PendienteDeProgramar`; `BloqueaPreparacion` sólo considera `PlanNoVerificable` y `RequiereRatificacion`.
+   - `AgContexto.TieneOrigenConservable(idAula)` (requeridas + extras del snapshot) y `PuedeGenerarAula` admite genes para una aprobada sin origen.
+   - Clasificación por aula: globales del lector → `PlanNoVerificable`; sin origen → `PendienteDeProgramar`; con origen → cobertura y `RequiereRatificacion`. Un origen parcial nunca se relaja.
+   - `Conservar` y `ValidarAprobadas` excluyen las pendientes; la preparación del formulario separa `conservables` de `pendientesProgramacion`, registra `[PLAN CANÓNICO] aula=N estado=PendienteDeProgramar origen=AUSENTE acción=planificar` y no bloquea.
+2. **Pruebas:** `AgAprobadaSinOrigenTests` (10 casos), separación de «vinculación sin sesiones» (sigue `PlanNoVerificable`) y guard de fuente en `AgFormGeneradorHorariosPreservacionSourceTests`.
+3. **Documentación:** `docs/articles/changes/2026-11-17-aprobada-sin-origen-planificable.md`.
+
+### Verificación
+- `dotnet build` XLL y tests: **0 errores**.
+- Gate alternativo por lotes (`scripts/verify.ps1` bloqueado por ACL, desviación de Rondas 404–405): **1629 pruebas ejecutadas, 0 fallos**; baseline 1446 → suite crece, sin `SUITE_SHRUNK`.
+- Evidencia: `_evidence/20261117-aprobada-sin-origen/summary.md` (TRX `fase-green`, `int-a`, `int-b`, `root`).
+

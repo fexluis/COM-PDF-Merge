@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 407 | 408 | 2026-11-16 |
-| `fase` | 1843 | 1844 | 2026-11-16 |
+| `ronda` | 408 | 409 | 2026-11-17 |
+| `fase` | 1844 | 1845 | 2026-11-17 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -122,6 +122,8 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-085 | 2026-11-16 | `(revisión Ronda 405 — Fases 1836–1838: respaldo blob, gate TRX 1584 tests, preflight adaptado)` | `Wave —` → `Ronda 405` | `Fase 1836–1838` | closed | `BLOCKED-ACL (verify.ps1); evidencia: _evidence/20261116-gate-alt/gate-alternativo.trx (1584 pruebas, 0 fallas)` | `5676f5b` |
 | R-086 | 2026-11-16 | `(revisión Ronda 406 — Fases 1839–1841: commit de contenido, doc reconciliado, respaldo byte-a-byte)` | `Wave —` → `Ronda 406` | `Fase 1839–1841` | closed | `BLOCKED-ACL (verify.ps1); evidencia: _evidence/20261116-gate-alt/gate-alternativo.trx (1584 pruebas, 0 fallas)` | `534931d` |
 | R-087 | 2026-11-16 | `(revisión Ronda 407 — Fases 1842–1843: SHA propio R-086, política .gitattributes EOL)` | `Wave —` → `Ronda 407` | `Fase 1842–1843` | closed | `BLOCKED-ACL (verify.ps1); evidencia: _evidence/20261116-gate-alt/gate-alternativo.trx (1584 pruebas, 0 fallas)` | `d97bc8a` |
+| R-088 | 2026-11-17 | `(implementación general: aula aprobada sin origen productivo ⇒ demanda pendiente de programar)` | `Wave —` → `Ronda 408` | `Fase 1844` | closed | `BLOCKED-ACL (verify.ps1); gate alternativo por lotes: _evidence/20261117-aprobada-sin-origen (1629 pruebas, 0 fallas)` | `0596274` |
+
 
 
 Estados: `reserved` (Fase A) · `executing` (Fase B) · `closed` (Fase C, sellado) · `abandoned` (plan descartado: los números **no** se reciclan).

@@ -16,7 +16,14 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         {
             var m = contexto?.ManifiestoCobertura;
             if (m == null) return Result.Failure<IReadOnlyCollection<AgSesionCobertura>>("MANIFIESTO_AUSENTE");
-            var aprobadas = m.Relaciones.Where(r => r.EstadoAula == (int)AgEstadoAula.Aprobado)
+            // Una aprobada sin origen productivo no conserva nada: se excluye de la proyección para que
+            // el aula sea planificada como demanda nueva en lugar de bloquear la preparación.
+            var pendientes = new HashSet<int>((contexto.ValidacionPlanAprobado?.Aulas ??
+                Enumerable.Empty<AgValidacionAulaPlan>())
+                .Where(a => a.Estado == AgEstadoValidacionPlan.PendienteDeProgramar)
+                .Select(a => a.IdAula));
+            var aprobadas = m.Relaciones.Where(r => r.EstadoAula == (int)AgEstadoAula.Aprobado
+                    && !pendientes.Contains(r.Clave.IdAula))
                 .Select(r => r.Clave.IdAula).Distinct().ToList();
             if (aprobadas.Count == 0)
                 return Result.Success<IReadOnlyCollection<AgSesionCobertura>>(Array.Empty<AgSesionCobertura>());

@@ -241,3 +241,27 @@ Las citas `walkthrough.md:NNNN` anteriores al corte apuntan al archivo monolitic
 |---|---|---|---|---|---|
 | F1842 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `.agents/plans/REGISTRY.md:123` (`534931d`, ancestro exit=0) |
 | F1843 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `.gitattributes`, hash `1ed9da9`, fila R-087 (`d97bc8a`) |
+
+---
+
+## Ronda 408 — Aula aprobada sin origen productivo es demanda pendiente (Fase 1844)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1844 — Regla general de programación frente al estado del aula
+- **Archivos:** `Academic/Domain/Models/Genetica/AgValidacionPlanAprobado.cs`, `AgContexto.cs`, `Academic/Application/Services/Genetica/AgValidadorPlanAprobado.cs`, `AgProyectorSolucionCobertura.cs`, `AgGeneradorHorarios.cs`, `Academic/UI/Forms/AgFormGeneradorHorarios.cs`
+- **Cambio:** se añade `AgEstadoValidacionPlan.PendienteDeProgramar`. Una aula `Aprobado` sin ninguna fila productiva para su cohorte deja de ser `PlanNoVerificable` terminal: es demanda obligatoria y se planifica como nueva. `AgContexto.TieneOrigenConservable` centraliza la pregunta «¿hay algo que conservar?»; `PuedeGenerarAula`, `Conservar`, `ValidarAprobadas` y la preparación del formulario lo usan. Un origen parcial, ambiguo o fuera de ventana mantiene el régimen estricto anterior y exige T4.
+
+#### 2. Fase 1844 — Pruebas y documentación
+- **Archivos:** `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgAprobadaSinOrigenTests.cs` (nuevo), `AgValidadorPlanAprobadoTests.cs`, `AgFormGeneradorHorariosPreservacionSourceTests.cs`, `docs/articles/changes/2026-11-17-aprobada-sin-origen-planificable.md`
+- **Cambio:** 10 casos nuevos para la regla; el escenario «vinculación sin sesiones» se conserva como `PlanNoVerificable`; los guards de fuente vigilan `conservables`/`pendientesProgramacion`.
+
+### Verificación de Principios (Ronda 408)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1844 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `_evidence/20261117-aprobada-sin-origen/summary.md` (1629 pruebas, 0 fallas) |
+
+### Decisión
+No se requieren fases nuevas. El comportamiento queda cubierto por pruebas de dominio y de fuente; el caso productivo (aulas aprobadas sin plan) deja de bloquear y se planifica en sus oleadas.
+

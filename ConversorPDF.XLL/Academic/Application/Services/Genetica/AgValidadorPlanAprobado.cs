@@ -89,6 +89,10 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             foreach (var aula in m.Relaciones.GroupBy(r => r.Clave.IdAula))
             {
                 bool aprobada = aula.Any(r => r.EstadoAula == (int)AgEstadoAula.Aprobado);
+                // Una aprobada sin ninguna fila productiva reconciliada (requerida o extra) para su
+                // cohorte no tiene origen que verificar: es demanda obligatoria y se planifica.
+                bool sinOrigen = !snapshot.Relaciones.Concat(snapshot.RelacionesExtra)
+                    .Any(r => r.ClavesCandidatas.Any(k => k.IdAula == aula.Key));
                 var resultados = new List<AgValidacionRelacionPlan>();
                 foreach (var requerida in aula)
                 {
@@ -105,8 +109,13 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         && HorasValidas(s.HorasLectivas)).GroupBy(s => s.IdSesion).Sum(g => g.First().HorasLectivas);
                     resultados.Add(new AgValidacionRelacionPlan(requerida, validas, fuera, e));
                 }
+                // Orden de decisión: primero lo que el lector no pudo verificar (globales); luego la
+                // ausencia total de origen, que convierte el aula en demanda pendiente; sólo con origen
+                // reconciliado se evalúa cobertura y ratificación. Nunca se relaja un origen parcial.
                 var estado = !aprobada ? AgEstadoValidacionPlan.NoRequerida
-                    : globales.Count > 0 || resultados.Any(r => r.Diagnosticos.Count > 0 || r.Exceso > 0.001)
+                    : globales.Count > 0 ? AgEstadoValidacionPlan.PlanNoVerificable
+                    : sinOrigen ? AgEstadoValidacionPlan.PendienteDeProgramar
+                    : resultados.Any(r => r.Diagnosticos.Count > 0 || r.Exceso > 0.001)
                         ? AgEstadoValidacionPlan.PlanNoVerificable : AgEstadoValidacionPlan.RequiereRatificacion;
                 aulas.Add(new AgValidacionAulaPlan(aula.Key, estado, resultados));
             }

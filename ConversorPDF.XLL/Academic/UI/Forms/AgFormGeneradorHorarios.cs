@@ -1722,12 +1722,21 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     "Estado: Evaluando escalado informativo de aulas aprobadas.");
                 var propuestas = new AgSimuladorEscaladoAprobadas().Evaluar(contexto, ct);
                 var aprobadas = contexto.Aulas.Where(a => a.Estado == AgEstadoAula.Aprobado).OrderBy(a => a.Id).ToList();
+                // Regla general: una aprobada sin fila productiva para su cohorte no tiene origen que
+                // conservar; su demanda es obligatoria y se planifica como nueva. Sólo las aulas con origen
+                // reconciliado pasan por ratificación, escalado de conservación o bloqueo.
+                var pendientesProgramacion = aprobadas.Where(a => !contexto.TieneOrigenConservable(a.Id)).ToList();
+                var conservables = aprobadas.Where(a => contexto.TieneOrigenConservable(a.Id)).ToList();
+                foreach (var aula in pendientesProgramacion)
+                {
+                    Log($"[PLAN CANÓNICO] aula={aula.Id} estado=PendienteDeProgramar origen=AUSENTE acción=planificar");
+                }
                 if (_confirmadorPlanAprobado == null)
                     return MostrarFalloPlan(TipoPreparacionPlan.ErrorTecnico, "PUBLICACION_NO_DISPONIBLE");
                 var intentoRatificacion = _intentoOptimizacion ?? Guid.NewGuid();
                 var terminales = new List<string>();
                 var terminal = TipoPreparacionPlan.CandidatoListo;
-                foreach (var aula in aprobadas)
+                foreach (var aula in conservables)
                 {
                     ct.ThrowIfCancellationRequested();
                     if (_aulasConfirmadasEnIntento.Contains(aula.Id))
@@ -1806,7 +1815,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                             ? "RATIFICACION_SOLO_CONSERVACION_PENDIENTE_T5" : "CANDIDATO_COMPLETO_PENDIENTE_T5"));
                     }
                 }
-                if (terminal == TipoPreparacionPlan.CandidatoListo && contexto.CandidatosCobertura.Count == aprobadas.Count)
+                if (terminal == TipoPreparacionPlan.CandidatoListo && contexto.CandidatosCobertura.Count == conservables.Count)
                 {
                     var conservadas = new AgProyectorSolucionCobertura().Conservar(contexto);
                     if (conservadas.IsFailure)

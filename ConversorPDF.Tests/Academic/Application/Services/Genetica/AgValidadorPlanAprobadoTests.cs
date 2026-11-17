@@ -46,16 +46,25 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
         }
 
         [Fact]
-        public void CeroSesionesONingunaVinculacion_NoEsPlanCompleto()
+        public void AprobadaSinNingunaVinculacion_EsDemandaPendienteYNoSeBloquea()
         {
-            var k = Clave(); var m = Manifiesto(k);
-            foreach (var relaciones in new[] { new AgRelacionPlanLeida[0], new[] { Relacion(k) } })
-            {
-                var r = Validar(m, relaciones).Aulas.Single();
-                Assert.Equal(AgEstadoValidacionPlan.PlanNoVerificable, r.Estado);
-                Assert.Equal(4, r.Relaciones.Single().Deficit);
-                Assert.Equal(0, r.Relaciones.Single().HorasPreservadas);
-            }
+            var k = Clave();
+            var r = Validar(Manifiesto(k), new AgRelacionPlanLeida[0]).Aulas.Single();
+            Assert.Equal(AgEstadoValidacionPlan.PendienteDeProgramar, r.Estado);
+            Assert.Equal(4, r.Relaciones.Single().Deficit);
+            Assert.Equal(0, r.Relaciones.Single().HorasPreservadas);
+            Assert.Contains(r.Relaciones.Single().Diagnosticos, d => d.StartsWith("RELACION_AUSENTE:"));
+        }
+
+        [Fact]
+        public void VinculacionSinSesiones_NoEsPlanCompletoNiDemandaPendiente()
+        {
+            var k = Clave();
+            var r = Validar(Manifiesto(k), new[] { Relacion(k) }).Aulas.Single();
+            Assert.Equal(AgEstadoValidacionPlan.PlanNoVerificable, r.Estado);
+            Assert.Equal(4, r.Relaciones.Single().Deficit);
+            Assert.Equal(0, r.Relaciones.Single().HorasPreservadas);
+            Assert.Contains(r.Relaciones.Single().Diagnosticos, d => d.StartsWith("SIN_SESIONES:"));
         }
 
         [Theory]
@@ -252,15 +261,15 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
                 x => x.StartsWith("RELACION_AUSENTE:"));
         }
 
-        // Escenario productivo 2026-11-16: período sin plan. El motivo debe nombrarse por relación
-        // ausente, no con la etiqueta genérica del terminal.
+        // Escenario productivo 2026-11-16: período sin plan. El motivo se nombra por relación ausente y,
+        // al no existir origen productivo, el aula es demanda pendiente de programar (no se bloquea).
         [Fact]
-        public void PeriodoSinPlan_NombraRelacionesAusentesEnLugarDeUnaEtiquetaGenerica()
+        public void PeriodoSinPlan_NombraRelacionesAusentesYQuedaPendienteDeProgramar()
         {
             var k = Clave(); var otra = Clave(asignatura: 8);
             var r = Validar(Manifiesto(k, otra), new AgRelacionPlanLeida[0]);
             var aula = r.Aulas.Single();
-            Assert.Equal(AgEstadoValidacionPlan.PlanNoVerificable, aula.Estado);
+            Assert.Equal(AgEstadoValidacionPlan.PendienteDeProgramar, aula.Estado);
             Assert.All(aula.Relaciones, x =>
                 Assert.Contains(x.Diagnosticos, d => d.StartsWith("RELACION_AUSENTE:")));
             var texto = AgDescriptorDiagnosticoPlan.Describir(aula, r.Diagnosticos);

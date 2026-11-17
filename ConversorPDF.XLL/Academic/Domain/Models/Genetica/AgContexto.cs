@@ -25,12 +25,27 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
             if (ManifiestoCobertura == null) return aula.Estado == ConversorPDF.XLL.Academic.Domain.Enums.AgEstadoAula.Disponible;
             if (!ManifiestoCobertura.Relaciones.Any(r => r.Clave.IdAula == idAula)) return false;
             if (aula.Estado == ConversorPDF.XLL.Academic.Domain.Enums.AgEstadoAula.Disponible) return true;
+            // Regla general: el estado Aprobado sólo puede conservar lo que existe. Sin ninguna fila
+            // productiva para la cohorte no hay origen que preservar y el aula es demanda obligatoria.
+            if (aula.Estado == ConversorPDF.XLL.Academic.Domain.Enums.AgEstadoAula.Aprobado
+                && !TieneOrigenConservable(idAula)) return true;
             var c = CandidatosCobertura.SingleOrDefault(x => x.IdAula == idAula);
             return aula.Estado == ConversorPDF.XLL.Academic.Domain.Enums.AgEstadoAula.Aprobado
                 && c != null && c.Desde != c.Hacia
                 && c.HuellaManifiesto == ManifiestoCobertura.Huella
                 && c.HuellaOrigen == PlanAprobadoSnapshot?.HuellaOrigen
                 && c.Inicio == ManifiestoCobertura.Inicio && c.Fin == ManifiestoCobertura.Fin;
+        }
+
+        /// <summary>Indica si el aula tiene alguna fila productiva reconciliada (requerida o extra) en el
+        /// snapshot leído. Es la única condición que habilita conservar, comparar o ratificar un origen;
+        /// un aula aprobada sin origen se planifica como demanda nueva.</summary>
+        public bool TieneOrigenConservable(int idAula)
+        {
+            var snapshot = PlanAprobadoSnapshot;
+            if (snapshot == null) return false;
+            return snapshot.Relaciones.Concat(snapshot.RelacionesExtra)
+                .Any(r => r.ClavesCandidatas.Any(k => k.IdAula == idAula));
         }
 
         /// <summary>Proyección fija de sesiones conservadas, nunca genes ni filas de staging.</summary>
