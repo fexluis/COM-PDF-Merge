@@ -264,5 +264,32 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             result.Value.FechaFin.Should().Be(new DateTime(2027, 5, 30));
             result.Value.DuracionDias.Should().Be(115);
         }
+
+        [Fact]
+        public async Task ResolverVentanaAsync_WhenPeriodoFinExtendido_ShouldPermitirVentanaManualLargaSinError()
+        {
+            // Arrange (Periodo 7 extendido a 2027-06-13)
+            using (var conn = new SQLiteConnection(_connectionString))
+            {
+                conn.Open();
+                conn.Execute(@"
+                    INSERT INTO periodos (idperiodo, periodo, periodo_inicio, periodo_fin, activo)
+                    VALUES (7, '2027-01-EXT', '2027-02-05', '2027-06-13', 1);
+                ");
+            }
+
+            var sut = new AgResolutorVentanaSemestre(() => new SQLiteConnection(_connectionString));
+
+            // Act: ventana manual extendida a 2027-06-13
+            var result = await sut.ResolverVentanaAsync(7, new DateTime(2027, 2, 5), new DateTime(2027, 6, 13),
+                CancellationToken.None);
+
+            // Assert: ya no devuelve VENTANA_FUERA_DE_PERIODO, sino éxito con ventana manual
+            result.IsSuccess.Should().BeTrue();
+            result.Value.Origen.Should().Be(AgOrigenVentana.Manual);
+            result.Value.FechaInicio.Should().Be(new DateTime(2027, 2, 5));
+            result.Value.FechaFin.Should().Be(new DateTime(2027, 6, 13));
+            result.Value.DuracionDias.Should().Be(129);
+        }
     }
 }

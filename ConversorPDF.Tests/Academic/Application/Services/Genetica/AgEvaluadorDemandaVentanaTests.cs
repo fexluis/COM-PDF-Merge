@@ -291,5 +291,30 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
                 eval.SesionesPendientesPorAsignatura[10].Should().Be(0);
             }
         }
+
+        [Fact]
+        public void Demandas_WhenRelacionSinCatalogoYHorasCero_ShouldDistinguirModoSimulacionDeModoEstricto()
+        {
+            // Arrange (Fase 1867): Relación ag_aula_asignatura con IdAsignatura no presente en catálogo y HorasObjetivo = 0
+            var contexto = new AgContexto();
+            var aula = new AgAula { Id = 1, AulaRef = "AULA-01", Estado = AgEstadoAula.Disponible };
+            contexto.Aulas.Add(aula);
+            var aa = new AgAulaAsignatura { IdAula = 1, IdAsignatura = 999, HorasObjetivo = 0 };
+            contexto.AulaAsignaturas.Add(aa);
+            contexto.ConstruirIndices();
+
+            // Act
+            var demandasSimulacion = AgEvaluadorDemandaVentana.Demandas(contexto, aula, fallbackPermitido: true);
+            var demandasEstricto = AgEvaluadorDemandaVentana.Demandas(contexto, aula, fallbackPermitido: false);
+
+            // Assert
+            // En modo simulación (fallbackPermitido: true), debe excluir la relación huérfana para evitar inyectar 64h ficticias
+            demandasSimulacion.Should().BeEmpty();
+
+            // En modo estricto (fallbackPermitido: false), debe incluir la relación con 0h para que el validador emita I5_HORAS_DESCONOCIDAS
+            demandasEstricto.Should().HaveCount(1);
+            demandasEstricto.Single().IdAsignatura.Should().Be(999);
+            demandasEstricto.Single().Horas.Should().Be(0.0);
+        }
     }
 }

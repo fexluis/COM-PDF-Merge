@@ -11,29 +11,61 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
     /// <summary>Evalúa planes fechados con la misma autoridad que la fábrica, dentro del plazo original.</summary>
     internal static class AgEvaluadorDemandaVentana
     {
-        internal static double HorasObjetivo(Asignatura asignatura, AgAulaAsignatura relacion)
+        internal static double HorasObjetivo(Asignatura asignatura, AgAulaAsignatura relacion, bool fallbackPermitido = true)
         {
             double horas = relacion != null && relacion.HorasObjetivo > 0 ? relacion.HorasObjetivo
-                : asignatura.IntHoraria > 0 ? asignatura.IntHoraria : asignatura.Horas > 0 ? asignatura.Horas
-                : asignatura.Creditos > 0 ? asignatura.Creditos * 16.0 : 64.0;
+                : asignatura != null && asignatura.IntHoraria > 0 ? asignatura.IntHoraria
+                : asignatura != null && asignatura.Horas > 0 ? asignatura.Horas
+                : asignatura != null && asignatura.Creditos > 0 ? asignatura.Creditos * 16.0 : 0.0;
+            if (horas <= 0) return fallbackPermitido ? 64.0 : 0.0;
             double resto = horas % 4.0;
             return resto > 0.001 && resto < 3.999 ? Math.Ceiling(horas / 4.0) * 4.0 : horas;
         }
 
-        internal static List<(int IdAsignatura, double Horas, int OrdenCurricular)> Demandas(AgContexto contexto, AgAula aula)
+        internal static List<(int IdAsignatura, double Horas, int OrdenCurricular)> Demandas(
+            AgContexto contexto, AgAula aula, bool fallbackPermitido = true)
         {
             var resultado = new List<(int, double, int)>();
-            string semestre = AgFormatoAsignatura.SemestreRomano(aula.Semestre);
-            foreach (var aa in contexto.AulaAsignaturaPorAulaAsig.Values.Where(a => a.IdAula == aula.Id))
+            if (contexto == null || aula == null) return resultado;
+            if ((contexto.AulaAsignaturaPorAulaAsig == null || contexto.AulaAsignaturaPorAulaAsig.Count == 0) && contexto.AulaAsignaturas != null && contexto.AulaAsignaturas.Count > 0)
             {
-                var asignatura = contexto.Asignaturas.FirstOrDefault(a => a.Id == aa.IdAsignatura);
-                if (asignatura == null || (aula.IdPrograma > 0 && asignatura.IdPrograma > 0 && aula.IdPrograma != asignatura.IdPrograma)) { continue; }
-                string semestreAsignatura = AgFormatoAsignatura.SemestreRomano(asignatura.Semestre);
-                if (!string.IsNullOrWhiteSpace(semestre) && semestre != "SIN ASIGNAR"
-                    && !string.IsNullOrWhiteSpace(asignatura.Semestre) && semestreAsignatura != "SIN ASIGNAR"
-                    && !string.Equals(semestre, semestreAsignatura, StringComparison.OrdinalIgnoreCase)) { continue; }
-                double horas = HorasObjetivo(asignatura, aa);
-                if (horas > 0) { resultado.Add((aa.IdAsignatura, horas, aa.OrdenCurricular)); }
+                contexto.ConstruirIndices();
+            }
+
+            var relaciones = contexto.AulaAsignaturaPorAulaAsig != null && contexto.AulaAsignaturaPorAulaAsig.Count > 0
+                ? contexto.AulaAsignaturaPorAulaAsig.Values.Where(a => a.IdAula == aula.Id)
+                : (contexto.AulaAsignaturas ?? Enumerable.Empty<AgAulaAsignatura>()).Where(a => a.IdAula == aula.Id);
+
+            string semestre = AgFormatoAsignatura.SemestreRomano(aula.Semestre);
+            foreach (var aa in relaciones)
+            {
+                var asignatura = contexto.Asignaturas?.FirstOrDefault(a => a.Id == aa.IdAsignatura);
+                if (asignatura == null && contexto.AsignaturasPorId != null)
+                {
+                    contexto.AsignaturasPorId.TryGetValue(aa.IdAsignatura, out asignatura);
+                }
+
+                // FASE 1867: modo simulación exige catálogo (evita 64 h ficticias);
+                // modo estricto conserva la fila para emitir I5_HORAS_DESCONOCIDAS.
+                if (asignatura == null && fallbackPermitido) { continue; }
+
+                if (asignatura != null)
+                {
+                    if (aula.IdPrograma > 0 && asignatura.IdPrograma > 0 && aula.IdPrograma != asignatura.IdPrograma) { continue; }
+                    string semestreAsignatura = AgFormatoAsignatura.SemestreRomano(asignatura.Semestre);
+                    if (!string.IsNullOrWhiteSpace(semestre) && semestre != "SIN ASIGNAR"
+                        && !string.IsNullOrWhiteSpace(asignatura.Semestre) && semestreAsignatura != "SIN ASIGNAR"
+                        && !string.Equals(semestre, semestreAsignatura, StringComparison.OrdinalIgnoreCase)) { continue; }
+                }
+                double horas = HorasObjetivo(asignatura, aa, fallbackPermitido);
+                if (fallbackPermitido)
+                {
+                    if (horas > 0) { resultado.Add((aa.IdAsignatura, horas, aa.OrdenCurricular)); }
+                }
+                else
+                {
+                    resultado.Add((aa.IdAsignatura, horas, aa.OrdenCurricular));
+                }
             }
             return AgOrdenAsignaturas.PorHoras(resultado);
         }
@@ -45,8 +77,12 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             bool conserva = antes.Plan == null || despues.Plan != null
                 && antes.Plan.Planes.Where(p => !antes.Plan.Infactibles.Contains(p.IdAsignatura))
                     .All(p => despues.Plan.Planes.Any(n => n.IdAsignatura == p.IdAsignatura && n.Sesiones.Count >= p.Sesiones.Count));
-            return conserva && (despues.DemandaPendiente < antes.DemandaPendiente
-                || despues.MateriasFueraVentana.Count < antes.MateriasFueraVentana.Count);
+            bool mejoraGlobal = despues.DemandaPendiente < antes.DemandaPendiente
+                             || despues.MateriasFueraVentana.Count < antes.MateriasFueraVentana.Count;
+            // FASE 1864: Pérdida acotada y deliberada, no anulación accidental del guardián conserva
+            bool perdidaAceptable = despues.DemandaPendiente < antes.DemandaPendiente
+                                 && despues.DemandaPendiente <= antes.DemandaPendiente - 1;
+            return mejoraGlobal && (conserva || perdidaAceptable);
         }
 
         public static AgResultadoEvaluacionVentana Evaluar(string diasVentana, string jornada, double unidad,

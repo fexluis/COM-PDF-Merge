@@ -51,6 +51,10 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
         private readonly IAgArbolService _arbolService;
         private readonly AgAulaDimensionesSync _aulaDimSync;
         private readonly IAgFiltroSeleccionRepository _filtroSeleccionRepo;
+        private readonly IPeriodoCrudService _periodoCrudServiceOverride;
+        private IPeriodoCrudService ObtenerPeriodoCrudService() =>
+            _periodoCrudServiceOverride ?? new PeriodoCrudService(new AcademicRepository(_connectionFactory()));
+        private bool _ventanaEnActualizacion;
         private HashSet<int> _tercerosSeleccionadosIds = new HashSet<int>();
         private readonly HashSet<int> _programasOcultos = new HashSet<int>();
         private bool _suprimirAutoFiltro;
@@ -104,9 +108,10 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
 
         /// <summary>Compone servicios con la fábrica académica existente y un lector canónico opcional para pruebas.</summary>
         public AgFormGeneradorHorarios(Func<IDbConnection> connectionFactory, IAgPlanAprobadoRepository planAprobadoRepository = null,
-            AcademicDbSession sesionRatificacion = null, EncryptedSQLiteContext vaultRatificacion = null)
+            AcademicDbSession sesionRatificacion = null, EncryptedSQLiteContext vaultRatificacion = null, IPeriodoCrudService periodoCrudService = null)
         {
             _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
+            _periodoCrudServiceOverride = periodoCrudService;
 
             // Inyección y cableado de servicios del AG
             _resolutorVentana = new AgResolutorVentanaSemestre(_connectionFactory);
@@ -370,14 +375,9 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
                 dtpVentanaFin.Enabled = chkManualVentana.Checked;
                 OnVentanaChanged(s, e);
             };
-            dtpVentanaInicio.ValueChanged += (s, e) =>
-            {
-                if (chkManualVentana.Checked) OnVentanaChanged(s, e);
-            };
-            dtpVentanaFin.ValueChanged += (s, e) =>
-            {
-                if (chkManualVentana.Checked) OnVentanaChanged(s, e);
-            };
+            // FASE 1863 & 1868: La extensión automática de período solo se autoriza ante cambios explícitos de fecha por el usuario
+            dtpVentanaInicio.ValueChanged += DtpVentana_ValueChanged;
+            dtpVentanaFin.ValueChanged += DtpVentana_ValueChanged;
 
             // Eventos del árbol jerárquico de 6 niveles (Fases 157, 158, 160)
             // Fase 542: radio en nivel 6 (y checks en 1-5)
@@ -539,11 +539,39 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
         /// </summary>
         private async void OnVentanaChanged(object sender, EventArgs e)
         {
+            await EjecutarVentanaChangedAsync(permitirExtension: false);
+        }
+
+        /// <summary>
+        /// FASE 1868: Manejador tipado no anónimo con captura de excepciones para cambios de fecha manual de ventana,
+        /// evitando async void sin protección en eventos de WinForms.
+        /// </summary>
+        private async void DtpVentana_ValueChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                if (chkManualVentana.Checked)
+                {
+                    await EjecutarVentanaChangedAsync(permitirExtension: true);
+                }
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error("[AgFormGeneradorHorarios] Error en cambio de fecha de ventana", ex);
+            }
+        }
+
+        /// <summary>
+        /// FASE 1863: Desacopla la invocación de cambio de ventana distinguiendo si procede de edición de fechas
+        /// (permitirExtension=true) o de cambio de período/check (permitirExtension=false) para evitar mutaciones espurias.
+        /// </summary>
+        private async Task EjecutarVentanaChangedAsync(bool permitirExtension)
+        {
             // Fase 1439: Ignorar si se restaura perfil o si se están cargando/restaurando filtros de selección
             if (_restaurandoPerfil || _suprimirAutoFiltro) return;
             try
             {
-                await ActualizarVentanaSemestralAsync();
+                await ActualizarVentanaSemestralAsync(permitirExtension: permitirExtension);
             }
             catch (Exception ex)
             {
@@ -674,76 +702,158 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             }
         }
 
-        private async Task ActualizarVentanaSemestralAsync(Periodo periodoObjetivo = null)
+        private async Task ActualizarVentanaSemestralAsync(Periodo periodoObjetivo = null, bool permitirExtension = false)
         {
-            var periodoSel = periodoObjetivo ?? cmbPeriodos.Primario<Periodo>() ?? (cmbPeriodos.SelectedItem as Periodo);
-            if (periodoSel == null) return;
-
-            var traza = CrearTraza("VentanaSemestral");
-            traza.Inicio();
-            traza.Paso("P02_ActualizarVentana", $"Periodo='{periodoSel.Nombre}', Manual={chkManualVentana.Checked}");
-
-            // Fase 164: Advertencia inmediata si el periodo seleccionado carece de fechas configuradas
-            bool sinFechas = string.IsNullOrWhiteSpace(periodoSel.PeriodoInicio) || string.IsNullOrWhiteSpace(periodoSel.PeriodoFin);
-
-            DateTime? fIniManual = chkManualVentana.Checked ? (DateTime?)dtpVentanaInicio.Value.Date : null;
-            DateTime? fFinManual = chkManualVentana.Checked ? (DateTime?)dtpVentanaFin.Value.Date : null;
-
-            var res = await _resolutorVentana.ResolverVentanaAsync(periodoSel.Id, fIniManual, fFinManual, CancellationToken.None);
-            if (res.IsSuccess)
+            if (_ventanaEnActualizacion) return;
+            _ventanaEnActualizacion = true;
+            try
             {
-                _ventanaResuelta = res.Value;
-                if (!chkManualVentana.Checked)
+                var periodoSel = periodoObjetivo ?? cmbPeriodos.Primario<Periodo>() ?? (cmbPeriodos.SelectedItem as Periodo);
+                if (periodoSel == null) return;
+
+                var traza = CrearTraza("VentanaSemestral");
+                traza.Inicio();
+                traza.Paso("P02_ActualizarVentana", $"Periodo='{periodoSel.Nombre}', Manual={chkManualVentana.Checked}, PermitirExt={permitirExtension}");
+
+                // Fase 164: Advertencia inmediata si el periodo seleccionado carece de fechas configuradas
+                bool sinFechas = string.IsNullOrWhiteSpace(periodoSel.PeriodoInicio) || string.IsNullOrWhiteSpace(periodoSel.PeriodoFin);
+
+                bool periodoExtendido = false;
+                DateTime? fIniManual = chkManualVentana.Checked ? (DateTime?)dtpVentanaInicio.Value.Date : null;
+                DateTime? fFinManual = chkManualVentana.Checked ? (DateTime?)dtpVentanaFin.Value.Date : null;
+
+                // FASE 1855 & 1863: Solo extender período si fue autorizado explícitamente por edición de fecha manual (no al conmutar período)
+                if (permitirExtension && chkManualVentana.Checked && fIniManual.HasValue && fFinManual.HasValue && periodoSel.TryObtenerVentana(out var perIni, out var perFin))
                 {
-                    dtpVentanaInicio.Value = _ventanaResuelta.FechaInicio;
-                    dtpVentanaFin.Value = _ventanaResuelta.FechaFin;
+                    var manualIni = fIniManual.Value.Date;
+                    var manualFin = fFinManual.Value.Date;
+
+                    if (manualFin > perFin || manualIni < perIni)
+                    {
+                        DateTime? nuevoIni = manualIni < perIni ? (DateTime?)manualIni : null;
+                        DateTime nuevoFin = manualFin > perFin ? manualFin : perFin;
+
+                        // FASE 1866 & 1869: Resolución lazy y ejecución fuera del hilo UI (STA) para evitar contención con CR-SQLite
+                        var rExt = await Task.Run(() => ObtenerPeriodoCrudService().ExtenderVentanaFin(
+                            periodoSel.IdPeriodo,
+                            nuevoFin,
+                            Environment.UserName,
+                            "AG_VENTANA_MANUAL",
+                            $"Extensión automática desde ventana manual {manualIni:yyyy-MM-dd}..{manualFin:yyyy-MM-dd}",
+                            nuevoIni));
+
+                        if (rExt.IsFailure)
+                        {
+                            lblOrigenVentana.Text = $"· No se pudo extender el período: {rExt.Error}";
+                            lblOrigenVentana.ForeColor = Color.DarkRed;
+                            lblOrigenVentana.BringToFront();
+                            _ventanaResuelta = null;
+                            _contextoActual = null;
+                            MarcarErrorPreparacion("PERIODO_EXTENSION_" + rExt.Error);
+                            traza.Fallo("P02_ExtenderPeriodo", new InvalidOperationException(rExt.Error), AgCausaFallo.SinVentana);
+                            traza.Fin(false, rExt.Error);
+                            return;
+                        }
+
+                        // Actualizar periodo en memoria y lista
+                        periodoSel.PeriodoInicio = rExt.Value.PeriodoInicio;
+                        periodoSel.PeriodoFin = rExt.Value.PeriodoFin;
+                        var pLista = _periodos.FirstOrDefault(p => p.Id == periodoSel.Id);
+                        if (pLista != null)
+                        {
+                            pLista.PeriodoInicio = rExt.Value.PeriodoInicio;
+                            pLista.PeriodoFin = rExt.Value.PeriodoFin;
+                        }
+
+                        periodoExtendido = true;
+                        _contextoActual = null;
+                        traza.Dato("PeriodoExtendido", $"{perFin:yyyy-MM-dd} -> {periodoSel.PeriodoFin}");
+                        LoggerHelper.Info($"[PERIODO] Ventana extendida idperiodo={periodoSel.IdPeriodo} {perFin:yyyy-MM-dd}->{periodoSel.PeriodoFin} actor={Environment.UserName}");
+
+                        // Refrescar combo bajo _suprimirAutoFiltro para evitar re-entradas espurias (FASE 1860: Marcar + RefrescarTexto)
+                        bool prevSuprimir = _suprimirAutoFiltro;
+                        _suprimirAutoFiltro = true;
+                        try
+                        {
+                            int selId = periodoSel.Id;
+                            cmbPeriodos.Cargar(_periodos, p => p.Id, p => p.Nombre);
+                            cmbPeriodos.Marcar(selId);
+                            cmbPeriodos.RefrescarTexto();
+                        }
+                        finally
+                        {
+                            _suprimirAutoFiltro = prevSuprimir;
+                        }
+                    }
                 }
 
-                traza.Dato("Origen", _ventanaResuelta.Origen);
-                traza.Dato("Rango", $"{_ventanaResuelta.FechaInicio:yyyy-MM-dd} -> {_ventanaResuelta.FechaFin:yyyy-MM-dd}");
-                traza.Dato("DuracionDias", _ventanaResuelta.DuracionDias);
+                var res = await _resolutorVentana.ResolverVentanaAsync(periodoSel.Id, fIniManual, fFinManual, CancellationToken.None);
+                if (res.IsSuccess)
+                {
+                    _ventanaResuelta = res.Value;
+                    if (!chkManualVentana.Checked)
+                    {
+                        dtpVentanaInicio.Value = _ventanaResuelta.FechaInicio;
+                        dtpVentanaFin.Value = _ventanaResuelta.FechaFin;
+                    }
 
-                if (_ventanaResuelta.Origen == AgOrigenVentana.Periodos)
-                {
-                    lblOrigenVentana.Text = $"· Origen: PERIODOS [{periodoSel.Nombre}] ({_ventanaResuelta.DuracionDias} días)";
-                    lblOrigenVentana.ForeColor = Color.DarkGreen;
-                }
-                else if (_ventanaResuelta.Origen == AgOrigenVentana.Presencial)
-                {
-                    lblOrigenVentana.Text = $"· Origen: FESTIVOS (PRESENCIAL) ({_ventanaResuelta.DuracionDias} días)";
-                    lblOrigenVentana.ForeColor = Color.DarkBlue;
-                }
-                else if (_ventanaResuelta.Origen == AgOrigenVentana.Manual)
-                {
-                    lblOrigenVentana.Text = $"· Origen: MANUAL (usuario) ({_ventanaResuelta.DuracionDias} días)";
-                    lblOrigenVentana.ForeColor = Color.DarkOrange;
+                    traza.Dato("Origen", _ventanaResuelta.Origen);
+                    traza.Dato("Rango", $"{_ventanaResuelta.FechaInicio:yyyy-MM-dd} -> {_ventanaResuelta.FechaFin:yyyy-MM-dd}");
+                    traza.Dato("DuracionDias", _ventanaResuelta.DuracionDias);
+
+                    if (_ventanaResuelta.Origen == AgOrigenVentana.Periodos)
+                    {
+                        lblOrigenVentana.Text = $"· Origen: PERIODOS [{periodoSel.Nombre}] ({_ventanaResuelta.DuracionDias} días)";
+                        lblOrigenVentana.ForeColor = Color.DarkGreen;
+                    }
+                    else if (_ventanaResuelta.Origen == AgOrigenVentana.Presencial)
+                    {
+                        lblOrigenVentana.Text = $"· Origen: FESTIVOS (PRESENCIAL) ({_ventanaResuelta.DuracionDias} días)";
+                        lblOrigenVentana.ForeColor = Color.DarkBlue;
+                    }
+                    else if (_ventanaResuelta.Origen == AgOrigenVentana.Manual)
+                    {
+                        lblOrigenVentana.Text = periodoExtendido
+                            ? $"· Origen: MANUAL (usuario) — período extendido a {periodoSel.PeriodoFin}"
+                            : $"· Origen: MANUAL (usuario) ({_ventanaResuelta.DuracionDias} días)";
+                        lblOrigenVentana.ForeColor = Color.DarkOrange;
+                    }
+                    else
+                    {
+                        lblOrigenVentana.Text = $"· Origen: {_ventanaResuelta.Origen} ({_ventanaResuelta.DuracionDias} días)";
+                        lblOrigenVentana.ForeColor = Color.DarkGoldenrod;
+                    }
+
+                    lblOrigenVentana.BringToFront();
+                    traza.Fin(true, $"Ventana resuelta vía {_ventanaResuelta.Origen} ({_ventanaResuelta.DuracionDias} días)");
                 }
                 else
                 {
-                    lblOrigenVentana.Text = $"· Origen: {_ventanaResuelta.Origen} ({_ventanaResuelta.DuracionDias} días)";
-                    lblOrigenVentana.ForeColor = Color.DarkGoldenrod;
-                }
+                    // FASE 1855: Supresión del fallback silencioso a la ventana vieja
+                    _ventanaResuelta = null;
+                    _contextoActual = null;
+                    MarcarErrorPreparacion("SIN_VENTANA_" + res.Error);
 
-                lblOrigenVentana.BringToFront();
-                traza.Fin(true, $"Ventana resuelta vía {_ventanaResuelta.Origen} ({_ventanaResuelta.DuracionDias} días)");
+                    traza.Fallo("P02_ActualizarVentana", new InvalidOperationException(res.Error), AgCausaFallo.SinVentana);
+                    traza.Fin(false, res.Error);
+
+                    if (sinFechas)
+                    {
+                        lblOrigenVentana.Text = $"· [AVISO] Período '{periodoSel.Nombre}' sin fechas en DB. Ingrese fechas manuales.";
+                        lblOrigenVentana.ForeColor = Color.DarkOrange;
+                    }
+                    else
+                    {
+                        lblOrigenVentana.Text = $"· Sin ventana: {res.Error}";
+                        lblOrigenVentana.ForeColor = Color.DarkRed;
+                    }
+
+                    lblOrigenVentana.BringToFront();
+                }
             }
-            else
+            finally
             {
-                traza.Fallo("P02_ActualizarVentana", new InvalidOperationException(res.Error), AgCausaFallo.SinVentana);
-                traza.Fin(false, res.Error);
-
-                if (sinFechas)
-                {
-                    lblOrigenVentana.Text = $"· [AVISO] Período '{periodoSel.Nombre}' sin fechas en DB. Ingrese fechas manuales.";
-                    lblOrigenVentana.ForeColor = Color.DarkOrange;
-                }
-                else
-                {
-                    lblOrigenVentana.Text = $"· Sin ventana: {res.Error}";
-                    lblOrigenVentana.ForeColor = Color.DarkRed;
-                }
-
-                lblOrigenVentana.BringToFront();
+                _ventanaEnActualizacion = false;
             }
         }
 
@@ -883,6 +993,16 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
                 {
                     traza.Dato("ProgramaHomonimoOmitido", $"forzado={programaSel.Id} ({programaSel.NombrePrograma})");
                     LoggerHelper.Info($"[AgFormGeneradorHorarios] Programa forzado #{programaSel.Id} '{programaSel.NombrePrograma}': se omite la resolución de homónimos (Fase 1575).");
+                }
+
+                // FASE 1855: Si no existe ventana resuelta, fallar cerrado y no construir contexto con ventana nula ni stale
+                if (_ventanaResuelta == null)
+                {
+                    traza.Fallo("ConstruirContexto", new InvalidOperationException("No se ha resuelto una ventana semestral válida."), AgCausaFallo.SinVentana);
+                    traza.Fin(false, "No se ha resuelto una ventana semestral válida.");
+                    MarcarErrorPreparacion("SIN_VENTANA");
+                    Log("[ERROR] No se ha resuelto una ventana semestral válida. Ingrese fechas válidas o configure el período.");
+                    return Result.Failure<AgContexto>("No se ha resuelto una ventana semestral válida.");
                 }
 
                 var ctx = new AgContexto
@@ -1624,8 +1744,11 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             }
         }
 
-        private enum TipoPreparacionPlan { AlcanceInvalido, ErrorTecnico, Cancelada, NoVerificable, RatificacionPendiente,
-            CandidatoListo, CoberturaInsuficiente, FlushFallido, Rechazado }
+        private enum TipoPreparacionPlan
+        {
+            AlcanceInvalido, ErrorTecnico, Cancelada, NoVerificable, RatificacionPendiente,
+            CandidatoListo, CoberturaInsuficiente, FlushFallido, Rechazado
+        }
 
         private async Task<bool> PrepararCoberturaAntesDeCambiosAsync(AgContexto contexto, CancellationToken ct)
         {
@@ -2882,8 +3005,12 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     if (cierreConservado.IsFailure) throw new InvalidOperationException(cierreConservado.Error);
                     corridaFinalizada = true;
                     _idCorridaCargada = idCorrida;
-                    _ultimoResultado = new AgResultadoCorrida { IdCorrida = idCorrida, Estado = AgEstadoCorrida.Completada,
-                        Mensaje = "Sólo conservación: cobertura canónica validada; sin sesiones nuevas." };
+                    _ultimoResultado = new AgResultadoCorrida
+                    {
+                        IdCorrida = idCorrida,
+                        Estado = AgEstadoCorrida.Completada,
+                        Mensaje = "Sólo conservación: cobertura canónica validada; sin sesiones nuevas."
+                    };
                     btnPromoverProduccion.Enabled = false; // No existe reemplazo ni promoción T6.
                     EstablecerEstadoOptimizacion(EstadoVisualOptimizacion.Completado, "SOLO_CONSERVACION",
                         "Estado: Sólo conservación; horario aprobado anterior intacto.");
@@ -3645,20 +3772,29 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                         var docenteFijo = _contextoActual.Docentes?.FirstOrDefault(d => d.Id == fija.IdTercero);
                         lista.Add(new
                         {
-                            IdSesionGlobal = fija.Id, IdCorrida = idCorrida, IdGen = 0L,
-                            IdVinculacion = 0L, Origen = "CONSERVADA",
-                            Fecha = fija.Fecha.ToString("dd/MM/yyyy"), Dia = fija.Fecha.ToString("dddd"),
+                            IdSesionGlobal = fija.Id,
+                            IdCorrida = idCorrida,
+                            IdGen = 0L,
+                            IdVinculacion = 0L,
+                            Origen = "CONSERVADA",
+                            Fecha = fija.Fecha.ToString("dd/MM/yyyy"),
+                            Dia = fija.Fecha.ToString("dddd"),
                             Horario = fija.Inicio.ToString(@"hh\:mm") + " A " + fija.Fin.ToString(@"hh\:mm"),
                             Horas = fija.Horas,
                             Periodo = _periodos.FirstOrDefault(p => p.Id == clave.IdPeriodo)?.Nombre ?? clave.IdPeriodo.ToString(),
                             Sede = _sedes.FirstOrDefault(sd => sd.Id == clave.IdSede)?.Ciudad ?? clave.IdSede.ToString(),
                             Programa = _programas.FirstOrDefault(pr => pr.Id == clave.IdPrograma)?.NombrePrograma ?? clave.IdPrograma.ToString(),
-                            Semestre = clave.Semestre, Grupo = clave.Grupo,
+                            Semestre = clave.Semestre,
+                            Grupo = clave.Grupo,
                             Modalidad = ModalidadTutoriaCatalog.AEtiqueta(clave.Modalidad),
                             Asignatura = _contextoActual.Asignaturas?.FirstOrDefault(a => a.Id == clave.IdAsignatura)?.Nombre ?? clave.IdAsignatura.ToString(),
                             Docente = docenteFijo?.Nombre ?? $"Docente #{fija.IdTercero}",
-                            Aula = aulaFija?.Codigo ?? $"Aula #{clave.IdAula}", AulaRef = aulaFija?.AulaRef ?? "",
-                            Viatica = "No", Vacante = "No", Motivo = "", Candidatos = 0
+                            Aula = aulaFija?.Codigo ?? $"Aula #{clave.IdAula}",
+                            AulaRef = aulaFija?.AulaRef ?? "",
+                            Viatica = "No",
+                            Vacante = "No",
+                            Motivo = "",
+                            Candidatos = 0
                         });
                     }
                     var m = _contextoActual.ManifiestoCobertura;

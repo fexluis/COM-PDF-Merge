@@ -144,5 +144,101 @@ namespace ConversorPDF.XLL.Academic.Application.Services
                 return Result.Failure($"Error al eliminar período: {ex.Message}");
             }
         }
+
+        /// <summary>
+        /// FASE 1854: Extiende la ventana temporal de un período de forma atómica y auditada.
+        /// Reglas:
+        /// 1. El período existe y tiene ventana válida (TryObtenerVentana).
+        /// 2. Solo extensión: targetFin &gt;= finActual y targetIni &lt;= iniActual (idempotente si no hay cambios).
+        /// 3. Coherencia: targetFin &gt;= targetIni (RN2).
+        /// 4. Tope de seguridad: targetFin &lt;= targetIni.AddYears(2).
+        /// </summary>
+        public Result<Periodo> ExtenderVentanaFin(
+            int idPeriodo,
+            DateTime nuevoFin,
+            string actor,
+            string origen,
+            string motivo = null,
+            DateTime? nuevoInicio = null)
+        {
+            if (idPeriodo <= 0) return Result.Failure<Periodo>("Identificador de período inválido.");
+            if (string.IsNullOrWhiteSpace(actor)) return Result.Failure<Periodo>("El actor es obligatorio.");
+            if (string.IsNullOrWhiteSpace(origen)) return Result.Failure<Periodo>("El origen es obligatorio.");
+
+            try
+            {
+                var getRes = _repository.GetPeriodoById(idPeriodo);
+                if (!getRes.IsSuccess || getRes.Value == null)
+                {
+                    return Result.Failure<Periodo>(getRes.Error ?? "Período no encontrado.");
+                }
+
+                var periodo = getRes.Value;
+                if (!periodo.TryObtenerVentana(out var iniActual, out var finActual))
+                {
+                    return Result.Failure<Periodo>("El período no tiene una ventana temporal válida configurada.");
+                }
+
+                DateTime targetFin = nuevoFin.Date;
+                DateTime targetIni = nuevoInicio.HasValue ? nuevoInicio.Value.Date : iniActual;
+
+                // Regla 2: Solo extensión (no reducción)
+                if (targetFin < finActual)
+                {
+                    return Result.Failure<Periodo>("Este flujo no reduce la ventana temporal del período.");
+                }
+                if (targetIni > iniActual)
+                {
+                    return Result.Failure<Periodo>("Este flujo no reduce la ventana temporal del período.");
+                }
+
+                // Idempotencia: si ambas fechas coinciden, retornar éxito sin tocar BD
+                if (targetFin == finActual && targetIni == iniActual)
+                {
+                    return Result.Success(periodo);
+                }
+
+                // Regla 3: fin >= inicio
+                if (targetFin < targetIni)
+                {
+                    return Result.Failure<Periodo>("La fecha de fin del período no puede ser anterior a la fecha de inicio.");
+                }
+
+                // Regla 4: Tope de seguridad (2 años máximo)
+                if (targetFin > targetIni.AddYears(2))
+                {
+                    return Result.Failure<Periodo>("La fecha de fin supera el tope de seguridad de 2 años respecto al inicio.");
+                }
+
+                string nuevoIniStr = targetIni.ToString("yyyy-MM-dd");
+                string nuevoFinStr = targetFin.ToString("yyyy-MM-dd");
+                string iniAntesStr = periodo.PeriodoInicio;
+                string finAntesStr = periodo.PeriodoFin;
+
+                var updResult = _repository.UpdatePeriodoVentana(
+                    idPeriodo,
+                    nuevoIniStr,
+                    nuevoFinStr,
+                    iniAntesStr,
+                    finAntesStr,
+                    actor.Trim(),
+                    origen.Trim(),
+                    motivo);
+
+                if (!updResult.IsSuccess)
+                {
+                    return Result.Failure<Periodo>(updResult.Error);
+                }
+
+                periodo.PeriodoInicio = nuevoIniStr;
+                periodo.PeriodoFin = nuevoFinStr;
+                return Result.Success(periodo);
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error($"[PeriodoCrudService] Error en ExtenderVentanaFin idperiodo={idPeriodo}", ex);
+                return Result.Failure<Periodo>($"Error al extender ventana del período: {ex.Message}");
+            }
+        }
     }
 }

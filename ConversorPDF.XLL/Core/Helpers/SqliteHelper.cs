@@ -380,7 +380,8 @@ namespace ConversorPDF.XLL.Core.Helpers
                 new MigrationV79_NormalizeUsuariosIds(),              // Normalización determinista de usuarios y deduplicación
                 new MigrationV80_AddOrigenPatronAgAulaAsignatura(),    // FASE 1735: columna origen_patron en ag_aula_asignatura
                 new MigrationV81_AddAgGenFechasGen(),                 // FASE 1815: columna fechas_gen en ag_gen
-                new MigrationV82_AddAgCandidatoPlanAprobado()       // T4: candidato y ratificación aditivos
+                new MigrationV82_AddAgCandidatoPlanAprobado(),       // T4: candidato y ratificación aditivos
+                new MigrationV83_AddAgPeriodoVentanaAuditoria()      // FASE 1854: auditoría de extensión de ventana en periodos
             };
             return new SchemaMigrator(migrations, new VaultPersister(), new LoggerAdapter());
         }

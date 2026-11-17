@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 412 | 413 | 2026-11-17 |
-| `fase` | 1853 | 1854 | 2026-11-17 |
+| `ronda` | 415 | 416 | 2026-11-17 |
+| `fase` | 1869 | 1870 | 2026-11-17 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -125,7 +125,10 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-088 | 2026-11-17 | `(implementación general: aula aprobada sin origen productivo ⇒ demanda pendiente de programar)` | `Wave —` → `Ronda 408` | `Fase 1844` | closed | `BLOCKED-ACL (verify.ps1); gate alternativo por lotes: _evidence/20261117-aprobada-sin-origen (1629 pruebas, 0 fallas)` | `0596274` |
 | R-089 | 2026-11-17 | `(empaquetado: Newtonsoft.Json declarado en .dna/MSI + contrato check-addin-packaging)` | `Wave —` → `Ronda 409` | `Fase 1845` | closed | `BLOCKED-ACL (verify.ps1); gate alternativo por lotes: 1629 pruebas, 0 fallas; EMPACADO_OK (bin 20 / dna 16 / wix 21)` | `2da0788` |
 | R-090 | 2026-11-17 | `(revisión Ronda 410/411 — Fases 1846–1849: factibilidad, escalador decisión, fail-closed snapshot)` | `Wave —` → `Ronda 410–411` | `Fase 1846–1849` | closed | revisión y correcciones; sin build/tests | pendiente |
-| R-091 | 2026-11-17 | `(revisión Ronda 412 — Fases 1850–1853: flush alcance semáforo, snapshot divergente, trazabilidad y tests)` | `Wave —` → `Ronda 412` | `Fase 1850–1853` | executing | revisión y correcciones; sin build/tests | pendiente |
+| R-091 | 2026-11-17 | `(revisión Ronda 412 — Fases 1850–1853: flush alcance semáforo, snapshot divergente, trazabilidad y tests)` | `Wave —` → `Ronda 412` | `Fase 1850–1853` | closed | revisión y correcciones; sin build/tests | pendiente |
+| R-092 | 2026-11-17 | `(revisión Ronda 413 — Fases 1854–1857: extensión de período, fallo cerrado ventana, paridad demanda escalador)` | `Wave —` → `Ronda 413` | `Fase 1854–1857` | closed | revisión y correcciones; sin build/tests | pendiente |
+| R-093 | 2026-11-17 | `(revisión Ronda 414 — Fases 1858–1866: corrección tipado Result, asigsAula, Marcar combo, contabilidad demanda y no pérdida)` | `Wave —` → `Ronda 414` | `Fase 1858–1866` | closed | revisión y correcciones; sin build/tests | pendiente |
+| R-094 | 2026-11-17 | `(revisión Ronda 415 — Fases 1867–1869: filtro catálogo en simulación, DtpVentana tipado y escritura fuera de UI)` | `Wave —` → `Ronda 415` | `Fase 1867–1869` | executing | revisión y correcciones; sin build/tests | pendiente |
 
 
 

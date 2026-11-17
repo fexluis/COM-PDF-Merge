@@ -230,8 +230,10 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                             .All(r => Math.Abs(contexto.SesionesConservadas.Where(s => s.Clave.Valor == r.Clave.Valor)
                                 .Sum(s => s.Horas) - r.HorasEfectivas) <= 0.001))
                         continue;
-                    var asigsAula = contexto.AulaAsignaturas.Where(aa => aa.IdAula == au.Id && aa.IdAsignatura > 0).ToList();
-                    if (asigsAula.Count == 0) continue;
+                    // FASE 1859 & 1865: Contabilizar relaciones existentes antes de comprobaciones estructurales
+                    int totalRelaciones = (contexto.AulaAsignaturas ?? new List<AgAulaAsignatura>())
+                        .Count(aa => aa.IdAula == au.Id && aa.IdAsignatura > 0);
+                    if (totalRelaciones == 0) continue;
 
                     var ventanaAu = AgCarriles.Ventana(au.DiasVentana);
                     // Fase 1093: Bloquear factibilidad explícitamente si ag_aula carece de dias_ventana (I1)
@@ -252,6 +254,10 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                             "Seleccione 4h en el árbol y ejecute 'Generar Aulas'.");
                     }
                     double unidadAu = AgUnidadesSemanales.HorasSesionAula(au, nivelAu);
+
+                    // FASE 1856 & 1861: Unificar definición de demanda sin fallback ficticio de 64h (preserva I5_HORAS_DESCONOCIDAS)
+                    var demandasAu = AgEvaluadorDemandaVentana.Demandas(contexto, au, fallbackPermitido: false);
+                    if (demandasAu.Count == 0) continue;
 
                     // Fase 1142 / Fase 1158: Capacidad real medida en ranuras efectivas (SAB cuenta 2 veces si tiene M+T)
                     var ranurasAu = AgRanuras.PorVentana(au.DiasVentana, contexto.Bloques, au.Jornada, unidadAu);
@@ -280,35 +286,62 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         }
                     }
                     
-                    // Fase 1105 / Fase 1110: Calcular demanda real resolviendo horas_objetivo o int_horaria; omitir desconocidas (<=0) con advertencia
+                    // FASE 1856: Calcular demanda real unificada con Demandas; omitir desconocidas (<=0) con advertencia
                     int totalSesionesAula = 0;
                     int materiasComputadas = 0;
-                    foreach (var aa in asigsAula)
+                    foreach (var d in demandasAu)
                     {
-                        double horasAu = aa.HorasObjetivo > 0
-                            ? aa.HorasObjetivo
-                            : (asigPorId.TryGetValue(aa.IdAsignatura, out var asigAu) && asigAu.IntHoraria > 0 ? asigAu.IntHoraria : 0.0);
-
-                        if (horasAu <= 0.0)
+                        if (d.Horas <= 0.0)
                         {
-                            informe.AgregarAdvertencia($"[I5_HORAS_DESCONOCIDAS] {EtiquetaSede(contexto, au)} Aula '{au.AulaRef}' asig {aa.IdAsignatura}: horas_objetivo=0; no se computa en la demanda.");
+                            informe.AgregarAdvertencia($"[I5_HORAS_DESCONOCIDAS] {EtiquetaSede(contexto, au)} Aula '{au.AulaRef}' asig {d.IdAsignatura}: horas_objetivo=0; no se computa en la demanda.");
                             continue;
                         }
-                        totalSesionesAula += (int)Math.Ceiling(horasAu / unidadAu);
+                        totalSesionesAula += (int)Math.Ceiling(d.Horas / unidadAu);
                         materiasComputadas++;
                     }
 
                     if (totalSesionesAula > capacidadTotalRanuras)
                     {
                         string escalon = AgEscaleraVentanas.Siguiente(au.DiasVentana);
+                        string consejoEscalon;
+                        if (string.IsNullOrEmpty(escalon))
+                        {
+                            consejoEscalon = " Amplíe la ventana semestral o reduzca asignaturas simultáneas.";
+                        }
+                        else
+                        {
+                            // FASE 1856: Validar ganancia real antes de sugerir el escalón
+                            var ranurasEscalon = AgRanuras.PorVentana(escalon, contexto.Bloques, au.Jornada, unidadAu);
+                            int capEscalon = 0;
+                            if (ranurasEscalon.Count > 0)
+                            {
+                                int carrilesEsc = AgCarriles.Cantidad(ranurasEscalon);
+                                for (int c = 0; c < carrilesEsc; c++)
+                                {
+                                    var rCarril = AgCarriles.DelCarril(ranurasEscalon, c);
+                                    for (int r = 0; r < rCarril.Count; r++)
+                                    {
+                                        capEscalon += AgPlanificadorTemporal.ContarOcurrencias(rCarril[r].Dia, ini, fin, contexto.EsFestivo);
+                                    }
+                                }
+                            }
+
+                            if (capEscalon > capacidadTotalRanuras)
+                            {
+                                consejoEscalon = $" Escale la ventana a '{escalon}' (capacidad {capEscalon}) o amplíe el semestre.";
+                            }
+                            else
+                            {
+                                consejoEscalon = $" El siguiente escalón '{escalon}' no añade ranuras útiles (no existe bloque activo de {unidadAu:0} h para la jornada '{au.Jornada}' en ag_bloque_horario). Configure bloques para esa jornada o amplíe el semestre.";
+                            }
+                        }
+
                         informe.AgregarBloqueo(
                             $"[I5_INFACTIBLE] {EtiquetaSede(contexto, au)} Aula '{au.AulaRef}': demanda total de {totalSesionesAula} sesiones " +
-                            $"({materiasComputadas} materias computadas de {asigsAula.Count}) excede la capacidad real de " +
+                            $"({materiasComputadas} materias computadas de {totalRelaciones}) excede la capacidad real de " +
                             $"{capacidadTotalRanuras} ranuras ({ranurasAu.Count} ranuras/semana, festivos descontados) " +
                             $"en ventana {ini:yyyy-MM-dd}..{fin:yyyy-MM-dd}." +
-                            (string.IsNullOrEmpty(escalon)
-                                ? " Amplíe la ventana semestral o reduzca asignaturas simultáneas."
-                                : $" Escale la ventana a '{escalon}' o amplíe el semestre."));
+                            consejoEscalon);
                         continue;
                     }
 
@@ -327,17 +360,18 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         return capacidadAlt >= requeridas;
                     }
 
+                    // FASE 1859: Iteración canónica sobre relaciones del aula en contexto
                     bool todasConAlternativa = true;
-                    foreach (var aa in asigsAula)
+                    foreach (var rel in (contexto.AulaAsignaturas ?? new List<AgAulaAsignatura>()).Where(aa => aa.IdAula == au.Id))
                     {
-                        double horasAlt = aa.HorasObjetivo > 0
-                            ? aa.HorasObjetivo
-                            : (asigPorId.TryGetValue(aa.IdAsignatura, out var asigAlt) && asigAlt.IntHoraria > 0 ? asigAlt.IntHoraria : 0.0);
+                        double horasAlt = rel.HorasObjetivo > 0
+                            ? rel.HorasObjetivo
+                            : (asigPorId.TryGetValue(rel.IdAsignatura, out var asigAlt) && asigAlt.IntHoraria > 0 ? asigAlt.IntHoraria : 0.0);
                         if (horasAlt <= 0) continue;
 
                         int reqAlt = (int)Math.Ceiling(horasAlt / unidadAu);
                         var alternativas = (contexto.AulaAsignaturas ?? new List<AgAulaAsignatura>())
-                            .Where(x => x.IdAsignatura == aa.IdAsignatura && x.IdAula != au.Id)
+                            .Where(x => x.IdAsignatura == rel.IdAsignatura && x.IdAula != au.Id)
                             .ToList();
                         if (!alternativas.Any(c => TieneCapacidadAlternativa(c, reqAlt)))
                         {

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ConversorPDF.XLL.Academic.Application.DTOs;
@@ -119,6 +120,121 @@ namespace ConversorPDF.Tests.Academic.Application.Services
             // Assert
             result.IsFailure.Should().BeTrue();
             result.Error.Should().Contain("inválido");
+        }
+
+        [Fact]
+        public void ExtenderVentanaFin_WhenNuevoFinAnteriorAFinActual_ShouldReturnFailure()
+        {
+            // Arrange (Periodo 2027-01: 2027-01-15 a 2027-05-30)
+            var existing = new Periodo
+            {
+                IdPeriodo = 5,
+                PeriodoNombre = "2027-01",
+                PeriodoInicio = "2027-01-15",
+                PeriodoFin = "2027-05-30",
+                Activo = true
+            };
+            _repoMock.Setup(r => r.GetPeriodoById(5)).Returns(SqliteResult<Periodo>.Success(existing));
+
+            // Act: reducir a 2027-05-15
+            var result = _service.ExtenderVentanaFin(5, new DateTime(2027, 5, 15), "TEST_USER", "AG_VENTANA_MANUAL");
+
+            // Assert
+            result.IsFailure.Should().BeTrue();
+            result.Error.Should().Contain("no reduce la ventana");
+        }
+
+        [Fact]
+        public void ExtenderVentanaFin_WhenNuevoFinIgualAFinActual_ShouldBeIdempotentWithoutCallingRepo()
+        {
+            // Arrange
+            var existing = new Periodo
+            {
+                IdPeriodo = 5,
+                PeriodoNombre = "2027-01",
+                PeriodoInicio = "2027-01-15",
+                PeriodoFin = "2027-05-30",
+                Activo = true
+            };
+            _repoMock.Setup(r => r.GetPeriodoById(5)).Returns(SqliteResult<Periodo>.Success(existing));
+
+            // Act
+            var result = _service.ExtenderVentanaFin(5, new DateTime(2027, 5, 30), "TEST_USER", "AG_VENTANA_MANUAL");
+
+            // Assert
+            result.IsSuccess.Should().BeTrue();
+            result.Value.PeriodoFin.Should().Be("2027-05-30");
+            _repoMock.Verify(r => r.UpdatePeriodoVentana(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public void ExtenderVentanaFin_WhenSuperaTope2Anios_ShouldReturnFailure()
+        {
+            // Arrange
+            var existing = new Periodo
+            {
+                IdPeriodo = 5,
+                PeriodoNombre = "2027-01",
+                PeriodoInicio = "2027-01-15",
+                PeriodoFin = "2027-05-30",
+                Activo = true
+            };
+            _repoMock.Setup(r => r.GetPeriodoById(5)).Returns(SqliteResult<Periodo>.Success(existing));
+
+            // Act: fecha de 3 años en el futuro
+            var result = _service.ExtenderVentanaFin(5, new DateTime(2030, 5, 30), "TEST_USER", "AG_VENTANA_MANUAL");
+
+            // Assert
+            result.IsFailure.Should().BeTrue();
+            result.Error.Should().Contain("tope de seguridad de 2 años");
+        }
+
+        [Fact]
+        public void ExtenderVentanaFin_WhenPeriodoNoExiste_ShouldReturnFailure()
+        {
+            // Arrange
+            _repoMock.Setup(r => r.GetPeriodoById(99)).Returns(SqliteResult<Periodo>.Failure("Período no encontrado"));
+
+            // Act
+            var result = _service.ExtenderVentanaFin(99, new DateTime(2027, 6, 15), "TEST_USER", "AG_VENTANA_MANUAL");
+
+            // Assert
+            result.IsFailure.Should().BeTrue();
+            result.Error.Should().Contain("Período no encontrado");
+        }
+
+        [Fact]
+        public void ExtenderVentanaFin_WhenExtiendeFinValido_ShouldCallRepoAndReturnPeriodoActualizado()
+        {
+            // Arrange
+            var existing = new Periodo
+            {
+                IdPeriodo = 5,
+                PeriodoNombre = "2027-01",
+                PeriodoInicio = "2027-01-15",
+                PeriodoFin = "2027-05-30",
+                Activo = true
+            };
+            _repoMock.Setup(r => r.GetPeriodoById(5)).Returns(SqliteResult<Periodo>.Success(existing));
+            _repoMock.Setup(r => r.UpdatePeriodoVentana(
+                5,
+                "2027-01-15",
+                "2027-06-13",
+                "2027-01-15",
+                "2027-05-30",
+                "ADMIN",
+                "AG_VENTANA_MANUAL",
+                It.IsAny<string>())).Returns(SqliteResult<int>.Success(1));
+
+            // Act
+            var result = _service.ExtenderVentanaFin(5, new DateTime(2027, 6, 13), "ADMIN", "AG_VENTANA_MANUAL", "Extensión por holgura");
+
+            // Assert
+            result.IsSuccess.Should().BeTrue();
+            result.Value.PeriodoInicio.Should().Be("2027-01-15");
+            result.Value.PeriodoFin.Should().Be("2027-06-13");
+            _repoMock.Verify(r => r.UpdatePeriodoVentana(
+                5, "2027-01-15", "2027-06-13", "2027-01-15", "2027-05-30", "ADMIN", "AG_VENTANA_MANUAL", "Extensión por holgura"), Times.Once);
         }
     }
 }

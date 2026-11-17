@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Globalization;
+using System.Threading;
 using ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context;
 using ConversorPDF.XLL.Core.Helpers;
 using ConversorPDF.XLL.Academic.Domain.Interfaces;
@@ -649,6 +651,20 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
             }
         }
 
+        private bool TablaAuditoriaPeriodoExiste(IDbTransaction tx = null)
+        {
+            try
+            {
+                return _connection.QueryFirstOrDefault<int>(
+                    "SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name='ag_periodo_ventana_auditoria';",
+                    transaction: tx ?? _transaction) > 0;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         public SqliteResult<IEnumerable<Periodo>> GetPeriodos()
         {
             try
@@ -752,6 +768,139 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
 
                 NotifyMarkDirty();
                 return SqliteResult<int>.Success(filas);
+            }
+            catch (Exception ex)
+            {
+                return SqliteResult<int>.Failure(ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// FASE 1854: Actualiza la ventana temporal (periodo_inicio / periodo_fin) de un período de manera atómica,
+        /// condicionada por concurrencia optimista y auditada en ag_periodo_ventana_auditoria sin alterar nombre ni activo.
+        /// </summary>
+        public SqliteResult<int> UpdatePeriodoVentana(
+            int idPeriodo,
+            string nuevoInicio,
+            string nuevoFin,
+            string inicioAntes,
+            string finAntes,
+            string actor,
+            string origen,
+            string motivo)
+        {
+            if (idPeriodo <= 0) return SqliteResult<int>.Failure("Identificador de período inválido.");
+            if (string.IsNullOrWhiteSpace(actor)) return SqliteResult<int>.Failure("El actor es obligatorio para auditar la extensión.");
+            if (string.IsNullOrWhiteSpace(origen)) return SqliteResult<int>.Failure("El origen es obligatorio para auditar la extensión.");
+
+            EnsureCrSqliteEnabled();
+
+            try
+            {
+                if (!PeriodosTieneVentana())
+                {
+                    return SqliteResult<int>.Failure("El esquema no soporta ventana temporal (periodo_inicio/periodo_fin). Aplique las migraciones.");
+                }
+
+                // FASE 1869: Reintento acotado ante SQLiteErrorCode.Busy/Locked para mitigar contención con sync CR-SQLite
+                const int maxReintentos = 3;
+                for (int intento = 1; intento <= maxReintentos; intento++)
+                {
+                    bool localTx = _transaction == null;
+                    IDbTransaction currentTx = _transaction ?? _connection.BeginTransaction();
+
+                    try
+                    {
+                        string nombrePeriodo = _connection.QueryFirstOrDefault<string>(
+                            "SELECT periodo FROM periodos WHERE idperiodo = @idPeriodo;",
+                            new { idPeriodo },
+                            transaction: currentTx);
+
+                        if (nombrePeriodo == null)
+                        {
+                            if (localTx) { try { currentTx.Rollback(); } catch { } }
+                            return SqliteResult<int>.Failure("Período no encontrado.");
+                        }
+
+                        // FASE 1862 & 1866: Verificación de presencia de tabla de auditoría (única fuente: Migración V83)
+                        if (!TablaAuditoriaPeriodoExiste(currentTx))
+                        {
+                            if (localTx) { try { currentTx.Rollback(); } catch { } }
+                            return SqliteResult<int>.Failure("AUDITORIA_VENTANA_NO_MIGRADA");
+                        }
+
+                        const string sqlUpdate = @"
+                            UPDATE periodos 
+                            SET periodo_inicio = @nuevoInicio, 
+                                periodo_fin = @nuevoFin 
+                            WHERE idperiodo = @idPeriodo 
+                              AND IFNULL(periodo_fin, '') = IFNULL(@finAntes, '')
+                              AND IFNULL(periodo_inicio, '') = IFNULL(@inicioAntes, '');";
+
+                        int filas = _connection.Execute(sqlUpdate, new
+                        {
+                            idPeriodo,
+                            nuevoInicio,
+                            nuevoFin,
+                            finAntes,
+                            inicioAntes
+                        }, transaction: currentTx);
+
+                        if (filas != 1)
+                        {
+                            if (localTx) { try { currentTx.Rollback(); } catch { } }
+                            return SqliteResult<int>.Failure("PERIODO_MODIFICADO_POR_OTRO_USUARIO");
+                        }
+
+                        const string sqlAudit = @"
+                            INSERT INTO ag_periodo_ventana_auditoria (
+                                idperiodo, periodo, inicio_antes, fin_antes, inicio_despues, fin_despues, actor, origen, motivo, fecha
+                            ) VALUES (
+                                @idPeriodo, @nombrePeriodo, @inicioAntes, @finAntes, @nuevoInicio, @nuevoFin, @actor, @origen, @motivo, @fecha
+                            );";
+
+                        _connection.Execute(sqlAudit, new
+                        {
+                            idPeriodo,
+                            nombrePeriodo,
+                            inicioAntes,
+                            finAntes,
+                            nuevoInicio,
+                            nuevoFin,
+                            actor,
+                            origen,
+                            motivo,
+                            fecha = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                        }, transaction: currentTx);
+
+                        if (localTx)
+                        {
+                            currentTx.Commit();
+                        }
+
+                        NotifyMarkDirty();
+                        return SqliteResult<int>.Success(1);
+                    }
+                    catch (SQLiteException ex) when (localTx && intento < maxReintentos && (ex.ResultCode == SQLiteErrorCode.Busy || ex.ResultCode == SQLiteErrorCode.Locked))
+                    {
+                        if (localTx) { try { currentTx.Rollback(); } catch { } }
+                        Thread.Sleep(50 * intento);
+                    }
+                    catch
+                    {
+                        if (localTx) { try { currentTx.Rollback(); } catch { } }
+                        throw;
+                    }
+                    finally
+                    {
+                        if (localTx)
+                        {
+                            currentTx.Dispose();
+                        }
+                    }
+                }
+
+                return SqliteResult<int>.Failure("SQLITE_BUSY: Base de datos ocupada tras reintentos.");
             }
             catch (Exception ex)
             {

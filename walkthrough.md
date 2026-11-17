@@ -348,5 +348,119 @@ cualquier dependencia nueva vuelva a quedar fuera del add-in instalado.
 | F1852 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:120,601,786` |
 | F1853 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgAprobadaSinOrigenTests.cs` |
 
+---
+
+## Ronda 413 — Extensión automática de período y robustecimiento de escalado de ranuras (Fases 1854–1857)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1854 — Persistencia y Auditoría de Extensión
+- **Archivos:** `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Migrations/MigrationV83_AddAgPeriodoVentanaAuditoria.cs`, `ConversorPDF.XLL/Core/Helpers/SqliteHelper.cs`, `ConversorPDF.XLL/Academic/Domain/Interfaces/IAcademicRepository.cs`, `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AcademicRepository.cs`, `ConversorPDF.XLL/Academic/Application/Interfaces/IPeriodoCrudService.cs`, `ConversorPDF.XLL/Academic/Application/Services/PeriodoCrudService.cs`
+- **Cambio:** Registrada migración V83 creando `ag_periodo_ventana_auditoria` con índice. `UpdatePeriodoVentana` aplica concurrencia optimista (`WHERE IFNULL(periodo_fin,'')=@finAntes`) y registra auditoría en transacción atómica con `EnsureCrSqliteEnabled()` y `NotifyMarkDirty()`. `ExtenderVentanaFin` aplica invariantes de negocio: no reducción de ventana, idempotencia, `fin >= inicio` y tope de 2 años.
+
+#### 2. Fase 1855 — Enganche UI y Supresión de Fallback Silencioso
+- **Archivo:** `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
+- **Cambio:** Guarda `_ventanaEnActualizacion` contra reentradas. Extensión automática sin `MessageBox`, actualización de catálogo en memoria y recarga de selector bajo `_suprimirAutoFiltro`. Asignación de `_ventanaResuelta = null` y fallo cerrado en `ConstruirContextoAsync`, eliminando el fallback a ventanas obsoletas.
+
+#### 3. Fase 1856 — Paridad de Demanda y Diagnóstico Verificable en Escalado
+- **Archivos:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgValidadorVentana.cs`, `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgEvaluadorDemandaVentana.cs`, `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgEscaladorRanuraAula.cs`
+- **Cambio:** `AgValidadorVentana` computa la demanda a través de `Demandas(contexto, au)` unificando el universo evaluado con el escalador. Validación de ganancia efectiva antes de sugerir escalón (mensaje accionable de falta de bloques para la jornada). `PasoMejora` admite planes con reducción neta de demanda pendiente. `ESCALADOR_OMITIR` elevado a `Info` con enriquecimiento de traza.
+
+#### 4. Fase 1857 — Pruebas Unitarias y de Integración
+- **Archivos:** `ConversorPDF.Tests/Academic/Infrastructure/Persistence/AcademicRepositoryPeriodoTests.cs`, `ConversorPDF.Tests/Academic/Application/Services/PeriodoCrudServiceTests.cs`, `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgResolutorVentanaSemestreTests.cs`, `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgValidadorVentanaTests.cs`
+- **Cambio:** 2 nuevos tests en `AcademicRepositoryPeriodoTests` (extensión + auditoría y rechazo de concurrencia optimista), 5 tests en `PeriodoCrudServiceTests` (rechazo por reducción, idempotencia, tope 2 años, no encontrado, éxito), 1 test en `AgResolutorVentanaSemestreTests` (resolución válida de ventana manual con período extendido), y 2 tests en `AgValidadorVentanaTests` (bloques presentes vs escalón sin bloques con mensaje accionable).
+
+### Verificación de Principios (Ronda 413)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1854 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `MigrationV83_AddAgPeriodoVentanaAuditoria.cs`, `SqliteHelper.cs`, `AcademicRepository.cs`, `PeriodoCrudService.cs` |
+| F1855 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:680-760,970` |
+| F1856 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgValidadorVentana.cs:233,284`, `AgEvaluadorDemandaVentana.cs`, `AgEscaladorRanuraAula.cs:550` |
+| F1857 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AcademicRepositoryPeriodoTests.cs`, `PeriodoCrudServiceTests.cs`, `AgResolutorVentanaSemestreTests.cs`, `AgValidadorVentanaTests.cs` |
+
+---
+
+## Ronda 414 — Regresiones en extensión de período y paridad de demanda (Fases 1858–1866)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1858 — Corrección de Tipado en ConstruirContextoAsync
+- **Archivo:** `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
+- **Cambio:** Sustituido `return null;` por `return Result.Failure<AgContexto>("No se ha resuelto una ventana semestral válida.");` eliminando error de compilación CS0037 y protegiendo consumidores contra NRE.
+
+#### 2. Fase 1859 — Iteración Canónica de Relaciones en Validador
+- **Archivo:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgValidadorVentana.cs`
+- **Cambio:** Sustituida la variable inexistente `asigsAula` por `totalRelaciones` e iteración segura sobre `contexto.AulaAsignaturas` eliminando CS0103.
+
+#### 3. Fase 1860 — Invocación Canónica en CheckedComboBox
+- **Archivo:** `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
+- **Cambio:** Sustituido `cmbPeriodos.Seleccionar(selId)` inexistente por `cmbPeriodos.Marcar(selId); cmbPeriodos.RefrescarTexto();` eliminando CS1061.
+
+#### 4. Fase 1861 — Parametrización de Fallback en Demandas
+- **Archivos:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgEvaluadorDemandaVentana.cs`, `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgValidadorVentana.cs`
+- **Cambio:** Parametrizado `fallbackPermitido = true/false` en `HorasObjetivo` y `Demandas`. En validador (`fallbackPermitido: false`), evita inyectar 64 h ficticias ante horas no informadas, preserva la advertencia `[I5_HORAS_DESCONOCIDAS]` y reporta `totalRelaciones` exacto en `[I5_INFACTIBLE]`.
+
+#### 5. Fase 1862 — DDL en Fixture de Tests y Verificación Fail-Closed en Repositorio
+- **Archivos:** `ConversorPDF.Tests/Academic/Infrastructure/Persistence/AcademicRepositoryPeriodoTests.cs`, `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AcademicRepository.cs`
+- **Cambio:** Añadida creación de `ag_periodo_ventana_auditoria` en constructor del fixture de tests. `AcademicRepository` valida `TablaAuditoriaPeriodoExiste()` y falla con `AUDITORIA_VENTANA_NO_MIGRADA` sin duplicar DDL inline.
+
+#### 6. Fase 1863 — Guarda de Intención en Extensión de Período
+- **Archivo:** `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
+- **Cambio:** Parámetro `permitirExtension = false` en `ActualizarVentanaSemestralAsync`, habilitado únicamente desde `ValueChanged` de selectores de fecha (`dtpVentanaInicio`, `dtpVentanaFin`). Conmutar período o activar checkbox manual no muta `periodos`.
+
+#### 7. Fase 1864 — Acotación de Pérdida en PasoMejora
+- **Archivo:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgEvaluadorDemandaVentana.cs`
+- **Cambio:** Tolerancia a pérdida de sesiones de otras materias condicionada estrictamente a `despues.DemandaPendiente <= antes.DemandaPendiente - 1`.
+
+#### 8. Fase 1865 — Preservación de Bloqueos Estructurales
+- **Archivo:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgValidadorVentana.cs`
+- **Cambio:** Evaluación de bloqueos estructurales `[I1_VENTANA_VACIA]` y `[D4_PREGRADO_8H]` previa al descarte temprano por demanda vacía (`demandasAu.Count == 0`).
+
+#### 9. Fase 1866 — Resolución Dinámica de Conexión en Servicio
+- **Archivos:** `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AcademicRepository.cs`, `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
+- **Cambio:** Retirado DDL duplicado en `UpdatePeriodoVentana`. Formulario instancia el servicio lazily mediante `ObtenerPeriodoCrudService()` usando `_connectionFactory()`.
+
+### Verificación de Principios (Ronda 414)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1858 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:978` |
+| F1859 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgValidadorVentana.cs:233,359` |
+| F1860 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:754` |
+| F1861 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEvaluadorDemandaVentana.cs:14-45`, `AgValidadorVentana.cs:234-290` |
+| F1862 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AcademicRepositoryPeriodoTests.cs:33,142`, `AcademicRepository.cs:765-775` |
+| F1863 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:368-385,548,683-705` |
+| F1864 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEvaluadorDemandaVentana.cs:115` |
+| F1865 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgValidadorVentana.cs:220-235` |
+| F1866 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AcademicRepository.cs:765`, `AgFormGeneradorHorarios.cs:175,225-245` |
+
+---
+
+## Ronda 415 — Efecto colateral de `Demandas` estricta en modo simulación (Fases 1867–1869)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1867 — Filtro de Admisión de Demandas por Modo
+- **Archivos:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgEvaluadorDemandaVentana.cs`, `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgEvaluadorDemandaVentanaTests.cs`
+- **Cambio:** En `Demandas`, las relaciones huérfanas sin fila en catálogo (`asignatura == null`) se omiten cuando `fallbackPermitido: true` (modo simulación), erradicando las 64 h (16 sesiones) ficticias en `Evaluar`, `itemsPlan` y reclasificación. En modo estricto (`fallbackPermitido: false`), se admiten con 0 h para emitir `[I5_HORAS_DESCONOCIDAS]`. Se añadió prueba unitaria que valida la bifurcación de ambos modos.
+
+#### 2. Fase 1868 — Manejador Tipado y Seguro para Cambios de Fecha
+- **Archivo:** `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
+- **Cambio:** Reemplazadas lambdas `async void` anónimas en `ValueChanged` de `dtpVentanaInicio` y `dtpVentanaFin` por el manejador tipado `DtpVentana_ValueChanged` con bloque `try/catch` y registro seguro de excepciones en `LoggerHelper`.
+
+#### 3. Fase 1869 — Escritura Asíncrona Fuera de UI y Reintento Bounded de SQLite
+- **Archivos:** `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`, `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AcademicRepository.cs`
+- **Cambio:** En `AgFormGeneradorHorarios`, `ExtenderVentanaFin` se ejecuta fuera del hilo STA mediante `await Task.Run(...)` para evitar bloqueos de interfaz y contención con el sincronizador CR-SQLite. En `AcademicRepository.UpdatePeriodoVentana`, se implementó reintento acotado (hasta 3 intentos con backoff exponencial) ante excepciones `SQLiteErrorCode.Busy` o `Locked`.
+
+### Verificación de Principios (Ronda 415)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1867 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEvaluadorDemandaVentana.cs:49-65`, `AgEvaluadorDemandaVentanaTests.cs:296-320` |
+| F1868 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:378-385,550-565` |
+| F1869 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:736-745`, `AcademicRepository.cs:1-15,804-890` |
+
+
 
 

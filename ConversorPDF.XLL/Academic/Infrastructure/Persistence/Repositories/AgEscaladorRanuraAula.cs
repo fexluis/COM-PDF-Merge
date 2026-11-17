@@ -545,10 +545,12 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                     }
                 }
 
+                // FASE 1856: Trazabilidad enriquecida de omisión del escalador en nivel Info
                 // Si no hay saturación, no hay candidatos y no hay autorizaciones, omitir
                 if (!antes.HaySaturacion && candidatos.Count == 0 && autorizadasAula.Count == 0)
                 {
-                    LoggerHelper.Debug($"[AG-RANURAS-TMP] ESCALADOR_OMITIR aula={aula.Id} motivo=cabe_en_plazo_y_sin_candidatos");
+                    LoggerHelper.Info($"[ESCALADO] ESCALADOR_OMITIR aula={aula.Id} ref={aula.AulaRef} dias={aula.DiasVentana} capAntes={antes.CapacidadTotal} motivo=cabe_en_plazo_y_sin_candidatos");
+                    contexto.Traza?.Dato("EscaladorOmitir", $"aula={aula.Id} ref={aula.AulaRef} motivo=cabe_en_plazo_y_sin_candidatos");
                     continue;
                 }
 
@@ -559,7 +561,8 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
 
                 if (!hayCambioVentana && !hayAutorizaciones && !hayCandidatos)
                 {
-                    LoggerHelper.Debug($"[AG-RANURAS-TMP] ESCALADOR_OMITIR aula={aula.Id} motivo=sin_propuesta_viable");
+                    LoggerHelper.Info($"[ESCALADO] ESCALADOR_OMITIR aula={aula.Id} ref={aula.AulaRef} dias={aula.DiasVentana} capAntes={antes.CapacidadTotal} capDespues={despues?.CapacidadTotal ?? antes.CapacidadTotal} motivo=sin_propuesta_viable");
+                    contexto.Traza?.Dato("EscaladorOmitir", $"aula={aula.Id} ref={aula.AulaRef} motivo=sin_propuesta_viable");
                     continue;
                 }
 

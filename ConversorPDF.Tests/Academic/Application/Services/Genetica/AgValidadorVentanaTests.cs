@@ -520,11 +520,12 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             };
             contexto.Aulas.Add(aula);
 
-            // Bloques activos para VIE (5), SAB (6M, 6T), DOM (7)
+            // Bloques activos para JUE (4), VIE (5), SAB (6M, 6T), DOM (7)
             contexto.Bloques.Add(new AgBloqueHorario { Id = 1, DiaSemanaNumero = 5, Franja = "MANANA", DuracionHoras = 4, Activo = 1 });
             contexto.Bloques.Add(new AgBloqueHorario { Id = 2, DiaSemanaNumero = 6, Franja = "MANANA", DuracionHoras = 4, Activo = 1 });
             contexto.Bloques.Add(new AgBloqueHorario { Id = 3, DiaSemanaNumero = 6, Franja = "TARDE", DuracionHoras = 4, Activo = 1 });
             contexto.Bloques.Add(new AgBloqueHorario { Id = 4, DiaSemanaNumero = 7, Franja = "MANANA", DuracionHoras = 4, Activo = 1 });
+            contexto.Bloques.Add(new AgBloqueHorario { Id = 5, DiaSemanaNumero = 4, Franja = "MANANA", DuracionHoras = 4, Activo = 1 });
 
             // Asignatura con 80h = 20 sesiones de 4h (> 16 ranuras)
             contexto.Asignaturas.Add(new Asignatura { Id = 1, Nombre = "ASIG 1", Horas = 80 });
@@ -540,6 +541,48 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             result.Value.Bloqueos.Should().Contain(b =>
                 b.Contains("[I5_INFACTIBLE]") &&
                 b.Contains("Escale la ventana a 'JUE-DOM'"));
+        }
+
+        [Fact]
+        public void ValidarFactibilidad_WhenEscalonNoGanaRanurasPorFaltaDeBloques_ShouldEmitirMensajeAccionable()
+        {
+            // Arrange (LUN-JUE sin bloque de viernes en la jornada)
+            var contexto = new AgContexto();
+            contexto.Ventana = VentanaSemestre.Crear(1, "2027-1", new DateTime(2027, 2, 5), new DateTime(2027, 5, 30), AgOrigenVentana.Manual).Value;
+
+            var aula = new AgAula
+            {
+                Id = 2,
+                AulaRef = "AULA-LUN-JUE",
+                DiasVentana = "LUN-JUE",
+                Jornada = "MANANA",
+                HorasDia = 4,
+                Estado = AgEstadoAula.Disponible,
+                Capacidad = 35
+            };
+            contexto.Aulas.Add(aula);
+
+            // Bloques solo para LUN..JUE (1..4), sin bloque de viernes (5) para MANANA
+            contexto.Bloques.Add(new AgBloqueHorario { Id = 1, DiaSemanaNumero = 1, Franja = "MANANA", DuracionHoras = 4, Activo = 1 });
+            contexto.Bloques.Add(new AgBloqueHorario { Id = 2, DiaSemanaNumero = 2, Franja = "MANANA", DuracionHoras = 4, Activo = 1 });
+            contexto.Bloques.Add(new AgBloqueHorario { Id = 3, DiaSemanaNumero = 3, Franja = "MANANA", DuracionHoras = 4, Activo = 1 });
+            contexto.Bloques.Add(new AgBloqueHorario { Id = 4, DiaSemanaNumero = 4, Franja = "MANANA", DuracionHoras = 4, Activo = 1 });
+
+            // Demanda que excede la capacidad de LUN-JUE
+            contexto.Asignaturas.Add(new Asignatura { Id = 10, Nombre = "ASIG DEMANDA", Horas = 300 });
+            contexto.AulaAsignaturas.Add(new AgAulaAsignatura { IdAula = 2, IdAsignatura = 10, HorasObjetivo = 300, OrdenCurricular = 1 });
+            contexto.Docentes.Add(new Tercero { Id = 2, Nombre = "Docente", Activo = 1 });
+            contexto.ConstruirIndices();
+
+            // Act
+            var result = _sut.ValidarFactibilidad(contexto);
+
+            // Assert
+            result.Value.EsFactible.Should().BeFalse();
+            result.Value.Bloqueos.Should().Contain(b =>
+                b.Contains("[I5_INFACTIBLE]") &&
+                b.Contains("no añade ranuras útiles") &&
+                b.Contains("no existe bloque activo"));
         }
     }
 }

@@ -87,6 +87,8 @@ namespace ConversorPDF.XLL.Academic.Domain.Interfaces
         SqliteResult<int> InsertPeriodo(Periodo periodo);
         /// <summary> Actualiza un período académico existente. </summary>
         SqliteResult<int> UpdatePeriodo(Periodo periodo);
+        /// <summary> Actualiza la ventana temporal de un período de forma atómica y auditada con control de concurrencia optimista (Fase 1854). </summary>
+        SqliteResult<int> UpdatePeriodoVentana(int idPeriodo, string nuevoInicio, string nuevoFin, string inicioAntes, string finAntes, string actor, string origen, string motivo);
         /// <summary> Elimina un período académico verificando dependencias en vinculaciones, festivos y configuración. </summary>
         SqliteResult<int> DeletePeriodo(int id);
         /// <summary> Obtiene los períodos académicos proyectando la ventana temporal canónica. </summary>
