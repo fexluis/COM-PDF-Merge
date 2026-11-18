@@ -24,7 +24,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         {
         }
 
-        private static bool MismoGrupo(AgGen a, AgGen b) =>
+        internal static bool MismoGrupo(AgGen a, AgGen b) =>
             a != null && b != null
             && a.IdAula == b.IdAula && a.IdAsignatura == b.IdAsignatura
             && a.IdPrograma == b.IdPrograma && a.IdSede == b.IdSede
@@ -35,8 +35,13 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         /// comprobando habilitación en pool, ausencia de solapamiento fechado contra otros genes del individuo
         /// y disponibilidad de agenda externa en AgContexto.TerceroOcupado.
         /// </summary>
-        public static bool DisponibleGrupo(int docente, AgGen gen, AgIndividuo individuo, AgContexto contexto)
+        public static bool DisponibleGrupo(int docente, AgGen gen, AgIndividuo individuo, AgContexto contexto, AgProyeccionIndividuo proyeccion = null)
         {
+            if (proyeccion != null)
+            {
+                return proyeccion.DisponibleDocente(docente, gen);
+            }
+
             long t0 = 0;
             if (AgTelemetriaSubetapas.Activo)
             {
@@ -133,6 +138,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 
         public int BuscarAlterno(AgGen gen, AgContexto contexto, AgIndividuo individuo)
         {
+            return BuscarAlterno(gen, contexto, individuo, null);
+        }
+
+        public int BuscarAlterno(AgGen gen, AgContexto contexto, AgIndividuo individuo, AgProyeccionIndividuo proyeccion)
+        {
             if (gen == null || contexto == null) return 0;
 
             if (contexto.PoolPorAsignatura.TryGetValue(gen.IdAsignatura, out var pool) && pool.Count > 0)
@@ -142,7 +152,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 {
                     if (cand.IdTercero == gen.IdTercero) continue;
 
-                    if (DisponibleGrupo(cand.IdTercero, gen, individuo, contexto))
+                    bool disp = proyeccion != null
+                        ? proyeccion.DisponibleDocente(cand.IdTercero, gen)
+                        : DisponibleGrupo(cand.IdTercero, gen, individuo, contexto);
+
+                    if (disp)
                     {
                         if (individuo != null && individuo.Genes != null)
                         {
@@ -158,6 +172,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                             gen.IdTercero = cand.IdTercero;
                             gen.EsVacante = 0;
                             gen.MotivoVacante = string.Empty;
+                        }
+
+                        if (proyeccion != null)
+                        {
+                            proyeccion.ActualizarDocenteGrupo(gen, cand.IdTercero);
                         }
 
                         return cand.IdTercero;
@@ -261,5 +280,175 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         public static long TiempoDisponibleGrupoMs => System.Diagnostics.Stopwatch.Frequency > 0
             ? TiempoDisponibleGrupoTicks * 1000 / System.Diagnostics.Stopwatch.Frequency
             : 0;
+    }
+
+    public sealed class AgProyeccionIndividuo
+    {
+        private readonly Dictionary<long, List<AgCalendarioConflictos.Ocupacion>> _ocupacionesPorGen =
+            new Dictionary<long, List<AgCalendarioConflictos.Ocupacion>>();
+        private readonly Dictionary<int, List<AgCalendarioConflictos.Ocupacion>> _ocupacionesPorDocente =
+            new Dictionary<int, List<AgCalendarioConflictos.Ocupacion>>();
+        private readonly Dictionary<string, List<AgGen>> _genesPorGrupo =
+            new Dictionary<string, List<AgGen>>(StringComparer.Ordinal);
+
+        public AgIndividuo Individuo { get; }
+        public AgContexto Contexto { get; }
+
+        public AgProyeccionIndividuo(AgIndividuo individuo, AgContexto contexto)
+        {
+            Individuo = individuo ?? throw new ArgumentNullException(nameof(individuo));
+            Contexto = contexto ?? throw new ArgumentNullException(nameof(contexto));
+            ConstruirIndices();
+        }
+
+        public void ConstruirIndices()
+        {
+            _ocupacionesPorGen.Clear();
+            _ocupacionesPorDocente.Clear();
+            _genesPorGrupo.Clear();
+
+            if (Individuo.Genes == null) return;
+
+            foreach (var g in Individuo.Genes)
+            {
+                string clave = string.IsNullOrWhiteSpace(g.ClaveGrupo) ? $"{g.IdAsignatura}|{g.IdAula}|{g.Grupo}" : g.ClaveGrupo;
+                if (!_genesPorGrupo.TryGetValue(clave, out var lista))
+                {
+                    lista = new List<AgGen>();
+                    _genesPorGrupo[clave] = lista;
+                }
+                lista.Add(g);
+
+                if (g.HorasGen > 0 && Contexto.BloquesPorId != null && Contexto.BloquesPorId.TryGetValue(g.IdBloqueHorario, out var bloque) && bloque.Activo == 1 && bloque.EsHorarioValido)
+                {
+                    var resFechas = AgExpansorSesiones.ProyectarFechas(g, Contexto);
+                    if (resFechas.IsSuccess)
+                    {
+                        var oList = new List<AgCalendarioConflictos.Ocupacion>(resFechas.Value.Count);
+                        foreach (var f in resFechas.Value)
+                        {
+                            var oc = new AgCalendarioConflictos.Ocupacion
+                            {
+                                Gen = g,
+                                Fecha = f.Date,
+                                Inicio = bloque.TimeSpanInicio,
+                                Fin = bloque.TimeSpanFin,
+                                Franja = bloque.Franja ?? string.Empty
+                            };
+                            oList.Add(oc);
+
+                            if (AgCalendarioConflictos.DocenteReal(g, Contexto) && g.IdTercero > 0)
+                            {
+                                if (!_ocupacionesPorDocente.TryGetValue(g.IdTercero, out var docList))
+                                {
+                                    docList = new List<AgCalendarioConflictos.Ocupacion>();
+                                    _ocupacionesPorDocente[g.IdTercero] = docList;
+                                }
+                                docList.Add(oc);
+                            }
+                        }
+                        _ocupacionesPorGen[g.Id] = oList;
+                    }
+                }
+            }
+        }
+
+        public IReadOnlyList<AgGen> ObtenerGrupo(AgGen gen)
+        {
+            if (gen == null) return Array.Empty<AgGen>();
+            string clave = string.IsNullOrWhiteSpace(gen.ClaveGrupo) ? $"{gen.IdAsignatura}|{gen.IdAula}|{gen.Grupo}" : gen.ClaveGrupo;
+            return _genesPorGrupo.TryGetValue(clave, out var l) ? l : (IReadOnlyList<AgGen>)new[] { gen };
+        }
+
+        public bool DisponibleDocente(int docente, AgGen gen)
+        {
+            if (gen == null || Contexto == null) return false;
+            if (docente <= 0 || docente == Contexto.IdTerceroVacante) return false;
+
+            var grupo = ObtenerGrupo(gen);
+            for (int i = 0; i < grupo.Count; i++)
+            {
+                var g = grupo[i];
+                if (g.Estado == AgEstadoGen.Fijado && g.IdTercero != docente) return false;
+                if (!Contexto.EsDocenteHabilitado(docente, g.IdPrograma, g.IdAsignatura, g.Semestre)) return false;
+            }
+
+            // Ocupaciones de este grupo
+            List<AgCalendarioConflictos.Ocupacion> ocupGrupo = null;
+            for (int i = 0; i < grupo.Count; i++)
+            {
+                if (_ocupacionesPorGen.TryGetValue(grupo[i].Id, out var oList))
+                {
+                    if (ocupGrupo == null) ocupGrupo = new List<AgCalendarioConflictos.Ocupacion>(oList);
+                    else ocupGrupo.AddRange(oList);
+                }
+            }
+
+            if (ocupGrupo == null || ocupGrupo.Count == 0)
+            {
+                var res = AgCalendarioConflictos.Crear(grupo, Contexto);
+                if (res.IsFailure) return false;
+                ocupGrupo = res.Value;
+            }
+
+            // Ocupaciones ajenas del docente
+            if (_ocupacionesPorDocente.TryGetValue(docente, out var docOcup))
+            {
+                for (int i = 0; i < ocupGrupo.Count; i++)
+                {
+                    var o = ocupGrupo[i];
+                    for (int j = 0; j < docOcup.Count; j++)
+                    {
+                        var a = docOcup[j];
+                        if (AgAsignadorTercero.MismoGrupo(o.Gen, a.Gen)) continue;
+                        if (AgCalendarioConflictos.SeCruzan(o, a)) return false;
+                    }
+                }
+            }
+
+            // Comprobar sesiones conservadas y agenda externa
+            for (int i = 0; i < ocupGrupo.Count; i++)
+            {
+                var o = ocupGrupo[i];
+                if (Contexto.SesionesConservadas != null && Contexto.SesionesConservadas.Count > 0)
+                {
+                    foreach (var s in Contexto.SesionesConservadas)
+                    {
+                        if (s.IdTercero == docente && s.Fecha.Date == o.Fecha && s.Inicio < o.Fin && o.Inicio < s.Fin)
+                            return false;
+                    }
+                }
+                if (Contexto.TerceroOcupado(docente, o.Fecha, new ConversorPDF.XLL.Academic.Domain.Models.FranjaHoraria(o.Inicio, o.Fin)))
+                    return false;
+            }
+
+            return true;
+        }
+
+        public void ActualizarDocenteGrupo(AgGen gen, int nuevoDocente)
+        {
+            var grupo = ObtenerGrupo(gen);
+            for (int i = 0; i < grupo.Count; i++)
+            {
+                var g = grupo[i];
+                if (_ocupacionesPorGen.TryGetValue(g.Id, out var oList))
+                {
+                    if (g.IdTercero > 0 && _ocupacionesPorDocente.TryGetValue(g.IdTercero, out var viejas))
+                    {
+                        viejas.RemoveAll(x => x.Gen == g);
+                    }
+
+                    if (nuevoDocente > 0 && AgCalendarioConflictos.DocenteReal(g, Contexto))
+                    {
+                        if (!_ocupacionesPorDocente.TryGetValue(nuevoDocente, out var nuevas))
+                        {
+                            nuevas = new List<AgCalendarioConflictos.Ocupacion>();
+                            _ocupacionesPorDocente[nuevoDocente] = nuevas;
+                        }
+                        nuevas.AddRange(oList);
+                    }
+                }
+            }
+        }
     }
 }

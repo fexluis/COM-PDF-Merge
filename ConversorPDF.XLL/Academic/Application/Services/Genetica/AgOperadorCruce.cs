@@ -46,21 +46,27 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             }
 
             // Aplicar OX (Order Crossover)
-            bool mod1 = HeredarOX(h1, padre2, contexto);
-            bool mod2 = HeredarOX(h2, padre1, contexto);
+            var dirtyH1 = new HashSet<long>();
+            var dirtyH2 = new HashSet<long>();
+            bool mod1 = HeredarOX(h1, padre2, contexto, dirtyH1);
+            bool mod2 = HeredarOX(h2, padre1, contexto, dirtyH2);
 
             // Reparación en cascada de docentes
             if (contexto != null)
             {
-                var pares = new[] { (h1, mod1), (h2, mod2) };
+                var pares = new[] { (h1, mod1, dirtyH1), (h2, mod2, dirtyH2) };
                 foreach (var par in pares)
                 {
                     var hijo = par.Item1;
                     var modificado = par.Item2;
+                    var directos = par.Item3;
                     if (!modificado)
                     {
                         continue;
                     }
+
+                    var proyeccion = new AgProyeccionIndividuo(hijo, contexto);
+                    var dirtySet = ConstruirConjuntoSucio(hijo, directos, contexto);
 
                     foreach (var gen in hijo.Genes)
                     {
@@ -72,13 +78,19 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                             continue;
                         }
 
-                        if (_asignador.DocenteDisponible(gen, hijo, contexto))
+                        // Si el gen no está en el conjunto sucio conservador y ya tiene docente válido, omitir búsqueda
+                        if (dirtySet != null && !dirtySet.Contains(gen.Id) && gen.Estado == AgEstadoGen.Valido && gen.IdTercero > 0)
+                        {
+                            continue;
+                        }
+
+                        if (proyeccion.DisponibleDocente(gen.IdTercero, gen))
                         {
                             gen.Estado = AgEstadoGen.Valido;
                             continue;
                         }
 
-                        int alterno = _asignador.BuscarAlterno(gen, contexto, hijo);
+                        int alterno = _asignador.BuscarAlterno(gen, contexto, hijo, proyeccion);
                         if (alterno > 0)
                         {
                             gen.IdTercero = alterno;
@@ -100,7 +112,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             return (h1, h2);
         }
 
-        private bool HeredarOX(AgIndividuo hijo, AgIndividuo donante, AgContexto contexto)
+        private bool HeredarOX(AgIndividuo hijo, AgIndividuo donante, AgContexto contexto, HashSet<long> dirtyIds = null)
         {
             if (hijo.Genes == null || donante.Genes == null) return false;
             int n = Math.Min(hijo.Genes.Count, donante.Genes.Count);
@@ -271,6 +283,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 if (dst.IdAsignatura != origAsig || dst.IdTercero != origTercero || dst.IdBloqueHorario != origBloque)
                 {
                     cambios = true;
+                    if (dirtyIds != null) dirtyIds.Add(dst.Id);
                 }
             }
 
@@ -279,6 +292,51 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 hijo.Estado = AgEstadoIndividuo.NoEvaluado;
             }
             return cambios;
+        }
+
+        private static HashSet<long> ConstruirConjuntoSucio(AgIndividuo hijo, HashSet<long> directos, AgContexto contexto)
+        {
+            var dirty = new HashSet<long>(directos ?? Enumerable.Empty<long>());
+            if (hijo.Genes == null || directos == null || directos.Count == 0) return dirty;
+
+            var dirtyGrupos = new HashSet<string>(StringComparer.Ordinal);
+            var dirtyDocentes = new HashSet<int>();
+            var dirtyAulas = new HashSet<int>();
+
+            foreach (var g in hijo.Genes)
+            {
+                if (directos.Contains(g.Id))
+                {
+                    if (!string.IsNullOrWhiteSpace(g.ClaveGrupo)) dirtyGrupos.Add(g.ClaveGrupo);
+                    if (g.IdTercero > 0) dirtyDocentes.Add(g.IdTercero);
+                    if (g.IdAula > 0) dirtyAulas.Add(g.IdAula);
+                }
+            }
+
+            foreach (var g in hijo.Genes)
+            {
+                if (dirty.Contains(g.Id)) continue;
+
+                if (!string.IsNullOrWhiteSpace(g.ClaveGrupo) && dirtyGrupos.Contains(g.ClaveGrupo))
+                {
+                    dirty.Add(g.Id);
+                    continue;
+                }
+
+                if (g.IdTercero > 0 && dirtyDocentes.Contains(g.IdTercero))
+                {
+                    dirty.Add(g.Id);
+                    continue;
+                }
+
+                if (g.IdAula > 0 && dirtyAulas.Contains(g.IdAula))
+                {
+                    dirty.Add(g.Id);
+                    continue;
+                }
+            }
+
+            return dirty;
         }
     }
 }

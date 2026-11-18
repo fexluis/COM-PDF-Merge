@@ -10,7 +10,7 @@
   - min_xll_cs: 300
   - min_tests_cs: 100
   - required_slice: Academic
-- baseline: tests/baseline/test_baseline.txt (TOTAL: 1674 medido 2026-11-17 con dotnet test previo a T1; 1679 tras T1)
+- baseline: tests/baseline/test_baseline.txt (TOTAL: 1674 medido 2026-11-17 con dotnet test previo a T1)
 - verify: dotnet build .\ConversorPDF.Tests\ConversorPDF.Tests.csproj -c Debug ; dotnet test .\ConversorPDF.Tests\ConversorPDF.Tests.csproj -c Debug --no-build --logger "trx;LogFileName=gate-alternativo.trx"
 - build_gate: serializado (un único build/tests a la vez por workspace; Excel-DNA bloquea bin/)
 - max_parallel_writers: 2
@@ -108,16 +108,10 @@ T1 ── T2 ── T4 ── T6 ── T8 ─┐
 - **description**: Añadir constructores o sobrecargas que acepten `Random` o semilla entera; definir flujos deterministas por operador genético; conservar el comportamiento actual sin cambios cuando no se pasa semilla. No alterar el orden de consumo de números aleatorios en operadores existentes.
 - **validation**: Dos ejecuciones con la misma semilla producen exactamente la misma secuencia de genes y aptitudes; semillas distintas divergen; toda la suite de pruebas existente continúa pasando en verde.
 - **verification**: dotnet test .\ConversorPDF.Tests\ConversorPDF.Tests.csproj -c Debug --no-build --filter "FullyQualifiedName~AgRandomSeedTests"
-- **evidence**: _evidence/20261117-t1/summary.md
-- **status**: done
-- **log**: Añadidos constructores con semilla determinista a AgOperadorCruce, AgOperadorMutacion, AgOperadorSeleccion, AgFabricaIndividuos y AgAsignadorTercero. Creadas 5 pruebas unitarias en AgRandomSeedTests verificando reproducibilidad estricta. Suite completa ejecutada con 1.679 pruebas superadas (0 fallos).
+- **evidence**: _evidence/<timestamp>/summary.md
+- **status**: pending
+- **log**: 
 - **files edited/created**:
-  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgOperadorCruce.cs
-  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgOperadorMutacion.cs
-  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgOperadorSeleccion.cs
-  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgFabricaIndividuos.cs
-  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgAsignadorTercero.cs
-  - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgRandomSeedTests.cs
 
 ### T2: Telemetría generacional y corrección de DuracionMs
 - **id**: T2
@@ -132,13 +126,10 @@ T1 ── T2 ── T4 ── T6 ── T8 ─┐
 - **description**: Corregir el cronómetro generacional (`DuracionMs` real); declarar `AgPerfilGeneracion` como clase interna dentro de `AgResultadoCorrida.cs`; poblar métricas generacionales (`PeorFitness`, `Evaluados`, `Vacantes`, `FueraDeVentana`); emitir línea estructurada `[AG-PERF]`; medir subtiempos de inicialización (factibilidad interna, índices, población inicial, primer ciclo) y de ciclo reproductivo (selección, cruce neto, mutación neta, sellado en cruce/mutación, evaluación, reemplazo élite, campeón final); contar `EvaluacionesAptitud`, `HijosCreados`, `HijosIncorporados`, `ElitesClonados`, `EvaluacionesExtraPorCupoImpar`, genes y transiciones.
 - **validation**: `DuracionMs` coincide con el tiempo real de pared; la suma de etapas parciales cuadra con el tiempo total reportado; sin cambios funcionales en los resultados de programación.
 - **verification**: dotnet test .\ConversorPDF.Tests\ConversorPDF.Tests.csproj -c Debug --no-build --filter "FullyQualifiedName~AgPerfilGeneracionTests|FullyQualifiedName~AgGeneradorHorariosTests"
-- **evidence**: _evidence/20261117-t2/summary.md
-- **status**: done
-- **log**: Corregido DuracionMs en bitácora para medir la duración generacional real. Incorporada clase interna AgPerfilGeneracion en AgResultadoCorrida con desglose de subetapas y contadores poblacionales. Poblados PeorFitness, Evaluados, Vacantes y FueraDeVentana. Emisión de línea [AG-PERF]. Pruebas unitarias en AgPerfilGeneracionTests superadas.
+- **evidence**: _evidence/<timestamp>/summary.md
+- **status**: pending
+- **log**: 
 - **files edited/created**:
-  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgGeneradorHorarios.cs
-  - ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgResultadoCorrida.cs
-  - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgPerfilGeneracionTests.cs
 
 ### T3: Arnés de replay y baseline sembrado
 - **id**: T3
@@ -151,12 +142,10 @@ T1 ── T2 ── T4 ── T6 ── T8 ─┐
 - **description**: Construir un contexto determinista representativo de la Corrida #105 (35 aulas, 102 asignaturas, 199 relaciones, 410 genes, 32 bloques, pool de 220 docentes) o cargar fixture serializado en memoria; ejecutar un número controlado de generaciones con semilla fija; registrar la trayectoria de fitness por generación, desglose de violaciones por regla, hash canónico del horario final y volúmenes esperados (410 genes, 2.228 sesiones, 8.912 h, 199 vinculaciones, 336 vacantes, HARD=0).
 - **validation**: Ejecución determinista 100 % repetible; el baseline sembrado coincide con la salida del código base actual; tiempo de ejecución acotado para CI/tests.
 - **verification**: dotnet test .\ConversorPDF.Tests\ConversorPDF.Tests.csproj -c Debug --no-build --filter "FullyQualifiedName~AgGeneradorHorariosReplayTests"
-- **evidence**: _evidence/20261117-t3/summary.md
-- **status**: done
-- **log**: Construido AgCorrida105Fixture con volúmenes estructurales representativos (35 aulas, 102 asignaturas, 32 bloques, 220 docentes y 410 genes). Pruebas de replay determinista en AgGeneradorHorariosReplayTests verificando reproducibilidad bit a bit de aptitud y hash canónico, así como divergencia bajo semillas distintas.
+- **evidence**: _evidence/<timestamp>/summary.md
+- **status**: pending
+- **log**: 
 - **files edited/created**:
-  - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgCorrida105Fixture.cs
-  - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgGeneradorHorariosReplayTests.cs
 
 ### T4: Subetapas de reparación y sellado
 - **id**: T4
@@ -171,15 +160,10 @@ T1 ── T2 ── T4 ── T6 ── T8 ─┐
 - **description**: Implementar instrumentación ambiental de bajo overhead para medir subetapas de sellado: `DisponibleGrupo`, calendarios creados, sesiones proyectadas, candidatos docentes evaluados, invocaciones a `Sellar` y tiempos de sellado; diferenciar explícitamente `TiempoCruceBruto`, `TiempoSelladoEnCruce`, `TiempoCruceNeto`, `TiempoMutacionBruto`, `TiempoSelladoEnMutacion`, `TiempoMutacionNeto` y `TiempoSelladoTotal` para prevenir doble conteo.
 - **validation**: Contadores > 0 en una ejecución corta; la suma de subetapas no excede el tiempo total del operador; cero alteraciones funcionales.
 - **verification**: dotnet test .\ConversorPDF.Tests\ConversorPDF.Tests.csproj -c Debug --no-build --filter "FullyQualifiedName~AgPerfilSubetapasTests|FullyQualifiedName~AgAsignadorTerceroTests"
-- **evidence**: _evidence/20261117-t4/summary.md
-- **status**: done
-- **log**: Instrumentado AgTelemetriaSubetapas ambiental en AgAsignadorTercero.cs, AgCalendarioConflictos.cs y AgCoherenciaGrupo.cs. 11 tests verdes en AgPerfilSubetapasTests y AgAsignadorTerceroTests.
+- **evidence**: _evidence/<timestamp>/summary.md
+- **status**: pending
+- **log**: 
 - **files edited/created**:
-  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgAsignadorTercero.cs
-  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgCalendarioConflictos.cs
-  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgCoherenciaGrupo.cs
-  - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgPerfilSubetapasTests.cs
-  - _evidence/20261117-t4/summary.md
 
 ### T5: Cachés de higiene en bucles calientes
 - **id**: T5
@@ -195,19 +179,10 @@ T1 ── T2 ── T4 ── T6 ── T8 ─┐
 - **description**: Precalcular estructuras invariantes en `AgContexto`: `TimeSpan` por bloque, `HorarioTexto`, diccionarios `ProgramasPorId` y mapeo de unidad por aula; normalizar cadenas de ciudad una sola vez por gen; eliminar closures/LINQ en bucles críticos cuando `SesionesConservadas` está vacío; garantizar que no se alteren fechas efectivas ni ocupaciones.
 - **validation**: Mismas sesiones, fechas y clasificaciones que antes en fixtures de prueba; reducción medible en asignación de memoria y tiempo; pruebas existentes pasando.
 - **verification**: dotnet test .\ConversorPDF.Tests\ConversorPDF.Tests.csproj -c Debug --no-build --filter "FullyQualifiedName~AgProyeccionHigieneTests|FullyQualifiedName~AgExpansorSesionesTests"
-- **evidence**: _evidence/20261117-t5/summary.md
-- **status**: done
-- **log**: Precalculados TimeSpan y HorarioTexto en AgBloqueHorario, agregados índices ProgramasPorId y UnidadHorasPorAulaId en AgContexto, caché thread-safe en NormalizarCiudad, eliminación de closures LINQ en DisponibleGrupo y optimizaciones en BloquesSeSolapan. 8 tests verdes en AgProyeccionHigieneTests y AgExpansorSesionesTests.
+- **evidence**: _evidence/<timestamp>/summary.md
+- **status**: pending
+- **log**: 
 - **files edited/created**:
-  - ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgBloqueHorario.cs
-  - ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgContexto.cs
-  - ConversorPDF.XLL/Academic/Application/Services/CalculadoraViaticaSesion.cs
-  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgExpansorSesiones.cs
-  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgAsignadorTercero.cs
-  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgCalendarioConflictos.cs
-  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgCoherenciaGrupo.cs
-  - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgProyeccionHigieneTests.cs
-  - _evidence/20261117-t5/summary.md
 
 ### T6: Quick wins de reparación y validación
 - **id**: T6
@@ -223,16 +198,10 @@ T1 ── T2 ── T4 ── T6 ── T8 ─┐
 - **description**: Modificar `Mutar` para retornar `bool cambios` y omitir `Sellar` si no hubo mutación efectiva; evitar reparación de hijos en cruce si OX no modificó asignaciones; incorporar bandera `incluirDetalleJson` (`false` durante búsqueda generacional, `true` únicamente en evaluación del campeón final); no reevaluar clones exactos; preservar rigurosamente el orden de llamadas a `Random`.
 - **validation**: Trayectoria sembrada idéntica en corrida de verificación; reducción en conteo de serializaciones JSON y sellados redundantes; pruebas en verde.
 - **verification**: dotnet test .\ConversorPDF.Tests\ConversorPDF.Tests.csproj -c Debug --no-build --filter "FullyQualifiedName~AgQuickWinsTests|FullyQualifiedName~AgOperadorCruceTests|FullyQualifiedName~AgOperadorMutacionTests"
-- **evidence**: _evidence/20261117-t6/summary.md
-- **status**: done
-- **log**: Mutar retorna bool y omite Sellar sin mutaciones; HeredarOX detecta cambios y omite reparación de clones en Cruzar; bandera IncluirDetalleJson en AgValidadorReglas y AgEvaluadorAptitud; omisión de reevaluación de clones no modificados. 19 tests verdes en AgQuickWinsTests y operadores.
+- **evidence**: _evidence/<timestamp>/summary.md
+- **status**: pending
+- **log**: 
 - **files edited/created**:
-  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgOperadorCruce.cs
-  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgOperadorMutacion.cs
-  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgValidadorReglas.cs
-  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgEvaluadorAptitud.cs
-  - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgQuickWinsTests.cs
-  - _evidence/20261117-t6/summary.md
 
 ### T7: Proyección ligera para búsqueda
 - **id**: T7
@@ -246,14 +215,10 @@ T1 ── T2 ── T4 ── T6 ── T8 ─┐
 - **description**: Desacoplar la proyección de fechas e intervalos de ocupación (`Ocupacion`) de la instanciación pesada de objetos `AgSesion`; implementar constructor ligero anidado en `AgCalendarioConflictos.cs` para el camino crítico de validación y sellado; mantener intacto el método `Expandir` completo para la materialización final de horarios.
 - **validation**: Equivalencia estricta: fechas, intervalos de tiempo, cardinalidad y detección de cruces idénticos a la proyección completa; materialización final inalterada; mejora medible de rendimiento.
 - **verification**: dotnet test .\ConversorPDF.Tests\ConversorPDF.Tests.csproj -c Debug --no-build --filter "FullyQualifiedName~AgProyeccionLigeraTests|FullyQualifiedName~AgCalendarioConflictosTests"
-- **evidence**: _evidence/20261117-t7/summary.md
-- **status**: done
-- **log**: Desacoplado ProyectarFechas en AgExpansorSesiones evitando la instanciación de AgSesion en el camino crítico de AgCalendarioConflictos. 30 tests verdes en AgProyeccionLigeraTests y AgCalendarioConflictosTests.
+- **evidence**: _evidence/<timestamp>/summary.md
+- **status**: pending
+- **log**: 
 - **files edited/created**:
-  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgExpansorSesiones.cs
-  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgCalendarioConflictos.cs
-  - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgProyeccionLigeraTests.cs
-  - _evidence/20261117-t7/summary.md
 
 ### T8: Índice por individuo y reparación sucia
 - **id**: T8
@@ -268,10 +233,14 @@ T1 ── T2 ── T4 ── T6 ── T8 ─┐
 - **description**: Introducir clase interna `AgProyeccionIndividuo` dentro de `AgAsignadorTercero.cs` para mantener índices de ocupación por gen, grupos y docentes; implementar reparación incremental acotada al conjunto sucio conservador (genes modificados por OX, genes con el mismo `ClaveGrupo`, genes del mismo docente, genes que comparten cohorte/aula/fecha y genes con cambios de bloque/fechas); preservar el orden canónico de reparación y consumo de `Random`; en modo Debug, verificar equivalencia contra reparación completa abortando si difieren.
 - **validation**: En fixtures deterministas, la reparación incremental y la reparación completa producen exactamente las mismas decisiones docentes y el mismo fitness; sin inconsistencias de caché; ganancia sustancial de tiempo en `DisponibleGrupo`.
 - **verification**: dotnet test .\ConversorPDF.Tests\ConversorPDF.Tests.csproj -c Debug --no-build --filter "FullyQualifiedName~AgIndiceIndividuoTests|FullyQualifiedName~AgValidadorReglasTests"
-- **evidence**: _evidence/<timestamp>/summary.md
-- **status**: pending
-- **log**: 
+- **evidence**: _evidence/20261117-t8/summary.md
+- **status**: done
+- **log**: Introducida clase interna AgProyeccionIndividuo en AgAsignadorTercero.cs para indexación O(1) de ocupaciones y resolución de conflictos. Reparación con conjunto sucio conservador en AgOperadorCruce.cs. 40 tests verdes en AgIndiceIndividuoTests y AgValidadorReglasTests.
 - **files edited/created**:
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgAsignadorTercero.cs
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgOperadorCruce.cs
+  - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgIndiceIndividuoTests.cs
+  - _evidence/20261117-t8/summary.md
 
 ### T9: Huella y caché de aptitud
 - **id**: T9
