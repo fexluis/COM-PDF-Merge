@@ -29,15 +29,31 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         public AgGeneradorHorarios(
             IAgValidadorVentana validadorVentana,
             IAgEvaluadorAptitud evaluadorAptitud)
+            : this(validadorVentana, evaluadorAptitud, (Random)null)
+        {
+        }
+
+        public AgGeneradorHorarios(
+            IAgValidadorVentana validadorVentana,
+            IAgEvaluadorAptitud evaluadorAptitud,
+            int seed)
+            : this(validadorVentana, evaluadorAptitud, new Random(seed))
+        {
+        }
+
+        public AgGeneradorHorarios(
+            IAgValidadorVentana validadorVentana,
+            IAgEvaluadorAptitud evaluadorAptitud,
+            Random random)
         {
             _validadorVentana = validadorVentana ?? throw new ArgumentNullException(nameof(validadorVentana));
             _evaluadorAptitud = evaluadorAptitud ?? throw new ArgumentNullException(nameof(evaluadorAptitud));
 
-            _fabricaIndividuos = new AgFabricaIndividuos();
-            _operadorSeleccion = new AgOperadorSeleccion();
-            var asignador = new AgAsignadorTercero();
-            _operadorCruce = new AgOperadorCruce(new Random(), asignador);
-            _operadorMutacion = new AgOperadorMutacion();
+            _fabricaIndividuos = random != null ? new AgFabricaIndividuos(random) : new AgFabricaIndividuos();
+            _operadorSeleccion = random != null ? new AgOperadorSeleccion(random) : new AgOperadorSeleccion();
+            var asignador = random != null ? new AgAsignadorTercero(random) : new AgAsignadorTercero();
+            _operadorCruce = new AgOperadorCruce(random ?? new Random(), asignador);
+            _operadorMutacion = random != null ? new AgOperadorMutacion(random) : new AgOperadorMutacion();
         }
 
         public async Task<Result<AgResultadoCorrida>> EjecutarOptimizacionAsync(
@@ -64,141 +80,211 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     return Result.Failure<AgResultadoCorrida>(aprobadas.Error);
 
                 // 1. Diagnóstico de Factibilidad Pre-vuelo
+                var swFact = Stopwatch.StartNew();
                 var factibilidadResult = await _validadorVentana.ValidarFactibilidadAsync(contexto, ct);
-            if (factibilidadResult.IsFailure)
-            {
-                return Result.Failure<AgResultadoCorrida>($"Fallo en validación de factibilidad: {factibilidadResult.Error}");
-            }
+                swFact.Stop();
+                resultado.TiempoFactibilidadMs = swFact.ElapsedMilliseconds;
 
-            var informe = factibilidadResult.Value;
-            if (!informe.EsFactible)
-            {
-                string errores = string.Join("\n• ", informe.BloqueosCriticos);
-                // F1601: Se reemplaza «inviabilidad matemática» por «bloqueos de factibilidad detectados»
-                return Result.Failure<AgResultadoCorrida>($"Corrida abortada por bloqueos de factibilidad detectados:\n• {errores}");
-            }
-
-            // 2. Construir Índices de Contexto
-            contexto.ConstruirIndices();
-
-            // 3. Inicializar Población
-            var poblacion = new List<AgIndividuo>(poblacionTamano);
-            for (int i = 0; i < poblacionTamano; i++)
-            {
-                ct.ThrowIfCancellationRequested();
-                var ind = _fabricaIndividuos.CrearAleatorio(contexto, resultado.IdCorrida, 0);
-                _evaluadorAptitud.EvaluarAptitud(ind, contexto);
-                poblacion.Add(ind);
-            }
-
-            AgIndividuo mejorGlobal = poblacion.OrderByDescending(ind => ind.Fitness).First().Clonar();
-            double mejorHist = double.NegativeInfinity;
-            int estancadas = 0;
-
-            // 4. Bucle Evolutivo
-            for (int gen = 1; gen <= generacionesMax; gen++)
-            {
-                ct.ThrowIfCancellationRequested();
-                var swGen = Stopwatch.StartNew();
-
-                // Ordenar población por fitness descendente
-                poblacion = poblacion.OrderByDescending(ind => ind.Fitness).ToList();
-
-                var mejorGen = poblacion[0];
-                if (mejorGen.Fitness > mejorGlobal.Fitness)
+                if (factibilidadResult.IsFailure)
                 {
-                    mejorGlobal = mejorGen.Clonar();
+                    return Result.Failure<AgResultadoCorrida>($"Fallo en validación de factibilidad: {factibilidadResult.Error}");
                 }
 
-                if (mejorGlobal.Fitness > mejorHist + 1e-9)
+                var informe = factibilidadResult.Value;
+                if (!informe.EsFactible)
                 {
-                    mejorHist = mejorGlobal.Fitness;
-                    estancadas = 0;
-                }
-                else
-                {
-                    estancadas++;
+                    string errores = string.Join("\n• ", informe.BloqueosCriticos);
+                    return Result.Failure<AgResultadoCorrida>($"Corrida abortada por bloqueos de factibilidad detectados:\n• {errores}");
                 }
 
-                // Bitácora de convergencia
-                double promedioFit = poblacion.Average(ind => ind.Fitness);
-                var bitacora = new AgBitacora
-                {
-                    Generacion = gen,
-                    MejorFitness = mejorGen.Fitness,
-                    PromedioFitness = promedioFit,
-                    HardViolations = mejorGen.HardViolations,
-                    DuracionMs = swGen.ElapsedMilliseconds,
-                    Subunidad = contexto.Subunidad
-                };
-                resultado.HistorialConvergencia.Add(bitacora);
+                // 2. Construir Índices de Contexto
+                var swIndices = Stopwatch.StartNew();
+                contexto.ConstruirIndices();
+                swIndices.Stop();
+                resultado.TiempoIndicesMs = swIndices.ElapsedMilliseconds;
 
-                // Reportar progreso UI
-                progreso?.Report((gen, mejorGen.Fitness, mejorGen.HardViolations, $"Generación {gen}/{generacionesMax} - Mejor Fitness: {mejorGen.Fitness:F4} (Hard: {mejorGen.HardViolations})"));
-
-                // Condición de parada por umbral
-                bool sinViolaciones = mejorGlobal.HardViolations == 0;
-                bool alcanzoUmbral = umbralFitness > 0 && mejorGlobal.Fitness >= umbralFitness;
-                if (sinViolaciones && alcanzoUmbral)
+                // 3. Inicializar Población
+                var swPob = Stopwatch.StartNew();
+                var poblacion = new List<AgIndividuo>(poblacionTamano);
+                for (int i = 0; i < poblacionTamano; i++)
                 {
-                    LoggerHelper.Info($"[AgGeneradorHorarios] Óptimo alcanzado en gen {gen}: Fitness={mejorGlobal.Fitness:F4}");
-                    resultado.GeneracionesEjecutadas = gen;
-                    break;
+                    ct.ThrowIfCancellationRequested();
+                    var ind = _fabricaIndividuos.CrearAleatorio(contexto, resultado.IdCorrida, 0);
+                    _evaluadorAptitud.EvaluarAptitud(ind, contexto);
+                    poblacion.Add(ind);
                 }
+                swPob.Stop();
+                resultado.TiempoPoblacionInicialMs = swPob.ElapsedMilliseconds;
 
-                // Condición de parada por estancamiento
-                if (estancamientoMax > 0 && estancadas >= estancamientoMax)
+                var swPrimerCiclo = Stopwatch.StartNew();
+                AgIndividuo mejorGlobal = poblacion.OrderByDescending(ind => ind.Fitness).First().Clonar();
+                double mejorHist = double.NegativeInfinity;
+                int estancadas = 0;
+                long duracionUltimaTransicionMs = resultado.TiempoPoblacionInicialMs;
+
+                // 4. Bucle Evolutivo
+                for (int gen = 1; gen <= generacionesMax; gen++)
                 {
-                    LoggerHelper.Info($"[AgGeneradorHorarios] Estancamiento ({estancadas} generaciones) alcanzado en gen {gen}. Fin.");
-                    resultado.GeneracionesEjecutadas = gen;
-                    break;
-                }
+                    ct.ThrowIfCancellationRequested();
 
-                if (gen == generacionesMax)
-                {
-                    resultado.GeneracionesEjecutadas = gen;
-                    break;
-                }
+                    // Ordenar población por fitness descendente
+                    poblacion = poblacion.OrderByDescending(ind => ind.Fitness).ToList();
 
-                // Crear nueva generación
-                var nuevaPoblacion = new List<AgIndividuo>(poblacionTamano);
-
-                // Elitismo
-                int eliteCount = Math.Min(elitismo, poblacion.Count);
-                for (int e = 0; e < eliteCount; e++)
-                {
-                    nuevaPoblacion.Add(poblacion[e].Clonar());
-                }
-
-                // Reproducción (Selección + Cruce + Mutación)
-                while (nuevaPoblacion.Count < poblacionTamano)
-                {
-                    var padre1 = _operadorSeleccion.SeleccionarPorTorneo(poblacion);
-                    var padre2 = _operadorSeleccion.SeleccionarPorTorneo(poblacion);
-
-                    var (hijo1, hijo2) = _operadorCruce.Cruzar(padre1, padre2, tasaCruce, gen, contexto);
-
-                    _operadorMutacion.Mutar(hijo1, tasaMutacion, contexto);
-                    _operadorMutacion.Mutar(hijo2, tasaMutacion, contexto);
-
-                    _evaluadorAptitud.EvaluarAptitud(hijo1, contexto);
-                    _evaluadorAptitud.EvaluarAptitud(hijo2, contexto);
-
-                    nuevaPoblacion.Add(hijo1);
-                    if (nuevaPoblacion.Count < poblacionTamano)
+                    var mejorGen = poblacion[0];
+                    var peorGen = poblacion[poblacion.Count - 1];
+                    if (mejorGen.Fitness > mejorGlobal.Fitness)
                     {
-                        nuevaPoblacion.Add(hijo2);
+                        mejorGlobal = mejorGen.Clonar();
                     }
+
+                    if (mejorGlobal.Fitness > mejorHist + 1e-9)
+                    {
+                        mejorHist = mejorGlobal.Fitness;
+                        estancadas = 0;
+                    }
+                    else
+                    {
+                        estancadas++;
+                    }
+
+                    if (gen == 1 && swPrimerCiclo.IsRunning)
+                    {
+                        swPrimerCiclo.Stop();
+                        resultado.TiempoPrimerCicloMs = swPrimerCiclo.ElapsedMilliseconds;
+                    }
+
+                    // Bitácora de convergencia
+                    double promedioFit = poblacion.Average(ind => ind.Fitness);
+                    int vacantes = mejorGen.Vacantes;
+                    int fueraDeVentana = mejorGen.Genes != null ? mejorGen.Genes.Count(g => g.DentroDeVentana == 0) : 0;
+                    long duracionGenMs = gen == 1 ? (resultado.TiempoPoblacionInicialMs + resultado.TiempoPrimerCicloMs) : duracionUltimaTransicionMs;
+                    int evaluadosGen = gen == 1 ? poblacionTamano : (resultado.PerfilesGeneracion.Count > 0 ? resultado.PerfilesGeneracion[resultado.PerfilesGeneracion.Count - 1].EvaluacionesAptitud : poblacionTamano);
+
+                    var bitacora = new AgBitacora
+                    {
+                        Generacion = gen,
+                        MejorFitness = mejorGen.Fitness,
+                        PromedioFitness = promedioFit,
+                        PeorFitness = peorGen.Fitness,
+                        HardViolations = mejorGen.HardViolations,
+                        Evaluados = evaluadosGen,
+                        Vacantes = vacantes,
+                        FueraDeVentana = fueraDeVentana,
+                        DuracionMs = duracionGenMs,
+                        Subunidad = contexto.Subunidad
+                    };
+                    resultado.HistorialConvergencia.Add(bitacora);
+
+                    // Reportar progreso UI
+                    progreso?.Report((gen, mejorGen.Fitness, mejorGen.HardViolations, $"Generación {gen}/{generacionesMax} - Mejor Fitness: {mejorGen.Fitness:F4} (Hard: {mejorGen.HardViolations})"));
+
+                    // Condición de parada por umbral
+                    bool sinViolaciones = mejorGlobal.HardViolations == 0;
+                    bool alcanzoUmbral = umbralFitness > 0 && mejorGlobal.Fitness >= umbralFitness;
+                    if (sinViolaciones && alcanzoUmbral)
+                    {
+                        LoggerHelper.Info($"[AgGeneradorHorarios] Óptimo alcanzado en gen {gen}: Fitness={mejorGlobal.Fitness:F4}");
+                        resultado.GeneracionesEjecutadas = gen;
+                        break;
+                    }
+
+                    // Condición de parada por estancamiento
+                    if (estancamientoMax > 0 && estancadas >= estancamientoMax)
+                    {
+                        LoggerHelper.Info($"[AgGeneradorHorarios] Estancamiento ({estancadas} generaciones) alcanzado en gen {gen}. Fin.");
+                        resultado.GeneracionesEjecutadas = gen;
+                        break;
+                    }
+
+                    if (gen == generacionesMax)
+                    {
+                        resultado.GeneracionesEjecutadas = gen;
+                        break;
+                    }
+
+                    // Crear nueva generación y medir transición reproductiva
+                    var swTransicion = Stopwatch.StartNew();
+                    var perfil = new AgResultadoCorrida.AgPerfilGeneracion
+                    {
+                        Generacion = gen,
+                        ElitesClonados = Math.Min(elitismo, poblacion.Count),
+                        Vacantes = vacantes,
+                        FueraDeVentana = fueraDeVentana
+                    };
+
+                    long acumSel = 0, acumCruce = 0, acumMut = 0, acumEval = 0;
+                    var swOp = new Stopwatch();
+
+                    var nuevaPoblacion = new List<AgIndividuo>(poblacionTamano);
+                    for (int e = 0; e < perfil.ElitesClonados; e++)
+                    {
+                        nuevaPoblacion.Add(poblacion[e].Clonar());
+                    }
+
+                    while (nuevaPoblacion.Count < poblacionTamano)
+                    {
+                        swOp.Restart();
+                        var padre1 = _operadorSeleccion.SeleccionarPorTorneo(poblacion);
+                        var padre2 = _operadorSeleccion.SeleccionarPorTorneo(poblacion);
+                        swOp.Stop();
+                        acumSel += swOp.ElapsedMilliseconds;
+
+                        swOp.Restart();
+                        var (hijo1, hijo2) = _operadorCruce.Cruzar(padre1, padre2, tasaCruce, gen, contexto);
+                        swOp.Stop();
+                        acumCruce += swOp.ElapsedMilliseconds;
+
+                        swOp.Restart();
+                        _operadorMutacion.Mutar(hijo1, tasaMutacion, contexto);
+                        _operadorMutacion.Mutar(hijo2, tasaMutacion, contexto);
+                        swOp.Stop();
+                        acumMut += swOp.ElapsedMilliseconds;
+
+                        swOp.Restart();
+                        _evaluadorAptitud.EvaluarAptitud(hijo1, contexto);
+                        _evaluadorAptitud.EvaluarAptitud(hijo2, contexto);
+                        swOp.Stop();
+                        acumEval += swOp.ElapsedMilliseconds;
+
+                        perfil.HijosCreados += 2;
+                        perfil.EvaluacionesAptitud += 2;
+
+                        nuevaPoblacion.Add(hijo1);
+                        perfil.HijosIncorporados++;
+
+                        if (nuevaPoblacion.Count < poblacionTamano)
+                        {
+                            nuevaPoblacion.Add(hijo2);
+                            perfil.HijosIncorporados++;
+                        }
+                        else
+                        {
+                            perfil.EvaluacionesExtraPorCupoImpar++;
+                        }
+                    }
+
+                    swTransicion.Stop();
+                    duracionUltimaTransicionMs = swTransicion.ElapsedMilliseconds;
+                    perfil.DuracionTotalMs = duracionUltimaTransicionMs;
+                    perfil.TiempoSeleccionMs = acumSel;
+                    perfil.TiempoCruceNetoMs = acumCruce;
+                    perfil.TiempoMutacionNetoMs = acumMut;
+                    perfil.TiempoEvaluacionMs = acumEval;
+                    resultado.PerfilesGeneracion.Add(perfil);
+
+                    LoggerHelper.Info($"[AG-PERF] Gen {gen}->{gen + 1}: Duracion={perfil.DuracionTotalMs}ms | Sel={perfil.TiempoSeleccionMs}ms, CruceNeto={perfil.TiempoCruceNetoMs}ms, MutNeto={perfil.TiempoMutacionNetoMs}ms, Eval={perfil.TiempoEvaluacionMs}ms | Evals={perfil.EvaluacionesAptitud} (Hijos={perfil.HijosCreados}, Incorp={perfil.HijosIncorporados}, Elites={perfil.ElitesClonados}, Impar={perfil.EvaluacionesExtraPorCupoImpar}) | MejorFit={mejorGen.Fitness:F4}, PeorFit={peorGen.Fitness:F4}, Vac={vacantes}");
+
+                    poblacion = nuevaPoblacion;
                 }
 
-                poblacion = nuevaPoblacion;
-            }
+                stopwatch.Stop();
 
-            stopwatch.Stop();
-
-            // Fase 582: sellado canónico + re-evaluación del campeón antes de publicarse
-            AgCoherenciaGrupo.Sellar(mejorGlobal, contexto);
-            _evaluadorAptitud.EvaluarAptitud(mejorGlobal, contexto);
+                // Fase 582: sellado canónico + re-evaluación del campeón antes de publicarse
+                var swCamp = Stopwatch.StartNew();
+                AgCoherenciaGrupo.Sellar(mejorGlobal, contexto);
+                _evaluadorAptitud.EvaluarAptitud(mejorGlobal, contexto);
+                swCamp.Stop();
+                resultado.TiempoCampeonFinalMs = swCamp.ElapsedMilliseconds;
 
             mejorGlobal.Estado = mejorGlobal.HardViolations == 0
                 ? AgEstadoIndividuo.Optimo

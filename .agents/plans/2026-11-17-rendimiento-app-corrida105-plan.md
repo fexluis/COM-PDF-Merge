@@ -132,10 +132,13 @@ T1 ── T2 ── T4 ── T6 ── T8 ─┐
 - **description**: Corregir el cronómetro generacional (`DuracionMs` real); declarar `AgPerfilGeneracion` como clase interna dentro de `AgResultadoCorrida.cs`; poblar métricas generacionales (`PeorFitness`, `Evaluados`, `Vacantes`, `FueraDeVentana`); emitir línea estructurada `[AG-PERF]`; medir subtiempos de inicialización (factibilidad interna, índices, población inicial, primer ciclo) y de ciclo reproductivo (selección, cruce neto, mutación neta, sellado en cruce/mutación, evaluación, reemplazo élite, campeón final); contar `EvaluacionesAptitud`, `HijosCreados`, `HijosIncorporados`, `ElitesClonados`, `EvaluacionesExtraPorCupoImpar`, genes y transiciones.
 - **validation**: `DuracionMs` coincide con el tiempo real de pared; la suma de etapas parciales cuadra con el tiempo total reportado; sin cambios funcionales en los resultados de programación.
 - **verification**: dotnet test .\ConversorPDF.Tests\ConversorPDF.Tests.csproj -c Debug --no-build --filter "FullyQualifiedName~AgPerfilGeneracionTests|FullyQualifiedName~AgGeneradorHorariosTests"
-- **evidence**: _evidence/<timestamp>/summary.md
-- **status**: pending
-- **log**: 
+- **evidence**: _evidence/20261117-t2/summary.md
+- **status**: done
+- **log**: Corregido DuracionMs en bitácora para medir la duración generacional real. Incorporada clase interna AgPerfilGeneracion en AgResultadoCorrida con desglose de subetapas y contadores poblacionales. Poblados PeorFitness, Evaluados, Vacantes y FueraDeVentana. Emisión de línea [AG-PERF]. Pruebas unitarias en AgPerfilGeneracionTests superadas.
 - **files edited/created**:
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgGeneradorHorarios.cs
+  - ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgResultadoCorrida.cs
+  - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgPerfilGeneracionTests.cs
 
 ### T3: Arnés de replay y baseline sembrado
 - **id**: T3
