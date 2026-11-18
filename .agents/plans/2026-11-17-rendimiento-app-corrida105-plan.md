@@ -151,10 +151,12 @@ T1 ── T2 ── T4 ── T6 ── T8 ─┐
 - **description**: Construir un contexto determinista representativo de la Corrida #105 (35 aulas, 102 asignaturas, 199 relaciones, 410 genes, 32 bloques, pool de 220 docentes) o cargar fixture serializado en memoria; ejecutar un número controlado de generaciones con semilla fija; registrar la trayectoria de fitness por generación, desglose de violaciones por regla, hash canónico del horario final y volúmenes esperados (410 genes, 2.228 sesiones, 8.912 h, 199 vinculaciones, 336 vacantes, HARD=0).
 - **validation**: Ejecución determinista 100 % repetible; el baseline sembrado coincide con la salida del código base actual; tiempo de ejecución acotado para CI/tests.
 - **verification**: dotnet test .\ConversorPDF.Tests\ConversorPDF.Tests.csproj -c Debug --no-build --filter "FullyQualifiedName~AgGeneradorHorariosReplayTests"
-- **evidence**: _evidence/<timestamp>/summary.md
-- **status**: pending
-- **log**: 
+- **evidence**: _evidence/20261117-t3/summary.md
+- **status**: done
+- **log**: Construido AgCorrida105Fixture con volúmenes estructurales representativos (35 aulas, 102 asignaturas, 32 bloques, 220 docentes y 410 genes). Pruebas de replay determinista en AgGeneradorHorariosReplayTests verificando reproducibilidad bit a bit de aptitud y hash canónico, así como divergencia bajo semillas distintas.
 - **files edited/created**:
+  - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgCorrida105Fixture.cs
+  - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgGeneradorHorariosReplayTests.cs
 
 ### T4: Subetapas de reparación y sellado
 - **id**: T4
