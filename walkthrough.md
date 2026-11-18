@@ -938,6 +938,123 @@ cualquier dependencia nueva vuelva a quedar fuera del add-in instalado.
 | F1940 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `SemestresExcelExporter.cs:819, 842`, `SemestresExcelExporterTests.cs:210-234` |
 | F1941 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `FormVinculaciones.cs:867-888` |
 
+---
+
+## Ronda 433 — Semilla Determinista y Flujos RNG en Algoritmo Genético (Fase 1942 / Wave 1 - T1)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1942 (T1) — Sobrecargas con Semilla Entera y Flujos RNG Desacoplados
+- **Archivos:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgOperadorCruce.cs`, `AgOperadorMutacion.cs`, `AgOperadorSeleccion.cs`, `AgFabricaIndividuos.cs`, `AgAsignadorTercero.cs`, `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgRandomSeedTests.cs`
+- **Cambio:** Incorporadas sobrecargas de constructor con `int seed` preservando el orden exacto de llamadas a `Random`. Pruebas unitarias en verde garantizando determinismo bit a bit cuando se provee la misma semilla.
+
+### Verificación de Principios (Ronda 433)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1942 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgRandomSeedTests.cs`, `_evidence/20261117-t1/summary.md` |
+
+---
+
+## Ronda 434 — Telemetría Generacional y Arnés de Replay Sembrado (Fases 1943–1944 / Wave 2 - T2, T3)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1943 (T2) — Telemetría Generacional Estructurada [AG-PERF]
+- **Archivos:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgGeneradorHorarios.cs`, `ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgResultadoCorrida.cs`, `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgPerfilGeneracionTests.cs`
+- **Cambio:** Corregida la ventana de medición de `DuracionMs` en `AgGeneradorHorarios`. Definida la clase interna `AgPerfilGeneracion` en `AgResultadoCorrida.cs` y emitida línea estructurada `[AG-PERF]`.
+
+#### 2. Fase 1944 (T3) — Arnés de Replay y Fixture Corrida #105
+- **Archivos:** `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgCorrida105Fixture.cs`, `AgGeneradorHorariosReplayTests.cs`
+- **Cambio:** Creado fixture determinista con 35 aulas, 102 asignaturas, 32 bloques, 220 docentes y 410 genes. Pruebas de replay determinista con validación de hash SHA-256 canónico.
+
+### Verificación de Principios (Ronda 434)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1943 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPerfilGeneracionTests.cs`, `_evidence/20261117-t2/summary.md` |
+| F1944 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgGeneradorHorariosReplayTests.cs`, `_evidence/20261117-t3/summary.md` |
+
+---
+
+## Ronda 435 — Subetapas de Reparación/Sellado y Cachés de Higiene (Fases 1945–1946 / Wave 3 - T4, T5)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1945 (T4) — Instrumentación de Subetapas de Reparación y Sellado
+- **Archivos:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgAsignadorTercero.cs`, `AgCalendarioConflictos.cs`, `AgCoherenciaGrupo.cs`, `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgPerfilSubetapasTests.cs`
+- **Cambio:** Contadores `ThreadStatic` en `AgTelemetriaSubetapas` para aislar tiempos de `DisponibleGrupo`, `AgCalendarioConflictos.Crear` y `AgCoherenciaGrupo.Sellar`.
+
+#### 2. Fase 1946 (T5) — Cachés de Higiene en Bucles Críticos
+- **Archivos:** `ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgBloqueHorario.cs`, `AgContexto.cs`, `CalculadoraViaticaSesion.cs`, `AgCoherenciaGrupo.cs`, `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgProyeccionHigieneTests.cs`
+- **Cambio:** Pre-cálculo de intervalos de tiempo e índices O(1) de diccionarios en `AgContexto`. Eliminación de asignaciones LINQ redundantes en `DisponibleGrupo`.
+
+### Verificación de Principios (Ronda 435)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1945 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPerfilSubetapasTests.cs`, `_evidence/20261117-t4/summary.md` |
+| F1946 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgProyeccionHigieneTests.cs`, `_evidence/20261117-t5/summary.md` |
+
+---
+
+## Ronda 436 — Quick Wins de Reparación y Proyección Ligera (Fases 1947–1948 / Wave 4 - T6, T7)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1947 (T6) — Quick Wins de Reparación y Validación
+- **Archivos:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgOperadorMutacion.cs`, `AgOperadorCruce.cs`, `AgValidadorReglas.cs`, `AgEvaluadorAptitud.cs`, `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgQuickWinsTests.cs`
+- **Cambio:** Omisión de sellado cuando no hay mutación; omisión de reparación en hijos idénticos; evaluación perezosa de JSON durante la búsqueda generacional.
+
+#### 2. Fase 1948 (T7) — Proyección Ligera de Fechas para Búsqueda
+- **Archivos:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgExpansorSesiones.cs`, `AgCalendarioConflictos.cs`, `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgProyeccionLigeraTests.cs`
+- **Cambio:** Método `ProyectarFechas` retornando `Result<List<DateTime>>` con equivalencia estricta, eliminando la instanciación innecesaria de objetos `AgSesion` durante la detección de conflictos.
+
+### Verificación de Principios (Ronda 436)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1947 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgQuickWinsTests.cs`, `_evidence/20261117-t6/summary.md` |
+| F1948 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgProyeccionLigeraTests.cs`, `_evidence/20261117-t7/summary.md` |
+
+---
+
+## Ronda 437 — Índice de Ocupación por Individuo y Huella Estructural (Fases 1949–1950 / Wave 5 - T8, T9)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1949 (T8) — Índice por Individuo y Reparación con Conjunto Sucio
+- **Archivos:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgAsignadorTercero.cs`, `AgOperadorCruce.cs`, `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgIndiceIndividuoTests.cs`
+- **Cambio:** Clase interna `AgProyeccionIndividuo` en `AgAsignadorTercero.cs` para indexación O(1) de ocupaciones por gen, grupo y docente. Reparación incremental acotada a conjunto sucio conservador.
+
+#### 2. Fase 1950 (T9) — Huella Estructural FNV-1a y Caché Generacional de Aptitud
+- **Archivos:** `ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgGen.cs`, `AgIndividuo.cs`, `AgGeneradorHorarios.cs`, `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgHuellaAptitudTests.cs`
+- **Cambio:** Huella rápida de 64 bits (FNV-1a) para individuos; caché generacional `AgEntradaCacheAptitud` en `AgGeneradorHorarios`; evaluación forzada con detalle JSON completo para el campeón final.
+
+### Verificación de Principios (Ronda 437)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1949 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgIndiceIndividuoTests.cs`, `_evidence/20261117-t8/summary.md` |
+| F1950 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgHuellaAptitudTests.cs`, `_evidence/20261117-t9/summary.md` |
+
+---
+
+## Ronda 438 — Benchmark, Equivalencia y Certificación de Rendimiento (Fase 1951 / Wave 6 - T10)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1951 (T10) — Certificación de Rendimiento y Paridad de Corrida #105
+- **Archivos:** `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgRendimientoCertificacionTests.cs`, `docs/articles/changes/2026-11-17-rendimiento-ag-corrida105.md`, `tests/baseline/test_baseline.txt`
+- **Cambio:** Suite de certificación de invariantes estructurales (410 genes, 2.228 sesiones, 8.912 h, 199 vinculaciones, 336 vacantes, HARD=0), paridad estricta de hash SHA-256 y reducción del tiempo de transición generacional a ≤ 1.0 s (≈ 400-650 ms). Suite global certificada con 1.714 pruebas superadas (0 fallos).
+
+### Verificación de Principios (Ronda 438)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1951 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgRendimientoCertificacionTests.cs`, `docs/articles/changes/2026-11-17-rendimiento-ag-corrida105.md`, `_evidence/20261117-t10/summary.md` |
+
+
 
 
 

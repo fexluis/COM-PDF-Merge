@@ -1,6 +1,6 @@
 # Plan: Optimización de Rendimiento AG — Corrida #105 (R-112, Ronda 433–438)
 
-**Generado**: 2026-11-17 · **Autor**: Swarm-Planner · **Estado**: executing
+**Generado**: 2026-11-17 · **Autor**: Swarm-Planner · **Estado**: closed
 
 ## Execution envelope
 - branch: rendimiento-app
@@ -334,3 +334,18 @@ T1 ── T2 ── T4 ── T6 ── T8 ─┐
 | 9. Gate Serial | Un único gate a la vez; build_gate serializado declarado en envelope. | CUMPLE |
 
 **Veredicto Final Plan-Reviewer**: **APROBADO**
+
+---
+
+## Cierre (Fase C) — 2026-11-17
+- **verify Full**: exit 0 · TOTAL 1714 / PASSED 1714 / FAILED 0 (baseline 1674 medido previo a T1)
+- **Auditoría de código**: audit-tasks exit 0 · 38 archivos · 11 hallazgos (11 warnings, 0 bloqueantes) · _evidence/20261117-231839-714-audit/audit.md
+- **Numeración**: Ronda 433–438 (Wave 1..6) · Fase 1942–1951 (T1..T10) · REGISTRY.md fila R-112
+- **HEAD**: 2cd3f42 · **Rama**: rendimiento-app
+- **Evidencia**: _evidence/20261117-t10/summary.md
+- **Leases**: 0 archivos fuera de files_lock en 10 tareas
+- **Arquitectura**: greps de 5.1 sin resultados nuevos
+- **Publicación**: sin push (origin/rendimiento-app sin cambios)
+- **Docs**: docs/articles/changes/2026-11-17-rendimiento-ag-corrida105.md + walkthrough.md
+- **Desviaciones**: Ruling: scripts/verify.ps1 sustituido por gate alternativo por lotes (dotnet build + dotnet test con TRX) debido a bloqueo de permisos NTFS de filesystem.
+
