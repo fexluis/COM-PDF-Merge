@@ -255,10 +255,15 @@ T1 ── T2 ── T4 ── T6 ── T8 ─┐
 - **description**: Implementar cálculo de huella estructural rápida para individuos; almacenar en caché generacional y reutilizar fitness/violaciones únicamente para individuos con idéntica huella estructural; registrar contador de duplicados; garantizar que la evaluación final del campeón genere siempre el desglose completo.
 - **validation**: Fitness recuperado de la caché es idéntico bit a bit al fitness recalculado; porcentaje de aciertos en caché > 0 conforme la población converge; sin mutación de la trayectoria generacional.
 - **verification**: dotnet test .\ConversorPDF.Tests\ConversorPDF.Tests.csproj -c Debug --no-build --filter "FullyQualifiedName~AgHuellaAptitudTests"
-- **evidence**: _evidence/<timestamp>/summary.md
-- **status**: pending
-- **log**: 
+- **evidence**: _evidence/20261117-t9/summary.md
+- **status**: done
+- **log**: Implementada huella estructural FNV-1a en AgGen y AgIndividuo. Caché generacional de aptitud en AgGeneradorHorarios con evaluación forzada con detalle JSON para el campeón final. 9 tests en AgHuellaAptitudTests y tests de replay en verde (2 s).
 - **files edited/created**:
+  - ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgGen.cs
+  - ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgIndividuo.cs
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgGeneradorHorarios.cs
+  - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgHuellaAptitudTests.cs
+  - _evidence/20261117-t9/summary.md
 
 ### T10: Benchmark, equivalencia y certificación
 - **id**: T10

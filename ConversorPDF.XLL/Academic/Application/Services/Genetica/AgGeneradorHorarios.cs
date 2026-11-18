@@ -105,6 +105,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 
                 // 3. Inicializar Población
                 var swPob = Stopwatch.StartNew();
+                var cacheAptitud = new Dictionary<long, AgEntradaCacheAptitud>();
                 var poblacion = new List<AgIndividuo>(poblacionTamano);
                 for (int i = 0; i < poblacionTamano; i++)
                 {
@@ -112,6 +113,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     var ind = _fabricaIndividuos.CrearAleatorio(contexto, resultado.IdCorrida, 0);
                     _evaluadorAptitud.EvaluarAptitud(ind, contexto);
                     poblacion.Add(ind);
+                    cacheAptitud[ind.CalcularHuellaEstructural()] = new AgEntradaCacheAptitud(ind);
                 }
                 swPob.Stop();
                 resultado.TiempoPoblacionInicialMs = swPob.ElapsedMilliseconds;
@@ -213,6 +215,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     };
 
                     long acumSel = 0, acumCruce = 0, acumMut = 0, acumEval = 0;
+                    int aciertosGen = 0;
                     var swOp = new Stopwatch();
 
                     var nuevaPoblacion = new List<AgIndividuo>(poblacionTamano);
@@ -241,8 +244,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         acumMut += swOp.ElapsedMilliseconds;
 
                         swOp.Restart();
-                        _evaluadorAptitud.EvaluarAptitud(hijo1, contexto);
-                        _evaluadorAptitud.EvaluarAptitud(hijo2, contexto);
+                        EvaluarConCache(hijo1, contexto, cacheAptitud, ref aciertosGen);
+                        EvaluarConCache(hijo2, contexto, cacheAptitud, ref aciertosGen);
                         swOp.Stop();
                         acumEval += swOp.ElapsedMilliseconds;
 
@@ -272,7 +275,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     perfil.TiempoEvaluacionMs = acumEval;
                     resultado.PerfilesGeneracion.Add(perfil);
 
-                    LoggerHelper.Info($"[AG-PERF] Gen {gen}->{gen + 1}: Duracion={perfil.DuracionTotalMs}ms | Sel={perfil.TiempoSeleccionMs}ms, CruceNeto={perfil.TiempoCruceNetoMs}ms, MutNeto={perfil.TiempoMutacionNetoMs}ms, Eval={perfil.TiempoEvaluacionMs}ms | Evals={perfil.EvaluacionesAptitud} (Hijos={perfil.HijosCreados}, Incorp={perfil.HijosIncorporados}, Elites={perfil.ElitesClonados}, Impar={perfil.EvaluacionesExtraPorCupoImpar}) | MejorFit={mejorGen.Fitness:F4}, PeorFit={peorGen.Fitness:F4}, Vac={vacantes}");
+                    LoggerHelper.Info($"[AG-PERF] Gen {gen}->{gen + 1}: Duracion={perfil.DuracionTotalMs}ms | Sel={perfil.TiempoSeleccionMs}ms, CruceNeto={perfil.TiempoCruceNetoMs}ms, MutNeto={perfil.TiempoMutacionNetoMs}ms, Eval={perfil.TiempoEvaluacionMs}ms | Evals={perfil.EvaluacionesAptitud} (Hijos={perfil.HijosCreados}, Incorp={perfil.HijosIncorporados}, Elites={perfil.ElitesClonados}, Impar={perfil.EvaluacionesExtraPorCupoImpar}, CacheHits={aciertosGen}) | MejorFit={mejorGen.Fitness:F4}, PeorFit={peorGen.Fitness:F4}, Vac={vacantes}");
 
                     poblacion = nuevaPoblacion;
                 }
@@ -282,7 +285,14 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 // Fase 582: sellado canónico + re-evaluación del campeón antes de publicarse
                 var swCamp = Stopwatch.StartNew();
                 AgCoherenciaGrupo.Sellar(mejorGlobal, contexto);
-                _evaluadorAptitud.EvaluarAptitud(mejorGlobal, contexto);
+                if (_evaluadorAptitud is AgEvaluadorAptitud evalApt)
+                {
+                    evalApt.EvaluarAptitud(mejorGlobal, contexto, forzar: true, incluirDetalleJson: true);
+                }
+                else
+                {
+                    _evaluadorAptitud.EvaluarAptitud(mejorGlobal, contexto);
+                }
                 swCamp.Stop();
                 resultado.TiempoCampeonFinalMs = swCamp.ElapsedMilliseconds;
 
@@ -376,6 +386,63 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         "El escalador no modifica aulas aprobadas.");
             }
             return Result.Success();
+        }
+
+        private void EvaluarConCache(
+            AgIndividuo individuo,
+            AgContexto contexto,
+            Dictionary<long, AgEntradaCacheAptitud> cacheAptitud,
+            ref int aciertosCache)
+        {
+            if (individuo == null) return;
+
+            // Clones exactos ya evaluados en su progenitor
+            if (individuo.Estado != AgEstadoIndividuo.NoEvaluado)
+            {
+                return;
+            }
+
+            long huella = individuo.CalcularHuellaEstructural();
+            if (cacheAptitud != null && cacheAptitud.TryGetValue(huella, out var entrada))
+            {
+                entrada.AplicarA(individuo);
+                aciertosCache++;
+                return;
+            }
+
+            _evaluadorAptitud.EvaluarAptitud(individuo, contexto);
+
+            if (cacheAptitud != null)
+            {
+                cacheAptitud[huella] = new AgEntradaCacheAptitud(individuo);
+            }
+        }
+
+        private struct AgEntradaCacheAptitud
+        {
+            public readonly double Fitness;
+            public readonly int HardViolations;
+            public readonly double SoftViolations;
+            public readonly AgEstadoIndividuo Estado;
+            public readonly List<AgViolacion> Violaciones;
+
+            public AgEntradaCacheAptitud(AgIndividuo ind)
+            {
+                Fitness = ind.Fitness;
+                HardViolations = ind.HardViolations;
+                SoftViolations = ind.SoftViolations;
+                Estado = ind.Estado;
+                Violaciones = ind.Violaciones != null ? new List<AgViolacion>(ind.Violaciones) : new List<AgViolacion>();
+            }
+
+            public void AplicarA(AgIndividuo ind)
+            {
+                ind.Fitness = Fitness;
+                ind.HardViolations = HardViolations;
+                ind.SoftViolations = SoftViolations;
+                ind.Estado = Estado;
+                ind.Violaciones = new List<AgViolacion>(Violaciones);
+            }
         }
     }
 }

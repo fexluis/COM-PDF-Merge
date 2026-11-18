@@ -193,6 +193,52 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
             };
         }
 
+        public long CalcularHuellaEstructural()
+        {
+            unchecked
+            {
+                ulong hash = 14695981039346656037UL;
+                const ulong prime = 1099511628211UL;
+
+                hash = (hash ^ (ulong)IdAsignatura) * prime;
+                hash = (hash ^ (ulong)IdAula) * prime;
+                hash = (hash ^ (ulong)IdBloqueHorario) * prime;
+                hash = (hash ^ (ulong)(uint)IdTercero) * prime;
+                hash = (hash ^ (ulong)EsVacante) * prime;
+                hash = (hash ^ (ulong)DiaSemana) * prime;
+                hash = (hash ^ (ulong)EsFijo) * prime;
+                hash = (hash ^ (ulong)(EsFijoTemporal ? 1 : 0)) * prime;
+                hash = (hash ^ (ulong)IndiceDiaPatron) * prime;
+                hash = (hash ^ (ulong)IdPrograma) * prime;
+                hash = (hash ^ (ulong)IdSede) * prime;
+
+                if (!string.IsNullOrEmpty(ClaveGrupo))
+                {
+                    hash = (hash ^ (ulong)(uint)ClaveGrupo.GetHashCode()) * prime;
+                }
+
+                if (FechaInicioEstimada.HasValue)
+                {
+                    hash = (hash ^ (ulong)FechaInicioEstimada.Value.Ticks) * prime;
+                }
+                if (FechaFinEstimada.HasValue)
+                {
+                    hash = (hash ^ (ulong)FechaFinEstimada.Value.Ticks) * prime;
+                }
+
+                if (FechasGen != null && FechasGen.Count > 0)
+                {
+                    hash = (hash ^ (ulong)FechasGen.Count) * prime;
+                    for (int i = 0; i < FechasGen.Count; i++)
+                    {
+                        hash = (hash ^ (ulong)FechasGen[i].Ticks) * prime;
+                    }
+                }
+
+                return (long)hash;
+            }
+        }
+
         public override string ToString()
         {
             return $"Gen[Asig:{IdAsignatura}, Prog:{IdPrograma}, Doc:{IdTercero}, Aula:{IdAula}, Bloque:{IdBloqueHorario}, Sem:{Semestre}]";
