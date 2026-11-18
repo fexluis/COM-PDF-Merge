@@ -785,6 +785,52 @@ Las citas `implementation_plan.md:NNNN` anteriores al corte apuntan al archivo m
 | 1907 | `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs` | Realizado |
 | 1908 | `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs` | Realizado |
 
+---
+
+## Ronda 428: No Bloqueo por Vacantes en Corrida/Staging/GA, Promoción Condicionada a Justificación y Diagnóstico Legible
+
+### Resumen de la Ronda
+Se elimina el bloqueo destructivo de las vacantes declaradas en las corridas evolutivas:
+- **1920**: El certificado de cobertura no falla por vacantes declaradas (`EsVacante` o centinela). Solo falla ante inconsistencias (`IdTercero <= 0 && !EsVacante`) mediante `SESION_SIN_DOCENTE`. Cruces y cobertura horaria se auditan exhaustivamente.
+- **1921**: `stagingOk` no se invalida por vacantes declaradas y no se purga el staging de 2228 sesiones. La corrida finaliza como `Completada` con vacantes registradas.
+- **1922**: La vacante nunca genera infracción HARD (R5 duro eliminado de `AgValidadorReglas`). Se conserva como penalización suave (Fase 320).
+- **1923**: Los 5 sitios de la compuerta de promoción en UI pasan `permitirVacantes: true` para habilitar el botón; la compuerta real es el cuadro de diálogo que exige justificación formal.
+- **1924**: La ruta de solo conservación no lanza excepción no controlada (`InvalidOperationException`) ante vacantes, derivando a `MostrarFalloPlan(TipoPreparacionPlan.NoVerificable, ...)`.
+- **1925**: Tipado entero de la regla en `AgScheduleRepository` (`Regla = (int)v.Regla`) resolviendo `regla=0`, diagnóstico sin cortocircuito y formato legible en logs (`sede/programa/aula/asignatura/semestre/grupo`).
+- **1926**: El consentimiento se conserva exclusivamente como registro para auditoría (`ParametrosJson`) y diálogo UI; no condiciona pre-bloqueos en el motor genético.
+- **1927**: Calibración y actualización de la matriz de pruebas unitarias (`AgValidadorCoberturaSeleccionTests`, `AgValidadorReglasTests`).
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 1920 | `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgValidadorCoberturaSeleccion.cs` | Realizado |
+| 1921 | `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs` | Realizado |
+| 1922 | `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgValidadorReglas.cs` | Realizado |
+| 1923 | `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs` | Realizado |
+| 1924 | `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs` | Realizado |
+| 1925 | `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgScheduleRepository.cs`, `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgDetalleVacanteCobertura.cs` | Realizado |
+| 1926 | `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs` | Realizado |
+| 1927 | `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgValidadorCoberturaSeleccionTests.cs`, `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgValidadorReglasTests.cs` | Realizado |
+
+---
+
+## Ronda 429: Separación Calidad vs Promovibilidad, Higiene de Código Muerto y Etiquetado Preciso
+
+### Resumen de la Ronda
+Se corrigen las observaciones de la Ronda 428:
+- **1928**: Separación explícita de `calidad` (`stagingOk && mejor.HardViolations == 0 && mejor.Vacantes == 0`) vs `promovible` (`stagingOk && EsPromovible(..., permitirVacantes: true)`). Corridas con vacantes reportan `RESULTADO_PARCIAL` con desglose visual de vacantes, manteniendo habilitado `btnPromoverProduccion` para promoción justificada.
+- **1929**: Eliminación de código muerto: retirado `MotivosDocentes` en `AgValidadorReglas` y removida la comprobación de `"DOCENTE_VACANTE"` en solo conservación de `AgFormGeneradorHorarios`.
+- **1930**: Log pre-purga ajustado: `materiasConsentidas={contexto.AsignaturasVacantesConsentidas?.Count ?? 0}` y `sesionesConsentidas={detalleVacantes.Count(d => d.Consentida)}`.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 1928 | `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs` | Realizado |
+| 1929 | `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgValidadorReglas.cs`, `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs` | Realizado |
+| 1930 | `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs` | Realizado |
+
 
 
 

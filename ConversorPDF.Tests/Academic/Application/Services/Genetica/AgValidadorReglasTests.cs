@@ -205,9 +205,8 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             _sut.Evaluar(individuo, contexto);
 
             // Assert
-            individuo.Violaciones.Should().NotContain(v => v.Regla == AgReglaViolacion.R5_HabilitacionDocentePool && v.EsDura);
-            individuo.Violaciones.Should().Contain(v => v.Regla == AgReglaViolacion.R5_HabilitacionDocentePool && !v.EsDura);
-            individuo.HardViolations.Should().Be(0);
+            string duras = string.Join("; ", individuo.Violaciones.Where(v => v.EsDura).Select(v => $"{v.Regla}: {v.Mensaje}"));
+            individuo.HardViolations.Should().Be(0, because: duras);
             individuo.Vacantes.Should().Be(1);
             individuo.SoftViolations.Should().Be(50.0);
         }
@@ -1306,9 +1305,9 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
         }
 
         [Fact]
-        public void Evaluar_WhenVacanteSinDisponibilidadSinConsentimiento_ShouldGenerarHardR5()
+        public void Evaluar_WhenVacanteSinDisponibilidad_ShouldGenerarPenalizacionSuaveYNoHardR5()
         {
-            // Arrange (Fase 1896-C / Fase 1903): Vacante por SIN_DISPONIBILIDAD sin autorización explícita ⇒ HARD R5
+            // Arrange (Fase 1922): La vacante nunca es HARD; genera penalización suave y preserva factibilidad dura
             var contexto = new AgContexto();
             contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
 
@@ -1318,6 +1317,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
                 Id = 1,
                 IdAsignatura = 101,
                 IdAula = 1,
+                IdBloqueHorario = 1,
                 EsVacante = 1,
                 MotivoVacante = AgMotivoVacante.SIN_DISPONIBILIDAD.Codigo(),
                 FechaInicioEstimada = new DateTime(2026, 2, 10),
@@ -1328,14 +1328,15 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             _sut.Evaluar(individuo, contexto);
 
             // Assert
-            individuo.Violaciones.Should().Contain(v => v.Regla == AgReglaViolacion.R5_HabilitacionDocentePool && v.EsDura && v.Mensaje.Contains("SIN_DISPONIBILIDAD"));
-            individuo.HardViolations.Should().BeGreaterThan(0);
+            individuo.Violaciones.Should().NotContain(v => v.Regla == AgReglaViolacion.R5_HabilitacionDocentePool && v.EsDura);
+            individuo.Violaciones.Should().Contain(v => v.Regla == AgReglaViolacion.R5_HabilitacionDocentePool && !v.EsDura);
+            individuo.HardViolations.Should().Be(0);
         }
 
         [Fact]
         public void Evaluar_WhenVacanteSinCandidatosConsentida_ShouldNoGenerarHardR5()
         {
-            // Arrange (Fase 1896-C / Fase 1903): Vacante por SIN_CANDIDATOS con consentimiento registrado ⇒ no genera HARD R5
+            // Arrange (Fase 1922): Vacante por SIN_CANDIDATOS no genera HARD R5
             var contexto = new AgContexto
             {
                 Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value,
@@ -1348,6 +1349,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
                 Id = 1,
                 IdAsignatura = 101,
                 IdAula = 1,
+                IdBloqueHorario = 1,
                 EsVacante = 1,
                 MotivoVacante = AgMotivoVacante.SIN_CANDIDATOS.Codigo(),
                 FechaInicioEstimada = new DateTime(2026, 2, 10),
@@ -1359,12 +1361,13 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
 
             // Assert
             individuo.Violaciones.Should().NotContain(v => v.Regla == AgReglaViolacion.R5_HabilitacionDocentePool && v.EsDura);
+            individuo.HardViolations.Should().Be(0);
         }
 
         [Fact]
         public void Evaluar_WhenVacanteSinPlanOleada_ShouldNoGenerarHardR5()
         {
-            // Arrange (Fase 1899 / Fase 1903): Vacante estructural por SIN_PLAN_OLEADA NO genera infracción dura R5 (se tipifica en R7)
+            // Arrange (Fase 1899 / Fase 1922): Vacante estructural por SIN_PLAN_OLEADA NO genera infracción dura R5
             var contexto = new AgContexto();
             contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
 
@@ -1374,6 +1377,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
                 Id = 1,
                 IdAsignatura = 101,
                 IdAula = 1,
+                IdBloqueHorario = 1,
                 EsVacante = 1,
                 MotivoVacante = AgMotivoVacante.SIN_PLAN_OLEADA.Codigo(),
                 FechaInicioEstimada = new DateTime(2026, 2, 10),
@@ -1383,14 +1387,14 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             // Act
             _sut.Evaluar(individuo, contexto);
 
-            // Assert: no debe ser penalizada como R5 docente
+            // Assert: no debe ser penalizada como R5 docente dura
             individuo.Violaciones.Should().NotContain(v => v.Regla == AgReglaViolacion.R5_HabilitacionDocentePool && v.EsDura);
         }
 
         [Fact]
-        public void Evaluar_WhenVacanteMotivoVacioSinConsentimiento_ShouldGenerarHardR5()
+        public void Evaluar_WhenVacanteMotivoVacio_ShouldNoGenerarHardR5YSumaPenalizacionSuave()
         {
-            // Arrange (Fase 1904): Vacante con motivo vacío sin autorización explícita ⇒ se asume causa docente no autorizada (HARD R5)
+            // Arrange (Fase 1922): Vacante con motivo vacío recibe penalización suave pero nunca HARD
             var contexto = new AgContexto();
             contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
 
@@ -1400,6 +1404,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
                 Id = 1,
                 IdAsignatura = 101,
                 IdAula = 1,
+                IdBloqueHorario = 1,
                 EsVacante = 1,
                 MotivoVacante = string.Empty,
                 FechaInicioEstimada = new DateTime(2026, 2, 10),
@@ -1410,8 +1415,9 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             _sut.Evaluar(individuo, contexto);
 
             // Assert
-            individuo.Violaciones.Should().Contain(v => v.Regla == AgReglaViolacion.R5_HabilitacionDocentePool && v.EsDura);
-            individuo.HardViolations.Should().BeGreaterThan(0);
+            individuo.Violaciones.Should().NotContain(v => v.Regla == AgReglaViolacion.R5_HabilitacionDocentePool && v.EsDura);
+            individuo.Violaciones.Should().Contain(v => v.Regla == AgReglaViolacion.R5_HabilitacionDocentePool && !v.EsDura);
+            individuo.HardViolations.Should().Be(0);
         }
     }
 }

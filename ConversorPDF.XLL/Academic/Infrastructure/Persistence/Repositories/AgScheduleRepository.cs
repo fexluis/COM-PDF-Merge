@@ -533,7 +533,7 @@ VALUES (@IdIndividuo, @IdGen, @Regla, @EsDura, @Mensaje, @DetalleJson, @Subunida
                                 {
                                     v.IdIndividuo,
                                     v.IdGen,
-                                    Regla = v.Regla.ToString(),
+                                    Regla = (int)v.Regla, // Fase 1914 / Fase 1925: Persistir enum como entero, no como string
                                     v.EsDura,
                                     Mensaje = v.Mensaje ?? string.Empty,
                                     DetalleJson = v.DetalleJson ?? "{}",
@@ -1400,7 +1400,7 @@ VALUES (@IdIndividuo, @IdGen, @Regla, @EsDura, @Mensaje, @DetalleJson, @Subunida
                                 {
                                     IdIndividuo = idIndividuo,
                                     v.IdGen,
-                                    Regla = v.Regla.ToString(),
+                                    Regla = (int)v.Regla, // Fase 1914 / Fase 1925: Persistir enum como entero, no como string
                                     v.EsDura,
                                     Mensaje = v.Mensaje ?? string.Empty,
                                     DetalleJson = v.DetalleJson ?? "{}",

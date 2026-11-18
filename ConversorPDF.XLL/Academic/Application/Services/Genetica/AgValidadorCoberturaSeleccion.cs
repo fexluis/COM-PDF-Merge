@@ -31,6 +31,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             var sesiones = conservadas.Concat(nuevas).ToList();
             var ids = new HashSet<string>(StringComparer.Ordinal);
             var posiciones = new HashSet<string>(StringComparer.Ordinal);
+            bool hayInconsistencia = false;
             foreach (var s in sesiones)
             {
                 if (s == null || s.Clave == null) return Result.Failure("RELACION_INESPERADA");
@@ -53,25 +54,50 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     s.Horas <= 0 || double.IsNaN(s.Horas) || double.IsInfinity(s.Horas) ||
                     s.Horas > (s.Fin - s.Inicio).TotalHours + 0.001)
                     return Result.Failure("SESION_NO_VERIFICABLE");
-                // FASE 1870/1875/1897: VACANTE consentida: la cobertura horaria se cuenta y el docente falta por autorización explícita.
+                // FASE 1920 / FASE 1925 / FASE 1926: Diagnóstico completo de vacantes y detección de inconsistencias
+                // Una vacante declarada es resultado válido de dominio; solo falla si falta docente sin declarar vacante.
                 bool consentida = consentidas.Contains(s.Clave.IdAsignatura);
-                bool esVacante = s.IdTercero <= 0 || s.EsVacante || (idTerceroVacante > 0 && s.IdTercero == idTerceroVacante);
-                if (esVacante)
+                bool esVacanteDeclarada = s.EsVacante || (idTerceroVacante > 0 && s.IdTercero == idTerceroVacante);
+                if (s.IdTercero <= 0 && !s.EsVacante)
+                {
+                    hayInconsistencia = true;
+                    diagnosticos?.Add(new AgDetalleVacanteCobertura
+                    {
+                        ClaveValor = s.Clave.Valor,
+                        IdTerritorial = s.Clave.IdTerritorial,
+                        Subunidad = s.Clave.Subunidad,
+                        IdPeriodo = s.Clave.IdPeriodo,
+                        IdSede = s.Clave.IdSede,
+                        IdPrograma = s.Clave.IdPrograma,
+                        IdAula = s.Clave.IdAula,
+                        IdAsignatura = s.Clave.IdAsignatura,
+                        Semestre = s.Clave.Semestre,
+                        Grupo = s.Clave.Grupo,
+                        MotivoVacante = string.IsNullOrWhiteSpace(s.MotivoVacante) ? "SIN_MARCA_VACANTE" : s.MotivoVacante,
+                        Fecha = s.Fecha,
+                        Horas = s.Horas,
+                        Consentida = false
+                    });
+                }
+                else if (esVacanteDeclarada)
                 {
                     diagnosticos?.Add(new AgDetalleVacanteCobertura
                     {
                         ClaveValor = s.Clave.Valor,
+                        IdTerritorial = s.Clave.IdTerritorial,
+                        Subunidad = s.Clave.Subunidad,
+                        IdPeriodo = s.Clave.IdPeriodo,
+                        IdSede = s.Clave.IdSede,
+                        IdPrograma = s.Clave.IdPrograma,
+                        IdAula = s.Clave.IdAula,
                         IdAsignatura = s.Clave.IdAsignatura,
+                        Semestre = s.Clave.Semestre,
+                        Grupo = s.Clave.Grupo,
                         MotivoVacante = s.MotivoVacante,
                         Fecha = s.Fecha,
                         Horas = s.Horas,
                         Consentida = consentida
                     });
-
-                    if (!consentida)
-                    {
-                        return Result.Failure("DOCENTE_VACANTE");
-                    }
                 }
             }
             for (int i = 0; i < sesiones.Count; i++)
@@ -90,6 +116,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 if (horas < r.HorasEfectivas - 0.001) return Result.Failure("COBERTURA_INCOMPLETA:" + r.Clave.Valor);
                 if (horas > r.HorasEfectivas + 0.001) return Result.Failure("COBERTURA_EXCESIVA:" + r.Clave.Valor);
             }
+            if (hayInconsistencia) return Result.Failure("SESION_SIN_DOCENTE");
             return Result.Success();
         }
     }

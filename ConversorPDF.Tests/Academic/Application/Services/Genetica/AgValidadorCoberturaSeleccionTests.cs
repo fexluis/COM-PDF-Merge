@@ -152,7 +152,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             var m = Manifiesto(2);
             Assert.StartsWith("COBERTURA_INCOMPLETA:", new AgValidadorCoberturaSeleccion().Validar(m,
                 Array.Empty<AgSesionCobertura>(), new[] { Sesion(m) }).Error);
-            Assert.Equal("DOCENTE_VACANTE", new AgValidadorCoberturaSeleccion().Validar(Manifiesto(),
+            Assert.Equal("SESION_SIN_DOCENTE", new AgValidadorCoberturaSeleccion().Validar(Manifiesto(),
                 Array.Empty<AgSesionCobertura>(), new[] { Sesion(Manifiesto(), docente: 0) }).Error);
         }
 
@@ -264,10 +264,9 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
 
             var validador = new AgValidadorCoberturaSeleccion();
 
-            // Act 1: Sin consentimiento, debe rechazar DOCENTE_VACANTE
+            // Act 1: Sin consentimiento, la vacante declarada valida con éxito en cobertura (Fase 1920)
             var sinConsentimiento = validador.Validar(m, Array.Empty<AgSesionCobertura>(), new[] { sesionVacante }, idTerceroVacante: idVacante);
-            Assert.True(sinConsentimiento.IsFailure);
-            Assert.Equal("DOCENTE_VACANTE", sinConsentimiento.Error);
+            Assert.True(sinConsentimiento.IsSuccess, sinConsentimiento.IsFailure ? sinConsentimiento.Error : string.Empty);
 
             // Act 2: Con consentimiento para la asignatura, debe validar con éxito
             var conConsentimiento = validador.Validar(m, Array.Empty<AgSesionCobertura>(), new[] { sesionVacante },
@@ -303,7 +302,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
         [Fact]
         public void VacanteConsentida_SinCentinelaDocente_AutorizaSesionConIdTerceroCero()
         {
-            // Arrange (Fase 1875/1879): Sesión vacante sin centinela configurado (IdTercero == 0)
+            // Arrange (Fase 1875/1879/1920): Sesión vacante sin centinela configurado (IdTercero == 0)
             var m = Manifiesto(1);
             int idAsignatura = m.Relaciones.First().Clave.IdAsignatura;
             var sesionSinCentinela = new AgSesionCobertura(
@@ -312,10 +311,9 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
 
             var validador = new AgValidadorCoberturaSeleccion();
 
-            // Act 1: Sin consentimiento, debe rechazar DOCENTE_VACANTE
+            // Act 1: Sin consentimiento, la vacante declarada valida con éxito (Fase 1920)
             var sinConsentimiento = validador.Validar(m, Array.Empty<AgSesionCobertura>(), new[] { sesionSinCentinela }, idTerceroVacante: 0);
-            Assert.True(sinConsentimiento.IsFailure);
-            Assert.Equal("DOCENTE_VACANTE", sinConsentimiento.Error);
+            Assert.True(sinConsentimiento.IsSuccess, sinConsentimiento.IsFailure ? sinConsentimiento.Error : string.Empty);
 
             // Act 2: Con consentimiento para la asignatura, no debe abortar en s.IdTercero <= 0 y debe validar con éxito
             var conConsentimiento = validador.Validar(m, Array.Empty<AgSesionCobertura>(), new[] { sesionSinCentinela },
@@ -324,9 +322,9 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
         }
 
         [Fact]
-        public void Validar_WhenVacanteNoConsentida_ShouldRetornarDocenteVacanteYDetalleDiagnostico()
+        public void Validar_WhenVacanteDeclaradaSinConsentimiento_ShouldRetornarSuccessYDetalleDiagnosticoConConsentidaFalse()
         {
-            // Arrange (Fase 1897 / Fase 1903): Sesión vacante no consentida debe capturar diagnóstico detallado
+            // Arrange (Fase 1920): Vacante declarada es resultado válido de dominio; certifica Success y reporta detalle
             var m = Manifiesto(1);
             var rel = m.Relaciones.First();
             var sesion = new AgSesionCobertura(
@@ -342,14 +340,36 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
                 idTerceroVacante: 0, festivos: null, asignaturasVacantesConsentidas: null, diagnosticos: diagnosticos);
 
             // Assert
-            Assert.True(res.IsFailure);
-            Assert.Equal("DOCENTE_VACANTE", res.Error);
+            Assert.True(res.IsSuccess);
             Assert.Single(diagnosticos);
             Assert.Equal(rel.Clave.Valor, diagnosticos[0].ClaveValor);
             Assert.Equal(rel.Clave.IdAsignatura, diagnosticos[0].IdAsignatura);
             Assert.Equal("SIN_DISPONIBILIDAD", diagnosticos[0].MotivoVacante);
             Assert.Equal(4.0, diagnosticos[0].Horas);
             Assert.False(diagnosticos[0].Consentida);
+        }
+
+        [Fact]
+        public void Validar_WhenSesionSinDocenteYSinMarcaVacante_ShouldRetornarFailureSesionSinDocente()
+        {
+            // Arrange (Fase 1920): Sesión sin docente y sin marca de vacante es inconsistencia de datos -> rechazo
+            var m = Manifiesto(1);
+            var rel = m.Relaciones.First();
+            var sesion = new AgSesionCobertura(
+                rel.Clave, "NUEVA", 1, idTercero: 0,
+                fecha: new DateTime(2027, 2, 5), inicio: TimeSpan.FromHours(8), fin: TimeSpan.FromHours(12),
+                horas: 4, esVacante: false, motivoVacante: null);
+
+            var validador = new AgValidadorCoberturaSeleccion();
+            var diagnosticos = new List<AgDetalleVacanteCobertura>();
+
+            // Act
+            var res = validador.Validar(m, Array.Empty<AgSesionCobertura>(), new[] { sesion },
+                idTerceroVacante: 0, festivos: null, asignaturasVacantesConsentidas: null, diagnosticos: diagnosticos);
+
+            // Assert
+            Assert.True(res.IsFailure);
+            Assert.Equal("SESION_SIN_DOCENTE", res.Error);
         }
 
         [Fact]

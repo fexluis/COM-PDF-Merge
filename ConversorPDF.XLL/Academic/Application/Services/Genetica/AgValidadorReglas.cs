@@ -14,15 +14,6 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
     /// </summary>
     public class AgValidadorReglas : IAgValidadorReglas
     {
-        // Fase 1899: Familia de motivos atribuibles a la disponibilidad docente (excluye vacantes estructurales de oleadas/bloques)
-        private static readonly HashSet<string> MotivosDocentes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            AgMotivoVacante.SIN_CANDIDATOS.Codigo(),
-            AgMotivoVacante.SIN_DISPONIBILIDAD.Codigo(),
-            AgMotivoVacante.NO_CUMPLE_REQUISITOS.Codigo(),
-            AgMotivoVacante.FUERA_DE_VENTANA.Codigo()
-        };
-
         public void Evaluar(AgIndividuo individuo, AgContexto contexto)
         {
             if (individuo == null) throw new ArgumentNullException(nameof(individuo));
@@ -102,28 +93,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         hardCount++;
                     }
                 }
-                else if (gen.EsVacante == 1)
-                {
-                    // Fase 1896-C / Fase 1899 / Fase 1904: vacío = causa desconocida => se trata como docente (conservador)
-                    bool motivoDocente = string.IsNullOrWhiteSpace(gen.MotivoVacante)
-                                      || MotivosDocentes.Contains(gen.MotivoVacante);
-                    if (motivoDocente)
-                    {
-                        bool vacanteAutorizada = contexto.AsignaturasVacantesConsentidas != null
-                            && contexto.AsignaturasVacantesConsentidas.Contains(gen.IdAsignatura)
-                            && string.Equals(gen.MotivoVacante, AgMotivoVacante.SIN_CANDIDATOS.Codigo(), StringComparison.OrdinalIgnoreCase);
-
-                        if (!vacanteAutorizada)
-                        {
-                            individuo.Violaciones.Add(new AgViolacion(
-                                AgReglaViolacion.R5_HabilitacionDocentePool,
-                                esDura: true,
-                                mensaje: $"Asignatura {gen.IdAsignatura} en vacante no autorizada (motivo: '{gen.MotivoVacante}').",
-                                idGen: gen.Id));
-                            hardCount++;
-                        }
-                    }
-                }
+                // Fase 1922: La vacante nunca es HARD. Se elimina la penalización dura de 1896-C/1899/1904.
+                // La vacante declarada recibe penalización blanda en la etapa de evaluación suave (Fase 320).
 
                 // --- R4: Compatibilidad Aula (Fase 1571: acepta Disponible y Aprobado) ---
                 if (gen.IdAula > 0 && contexto.AulasPorId.TryGetValue(gen.IdAula, out var aula))

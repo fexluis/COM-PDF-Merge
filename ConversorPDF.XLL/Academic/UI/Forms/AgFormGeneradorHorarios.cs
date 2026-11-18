@@ -3032,7 +3032,16 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 {
                     var certificado = new AgValidadorCoberturaSeleccion().Validar(_contextoActual.ManifiestoCobertura,
                         _contextoActual.SesionesConservadas, Array.Empty<AgSesionCobertura>(), _contextoActual.IdTerceroVacante, _contextoActual.Festivos, _contextoActual.AsignaturasVacantesConsentidas);
-                    if (certificado.IsFailure) throw new InvalidOperationException(certificado.Error);
+                    if (certificado.IsFailure)
+                    {
+                        // Fase 1924 / Fase 1929: “Sólo conservación” sin excepción no controlada ante vacantes
+                        if (certificado.Error == "SESION_SIN_DOCENTE")
+                        {
+                            MostrarFalloPlan(TipoPreparacionPlan.NoVerificable, certificado.Error);
+                            return;
+                        }
+                        throw new InvalidOperationException(certificado.Error);
+                    }
                     // No se crea población, individuo ni staging; la producción anterior no se toca.
                     corrida.FechaFinCorrida = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                     corrida.Estado = AgEstadoCorrida.Completada;
@@ -3296,8 +3305,9 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                         throw new InvalidOperationException("SNAPSHOT_PLAN_FECHADO_SERIALIZACION_ERROR", ex);
                     }
                 }
-                // La compuerta genes ↔ staging sigue intacta; la segunda compuerta detecta relaciones enteras omitidas.
-                bool factible = stagingOk && AgCompuertaPromocion.EsPromovible(corrida, mejor, sesiones, contexto, permitirVacantes: contexto?.PermiteVacantes ?? false);
+                // Fase 1923 / Fase 1928: Diferenciar calidad del horario vs promovibilidad
+                bool calidad = stagingOk && mejor != null && mejor.HardViolations == 0 && mejor.Vacantes == 0;
+                bool promovible = stagingOk && AgCompuertaPromocion.EsPromovible(corrida, mejor, sesiones, contexto, permitirVacantes: true);
                 if (stagingOk)
                 {
                     if (sesiones.IsFailure)
@@ -3317,7 +3327,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                         }
                         else
                         {
-                            // Fase 1897/1898: Captura detallada de vacantes de cobertura antes de purgar staging
+                            // Fase 1897/1898/1920/1925/1930: Captura detallada de vacantes de cobertura
                             var detalleVacantes = new List<AgDetalleVacanteCobertura>();
                             var cobertura = new AgValidadorCoberturaSeleccion().Validar(
                                 contexto.ManifiestoCobertura,
@@ -3335,13 +3345,21 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                                 MarcarErrorPreparacion("P08_Cobertura_" + cobertura.Error);
                                 var noConsentidas = detalleVacantes.Where(d => !d.Consentida).ToList();
                                 LoggerHelper.Warning($"[AG] Cobertura no certificada: {cobertura.Error}. " +
-                                    $"Vacantes no consentidas={noConsentidas.Count} (consentidas={contexto.AsignaturasVacantesConsentidas?.Count ?? 0}). " +
-                                    string.Join("; ", noConsentidas.Take(10)
-                                        .Select(d => $"{d.ClaveValor}|asig={d.IdAsignatura}|motivo={d.MotivoVacante}|horas={d.Horas:0.#}")));
+                                    $"Vacantes={detalleVacantes.Count} (materiasConsentidas={contexto.AsignaturasVacantesConsentidas?.Count ?? 0}, sesionesConsentidas={detalleVacantes.Count(d => d.Consentida)}). " +
+                                    string.Join("; ", detalleVacantes.Take(10)
+                                        .Select(d => $"{d.IdentidadLegible}|asig={d.IdAsignatura}|motivo={d.MotivoVacante}|horas={d.Horas:0.#}")));
                                 Log($"[ERROR] Cobertura no certificada: {cobertura.Error}. " +
                                     $"Vacantes consentidas={contexto?.AsignaturasVacantesConsentidas?.Count ?? 0}. " +
                                     "Verifique pool docente o retire asignaturas sin docente.");
                                 traza.Causa(AgCausaFallo.CoberturaNoCertificada, cobertura.Error);
+                            }
+                            else if (detalleVacantes.Count > 0)
+                            {
+                                // Fase 1920/1921/1925: Cobertura certificada con vacantes declaradas (resultado parcial válido)
+                                LoggerHelper.Info($"[AG] Corrida #{idCorrida}: cobertura certificada con {detalleVacantes.Count} vacantes declaradas. " +
+                                    string.Join("; ", detalleVacantes.Take(10)
+                                        .Select(d => $"{d.IdentidadLegible}|asig={d.IdAsignatura}|motivo={d.MotivoVacante}|horas={d.Horas:0.#}")));
+                                Log($"[INFO] Cobertura completada con {detalleVacantes.Count} vacante(s) declarada(s). Se requiere justificación para promover.");
                             }
                         }
                     }
@@ -3365,7 +3383,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     }
                 }
 
-                corrida.Estado = stagingOk ? (factible ? AgEstadoCorrida.Completada : AgEstadoCorrida.Completada) : AgEstadoCorrida.Error;
+                corrida.Estado = stagingOk ? (calidad ? AgEstadoCorrida.Completada : AgEstadoCorrida.Completada) : AgEstadoCorrida.Error;
                 var cierreCorrida = await _scheduleRepository.UpdateCorridaAsync(corrida, _ctsEjecucion.Token);
                 if (cierreCorrida.IsFailure) throw new InvalidOperationException(cierreCorrida.Error);
                 corridaFinalizada = true;
@@ -3373,12 +3391,12 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 if (stagingOk)
                 {
                     EstablecerEstadoOptimizacion(EstadoVisualOptimizacion.Completado,
-                        factible ? "HORARIO_FACTIBLE" : "RESULTADO_PARCIAL",
-                        factible ? "Estado: Horario factible."
+                        calidad ? "HORARIO_FACTIBLE" : "RESULTADO_PARCIAL",
+                        calidad ? "Estado: Horario factible."
                             : $"Estado: Resultado parcial. HARD={mejor?.HardViolations ?? 0}; vacantes={mejor?.Vacantes ?? 0}; sesiones vacantes={sesionesVacantes}; horas vacantes={horasVacantes:0.#}.");
                 }
                 // T6 requiere sustitución transaccional con ratificación vigente; no habilitar promoción aquí.
-                btnPromoverProduccion.Enabled = contexto.CandidatosCobertura.Count == 0 && factible;
+                btnPromoverProduccion.Enabled = contexto.CandidatosCobertura.Count == 0 && promovible;
 
                 // Fase 599: Resumen de fin de corrida
                 LoggerHelper.Resumen("FinCorridaAG",
@@ -3413,7 +3431,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 if (stagingOk)
                 {
                     await CargarModuloResultadosAsync(idCorrida);
-                    btnPromoverProduccion.Enabled = contexto.CandidatosCobertura.Count == 0 && factible;
+                    btnPromoverProduccion.Enabled = contexto.CandidatosCobertura.Count == 0 && promovible;
                     tabControlPrincipal.SelectedTab = tabResultados;
                 }
                 else
@@ -4378,7 +4396,8 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     }
                 }
 
-                btnPromoverProduccion.Enabled = corridaDbRes.IsSuccess && AgCompuertaPromocion.EsPromovible(corridaEfectiva, ind, sesionesRes, _contextoActual, permitirVacantes: _contextoActual?.PermiteVacantes ?? false);
+                // Fase 1923: permitirVacantes: true para habilitar botón; la compuerta real es la justificación al promover
+                btnPromoverProduccion.Enabled = corridaDbRes.IsSuccess && AgCompuertaPromocion.EsPromovible(corridaEfectiva, ind, sesionesRes, _contextoActual, permitirVacantes: true);
                 LoggerHelper.Info($"[AG] Corrida #{corrida.IdCorrida} cargada: individuo #{ind?.Id ?? 0}, HARD={ind?.HardViolations ?? 0}, promover={btnPromoverProduccion.Enabled}.");
                 Log($"[AG] Corrida #{corrida.IdCorrida} cargada desde el selector ({corrida.TotalSesiones} sesiones en staging).");
             }
@@ -4608,7 +4627,8 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 var corridaDbRes = await _scheduleRepository.GetCorridaByIdAsync(idCorrida, CancellationToken.None);
                 var sesionesRes = await _scheduleRepository.GetSesionesStagingAsync(idCorrida, CancellationToken.None);
                 var corridaEfectiva = corridaDbRes.IsSuccess ? corridaDbRes.Value : null;
-                btnPromoverProduccion.Enabled = corridaDbRes.IsSuccess && AgCompuertaPromocion.EsPromovible(corridaEfectiva, ind, sesionesRes, _contextoActual, permitirVacantes: _contextoActual?.PermiteVacantes ?? false);
+                // Fase 1923: permitirVacantes: true para habilitar botón; la compuerta real es la justificación al promover
+                btnPromoverProduccion.Enabled = corridaDbRes.IsSuccess && AgCompuertaPromocion.EsPromovible(corridaEfectiva, ind, sesionesRes, _contextoActual, permitirVacantes: true);
 
                 MessageBox.Show(this,
                     $"Recálculo completado para la corrida #{idCorrida}.\n\n" +
@@ -4669,7 +4689,8 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
 
                     var indActual = _ultimoResultado?.MejorIndividuo;
                     var sesionesRes = await _scheduleRepository.GetSesionesStagingAsync(idCorrida, CancellationToken.None);
-                    btnPromoverProduccion.Enabled = indActual != null && sesionesRes.IsSuccess && AgCompuertaPromocion.EsPromovible(verif.Value, indActual, sesionesRes, _contextoActual, permitirVacantes: _contextoActual?.PermiteVacantes ?? false);
+                    // Fase 1923: permitirVacantes: true para habilitar botón; la compuerta real es la justificación al promover
+                    btnPromoverProduccion.Enabled = indActual != null && sesionesRes.IsSuccess && AgCompuertaPromocion.EsPromovible(verif.Value, indActual, sesionesRes, _contextoActual, permitirVacantes: true);
                 }
                 else
                 {
@@ -4860,7 +4881,8 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 var corridaDbRes = await _scheduleRepository.GetCorridaByIdAsync(_ultimoResultado.IdCorrida, CancellationToken.None);
                 var sesionesRes = await _scheduleRepository.GetSesionesStagingAsync(_ultimoResultado.IdCorrida, CancellationToken.None);
                 var corridaEfectiva = corridaDbRes.IsSuccess ? corridaDbRes.Value : null;
-                btnPromoverProduccion.Enabled = corridaDbRes.IsSuccess && AgCompuertaPromocion.EsPromovible(corridaEfectiva, ind, sesionesRes, _contextoActual, permitirVacantes: _contextoActual?.PermiteVacantes ?? false);
+                // Fase 1923: permitirVacantes: true para habilitar botón; la compuerta real es la justificación al promover
+                btnPromoverProduccion.Enabled = corridaDbRes.IsSuccess && AgCompuertaPromocion.EsPromovible(corridaEfectiva, ind, sesionesRes, _contextoActual, permitirVacantes: true);
             }
         }
 

@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 426 | 427 | 2026-11-17 |
-| `fase` | 1908 | 1909 | 2026-11-17 |
+| `ronda` | 429 | 430 | 2026-11-17 |
+| `fase` | 1930 | 1931 | 2026-11-17 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -139,7 +139,10 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-102 | 2026-11-17 | `(revisión Ronda 423 — Fases 1892–1894: verificación en v1.6.4.22, tri-estado y exclusión sqlite_)` | `Wave —` → `Ronda 423` | `Fase —` | closed | sin fases nuevas obligatorias; procede plan R424 | `v1.6.4.22` |
 | R-103 | 2026-11-17 | `(implementación Ronda 424 — Fases 1895–1898: AG fuera de UI, logging pre-purga, detalle vacante y corrección ruta vacantes)` | `Wave —` → `Ronda 424` | `Fase 1895–1898` | closed | sin escisión (bajo umbral); sin build/tests | pendiente |
 | R-104 | 2026-11-17 | `(revisión Ronda 425 — Fases 1899–1903: vacantes docentes en R5, cierre diferido, snapshot contexto y tests)` | `Wave —` → `Ronda 425` | `Fase 1899–1903` | closed | sin escisión (bajo umbral); sin build/tests | pendiente |
-| R-105 | 2026-11-17 | `(revisión Ronda 426 — Fases 1904–1908: motivo vacío a R5, ciclo de vida cierre, guarda Invoke, snapshot total y bloqueo mutaciones)` | `Wave —` → `Ronda 426` | `Fase 1904–1908` | closed | sin escisión (bajo umbral); sin build/tests | pendiente |
+| R-105 | 2026-11-17 | `(revisión Ronda 426 — Fases 1904–1908: motivo vacío a R5, ciclo de vida cierre, guarda Invoke, snapshot total y bloqueo mutaciones)` | `Wave —` → `Ronda 426` | `Fase 1904–1908` | closed | sin escisión (bajo umbral); sin build/tests | `29cdd0f` |
+| R-106 | 2026-11-17 | `(revisión manual Ronda 427 — Fases 1909–1919: diagnóstico forense vacantes, tipado enum regla y log)` | `Wave —` → `Ronda 427` | `Fase 1909–1919` | closed | retirada 1909; 1914/1915/1918 consolidadas en R428 | `29cdd0f` |
+| R-107 | 2026-11-17 | `(revisión e implementación Ronda 428 — Fases 1920–1927: no bloqueo por vacantes en corrida/staging/GA, botón promoción con justificación, y diagnóstico legible)` | `Wave —` → `Ronda 428` | `Fase 1920–1927` | closed | sin escisión (bajo umbral); sin build/tests | pendiente |
+| R-108 | 2026-11-17 | `(revisión e implementación Ronda 429 — Fases 1928–1930: calidad vs promovible, limpieza código muerto y etiqueta precisa)` | `Wave —` → `Ronda 429` | `Fase 1928–1930` | closed | sin escisión (bajo umbral); sin build/tests | pendiente |
 
 
 

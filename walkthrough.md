@@ -773,6 +773,83 @@ cualquier dependencia nueva vuelva a quedar fuera del add-in instalado.
 | F1907 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:3415` |
 | F1908 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:3503-3511,3546-3568` |
 
+---
+
+## Ronda 428: No Bloqueo por Vacantes en Corrida/Staging/GA, Promoción Condicionada a Justificación y Diagnóstico Legible
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1920 — Certificado de Cobertura No Falla por Vacantes Declaradas
+- **Archivos:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgValidadorCoberturaSeleccion.cs`
+- **Cambio:** `Validar` recopila todas las vacantes declaradas (`EsVacante` o centinela) en `diagnosticos` sin fallar ni abortar. Cruces y demanda horaria se validan en su totalidad. Solo retorna `SESION_SIN_DOCENTE` si existe inconsistencia (`IdTercero <= 0 && !EsVacante`).
+
+#### 2. Fase 1921 — Preservación de Staging y No Purga por Vacantes
+- **Archivos:** `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
+- **Cambio:** `stagingOk` no se invalida ante vacantes declaradas. La purga de staging con `LimpiarStagingAsync` solo opera ante fallos estructurales. La corrida culmina como `Completada` con el recuento de vacantes.
+
+#### 3. Fase 1922 — Supresión de Infracción HARD R5 por Vacantes
+- **Archivos:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgValidadorReglas.cs`
+- **Cambio:** Se eliminó la rama `else if (gen.EsVacante == 1)` de 1896-C. Las vacantes no generan violaciones duras; se evalúan exclusivamente con penalización suave según la Fase 320.
+
+#### 4. Fase 1923 — Desbloqueo del Botón de Promoción con Vacantes
+- **Archivos:** `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
+- **Cambio:** Se pasó `permitirVacantes: true` en los 5 sitios de consulta a `AgCompuertaPromocion.EsPromovible` en UI. El botón queda habilitado si el horario es válido; la compuerta de seguridad exige justificación humana en el diálogo antes de promover.
+
+#### 5. Fase 1924 — Manejo Seguro de Vacantes en Solo Conservación
+- **Archivos:** `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
+- **Cambio:** Se reemplazó el `throw new InvalidOperationException` por `MostrarFalloPlan(TipoPreparacionPlan.NoVerificable, ...)` cuando el certificado reporta códigos de vacante.
+
+#### 6. Fase 1925 — Persistencia Numérica de Reglas y Log Legible
+- **Archivos:** `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgScheduleRepository.cs`, `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgDetalleVacanteCobertura.cs`, `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
+- **Cambio:** Se cambió `Regla = (int)v.Regla` al insertar en `ag_violacion`, resolviendo el problema de `regla=0`. Se dotó a `AgDetalleVacanteCobertura` de los campos `IdSede`, `IdPrograma`, `IdAula`, `Semestre`, `Grupo` y propiedad `IdentidadLegible` para el log format.
+
+#### 7. Fase 1926 — Consentimiento Exclusivo para Registro y Auditoría
+- **Archivos:** `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
+- **Cambio:** `AsignaturasVacantesConsentidas` se mantiene para serialización de auditoría y texto de diálogo en promoción, sin condicionar fallos anticipados en el motor ni en el validador de cobertura.
+
+#### 8. Fase 1927 — Calibración de la Suite de Pruebas Unitarias
+- **Archivos:** `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgValidadorCoberturaSeleccionTests.cs`, `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgValidadorReglasTests.cs`
+- **Cambio:** Actualizadas aserciones para verificar que vacantes declaradas retornan `Success` en cobertura y penalización suave (sin HARD R5) en reglas. Añadido test específico para `SESION_SIN_DOCENTE`.
+
+### Verificación de Principios (Ronda 428)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1920 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgValidadorCoberturaSeleccion.cs:56-118` |
+| F1921 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:3309-3375` |
+| F1922 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgValidadorReglas.cs:95-107` |
+| F1923 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:3309, 4399, 4630, 4691, 4883` |
+| F1924 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:3033-3045` |
+| F1925 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgScheduleRepository.cs:535, 1403`, `AgDetalleVacanteCobertura.cs:9-25` |
+| F1926 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:3320-3350` |
+| F1927 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgValidadorCoberturaSeleccionTests.cs:326-370`, `AgValidadorReglasTests.cs:1308-1416` |
+
+---
+
+## Ronda 429: Separación Calidad vs Promovibilidad, Higiene de Código Muerto y Etiquetado Preciso
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1928 — Separación de Estado Calidad vs Promovible
+- **Archivos:** `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
+- **Cambio:** Se introdujo `calidad = stagingOk && mejor != null && mejor.HardViolations == 0 && mejor.Vacantes == 0` y `promovible = stagingOk && EsPromovible(..., permitirVacantes: true)`. Si hay vacantes, la corrida se establece como `RESULTADO_PARCIAL` con desglose visual de vacantes y mantiene habilitado `btnPromoverProduccion`.
+
+#### 2. Fase 1929 — Eliminación de Código Muerto
+- **Archivos:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgValidadorReglas.cs`, `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
+- **Cambio:** Eliminado `MotivosDocentes` de `AgValidadorReglas` (sin uso tras 1922). En `AgFormGeneradorHorarios` (solo conservación) se eliminó la comprobación de `"DOCENTE_VACANTE"`, manteniendo la protección de `SESION_SIN_DOCENTE`.
+
+#### 3. Fase 1930 — Precisión de Etiquetas en Log de Cobertura
+- **Archivos:** `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
+- **Cambio:** Se ajustó la advertencia de cobertura para discriminar `materiasConsentidas={contexto.AsignaturasVacantesConsentidas?.Count ?? 0}` y `sesionesConsentidas={detalleVacantes.Count(d => d.Consentida)}`.
+
+### Verificación de Principios (Ronda 429)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1928 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:3309-3310, 3392-3398` |
+| F1929 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgValidadorReglas.cs:15-28`, `AgFormGeneradorHorarios.cs:3037-3042` |
+| F1930 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:3347-3349` |
+
 
 
 
