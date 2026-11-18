@@ -434,7 +434,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     {
                         g.EsVacante = 1;
                         g.IdTercero = ctx?.IdTerceroVacante ?? 0;
-                        g.MotivoVacante = genNoAsignable.MotivoVacante;
+                        // Fase 1896-B: no propagar motivo ajeno a genes que ya tengan causa propia
+                        if (string.IsNullOrEmpty(g.MotivoVacante))
+                        {
+                            g.MotivoVacante = genNoAsignable.MotivoVacante;
+                        }
                     }
                     continue;
                 }
@@ -448,7 +452,9 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 {
                     doc = ctx?.IdTerceroVacante ?? 0;
                     vac = 1;
-                    motivo = genes.FirstOrDefault(g => !string.IsNullOrEmpty(g.MotivoVacante))?.MotivoVacante ?? string.Empty;
+                    // Fase 1904: no dejar vacío el motivo de una vacante consolidada
+                    motivo = genes.Select(g => g.MotivoVacante).FirstOrDefault(m => !string.IsNullOrWhiteSpace(m))
+                          ?? AgMotivoVacante.SIN_DISPONIBILIDAD.Codigo();
                 }
                 else
                 {

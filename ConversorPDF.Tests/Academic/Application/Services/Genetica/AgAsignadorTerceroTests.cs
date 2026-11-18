@@ -52,6 +52,30 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
         }
 
         [Fact]
+        public void AsignarDocente_WhenPoolExistsButAllExcludedByConflict_ShouldDiagnoseSinDisponibilidad()
+        {
+            // Arrange - Materia con pool habilitado, pero todos sus docentes excluidos por conflicto (Fase 1896-A RED)
+            var gen = new AgGen { IdAsignatura = 7, IdPrograma = 1, Semestre = "I" };
+            var ctx = new AgContexto();
+            ctx.PoolPorAsignatura[7] = new List<TerceroAsignatura>
+            {
+                new TerceroAsignatura { IdTercero = 11, Activo = 1 },
+                new TerceroAsignatura { IdTercero = 12, Activo = 1 }
+            };
+            ctx.RegistrarDocenteHabilitado(11, 1, 7, "I");
+            ctx.RegistrarDocenteHabilitado(12, 1, 7, "I");
+            var excluidos = new HashSet<int> { 11, 12 };
+
+            // Act
+            bool ok = _sut.AsignarDocente(gen, ctx, excluidos);
+
+            // Assert
+            Assert.False(ok);
+            Assert.Equal(1, gen.EsVacante);
+            Assert.Equal(AgMotivoVacante.SIN_DISPONIBILIDAD.Codigo(), gen.MotivoVacante);
+        }
+
+        [Fact]
         public void DiagnosticarMotivo_WhenNoPoolExists_ShouldReturnSinCandidatos()
         {
             // Arrange

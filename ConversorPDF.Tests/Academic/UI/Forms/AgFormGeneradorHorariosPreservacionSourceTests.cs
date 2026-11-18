@@ -126,7 +126,7 @@ namespace ConversorPDF.Tests.Academic.UI.Forms
             var inicio = Inicio();
             Antes(inicio, "EstadoVisualOptimizacion.Preparando", "await _semaforoSyncDimensiones.WaitAsync(");
             Antes(inicio, "EstadoVisualOptimizacion.Validando", "await ConstruirContextoAsync(");
-            Antes(inicio, "EstadoVisualOptimizacion.Optimizando", "await _generadorHorarios.EjecutarOptimizacionAsync(");
+            Antes(inicio, "EstadoVisualOptimizacion.Optimizando", "_generadorHorarios.EjecutarOptimizacionAsync(");
             Antes(inicio, "MarcarDecisionPreparacion();", "var cont = MessageBox.Show(");
             Antes(inicio, "EstablecerEstadoOptimizacion(EstadoVisualOptimizacion.Cancelado, \"ESCALADO_CONTINUACION_RECHAZADA\")", "// Fase 295, 296, 303 & 321");
             inicio.Should().Contain("if (!_terminalVisualOptimizacion) CerrarEstadoVisualOptimizacion(cancelada);");
@@ -261,9 +261,10 @@ namespace ConversorPDF.Tests.Academic.UI.Forms
             Antes(inicio, "InsertCorridaAsync(corrida,", "bool soloConservacion =");
             Antes(inicio, "bool soloConservacion =", "_generadorHorarios.EjecutarOptimizacionAsync(");
             inicio.Should().Contain("Array.Empty<AgSesionCobertura>(), _contextoActual.IdTerceroVacante");
-            inicio.Should().Contain("new AgProyectorSolucionCobertura().Nuevas(_contextoActual, mejor, sesiones.Value)");
-            inicio.Should().Contain("new AgValidadorCoberturaSeleccion().Validar(_contextoActual.ManifiestoCobertura,");
-            inicio.Should().Contain("AgCompuertaPromocion.EsPromovible(corrida, mejor, sesiones, _contextoActual");
+            inicio.Should().Contain("new AgProyectorSolucionCobertura().Nuevas(contexto, mejor, sesiones.Value)");
+            inicio.Should().Contain("new AgValidadorCoberturaSeleccion().Validar(");
+            inicio.Should().Contain("contexto.ManifiestoCobertura,");
+            inicio.Should().Contain("AgCompuertaPromocion.EsPromovible(corrida, mejor, sesiones, contexto");
             inicio.Should().Contain("{ \"decisionesCobertura\", _contextoActual.CandidatosCobertura }");
             inicio.Should().Contain("{ \"sesionesConservadas\", _contextoActual.SesionesConservadas }");
             Fuente().Should().Contain("Promoción bloqueada: falta reemplazo transaccional T6");

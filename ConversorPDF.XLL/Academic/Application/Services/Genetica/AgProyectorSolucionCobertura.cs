@@ -107,7 +107,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 var horario = HorarioSesionParser.TryParse(s.HorarioSesion);
                 if (horario.IsFailure) return Result.Failure<IReadOnlyCollection<AgSesionCobertura>>("SESION_NO_VERIFICABLE");
                 salida.Add(new AgSesionCobertura(claves[0].Clave, "NUEVA", s.Id, s.IdTercero,
-                    s.FechaSesion.Value, horario.Value.Inicio, horario.Value.Fin, s.Horas, s.EsVacante == 1));
+                    s.FechaSesion.Value, horario.Value.Inicio, horario.Value.Fin, s.Horas,
+                    s.EsVacante == 1, s.MotivoVacante));
             }
             return Result.Success<IReadOnlyCollection<AgSesionCobertura>>(salida.AsReadOnly());
         }

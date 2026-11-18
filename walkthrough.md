@@ -663,6 +663,116 @@ cualquier dependencia nueva vuelva a quedar fuera del add-in instalado.
 | F1893 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgScheduleRepository.cs:1356-1362`, `AgScheduleRepositoryCorridaVacantesTests.cs:510-570` |
 | F1894 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `SqliteHelper.cs:416,437`, `AgScheduleRepositoryCorridaVacantesTests.cs:475-485` |
 
+---
+
+## Ronda 423 — Revisión de Fases 1892–1894 (v1.6.4.22)
+
+- Revisión estática de v1.6.4.22. Fases 1892, 1893, 1894 verificadas conformes en disco.
+- Sin regresiones ni fases nuevas obligatorias. Procede implementación Ronda 424.
+
+---
+
+## Ronda 424 — Desbloqueo de UI, Diagnóstico y Manejo de Vacantes en AG (Fases 1895–1898)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1895 — Ejecución del AG en Hilo en Segundo Plano (Task.Run)
+- **Archivos:** `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
+- **Cambio:** Se envolvió la llamada a `_generadorHorarios.EjecutarOptimizacionAsync` en `await Task.Run(...)` pasando `_ctsEjecucion.Token` y configurando `ConfigureAwait(true)`, liberando el hilo STA de la UI de 195 s de cómputo ininterrumpido.
+
+#### 2. Fase 1896 — Corrección de Diagnóstico de Vacante y Penalización Dura
+- **Archivos:** `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgAsignadorTerceroTests.cs`, `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgAsignadorTercero.cs`, `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgCoherenciaGrupo.cs`, `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgValidadorReglas.cs`
+- **Cambio:** Añadida prueba RED `AsignarDocente_WhenPoolExistsButAllExcludedByConflict_ShouldDiagnoseSinDisponibilidad`. En `AgAsignadorTercero.AsignarDocente`, se delegó en `DiagnosticarMotivo(gen, contexto)` en lugar de fijar `SIN_CANDIDATOS`. En `AgCoherenciaGrupo`, se protegió a los genes con motivo propio para que no sean sobreescritos. En `AgValidadorReglas`, se añadió penalización dura (`hardCount++`) cuando un gen en vacante no está autorizado en `AsignaturasVacantesConsentidas`.
+
+#### 3. Fase 1897 — Transporte de Motivo y Estructura AgDetalleVacanteCobertura
+- **Archivos:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgDetalleVacanteCobertura.cs`, `ConversorPDF.XLL/ConversorPDF.XLL.csproj`, `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgValidadorCoberturaSeleccion.cs`, `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgProyectorSolucionCobertura.cs`
+- **Cambio:** Se creó la clase `AgDetalleVacanteCobertura` en su propio archivo y se incorporó al proyecto csproj. Se extendió el constructor de `AgSesionCobertura` con parámetro opcional `motivoVacante = null` y propiedad pública `MotivoVacante`. Se propagó `s.MotivoVacante` en `AgProyectorSolucionCobertura.Nuevas`. Se añadió el parámetro opcional `diagnosticos` a `AgValidadorCoberturaSeleccion.Validar`.
+
+#### 4. Fase 1898 — Registro Diagnóstico Previo a Purga de Staging
+- **Archivos:** `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
+- **Cambio:** Se recolectaron las instancias de `AgDetalleVacanteCobertura` al validar la cobertura y se emitió un log de advertencia con el resumen detallado de vacantes no consentidas antes de proceder a la purga preventiva del staging.
+
+### Verificación de Principios (Ronda 424)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1895 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:3055-3069` |
+| F1896 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgAsignadorTerceroTests.cs:55-75`, `AgAsignadorTercero.cs:92-96`, `AgCoherenciaGrupo.cs:435-440`, `AgValidadorReglas.cs:96-113` |
+| F1897 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgDetalleVacanteCobertura.cs:1-18`, `ConversorPDF.XLL.csproj:574`, `AgValidadorCoberturaSeleccion.cs:19,60,119-126`, `AgProyectorSolucionCobertura.cs:110` |
+| F1898 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:3297-3323` |
+
+---
+
+## Ronda 425 — Corrección de Regresiones, Cierre Seguro y Robustez de Vacantes (Fases 1899–1903)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1899 — Acotación de Regla Dura R5 a la Familia de Motivos Docentes
+- **Archivos:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgValidadorReglas.cs`
+- **Cambio:** Se introdujo `MotivosDocentes` (`SIN_CANDIDATOS`, `SIN_DISPONIBILIDAD`, `NO_CUMPLE_REQUISITOS`, `FUERA_DE_VENTANA`). Las vacantes estructurales (`SIN_PLAN_OLEADA`, `SIN_BLOQUE_NIVEL`) no disparan penalización dura R5 indebida.
+
+#### 2. Fase 1900 — Cierre Seguro y Espera Diferida del Formulario
+- **Archivos:** `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
+- **Cambio:** Se vinculó `_tareaOptimizacion` al `Task.Run` del AG. `OnFormClosing` detecta la tarea activa, invoca `_ctsEjecucion.Cancel()`, cancela el cierre inmediato (`e.Cancel = true`) y agenda el cierre al finalizar mediante `ContinueWith(_ => BeginInvoke(new Action(Close)))`. Se limpia la tarea en `finally`.
+
+#### 3. Fase 1901 — Instantánea Inmutable de Contexto y Bloqueo de UI de Ventana
+- **Archivos:** `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
+- **Cambio:** Se reemplazó el acceso al campo mutable `_contextoActual` en todo el flujo post-await por la variable local capturada `contexto`. En `EstablecerEstadoOptimizacion`, se inhabilitan `cmbPeriodos`, `dtpVentanaInicio`, `dtpVentanaFin` y `chkManualVentana` al entrar en `Optimizando`, y se rehabilitan en estados terminales o `CerrarEstadoVisualOptimizacion`.
+
+#### 4. Fase 1902 — Guarda de Programa y Semestre en DiagnosticarMotivo
+- **Archivos:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgAsignadorTercero.cs`
+- **Cambio:** Se incorporó una guarda previa en `DiagnosticarMotivo`: si `gen.IdPrograma <= 0` o `string.IsNullOrWhiteSpace(gen.Semestre)`, devuelve `SIN_DISPONIBILIDAD` en lugar de atribuir falsamente a `NO_CUMPLE_REQUISITOS`.
+
+#### 5. Fase 1903 — Cobertura de Pruebas Unitarias de Reglas y Cobertura
+- **Archivos:** `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgValidadorReglasTests.cs`, `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgValidadorCoberturaSeleccionTests.cs`
+- **Cambio:** Se añadieron pruebas unitarias para `SIN_DISPONIBILIDAD` sin consentimiento (HARD R5), `SIN_CANDIDATOS` consentida (sin HARD), `SIN_PLAN_OLEADA` (sin HARD por R5) y la recolección de `AgDetalleVacanteCobertura` tanto en caso de rechazo como de éxito.
+
+### Verificación de Principios (Ronda 425)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1899 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgValidadorReglas.cs:17-24,106-125` |
+| F1900 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:73,256-267,3070-3085,3438` |
+| F1901 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:3068,3200,3274-3370,3480-3535` |
+| F1902 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgAsignadorTercero.cs:157-164` |
+| F1903 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgValidadorReglasTests.cs:1308-1385`, `AgValidadorCoberturaSeleccionTests.cs:326-378` |
+
+---
+
+## Ronda 426 — Corrección de Cierre, Cobertura Residual de Snapshot y Bloqueo Superficie (Fases 1904–1908)
+
+### Resumen de Cambios Aplicados
+
+#### 1. Fase 1904 — Tratamiento Conservador de Motivo Vacío y Diagnóstico en Coherencia
+- **Archivos:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgCoherenciaGrupo.cs`, `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgValidadorReglas.cs`, `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgValidadorReglasTests.cs`
+- **Cambio:** En `AgCoherenciaGrupo`, una vacante sin motivo se inicializa como `SIN_DISPONIBILIDAD`. En `AgValidadorReglas`, motivo vacío se clasifica como causa docente (conservador). Añadida prueba unitaria que verifica que una vacante con motivo vacío sin consentimiento genera infracción dura R5.
+
+#### 2. Fase 1905 — Flag Operación en Curso para Cierre Seguro del Ciclo Completo
+- **Archivos:** `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
+- **Cambio:** Se introdujo `_operacionEnCurso` abarcando todo el ciclo de vida de `IniciarOptimizacionAsync` (cálculo AG, materialización en staging, certificación de cobertura y persistencia). `OnFormClosing` aplaza el cierre y cancela la ejecución si esta bandera está activa.
+
+#### 3. Fase 1906 — Guarda de Handle en Continuación de Cierre
+- **Archivos:** `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
+- **Cambio:** En `OnFormClosing`, la continuación sobre `_tareaOptimizacion` comprueba `!IsDisposed && !Disposing && IsHandleCreated` y captura `InvalidOperationException` al invocar `BeginInvoke(new Action(Close))`.
+
+#### 4. Fase 1907 — Reemplazo Definitivo de _contextoActual Residual
+- **Archivos:** `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
+- **Cambio:** Se migró el cálculo de habilitación del botón de promoción a `contexto.CandidatosCobertura.Count == 0 && factible`. Se verificó que solo queda la captura inicial de snapshot en línea 3078.
+
+#### 5. Fase 1908 — Bloqueo Exhaustivo de Superficie de Mutación
+- **Archivos:** `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
+- **Cambio:** En `EstablecerEstadoOptimizacion` y `CerrarEstadoVisualOptimizacion`, se inhabilitan `cmbArboles`, `treeContextoAcademico`, `btnFiltrarArbol`, `cmbSedes`, `cmbProgramas` y `cmbCargarCorridas` durante `Optimizando` y `Materializando`, restaurándolos en estados terminales.
+
+### Verificación de Principios (Ronda 426)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1904 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgCoherenciaGrupo.cs:455-458`, `AgValidadorReglas.cs:107-111`, `AgValidadorReglasTests.cs:1390-1415` |
+| F1905 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:74,2377,258,3441` |
+| F1906 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:263-272` |
+| F1907 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:3415` |
+| F1908 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:3503-3511,3546-3568` |
+
 
 
 

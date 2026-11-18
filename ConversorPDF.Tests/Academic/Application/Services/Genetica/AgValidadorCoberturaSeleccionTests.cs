@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using ConversorPDF.XLL.Academic.Application.Services.Genetica;
 using ConversorPDF.XLL.Academic.Domain.Models.Genetica;
@@ -320,6 +321,61 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             var conConsentimiento = validador.Validar(m, Array.Empty<AgSesionCobertura>(), new[] { sesionSinCentinela },
                 idTerceroVacante: 0, asignaturasVacantesConsentidas: new[] { idAsignatura });
             Assert.True(conConsentimiento.IsSuccess, conConsentimiento.IsFailure ? conConsentimiento.Error : string.Empty);
+        }
+
+        [Fact]
+        public void Validar_WhenVacanteNoConsentida_ShouldRetornarDocenteVacanteYDetalleDiagnostico()
+        {
+            // Arrange (Fase 1897 / Fase 1903): Sesión vacante no consentida debe capturar diagnóstico detallado
+            var m = Manifiesto(1);
+            var rel = m.Relaciones.First();
+            var sesion = new AgSesionCobertura(
+                rel.Clave, "NUEVA", 1, idTercero: 0,
+                fecha: new DateTime(2027, 2, 5), inicio: TimeSpan.FromHours(8), fin: TimeSpan.FromHours(12),
+                horas: 4, esVacante: true, motivoVacante: "SIN_DISPONIBILIDAD");
+
+            var validador = new AgValidadorCoberturaSeleccion();
+            var diagnosticos = new List<AgDetalleVacanteCobertura>();
+
+            // Act
+            var res = validador.Validar(m, Array.Empty<AgSesionCobertura>(), new[] { sesion },
+                idTerceroVacante: 0, festivos: null, asignaturasVacantesConsentidas: null, diagnosticos: diagnosticos);
+
+            // Assert
+            Assert.True(res.IsFailure);
+            Assert.Equal("DOCENTE_VACANTE", res.Error);
+            Assert.Single(diagnosticos);
+            Assert.Equal(rel.Clave.Valor, diagnosticos[0].ClaveValor);
+            Assert.Equal(rel.Clave.IdAsignatura, diagnosticos[0].IdAsignatura);
+            Assert.Equal("SIN_DISPONIBILIDAD", diagnosticos[0].MotivoVacante);
+            Assert.Equal(4.0, diagnosticos[0].Horas);
+            Assert.False(diagnosticos[0].Consentida);
+        }
+
+        [Fact]
+        public void Validar_WhenVacanteConsentida_ShouldRetornarSuccessYDetalleConConsentidaTrue()
+        {
+            // Arrange (Fase 1897 / Fase 1903): Sesión vacante consentida debe validar OK y marcar Consentida = true
+            var m = Manifiesto(1);
+            var rel = m.Relaciones.First();
+            var sesion = new AgSesionCobertura(
+                rel.Clave, "NUEVA", 1, idTercero: 0,
+                fecha: new DateTime(2027, 2, 5), inicio: TimeSpan.FromHours(8), fin: TimeSpan.FromHours(12),
+                horas: 4, esVacante: true, motivoVacante: "SIN_CANDIDATOS");
+
+            var validador = new AgValidadorCoberturaSeleccion();
+            var diagnosticos = new List<AgDetalleVacanteCobertura>();
+
+            // Act
+            var res = validador.Validar(m, Array.Empty<AgSesionCobertura>(), new[] { sesion },
+                idTerceroVacante: 0, festivos: null, asignaturasVacantesConsentidas: new[] { rel.Clave.IdAsignatura },
+                diagnosticos: diagnosticos);
+
+            // Assert
+            Assert.True(res.IsSuccess);
+            Assert.Single(diagnosticos);
+            Assert.True(diagnosticos[0].Consentida);
+            Assert.Equal("SIN_CANDIDATOS", diagnosticos[0].MotivoVacante);
         }
     }
 }

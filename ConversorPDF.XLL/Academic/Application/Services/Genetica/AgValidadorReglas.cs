@@ -14,6 +14,15 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
     /// </summary>
     public class AgValidadorReglas : IAgValidadorReglas
     {
+        // Fase 1899: Familia de motivos atribuibles a la disponibilidad docente (excluye vacantes estructurales de oleadas/bloques)
+        private static readonly HashSet<string> MotivosDocentes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            AgMotivoVacante.SIN_CANDIDATOS.Codigo(),
+            AgMotivoVacante.SIN_DISPONIBILIDAD.Codigo(),
+            AgMotivoVacante.NO_CUMPLE_REQUISITOS.Codigo(),
+            AgMotivoVacante.FUERA_DE_VENTANA.Codigo()
+        };
+
         public void Evaluar(AgIndividuo individuo, AgContexto contexto)
         {
             if (individuo == null) throw new ArgumentNullException(nameof(individuo));
@@ -93,6 +102,28 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         hardCount++;
                     }
                 }
+                else if (gen.EsVacante == 1)
+                {
+                    // Fase 1896-C / Fase 1899 / Fase 1904: vacío = causa desconocida => se trata como docente (conservador)
+                    bool motivoDocente = string.IsNullOrWhiteSpace(gen.MotivoVacante)
+                                      || MotivosDocentes.Contains(gen.MotivoVacante);
+                    if (motivoDocente)
+                    {
+                        bool vacanteAutorizada = contexto.AsignaturasVacantesConsentidas != null
+                            && contexto.AsignaturasVacantesConsentidas.Contains(gen.IdAsignatura)
+                            && string.Equals(gen.MotivoVacante, AgMotivoVacante.SIN_CANDIDATOS.Codigo(), StringComparison.OrdinalIgnoreCase);
+
+                        if (!vacanteAutorizada)
+                        {
+                            individuo.Violaciones.Add(new AgViolacion(
+                                AgReglaViolacion.R5_HabilitacionDocentePool,
+                                esDura: true,
+                                mensaje: $"Asignatura {gen.IdAsignatura} en vacante no autorizada (motivo: '{gen.MotivoVacante}').",
+                                idGen: gen.Id));
+                            hardCount++;
+                        }
+                    }
+                }
 
                 // --- R4: Compatibilidad Aula (Fase 1571: acepta Disponible y Aprobado) ---
                 if (gen.IdAula > 0 && contexto.AulasPorId.TryGetValue(gen.IdAula, out var aula))
@@ -110,7 +141,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 
                     // Fase 487/489 & Fase 664: Coherencia aula-cohorte. "SIN ASIGNAR"/vacío = comodín. Coherencia estricta de programa.
                     string semAula = AgFormatoAsignatura.SemestreRomano(aula.Semestre);
-                    string semGen  = AgFormatoAsignatura.SemestreRomano(gen.Semestre);
+                    string semGen = AgFormatoAsignatura.SemestreRomano(gen.Semestre);
                     bool semOk = semAula == "SIN ASIGNAR" || semGen == "SIN ASIGNAR"
                               || string.Equals(semAula, semGen, StringComparison.OrdinalIgnoreCase);
                     bool grpOk = string.IsNullOrWhiteSpace(aula.Grupo) || string.IsNullOrWhiteSpace(gen.Grupo)
@@ -525,33 +556,38 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 var ocupaciones = proyeccion.Value;
                 // Conservadas no son genes: ocupación fija con intervalo real, sin autocruces productivos.
                 foreach (var o in ocupaciones)
-                foreach (var fija in contexto.SesionesConservadas.Where(s => s.Fecha.Date == o.Fecha &&
-                    s.Inicio < o.Fin && o.Inicio < s.Fin))
-                {
-                    if (fija.Clave.IdAula == o.Gen.IdAula ||
-                        (AgCalendarioConflictos.DocenteReal(o.Gen, contexto) && fija.IdTercero == o.Gen.IdTercero))
+                    foreach (var fija in contexto.SesionesConservadas.Where(s => s.Fecha.Date == o.Fecha &&
+                        s.Inicio < o.Fin && o.Inicio < s.Fin))
                     {
-                        individuo.Violaciones.Add(new AgViolacion(
-                            fija.Clave.IdAula == o.Gen.IdAula ? AgReglaViolacion.R2_SuperposicionAula
-                                : AgReglaViolacion.R1_SuperposicionDocente,
-                            esDura: true,
-                            mensaje: $"Cruce con sesión CONSERVADA #{fija.Id} el {o.Fecha:yyyy-MM-dd} ({fija.Inicio}-{fija.Fin}).",
-                            idGen: o.Gen.Id));
-                        hardCount++;
+                        if (fija.Clave.IdAula == o.Gen.IdAula ||
+                            (AgCalendarioConflictos.DocenteReal(o.Gen, contexto) && fija.IdTercero == o.Gen.IdTercero))
+                        {
+                            individuo.Violaciones.Add(new AgViolacion(
+                                fija.Clave.IdAula == o.Gen.IdAula ? AgReglaViolacion.R2_SuperposicionAula
+                                    : AgReglaViolacion.R1_SuperposicionDocente,
+                                esDura: true,
+                                mensaje: $"Cruce con sesión CONSERVADA #{fija.Id} el {o.Fecha:yyyy-MM-dd} ({fija.Inicio}-{fija.Fin}).",
+                                idGen: o.Gen.Id));
+                            hardCount++;
+                        }
                     }
-                }
                 var serializador = new JavaScriptSerializer();
 
                 void Registrar(AgReglaViolacion regla, IEnumerable<AgCalendarioConflictos.Ocupacion> implicadas, string mensaje)
                 {
                     var lista = implicadas.ToList();
                     var indices = lista.Select(o => genes.IndexOf(o.Gen)).Distinct().ToArray();
-                    string detalle = serializador.Serialize(new {
+                    string detalle = serializador.Serialize(new
+                    {
                         indicesGenes = indices,
                         fecha = lista[0].Fecha.ToString("yyyy-MM-dd"),
-                        intervalos = lista.Select(o => new {
-                            o.Gen.IdAula, o.Gen.IdAsignatura, o.Gen.IdTercero,
-                            inicio = o.Inicio.ToString(), fin = o.Fin.ToString()
+                        intervalos = lista.Select(o => new
+                        {
+                            o.Gen.IdAula,
+                            o.Gen.IdAsignatura,
+                            o.Gen.IdTercero,
+                            inicio = o.Inicio.ToString(),
+                            fin = o.Fin.ToString()
                         }).ToArray()
                     });
                     individuo.Violaciones.Add(new AgViolacion(regla, true, mensaje, detalleJson: detalle));
@@ -562,27 +598,27 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 {
                     var lista = dia.ToList();
                     for (int i = 0; i < lista.Count; i++)
-                    for (int j = i + 1; j < lista.Count; j++)
-                    {
-                        var a = lista[i]; var b = lista[j];
-                        if (!AgCalendarioConflictos.SeCruzan(a, b)) continue;
-                        var par = new[] { a, b };
-                        string mensaje = $"Cruce real {dia.Key:yyyy-MM-dd}: asignaturas {a.Gen.IdAsignatura}/{b.Gen.IdAsignatura}.";
-                        bool docente = AgCalendarioConflictos.DocenteReal(a.Gen, contexto)
-                            && AgCalendarioConflictos.DocenteReal(b.Gen, contexto)
-                            && a.Gen.IdTercero == b.Gen.IdTercero;
-                        bool mismaCohorte = AgCalendarioConflictos.Cohorte(a.Gen) == AgCalendarioConflictos.Cohorte(b.Gen);
-                        if (docente)
+                        for (int j = i + 1; j < lista.Count; j++)
                         {
-                            Registrar(AgReglaViolacion.R1_SuperposicionDocente, par, mensaje);
-                            if (!mismaCohorte)
-                                Registrar(AgReglaViolacion.R7_TerceroOtroGrupoFechaHora, par, mensaje);
+                            var a = lista[i]; var b = lista[j];
+                            if (!AgCalendarioConflictos.SeCruzan(a, b)) continue;
+                            var par = new[] { a, b };
+                            string mensaje = $"Cruce real {dia.Key:yyyy-MM-dd}: asignaturas {a.Gen.IdAsignatura}/{b.Gen.IdAsignatura}.";
+                            bool docente = AgCalendarioConflictos.DocenteReal(a.Gen, contexto)
+                                && AgCalendarioConflictos.DocenteReal(b.Gen, contexto)
+                                && a.Gen.IdTercero == b.Gen.IdTercero;
+                            bool mismaCohorte = AgCalendarioConflictos.Cohorte(a.Gen) == AgCalendarioConflictos.Cohorte(b.Gen);
+                            if (docente)
+                            {
+                                Registrar(AgReglaViolacion.R1_SuperposicionDocente, par, mensaje);
+                                if (!mismaCohorte)
+                                    Registrar(AgReglaViolacion.R7_TerceroOtroGrupoFechaHora, par, mensaje);
+                            }
+                            if (a.Gen.IdAula > 0 && a.Gen.IdAula == b.Gen.IdAula)
+                                Registrar(AgReglaViolacion.R2_SuperposicionAula, par, mensaje);
+                            if (mismaCohorte)
+                                Registrar(AgReglaViolacion.R3_SuperposicionGrupo, par, mensaje);
                         }
-                        if (a.Gen.IdAula > 0 && a.Gen.IdAula == b.Gen.IdAula)
-                            Registrar(AgReglaViolacion.R2_SuperposicionAula, par, mensaje);
-                        if (mismaCohorte)
-                            Registrar(AgReglaViolacion.R3_SuperposicionGrupo, par, mensaje);
-                    }
                 }
 
                 // R4

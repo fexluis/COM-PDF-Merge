@@ -90,10 +90,10 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 }
             }
 
-            // Si no hay candidatos disponibles en el pool, se marca como vacante
+            // Fase 1896-B: Reutilizar clasificación canónica DiagnosticarMotivo (habilitación, ventana, disponibilidad)
             gen.IdTercero = 0;
             gen.EsVacante = 1;
-            gen.MotivoVacante = AgMotivoVacante.SIN_CANDIDATOS.Codigo();
+            gen.MotivoVacante = DiagnosticarMotivo(gen, contexto);
             return false;
         }
 
@@ -152,6 +152,12 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             if (!contexto.PoolPorAsignatura.TryGetValue(gen.IdAsignatura, out var pool) || pool.Count == 0 || !pool.Any(p => p.Activo == 1))
             {
                 return AgMotivoVacante.SIN_CANDIDATOS.Codigo();
+            }
+
+            // Fase 1902: si el gen carece de programa o semestre (mutación/recombinación), no atribuir erróneamente a NO_CUMPLE_REQUISITOS
+            if (gen.IdPrograma <= 0 || string.IsNullOrWhiteSpace(gen.Semestre))
+            {
+                return AgMotivoVacante.SIN_DISPONIBILIDAD.Codigo();
             }
 
             // Si existen candidatos en pool para la materia pero ninguno habilitado para este programa/semestre

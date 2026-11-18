@@ -15,7 +15,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         public Result Validar(AgManifiestoCobertura manifiesto,
             IReadOnlyCollection<AgSesionCobertura> conservadas, IReadOnlyCollection<AgSesionCobertura> nuevas,
             int idTerceroVacante = 0, IReadOnlyCollection<(DateTime Inicio, DateTime Fin)> festivos = null,
-            IReadOnlyCollection<int> asignaturasVacantesConsentidas = null)
+            IReadOnlyCollection<int> asignaturasVacantesConsentidas = null,
+            ICollection<AgDetalleVacanteCobertura> diagnosticos = null)
         {
             if (manifiesto == null || conservadas == null || nuevas == null)
                 return Result.Failure("COBERTURA_ENTRADA_INVALIDA");
@@ -52,12 +53,26 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     s.Horas <= 0 || double.IsNaN(s.Horas) || double.IsInfinity(s.Horas) ||
                     s.Horas > (s.Fin - s.Inicio).TotalHours + 0.001)
                     return Result.Failure("SESION_NO_VERIFICABLE");
-                // FASE 1870/1875: VACANTE consentida: la cobertura horaria se cuenta y el docente falta por autorización explícita.
+                // FASE 1870/1875/1897: VACANTE consentida: la cobertura horaria se cuenta y el docente falta por autorización explícita.
                 bool consentida = consentidas.Contains(s.Clave.IdAsignatura);
-                if (s.IdTercero <= 0 && !consentida) return Result.Failure("DOCENTE_VACANTE");
-                if ((s.EsVacante || (idTerceroVacante > 0 && s.IdTercero == idTerceroVacante))
-                    && !consentida)
-                    return Result.Failure("DOCENTE_VACANTE");
+                bool esVacante = s.IdTercero <= 0 || s.EsVacante || (idTerceroVacante > 0 && s.IdTercero == idTerceroVacante);
+                if (esVacante)
+                {
+                    diagnosticos?.Add(new AgDetalleVacanteCobertura
+                    {
+                        ClaveValor = s.Clave.Valor,
+                        IdAsignatura = s.Clave.IdAsignatura,
+                        MotivoVacante = s.MotivoVacante,
+                        Fecha = s.Fecha,
+                        Horas = s.Horas,
+                        Consentida = consentida
+                    });
+
+                    if (!consentida)
+                    {
+                        return Result.Failure("DOCENTE_VACANTE");
+                    }
+                }
             }
             for (int i = 0; i < sesiones.Count; i++)
                 for (int j = i + 1; j < sesiones.Count; j++)
@@ -100,12 +115,15 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         public double Horas { get; }
         /// <summary>La falta de docente nunca exonera la demanda.</summary>
         public bool EsVacante { get; }
+        /// <summary>Motivo de vacante diagnosticado por el AG.</summary>
+        public string MotivoVacante { get; }
         /// <summary>Copia los valores sin mutar el origen.</summary>
         public AgSesionCobertura(AgClaveRelacionCobertura clave, string origen, long id, int idTercero,
-            DateTime fecha, TimeSpan inicio, TimeSpan fin, double horas, bool esVacante = false)
+            DateTime fecha, TimeSpan inicio, TimeSpan fin, double horas, bool esVacante = false, string motivoVacante = null)
         {
             Clave = clave; Origen = origen; Id = id; IdTercero = idTercero;
             Fecha = fecha; Inicio = inicio; Fin = fin; Horas = horas; EsVacante = esVacante;
+            MotivoVacante = motivoVacante ?? string.Empty;
         }
     }
 }

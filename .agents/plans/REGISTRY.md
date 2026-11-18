@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 422 | 423 | 2026-11-17 |
-| `fase` | 1894 | 1895 | 2026-11-17 |
+| `ronda` | 426 | 427 | 2026-11-17 |
+| `fase` | 1908 | 1909 | 2026-11-17 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -136,6 +136,10 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-099 | 2026-11-17 | `(revisión Ronda 420 — Fases 1887–1888: serialización segura vacantes_consentidas, helper introspección unificado y test compatibilidad)` | `Wave —` → `Ronda 420` | `Fase 1887–1888` | closed | sin escisión (bajo umbral); sin build/tests | pendiente |
 | R-100 | 2026-11-17 | `(revisión Ronda 421 — Fases 1889–1891: tri-estado ExistenciaSql, TablaExiste unificado y saneamiento de identificador)` | `Wave —` → `Ronda 421` | `Fase 1889–1891` | closed | sin escisión (bajo umbral); sin build/tests | pendiente |
 | R-101 | 2026-11-17 | `(revisión Ronda 422 — Fases 1892–1894: propagación Indeterminada en V84, degradación segura en repositorio y exclusión prefijo sqlite_)` | `Wave —` → `Ronda 422` | `Fase 1892–1894` | closed | sin escisión (bajo umbral); sin build/tests | pendiente |
+| R-102 | 2026-11-17 | `(revisión Ronda 423 — Fases 1892–1894: verificación en v1.6.4.22, tri-estado y exclusión sqlite_)` | `Wave —` → `Ronda 423` | `Fase —` | closed | sin fases nuevas obligatorias; procede plan R424 | `v1.6.4.22` |
+| R-103 | 2026-11-17 | `(implementación Ronda 424 — Fases 1895–1898: AG fuera de UI, logging pre-purga, detalle vacante y corrección ruta vacantes)` | `Wave —` → `Ronda 424` | `Fase 1895–1898` | closed | sin escisión (bajo umbral); sin build/tests | pendiente |
+| R-104 | 2026-11-17 | `(revisión Ronda 425 — Fases 1899–1903: vacantes docentes en R5, cierre diferido, snapshot contexto y tests)` | `Wave —` → `Ronda 425` | `Fase 1899–1903` | closed | sin escisión (bajo umbral); sin build/tests | pendiente |
+| R-105 | 2026-11-17 | `(revisión Ronda 426 — Fases 1904–1908: motivo vacío a R5, ciclo de vida cierre, guarda Invoke, snapshot total y bloqueo mutaciones)` | `Wave —` → `Ronda 426` | `Fase 1904–1908` | closed | sin escisión (bajo umbral); sin build/tests | pendiente |
 
 
 

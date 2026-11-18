@@ -70,6 +70,8 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
         private bool _diagnosticoEnCurso; // Fase 1727: exclusión de reentrada concurrente en diagnóstico pre-vuelo
 
         private CancellationTokenSource _ctsEjecucion;
+        private Task _tareaOptimizacion; // Fase 1900: Tarea de optimización en segundo plano para cierre seguro
+        private bool _operacionEnCurso;  // Fase 1905: Ciclo de vida completo de la optimización y post-proceso
         private Guid? _intentoOptimizacion;
         private bool _aceptaProgresoOptimizacion;
         private enum EstadoVisualOptimizacion
@@ -253,6 +255,24 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
         /// </summary>
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
+            // Fase 1900 / 1905 / 1906: Si la optimización o el post-proceso de la corrida están en curso, cancelar y diferir el cierre
+            if (_operacionEnCurso || (_tareaOptimizacion != null && !_tareaOptimizacion.IsCompleted))
+            {
+                _ctsEjecucion?.Cancel();
+                e.Cancel = true;
+                if (_tareaOptimizacion != null)
+                {
+                    _tareaOptimizacion.ContinueWith(_ =>
+                    {
+                        if (!IsDisposed && !Disposing && IsHandleCreated)
+                        {
+                            try { BeginInvoke(new Action(Close)); } catch (InvalidOperationException) { }
+                        }
+                    }, TaskScheduler.FromCurrentSynchronizationContext());
+                }
+                return;
+            }
+
             // Fase 1723: Aplazar cierre si existe una operación protegida (escalado/recarga/sincronización) en curso
             if (_semaforoSyncDimensiones.CurrentCount == 0)
             {
@@ -2354,6 +2374,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             // Identidad local anterior a cualquier await; no autoriza revisar horarios aprobados.
             var intento = Guid.NewGuid();
             _intentoOptimizacion = intento;
+            _operacionEnCurso = true; // Fase 1905: protección de ciclo de vida completo de la optimización y post-proceso
             _aceptaProgresoOptimizacion = false;
             _terminalVisualOptimizacion = false;
             _faseFinOptimizacion = null;
@@ -3052,15 +3073,26 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 trazaOpt.Inicio($"Poblacion={corrida.PoblacionTamano}, Generaciones={corrida.GeneracionesMax}, IdCorrida={idCorrida}");
 
                 EstablecerEstadoOptimizacion(EstadoVisualOptimizacion.Optimizando);
-                var optResult = await _generadorHorarios.EjecutarOptimizacionAsync(
-                    _contextoActual,
-                    corrida.PoblacionTamano,
-                    corrida.GeneracionesMax,
-                    corrida.TasaCruce,
-                    corrida.TasaMutacion,
-                    corrida.Elitismo,
-                    progressReporter,
-                    _ctsEjecucion.Token);
+
+                // Fase 1895 & Fase 1900/1901: Offload del bucle intensivo de CPU del AG fuera del hilo STA de UI
+                var contextoOpt = _contextoActual;
+                var contexto = contextoOpt; // Fase 1901: instantánea inmutable para todo el tramo post-await
+                var tokenOpt = _ctsEjecucion.Token;
+
+                var tareaOpt = Task.Run(
+                    () => _generadorHorarios.EjecutarOptimizacionAsync(
+                            contextoOpt,
+                            corrida.PoblacionTamano,
+                            corrida.GeneracionesMax,
+                            corrida.TasaCruce,
+                            corrida.TasaMutacion,
+                            corrida.Elitismo,
+                            progressReporter,
+                            tokenOpt),
+                    tokenOpt);
+                _tareaOptimizacion = tareaOpt;
+
+                var optResult = await tareaOpt.ConfigureAwait(true);
 
                 _aceptaProgresoOptimizacion = false;
                 if (optResult.IsFailure)
@@ -3176,7 +3208,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     trazaMat.Inicio($"IdCorrida={idCorrida}");
 
                     Log("\nMaterializando solución óptima en tablas de staging...");
-                    var matRes = await _materializador.MaterializarEnStagingAsync(idCorrida, _ultimoResultado.MejorIndividuo, _contextoActual, _ctsEjecucion.Token);
+                    var matRes = await _materializador.MaterializarEnStagingAsync(idCorrida, _ultimoResultado.MejorIndividuo, contexto, _ctsEjecucion.Token);
                     if (matRes.IsFailure)
                     {
                         stagingOk = false;
@@ -3250,12 +3282,12 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                             }
                         }
                         dict["planFechado"] = planFechado;
-                        dict["vacantesConsentidas"] = _contextoActual.AsignaturasVacantesConsentidas != null
-                            ? _contextoActual.AsignaturasVacantesConsentidas.OrderBy(id => id).ToList()
+                        dict["vacantesConsentidas"] = contexto.AsignaturasVacantesConsentidas != null
+                            ? contexto.AsignaturasVacantesConsentidas.OrderBy(id => id).ToList()
                             : new List<int>();
                         if (aulaCorrida != null)
                         {
-                            dict["huella"] = AgHuellaPlanVentana.Calcular(_contextoActual, aulaCorrida, planFechado: planFechado);
+                            dict["huella"] = AgHuellaPlanVentana.Calcular(contexto, aulaCorrida, planFechado: planFechado);
                         }
                         corrida.ParametrosJson = serializer.Serialize(dict);
                     }
@@ -3265,7 +3297,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     }
                 }
                 // La compuerta genes ↔ staging sigue intacta; la segunda compuerta detecta relaciones enteras omitidas.
-                bool factible = stagingOk && AgCompuertaPromocion.EsPromovible(corrida, mejor, sesiones, _contextoActual, permitirVacantes: _contextoActual?.PermiteVacantes ?? false);
+                bool factible = stagingOk && AgCompuertaPromocion.EsPromovible(corrida, mejor, sesiones, contexto, permitirVacantes: contexto?.PermiteVacantes ?? false);
                 if (stagingOk)
                 {
                     if (sesiones.IsFailure)
@@ -3276,7 +3308,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     }
                     else
                     {
-                        var nuevas = new AgProyectorSolucionCobertura().Nuevas(_contextoActual, mejor, sesiones.Value);
+                        var nuevas = new AgProyectorSolucionCobertura().Nuevas(contexto, mejor, sesiones.Value);
                         if (nuevas.IsFailure)
                         {
                             stagingOk = false;
@@ -3285,16 +3317,29 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                         }
                         else
                         {
-                            var cobertura = new AgValidadorCoberturaSeleccion().Validar(_contextoActual.ManifiestoCobertura,
-                                _contextoActual.SesionesConservadas, nuevas.Value, _contextoActual.IdTerceroVacante, _contextoActual.Festivos,
-                                _contextoActual.AsignaturasVacantesConsentidas);
+                            // Fase 1897/1898: Captura detallada de vacantes de cobertura antes de purgar staging
+                            var detalleVacantes = new List<AgDetalleVacanteCobertura>();
+                            var cobertura = new AgValidadorCoberturaSeleccion().Validar(
+                                contexto.ManifiestoCobertura,
+                                contexto.SesionesConservadas,
+                                nuevas.Value,
+                                contexto.IdTerceroVacante,
+                                contexto.Festivos,
+                                contexto.AsignaturasVacantesConsentidas,
+                                detalleVacantes);
+
                             if (cobertura.IsFailure)
                             {
                                 stagingOk = false;
                                 stagingError = "COBERTURA_NO_CERTIFICADA:" + cobertura.Error;
                                 MarcarErrorPreparacion("P08_Cobertura_" + cobertura.Error);
+                                var noConsentidas = detalleVacantes.Where(d => !d.Consentida).ToList();
+                                LoggerHelper.Warning($"[AG] Cobertura no certificada: {cobertura.Error}. " +
+                                    $"Vacantes no consentidas={noConsentidas.Count} (consentidas={contexto.AsignaturasVacantesConsentidas?.Count ?? 0}). " +
+                                    string.Join("; ", noConsentidas.Take(10)
+                                        .Select(d => $"{d.ClaveValor}|asig={d.IdAsignatura}|motivo={d.MotivoVacante}|horas={d.Horas:0.#}")));
                                 Log($"[ERROR] Cobertura no certificada: {cobertura.Error}. " +
-                                    $"Vacantes consentidas={_contextoActual?.AsignaturasVacantesConsentidas?.Count ?? 0}. " +
+                                    $"Vacantes consentidas={contexto?.AsignaturasVacantesConsentidas?.Count ?? 0}. " +
                                     "Verifique pool docente o retire asignaturas sin docente.");
                                 traza.Causa(AgCausaFallo.CoberturaNoCertificada, cobertura.Error);
                             }
@@ -3333,7 +3378,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                             : $"Estado: Resultado parcial. HARD={mejor?.HardViolations ?? 0}; vacantes={mejor?.Vacantes ?? 0}; sesiones vacantes={sesionesVacantes}; horas vacantes={horasVacantes:0.#}.");
                 }
                 // T6 requiere sustitución transaccional con ratificación vigente; no habilitar promoción aquí.
-                btnPromoverProduccion.Enabled = _contextoActual.CandidatosCobertura.Count == 0 && factible;
+                btnPromoverProduccion.Enabled = contexto.CandidatosCobertura.Count == 0 && factible;
 
                 // Fase 599: Resumen de fin de corrida
                 LoggerHelper.Resumen("FinCorridaAG",
@@ -3364,11 +3409,11 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                         "Estado: Finalizado con errores en staging.");
                 }
 
-                // 4. FASE 1878: Mostrar Resultados en Módulo R solo si el staging fue exitoso
+                // 4. FASE 1878 & Fase 1907: Mostrar Resultados en Módulo R usando snapshot inmutable 'contexto'
                 if (stagingOk)
                 {
                     await CargarModuloResultadosAsync(idCorrida);
-                    btnPromoverProduccion.Enabled = _contextoActual.CandidatosCobertura.Count == 0 && factible;
+                    btnPromoverProduccion.Enabled = contexto.CandidatosCobertura.Count == 0 && factible;
                     tabControlPrincipal.SelectedTab = tabResultados;
                 }
                 else
@@ -3394,6 +3439,8 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             }
             finally
             {
+                _operacionEnCurso = false; // Fase 1905: fin de operación en curso
+                _tareaOptimizacion = null; // Fase 1900: desasociar tarea finalizada
                 _aceptaProgresoOptimizacion = false;
                 if (!corridaFinalizada)
                 {
@@ -3445,6 +3492,21 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             if (_terminalVisualOptimizacion) return;
             EstablecerEstadoOptimizacion(cancelada ? EstadoVisualOptimizacion.Cancelado : EstadoVisualOptimizacion.Error,
                 cancelada ? "CANCELACION" : "FALLO_EJECUCION");
+
+            // Fase 1901 / 1908: Restaurar controles de período, ventana, árbol y corridas bloqueados durante la optimización
+            if (!IsDisposed && !Disposing)
+            {
+                cmbPeriodos.Enabled = true;
+                chkManualVentana.Enabled = true;
+                dtpVentanaInicio.Enabled = chkManualVentana.Checked;
+                dtpVentanaFin.Enabled = chkManualVentana.Checked;
+                if (cmbArboles != null) cmbArboles.Enabled = true;
+                if (treeContextoAcademico != null) treeContextoAcademico.Enabled = true;
+                if (btnFiltrarArbol != null) btnFiltrarArbol.Enabled = true;
+                if (cmbSedes != null) cmbSedes.Enabled = true;
+                if (cmbProgramas != null) cmbProgramas.Enabled = true;
+                if (cmbCargarCorridas != null) cmbCargarCorridas.Enabled = true;
+            }
         }
 
         // Los helpers compartidos con diagnóstico sólo afectan a un intento de optimización vigente.
@@ -3482,7 +3544,35 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             _terminalVisualOptimizacion = terminal;
             _aceptaProgresoOptimizacion = estado == EstadoVisualOptimizacion.Optimizando;
             if (IsDisposed || Disposing) return;
-            if (terminal) btnPromoverProduccion.Enabled = false;
+            if (terminal)
+            {
+                btnPromoverProduccion.Enabled = false;
+                // Fase 1901 / 1908: Restaurar controles en estados terminales
+                cmbPeriodos.Enabled = true;
+                chkManualVentana.Enabled = true;
+                dtpVentanaInicio.Enabled = chkManualVentana.Checked;
+                dtpVentanaFin.Enabled = chkManualVentana.Checked;
+                if (cmbArboles != null) cmbArboles.Enabled = true;
+                if (treeContextoAcademico != null) treeContextoAcademico.Enabled = true;
+                if (btnFiltrarArbol != null) btnFiltrarArbol.Enabled = true;
+                if (cmbSedes != null) cmbSedes.Enabled = true;
+                if (cmbProgramas != null) cmbProgramas.Enabled = true;
+                if (cmbCargarCorridas != null) cmbCargarCorridas.Enabled = true;
+            }
+            else if (estado == EstadoVisualOptimizacion.Optimizando || estado == EstadoVisualOptimizacion.Materializando)
+            {
+                // Fase 1901 / 1908: Bloquear mutaciones de período, ventana, árbol, jerarquía y corrida durante optimización y materialización
+                cmbPeriodos.Enabled = false;
+                dtpVentanaInicio.Enabled = false;
+                dtpVentanaFin.Enabled = false;
+                chkManualVentana.Enabled = false;
+                if (cmbArboles != null) cmbArboles.Enabled = false;
+                if (treeContextoAcademico != null) treeContextoAcademico.Enabled = false;
+                if (btnFiltrarArbol != null) btnFiltrarArbol.Enabled = false;
+                if (cmbSedes != null) cmbSedes.Enabled = false;
+                if (cmbProgramas != null) cmbProgramas.Enabled = false;
+                if (cmbCargarCorridas != null) cmbCargarCorridas.Enabled = false;
+            }
             Color color = Color.DarkBlue;
             switch (estado)
             {

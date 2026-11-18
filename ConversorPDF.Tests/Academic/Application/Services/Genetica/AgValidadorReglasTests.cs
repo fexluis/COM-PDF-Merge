@@ -183,6 +183,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             contexto.AulasPorId[1] = new AgAula { Id = 1, Estado = AgEstadoAula.Disponible, Grupo = null };
             contexto.BloquesPorId[1] = CrearBloque(1, diaSemana: 2);
             contexto.Pesos.PesoVacante = 50.0;
+            contexto.AsignaturasVacantesConsentidas = new HashSet<int> { 10 }; // Fase 1896-C: vacante autorizada para no generar R5 HARD
 
             var individuo = new AgIndividuo();
             individuo.Genes.Add(new AgGen
@@ -1302,6 +1303,115 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             individuo.HardViolations.Should().Be(0);
             individuo.Violaciones.Should().NotContain(v => v.EsDura);
             individuo.Estado.Should().Be(AgEstadoIndividuo.Factible);
+        }
+
+        [Fact]
+        public void Evaluar_WhenVacanteSinDisponibilidadSinConsentimiento_ShouldGenerarHardR5()
+        {
+            // Arrange (Fase 1896-C / Fase 1903): Vacante por SIN_DISPONIBILIDAD sin autorización explícita ⇒ HARD R5
+            var contexto = new AgContexto();
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
+
+            var individuo = new AgIndividuo();
+            individuo.Genes.Add(new AgGen
+            {
+                Id = 1,
+                IdAsignatura = 101,
+                IdAula = 1,
+                EsVacante = 1,
+                MotivoVacante = AgMotivoVacante.SIN_DISPONIBILIDAD.Codigo(),
+                FechaInicioEstimada = new DateTime(2026, 2, 10),
+                FechaFinEstimada = new DateTime(2026, 3, 10)
+            });
+
+            // Act
+            _sut.Evaluar(individuo, contexto);
+
+            // Assert
+            individuo.Violaciones.Should().Contain(v => v.Regla == AgReglaViolacion.R5_HabilitacionDocentePool && v.EsDura && v.Mensaje.Contains("SIN_DISPONIBILIDAD"));
+            individuo.HardViolations.Should().BeGreaterThan(0);
+        }
+
+        [Fact]
+        public void Evaluar_WhenVacanteSinCandidatosConsentida_ShouldNoGenerarHardR5()
+        {
+            // Arrange (Fase 1896-C / Fase 1903): Vacante por SIN_CANDIDATOS con consentimiento registrado ⇒ no genera HARD R5
+            var contexto = new AgContexto
+            {
+                Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value,
+                AsignaturasVacantesConsentidas = new HashSet<int> { 101 }
+            };
+
+            var individuo = new AgIndividuo();
+            individuo.Genes.Add(new AgGen
+            {
+                Id = 1,
+                IdAsignatura = 101,
+                IdAula = 1,
+                EsVacante = 1,
+                MotivoVacante = AgMotivoVacante.SIN_CANDIDATOS.Codigo(),
+                FechaInicioEstimada = new DateTime(2026, 2, 10),
+                FechaFinEstimada = new DateTime(2026, 3, 10)
+            });
+
+            // Act
+            _sut.Evaluar(individuo, contexto);
+
+            // Assert
+            individuo.Violaciones.Should().NotContain(v => v.Regla == AgReglaViolacion.R5_HabilitacionDocentePool && v.EsDura);
+        }
+
+        [Fact]
+        public void Evaluar_WhenVacanteSinPlanOleada_ShouldNoGenerarHardR5()
+        {
+            // Arrange (Fase 1899 / Fase 1903): Vacante estructural por SIN_PLAN_OLEADA NO genera infracción dura R5 (se tipifica en R7)
+            var contexto = new AgContexto();
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
+
+            var individuo = new AgIndividuo();
+            individuo.Genes.Add(new AgGen
+            {
+                Id = 1,
+                IdAsignatura = 101,
+                IdAula = 1,
+                EsVacante = 1,
+                MotivoVacante = AgMotivoVacante.SIN_PLAN_OLEADA.Codigo(),
+                FechaInicioEstimada = new DateTime(2026, 2, 10),
+                FechaFinEstimada = new DateTime(2026, 3, 10)
+            });
+
+            // Act
+            _sut.Evaluar(individuo, contexto);
+
+            // Assert: no debe ser penalizada como R5 docente
+            individuo.Violaciones.Should().NotContain(v => v.Regla == AgReglaViolacion.R5_HabilitacionDocentePool && v.EsDura);
+        }
+
+        [Fact]
+        public void Evaluar_WhenVacanteMotivoVacioSinConsentimiento_ShouldGenerarHardR5()
+        {
+            // Arrange (Fase 1904): Vacante con motivo vacío sin autorización explícita ⇒ se asume causa docente no autorizada (HARD R5)
+            var contexto = new AgContexto();
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
+
+            var individuo = new AgIndividuo();
+            individuo.Genes.Add(new AgGen
+            {
+                Id = 1,
+                IdAsignatura = 101,
+                IdAula = 1,
+                EsVacante = 1,
+                MotivoVacante = string.Empty,
+                FechaInicioEstimada = new DateTime(2026, 2, 10),
+                FechaFinEstimada = new DateTime(2026, 3, 10)
+            });
+
+            // Act
+            _sut.Evaluar(individuo, contexto);
+
+            // Assert
+            individuo.Violaciones.Should().Contain(v => v.Regla == AgReglaViolacion.R5_HabilitacionDocentePool && v.EsDura);
+            individuo.HardViolations.Should().BeGreaterThan(0);
         }
     }
 }
