@@ -1,6 +1,6 @@
 # Plan: Optimización de Rendimiento AG — Corrida #105 (R-112, Ronda 433–438)
 
-**Generado**: 2026-11-17 · **Autor**: Swarm-Planner · **Estado**: reserved
+**Generado**: 2026-11-17 · **Autor**: Swarm-Planner · **Estado**: executing
 
 ## Execution envelope
 - branch: rendimiento-app
@@ -10,7 +10,7 @@
   - min_xll_cs: 300
   - min_tests_cs: 100
   - required_slice: Academic
-- baseline: tests/baseline/test_baseline.txt (TOTAL: 1446; último reporte ledger R-109: Full 1648; build-verifier medirá workspace antes de T1)
+- baseline: tests/baseline/test_baseline.txt (TOTAL: 1674 medido 2026-11-17 con dotnet test previo a T1; 1679 tras T1)
 - verify: dotnet build .\ConversorPDF.Tests\ConversorPDF.Tests.csproj -c Debug ; dotnet test .\ConversorPDF.Tests\ConversorPDF.Tests.csproj -c Debug --no-build --logger "trx;LogFileName=gate-alternativo.trx"
 - build_gate: serializado (un único build/tests a la vez por workspace; Excel-DNA bloquea bin/)
 - max_parallel_writers: 2
@@ -108,10 +108,16 @@ T1 ── T2 ── T4 ── T6 ── T8 ─┐
 - **description**: Añadir constructores o sobrecargas que acepten `Random` o semilla entera; definir flujos deterministas por operador genético; conservar el comportamiento actual sin cambios cuando no se pasa semilla. No alterar el orden de consumo de números aleatorios en operadores existentes.
 - **validation**: Dos ejecuciones con la misma semilla producen exactamente la misma secuencia de genes y aptitudes; semillas distintas divergen; toda la suite de pruebas existente continúa pasando en verde.
 - **verification**: dotnet test .\ConversorPDF.Tests\ConversorPDF.Tests.csproj -c Debug --no-build --filter "FullyQualifiedName~AgRandomSeedTests"
-- **evidence**: _evidence/<timestamp>/summary.md
-- **status**: pending
-- **log**: 
+- **evidence**: _evidence/20261117-t1/summary.md
+- **status**: done
+- **log**: Añadidos constructores con semilla determinista a AgOperadorCruce, AgOperadorMutacion, AgOperadorSeleccion, AgFabricaIndividuos y AgAsignadorTercero. Creadas 5 pruebas unitarias en AgRandomSeedTests verificando reproducibilidad estricta. Suite completa ejecutada con 1.679 pruebas superadas (0 fallos).
 - **files edited/created**:
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgOperadorCruce.cs
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgOperadorMutacion.cs
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgOperadorSeleccion.cs
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgFabricaIndividuos.cs
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgAsignadorTercero.cs
+  - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgRandomSeedTests.cs
 
 ### T2: Telemetría generacional y corrección de DuracionMs
 - **id**: T2

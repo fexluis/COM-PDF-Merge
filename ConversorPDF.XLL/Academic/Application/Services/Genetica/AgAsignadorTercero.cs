@@ -19,6 +19,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             _random = random ?? new Random();
         }
 
+        public AgAsignadorTercero(int seed)
+            : this(new Random(seed))
+        {
+        }
+
         private static bool MismoGrupo(AgGen a, AgGen b) =>
             a != null && b != null
             && a.IdAula == b.IdAula && a.IdAsignatura == b.IdAsignatura

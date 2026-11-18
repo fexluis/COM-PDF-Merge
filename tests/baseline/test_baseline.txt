@@ -1,5 +1,5 @@
-# Baseline medido 2026-11-15 con scripts/verify.ps1 -Mode Full tras implementar Libro 8 / Corrida 94 (Ronda 397 / Fase 1814)
-TOTAL: 1446
-PASSED: 1446
+# Baseline medido 2026-11-17 con dotnet test tras completar T1 de Rendimiento AG Corrida 105 (Ronda 433 / Fase 1942)
+TOTAL: 1679
+PASSED: 1679
 FAILED: 0
 SKIPPED: 0

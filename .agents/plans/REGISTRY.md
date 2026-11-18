@@ -146,7 +146,7 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-109 | 2026-11-17 | `(consolidado e implementación Ronda 430 — Fases 1931–1935: alcance completo corrida, cuadre independiente, identidad fila-vinculación, visibilidad homónimos y prueba última fecha)` | `Wave —` → `Ronda 430` | `Fase 1931–1935` | closed | PASS (Full 1648) | pendiente |
 | R-110 | 2026-11-17 | `(revisión e implementación Ronda 431 — Fases 1936–1938: semántica banner cuadre, fallback clave IdVinculacion <= 0 y detección sesiones huérfanas)` | `Wave —` → `Ronda 431` | `Fase 1936–1938` | closed | PASS (8 tests SemestresExcelExporterTests) | pendiente |
 | R-111 | 2026-11-17 | `(revisión e implementación Ronda 432 — Fases 1939–1941: discriminantes sede/subsede/periodo en clave fallback, precisión texto huérfanas y cuadre en módulo legado)` | `Wave —` → `Ronda 432` | `Fase 1939–1941` | closed | sin escisión (bajo umbral); sin build/tests | pendiente |
-| R-112 | 2026-11-17 | `2026-11-17-rendimiento-app-corrida105-plan.md` | `Wave 1..6` → `Ronda 433–438` | `T1..T10` → `Fase 1942–1951` | reserved | pendiente | pendiente |
+| R-112 | 2026-11-17 | `2026-11-17-rendimiento-app-corrida105-plan.md` | `Wave 1..6` → `Ronda 433–438` | `T1..T10` → `Fase 1942–1951` | executing | PASS (Baseline Full 1674) | aa0f50c |
 
 
 

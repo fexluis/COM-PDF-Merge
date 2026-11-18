@@ -25,6 +25,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             _planificadorPatron = planificadorPatron ?? new AgPlanificadorPatronSemanal();
         }
 
+        public AgOperadorCruce(int seed, AgAsignadorTercero asignador = null, AgPlanificadorPatronSemanal planificadorPatron = null)
+            : this(new Random(seed), asignador, planificadorPatron)
+        {
+        }
+
         public (AgIndividuo Hijo1, AgIndividuo Hijo2) Cruzar(AgIndividuo padre1, AgIndividuo padre2, double tasaCruce, int generacion, AgContexto contexto = null)
         {
             if (padre1 == null) throw new ArgumentNullException(nameof(padre1));

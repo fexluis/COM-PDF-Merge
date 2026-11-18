@@ -19,6 +19,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             _random = random ?? new Random();
         }
 
+        public AgOperadorMutacion(int seed)
+            : this(new Random(seed))
+        {
+        }
+
         public void Mutar(AgIndividuo individuo, double tasaMutacion, AgContexto contexto)
         {
             if (individuo == null) throw new ArgumentNullException(nameof(individuo));

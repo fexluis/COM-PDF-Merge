@@ -16,6 +16,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             _random = random ?? new Random();
         }
 
+        public AgOperadorSeleccion(int seed)
+            : this(new Random(seed))
+        {
+        }
+
         public AgIndividuo SeleccionarPorTorneo(List<AgIndividuo> poblacion, int tamanoTorneo = 3)
         {
             if (poblacion == null || poblacion.Count == 0) throw new ArgumentException("La población no puede estar vacía.");

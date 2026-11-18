@@ -38,6 +38,16 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         {
         }
 
+        public AgFabricaIndividuos(int seed)
+            : this(new Random(seed), null, null)
+        {
+        }
+
+        public AgFabricaIndividuos(int seed, AgPlanificadorPatronSemanal planificadorPatron)
+            : this(new Random(seed), planificadorPatron, null)
+        {
+        }
+
         internal AgFabricaIndividuos(Random random, AgPlanificadorPatronSemanal planificadorPatron, AgPlanificadorOleadas planificadorOleadas)
         {
             _random = random ?? new Random();
