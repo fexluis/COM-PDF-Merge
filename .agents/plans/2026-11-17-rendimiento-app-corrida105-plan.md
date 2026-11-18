@@ -53,6 +53,19 @@
 
 ---
 
+## Criterios de Aceptación Globales
+
+1. **Equivalencia de Trayectoria y Calidad**: Misma semilla en baseline y versión optimizada produce idéntica aptitud o mejora estricta; no superar las 30 violaciones blandas históricas; `HARD=0` en campeón final.
+2. **Volúmenes Canónicos**: 410 genes, 2.228 sesiones, 8.912 horas, 199 vinculaciones y 336 vacantes en el horario final materializado.
+3. **Fidelidad de Horario**: El hash canónico del horario materializado coincide bit a bit entre baseline sembrado y versión optimizada.
+4. **Presupuesto de Rendimiento**:
+   - Transición de estado estacionario ≤ 1,00 s (objetivo ~0,65 s).
+   - Tiempo total ≤ 72 s (objetivo ≤ 45 s con inicio optimizado a ~7 s).
+   - Medición generacional precisa con `Stopwatch` en `[AG-PERF]`.
+5. **No Regresiones**: Suite completa en verde con el gate alternativo autorizado (0 fallos).
+
+---
+
 ## Dependency Graph
 
 ```text
@@ -65,16 +78,16 @@ T1 ── T2 ── T4 ── T6 ── T8 ─┐
 
 ---
 
-## Waves Summary
+## Parallel execution groups (Waves)
 
-| Wave | Ronda | Tareas | Precondición | Leases |
+| Wave | Ronda | Tasks | Can start when | Leases |
 |---|---|---|---|---|
-| Wave 1 | 433 | T1 | Inmediato | AgOperadorCruce, AgOperadorMutacion, AgOperadorSeleccion, AgFabricaIndividuos, AgAsignadorTercero |
-| Wave 2 | 434 | T2, T3 | T1 completado | Disjuntos: [AgGeneradorHorarios, AgResultadoCorrida, AgBitacora] vs [Tests/AgGeneradorHorariosReplayTests, AgCorrida105Fixture] |
-| Wave 3 | 435 | T4, T5 | T2 completado | Disjuntos: [AgAsignadorTercero, AgCalendarioConflictos, AgCoherenciaGrupo] vs [AgContexto, AgBloqueHorario, CalculadoraViaticaSesion, AgExpansorSesiones] |
-| Wave 4 | 436 | T6, T7 | T4 y T5 completados | Disjuntos: [AgOperadorCruce, AgOperadorMutacion, AgValidadorReglas, AgEvaluadorAptitud] vs [AgCalendarioConflictos, AgExpansorSesiones] |
-| Wave 5 | 437 | T8, T9 | T6 y T2 completados | Disjuntos: [AgAsignadorTercero, AgOperadorCruce, AgValidadorReglas] vs [AgIndividuo, AgGen, AgGeneradorHorarios] |
-| Wave 6 | 438 | T10 | T3, T6, T7, T8, T9 completados | AgRendimientoCertificacionTests, docs/articles/changes/ |
+| 1 | 433 | T1 | Inmediato | `ConversorPDF.XLL/Academic/Application/Services/Genetica/{AgOperadorCruce, AgOperadorMutacion, AgOperadorSeleccion, AgFabricaIndividuos, AgAsignadorTercero}.cs`, `ConversorPDF.Tests/.../AgRandomSeedTests.cs` |
+| 2 | 434 | T2, T3 | T1 completado | Disjuntos: T2 en `AgGeneradorHorarios.cs`, `AgResultadoCorrida.cs`, `AgBitacora.cs`, `AgPerfilGeneracionTests.cs` vs T3 en `AgGeneradorHorariosReplayTests.cs`, `AgCorrida105Fixture.cs` |
+| 3 | 435 | T4, T5 | T2 completado | Disjuntos: T4 en `AgAsignadorTercero.cs`, `AgCalendarioConflictos.cs`, `AgCoherenciaGrupo.cs`, `AgPerfilSubetapasTests.cs` vs T5 en `AgContexto.cs`, `AgBloqueHorario.cs`, `CalculadoraViaticaSesion.cs`, `AgExpansorSesiones.cs`, `AgProyeccionHigieneTests.cs` |
+| 4 | 436 | T6, T7 | T4 y T5 completados | Disjuntos: T6 en `AgOperadorCruce.cs`, `AgOperadorMutacion.cs`, `AgValidadorReglas.cs`, `AgEvaluadorAptitud.cs`, `AgQuickWinsTests.cs` vs T7 en `AgCalendarioConflictos.cs`, `AgExpansorSesiones.cs`, `AgProyeccionLigeraTests.cs` |
+| 5 | 437 | T8, T9 | T6 y T2 completados | Disjuntos: T8 en `AgAsignadorTercero.cs`, `AgOperadorCruce.cs`, `AgValidadorReglas.cs`, `AgIndiceIndividuoTests.cs` vs T9 en `AgIndividuo.cs`, `AgGen.cs`, `AgGeneradorHorarios.cs`, `AgHuellaAptitudTests.cs` |
+| 6 | 438 | T10 | T3, T6, T7, T8, T9 completados | `AgRendimientoCertificacionTests.cs`, `docs/articles/changes/2026-11-17-rendimiento-ag-corrida105.md` |
 
 ---
 
@@ -104,11 +117,11 @@ T1 ── T2 ── T4 ── T6 ── T8 ─┐
 - **id**: T2
 - **fase**: 1943
 - **depends_on**: [T1]
-- **location**: ConversorPDF.XLL/Academic/Application/Services/Genetica/
+- **location**: ConversorPDF.XLL/Academic/Application/Services/Genetica/AgGeneradorHorarios.cs
 - **files_lock**:
   - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgGeneradorHorarios.cs
-  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgResultadoCorrida.cs
-  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgBitacora.cs
+  - ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgResultadoCorrida.cs
+  - ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgBitacora.cs
   - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgPerfilGeneracionTests.cs
 - **description**: Corregir el cronómetro generacional (`DuracionMs` real); declarar `AgPerfilGeneracion` como clase interna dentro de `AgResultadoCorrida.cs`; poblar métricas generacionales (`PeorFitness`, `Evaluados`, `Vacantes`, `FueraDeVentana`); emitir línea estructurada `[AG-PERF]`; medir subtiempos de inicialización (factibilidad interna, índices, población inicial, primer ciclo) y de ciclo reproductivo (selección, cruce neto, mutación neta, sellado en cruce/mutación, evaluación, reemplazo élite, campeón final); contar `EvaluacionesAptitud`, `HijosCreados`, `HijosIncorporados`, `ElitesClonados`, `EvaluacionesExtraPorCupoImpar`, genes y transiciones.
 - **validation**: `DuracionMs` coincide con el tiempo real de pared; la suma de etapas parciales cuadra con el tiempo total reportado; sin cambios funcionales en los resultados de programación.
@@ -138,7 +151,7 @@ T1 ── T2 ── T4 ── T6 ── T8 ─┐
 - **id**: T4
 - **fase**: 1945
 - **depends_on**: [T2]
-- **location**: ConversorPDF.XLL/Academic/Application/Services/Genetica/
+- **location**: ConversorPDF.XLL/Academic/Application/Services/Genetica/AgAsignadorTercero.cs
 - **files_lock**:
   - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgAsignadorTercero.cs
   - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgCalendarioConflictos.cs
@@ -156,11 +169,11 @@ T1 ── T2 ── T4 ── T6 ── T8 ─┐
 - **id**: T5
 - **fase**: 1946
 - **depends_on**: [T2]
-- **location**: ConversorPDF.XLL/Academic/Application/Services/Genetica/
+- **location**: ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgContexto.cs
 - **files_lock**:
-  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgContexto.cs
-  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgBloqueHorario.cs
-  - ConversorPDF.XLL/Academic/Application/Services/Genetica/CalculadoraViaticaSesion.cs
+  - ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgContexto.cs
+  - ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgBloqueHorario.cs
+  - ConversorPDF.XLL/Academic/Application/Services/CalculadoraViaticaSesion.cs
   - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgExpansorSesiones.cs
   - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgProyeccionHigieneTests.cs
 - **description**: Precalcular estructuras invariantes en `AgContexto`: `TimeSpan` por bloque, `HorarioTexto`, diccionarios `ProgramasPorId` y mapeo de unidad por aula; normalizar cadenas de ciudad una sola vez por gen; eliminar closures/LINQ en bucles críticos cuando `SesionesConservadas` está vacío; garantizar que no se alteren fechas efectivas ni ocupaciones.
@@ -175,7 +188,7 @@ T1 ── T2 ── T4 ── T6 ── T8 ─┐
 - **id**: T6
 - **fase**: 1947
 - **depends_on**: [T4]
-- **location**: ConversorPDF.XLL/Academic/Application/Services/Genetica/
+- **location**: ConversorPDF.XLL/Academic/Application/Services/Genetica/AgOperadorCruce.cs
 - **files_lock**:
   - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgOperadorCruce.cs
   - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgOperadorMutacion.cs
@@ -194,7 +207,7 @@ T1 ── T2 ── T4 ── T6 ── T8 ─┐
 - **id**: T7
 - **fase**: 1948
 - **depends_on**: [T5]
-- **location**: ConversorPDF.XLL/Academic/Application/Services/Genetica/
+- **location**: ConversorPDF.XLL/Academic/Application/Services/Genetica/AgCalendarioConflictos.cs
 - **files_lock**:
   - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgCalendarioConflictos.cs
   - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgExpansorSesiones.cs
@@ -211,7 +224,7 @@ T1 ── T2 ── T4 ── T6 ── T8 ─┐
 - **id**: T8
 - **fase**: 1949
 - **depends_on**: [T4, T6]
-- **location**: ConversorPDF.XLL/Academic/Application/Services/Genetica/
+- **location**: ConversorPDF.XLL/Academic/Application/Services/Genetica/AgAsignadorTercero.cs
 - **files_lock**:
   - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgAsignadorTercero.cs
   - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgOperadorCruce.cs
@@ -229,10 +242,10 @@ T1 ── T2 ── T4 ── T6 ── T8 ─┐
 - **id**: T9
 - **fase**: 1950
 - **depends_on**: [T2]
-- **location**: ConversorPDF.XLL/Academic/Application/Services/Genetica/
+- **location**: ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgIndividuo.cs
 - **files_lock**:
-  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgIndividuo.cs
-  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgGen.cs
+  - ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgIndividuo.cs
+  - ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgGen.cs
   - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgGeneradorHorarios.cs
   - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgHuellaAptitudTests.cs
 - **description**: Implementar cálculo de huella estructural rápida para individuos; almacenar en caché generacional y reutilizar fitness/violaciones únicamente para individuos con idéntica huella estructural; registrar contador de duplicados; garantizar que la evaluación final del campeón genere siempre el desglose completo.
@@ -251,10 +264,60 @@ T1 ── T2 ── T4 ── T6 ── T8 ─┐
 - **files_lock**:
   - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgRendimientoCertificacionTests.cs
   - docs/articles/changes/2026-11-17-rendimiento-ag-corrida105.md
-- **description**: Ejecutar suite de certificación comparativa entre baseline sembrado y versión optimizada; verificar paridad estricta en trayectoria de fitness, violaciones por regla (≤ 30 blandas, HARD=0) y hash del horario materializado; validar invariantes de volumen: 410 genes, 2.228 sesiones, 8.912 h, 199 vinculaciones, 336 vacantes; certificar métricas de rendimiento con `Stopwatch`: transición de estado estacionario ≤ 1,0 s (objetivo ~0,65 s) y tiempo total ≤ 72 s (objetivo ≤ 45 s con inicio optimizado); generar informe de cierre en `docs/articles/changes/`.
+- **description**: Ejecutar suite de certificación comparativa entre baseline sembrado y versión optimizada; verificar paridad estricta en trayectoria de fitness, violaciones por regla (≤ 30 blandas, HARD=0) y hash del horario materializado; validar invariantes de volumen: 410 genes, 2.228 sesiones, 8.912 h, 199 vinculaciones, 336 vacantes; certificar métricas de rendimiento con `Stopwatch`: transición de estado estacionario ≤ 1,0 s (objetivo ~0,65 s) y tiempo total ≤ 72 s (objetivo ≤ 45 s con inicio optimizado a ~7 s); generar informe de cierre en `docs/articles/changes/`.
 - **validation**: Todos los criterios de equivalencia, volumen y rendimiento se cumplen satisfactoriamente; cero regresiones en la suite global de pruebas.
 - **verification**: dotnet build .\ConversorPDF.Tests\ConversorPDF.Tests.csproj -c Debug ; dotnet test .\ConversorPDF.Tests\ConversorPDF.Tests.csproj -c Debug --no-build --logger "trx;LogFileName=gate-alternativo.trx"
 - **evidence**: _evidence/<timestamp>/summary.md
 - **status**: pending
 - **log**: 
 - **files edited/created**:
+
+---
+
+## Riesgos y Mitigaciones
+
+| # | Riesgo | Severidad | Mitigación |
+|---|---|---|---|
+| 1 | Divergencia en trayectoria por consumo de RNG en operadores optimizados | Alta | T1 fija flujos deterministas; T6 y T8 preservan rigurosamente el orden de llamadas a `Random`. Comparación en Debug contra ejecución completa. |
+| 2 | Inconsistencia en reparación incremental (conjunto sucio insuficiente) | Alta | El conjunto sucio en T8 es conservador (incluye genes con mismo grupo, docente, cohorte, aula y fecha). En Debug se corre validación cruzada incremental vs completa. |
+| 3 | Proyección ligera diverge de `AgSesion` completa | Media | T7 valida equivalencia estricta en pruebas unitarias contra fechas, horas y conflictos de la proyección pesada. La materialización final sigue usando `Expandir` completo. |
+| 4 | Contención en `ConversorPDF.XLL.csproj` (Lease L0) | Crítica | No se añaden archivos nuevos a `ConversorPDF.XLL`. Todos los tipos nuevos son clases internas anidadas (`AgPerfilGeneracion`, `AgProyeccionIndividuo`). `ConversorPDF.Tests` usa SDK-style con globbing automático. |
+| 5 | Caché de aptitud devuelve fitness obsoleto ante mutaciones parciales | Media | T9 calcula la huella estructural sobre todos los campos funcionales de los genes del individuo. |
+
+---
+
+## Self-Review (Checklist de 13 puntos de swarm-planner)
+
+| # | Punto | Estado | Observación |
+|---|---|---|---|
+| 1 | Dependencias completas: ningún `depends_on` omitido | OK | Grafo cerrado: T1 raíz; T2,T3 dependen de T1; T4,T5 dependen de T2; T6 depende de T4; T7 depende de T5; T8 depende de T4,T6; T9 depende de T2; T10 depende de T3,T6,T7,T8,T9. |
+| 2 | Orden ejecutable: cada tarea compila al terminar | OK | Tareas ordenadas topológicamente; cada una cuenta con pruebas focalizadas. |
+| 3 | Ninguna tarea mezcla L0 sin rol `integrator` | OK | Ninguna tarea toca archivos L0. `ConversorPDF.XLL.csproj` intacto; clases nuevas son internas anidadas. |
+| 4 | `files_lock` disjuntos por ola | OK | Verificados pares de Wave 2 (T2,T3), Wave 3 (T4,T5), Wave 4 (T6,T7) y Wave 5 (T8,T9). Cero solapamientos. |
+| 5 | Cada `verification` es un comando que existe en el repo | OK | Se usa el gate alternativo por lotes documentado y verificado en preflight (`dotnet test ...`). |
+| 6 | Cada `validation` es falsable | OK | Métricas cuantitativas, paridad estricta de hash y asserts de equivalencia. |
+| 7 | El RED compila (esqueleto `integrator-first` previsto) | OK | Clases internas en archivos de producción existentes; proyecto de test es SDK-style. |
+| 8 | Migración y `APP_VERSION` asignadas solo por `integrator` | OK | No se requieren migraciones SQLite ni bumps de versión para esta ronda de optimización. |
+| 9 | Ninguna tarea cruza más de un slice | OK | Trabajo circunscrito 100 % al slice `Academic`. |
+| 10 | El context pack usado tiene ≤ 400 líneas | OK | Sin desbordamiento de contexto. |
+| 11 | Criterio de aceptación global definido | OK | 5 criterios globales especificados (equivalencia, volumen, hash, presupuesto y cero regresiones). |
+| 12 | Riesgos con mitigación | OK | 5 riesgos técnicos analizados con su respectiva estrategia de mitigación. |
+| 13 | `numbering:` en envelope y fila `reserved` en `REGISTRY.md` | OK | Bloque `numbering:` presente; fila `R-112` reservada en `REGISTRY.md`. |
+
+---
+
+## Auditoría de Plan-Reviewer (9 Reglas Duras)
+
+| Regla | Auditoría | Veredicto |
+|---|---|---|
+| 1. Execution Envelope | Bloque completo con workspace, preflight, workspace_guard, baseline, verify, build_gate serializado, hot_paths_L0 y numbering. | CUMPLE |
+| 2. Lease L0 Protegido | Ningún archivo L0 (`.csproj`, `App.cs`, migraciones, `RibbonController`, IoC) presente en `files_lock`. | CUMPLE |
+| 3. Disyunción de `files_lock` | Olas 2, 3, 4 y 5 tienen listas disjuntas sin prefijos compartidos. | CUMPLE |
+| 4. Fase RED Compilable | Clases internas en archivos ya referenciados; `ConversorPDF.Tests.csproj` incluye archivos `.cs` automáticamente. | CUMPLE |
+| 5. Comandos Falsables | Comandos `dotnet test` con filtros específicos y gate con TRX. | CUMPLE |
+| 6. Ubicación del Plan | Guardado en `.agents/plans/2026-11-17-rendimiento-app-corrida105-plan.md`. | CUMPLE |
+| 7. Workspace Verificado | Preflight ejecutado satisfactoriamente con `-AllowOneDrive` (`PREFLIGHT_OK`). | CUMPLE |
+| 8. Baseline Medido | Baseline oficial 1446 documentado; R-109 reporta Full 1648; medición obligatoria antes de T1. | CUMPLE |
+| 9. Gate Serial | Un único gate a la vez; build_gate serializado declarado en envelope. | CUMPLE |
+
+**Veredicto Final Plan-Reviewer**: **APROBADO**
