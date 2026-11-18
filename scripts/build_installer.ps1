@@ -30,12 +30,11 @@ if (-not [string]::IsNullOrWhiteSpace($NewVersion)) {
         Set-Content -Path $CSPROJ -Value $csprojContent -NoNewline
     }
 
-    # 1.3 Actualizar .wxs
+    # 1.3 Actualizar .wxs (solo versión del paquete; DefaultVersion de plantillas se mantiene anclada)
     $WXS = "installer\InstaladorConversorPDF.wxs"
     if (Test-Path $WXS) {
         $wxsContent = Get-Content $WXS -Raw
         $wxsContent = $wxsContent -replace 'Version="[^"]+"', "Version=`"$NewVersion`""
-        $wxsContent = $wxsContent -replace 'DefaultVersion="[^"]+"', "DefaultVersion=`"$NewVersion`""
         Set-Content -Path $WXS -Value $wxsContent -NoNewline
     }
 }

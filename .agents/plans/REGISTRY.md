@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 443 | 444 | 2026-11-18 |
-| `fase` | 1970 | 1971 | 2026-11-18 |
+| `ronda` | 446 | 447 | 2026-11-18 |
+| `fase` | 1977 | 1978 | 2026-11-18 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -151,7 +151,10 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-114 | 2026-11-18 | `(trazabilidad R439 y correcciones motor AG: duplicados índices, orden sellado cruce, bypass validador y coherencia mutación)` | `Wave —` → `Ronda 440` | `Fase 1962–1966` | executing | F1962 closed (documental); F1963-1966 pendiente | pendiente |
 | R-115 | 2026-11-18 | `(aptitud heredada en cruce, sinceramiento R440 y neutralización estado copiado en HeredarOX)` | `Wave —` → `Ronda 441` | `Fase 1967–1969` | executing | F1967/F1969 pendientes; F1968 reabierta | pendiente |
 | R-116 | 2026-11-18 | `(ajuste F1970 — escenario parametrizado por relaciones y prueba de rutas costosas)` | `Wave 442` → `Ronda 442` | `T1` → `Fase 1970` · `Fase 1968` (cerrada) | reserved | F1968 closed; F1970 reserved (sin build/tests) | pendiente |
-| R-117 | 2026-11-18 | `(revisión Wave 442 — F1968 cerrada, F1970 reservada con addendas A1–A4; no procede build release)` | `Wave —` → `Ronda 443` | `Fase — (sin fases nuevas)` | executing | sin escisión (bajo umbral); sin build/tests | pendiente |
+| R-117 | 2026-11-18 | `(diagnóstico corrida #106 — COBERTURA_NO_CERTIFICADA:CRUCE_DOCENTE; Fases 1971–1973: identidad de par, detector único solapes y preflight conservadas)` | `Wave —` → `Ronda 443` | `Fase 1971–1973` | executing | diagnóstico manual; sin build/tests; historial de revisión Wave 442 sobrescrito y reintegrado (ver walkthrough R443) | pendiente |
+| R-118 | 2026-11-18 | `(revisión Wave 443 — F1974: integridad historial y reintegro A1–A4; F1975: ancla TemplateMutationVersion instalador y versión única)` | `Wave —` → `Ronda 444` | `Fase 1974–1975` | closed | F1974 closed (residuo purgado); F1975 closed (ancla 1.6.3.82 desacoplada) | pendiente |
+| R-119 | 2026-11-18 | `(revisión pipeline build/release — F1976 ampliada: propagación de fallos, exit codes y ancla de versión)` | `Wave —` → `Ronda 445` | `Fase 1976` | closed | F1976 closed (Invoke-Native y propagación exit codes en build_project/build_release) | pendiente |
+| R-120 | 2026-11-18 | `(revisión Wave 445 — F1977: corrección doble propiedad de fases en R-119 y desambiguación encabezado R445)` | `Wave —` → `Ronda 446` | `Fase 1977` | closed | F1977 closed (documental); sin build/tests | pendiente |
 
 
 

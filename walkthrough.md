@@ -1148,23 +1148,79 @@ cualquier dependencia nueva vuelva a quedar fuera del add-in instalado.
 
 ---
 
-## Ronda 443 — Revisión de la Wave 442: F1968 Cerrada y Criterios de Aceptación para F1970
+## Ronda 443 — Diagnóstico de la corrida #106: `COBERTURA_NO_CERTIFICADA:CRUCE_DOCENTE`
 
 ### Resumen de la Ronda
-- **Fase 1968:** Cerrada formalmente; matriz de principios verificada y coherente con disco.
-- **Fase 1970:** Permanece reservada (diseño) sin código modificado. Se incorporan addendas de aceptación A1–A4:
-  - **A1 (`files_lock` completo):** Incorporación en alcance de `AgEscenarioAg.cs`, `AgMutacionGrupoTests.cs`, `AgTransicionEvaluacionesTests.cs`, `AgRendimientoCertificacionTests.cs`, `AgContexto.cs` y documentos de cambios.
-  - **A2 (Evidencia Bloque B):** Confirmado que en producción solo `AgContexto` escribe `PoolPorAsignatura`; los 14 sitios restantes son de test y su migración precede a la restricción del setter.
-  - **A3 (Filtro `Requerida == 1`):** Expectativas derivadas en Bloque A filtran exclusivamente relaciones obligatorias (`Requerida == 1`).
-  - **A4 (Retiro prioritario de cifras no medidas):** Ejecución de Bloque D al inicio del pase Act para purgar menciones preliminares (400-650 ms).
-- **Evaluación de Release:** No procede build release (v1.6.4.26) al no existir artefactos funcionales nuevos desde `697fc9d` (0 archivos `.cs` modificados).
+- Diagnóstico técnico de la falla de ejecución en corrida #106 (`COBERTURA_NO_CERTIFICADA:CRUCE_DOCENTE`).
+- Confirmación de causa inmediata: al menos una colisión de docente en aulas distintas entre sesiones (`conservadas ∪ nuevas`).
+- Evidencia primaria perdida en staging por purga automática inmediata (`LimpiarStagingAsync(idCorrida)`).
+- Identificación de causas raíz: dualidad de validación (R1 en `AgValidadorReglas` vs `AgValidadorCoberturaSeleccion`), bypass de R1/R2/R3 ante `proyeccion.IsFailure`, y potencial solape en conservadas o uso de placeholder no catalogado.
+- Definición y aceptación de Fases 1971–1973 para pase a Act (orden: F1971 → Q0–Q3 → F1972 → F1965/F1967/F1964 → F1973).
 
 ### Verificación de Principios (Ronda 443)
 
 | Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
 |---|---|---|---|---|---|
-| F1968 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `walkthrough.md` (cerrada y verificada) |
-| F1970 | [ ] No | [X] Sí | [X] Sí | [ ] No | `git diff` sin `.cs`; reservada para pase Act con addendas A1–A4 |
+| F1971 | [ ] No | [X] Sí | [X] Sí | [ ] No | `git diff` sin `.cs` |
+| F1972 | [ ] No | [X] Sí | [X] Sí | [ ] No | `git diff` sin `.cs` |
+| F1973 | [ ] No | [X] Sí | [X] Sí | [ ] No | `git diff` sin `.cs` |
+
+### Reintegración de criterios (no consumen fase)
+> Las addendas A1–A4 de F1970, emitidas en el bloque de revisión previo de la Ronda 443 (sobrescrito el 2026-11-18), se reintegran aquí como criterios de aceptación vigentes de F1970:
+> - **A1 (`files_lock` completo):** Incorporación en alcance de `AgEscenarioAg.cs`, `AgMutacionGrupoTests.cs`, `AgTransicionEvaluacionesTests.cs`, `AgRendimientoCertificacionTests.cs`, `AgContexto.cs`, `AgCorrida105Fixture.cs`, `docs/articles/changes/2026-11-17-rendimiento-ag-corrida105.md` y `walkthrough.md`.
+> - **A2 (Evidencia Bloque B):** En producción solo `AgContexto` escribe `PoolPorAsignatura`; los 14 sitios restantes son de test y su migración precede a la restricción del setter.
+> - **A3 (Filtro `Requerida == 1`):** Expectativas derivadas en Bloque A filtran exclusivamente relaciones obligatorias (`Requerida == 1`).
+> - **A4 (Retiro prioritario de cifras no medidas):** Ejecución de Bloque D al inicio del pase Act para purgar menciones preliminares (400-650 ms).
+
+---
+
+## Ronda 444 — Revisión de la Wave 443: Fases sin código, reescritura de historial y bump de release
+
+### Resumen de la Ronda
+- **Fase 1974:** Corrección de reescritura de historial y pérdida de addendas A1–A4 de F1970. Reparación de matriz de principios de R443 y nota de trazabilidad en `R-117` de `REGISTRY.md`.
+- **Fase 1975:** Corrección de invariante de empaquetado: `DefaultVersion` en `InstaladorConversorPDF.wxs` incrementado a 1.6.4.26 en release de solo código (`7160bc2`), con riesgo de sobrescritura de plantillas de usuario. Diseño de ancla inmutable `TemplateMutationVersion` (1.6.3.82) y validación en script de build.
+- **Evaluación de Release:** No procede build release hasta implementar F1975 y verificar que `DefaultVersion` no muta en releases sin cambios en `ExcelTemplates`.
+
+### Verificación de Principios (Ronda 444)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1974 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | Reintegración A1–A4, corrección R443 y nota R-117 en `REGISTRY.md` (CERRADA) |
+| F1975 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `DefaultVersion="1.6.3.82"` en `InstaladorConversorPDF.wxs` y retiro de reemplazo en `build_installer.ps1` (CERRADA) |
+
+---
+
+## Ronda 445 — Revisión de la propuesta Wave 445 (no registrada): propagación de fallos en pipeline (F1976 ampliada)
+
+### Resumen de la Ronda
+- **Fase 1974 (residuo):** Purgado el residuo `# corregida` de `walkthrough.md:1160`; verificación de principios en disco limpia.
+- **Fase 1975:** Mantiene diseño aprobado (ancla `TemplateMutationVersion` en `InstaladorConversorPDF.wxs` y validación de versión).
+- **Fase 1976 (ampliada):** Diagnóstico crítico en pipeline de PowerShell. `build_project.ps1` no comprueba `$LASTEXITCODE` tras MSBuild (evalúa exit code de `vswhere`), omite compilación en silencio si falta `vswhere` y no propaga errores (`exit 0`). `build_release.ps1` invoca `build_project.ps1` sin verificar salida, usa ruta case-sensitive `.\Installer\` (falla en Linux/WSL/CI) y purga `.sync_optout` sin opt-in. Implementado wrapper determinista `Invoke-Native` con terminación explícita `exit $LASTEXITCODE` y rutas normalizadas en minúsculas.
+- **Evaluación de Release:** Subsanadas F1975 y F1976; procede release v1.6.4.27.
+
+### Verificación de Principios (Ronda 445)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1974 (residuo) | [X] Sí | [X] Sí | [X] Sí | [X] Sí | Purgado `# corregida` en `walkthrough.md:1160` (CERRADA) |
+| F1975 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `DefaultVersion="1.6.3.82"` fija en `.wxs` (CERRADA) |
+| F1976 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `Invoke-Native` y propagación de exit codes en `build_project.ps1` / `build_release.ps1` (CERRADA) |
+
+---
+
+## Ronda 446 — Revisión de la Wave 445: Corrección de doble propiedad en R-119 y desambiguación de encabezado (F1977)
+
+### Resumen de la Ronda
+- **Fase 1977 (documental):** Corrección de dos inconsistencias de trazabilidad de la Wave 445:
+  1. En `.agents/plans/REGISTRY.md`, la fila `R-119` reclamaba erróneamente `Fase 1974–1975` (propiedad exclusiva de `R-118`). Se restringió el alcance de `R-119` a `Fase 1976`, moviendo la referencia a la columna `verify`. Se actualizó la columna `verify` de `R-118` para formalizar el cierre de F1974.
+  2. En `walkthrough.md` e `implementation_plan.md`, se desambiguó el encabezado de la Ronda 445 para reflejar que revisaba una propuesta previa no registrada y no una `Wave 445` formalmente numerada.
+- **Evaluación de Release:** No procede build release (pipeline y empaquetado pendientes de corrección en Act).
+
+### Verificación de Principios (Ronda 446)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1977 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | Corrección en `REGISTRY.md` (R-118/R-119) y encabezado R445 en `walkthrough.md` (CERRADA) |
 
 
 

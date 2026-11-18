@@ -987,20 +987,80 @@ Sinceramiento documental y aplicación de la regla estructural de acreditación:
 
 ---
 
-## Ronda 443: Revisión de la Wave 442 — F1968 Cerrada y Criterios de Aceptación para F1970
+## Ronda 443: Diagnóstico de la corrida #106 — `COBERTURA_NO_CERTIFICADA:CRUCE_DOCENTE`
 
 ### Resumen de la Ronda
-Confirmación del estado de la Wave 442 sin consumo de fases nuevas:
-- **Fase 1968**: Cerrada y verificada en disco.
-- **Fase 1970**: Reservada con addendas A1–A4 integradas; `files_lock` completado.
-- **Release**: Se constata la no procedencia de `build-release` (v1.6.4.26) al carecer de modificaciones en código `.cs` (HEAD `697fc9d`).
+Diagnóstico manual de ejecución real sobre la corrida #106 (`COBERTURA_NO_CERTIFICADA:CRUCE_DOCENTE`). Se identifica la causa inmediata (cruce docente en aulas distintas sobre sesiones materializadas y conservadas), el mecanismo de purga que impide auditoría forense y la discrepancia entre el motor AG (`HardViolations=0`) y el gate de cobertura. Se abren las fases 1971–1973:
+- **Fase 1971**: Identidad del par en el gate de cobertura y evidencia previa al purge (`AgValidadorCoberturaSeleccion.cs`, `AgFormGeneradorHorarios.cs`).
+- **Fase 1972**: Detector único de solapes y ejecución garantizada de R1/R2/R3 (`AgValidadorReglas.cs`, `AgValidadorCoberturaSeleccion.cs`, `AgDetectorSolapes.cs`).
+- **Fase 1973**: Preflight de conservadas y clasificación explícita de tercero no docente (`AgConstructorManifiestoCobertura.cs`, `AgContexto.cs`).
 
 ### Soporte realizado por fase
 
 | Fase | Archivos | Estado |
 |---|---|---|
-| 1968 | `walkthrough.md`, `implementation_plan.md` | Cerrada |
-| 1970 | `ConversorPDF.Tests/.../Genetica/*`, `AgContexto.cs`, docs | Reservada con addendas A1–A4 |
+| 1971 | `AgValidadorCoberturaSeleccion.cs`, `AgFormGeneradorHorarios.cs` | Aceptada (diseño diagnóstico; pase Act) |
+| 1972 | `AgValidadorReglas.cs`, `AgValidadorCoberturaSeleccion.cs`, `AgDetectorSolapes.cs` | Aceptada (diseño unificación R1/R2/R3; pase Act) |
+| 1973 | `AgConstructorManifiestoCobertura.cs`, `AgContexto.cs` | Aceptada (diseño preflight/clasificación; pase Act) |
+
+### Reintegración de criterios (no consumen fase)
+> Las addendas A1–A4 de F1970, emitidas en el bloque de revisión previo de la Ronda 443 (sobrescrito el 2026-11-18), se reintegran aquí como criterios de aceptación vigentes de F1970:
+> - **A1 (`files_lock` completo):** Incorporación en alcance de `AgEscenarioAg.cs`, `AgMutacionGrupoTests.cs`, `AgTransicionEvaluacionesTests.cs`, `AgRendimientoCertificacionTests.cs`, `AgContexto.cs`, `AgCorrida105Fixture.cs`, `docs/articles/changes/2026-11-17-rendimiento-ag-corrida105.md` y `walkthrough.md`.
+> - **A2 (Evidencia Bloque B):** En producción solo `AgContexto` escribe `PoolPorAsignatura`; los 14 sitios restantes son de test y su migración precede a la restricción del setter.
+> - **A3 (Filtro `Requerida == 1`):** Expectativas derivadas en Bloque A filtran exclusivamente relaciones obligatorias (`Requerida == 1`).
+> - **A4 (Retiro prioritario de cifras no medidas):** Ejecución de Bloque D al inicio del pase Act para purgar menciones preliminares (400-650 ms).
+
+---
+
+## Ronda 444: Revisión de la Wave 443 — Fases sin código, reescritura de historial y bump de release
+
+### Resumen de la Ronda
+- **Fase 1974**: Reescritura de historial y pérdida de addendas A1–A4 de F1970. Reparación de matriz de principios R443 (`[ ] No` en comentarios/solución directa ante 0 `.cs`), reincorporación de criterios A1–A4 y adición de nota de integridad en `R-117` de `REGISTRY.md`.
+- **Fase 1975**: Corrección de invariante de instalador: `DefaultVersion="1.6.4.26"` en `InstaladorConversorPDF.wxs` sobreescribe plantillas personalizadas de usuario en updates. Diseño de constante inmutable `TemplateMutationVersion=1.6.3.82`, validación en pipeline de release y unificación de versión de ensamble.
+- **Release**: Se congela build release hasta corregir `InstaladorConversorPDF.wxs` (F1975).
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 1974 | `walkthrough.md`, `implementation_plan.md`, `REGISTRY.md` | Cerrada (documental / trazabilidad) |
+| 1975 | `installer/InstaladorConversorPDF.wxs`, `scripts/build_installer.ps1` | Cerrada (DefaultVersion anclada a 1.6.3.82) |
+
+---
+
+## Ronda 445: Revisión de la propuesta Wave 445 (no registrada) — propagación de fallos en pipeline (Fase 1976 ampliada)
+
+### Resumen de la Ronda
+- **Fase 1974 (residuo):** Purgado de residuo `# corregida` en `walkthrough.md:1160`. Criterio de verificación en disco satisfecho.
+- **Fase 1975:** Desacoplamiento de versión de plantillas `DefaultVersion="1.6.3.82"` en `InstaladorConversorPDF.wxs` y retiro del reemplazo en `build_installer.ps1`.
+- **Fase 1976 (ampliada):** Corrección arquitectónica de scripts de build:
+  1. `build_project.ps1`: Eliminar gates obsoletos basados en `$LASTEXITCODE` previo (de `vswhere`), capturar y validar la salida de cada invocación de MSBuild, e introducir función `Invoke-Native` con propagación explícita de `exit $LASTEXITCODE`.
+  2. `build_release.ps1`: Propagar resultado de `build_project.ps1`, normalizar ruta en minúsculas `.\installer\InstaladorConversorPDF.wixproj` (compatibilidad case-sensitive) y condicionar borrado de `.sync_optout` a parámetro `-ResetSyncOptOut`.
+- **Release**: Descongelado tras aplicar F1975 y F1976.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 1974 | `walkthrough.md` | Cerrada (residuo purgado) |
+| 1975 | `installer/InstaladorConversorPDF.wxs`, `scripts/build_installer.ps1` | Cerrada (ancla preservada) |
+| 1976 | `build_project.ps1`, `build_release.ps1` | Cerrada (Invoke-Native y propagación de fallos) |
+
+---
+
+## Ronda 446: Revisión de la Wave 445 — Doble propiedad en R-119 y desambiguación de encabezado (Fase 1977)
+
+### Resumen de la Ronda
+- **Fase 1977 (documental):** Corrección de dos defectos de trazabilidad:
+  1. Reclamación indebida de `Fase 1974–1975` en la columna de alcance de `R-119` en `.agents/plans/REGISTRY.md` (fases de propiedad exclusiva de `R-118`). Se restringió el alcance de `R-119` a `Fase 1976` y se actualizó `R-118` registrando el cierre de F1974 en su columna `verify`.
+  2. Desambiguación del encabezado de la Ronda 445 para explicitar que revisaba una propuesta previa no registrada y no una wave con número homónimo.
+- **Release**: Congelado.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 1977 | `REGISTRY.md`, `walkthrough.md`, `implementation_plan.md` | Cerrada (documental / trazabilidad) |
 
 
 
