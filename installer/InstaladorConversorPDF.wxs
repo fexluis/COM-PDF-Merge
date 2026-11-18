@@ -2,7 +2,7 @@
   <Package 
     Name="ConversorPDF XLL Add-in" 
     Language="1034" 
-    Version="1.6.4.27" 
+    Version="1.6.4.28" 
     Manufacturer="ESAP" 
     UpgradeCode="80babf47-af47-4518-a228-9258c54f8726"
     Scope="perUser">
