@@ -60,7 +60,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     !contexto.BloquesPorId.TryGetValue(gen.IdBloqueHorario, out var bloque) ||
                     bloque == null ||
                     bloque.Activo != 1 ||
-                    bloque.TimeSpanInicio >= bloque.TimeSpanFin)
+                    !bloque.EsHorarioValido)
                 {
                     return Result.Failure<List<Ocupacion>>($"I6_BLOQUE_INVALIDO: aula={gen.IdAula}, asig={gen.IdAsignatura}");
                 }

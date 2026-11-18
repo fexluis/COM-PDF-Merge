@@ -16,6 +16,8 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
         private string _horaFin;
         private TimeSpan _timeSpanInicio;
         private TimeSpan _timeSpanFin;
+        private bool _horaInicioValida = true;
+        private bool _horaFinValida = true;
         private string _horarioTexto;
 
         public int Id { get; set; }
@@ -41,10 +43,8 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
             set
             {
                 _horaInicio = value;
-                if (TimeSpan.TryParse(value, System.Globalization.CultureInfo.InvariantCulture, out var ts))
-                {
-                    _timeSpanInicio = ts;
-                }
+                _horaInicioValida = TimeSpan.TryParse(value, System.Globalization.CultureInfo.InvariantCulture, out var ts);
+                _timeSpanInicio = _horaInicioValida ? ts : TimeSpan.Zero;
                 _horarioTexto = $"{_horaInicio} A {_horaFin}";
             }
         }
@@ -55,16 +55,15 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
             set
             {
                 _horaFin = value;
-                if (TimeSpan.TryParse(value, System.Globalization.CultureInfo.InvariantCulture, out var ts))
-                {
-                    _timeSpanFin = ts;
-                }
+                _horaFinValida = TimeSpan.TryParse(value, System.Globalization.CultureInfo.InvariantCulture, out var ts);
+                _timeSpanFin = _horaFinValida ? ts : TimeSpan.Zero;
                 _horarioTexto = $"{_horaInicio} A {_horaFin}";
             }
         }
 
         public TimeSpan TimeSpanInicio => _timeSpanInicio;
         public TimeSpan TimeSpanFin => _timeSpanFin;
+        public bool EsHorarioValido => _horaInicioValida && _horaFinValida && _timeSpanInicio < _timeSpanFin;
         public string HorarioTexto => _horarioTexto;
 
         public double DuracionHoras { get; set; }

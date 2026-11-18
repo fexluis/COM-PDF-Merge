@@ -101,8 +101,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             if (ctx?.BloquesPorId == null
                 || !ctx.BloquesPorId.TryGetValue(primero.IdBloqueHorario, out var a)
                 || !ctx.BloquesPorId.TryGetValue(segundo.IdBloqueHorario, out var b)
-                || a.TimeSpanFin <= a.TimeSpanInicio
-                || b.TimeSpanFin <= b.TimeSpanInicio)
+                || !a.EsHorarioValido
+                || !b.EsHorarioValido)
             {
                 return true;
             }
