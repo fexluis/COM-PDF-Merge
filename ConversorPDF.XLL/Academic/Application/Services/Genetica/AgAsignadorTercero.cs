@@ -37,35 +37,52 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         /// </summary>
         public static bool DisponibleGrupo(int docente, AgGen gen, AgIndividuo individuo, AgContexto contexto)
         {
-            if (gen == null || contexto == null) return false;
-            if (docente <= 0 || docente == contexto.IdTerceroVacante) return false;
-            var grupo = (individuo != null && individuo.Genes != null)
-                ? individuo.Genes.Where(g => MismoGrupo(g, gen)).ToList()
-                : new List<AgGen>();
-            if (grupo.Count == 0) grupo.Add(gen);
-            if (grupo.Any(g => g.Estado == AgEstadoGen.Fijado && g.IdTercero != docente))
-                return false;
-            if (grupo.Any(g => !contexto.EsDocenteHabilitado(docente, g.IdPrograma, g.IdAsignatura, g.Semestre)))
-                return false;
-
-            var propias = AgCalendarioConflictos.Crear(grupo, contexto);
-            if (propias.IsFailure) return false;
-
-            var otrosGenes = (individuo != null && individuo.Genes != null)
-                ? individuo.Genes.Where(g => !MismoGrupo(g, gen) && AgCalendarioConflictos.DocenteReal(g, contexto) && g.IdTercero == docente)
-                : Enumerable.Empty<AgGen>();
-            var ajenas = AgCalendarioConflictos.Crear(otrosGenes, contexto);
-            if (ajenas.IsFailure) return false;
-
-            foreach (var o in propias.Value)
+            long t0 = 0;
+            if (AgTelemetriaSubetapas.Activo)
             {
-                if (ajenas.Value.Any(a => AgCalendarioConflictos.SeCruzan(o, a))) return false;
-                if (contexto.SesionesConservadas.Any(s => s.IdTercero == docente && s.Fecha.Date == o.Fecha &&
-                    s.Inicio < o.Fin && o.Inicio < s.Fin)) return false;
-                if (contexto.TerceroOcupado(docente, o.Fecha, new ConversorPDF.XLL.Academic.Domain.Models.FranjaHoraria(o.Inicio, o.Fin)))
-                    return false;
+                AgTelemetriaSubetapas.LlamadasDisponibleGrupo++;
+                t0 = System.Diagnostics.Stopwatch.GetTimestamp();
             }
-            return true;
+
+            try
+            {
+                if (gen == null || contexto == null) return false;
+                if (docente <= 0 || docente == contexto.IdTerceroVacante) return false;
+                var grupo = (individuo != null && individuo.Genes != null)
+                    ? individuo.Genes.Where(g => MismoGrupo(g, gen)).ToList()
+                    : new List<AgGen>();
+                if (grupo.Count == 0) grupo.Add(gen);
+                if (grupo.Any(g => g.Estado == AgEstadoGen.Fijado && g.IdTercero != docente))
+                    return false;
+                if (grupo.Any(g => !contexto.EsDocenteHabilitado(docente, g.IdPrograma, g.IdAsignatura, g.Semestre)))
+                    return false;
+
+                var propias = AgCalendarioConflictos.Crear(grupo, contexto);
+                if (propias.IsFailure) return false;
+
+                var otrosGenes = (individuo != null && individuo.Genes != null)
+                    ? individuo.Genes.Where(g => !MismoGrupo(g, gen) && AgCalendarioConflictos.DocenteReal(g, contexto) && g.IdTercero == docente)
+                    : Enumerable.Empty<AgGen>();
+                var ajenas = AgCalendarioConflictos.Crear(otrosGenes, contexto);
+                if (ajenas.IsFailure) return false;
+
+                foreach (var o in propias.Value)
+                {
+                    if (ajenas.Value.Any(a => AgCalendarioConflictos.SeCruzan(o, a))) return false;
+                    if (contexto.SesionesConservadas.Any(s => s.IdTercero == docente && s.Fecha.Date == o.Fecha &&
+                        s.Inicio < o.Fin && o.Inicio < s.Fin)) return false;
+                    if (contexto.TerceroOcupado(docente, o.Fecha, new ConversorPDF.XLL.Academic.Domain.Models.FranjaHoraria(o.Inicio, o.Fin)))
+                        return false;
+                }
+                return true;
+            }
+            finally
+            {
+                if (AgTelemetriaSubetapas.Activo)
+                {
+                    AgTelemetriaSubetapas.TiempoDisponibleGrupoTicks += (System.Diagnostics.Stopwatch.GetTimestamp() - t0);
+                }
+            }
         }
 
         public bool AsignarDocente(AgGen gen, AgContexto contexto, HashSet<int> docentesExcluidos = null)
@@ -179,5 +196,64 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 
             return AgMotivoVacante.SIN_DISPONIBILIDAD.Codigo();
         }
+    }
+
+    public static class AgTelemetriaSubetapas
+    {
+        [ThreadStatic]
+        private static bool _activo;
+
+        [ThreadStatic]
+        public static long LlamadasDisponibleGrupo;
+
+        [ThreadStatic]
+        public static long CalendariosCreados;
+
+        [ThreadStatic]
+        public static long SesionesProyectadas;
+
+        [ThreadStatic]
+        public static long CandidatosEvaluados;
+
+        [ThreadStatic]
+        public static long ConteoSellados;
+
+        [ThreadStatic]
+        public static long TiempoSelladoTicks;
+
+        [ThreadStatic]
+        public static long TiempoDisponibleGrupoTicks;
+
+        public static bool Activo => _activo;
+
+        public static void Iniciar()
+        {
+            _activo = true;
+            Reiniciar();
+        }
+
+        public static void Detener()
+        {
+            _activo = false;
+        }
+
+        public static void Reiniciar()
+        {
+            LlamadasDisponibleGrupo = 0;
+            CalendariosCreados = 0;
+            SesionesProyectadas = 0;
+            CandidatosEvaluados = 0;
+            ConteoSellados = 0;
+            TiempoSelladoTicks = 0;
+            TiempoDisponibleGrupoTicks = 0;
+        }
+
+        public static long TiempoSelladoMs => System.Diagnostics.Stopwatch.Frequency > 0
+            ? TiempoSelladoTicks * 1000 / System.Diagnostics.Stopwatch.Frequency
+            : 0;
+
+        public static long TiempoDisponibleGrupoMs => System.Diagnostics.Stopwatch.Frequency > 0
+            ? TiempoDisponibleGrupoTicks * 1000 / System.Diagnostics.Stopwatch.Frequency
+            : 0;
     }
 }

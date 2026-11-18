@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -27,6 +27,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 
         internal static Result<List<Ocupacion>> Crear(IEnumerable<AgGen> genes, AgContexto contexto, IAgExpansorSesiones expansor)
         {
+            if (AgTelemetriaSubetapas.Activo)
+            {
+                AgTelemetriaSubetapas.CalendariosCreados++;
+            }
+
             if (genes == null)
             {
                 throw new ArgumentNullException(nameof(genes));
@@ -84,6 +89,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         Franja = bloque.Franja ?? string.Empty
                     });
                 }
+            }
+
+            if (AgTelemetriaSubetapas.Activo)
+            {
+                AgTelemetriaSubetapas.SesionesProyectadas += resultado.Count;
             }
 
             return Result.Success(resultado);

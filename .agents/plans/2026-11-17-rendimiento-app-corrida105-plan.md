@@ -171,10 +171,15 @@ T1 ── T2 ── T4 ── T6 ── T8 ─┐
 - **description**: Implementar instrumentación ambiental de bajo overhead para medir subetapas de sellado: `DisponibleGrupo`, calendarios creados, sesiones proyectadas, candidatos docentes evaluados, invocaciones a `Sellar` y tiempos de sellado; diferenciar explícitamente `TiempoCruceBruto`, `TiempoSelladoEnCruce`, `TiempoCruceNeto`, `TiempoMutacionBruto`, `TiempoSelladoEnMutacion`, `TiempoMutacionNeto` y `TiempoSelladoTotal` para prevenir doble conteo.
 - **validation**: Contadores > 0 en una ejecución corta; la suma de subetapas no excede el tiempo total del operador; cero alteraciones funcionales.
 - **verification**: dotnet test .\ConversorPDF.Tests\ConversorPDF.Tests.csproj -c Debug --no-build --filter "FullyQualifiedName~AgPerfilSubetapasTests|FullyQualifiedName~AgAsignadorTerceroTests"
-- **evidence**: _evidence/<timestamp>/summary.md
-- **status**: pending
-- **log**: 
+- **evidence**: _evidence/20261117-t4/summary.md
+- **status**: done
+- **log**: Instrumentado AgTelemetriaSubetapas ambiental en AgAsignadorTercero.cs, AgCalendarioConflictos.cs y AgCoherenciaGrupo.cs. 11 tests verdes en AgPerfilSubetapasTests y AgAsignadorTerceroTests.
 - **files edited/created**:
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgAsignadorTercero.cs
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgCalendarioConflictos.cs
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgCoherenciaGrupo.cs
+  - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgPerfilSubetapasTests.cs
+  - _evidence/20261117-t4/summary.md
 
 ### T5: Cachés de higiene en bucles calientes
 - **id**: T5

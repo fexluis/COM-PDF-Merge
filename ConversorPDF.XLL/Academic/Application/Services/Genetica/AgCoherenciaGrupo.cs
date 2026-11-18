@@ -124,10 +124,19 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             if (ind?.Genes == null) return;
             var genesOcupacion = ocupacion ?? ind.Genes;
 
-            foreach (var grp in ind.Genes.Where(g => ctx?.ManifiestoCobertura == null || ctx.PuedeGenerarAula(g.IdAula))
-                .GroupBy(g => string.IsNullOrWhiteSpace(g.ClaveGrupo)
-                         ? $"{g.IdAsignatura}|{g.IdAula}|{g.Grupo}" : g.ClaveGrupo))
+            long t0 = 0;
+            if (AgTelemetriaSubetapas.Activo)
             {
+                AgTelemetriaSubetapas.ConteoSellados++;
+                t0 = System.Diagnostics.Stopwatch.GetTimestamp();
+            }
+
+            try
+            {
+                foreach (var grp in ind.Genes.Where(g => ctx?.ManifiestoCobertura == null || ctx.PuedeGenerarAula(g.IdAula))
+                    .GroupBy(g => string.IsNullOrWhiteSpace(g.ClaveGrupo)
+                             ? $"{g.IdAsignatura}|{g.IdAula}|{g.Grupo}" : g.ClaveGrupo))
+                {
                 var genes = grp.ToList();
 
                 // Fase 1114 / Fase 1118: invariante de duración por nivel (-1 = no resoluble, no asumir pregrado)
@@ -471,5 +480,13 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 }
             }
         }
+        finally
+        {
+            if (AgTelemetriaSubetapas.Activo)
+            {
+                AgTelemetriaSubetapas.TiempoSelladoTicks += (System.Diagnostics.Stopwatch.GetTimestamp() - t0);
+            }
+        }
+    }
     }
 }
