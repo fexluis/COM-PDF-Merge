@@ -25,7 +25,7 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
 
         public AgBitacora()
         {
-            FechaRegistro = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            FechaRegistro = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss");
             Subunidad = string.Empty;
         }
     }

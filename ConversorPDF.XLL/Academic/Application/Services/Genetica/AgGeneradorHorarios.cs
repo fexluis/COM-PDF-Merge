@@ -119,7 +119,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 resultado.TiempoPoblacionInicialMs = swPob.ElapsedMilliseconds;
 
                 var swPrimerCiclo = Stopwatch.StartNew();
-                AgIndividuo mejorGlobal = poblacion.OrderByDescending(ind => ind.Fitness).First().Clonar();
+                AgIndividuo mejorGlobal = (poblacion.Count > 0 ? poblacion.OrderByDescending(ind => ind.Fitness).FirstOrDefault() : null)?.Clonar() ?? new AgIndividuo();
                 double mejorHist = double.NegativeInfinity;
                 int estancadas = 0;
                 long duracionUltimaTransicionMs = resultado.TiempoPoblacionInicialMs;

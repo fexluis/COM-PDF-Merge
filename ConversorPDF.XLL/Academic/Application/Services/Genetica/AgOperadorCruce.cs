@@ -251,8 +251,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 }
 
                 // Fase 550 & Fase 985: regenerar el histograma semanal desde la cohorte real usando unidadCruce
-                DateTime fIni = dst.FechaInicioEstimada ?? (contexto?.Ventana != null ? contexto.Ventana.FechaInicio : DateTime.Today);
-                DateTime fFin = dst.FechaFinEstimada ?? (contexto?.Ventana != null ? contexto.Ventana.FechaFin : DateTime.Today.AddMonths(4));
+                DateTime fIni = dst.FechaInicioEstimada ?? (contexto?.Ventana != null ? contexto.Ventana.FechaInicio : DateTime.UtcNow.Date);
+                DateTime fFin = dst.FechaFinEstimada ?? (contexto?.Ventana != null ? contexto.Ventana.FechaFin : DateTime.UtcNow.Date.AddMonths(4));
                 var resPatron = _planificadorPatron.Construir(
                     diasK,
                     (int)dst.TotalHorasAsignatura,

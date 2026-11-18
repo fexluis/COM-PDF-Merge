@@ -202,7 +202,7 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
             AulaAsignaturaPorAulaAsig = AulaAsignaturas != null
                 ? AulaAsignaturas
                     .GroupBy(x => (x.IdAula, x.IdAsignatura))
-                    .ToDictionary(g => g.Key, g => g.First())
+                    .ToDictionary(g => g.Key, g => g.FirstOrDefault())
                 : new Dictionary<(int IdAula, int IdAsignatura), AgAulaAsignatura>();
 
             if (AulaAsignaturas != null)

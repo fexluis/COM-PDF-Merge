@@ -306,7 +306,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             // Fase 1296, Fase 1302 & Fase 1310: Diagnóstico explícito de colisión I7 sin descartar sesiones (evita déficit I2)
             var mapaGrupos = (individuo.Genes ?? new List<AgGen>())
                 .GroupBy(g => g.Id)
-                .ToDictionary(g => g.Key, g => g.First().ClaveGrupo ?? string.Empty);
+                .ToDictionary(g => g.Key, g => g.FirstOrDefault()?.ClaveGrupo ?? string.Empty);
 
             var sesionColision = todasSesiones
                 .Where(s => s.FechaSesion.HasValue && !string.IsNullOrEmpty(s.HorarioSesion))

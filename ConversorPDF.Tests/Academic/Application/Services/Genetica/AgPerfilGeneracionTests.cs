@@ -123,7 +123,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             result.IsSuccess.Should().BeTrue();
             var corrida = result.Value;
             corrida.PerfilesGeneracion.Should().NotBeEmpty();
-            var primerPerfil = corrida.PerfilesGeneracion.First();
+            var primerPerfil = corrida.PerfilesGeneracion[0];
             primerPerfil.EvaluacionesExtraPorCupoImpar.Should().Be(1);
             primerPerfil.HijosCreados.Should().Be(4); // 2 pares evaluados
             primerPerfil.HijosIncorporados.Should().Be(3); // 3 cupos llenados

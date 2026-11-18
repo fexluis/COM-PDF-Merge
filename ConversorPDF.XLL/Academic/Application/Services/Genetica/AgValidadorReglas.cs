@@ -339,7 +339,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     var orden = porAsignatura
                         .OrderBy(asigGrp =>
                         {
-                            var x = asigGrp.First();
+                            var x = asigGrp.FirstOrDefault();
+                            if (x == null) return 999;
                             AgAulaAsignatura aa = null;
                             if (contexto.AulaAsignaturaPorAulaAsig != null && x.IdAula > 0 &&
                                 contexto.AulaAsignaturaPorAulaAsig.TryGetValue((x.IdAula, x.IdAsignatura), out var aaExacta))
@@ -368,7 +369,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                                 AgReglaViolacion.R6_SecuenciaAsignaturas,
                                 esDura: true,
                                 mensaje: $"Solape de secuencia curricular en carril '{carrilGrp.Key}' de cohorte '{g.Key}': Asignatura {orden[idx].Key} inicia ({actualIni:yyyy-MM-dd}) antes de que finalice la previa {orden[idx - 1].Key} ({previaFin:yyyy-MM-dd}).",
-                                idGen: orden[idx].First().Id));
+                                idGen: orden[idx].FirstOrDefault()?.Id ?? 0));
                         }
                     }
                 }
@@ -433,7 +434,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                             IdAsignatura = grp.Key,
                             FechaInicio = grp.Min(x => x.FechaInicioEstimada.Value),
                             FechaFin = grp.Max(x => x.FechaFinEstimada.Value),
-                            FirstGenId = grp.First().Id
+                            FirstGenId = grp.FirstOrDefault()?.Id ?? 0
                         })
                         .ToList();
 
@@ -491,7 +492,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         AgReglaViolacion.R8_DiasDuplicadosGrupo,
                         esDura: true,
                         mensaje: $"Grupo '{gr.Key}': bloques repetidos en el patrón ({string.Join(", ", pares.Select(p => $"D{p.Dia}/{p.Franja}"))}).",
-                        idGen: gr.First().Id));
+                        idGen: gr.FirstOrDefault()?.Id ?? 0));
                 }
                 // Fase 988: cada carril valida su propio patrón (un grupo puede tener varias oleadas)
                 var genFuera = gr.Where(g => !string.IsNullOrWhiteSpace(g.DiasPatron))

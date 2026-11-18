@@ -123,12 +123,12 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             // Fase 1003: Deduplicar por Id de aula para conservar carriles concurrentes de la misma cohorte
             // Fase 1033: DesdeAula evita colisión de registro de Excel-DNA 1.8.0
             var gruposAula = contexto.ManifiestoCobertura != null
-                ? aulasValidas.GroupBy(a => a.Id).Select(g => g.First()).ToList()
+                ? aulasValidas.GroupBy(a => a.Id).Select(g => g.FirstOrDefault()).Where(a => a != null).ToList()
                 : contexto.IdAulaCorrida > 0
                 ? aulasValidas.Where(a => a.Id == contexto.IdAulaCorrida).ToList()
                 : (aulasValidas.Count > 0
                     // Fase 1003: deduplicar por Id de aula conserva carriles concurrentes de la misma cohorte
-                    ? aulasValidas.GroupBy(a => a.Id).Select(g => g.First()).ToList()
+                    ? aulasValidas.GroupBy(a => a.Id).Select(g => g.FirstOrDefault()).Where(a => a != null).ToList()
                     : new List<AgAula> { null });
 
             foreach (var aula in gruposAula)
@@ -213,8 +213,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     .ThenBy(a => a.Id)
                     .ToList();
 
-                DateTime fInicioVentana = contexto.Ventana != null ? contexto.Ventana.FechaInicio : DateTime.Today;
-                DateTime fFinVentana = contexto.Ventana != null ? contexto.Ventana.FechaFin : DateTime.Today.AddMonths(4);
+                DateTime fInicioVentana = contexto.Ventana != null ? contexto.Ventana.FechaInicio : DateTime.UtcNow.Date;
+                DateTime fFinVentana = contexto.Ventana != null ? contexto.Ventana.FechaFin : DateTime.UtcNow.Date.AddMonths(4);
                 var progAulaNivel = aula != null ? contexto.Programas?.FirstOrDefault(p => p.Id == aula.IdPrograma) : null;
                 var nivelAulaNivel = AgNivelAcademicoCatalogo.Desde(progAulaNivel?.Modalidad);
                 double unidadSesionAula = AgUnidadesSemanales.HorasSesionAula(aula, nivelAulaNivel);

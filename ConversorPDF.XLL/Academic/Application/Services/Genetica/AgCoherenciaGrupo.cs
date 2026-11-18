@@ -30,7 +30,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         // Fase 585 / Fase 590: Cálculo de capacidad real de sesiones = ocurrencias del día propio del gen en su ventana
         private static int SesionesMaximas(AgGen g, AgContexto ctx)
         {
-            DateTime c0 = (g.FechaInicioEstimada ?? (ctx?.Ventana != null ? ctx.Ventana.FechaInicio : DateTime.Today)).Date;
+            DateTime c0 = (g.FechaInicioEstimada ?? (ctx?.Ventana != null ? ctx.Ventana.FechaInicio : DateTime.UtcNow.Date)).Date;
             DateTime t0 = (g.FechaFinEstimada ?? (ctx?.Ventana != null ? ctx.Ventana.FechaFin : c0.AddMonths(4))).Date;
             if (t0 < c0) return 0;
             int diaIso = (g.DiaSemana >= 1 && g.DiaSemana <= 7) ? g.DiaSemana : 1;
@@ -51,7 +51,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         {
             if (g == null || g.FechasGen == null) { return; }
             g.HorasGen = Math.Max(0, targetSesiones) * unidad;
-            DateTime inicio = (g.FechaInicioEstimada ?? ctx?.Ventana?.FechaInicio ?? DateTime.Today).Date;
+            DateTime inicio = (g.FechaInicioEstimada ?? ctx?.Ventana?.FechaInicio ?? DateTime.UtcNow.Date).Date;
             DateTime fin = (g.FechaFinEstimada ?? ctx?.Ventana?.FechaFin ?? inicio.AddMonths(4)).Date;
             if (ctx?.Ventana != null)
             {
@@ -297,7 +297,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                             return 4.0;
                         }
 
-                        double unidad = genes.Select(ObtenerUnidad).GroupBy(u => u).OrderByDescending(x => x.Count()).First().Key;
+                        var grpUnidades = genes.Select(ObtenerUnidad).GroupBy(u => u).OrderByDescending(x => x.Count()).FirstOrDefault();
+                        double unidad = grpUnidades != null ? grpUnidades.Key : 4.0;
 
                         // Fase 972 / 974: degradar a 4 h si ni el total ni el remanente son múltiplos de la unidad (D4': 4 h siempre es divisible)
                         if (Math.Abs(esperado / unidad - Math.Round(esperado / unidad)) > 0.001
@@ -337,14 +338,17 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                                 double delta = esperado - fijados.Sum(g => g.HorasGen);
                                 if (Math.Abs(delta) > 0.001)
                                 {
-                                    var mayor = fijados.OrderByDescending(g => g.HorasGen).First();
-                                    double u = ObtenerUnidad(mayor);
-                                    double nuevo = Math.Round((mayor.HorasGen + delta) / u) * u;
-                                    mayor.HorasGen = Math.Max(u, nuevo);
-                                    if (mayor.FechasGen != null && mayor.FechasGen.Count > 0)
+                                    var mayor = fijados.OrderByDescending(g => g.HorasGen).FirstOrDefault();
+                                    if (mayor != null)
                                     {
-                                        int targetSes = (int)Math.Round(mayor.HorasGen / u);
-                                        SincronizarFechasGen(mayor, u, targetSes, ctx, genesOcupacion);
+                                        double u = ObtenerUnidad(mayor);
+                                        double nuevo = Math.Round((mayor.HorasGen + delta) / u) * u;
+                                        mayor.HorasGen = Math.Max(u, nuevo);
+                                        if (mayor.FechasGen != null && mayor.FechasGen.Count > 0)
+                                        {
+                                            int targetSes = (int)Math.Round(mayor.HorasGen / u);
+                                            SincronizarFechasGen(mayor, u, targetSes, ctx, genesOcupacion);
+                                        }
                                     }
                                 }
 
@@ -479,7 +483,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 }
                 else
                 {
-                    doc = reales.GroupBy(g => g.IdTercero).OrderByDescending(x => x.Count()).First().Key;
+                    var topDoc = reales.GroupBy(g => g.IdTercero).OrderByDescending(x => x.Count()).FirstOrDefault();
+                    doc = topDoc != null ? topDoc.Key : 0;
                     vac = 0;
                     motivo = string.Empty;
                 }
