@@ -65,30 +65,54 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     return Result.Failure<List<Ocupacion>>($"I6_BLOQUE_INVALIDO: aula={gen.IdAula}, asig={gen.IdAsignatura}");
                 }
 
-                var sesiones = expansor.Expandir(gen, 0, contexto);
-                if (sesiones.IsFailure)
-                {
-                    return Result.Failure<List<Ocupacion>>(sesiones.Error);
-                }
-
                 var ini = bloque.TimeSpanInicio;
                 var fin = bloque.TimeSpanFin;
+                string franja = bloque.Franja ?? string.Empty;
 
-                foreach (var sesion in sesiones.Value)
+                if (expansor is AgExpansorSesiones)
                 {
-                    if (!sesion.FechaSesion.HasValue)
+                    var fechasRes = AgExpansorSesiones.ProyectarFechas(gen, contexto);
+                    if (fechasRes.IsFailure)
                     {
-                        return Result.Failure<List<Ocupacion>>("I5_SESION_SIN_FECHA");
+                        return Result.Failure<List<Ocupacion>>(fechasRes.Error);
                     }
 
-                    resultado.Add(new Ocupacion
+                    foreach (var f in fechasRes.Value)
                     {
-                        Gen = gen,
-                        Fecha = sesion.FechaSesion.Value.Date,
-                        Inicio = ini,
-                        Fin = fin,
-                        Franja = bloque.Franja ?? string.Empty
-                    });
+                        resultado.Add(new Ocupacion
+                        {
+                            Gen = gen,
+                            Fecha = f.Date,
+                            Inicio = ini,
+                            Fin = fin,
+                            Franja = franja
+                        });
+                    }
+                }
+                else
+                {
+                    var sesiones = expansor.Expandir(gen, 0, contexto);
+                    if (sesiones.IsFailure)
+                    {
+                        return Result.Failure<List<Ocupacion>>(sesiones.Error);
+                    }
+
+                    foreach (var sesion in sesiones.Value)
+                    {
+                        if (!sesion.FechaSesion.HasValue)
+                        {
+                            return Result.Failure<List<Ocupacion>>("I5_SESION_SIN_FECHA");
+                        }
+
+                        resultado.Add(new Ocupacion
+                        {
+                            Gen = gen,
+                            Fecha = sesion.FechaSesion.Value.Date,
+                            Inicio = ini,
+                            Fin = fin,
+                            Franja = franja
+                        });
+                    }
                 }
             }
 

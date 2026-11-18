@@ -246,10 +246,14 @@ T1 ── T2 ── T4 ── T6 ── T8 ─┐
 - **description**: Desacoplar la proyección de fechas e intervalos de ocupación (`Ocupacion`) de la instanciación pesada de objetos `AgSesion`; implementar constructor ligero anidado en `AgCalendarioConflictos.cs` para el camino crítico de validación y sellado; mantener intacto el método `Expandir` completo para la materialización final de horarios.
 - **validation**: Equivalencia estricta: fechas, intervalos de tiempo, cardinalidad y detección de cruces idénticos a la proyección completa; materialización final inalterada; mejora medible de rendimiento.
 - **verification**: dotnet test .\ConversorPDF.Tests\ConversorPDF.Tests.csproj -c Debug --no-build --filter "FullyQualifiedName~AgProyeccionLigeraTests|FullyQualifiedName~AgCalendarioConflictosTests"
-- **evidence**: _evidence/<timestamp>/summary.md
-- **status**: pending
-- **log**: 
+- **evidence**: _evidence/20261117-t7/summary.md
+- **status**: done
+- **log**: Desacoplado ProyectarFechas en AgExpansorSesiones evitando la instanciación de AgSesion en el camino crítico de AgCalendarioConflictos. 30 tests verdes en AgProyeccionLigeraTests y AgCalendarioConflictosTests.
 - **files edited/created**:
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgExpansorSesiones.cs
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgCalendarioConflictos.cs
+  - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgProyeccionLigeraTests.cs
+  - _evidence/20261117-t7/summary.md
 
 ### T8: Índice por individuo y reparación sucia
 - **id**: T8

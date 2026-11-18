@@ -22,29 +22,25 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             _planificador = planificador ?? new AgPlanificadorTemporal();
         }
 
-        public Result<List<AgSesion>> Expandir(AgGen gen, int idVinculacion, AgContexto contexto)
+        public static Result<List<DateTime>> ProyectarFechas(AgGen gen, AgContexto contexto, AgPlanificadorTemporal planificador = null)
         {
             if (gen == null) throw new ArgumentNullException(nameof(gen));
             if (contexto == null) throw new ArgumentNullException(nameof(contexto));
-            if (LoggerHelper.ModoVerboso)
-            {
-                LoggerHelper.Debug($"[AG-RANURAS-TMP] EXPANDIR_ENTRADA corrida={contexto.IdCorrida} individuo={gen.IdIndividuo} gen={gen.Id} aula={gen.IdAula} asig={gen.IdAsignatura} bloque={gen.IdBloqueHorario} horas={gen.HorasGen} fuente={(gen.FechasGen != null && gen.FechasGen.Count > 0 ? "FechasGen" : "calendario_legacy")} fechas={gen.FechasGen?.Count ?? 0} ultima={gen.FechasGen?.Select(d => (DateTime?)d).Max():yyyy-MM-dd} rango={gen.FechaInicioEstimada:yyyy-MM-dd}..{gen.FechaFinEstimada:yyyy-MM-dd}");
-            }
 
             // Fase 573 & 576: sin carga => 0 sesiones directamente, sin fallar por ventana/bloque
             if (gen.HorasGen <= 0.0)
             {
-                return Result.Success(new List<AgSesion>());
+                return Result.Success(new List<DateTime>());
             }
 
             if (contexto.Ventana == null)
             {
-                return Result.Failure<List<AgSesion>>("Ventana semestral no resuelta.");
+                return Result.Failure<List<DateTime>>("Ventana semestral no resuelta.");
             }
 
-            if (!contexto.BloquesPorId.TryGetValue(gen.IdBloqueHorario, out var bloque))
+            if (contexto.BloquesPorId == null || !contexto.BloquesPorId.TryGetValue(gen.IdBloqueHorario, out var bloque))
             {
-                return Result.Failure<List<AgSesion>>($"Bloque horario {gen.IdBloqueHorario} no encontrado.");
+                return Result.Failure<List<DateTime>>($"Bloque horario {gen.IdBloqueHorario} no encontrado.");
             }
 
             DateTime fInicio = gen.FechaInicioEstimada.HasValue
@@ -84,25 +80,22 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 
             if (!contexto.Ventana.ContieneRango(fInicio, fFin))
             {
-                return Result.Failure<List<AgSesion>>(
+                return Result.Failure<List<DateTime>>(
                     $"Gen {gen.Id} fuera de ventana: {fInicio:yyyy-MM-dd}..{fFin:yyyy-MM-dd}.");
             }
 
             double horasObjetivoGen = gen.HorasGen;
 
-            contexto.AsignaturasPorId.TryGetValue(gen.IdAsignatura, out _);
-            contexto.AulasPorId.TryGetValue(gen.IdAula, out var aula);
-            contexto.DocentesPorId.TryGetValue(gen.IdTercero, out var docente);
-            contexto.SedesPorId.TryGetValue(gen.IdSede, out var sede);
-
             // Fase 964: Cuantización estricta de sesiones (sin residuos fraccionarios Math.Min)
             double unidad = bloque.DuracionHoras;
             if (unidad <= 0)
             {
-                return Result.Failure<List<AgSesion>>($"Gen {gen.Id}: bloque con duración inválida ({unidad} h).");
+                return Result.Failure<List<DateTime>>($"Gen {gen.Id}: bloque con duración inválida ({unidad} h).");
             }
 
             // Ronda 206 / Fase 1056 (D4/I6): Defensa en profundidad de duración esperada según nivel académico del aula/programa
+            AgAula aula = null;
+            if (contexto.AulasPorId != null) contexto.AulasPorId.TryGetValue(gen.IdAula, out aula);
             if (aula != null)
             {
                 int idProg = gen.IdPrograma > 0 ? gen.IdPrograma : (aula.IdPrograma > 0 ? aula.IdPrograma : contexto.IdPrograma);
@@ -119,7 +112,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 double duracionEsperada = AgUnidadesSemanales.HorasSesionAula(aula, nivel);
                 if (Math.Abs(unidad - duracionEsperada) > 0.001)
                 {
-                    return Result.Failure<List<AgSesion>>(
+                    return Result.Failure<List<DateTime>>(
                         $"Gen {gen.Id}: bloque con duración ({unidad} h) no coincide con la esperada ({duracionEsperada} h) para nivel {nivel}.");
                 }
             }
@@ -127,7 +120,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             double sesionesExactas = horasObjetivoGen / unidad;
             if (Math.Abs(sesionesExactas - Math.Round(sesionesExactas)) > 0.001)
             {
-                return Result.Failure<List<AgSesion>>(
+                return Result.Failure<List<DateTime>>(
                     $"Gen {gen.Id}: {horasObjetivoGen:0.#} h no es múltiplo de {unidad:0.#} h (unidad de sesión).");
             }
             int sesionesRequeridas = (int)Math.Round(sesionesExactas);
@@ -135,7 +128,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             // Fase 414: Usar FechasGen si fueron precalculadas por el planificador semanal
             List<DateTime> fechas = usaFechasGen
                 ? gen.FechasGen
-                : _planificador.GenerarFechasValidas(
+                : (planificador ?? new AgPlanificadorTemporal()).GenerarFechasValidas(
                     bloque.DiaSemana,
                     fInicio,
                     fFin,
@@ -143,14 +136,9 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     horasObjetivoGen,
                     contexto.EsFestivo);
 
-            if (!usaFechasGen && LoggerHelper.ModoVerboso)
-            {
-                LoggerHelper.Debug($"[AG-EXPANSOR-LEGACY] Gen {gen.Id} (aula {gen.IdAula}, asig {gen.IdAsignatura}) usa generador de fechas legacy en lugar de FechasGen.");
-            }
-
             if (fechas == null || fechas.Count == 0)
             {
-                return Result.Failure<List<AgSesion>>(
+                return Result.Failure<List<DateTime>>(
                     $"Gen {gen.Id}: sin fechas disponibles para cubrir {horasObjetivoGen:0.#} h.");
             }
 
@@ -158,61 +146,105 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             // 1. Plazo semestral
             if (fechas.Any(f => f.Date < contexto.Ventana.FechaInicio.Date || f.Date > contexto.Ventana.FechaFin.Date))
             {
-                return Result.Failure<List<AgSesion>>(
+                return Result.Failure<List<DateTime>>(
                     $"Gen {gen.Id} contiene sesiones fuera del plazo semestral ({contexto.Ventana.FechaInicio:yyyy-MM-dd}..{contexto.Ventana.FechaFin:yyyy-MM-dd}).");
             }
 
             // 2. Rango del gen
             if (fechas.Any(f => f.Date < fInicio || f.Date > fFin))
             {
-                return Result.Failure<List<AgSesion>>(
+                return Result.Failure<List<DateTime>>(
                     $"Gen {gen.Id} contiene sesiones fuera de su rango ({fInicio:yyyy-MM-dd}..{fFin:yyyy-MM-dd}).");
             }
 
             // 3. Día de la semana del bloque
             if (fechas.Any(f => f.DayOfWeek != bloque.DiaSemana))
             {
-                return Result.Failure<List<AgSesion>>(
+                return Result.Failure<List<DateTime>>(
                     $"Gen {gen.Id}: fecha incompatible con el día del bloque ({bloque.DiaSemana}).");
             }
 
             // 4. Festivos
             if (contexto != null && fechas.Any(f => contexto.EsFestivo(f.Date)))
             {
-                return Result.Failure<List<AgSesion>>(
+                return Result.Failure<List<DateTime>>(
                     $"Gen {gen.Id}: contiene fechas festivas.");
             }
 
             // 5. Duplicados
             if (fechas.Select(f => f.Date).Distinct().Count() != fechas.Count)
             {
-                return Result.Failure<List<AgSesion>>(
+                return Result.Failure<List<DateTime>>(
                     $"Gen {gen.Id}: contiene fechas duplicadas.");
             }
 
             // 6. Cardinalidad
             if (fechas.Count != sesionesRequeridas)
             {
-                return Result.Failure<List<AgSesion>>(
+                return Result.Failure<List<DateTime>>(
                     $"Gen {gen.Id}: cardinalidad de fechas ({fechas.Count}) no coincide con sesiones requeridas ({sesionesRequeridas}).");
             }
 
+            double horasAcumuladas = 0.0;
+            var fechasValidas = new List<DateTime>(fechas.Count);
+            foreach (var f in fechas)
+            {
+                if (horasAcumuladas + 0.001 >= horasObjetivoGen) break;
+                fechasValidas.Add(f.Date);
+                horasAcumuladas += unidad;
+            }
+
+            const double Tolerancia = 0.001;
+            if (horasAcumuladas + Tolerancia < horasObjetivoGen)
+            {
+                return Result.Failure<List<DateTime>>(
+                    $"Cobertura incompleta gen {gen.Id}: {horasAcumuladas}/{horasObjetivoGen} h.");
+            }
+
+            return Result.Success(fechasValidas);
+        }
+
+        public Result<List<AgSesion>> Expandir(AgGen gen, int idVinculacion, AgContexto contexto)
+        {
+            if (gen == null) throw new ArgumentNullException(nameof(gen));
+            if (contexto == null) throw new ArgumentNullException(nameof(contexto));
+            if (LoggerHelper.ModoVerboso)
+            {
+                LoggerHelper.Debug($"[AG-RANURAS-TMP] EXPANDIR_ENTRADA corrida={contexto.IdCorrida} individuo={gen.IdIndividuo} gen={gen.Id} aula={gen.IdAula} asig={gen.IdAsignatura} bloque={gen.IdBloqueHorario} horas={gen.HorasGen} fuente={(gen.FechasGen != null && gen.FechasGen.Count > 0 ? "FechasGen" : "calendario_legacy")} fechas={gen.FechasGen?.Count ?? 0} ultima={gen.FechasGen?.Select(d => (DateTime?)d).Max():yyyy-MM-dd} rango={gen.FechaInicioEstimada:yyyy-MM-dd}..{gen.FechaFinEstimada:yyyy-MM-dd}");
+            }
+
+            var resFechas = ProyectarFechas(gen, contexto, _planificador);
+            if (resFechas.IsFailure)
+            {
+                return Result.Failure<List<AgSesion>>(resFechas.Error);
+            }
+
+            var fechas = resFechas.Value;
+            if (fechas.Count == 0)
+            {
+                return Result.Success(new List<AgSesion>());
+            }
+
+            AgBloqueHorario bloque = null;
+            if (contexto.BloquesPorId != null) contexto.BloquesPorId.TryGetValue(gen.IdBloqueHorario, out bloque);
+            AgAula aula = null;
+            if (contexto.AulasPorId != null) contexto.AulasPorId.TryGetValue(gen.IdAula, out aula);
+            Tercero docente = null;
+            if (contexto.DocentesPorId != null) contexto.DocentesPorId.TryGetValue(gen.IdTercero, out docente);
+            Sede sede = null;
+            if (contexto.SedesPorId != null) contexto.SedesPorId.TryGetValue(gen.IdSede, out sede);
+
             // Fase 217 & 786: Si el aula es virtual (EsVirtual == 1), forzar modalidad Plataforma para que CalculadoraViaticaSesion anule viáticos.
+            double unidad = bloque != null ? bloque.DuracionHoras : 4.0;
             string modalidad = (aula != null && aula.EsVirtual == 1)
                 ? ModalidadTutoriaCatalog.Plataforma
                 : ModalidadTutoriaCatalog.NormalizarTutoria(aula?.ModalidadVinculacion ?? ModalidadTutoriaCatalog.Presencial);
             string ciudadSede = sede != null ? sede.Ciudad : string.Empty;
             string residenciaDocente = docente != null ? docente.Residencia : string.Empty;
 
-            var sesiones = new List<AgSesion>();
-            double horasAcumuladas = 0.0;   // Fase 965: restaurar acumulador de horas de sesiones
-
+            var sesiones = new List<AgSesion>(fechas.Count);
             foreach (var f in fechas)
             {
-                if (horasAcumuladas + 0.001 >= horasObjetivoGen) break;
-
-                double horasSesion = unidad; // sin Math.Min
-
                 bool viatica = CalculadoraViaticaSesion.DeterminarViatica(
                     f,
                     modalidad,
@@ -228,8 +260,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     IdTercero = idTerceroSesion,
                     IdAula = gen.IdAula,
                     FechaSesion = f,
-                    HorarioSesion = bloque.ObtenerHorarioTexto(),
-                    Horas = horasSesion,
+                    HorarioSesion = bloque != null ? bloque.ObtenerHorarioTexto() : string.Empty,
+                    Horas = unidad,
                     Viatica = viatica,
                     Subunidad = contexto.Subunidad,
                     IdIndividuo = gen.IdIndividuo,
@@ -240,23 +272,6 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 };
 
                 sesiones.Add(sesion);
-                horasAcumuladas += horasSesion;
-            }
-
-            const double Tolerancia = 0.001;
-            if (LoggerHelper.ModoVerboso)
-            {
-                string fuente = usaFechasGen ? "FechasGen" : "generador legacy";
-                string detalleFechas = sesiones.Count <= 12
-                    ? string.Join(", ", sesiones.Select(s => s.FechaSesion.HasValue ? s.FechaSesion.Value.ToString("yyyy-MM-dd") : string.Empty))
-                    : $"{sesiones[0].FechaSesion:yyyy-MM-dd}..{sesiones[sesiones.Count - 1].FechaSesion:yyyy-MM-dd} ({sesiones.Count} fechas)";
-                LoggerHelper.Debug($"[AgExpansorSesiones] Gen {gen.Id} (aula {gen.IdAula}, asig {gen.IdAsignatura}) expandido vía {fuente}: {sesiones.Count} sesiones [{detalleFechas}].");
-                LoggerHelper.Debug($"[AG-RANURAS-TMP] EXPANDIR_SALIDA corrida={contexto.IdCorrida} gen={gen.Id} aula={gen.IdAula} asig={gen.IdAsignatura} sesiones={sesiones.Count} horas={horasAcumuladas}/{horasObjetivoGen} ultima={sesiones.Select(s => (DateTime?)s.FechaSesion).Max():yyyy-MM-dd}");
-            }
-            if (horasAcumuladas + Tolerancia < horasObjetivoGen)
-            {
-                return Result.Failure<List<AgSesion>>(
-                    $"Cobertura incompleta gen {gen.Id}: {horasAcumuladas}/{horasObjetivoGen} h.");
             }
 
             return Result.Success(sesiones);
