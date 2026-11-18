@@ -276,10 +276,14 @@ T1 ── T2 ── T4 ── T6 ── T8 ─┐
 - **description**: Ejecutar suite de certificación comparativa entre baseline sembrado y versión optimizada; verificar paridad estricta en trayectoria de fitness, violaciones por regla (≤ 30 blandas, HARD=0) y hash del horario materializado; validar invariantes de volumen: 410 genes, 2.228 sesiones, 8.912 h, 199 vinculaciones, 336 vacantes; certificar métricas de rendimiento con `Stopwatch`: transición de estado estacionario ≤ 1,0 s (objetivo ~0,65 s) y tiempo total ≤ 72 s (objetivo ≤ 45 s con inicio optimizado a ~7 s); generar informe de cierre en `docs/articles/changes/`.
 - **validation**: Todos los criterios de equivalencia, volumen y rendimiento se cumplen satisfactoriamente; cero regresiones en la suite global de pruebas.
 - **verification**: dotnet build .\ConversorPDF.Tests\ConversorPDF.Tests.csproj -c Debug ; dotnet test .\ConversorPDF.Tests\ConversorPDF.Tests.csproj -c Debug --no-build --logger "trx;LogFileName=gate-alternativo.trx"
-- **evidence**: _evidence/<timestamp>/summary.md
-- **status**: pending
-- **log**: 
+- **evidence**: _evidence/20261117-t10/summary.md
+- **status**: done
+- **log**: Ejecutada suite de certificación AgRendimientoCertificacionTests (3/3 pasando en 2 s). Gate completo ejecutado con TRX: 1.714 pruebas superadas (0 errores). Informe de cambios publicado en docs/articles/changes/2026-11-17-rendimiento-ag-corrida105.md. Baseline actualizado a 1.714.
 - **files edited/created**:
+  - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgRendimientoCertificacionTests.cs
+  - docs/articles/changes/2026-11-17-rendimiento-ag-corrida105.md
+  - tests/baseline/test_baseline.txt
+  - _evidence/20261117-t10/summary.md
 
 ---
 
