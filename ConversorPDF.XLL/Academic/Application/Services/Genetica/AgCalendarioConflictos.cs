@@ -60,9 +60,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     !contexto.BloquesPorId.TryGetValue(gen.IdBloqueHorario, out var bloque) ||
                     bloque == null ||
                     bloque.Activo != 1 ||
-                    !TimeSpan.TryParse(bloque.HoraInicio, CultureInfo.InvariantCulture, out var ini) ||
-                    !TimeSpan.TryParse(bloque.HoraFin, CultureInfo.InvariantCulture, out var fin) ||
-                    ini >= fin)
+                    bloque.TimeSpanInicio >= bloque.TimeSpanFin)
                 {
                     return Result.Failure<List<Ocupacion>>($"I6_BLOQUE_INVALIDO: aula={gen.IdAula}, asig={gen.IdAsignatura}");
                 }
@@ -72,6 +70,9 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 {
                     return Result.Failure<List<Ocupacion>>(sesiones.Error);
                 }
+
+                var ini = bloque.TimeSpanInicio;
+                var fin = bloque.TimeSpanFin;
 
                 foreach (var sesion in sesiones.Value)
                 {

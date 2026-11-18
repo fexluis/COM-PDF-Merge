@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -58,7 +59,16 @@ namespace ConversorPDF.XLL.Academic.Application.Services
             return false;
         }
 
+        private static readonly ConcurrentDictionary<string, string> _ciudadesNormalizadas =
+            new ConcurrentDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
         public static string NormalizarCiudad(string ciudad)
+        {
+            if (string.IsNullOrWhiteSpace(ciudad)) return string.Empty;
+            return _ciudadesNormalizadas.GetOrAdd(ciudad, NormalizarCiudadInterno);
+        }
+
+        private static string NormalizarCiudadInterno(string ciudad)
         {
             if (string.IsNullOrWhiteSpace(ciudad)) return string.Empty;
 

@@ -106,7 +106,15 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             if (aula != null)
             {
                 int idProg = gen.IdPrograma > 0 ? gen.IdPrograma : (aula.IdPrograma > 0 ? aula.IdPrograma : contexto.IdPrograma);
-                var progGen = contexto.Programas?.FirstOrDefault(p => p.Id == idProg);
+                Programa progGen = null;
+                if (contexto.ProgramasPorId != null && contexto.ProgramasPorId.TryGetValue(idProg, out var pg))
+                {
+                    progGen = pg;
+                }
+                else
+                {
+                    progGen = contexto.Programas?.FirstOrDefault(p => p.Id == idProg);
+                }
                 var nivel = AgNivelAcademicoCatalogo.Desde(progGen?.Modalidad);
                 double duracionEsperada = AgUnidadesSemanales.HorasSesionAula(aula, nivel);
                 if (Math.Abs(unidad - duracionEsperada) > 0.001)

@@ -131,6 +131,8 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
         public Dictionary<int, AgAula> AulasPorId { get; private set; }
         public Dictionary<int, AgBloqueHorario> BloquesPorId { get; private set; }
         public Dictionary<int, Asignatura> AsignaturasPorId { get; private set; }
+        public Dictionary<int, Programa> ProgramasPorId { get; private set; }
+        public Dictionary<int, double> UnidadHorasPorAulaId { get; private set; }
         public Dictionary<int, AgAulaAsignatura> AulaAsignaturasPorId { get; private set; }
         /// <summary> Índice O(1) de asignaturas por aula y asignatura para soporte multi-aula y multi-sede (Fase 547). </summary>
         public Dictionary<(int IdAula, int IdAsignatura), AgAulaAsignatura> AulaAsignaturaPorAulaAsig { get; private set; }
@@ -163,6 +165,8 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
             AulasPorId = new Dictionary<int, AgAula>();
             BloquesPorId = new Dictionary<int, AgBloqueHorario>();
             AsignaturasPorId = new Dictionary<int, Asignatura>();
+            ProgramasPorId = new Dictionary<int, Programa>();
+            UnidadHorasPorAulaId = new Dictionary<int, double>();
             AulaAsignaturasPorId = new Dictionary<int, AgAulaAsignatura>();
             AulaAsignaturaPorAulaAsig = new Dictionary<(int IdAula, int IdAsignatura), AgAulaAsignatura>();
             DocentesPorId = new Dictionary<int, Tercero>();
@@ -181,6 +185,18 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
             AsignaturasPorId = Asignaturas.ToDictionary(a => a.Id, a => a);
             DocentesPorId = Docentes.ToDictionary(d => d.Id, d => d);
             SedesPorId = Sedes.ToDictionary(s => s.Id, s => s);
+            ProgramasPorId = Programas != null ? Programas.ToDictionary(p => p.Id, p => p) : new Dictionary<int, Programa>();
+
+            UnidadHorasPorAulaId = new Dictionary<int, double>();
+            if (Aulas != null)
+            {
+                foreach (var a in Aulas)
+                {
+                    var prog = (ProgramasPorId != null && ProgramasPorId.TryGetValue(a.IdPrograma, out var p)) ? p : null;
+                    var nivel = AgNivelAcademicoCatalogo.Desde(prog?.Modalidad);
+                    UnidadHorasPorAulaId[a.Id] = AgUnidadesSemanales.HorasSesionAula(a, nivel);
+                }
+            }
 
             AulaAsignaturasPorId = new Dictionary<int, AgAulaAsignatura>();
             AulaAsignaturaPorAulaAsig = AulaAsignaturas != null

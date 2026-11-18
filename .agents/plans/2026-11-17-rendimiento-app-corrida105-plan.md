@@ -195,10 +195,19 @@ T1 ── T2 ── T4 ── T6 ── T8 ─┐
 - **description**: Precalcular estructuras invariantes en `AgContexto`: `TimeSpan` por bloque, `HorarioTexto`, diccionarios `ProgramasPorId` y mapeo de unidad por aula; normalizar cadenas de ciudad una sola vez por gen; eliminar closures/LINQ en bucles críticos cuando `SesionesConservadas` está vacío; garantizar que no se alteren fechas efectivas ni ocupaciones.
 - **validation**: Mismas sesiones, fechas y clasificaciones que antes en fixtures de prueba; reducción medible en asignación de memoria y tiempo; pruebas existentes pasando.
 - **verification**: dotnet test .\ConversorPDF.Tests\ConversorPDF.Tests.csproj -c Debug --no-build --filter "FullyQualifiedName~AgProyeccionHigieneTests|FullyQualifiedName~AgExpansorSesionesTests"
-- **evidence**: _evidence/<timestamp>/summary.md
-- **status**: pending
-- **log**: 
+- **evidence**: _evidence/20261117-t5/summary.md
+- **status**: done
+- **log**: Precalculados TimeSpan y HorarioTexto en AgBloqueHorario, agregados índices ProgramasPorId y UnidadHorasPorAulaId en AgContexto, caché thread-safe en NormalizarCiudad, eliminación de closures LINQ en DisponibleGrupo y optimizaciones en BloquesSeSolapan. 8 tests verdes en AgProyeccionHigieneTests y AgExpansorSesionesTests.
 - **files edited/created**:
+  - ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgBloqueHorario.cs
+  - ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgContexto.cs
+  - ConversorPDF.XLL/Academic/Application/Services/CalculadoraViaticaSesion.cs
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgExpansorSesiones.cs
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgAsignadorTercero.cs
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgCalendarioConflictos.cs
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgCoherenciaGrupo.cs
+  - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgProyeccionHigieneTests.cs
+  - _evidence/20261117-t5/summary.md
 
 ### T6: Quick wins de reparación y validación
 - **id**: T6

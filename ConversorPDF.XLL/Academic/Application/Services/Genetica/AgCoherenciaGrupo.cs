@@ -98,18 +98,15 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 
         private static bool BloquesSeSolapan(AgGen primero, AgGen segundo, AgContexto ctx)
         {
-            AgBloqueHorario a, b;
-            TimeSpan inicioA, finA, inicioB, finB;
-            // Un bloque desconocido no acredita que el hueco esté libre.
             if (ctx?.BloquesPorId == null
-                || !ctx.BloquesPorId.TryGetValue(primero.IdBloqueHorario, out a)
-                || !ctx.BloquesPorId.TryGetValue(segundo.IdBloqueHorario, out b)
-                || !TimeSpan.TryParse(a.HoraInicio, System.Globalization.CultureInfo.InvariantCulture, out inicioA)
-                || !TimeSpan.TryParse(a.HoraFin, System.Globalization.CultureInfo.InvariantCulture, out finA)
-                || !TimeSpan.TryParse(b.HoraInicio, System.Globalization.CultureInfo.InvariantCulture, out inicioB)
-                || !TimeSpan.TryParse(b.HoraFin, System.Globalization.CultureInfo.InvariantCulture, out finB)
-                || finA <= inicioA || finB <= inicioB) { return true; }
-            return inicioA < finB && inicioB < finA;
+                || !ctx.BloquesPorId.TryGetValue(primero.IdBloqueHorario, out var a)
+                || !ctx.BloquesPorId.TryGetValue(segundo.IdBloqueHorario, out var b)
+                || a.TimeSpanFin <= a.TimeSpanInicio
+                || b.TimeSpanFin <= b.TimeSpanInicio)
+            {
+                return true;
+            }
+            return a.TimeSpanInicio < b.TimeSpanFin && b.TimeSpanInicio < a.TimeSpanFin;
         }
 
         /// <summary>
@@ -142,10 +139,25 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 // Fase 1114 / Fase 1118: invariante de duración por nivel (-1 = no resoluble, no asumir pregrado)
                 double UnidadNivel(AgGen g)
                 {
-                    if (g.IdAula > 0 && ctx?.AulasPorId != null && ctx.AulasPorId.TryGetValue(g.IdAula, out var aN))
+                    if (g.IdAula > 0)
                     {
-                        var progN = ctx.Programas?.FirstOrDefault(p => p.Id == aN.IdPrograma);
-                        return AgUnidadesSemanales.HorasSesionAula(aN, AgNivelAcademicoCatalogo.Desde(progN?.Modalidad));
+                        if (ctx?.UnidadHorasPorAulaId != null && ctx.UnidadHorasPorAulaId.TryGetValue(g.IdAula, out double u))
+                        {
+                            return u;
+                        }
+                        if (ctx?.AulasPorId != null && ctx.AulasPorId.TryGetValue(g.IdAula, out var aN))
+                        {
+                            Programa progN = null;
+                            if (ctx.ProgramasPorId != null && ctx.ProgramasPorId.TryGetValue(aN.IdPrograma, out var pN))
+                            {
+                                progN = pN;
+                            }
+                            else
+                            {
+                                progN = ctx.Programas?.FirstOrDefault(p => p.Id == aN.IdPrograma);
+                            }
+                            return AgUnidadesSemanales.HorasSesionAula(aN, AgNivelAcademicoCatalogo.Desde(progN?.Modalidad));
+                        }
                     }
                     return -1.0;
                 }

@@ -12,6 +12,11 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
         { "DOMINGO", "LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO" };
 
         private int _diaSemanaNumero = 1;
+        private string _horaInicio;
+        private string _horaFin;
+        private TimeSpan _timeSpanInicio;
+        private TimeSpan _timeSpanFin;
+        private string _horarioTexto;
 
         public int Id { get; set; }
 
@@ -29,8 +34,39 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
         }
 
         public DayOfWeek DiaSemana { get; private set; }
-        public string HoraInicio { get; set; }
-        public string HoraFin { get; set; }
+
+        public string HoraInicio
+        {
+            get => _horaInicio;
+            set
+            {
+                _horaInicio = value;
+                if (TimeSpan.TryParse(value, System.Globalization.CultureInfo.InvariantCulture, out var ts))
+                {
+                    _timeSpanInicio = ts;
+                }
+                _horarioTexto = $"{_horaInicio} A {_horaFin}";
+            }
+        }
+
+        public string HoraFin
+        {
+            get => _horaFin;
+            set
+            {
+                _horaFin = value;
+                if (TimeSpan.TryParse(value, System.Globalization.CultureInfo.InvariantCulture, out var ts))
+                {
+                    _timeSpanFin = ts;
+                }
+                _horarioTexto = $"{_horaInicio} A {_horaFin}";
+            }
+        }
+
+        public TimeSpan TimeSpanInicio => _timeSpanInicio;
+        public TimeSpan TimeSpanFin => _timeSpanFin;
+        public string HorarioTexto => _horarioTexto;
+
         public double DuracionHoras { get; set; }
         public string Franja { get; set; }
         public int Activo { get; set; }
@@ -38,8 +74,11 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
 
         public AgBloqueHorario()
         {
-            HoraInicio = "08:00";
-            HoraFin = "12:00";
+            _timeSpanInicio = TimeSpan.FromHours(8);
+            _timeSpanFin = TimeSpan.FromHours(12);
+            _horaInicio = "08:00";
+            _horaFin = "12:00";
+            _horarioTexto = "08:00 A 12:00";
             DuracionHoras = 4.0;
             Franja = "MANANA";
             Activo = 1;
@@ -49,7 +88,7 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
 
         public string ObtenerHorarioTexto()
         {
-            return $"{HoraInicio} A {HoraFin}";
+            return _horarioTexto ?? $"{HoraInicio} A {HoraFin}";
         }
 
         public override string ToString()
