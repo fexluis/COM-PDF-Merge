@@ -54,6 +54,9 @@ namespace ConversorPDF.XLL.Academic.Domain.Enums
         VentanaAulaVacia = 14,
 
         /// <summary> La solución no satisface el certificado de cobertura del manifiesto (Fase 1873). </summary>
-        CoberturaNoCertificada = 15
+        CoberturaNoCertificada = 15,
+
+        /// <summary> La solución obtenida por el AG contiene violaciones duras pendientes y no es factible (Fase 1978). </summary>
+        SolucionInfactible = 16
     }
 }

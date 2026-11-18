@@ -66,14 +66,17 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             IProgress<(int Generacion, double MejorFitness, int HardViolations, string Mensaje)> progreso,
             CancellationToken ct,
             double umbralFitness = 0.0,
-            int estancamientoMax = 20)
+            int estancamientoMax = AgParametrosPorDefecto.EstancamientoMax)
         {
             if (contexto == null) return Result.Failure<AgResultadoCorrida>("El contexto del AG no puede ser nulo.");
 
             try
             {
                 var stopwatch = Stopwatch.StartNew();
-                var resultado = new AgResultadoCorrida();
+                var resultado = new AgResultadoCorrida
+                {
+                    IdCorrida = contexto.IdCorrida
+                };
 
                 var aprobadas = ValidarAprobadas(contexto);
                 if (aprobadas.IsFailure)
@@ -122,6 +125,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 AgIndividuo mejorGlobal = (poblacion.Count > 0 ? poblacion.OrderByDescending(ind => ind.Fitness).FirstOrDefault() : null)?.Clonar() ?? new AgIndividuo();
                 double mejorHist = double.NegativeInfinity;
                 int estancadas = 0;
+                var parada = AgMotivoParada.NoDefinida;
                 long duracionUltimaTransicionMs = resultado.TiempoPoblacionInicialMs;
 
                 // 4. Bucle Evolutivo
@@ -186,6 +190,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     if (sinViolaciones && alcanzoUmbral)
                     {
                         LoggerHelper.Info($"[AgGeneradorHorarios] Óptimo alcanzado en gen {gen}: Fitness={mejorGlobal.Fitness:F4}");
+                        parada = AgMotivoParada.Umbral;
                         resultado.GeneracionesEjecutadas = gen;
                         break;
                     }
@@ -194,12 +199,14 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     if (estancamientoMax > 0 && estancadas >= estancamientoMax)
                     {
                         LoggerHelper.Info($"[AgGeneradorHorarios] Estancamiento ({estancadas} generaciones) alcanzado en gen {gen}. Fin.");
+                        parada = AgMotivoParada.Estancamiento;
                         resultado.GeneracionesEjecutadas = gen;
                         break;
                     }
 
                     if (gen == generacionesMax)
                     {
+                        parada = AgMotivoParada.MaxGeneraciones;
                         resultado.GeneracionesEjecutadas = gen;
                         break;
                     }
@@ -296,12 +303,60 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 swCamp.Stop();
                 resultado.TiempoCampeonFinalMs = swCamp.ElapsedMilliseconds;
 
-            mejorGlobal.Estado = mejorGlobal.HardViolations == 0
-                ? AgEstadoIndividuo.Optimo
-                : AgEstadoIndividuo.Infactible;
-            resultado.TiempoTotalMs = stopwatch.ElapsedMilliseconds;
-            resultado.MejorIndividuo = mejorGlobal;
-            resultado.Estado = AgEstadoCorrida.Completada;
+                // Fase 1979/1983/1984/1995: Telemetría causal estructurada. Las restricciones HARD se desglosan por regla
+                // calculando descuadre con signo frente al contador (entradas - contador); las vacantes por motivo con
+                // el mismo predicado estricto que AgIndividuo.Vacantes (EsVacante == 1 || IdTercero <= 0).
+                var duras = (mejorGlobal.Violaciones ?? new List<AgViolacion>())
+                    .Where(v => v.EsDura)
+                    .GroupBy(v => v.Regla)
+                    .Select(g => new { Regla = g.Key, Total = g.Count() })
+                    .ToList();
+                var porRegla = duras
+                    .Select(g => $"{g.Regla.ToString()}x{g.Total}")
+                    .ToList();
+                int detalleDuro = duras.Sum(g => g.Total);
+                int descuadre = detalleDuro - mejorGlobal.HardViolations;
+
+                var porMotivo = (mejorGlobal.Genes ?? new List<AgGen>())
+                    .Where(g => g.EsVacante == 1 || g.IdTercero <= 0)
+                    .GroupBy(g => string.IsNullOrEmpty(g.MotivoVacante) ? "SIN_MOTIVO" : g.MotivoVacante)
+                    .Select(g => $"{g.Key}x{g.Count()}")
+                    .ToList();
+
+                resultado.MotivoParada = parada;
+                resultado.Estancadas = estancadas;
+                LoggerHelper.Info(
+                    $"[AG-CAUSAS] Corrida {resultado.IdCorrida}: Parada={parada} " +
+                    $"Gen={resultado.GeneracionesEjecutadas}/{generacionesMax} Estancadas={estancadas}/{estancamientoMax} " +
+                    $"HARD={mejorGlobal.HardViolations} Detalle={detalleDuro} Descuadre={descuadre:+#;-#;0} " +
+                    $"[{string.Join(",", porRegla)}] Vacantes={mejorGlobal.Vacantes} [{string.Join(",", porMotivo)}]");
+
+                // Fase 1994: Desglose forense del campeón infactible (causalidad de conflictos y vacantes)
+                if (mejorGlobal.HardViolations > 0)
+                {
+                    try
+                    {
+                        foreach (var linea in AgDiagnosticoInfactibilidad.Describir(mejorGlobal, contexto))
+                        {
+                            LoggerHelper.Info(linea);
+                        }
+                    }
+                    catch (Exception exDiag)
+                    {
+                        LoggerHelper.WarningLimitado(
+                            $"DiagInfactibleFallido|{resultado.IdCorrida}",
+                            $"[AG-CAUSAS-DETALLE] no generado: {exDiag.Message}");
+                    }
+                }
+
+                mejorGlobal.Estado = mejorGlobal.HardViolations == 0
+                    ? AgEstadoIndividuo.Optimo
+                    : AgEstadoIndividuo.Infactible;
+                resultado.TiempoTotalMs = stopwatch.ElapsedMilliseconds;
+                resultado.MejorIndividuo = mejorGlobal;
+                resultado.Estado = mejorGlobal.HardViolations == 0
+                    ? AgEstadoCorrida.Completada
+                    : AgEstadoCorrida.SinFactibilidad;
 
             // Fase 214: Diagnóstico estricto de soluciones degeneradas con 0 genes
             if (mejorGlobal.Genes == null || mejorGlobal.Genes.Count == 0)

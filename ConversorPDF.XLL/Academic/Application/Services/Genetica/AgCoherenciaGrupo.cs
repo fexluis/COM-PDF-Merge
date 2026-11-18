@@ -477,9 +477,26 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 {
                     doc = ctx?.IdTerceroVacante ?? 0;
                     vac = 1;
-                    // Fase 1904: no dejar vacío el motivo de una vacante consolidada
-                    motivo = genes.Select(g => g.MotivoVacante).FirstOrDefault(m => !string.IsNullOrWhiteSpace(m))
-                          ?? AgMotivoVacante.SIN_DISPONIBILIDAD.Codigo();
+                    // Fase 1904 / Fase 1996: elegir el motivo modal no vacío del grupo en lugar del primero arbitrario
+                    var motivoModal = genes
+                        .Select(g => g.MotivoVacante)
+                        .Where(m => !string.IsNullOrWhiteSpace(m))
+                        .GroupBy(m => m)
+                        .OrderByDescending(mg => mg.Count())
+                        .Select(mg => mg.Key)
+                        .FirstOrDefault();
+
+                    if (string.IsNullOrWhiteSpace(motivoModal))
+                    {
+                        motivo = AgMotivoVacante.SIN_DISPONIBILIDAD.Codigo();
+                        LoggerHelper.WarningLimitado(
+                            $"MotivoFallback|{ctx?.IdCorrida}|{grp.Key}",
+                            $"[AG] Grupo {grp.Key} sin motivo de vacante; aplicando fallback SIN_DISPONIBILIDAD.");
+                    }
+                    else
+                    {
+                        motivo = motivoModal;
+                    }
                 }
                 else
                 {

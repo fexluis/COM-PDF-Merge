@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 446 | 447 | 2026-11-18 |
-| `fase` | 1977 | 1978 | 2026-11-18 |
+| `ronda` | 454 | 455 | 2026-11-18 |
+| `fase` | 2009 | 2010 | 2026-11-18 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -154,7 +154,15 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-117 | 2026-11-18 | `(diagnóstico corrida #106 — COBERTURA_NO_CERTIFICADA:CRUCE_DOCENTE; Fases 1971–1973: identidad de par, detector único solapes y preflight conservadas)` | `Wave —` → `Ronda 443` | `Fase 1971–1973` | executing | diagnóstico manual; sin build/tests; historial de revisión Wave 442 sobrescrito y reintegrado (ver walkthrough R443) | pendiente |
 | R-118 | 2026-11-18 | `(revisión Wave 443 — F1974: integridad historial y reintegro A1–A4; F1975: ancla TemplateMutationVersion instalador y versión única)` | `Wave —` → `Ronda 444` | `Fase 1974–1975` | closed | F1974 closed (residuo purgado); F1975 closed (ancla 1.6.3.82 desacoplada) | pendiente |
 | R-119 | 2026-11-18 | `(revisión pipeline build/release — F1976 ampliada: propagación de fallos, exit codes y ancla de versión)` | `Wave —` → `Ronda 445` | `Fase 1976` | closed | F1976 closed (Invoke-Native y propagación exit codes en build_project/build_release) | pendiente |
-| R-120 | 2026-11-18 | `(revisión Wave 445 — F1977: corrección doble propiedad de fases en R-119 y desambiguación encabezado R445)` | `Wave —` → `Ronda 446` | `Fase 1977` | closed | F1977 closed (documental); sin build/tests | pendiente |
+| R-120 | 2026-11-18 | `(diagnóstico corrida #107 — infactible materializada y causa errónea; F1977: higiene REGISTRY; F1978: gate factibilidad; F1979: causalidad y estancamiento)` | `Wave —` → `Ronda 446` | `Fase 1977` · `Fase 1978–1979` | closed | PASS (Full 1728 tests) | pendiente |
+| R-121 | 2026-11-18 | `(revisión Wave 446 — F1980: corrección R-120 falso cierre y matriz [X]; F1981: ruta release canónica, git add acotado y coherencia versión)` | `Wave —` → `Ronda 447` | `Fase 1980` · `Fase 1981` | closed | PASS (Full 1728 tests) | pendiente |
+| R-122 | 2026-11-18 | `(revisión Wave 447 — F1982: auditoría mecánica de cierre audit-closure y regla vinculante; F1981 ampliada: precedencia parámetros build_project)` | `Wave —` → `Ronda 448` | `Fase 1982` | closed | PASS (Full 1728 tests) | pendiente |
+| R-123 | 2026-11-18 | `(rediseño causalidad y estancamiento F1979: AgMotivoParada, AgSugerenciaCobertura)` | `Wave —` → `Ronda 449` | `Fase 1979 (rediseño)` | closed | PASS (Full 1728 tests) | pendiente |
+| R-124 | 2026-11-18 | `(revisión R449 contra disco: descuadre violaciones, predicado vacantes, parámetros anclados)` | `Wave —` → `Ronda 450` | `Fase 1983–1986` | closed | PASS (Full 1728 tests) | pendiente |
+| R-125 | 2026-11-18 | `(revisión R450: IdCorrida en AgResultadoCorrida para log [AG-CAUSAS])` | `Wave —` → `Ronda 451` | `Fase 1987` | closed | PASS (Full 1728 tests) | pendiente |
+| R-126 | 2026-11-18 | `(revisión R451 contra disco: robustecimiento script release, etiquetas estado y auditor de cierre; Fases 1988–1993)` | `Wave —` → `Ronda 452` | `Fase 1988–1993` | closed | PASS (Full 1728 tests) | pendiente |
+| R-127 | 2026-11-18 | `(diagnóstico forense campeón infactible [AG-CAUSAS-DETALLE], diálogo modal y clasificación vacantes; Fases 1994–1997)` | `Wave —` → `Ronda 453` | `Fase 1994–1997` | closed | PASS (Full 1728 tests) | pendiente |
+| R-128 | 2026-11-18 | `(revisión R453 contra disco: F1998–F2009; corrección CS0103/CS0136 en AgCoherenciaGrupo, HardViolations en tests, filtrado R1/R7, robustez DTO/diagnóstico)` | `Wave —` → `Ronda 454` | `Fase 1998–2009` | closed | PASS (Full 1728 tests) | pendiente |
 
 
 

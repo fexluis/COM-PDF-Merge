@@ -704,9 +704,12 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 
                         var resPatron = _planificadorPatron.Construir(diasK, (int)Math.Ceiling(totalHoras), fechaInicio, fechaFin, contexto.EsFestivo, unidadPatron);
 
-                        // Ronda 206 / Fase 1058: Si falla la construcción del patrón, NO degradar silenciosamente a día único (genera sobre-sesiones/inviabilidad).
+                        // Ronda 206 / Fase 1058 / Fase 1996: Si falla la construcción del patrón, registrar advertencia y marcar vacante
                         if (resPatron.IsFailure)
                         {
+                            LoggerHelper.WarningLimitado(
+                                $"PatronNoConstruible|{idCorrida}|{aula?.Id}|{asig?.Id}",
+                                $"[AG] Patrón no construible en aula={aula?.Id}, asig={asig?.Id}, dias=[{string.Join(",", diasK)}], horas={totalHoras:0.#}, unidad={unidadPatron}: {resPatron.Error}");
                             esVacante = 1;
                             motivoVacante = AgMotivoVacante.SIN_DISPONIBILIDAD.Codigo();
                             if (contexto.IdTerceroVacante > 0)
@@ -944,13 +947,19 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 return (c.Docentes?.Count ?? 0) == 0 ? AgMotivoVacante.POOL_VACIO : AgMotivoVacante.SIN_CANDIDATOS;
             }
 
-            if (!pool.Any(p => p.Activo == 1))
+            // Fase 1996: Excluir el centinela IdTerceroVacante en el conteo de habilitados y activos reales
+            int idCentinela = c.IdTerceroVacante > 0 ? c.IdTerceroVacante : -1;
+            var activosReales = pool.Where(p => p.Activo == 1 && p.IdTercero != idCentinela).ToList();
+
+            if (activosReales.Count == 0)
             {
-                return AgMotivoVacante.NO_CUMPLE_REQUISITOS;
+                // Si todas las filas en pool están inactivas -> NO_CUMPLE_REQUISITOS; si el único en pool era el centinela -> SIN_CANDIDATOS
+                bool hayInactivos = pool.Any(p => p.Activo == 0 && p.IdTercero != idCentinela);
+                return hayInactivos ? AgMotivoVacante.NO_CUMPLE_REQUISITOS : AgMotivoVacante.SIN_CANDIDATOS;
             }
 
             // Si existen en pool con activo=1 pero ninguno habilitado para el programa/semestre
-            if (!pool.Any(p => p.Activo == 1 && c.EsDocenteHabilitado(p.IdTercero, a.IdPrograma, a.Id, a.Semestre)))
+            if (!activosReales.Any(p => c.EsDocenteHabilitado(p.IdTercero, a.IdPrograma, a.Id, a.Semestre)))
             {
                 return AgMotivoVacante.NO_CUMPLE_REQUISITOS;
             }

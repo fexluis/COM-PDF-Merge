@@ -80,7 +80,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services
                 TasaCruce = tasaCruce > 0 ? tasaCruce : 0.85,
                 TasaMutacion = tasaMutacion > 0 ? tasaMutacion : 0.10,
                 Elitismo = elitismo >= 0 ? elitismo : 2,
-                EstancamientoMax = 20,
+                EstancamientoMax = AgParametrosPorDefecto.EstancamientoMax,
                 Semilla = 0,
                 Usuario = usuario ?? string.Empty,
                 Subunidad = sub,

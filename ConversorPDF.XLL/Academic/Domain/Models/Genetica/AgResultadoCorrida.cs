@@ -10,6 +10,14 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
     {
         public long IdCorrida { get; set; }
         public AgEstadoCorrida Estado { get; set; }
+        /// <summary>
+        /// Motivo del corte o finalización del bucle evolutivo del AG (Umbral, Estancamiento o MaxGeneraciones).
+        /// </summary>
+        public AgMotivoParada MotivoParada { get; set; }
+        /// <summary>
+        /// Conteo de generaciones consecutivas sin mejora del mejor fitness histórico alcanzado al momento del corte.
+        /// </summary>
+        public int Estancadas { get; set; }
         public int GeneracionesEjecutadas { get; set; }
         public long TiempoTotalMs { get; set; }
         public AgIndividuo MejorIndividuo { get; set; }

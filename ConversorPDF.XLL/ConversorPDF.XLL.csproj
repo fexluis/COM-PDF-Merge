@@ -670,6 +670,7 @@
     <Compile Include="Academic\Domain\Models\Genetica\AgParametrosPorDefecto.cs" />
     <Compile Include="Academic\Domain\Enums\AgMotivoParada.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgSugerenciaCobertura.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgDiagnosticoInfactibilidad.cs" />
     <Compile Include="Academic\Domain\Interfaces\IAgArbolRepository.cs" />
     <Compile Include="Academic\Infrastructure\Persistence\Repositories\AgArbolRepository.cs" />
     <Compile Include="Academic\Application\Mappers\AgArbolMapper.cs" />

@@ -21,6 +21,6 @@ namespace ConversorPDF.XLL.Academic.Domain.Interfaces
             IProgress<(int Generacion, double MejorFitness, int HardViolations, string Mensaje)> progreso,
             CancellationToken ct,
             double umbralFitness = 0.0,
-            int estancamientoMax = 20);
+            int estancamientoMax = AgParametrosPorDefecto.EstancamientoMax);
     }
 }

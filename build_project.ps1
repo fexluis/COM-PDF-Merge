@@ -42,8 +42,8 @@ if (-not $msbuild) {
     Write-Host "MSBuild found: $msbuild"
 }
 
-$config = if ($env:Configuration) { $env:Configuration } else { $Configuration }
-$plat = if ($env:Platform) { $env:Platform } else { $Platform }
+$config = if ($PSBoundParameters.ContainsKey('Configuration')) { $Configuration } elseif ($env:Configuration) { $env:Configuration } else { $Configuration }
+$plat = if ($PSBoundParameters.ContainsKey('Platform')) { $Platform } elseif ($env:Platform) { $env:Platform } else { $Platform }
 
 function Run-MSBuild([string[]]$argsList) {
     if ($isDotnetMsbuild) {

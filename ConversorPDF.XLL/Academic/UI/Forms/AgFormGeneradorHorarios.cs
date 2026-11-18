@@ -2905,6 +2905,12 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     { "subunidad", a.Subunidad }
                 }).ToList();
 
+                int estancamientoMax = AgParametrosPorDefecto.EstancamientoMax;
+                if (cmbArboles.SelectedItem is AgArbol perfilEstancamiento)
+                {
+                    estancamientoMax = Math.Max(0, perfilEstancamiento.EstancamientoMax);
+                }
+
                 var parametrosDict = new Dictionary<string, object>
                 {
                     { "intentoId", intento.ToString("D") },
@@ -2957,7 +2963,8 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                             { "generacionesMax", (int)numGeneraciones.Value },
                             { "tasaCruce", (double)numTasaCruce.Value },
                             { "tasaMutacion", (double)numTasaMutacion.Value },
-                            { "elitismo", (int)numElitismo.Value }
+                            { "elitismo", (int)numElitismo.Value },
+                            { "estancamientoMax", estancamientoMax }
                         }
                     }
                 };
@@ -3097,7 +3104,8 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                             corrida.TasaMutacion,
                             corrida.Elitismo,
                             progressReporter,
-                            tokenOpt),
+                            tokenOpt,
+                            estancamientoMax: estancamientoMax),
                     tokenOpt);
                 _tareaOptimizacion = tareaOpt;
 
@@ -3199,6 +3207,36 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                         $"No se pudo consolidar la cabecera de la corrida #{idCorrida}:\n{updCorrida.Error}\n\n" +
                         "La corrida no se materializará en staging para no dejar datos huérfanos.",
                         "Corrida inconsistente", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                // Gate de factibilidad previo a staging (Fase 1978 / Fase 1995)
+                if (_ultimoResultado.Estado == AgEstadoCorrida.SinFactibilidad || (_ultimoResultado.MejorIndividuo != null && _ultimoResultado.MejorIndividuo.HardViolations > 0))
+                {
+                    traza.Fallo("P08_ValidarFactibilidadCampeon", new Exception("Solución infactible con violaciones duras"), AgCausaFallo.SolucionInfactible);
+                    traza.Fin(false, $"Solución infactible: {_ultimoResultado.MejorIndividuo?.HardViolations ?? 0} violaciones duras.");
+                    Log($"[ERROR] Optimización sin factibilidad: {_ultimoResultado.MejorIndividuo?.HardViolations ?? 0} violaciones duras no resueltas. Staging omitido.");
+
+                    string mensajeDetallado;
+                    try
+                    {
+                        mensajeDetallado = AgDiagnosticoInfactibilidad.ResumenCorto(
+                            _ultimoResultado.MejorIndividuo,
+                            contexto,
+                            _ultimoResultado.MotivoParada,
+                            _ultimoResultado.MejorIndividuo?.HardViolations ?? 0);
+                    }
+                    catch
+                    {
+                        mensajeDetallado = $"La optimización finalizó pero no alcanzó factibilidad ({_ultimoResultado.MejorIndividuo?.HardViolations ?? 0} violaciones duras).\n\n" +
+                            "No se materializarán sesiones en staging. Revise la demanda, disponibilidad docente y configuración del aula.";
+                    }
+
+                    Log($"[DIAGNÓSTICO FACTIBILIDAD]\n{mensajeDetallado}");
+                    CerrarEstadoVisualOptimizacion(_ctsEjecucion.IsCancellationRequested);
+                    EstablecerEstadoOptimizacion(EstadoVisualOptimizacion.Error, "P08_SolucionInfactible", $"Estado: Sin factibilidad (HARD={_ultimoResultado.MejorIndividuo?.HardViolations ?? 0}).");
+                    corridaFinalizada = true;
+                    MessageBox.Show(this, mensajeDetallado, "Solución Infactible", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
@@ -3350,7 +3388,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                                         .Select(d => $"{d.IdentidadLegible}|asig={d.IdAsignatura}|motivo={d.MotivoVacante}|horas={d.Horas:0.#}")));
                                 Log($"[ERROR] Cobertura no certificada: {cobertura.Error}. " +
                                     $"Vacantes consentidas={contexto?.AsignaturasVacantesConsentidas?.Count ?? 0}. " +
-                                    "Verifique pool docente o retire asignaturas sin docente.");
+                                    AgSugerenciaCobertura.Texto(cobertura.Error));
                                 traza.Causa(AgCausaFallo.CoberturaNoCertificada, cobertura.Error);
                             }
                             else if (detalleVacantes.Count > 0)

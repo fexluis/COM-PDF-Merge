@@ -44,6 +44,31 @@ namespace ConversorPDF.Tests.Academic.Domain
         }
 
         [Fact]
+        public void ClasificarMotivo_ConPoolSoloCentinela_DevuelveSinCandidatos()
+        {
+            // Arrange
+            var contexto = new AgContexto
+            {
+                IdTerceroVacante = 999
+            };
+            var pool = new List<TerceroAsignatura>
+            {
+                new TerceroAsignatura { IdTercero = 999, IdAsignatura = 10, Activo = 1 }
+            };
+            contexto.PoolPorAsignatura = new Dictionary<int, List<TerceroAsignatura>>
+            {
+                { 10, pool }
+            };
+            var asig = new Asignatura { Id = 10, Nombre = "Cálculo I" };
+
+            // Act
+            var motivo = AgFabricaIndividuos.ClasificarMotivo(contexto, asig);
+
+            // Assert
+            motivo.Should().Be(AgMotivoVacante.SIN_CANDIDATOS);
+        }
+
+        [Fact]
         public void ClasificarMotivo_WhenPoolHasRowsButAllInactive_ShouldReturnNoCumpleRequisitos()
         {
             // Arrange

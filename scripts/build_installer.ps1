@@ -10,6 +10,8 @@ $ErrorActionPreference = 'Stop'
 
 # Fuente de verdad: App.cs
 $APP_CS = "ConversorPDF.XLL\Core\Helpers\App.cs"
+$CSPROJ = "ConversorPDF.XLL\ConversorPDF.XLL.csproj"
+$WXS = "installer\InstaladorConversorPDF.wxs"
 
 # 1. Actualizar versión si se proporciona el parámetro
 if (-not [string]::IsNullOrWhiteSpace($NewVersion)) {
@@ -21,7 +23,6 @@ if (-not [string]::IsNullOrWhiteSpace($NewVersion)) {
     Set-Content -Path $APP_CS -Value $newContent -NoNewline
 
     # 1.2 Actualizar .csproj
-    $CSPROJ = "ConversorPDF.XLL\ConversorPDF.XLL.csproj"
     if (Test-Path $CSPROJ) {
         $csprojContent = Get-Content $CSPROJ -Raw
         $csprojContent = $csprojContent -replace '<Version>[^<]+</Version>', "<Version>$NewVersion</Version>"
@@ -31,7 +32,6 @@ if (-not [string]::IsNullOrWhiteSpace($NewVersion)) {
     }
 
     # 1.3 Actualizar .wxs (solo Package/@Version; DefaultVersion de plantillas se mantiene anclada)
-    $WXS = "installer\InstaladorConversorPDF.wxs"
     if (Test-Path $WXS) {
         $wxsContent = Get-Content $WXS -Raw
         $wxsContent = $wxsContent -replace '(?<![a-zA-Z])Version="[^"]+"', "Version=`"$NewVersion`""
@@ -44,6 +44,18 @@ $match = Select-String -Path $APP_CS -Pattern 'APP_VERSION\s*=\s*"([^"]+)"' | Se
 if (-not $match) { throw "No se pudo leer APP_VERSION desde $APP_CS" }
 $VERSION = $match.Matches[0].Groups[1].Value
 
+# Validación de consistencia de versión y ancla inmutable (Fase 1989)
+if (Test-Path $CSPROJ) {
+    $csVer = [regex]::Match((Get-Content $CSPROJ -Raw), '<Version>([^<]+)</Version>').Groups[1].Value
+    if ($csVer -ne $VERSION) { throw "VERSION_DISCORDANTE: App=$VERSION csproj=$csVer" }
+}
+if (Test-Path $WXS) {
+    $wxsRaw = Get-Content $WXS -Raw
+    $wxsVer = [regex]::Match($wxsRaw, '(?<![a-zA-Z])Version="([^"]+)"').Groups[1].Value
+    if ($wxsVer -ne $VERSION) { throw "VERSION_DISCORDANTE: App=$VERSION wxs=$wxsVer" }
+    if ($wxsRaw -notmatch 'DefaultVersion="1\.6\.3\.82"') { throw "ANCLA_DEFAULTVERSION_PERDIDA" }
+}
+
 $INSTALLER_DIR = "installer"
 $OUTPUT_MSI = "$INSTALLER_DIR\InstaladorConversorPDFv$VERSION.msi"
 
@@ -51,14 +63,18 @@ Write-Host "--- Iniciando Proceso de Compilación Pro v$VERSION ---" -Foreground
 
 # 1. Limpieza
 Write-Host "1. Limpiando instaladores y procesos residuales..."
-Get-Process | Where-Object { $_.ProcessName -match "^(testhost|vstest)" } | ForEach-Object {
-    try { Stop-Process -Id $_.Id -Force -ErrorAction Stop }
+$currentPid = $PID
+Get-Process | Where-Object { $_.ProcessName -match "^(testhost|vstest)" -and $_.Id -ne $currentPid } | ForEach-Object {
+    try { Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue }
     catch { }
 }
 if (Test-Path $INSTALLER_DIR) {
+    $outFull = [System.IO.Path]::GetFullPath($OUTPUT_MSI)
     Get-ChildItem -Path $INSTALLER_DIR -Filter "*.msi" | ForEach-Object {
-        try { Remove-Item $_.FullName -Force -ErrorAction Stop }
-        catch { Write-Warning "No se pudo eliminar $($_.Name) por estar en uso en otro proceso. Se omite." }
+        if ($_.FullName -ne $outFull) {
+            try { Remove-Item $_.FullName -Force -ErrorAction Stop }
+            catch { throw "MSI_EN_USO: No se pudo eliminar $($_.Name) por estar en uso en otro proceso." }
+        }
     }
 }
 
@@ -110,7 +126,10 @@ if (-not $NoGit) {
     try {
         $branch = (git rev-parse --abbrev-ref HEAD 2>$null).Trim()
         if (-not [string]::IsNullOrWhiteSpace($branch)) {
-            git add .
+            $releasePaths = @($APP_CS, $CSPROJ, $WXS, $OUTPUT_MSI) | Where-Object { Test-Path $_ }
+            if ($releasePaths.Count -gt 0) {
+                git add @releasePaths
+            }
             $status = (git status --porcelain)
             if (-not [string]::IsNullOrWhiteSpace($status)) {
                 $msg = if (-not [string]::IsNullOrWhiteSpace($CommitMessage)) { $CommitMessage } else { "chore(release): bump v$VERSION" }

@@ -10,6 +10,8 @@ namespace ConversorPDF.XLL.Academic.Domain.Enums
         Completada = 2,
         Cancelada = 3,
         Error = 4,
-        Aprobada = 5
+        Aprobada = 5,
+        /// <summary> Corrida finalizada cuya mejor solución contiene violaciones duras insatisfechas (Fase 1978). </summary>
+        SinFactibilidad = 6
     }
 }

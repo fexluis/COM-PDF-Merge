@@ -41,7 +41,7 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
             TasaCruce = 0.85;
             TasaMutacion = 0.10;
             Elitismo = 2;
-            EstancamientoMax = 20;
+            EstancamientoMax = AgParametrosPorDefecto.EstancamientoMax;
             Semilla = 0;
             Usuario = string.Empty;
             Subunidad = string.Empty;

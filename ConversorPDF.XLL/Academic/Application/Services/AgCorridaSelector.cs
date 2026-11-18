@@ -173,6 +173,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services
         {
             if (estado == (int)AgEstadoCorrida.Error) return "Error";
             if (estado == (int)AgEstadoCorrida.Cancelada) return "Cancelada";
+            if (estado == (int)AgEstadoCorrida.SinFactibilidad) return "Sin factibilidad";
             return string.Empty;
         }
     }
