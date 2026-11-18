@@ -2,7 +2,7 @@
   <Package 
     Name="ConversorPDF XLL Add-in" 
     Language="1034" 
-    Version="1.6.4.25" 
+    Version="1.6.4.26" 
     Manufacturer="ESAP" 
     UpgradeCode="80babf47-af47-4518-a228-9258c54f8726"
     Scope="perUser">
@@ -129,7 +129,7 @@
         - File/@Id ("filTemplate1") se mantiene idéntico entre versiones para conservar trazabilidad y linaje MSI.
         - RegistryValue con KeyPath="yes" en HKCU garantiza que el componente sea evaluado como 'Action: Local/Install'
           en instalaciones per-user al actualizarse el valor [ProductVersion].
-        - DefaultVersion="1.6.4.25": Atribuye versión sintética del release donde mutó la plantilla (Fase 1469).
+        - DefaultVersion="1.6.4.26": Atribuye versión sintética del release donde mutó la plantilla (Fase 1469).
           Se preserva 1.6.3.82 en releases de solo código para evitar doble purga incondicional de personalizaciones de usuario.
           En Windows Installer (CostFinalize), un archivo con versión en el MSI SIEMPRE sobreescribe a un archivo de datos
           sin versión (.xlsx) existente en disco, anulando la regla FA_NoOverwrite de archivos modificados por el usuario.
@@ -141,7 +141,7 @@
         <File Id="filTemplate1" 
               Name="GF-FO-023.xlsx" 
               Source="..\ConversorPDF.XLL\ExcelTemplates\GF-FO-023.xlsx" 
-              DefaultVersion="1.6.4.25" />
+              DefaultVersion="1.6.4.26" />
         <RemoveFile Id="PurgeOldTemplate1" Name="GF-FO-023.xlsx" On="uninstall" />
       </Component>
 
@@ -149,7 +149,7 @@
         Fase 722 & 723 (Blindaje Integral de Reemplazo y Limpieza de Carpeta): 
         - File/@Id ("filTemplate2") se mantiene idéntico entre versiones para conservar trazabilidad y linaje MSI.
         - RegistryValue con KeyPath="yes" en HKCU garantiza la instalación activa del componente en per-user.
-        - DefaultVersion="1.6.4.25": Preserva versión sintética de mutación de plantilla (Fase 1469).
+        - DefaultVersion="1.6.4.26": Preserva versión sintética de mutación de plantilla (Fase 1469).
         - RemoveFile On="uninstall": Purga física previa únicamente en desinstalación (Fase 1473).
         - RemoveFolder On="uninstall": Elimina la subcarpeta dir_ExcelTemplates en la desinstalación si queda vacía.
       -->
@@ -158,7 +158,7 @@
         <File Id="filTemplate2" 
               Name="FV-FO-033.xlsx" 
               Source="..\ConversorPDF.XLL\ExcelTemplates\FV-FO-033.xlsx" 
-              DefaultVersion="1.6.4.25" />
+              DefaultVersion="1.6.4.26" />
         <RemoveFile Id="PurgeOldTemplate2" Name="FV-FO-033.xlsx" On="uninstall" />
         <RemoveFolder Id="RemoveExcelTemplatesFolder" Directory="dir_ExcelTemplates" On="uninstall" />
       </Component>

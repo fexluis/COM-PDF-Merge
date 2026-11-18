@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 438 | 439 | 2026-11-17 |
-| `fase` | 1951 | 1952 | 2026-11-17 |
+| `ronda` | 443 | 444 | 2026-11-18 |
+| `fase` | 1970 | 1971 | 2026-11-18 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -147,6 +147,11 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-110 | 2026-11-17 | `(revisión e implementación Ronda 431 — Fases 1936–1938: semántica banner cuadre, fallback clave IdVinculacion <= 0 y detección sesiones huérfanas)` | `Wave —` → `Ronda 431` | `Fase 1936–1938` | closed | PASS (8 tests SemestresExcelExporterTests) | pendiente |
 | R-111 | 2026-11-17 | `(revisión e implementación Ronda 432 — Fases 1939–1941: discriminantes sede/subsede/periodo en clave fallback, precisión texto huérfanas y cuadre en módulo legado)` | `Wave —` → `Ronda 432` | `Fase 1939–1941` | closed | sin escisión (bajo umbral); sin build/tests | pendiente |
 | R-112 | 2026-11-17 | `2026-11-17-rendimiento-app-corrida105-plan.md` | `Wave 1..6` → `Ronda 433–438` | `T1..T10` → `Fase 1942–1951` | closed | PASS (Gate Full 1714, AUDIT_PASS) | 2cd3f42 |
+| R-113 | 2026-11-18 | `(consolidación Ronda 439 — Fases 1952–1961: reparación cruce, clave completa, telemetría y puertas P1/P2/recortes)` | `Wave —` → `Ronda 439` | `Fase 1952–1961` | executing | pendiente (abierta; sin build/tests) | pendiente |
+| R-114 | 2026-11-18 | `(trazabilidad R439 y correcciones motor AG: duplicados índices, orden sellado cruce, bypass validador y coherencia mutación)` | `Wave —` → `Ronda 440` | `Fase 1962–1966` | executing | F1962 closed (documental); F1963-1966 pendiente | pendiente |
+| R-115 | 2026-11-18 | `(aptitud heredada en cruce, sinceramiento R440 y neutralización estado copiado en HeredarOX)` | `Wave —` → `Ronda 441` | `Fase 1967–1969` | executing | F1967/F1969 pendientes; F1968 reabierta | pendiente |
+| R-116 | 2026-11-18 | `(ajuste F1970 — escenario parametrizado por relaciones y prueba de rutas costosas)` | `Wave 442` → `Ronda 442` | `T1` → `Fase 1970` · `Fase 1968` (cerrada) | reserved | F1968 closed; F1970 reserved (sin build/tests) | pendiente |
+| R-117 | 2026-11-18 | `(revisión Wave 442 — F1968 cerrada, F1970 reservada con addendas A1–A4; no procede build release)` | `Wave —` → `Ronda 443` | `Fase — (sin fases nuevas)` | executing | sin escisión (bajo umbral); sin build/tests | pendiente |
 
 
 

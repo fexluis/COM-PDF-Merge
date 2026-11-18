@@ -889,6 +889,125 @@ Se atienden las observaciones de revisión de la Ronda 431:
 | 1940 | `ConversorPDF.XLL/Academic/Infrastructure/Excel/SemestresExcelExporter.cs`, `ConversorPDF.Tests/Academic/Infrastructure/Excel/SemestresExcelExporterTests.cs` | Realizado |
 | 1941 | `ConversorPDF.XLL/Academic/UI/Forms/FormVinculaciones.cs` | Realizado |
 
+---
+
+## Ronda 439: Reparación del cruce, caché de aptitud y medición a escala #105 (Fases 1952–1961)
+
+### Resumen de la Ronda
+Consolidación de la Ronda 439 estructurada en orden P0 → P0 → P1 → P2 con recortes condicionados:
+- **1952 (P0 / T1)**: Indexación de ocupaciones por referencia (`ReferenciaComparer<AgGen>`) y conjunto sucio por índice posicional de cromosoma en `AgOperadorCruce`, eliminando la colisión por `Id=0`.
+- **1953 (P0 / T2)**: `BuscarAlterno` retira ocupación del docente anterior en `AgProyeccionIndividuo.ReasignarDocenteGrupo`, impidiendo ocupaciones fantasma en el docente previo.
+- **1954 (P0 / T3)**: Clave de evaluación completa (`ClaveGenEvaluacion` gen a gen) en `EvaluarConCache` con FNV canónico sobre caracteres, previniendo colisiones de aptitud ajena.
+- **1955 (P0 / T4)**: Ciclo de vida y límites de memoria en caché (`MaxEntradasCacheAptitud`, `PresupuestoBytes`) con interruptor `UsarCacheAptitud` e instrumentación.
+- **1956 (P1 / T5)**: Telemetría veraz en `AgPerfilGeneracion`: separación de `EvaluacionesSolicitadas`, `EvaluacionesReales`, `AciertosCache`, `SelladosCruce`, `SelladosMutacion` y proyecciones.
+- **1957 (P1 / T6)**: Arnés A/B a escala #105, hash canónico v2 con fechas y supresión de cifras preliminares (400-650 ms) hasta confirmación por medición formal.
+- **1958 (P2 / T7)**: Memoización de proyecciones de fechas repetidas (`ProyectarFechas`) sujeta a validación como cuello dominante.
+- **1959 (P2 / T8)**: Optimización del validador y `PuedeGenerarAula` O(A) condicionado al perfil generacional.
+- **1960 (Recorte 1 / T9)**: Omisión de evaluación de hijo descartado por cupo impar (`hijo2`) sin alterar secuencias pseudoaleatorias.
+- **1961 (Recorte 2 / T10)**: Fusión o preservación de doble sellado cruce→mutación supeditada a prueba de equivalencia.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 1952 | `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgAsignadorTercero.cs`, `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgOperadorCruce.cs` | Pendiente implementación |
+| 1953 | `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgAsignadorTercero.cs` | Pendiente implementación |
+| 1954 | `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgGeneradorHorarios.cs`, `ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgGen.cs`, `ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgIndividuo.cs` | Pendiente implementación |
+| 1955 | `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgGeneradorHorarios.cs` | Pendiente implementación |
+| 1956 | `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgGeneradorHorarios.cs`, `ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgResultadoCorrida.cs` | Pendiente implementación |
+| 1957 | `tests/bench/AgBenchAb/`, `scripts/bench-ag-ab.ps1`, `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgCorrida105Fixture.cs`, `docs/articles/changes/` | Pendiente implementación |
+| 1958 | `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgExpansorSesiones.cs`, `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgCalendarioConflictos.cs`, `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgCoherenciaGrupo.cs` | Condicionado al perfil |
+| 1959 | `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgValidadorReglas.cs`, `ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgContexto.cs` | Condicionado al perfil |
+| 1960 | `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgGeneradorHorarios.cs` | Pendiente implementación |
+| 1961 | `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgOperadorCruce.cs`, `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgOperadorMutacion.cs` | Condicionado a medición |
+
+---
+
+## Ronda 440: Trazabilidad de Ronda 439 y Defectos de Reparación/Evaluación en Motor AG (Fases 1962–1966)
+
+### Resumen de la Ronda
+Se abordan las desviaciones detectadas en la revisión de la Ronda 439 y se corrigen 4 defectos en el motor genético:
+- **1962 (T1)**: Sinceramiento de estado documental: F1952–F1961 se registran formalmente como pendientes en código (0 `.cs` modificados en disco).
+- **1963 (T2)**: Prevención de excepción `ArgumentException` por IDs repetidos en `AgContexto.ConstruirIndices` usando agrupamiento determinista en diccionarios.
+- **1964 (T3)**: Inversión del orden de sellado en `AgOperadorCruce`: sellar antes de instanciar `AgProyeccionIndividuo` para evitar aprobación vacua sobre genes sin horas.
+- **1965 (T4)**: Corrección en `AgValidadorReglas` para evitar que `proyeccion.IsFailure` aborte prematuramente con `softScore = 0`, asegurando la penalización de vacantes y preservando la presión selectiva.
+- **1966 (T5)**: Normalización de mutaciones de aula (`AsignarAula`) e invalidación de fechas en `AsignarBloque` cuando cambia el día de la semana.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 1962 | `walkthrough.md`, `.agents/plans/REGISTRY.md` | Realizado (documental) |
+| 1963 | `ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgContexto.cs` | Pendiente implementación |
+| 1964 | `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgOperadorCruce.cs` | Pendiente implementación |
+| 1965 | `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgValidadorReglas.cs` | Pendiente implementación |
+| 1966 | `ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgGen.cs`, `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgOperadorMutacion.cs` | Pendiente implementación |
+
+---
+
+## Ronda 441: Aptitud Heredada por Hijos del Cruce y Sincronización Documental de Ronda 440 (Fases 1967–1969)
+
+### Resumen de la Ronda
+Se corrigen defectos críticos de evaluación en el cruce genético y se sincroniza la documentación de R440:
+- **1967 (T1)**: Desacople de `AgMetricas.Recalcular` del estado de evaluación terminal mediante el flag `marcarEstado = true` (por defecto). En `AgOperadorCruce:108` se usa `marcarEstado: false`, evitando pisar `AgEstadoIndividuo.NoEvaluado` y forzando la evaluación efectiva de hijos cruzados en `EvaluarConCache`.
+- **1968 (T2)**: Sinceramiento documental de Ronda 440 en `walkthrough.md`: 1963–1966 marcadas formalmente como diseño pendiente de Act, alineando plan y walkthrough.
+- **1969 (T3)**: En `AgOperadorCruce.HeredarOX`, asignación `dst.Estado = AgEstadoGen.Incompleto` en lugar de copiar `src.Estado`, impidiendo congelar genes con `Fijado` sin `EsFijo = 1`.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 1967 | `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgOperadorCruce.cs`, `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgMetricas.cs` | Pendiente implementación |
+| 1968 | `walkthrough.md` | Realizado (documental) → Reabierta: cobertura incompleta |
+| 1969 | `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgOperadorCruce.cs`, `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgCoherenciaGrupo.cs` | Pendiente implementación |
+
+---
+
+## Ronda 442: Revisión de la Wave 441 — Reincidencia de Acreditación Documental (Fase 1968 Reabierta)
+
+### Resumen de la Ronda
+Sinceramiento documental y aplicación de la regla estructural de acreditación:
+- **1968 (reabierta)**: Corrección de la matriz de principios de Ronda 441 en `walkthrough.md`, sustituyendo `[X] Sí` por `[ ] No` en F1967/F1969.
+- Fijación de la regla: solo marcar `[X]` si el archivo figura en `git diff --name-only`. Diseños aprobados sin código en disco se documentan como `[ ] No` en comentarios y solución directa, con estado «Pendiente de pase a Act».
+- Sin fases nuevas de código (0 fases consumidas; contador de fases se mantiene en 1969).
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 1968 (reabierta) | `walkthrough.md`, `implementation_plan.md` | Realizado (documental, CERRADA) |
+| 1970 | `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgCorrida105Fixture.cs`, `ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgContexto.cs`, `docs/articles/changes/` | Pendiente implementación (diseño reservado) |
+
+### Detalle Fase 1970 — Escenario AG parametrizado por relaciones y prueba de rutas costosas (Bloques A–D + Addendas A1–A4)
+- **Bloque A**: Relaciones aula-asignatura parametrizadas (no producto cartesiano); expectativas 100% derivadas (`GenesEsperados`, `SesionesEsperadas` filtrando `Requerida == 1` según Addenda A3); eliminación de fechas hardcodeadas.
+- **Bloque B**: Fuente canónica explícita en `AgContexto` (`RegistrarHabilitaciones`, `DiagnosticarPool`); alta canónica previa a la migración de los 14 tests y posterior restricción del setter (Addenda A2).
+- **Bloque C**: Demostración de rutas costosas: pruebas rojas contra código actual de mutación de grupo y evaluaciones reales de descendientes (ejecutables tras F1967/F1969/F1956).
+- **Bloque D**: Retiro prioritario de cifras 400-650 ms no medidas del informe y walkthrough (Addenda A4); declaración explícita de certificación pendiente (F1957).
+- **Addenda A1 (`files_lock` completo)**: `AgEscenarioAg.cs`, `AgMutacionGrupoTests.cs`, `AgTransicionEvaluacionesTests.cs`, `AgRendimientoCertificacionTests.cs`, `AgContexto.cs`, `AgCorrida105Fixture.cs`, `docs/articles/changes/2026-11-17-rendimiento-ag-corrida105.md`, `walkthrough.md`.
+
+---
+
+## Ronda 443: Revisión de la Wave 442 — F1968 Cerrada y Criterios de Aceptación para F1970
+
+### Resumen de la Ronda
+Confirmación del estado de la Wave 442 sin consumo de fases nuevas:
+- **Fase 1968**: Cerrada y verificada en disco.
+- **Fase 1970**: Reservada con addendas A1–A4 integradas; `files_lock` completado.
+- **Release**: Se constata la no procedencia de `build-release` (v1.6.4.26) al carecer de modificaciones en código `.cs` (HEAD `697fc9d`).
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 1968 | `walkthrough.md`, `implementation_plan.md` | Cerrada |
+| 1970 | `ConversorPDF.Tests/.../Genetica/*`, `AgContexto.cs`, docs | Reservada con addendas A1–A4 |
+
+
+
+
+
+
+
 
 
 

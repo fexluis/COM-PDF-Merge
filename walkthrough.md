@@ -1054,6 +1054,124 @@ cualquier dependencia nueva vuelva a quedar fuera del add-in instalado.
 |---|---|---|---|---|---|
 | F1951 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgRendimientoCertificacionTests.cs`, `docs/articles/changes/2026-11-17-rendimiento-ag-corrida105.md`, `_evidence/20261117-t10/summary.md` |
 
+---
+
+## Ronda 439 — Reparación del Cruce, Clave de Aptitud y Medición a Escala #105 (Fases 1952–1961)
+
+### Estado de implementación (Ronda 439)
+
+| Fase | Archivos previstos | Estado real | Evidencia |
+|---|---|---|---|
+| 1952–1961 | ver implementation_plan.md | No implementado (`git diff` sin `.cs`) | `git status --short` |
+
+> Sin build/tests. Los números 1952–1961 quedan consumidos y **no se reasignan**. Ronda 439 permanece abierta; fila `R-113` en `executing`.
+
+### Verificación de Principios (Ronda 439)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1952–F1961 | [ ] No | [X] Sí | [X] Sí | [ ] No | No implementado en código fuente (fases abiertas) |
+
+---
+
+## Ronda 440 — Trazabilidad de Ronda 439 y Defectos de Reparación/Evaluación en Motor AG (Fases 1962–1966)
+
+### Cambios Aplicados (Ronda 440)
+#### Fase 1962 (T1) — Sinceramiento Documental de Ronda 439
+- **Archivos:** `walkthrough.md`, `.agents/plans/REGISTRY.md`
+- **Cambio:** Corrección de la declaración errónea de cierre en Ronda 439. Fases 1952–1961 documentadas formalmente como no implementadas en código `.cs`. Fila `R-113` mantenida en estado `executing`.
+
+### Pendiente de pase a Act (Ronda 440)
+
+| Fase | Archivo objetivo | Estado | Evidencia |
+|---|---|---|---|
+| 1963 | `AgContexto.cs` | Diseño aprobado, sin implementar | `git diff` sin `.cs` |
+| 1964 | `AgOperadorCruce.cs` | Diseño aprobado, sin implementar | `git diff` sin `.cs` |
+| 1965 | `AgValidadorReglas.cs` | Diseño aprobado, sin implementar | `git diff` sin `.cs` |
+| 1966 | `AgGen.cs`, `AgOperadorMutacion.cs` | Diseño aprobado, sin implementar | `git diff` sin `.cs` |
+
+### Verificación de Principios (Ronda 440)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1962 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `walkthrough.md`, `REGISTRY.md` (ajustado a estado real) |
+| F1963 | [ ] No | [X] Sí | [X] Sí | [ ] No | `AgContexto.cs` (diseño aprobado, sin cambios en disco) |
+| F1964 | [ ] No | [X] Sí | [X] Sí | [ ] No | `AgOperadorCruce.cs` (diseño aprobado, sin cambios en disco) |
+| F1965 | [ ] No | [X] Sí | [X] Sí | [ ] No | `AgValidadorReglas.cs` (diseño aprobado, sin cambios en disco) |
+| F1966 | [ ] No | [X] Sí | [X] Sí | [ ] No | `AgOperadorMutacion.cs`, `AgGen.cs` (diseño aprobado, sin cambios en disco) |
+
+---
+
+## Ronda 441 — Aptitud Heredada por Hijos del Cruce y Sincronización Documental de Ronda 440 (Fases 1967–1969)
+
+### Resumen de Cambios / Diseño Aprobado
+
+#### 1. Fase 1967 (T1) — Desacople de AgMetricas.Recalcular del Estado Terminal de Evaluación
+- **Archivos:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgOperadorCruce.cs`, `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgMetricas.cs`
+- **Cambio:** Parámetro opcional `marcarEstado = true` en `AgMetricas.Recalcular`. En `AgOperadorCruce:108` se invoca `marcarEstado: false` para evitar cancelar `AgEstadoIndividuo.NoEvaluado`, garantizando que los hijos modificados del cruce se evalúen efectivamente en `EvaluarConCache`.
+
+#### 2. Fase 1968 (T2) — Sinceramiento Documental de Ronda 440 en walkthrough.md
+- **Archivos:** `walkthrough.md`
+- **Cambio:** Reclasificación explícita de F1963–F1966 como diseño pendiente de Act, eliminando la declaración de cambios aplicados prematuros y actualizando la matriz de principios.
+
+#### 3. Fase 1969 (T3) — Neutralización de Estado Copiado del Donante en HeredarOX
+- **Archivos:** `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgOperadorCruce.cs`, `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgCoherenciaGrupo.cs`
+- **Cambio:** En `HeredarOX`, fijar `dst.Estado = AgEstadoGen.Incompleto` en lugar de heredar `src.Estado`, impidiendo que genes no fijos queden congelados como `Fijado` y omitan la redistribución de horas en `Sellar` o la reparación del cruce.
+
+### Verificación de Principios (Ronda 441)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1967 | [ ] No | [X] Sí | [X] Sí | [ ] No | `git diff` sin `.cs`; `AgMetricas.cs` sin `marcarEstado` |
+| F1968 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `walkthrough.md:1079-1101` (reabierta por cobertura incompleta en R441) |
+| F1969 | [ ] No | [X] Sí | [X] Sí | [ ] No | `AgOperadorCruce.cs:182` sin cambio |
+
+---
+
+## Ronda 442 — Revisión de la Wave 441: Reincidencia de Acreditación Documental (Fase 1968 Reabierta)
+
+### Resumen de Cambios Aplicados
+- **Fase 1968 (T2, reabierta):** Corrección estructural de la matriz de principios de Ronda 441. Se eliminan los falsos positivos `[X] Sí` para F1967 y F1969 (no modificadas en disco).
+- **Regla permanente de sinceramiento:** Marcado `[X]` restringido estrictamente a archivos presentes en `git diff --name-only`. Diseños aprobados sin código en disco se documentan como `[ ] No` en comentarios y solución directa, con estado «Pendiente de pase a Act».
+
+### Pendiente de pase a Act (Ronda 442)
+#### Fase 1970 (T1) — Escenario AG Parametrizado por Relaciones y Prueba de Rutas Costosas
+- **Archivos:** `ConversorPDF.Tests/Academic/Application/Services/Genetica/AgCorrida105Fixture.cs`, `ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgContexto.cs`, `docs/articles/changes/`
+- **Diseño aprobado:** Relaciones explícitas `AgAulaAsignatura` con expectativas 100% derivadas (sin fechas hardcodeadas ni producto cartesiano); contrato canónico `RegistrarHabilitaciones` y `DiagnosticarPool` sin romper los 14 sitios de test; validación de mutación real y conteo de evaluaciones efectivas; retiro de 400-650 ms no medidos.
+
+### Verificación de Principios (Ronda 442)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1968 (reabierta) | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `walkthrough.md:1123-1127` (sincerado integral de R440 y R441; CERRADA) |
+| F1970 | [ ] No | [X] Sí | [X] Sí | [ ] No | `git diff` sin `.cs`; diseño reservado para fase Act |
+
+---
+
+## Ronda 443 — Revisión de la Wave 442: F1968 Cerrada y Criterios de Aceptación para F1970
+
+### Resumen de la Ronda
+- **Fase 1968:** Cerrada formalmente; matriz de principios verificada y coherente con disco.
+- **Fase 1970:** Permanece reservada (diseño) sin código modificado. Se incorporan addendas de aceptación A1–A4:
+  - **A1 (`files_lock` completo):** Incorporación en alcance de `AgEscenarioAg.cs`, `AgMutacionGrupoTests.cs`, `AgTransicionEvaluacionesTests.cs`, `AgRendimientoCertificacionTests.cs`, `AgContexto.cs` y documentos de cambios.
+  - **A2 (Evidencia Bloque B):** Confirmado que en producción solo `AgContexto` escribe `PoolPorAsignatura`; los 14 sitios restantes son de test y su migración precede a la restricción del setter.
+  - **A3 (Filtro `Requerida == 1`):** Expectativas derivadas en Bloque A filtran exclusivamente relaciones obligatorias (`Requerida == 1`).
+  - **A4 (Retiro prioritario de cifras no medidas):** Ejecución de Bloque D al inicio del pase Act para purgar menciones preliminares (400-650 ms).
+- **Evaluación de Release:** No procede build release (v1.6.4.26) al no existir artefactos funcionales nuevos desde `697fc9d` (0 archivos `.cs` modificados).
+
+### Verificación de Principios (Ronda 443)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F1968 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `walkthrough.md` (cerrada y verificada) |
+| F1970 | [ ] No | [X] Sí | [X] Sí | [ ] No | `git diff` sin `.cs`; reservada para pase Act con addendas A1–A4 |
+
+
+
+
+
+
+
 
 
 
