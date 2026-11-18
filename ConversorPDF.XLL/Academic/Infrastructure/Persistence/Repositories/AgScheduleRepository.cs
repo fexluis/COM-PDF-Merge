@@ -4,6 +4,7 @@ using System.Data;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using ConversorPDF.XLL.Academic.Application.DTOs;
 using ConversorPDF.XLL.Academic.Domain.Enums;
 using ConversorPDF.XLL.Academic.Domain.Interfaces;
 using ConversorPDF.XLL.Academic.Domain.Models.Genetica;
@@ -402,6 +403,82 @@ WHERE id = @Id;";
             {
                 LoggerHelper.Error($"[AgScheduleRepository] Error al obtener corrida {idCorrida}", ex);
                 return Result.Failure<AgCorrida>($"Error: {ex.Message}");
+            }
+        }
+
+        public async Task<Result<CuadreCorrida>> GetCuadreCorridaAsync(long idCorrida, CancellationToken ct)
+        {
+            try
+            {
+                using (var db = _connectionFactory())
+                {
+                    if (db.State != ConnectionState.Open) db.Open();
+
+                    string sql = @"
+SELECT 
+    COUNT(*) as Sesiones,
+    COALESCE(SUM(s.horas), 0.0) as Horas,
+    COALESCE(SUM(CASE WHEN s.es_vacante = 1 THEN 1 ELSE 0 END), 0) as SesionesVacantes
+FROM ag_sesiones s
+INNER JOIN ag_vinculaciones v ON v.id = s.idvinculacion
+WHERE v.id_corrida = @idCorrida;
+
+SELECT 
+    v.idprograma as IdPrograma,
+    COUNT(*) as Sesiones,
+    COALESCE(SUM(s.horas), 0.0) as Horas
+FROM ag_sesiones s
+INNER JOIN ag_vinculaciones v ON v.id = s.idvinculacion
+WHERE v.id_corrida = @idCorrida
+GROUP BY v.idprograma;
+
+SELECT COUNT(*) as Huerfanas
+FROM ag_sesiones s
+LEFT JOIN ag_vinculaciones v ON v.id = s.idvinculacion
+WHERE v.id IS NULL;
+";
+                    using (var multi = await db.QueryMultipleAsync(new CommandDefinition(sql, new { idCorrida }, cancellationToken: ct)))
+                    {
+                        var resumen = await multi.ReadFirstOrDefaultAsync<dynamic>();
+                        int totalSesiones = resumen != null ? Convert.ToInt32(resumen.Sesiones) : 0;
+                        double totalHoras = resumen != null ? Convert.ToDouble(resumen.Horas) : 0.0;
+                        int totalVacantes = resumen != null ? Convert.ToInt32(resumen.SesionesVacantes) : 0;
+
+                        var progRows = await multi.ReadAsync<dynamic>();
+                        var porPrograma = new List<(int IdPrograma, int Sesiones, double Horas)>();
+                        foreach (var r in progRows)
+                        {
+                            int idProg = Convert.ToInt32(r.IdPrograma);
+                            int ses = Convert.ToInt32(r.Sesiones);
+                            double hrs = Convert.ToDouble(r.Horas);
+                            porPrograma.Add((idProg, ses, hrs));
+                        }
+
+                        var huerfanasRes = await multi.ReadFirstOrDefaultAsync<dynamic>();
+                        int totalHuerfanas = huerfanasRes != null ? Convert.ToInt32(huerfanasRes.Huerfanas) : 0;
+
+                        var cuadre = new CuadreCorrida
+                        {
+                            Sesiones = totalSesiones,
+                            Horas = totalHoras,
+                            SesionesVacantes = totalVacantes,
+                            SesionesHuerfanas = totalHuerfanas,
+                            PorPrograma = porPrograma.AsReadOnly(),
+                            RequiereCompleto = true
+                        };
+
+                        return Result.Success(cuadre);
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                return Result.Failure<CuadreCorrida>("Operación cancelada.");
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Error($"[AgScheduleRepository] Error al obtener cuadre de corrida #{idCorrida}", ex);
+                return Result.Failure<CuadreCorrida>($"Error al obtener cuadre de corrida: {ex.Message}");
             }
         }
 

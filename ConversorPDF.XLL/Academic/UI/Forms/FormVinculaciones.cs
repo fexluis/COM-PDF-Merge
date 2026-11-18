@@ -849,7 +849,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             }
         }
 
-        private void btnVerVinculaciones_Click(object sender, EventArgs e)
+        private async void btnVerVinculaciones_Click(object sender, EventArgs e)
         {
             var items = (_bsSesiones.DataSource as List<SesionListItem>)
                 ?.ToList() ?? new List<SesionListItem>();
@@ -864,7 +864,28 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             LoggerHelper.Info("[FormVinculaciones] Abriendo FormVerVinculaciones con todas las sesiones.");
             // IMPORTANTE: _currentConnection es propiedad de FormVinculaciones.
             // FormVerVinculaciones NO debe llamar Dispose sobre esta conexión.
-            using (var form = new FormVerVinculaciones(items, _currentConnection, _excelApp, _modo))
+            CuadreCorrida cuadreEsperado = null;
+            long idCorridaEfectiva = items.Select(i => i.IdCorrida).FirstOrDefault(c => c > 0);
+            if (idCorridaEfectiva > 0 && _currentConnection != null)
+            {
+                try
+                {
+                    var scheduleRepo = new ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories.AgScheduleRepository(() => _currentConnection);
+                    var resCuadre = await scheduleRepo.GetCuadreCorridaAsync(idCorridaEfectiva, CancellationToken.None);
+                    if (resCuadre.IsSuccess)
+                    {
+                        cuadreEsperado = resCuadre.Value;
+                        // Si la vista está filtrada en FormVinculaciones, no exigir completitud estricta
+                        cuadreEsperado.RequiereCompleto = false;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LoggerHelper.Warning($"[FormVinculaciones] No se pudo obtener cuadre de corrida #{idCorridaEfectiva}: {ex.Message}");
+                }
+            }
+
+            using (var form = new FormVerVinculaciones(items, _currentConnection, _excelApp, _modo, cuadreEsperado))
             {
                 form.ShowDialog(this);
             }

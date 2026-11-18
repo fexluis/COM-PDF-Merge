@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 429 | 430 | 2026-11-17 |
-| `fase` | 1930 | 1931 | 2026-11-17 |
+| `ronda` | 432 | 433 | 2026-11-17 |
+| `fase` | 1941 | 1942 | 2026-11-17 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -143,6 +143,9 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-106 | 2026-11-17 | `(revisión manual Ronda 427 — Fases 1909–1919: diagnóstico forense vacantes, tipado enum regla y log)` | `Wave —` → `Ronda 427` | `Fase 1909–1919` | closed | retirada 1909; 1914/1915/1918 consolidadas en R428 | `29cdd0f` |
 | R-107 | 2026-11-17 | `(revisión e implementación Ronda 428 — Fases 1920–1927: no bloqueo por vacantes en corrida/staging/GA, botón promoción con justificación, y diagnóstico legible)` | `Wave —` → `Ronda 428` | `Fase 1920–1927` | closed | sin escisión (bajo umbral); sin build/tests | pendiente |
 | R-108 | 2026-11-17 | `(revisión e implementación Ronda 429 — Fases 1928–1930: calidad vs promovible, limpieza código muerto y etiqueta precisa)` | `Wave —` → `Ronda 429` | `Fase 1928–1930` | closed | sin escisión (bajo umbral); sin build/tests | pendiente |
+| R-109 | 2026-11-17 | `(consolidado e implementación Ronda 430 — Fases 1931–1935: alcance completo corrida, cuadre independiente, identidad fila-vinculación, visibilidad homónimos y prueba última fecha)` | `Wave —` → `Ronda 430` | `Fase 1931–1935` | closed | PASS (Full 1648) | pendiente |
+| R-110 | 2026-11-17 | `(revisión e implementación Ronda 431 — Fases 1936–1938: semántica banner cuadre, fallback clave IdVinculacion <= 0 y detección sesiones huérfanas)` | `Wave —` → `Ronda 431` | `Fase 1936–1938` | closed | PASS (8 tests SemestresExcelExporterTests) | pendiente |
+| R-111 | 2026-11-17 | `(revisión e implementación Ronda 432 — Fases 1939–1941: discriminantes sede/subsede/periodo en clave fallback, precisión texto huérfanas y cuadre en módulo legado)` | `Wave —` → `Ronda 432` | `Fase 1939–1941` | closed | sin escisión (bajo umbral); sin build/tests | pendiente |
 
 
 

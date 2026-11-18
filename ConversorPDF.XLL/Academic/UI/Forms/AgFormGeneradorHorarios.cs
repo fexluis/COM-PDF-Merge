@@ -5330,24 +5330,23 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 long? idCorridaDetalle = _ultimoResultado?.IdCorrida > 0 ? (long?)_ultimoResultado.IdCorrida
                                        : _idCorridaCargada > 0 ? (long?)_idCorridaCargada : null;
 
-                // Fase 1576: si hay corrida cargada, su período y programa mandan sobre el contexto del árbol.
-                // Evita que un programa homónimo (mismo nombre, distinto id) deje la vista de detalle vacía.
+                CuadreCorrida cuadreEsperado = null;
                 if (idCorridaDetalle.HasValue && idCorridaDetalle.Value > 0)
                 {
+                    // Fase 1931: detalle completo por IdCorrida, sin filtro implícito de programa/sede
                     var corridaFiltro = await _scheduleRepository.GetCorridaByIdAsync(idCorridaDetalle.Value, CancellationToken.None);
-                    if (corridaFiltro.IsSuccess && corridaFiltro.Value != null)
+                    // sólo para trazar el programa principal; NO para filtrar
+                    LoggerHelper.Info($"[AG] Detalle staging: corrida #{idCorridaDetalle.Value} alcance completo (IdPrograma cabecera=" +
+                                      $"{(corridaFiltro.IsSuccess && corridaFiltro.Value != null ? corridaFiltro.Value.IdPrograma : 0)}; sin filtro de sede/programa).");
+
+                    idSede = null;
+                    idPeriodo = null;
+                    idPrograma = null;
+
+                    var resCuadre = await _scheduleRepository.GetCuadreCorridaAsync(idCorridaDetalle.Value, CancellationToken.None);
+                    if (resCuadre.IsSuccess)
                     {
-                        if (corridaFiltro.Value.IdPeriodo > 0) idPeriodo = corridaFiltro.Value.IdPeriodo;
-                        if (corridaFiltro.Value.IdPrograma > 0) idPrograma = corridaFiltro.Value.IdPrograma;
-                        LoggerHelper.Info(
-                            $"[AG] Detalle staging: filtros anclados a la corrida #{idCorridaDetalle.Value} " +
-                            $"(período {idPeriodo}, programa {idPrograma}).");
-                    }
-                    else
-                    {
-                        LoggerHelper.Warning(
-                            $"[AG] Detalle staging: no se pudo leer la corrida #{idCorridaDetalle.Value}; " +
-                            "se usan los filtros del contexto.");
+                        cuadreEsperado = resCuadre.Value;
                     }
                 }
 
@@ -5377,8 +5376,15 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 // T6: origen visible sin duplicar sesiones ni escribir staging.
                 foreach (var item in listaItems) item.OrigenSesion = "NUEVA";
 
+                // Fase 1934: Visibilidad de programas homónimos en log de alcance
+                if (idCorridaDetalle.HasValue && idCorridaDetalle.Value > 0)
+                {
+                    var progs = listaItems.Select(i => i.IdPrograma).Where(p => p > 0).Distinct().OrderBy(p => p).ToList();
+                    LoggerHelper.Info($"[AG] Corrida #{idCorridaDetalle.Value} programas=[{string.Join(",", progs)}]");
+                }
+
                 using (var db = _connectionFactory())
-                using (var f = new FormVerVinculaciones(listaItems, db, ExcelDnaUtil.Application, modo))
+                using (var f = new FormVerVinculaciones(listaItems, db, ExcelDnaUtil.Application, modo, cuadreEsperado))
                 {
                     f.ShowDialog(this);
                 }

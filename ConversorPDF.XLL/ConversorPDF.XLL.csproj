@@ -17,9 +17,9 @@
     <ExcelDnaCreate64BitAddIn>true</ExcelDnaCreate64BitAddIn>
     <!-- Excluir dependencias que no existen en .NET 4.8 y no deben empaquetarse -->
     <ExcelDnaExcludedDependencies>Microsoft.Bcl.HashCode.dll</ExcelDnaExcludedDependencies>
-    <Version>1.6.4.24</Version>
-    <AssemblyVersion>1.6.4.24</AssemblyVersion>
-    <FileVersion>1.6.4.24</FileVersion>
+    <Version>1.6.4.25</Version>
+    <AssemblyVersion>1.6.4.25</AssemblyVersion>
+    <FileVersion>1.6.4.25</FileVersion>
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
@@ -742,6 +742,7 @@
     <Compile Include="Academic\Application\DTOs\AgDimensionesSeleccion.cs" />
     <Compile Include="Academic\Application\DTOs\AgSeleccionModuloR.cs" />
     <Compile Include="Academic\Application\DTOs\AgTerceroSeleccionDto.cs" />
+    <Compile Include="Academic\Application\DTOs\CuadreCorrida.cs" />
     <Compile Include="Academic\Application\Services\AgFiltroArbolResolver.cs" />
     <Compile Include="Academic\Application\Services\AgPerfilAlcanceResolver.cs" />
     <Compile Include="Academic\Application\Services\AgProgramaCatalogoSql.cs" />

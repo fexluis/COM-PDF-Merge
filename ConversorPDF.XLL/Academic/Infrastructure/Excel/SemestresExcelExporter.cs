@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using ConversorPDF.XLL.Academic.Application.DTOs;
 using ConversorPDF.XLL.Academic.Application.Services;
 using ConversorPDF.XLL.Academic.Domain.Models;
 using ConversorPDF.XLL.Core.Helpers;
@@ -29,8 +30,69 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Excel
         /// <param name="periodoNombre">Nombre descriptivo del periodo académico.</param>
         /// <param name="festivos">Lista de rangos de fechas (Inicio, Fin) que se consideran como días FESTIVOS.</param>
         /// <param name="presenciales">Lista de rangos de fechas (Inicio, Fin) que se consideran como sesiones PRESENCIALES para viáticos.</param>
-        public void Exportar(List<SesionListItem> items, string periodoNombre, List<(DateTime Inicio, DateTime Fin)> festivos, List<(DateTime Inicio, DateTime Fin)> presenciales, Dictionary<string, Tercero> terceros)
+        /// <param name="terceros">Caché de terceros para resolver residencia.</param>
+        /// <param name="esperado">Cuadre esperado de la corrida para validación previa.</param>
+        public void Exportar(
+            List<SesionListItem> items,
+            string periodoNombre,
+            List<(DateTime Inicio, DateTime Fin)> festivos,
+            List<(DateTime Inicio, DateTime Fin)> presenciales,
+            Dictionary<string, Tercero> terceros,
+            CuadreCorrida esperado = null)
         {
+            if (items == null || !items.Any(s => s.FechaSesion.HasValue))
+            {
+                return;
+            }
+
+            // 1. Calcular fechas globales
+            var allDates = CalcularRangoFechas(items);
+            if (!allDates.Any())
+                return;
+
+            // 2. Agrupar Datos por Vinculación (Fase 1933, 1937 & 1939: Fila = vinculación con fallback compuesto para sintéticas/conservadas con discriminación de sede/subsede/periodo)
+            var grupos = items
+                .GroupBy(s => s.IdVinculacion > 0
+                    ? $"v{s.IdVinculacion}"
+                    : $"n{s.IdPeriodo}|{s.IdPrograma}|{s.IdAula}|{s.IdAsignatura}|{s.IdTercero}|{s.Semestre}|{s.Grupo}|{s.Modalidad}|{s.SedeCiudad}|{s.Subsede}")
+                .OrderBy(g => g.First().IdPrograma)
+                .ThenBy(g => SemestreParser.Parsear(g.First().Semestre))
+                .ThenBy(g => g.First().AsignaturaNombre)
+                .ThenBy(g => g.First().SedeCiudad)
+                .ToList();
+
+            if (grupos.Count == 0) return;
+
+            // 3. Cuadre independiente ANTES de limpiar o tocar la hoja (Fase 1932, 1936 & 1938)
+            if (!ValidarCuadre(items, esperado, out string errorCuadre, out bool marcarBannerParcial))
+            {
+                throw new InvalidOperationException(errorCuadre);
+            }
+
+            string bannerParcialTexto = null;
+            if (marcarBannerParcial)
+            {
+                bannerParcialTexto = esperado != null
+                    ? $"[ALCANCE PARCIAL: {items.Count} sesiones / {items.Sum(i => i.Horas):0.#} h / {items.Count(i => i.EsVacante == 1)} vac]"
+                    : "[SIN CONTROL DE CUADRE: totales no verificados]";
+            }
+
+            // Fase 512 & 1933: Logging de proyección con detección de duplicados
+            var rep = grupos
+                .GroupBy(g => g.Key)
+                .Where(g => g.Count() > 1)
+                .Select(g => $"{g.Key}×{g.Count()}")
+                .ToList();
+            LoggerHelper.Info($"[Proyeccion] filas={grupos.Count} | clavesRepetidas={(rep.Count > 0 ? string.Join(" ; ", rep) : "NINGUNA")} | columnasDia={allDates.Count}");
+
+            // Fase 1934: Log de programas homónimos / alcance
+            var progs = items.Select(i => i.IdPrograma).Where(p => p > 0).Distinct().OrderBy(p => p).ToList();
+            long idCorridaLog = items.Select(i => i.IdCorrida).FirstOrDefault(c => c > 0);
+            if (idCorridaLog > 0)
+            {
+                LoggerHelper.Info($"[AG] Corrida #{idCorridaLog} programas=[{string.Join(",", progs)}]");
+            }
+
             dynamic ws = null;
             dynamic allCells = null;
             
@@ -77,11 +139,6 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Excel
             dynamic col6 = null;
             dynamic col7 = null;
             dynamic col8 = null;
-
-            if (items == null || !items.Any(s => s.FechaSesion.HasValue))
-            {
-                return;
-            }
 
             try
             {
@@ -170,49 +227,49 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Excel
                             "Asegúrese de tener una hoja de cálculo desprotegida y activa.", ex);
                     }
 
-                    // 1. Calcular fechas globales
-                    var fechasSesiones = items
-                        .Where(s => s.FechaSesion.HasValue)
-                        .Select(s => s.FechaSesion.Value.Date)
-                        .ToList();
-
-                    if (!fechasSesiones.Any())
-                        return;
-
-                    DateTime minDate = fechasSesiones.Min();
-                    DateTime maxDate = fechasSesiones.Max();
-                    List<DateTime> allDates = new List<DateTime>();
-                    for (DateTime d = minDate; d <= maxDate; d = d.AddDays(1))
-                        allDates.Add(d);
-
                     var diasFestivos = new HashSet<DateTime>();
-                    foreach (var f in festivos)
+                    foreach (var f in festivos ?? Enumerable.Empty<(DateTime Inicio, DateTime Fin)>())
                         for (DateTime d = f.Inicio; d <= f.Fin; d = d.AddDays(1))
                             diasFestivos.Add(d.Date);
 
                     var diasPresenciales = new HashSet<DateTime>();
-                    foreach (var p in presenciales)
+                    foreach (var p in presenciales ?? Enumerable.Empty<(DateTime Inicio, DateTime Fin)>())
                         for (DateTime d = p.Inicio; d <= p.Fin; d = d.AddDays(1))
                             diasPresenciales.Add(d.Date);
 
-                    // 2. Título Combinado en Fila 1 de Col 1 a 11
+                    // 4. Cabeceras Fijas (Fase 1933 / 1934)
+                    string[] cabecerasFijas = {
+                        "No.", "IdPrograma", "Modalidad", "Sem.", "Horas", "Asignatura",
+                        "Aula", "Sede", "Subsede", "Residencia", "Docente",
+                        "Vacante", "MotivoVacante", "Fecha Inicio", "Fecha Final", "Días/Horas Semana"
+                    };
+
+                    // Título Combinado en Fila 1 de Col 1 a cabecerasFijas.Length
                     tituloC1 = ws.Cells[1, 1];
-                    tituloC2 = ws.Cells[1, 11];
+                    tituloC2 = ws.Cells[1, cabecerasFijas.Length];
                     rangeTitulo = ws.Range[tituloC1, tituloC2];
                     rangeTitulo.Merge();
-                    rangeTitulo.Value = "PROGRAMACION DOCENTE PERIODO " + (periodoNombre ?? "").Trim();
+                    string tituloBase = "PROGRAMACION DOCENTE PERIODO " + (periodoNombre ?? "").Trim();
+                    rangeTitulo.Value = marcarBannerParcial ? $"{bannerParcialTexto} {tituloBase}" : tituloBase;
                     tituloFont = rangeTitulo.Font;
                     tituloFont.Bold = true;
                     tituloFont.Size = 12;
                     try { Marshal.ReleaseComObject(tituloFont); } catch { }
                     tituloFont = null;
                     rangeTitulo.HorizontalAlignment = -4108;
-
-                    // 3. Dibujar Cabeceras
-                    string[] cabecerasFijas = {
-                        "No.", "Programa", "Sem.", "Horas", "Asignatura",
-                        "Sede", "Residencia", "Docente", "Fecha Inicio", "Fecha Final", "Días/Horas Semana"
-                    };
+                    if (marcarBannerParcial)
+                    {
+                        try
+                        {
+                            dynamic tituloInterior = rangeTitulo.Interior;
+                            if (tituloInterior != null)
+                            {
+                                tituloInterior.Color = 0xC0FFFF;
+                                try { Marshal.ReleaseComObject(tituloInterior); } catch { }
+                            }
+                        }
+                        catch { }
+                    }
 
                     for (int i = 0; i < cabecerasFijas.Length; i++)
                     {
@@ -232,7 +289,7 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Excel
                         }
                     }
 
-                    int colBase = 12;
+                    int colBase = cabecerasFijas.Length + 1;
                     
                     object[,] fechasRow1 = new object[1, allDates.Count];
                     object[,] diasRow2 = new object[1, allDates.Count];
@@ -314,34 +371,6 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Excel
                         }
                     }
 
-                    // 4. Agrupar Datos (Fase 488/490: incluir Grupo y Modalidad para no colapsar cohortes homónimas)
-                    var grupos = items
-                        .GroupBy(s => new
-                        {
-                            s.ProgramaDetalle,
-                            s.Semestre,
-                            s.AsignaturaNombre,
-                            SedeCompleta = string.IsNullOrWhiteSpace(s.Subsede) ? s.SedeCiudad : $"{s.SedeCiudad}({s.Subsede})",
-                            Residencia = terceros != null && terceros.TryGetValue(s.CedulaTercero ?? "", out var t) ? t.Residencia : "",
-                            s.DocenteNombre,
-                            s.Grupo,
-                            s.Modalidad
-                        })
-                        .OrderBy(g => g.Key.ProgramaDetalle)
-                        .ThenBy(g => SemestreParser.Parsear(g.Key.Semestre))
-                        .ThenBy(g => g.Key.Semestre)
-                        .ThenBy(g => g.Key.AsignaturaNombre)
-                        .ThenBy(g => g.Key.SedeCompleta)
-                        .ThenBy(g => g.Key.DocenteNombre)
-                        .ToList();
-
-                    // Fase 512: Logging de proyección con detección de duplicados
-                    var dups = grupos.Select(g => $"{g.Key.Semestre}|{g.Key.Grupo}|{g.Key.AsignaturaNombre}|{g.Key.DocenteNombre}|{g.Key.Modalidad}").ToList();
-                    var rep = dups.GroupBy(x => x).Where(x => x.Count() > 1).Select(x => $"{x.Key}×{x.Count()}").ToList();
-                    LoggerHelper.Info($"[Proyeccion] filas={grupos.Count} | clavesRepetidas={(rep.Count > 0 ? string.Join(" ; ", rep) : "NINGUNA")} | columnasDia={allDates.Count}");
-
-                    if (grupos.Count == 0) return;
-
                     // 5. Preparar Matriz para Escritura Masiva
                     int filasTotales = grupos.Count;
                     int columnasTotales = colSubTotal;
@@ -351,18 +380,37 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Excel
                     for (int r = 0; r < grupos.Count; r++)
                     {
                         var grupo = grupos[r];
+                        var primerItem = grupo.First();
                         var sesionesGrupo = grupo.ToList();
 
                         matrizDatos[r, 0] = r + 1;
-                        matrizDatos[r, 1] = grupo.Key.ProgramaDetalle;
-                        matrizDatos[r, 2] = grupo.Key.Semestre;
+
+                        string progAbrev = string.IsNullOrWhiteSpace(primerItem.ProgramaAbreviatura)
+                            ? primerItem.ProgramaNombre
+                            : primerItem.ProgramaAbreviatura;
+                        string progLabel = primerItem.IdPrograma > 0
+                            ? (string.IsNullOrWhiteSpace(progAbrev) ? $"[{primerItem.IdPrograma}]" : $"{progAbrev} [{primerItem.IdPrograma}]")
+                            : (progAbrev ?? "");
+                        matrizDatos[r, 1] = progLabel;
+
+                        matrizDatos[r, 2] = primerItem.Modalidad ?? "";
+                        matrizDatos[r, 3] = primerItem.Semestre ?? "";
                         
                         double totalHoras = Math.Round(sesionesGrupo.Sum(s => s.Horas), 1);
-                        matrizDatos[r, 3] = totalHoras;
-                        matrizDatos[r, 4] = grupo.Key.AsignaturaNombre;
-                        matrizDatos[r, 5] = grupo.Key.SedeCompleta;
-                        matrizDatos[r, 6] = grupo.Key.Residencia;
-                        matrizDatos[r, 7] = grupo.Key.DocenteNombre;
+                        matrizDatos[r, 4] = totalHoras;
+                        matrizDatos[r, 5] = primerItem.AsignaturaNombre ?? "";
+                        matrizDatos[r, 6] = primerItem.IdAula > 0 ? (object)primerItem.IdAula : "";
+                        matrizDatos[r, 7] = primerItem.SedeCiudad ?? "";
+                        matrizDatos[r, 8] = primerItem.Subsede ?? "";
+
+                        string residencia = terceros != null && terceros.TryGetValue(primerItem.CedulaTercero ?? "", out var t)
+                            ? t.Residencia
+                            : "";
+                        matrizDatos[r, 9] = residencia;
+                        matrizDatos[r, 10] = primerItem.DocenteNombre ?? "";
+
+                        matrizDatos[r, 11] = sesionesGrupo.Any(s => s.EsVacante == 1) ? "Sí" : "No";
+                        matrizDatos[r, 12] = sesionesGrupo.FirstOrDefault(s => !string.IsNullOrWhiteSpace(s.MotivoVacante))?.MotivoVacante ?? "";
 
                         var fechasGrupoValidas = sesionesGrupo
                             .Where(s => s.FechaSesion.HasValue)
@@ -372,13 +420,13 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Excel
 
                         if (fechasGrupoValidas.Any())
                         {
-                            matrizDatos[r, 8] = fechasGrupoValidas.First().ToOADate();
-                            matrizDatos[r, 9] = fechasGrupoValidas.Last().ToOADate();
+                            matrizDatos[r, 13] = fechasGrupoValidas.First().ToOADate();
+                            matrizDatos[r, 14] = fechasGrupoValidas.Last().ToOADate();
                         }
 
                         // Fases 876, 878 & 1136: Columna K canónica "DIA|horas|horario" vía DiasHorasSemanaFormatter
                         var colK = DiasHorasSemanaFormatter.DesdeSesionListItems(sesionesGrupo);
-                        matrizDatos[r, 10] = !string.IsNullOrWhiteSpace(colK) ? colK : null;
+                        matrizDatos[r, 15] = !string.IsNullOrWhiteSpace(colK) ? colK : null;
 
                         double subTotalFila = 0;
                         for (int i = 0; i < allDates.Count; i++)
@@ -433,11 +481,15 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Excel
                             "Cierre cualquier diálogo abierto en Excel e inténtelo de nuevo.", ex);
                     }
 
-                    // Formatear Horas (Col 4)
+                    int colHoras = Array.IndexOf(cabecerasFijas, "Horas") + 1;
+                    int colFechaInicio = Array.IndexOf(cabecerasFijas, "Fecha Inicio") + 1;
+                    int colFechaFinal = Array.IndexOf(cabecerasFijas, "Fecha Final") + 1;
+
+                    // Formatear Horas (Col Horas)
                     try
                     {
-                        horasFmtC1 = ws.Cells[3, 4];
-                        horasFmtC2 = ws.Cells[3 + filasTotales - 1, 4];
+                        horasFmtC1 = ws.Cells[3, colHoras];
+                        horasFmtC2 = ws.Cells[3 + filasTotales - 1, colHoras];
                         horasFormatRange = ws.Range[horasFmtC1, horasFmtC2];
                         if (horasFormatRange != null) horasFormatRange.NumberFormat = "0.0";
                     }
@@ -452,11 +504,11 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Excel
                         if (horasFmtC1 != null)       { try { Marshal.ReleaseComObject(horasFmtC1); } catch { } horasFmtC1 = null; }
                     }
 
-                    // Formatear Fechas (Col 9 y 10)
+                    // Formatear Fechas (Col Fecha Inicio y Fecha Final)
                     try
                     {
-                        dateFmtC1 = ws.Cells[3, 9];
-                        dateFmtC2 = ws.Cells[3 + filasTotales - 1, 10];
+                        dateFmtC1 = ws.Cells[3, colFechaInicio];
+                        dateFmtC2 = ws.Cells[3 + filasTotales - 1, colFechaFinal];
                         dateFormatRange = ws.Range[dateFmtC1, dateFmtC2];
                         if (dateFormatRange != null) dateFormatRange.NumberFormat = "dd/mm/yyyy";
                     }
@@ -573,14 +625,20 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Excel
                     {
                         colAll = ws.Columns;
                         colAll.AutoFit();
-                        col2 = ws.Columns[2];
-                        col5 = ws.Columns[5];
-                        col6 = ws.Columns[6];
-                        col7 = ws.Columns[7];
-                        col8 = ws.Columns[8];
+                        int colIdProg = Array.IndexOf(cabecerasFijas, "IdPrograma") + 1;
+                        int colAsig = Array.IndexOf(cabecerasFijas, "Asignatura") + 1;
+                        int colSede = Array.IndexOf(cabecerasFijas, "Sede") + 1;
+                        int colResid = Array.IndexOf(cabecerasFijas, "Residencia") + 1;
+                        int colDoc = Array.IndexOf(cabecerasFijas, "Docente") + 1;
+
+                        col2 = ws.Columns[colIdProg];
+                        col5 = ws.Columns[colAsig];
+                        col6 = ws.Columns[colSede];
+                        col7 = ws.Columns[colResid];
+                        col8 = ws.Columns[colDoc];
                         if (col2 != null) col2.ColumnWidth = 15;
                         if (col5 != null) col5.ColumnWidth = 25;
-                        if (col6 != null) col6.ColumnWidth = 25;
+                        if (col6 != null) col6.ColumnWidth = 20;
                         if (col7 != null) col7.ColumnWidth = 15;
                         if (col8 != null) col8.ColumnWidth = 25;
                     }
@@ -708,6 +766,92 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Excel
             return (d ?? string.Empty).Trim().ToUpperInvariant()
                 .Replace("Á", "A").Replace("É", "E").Replace("Í", "I")
                 .Replace("Ó", "O").Replace("Ú", "U").Replace("Ü", "U");
+        }
+
+        // Fase 1932: Métodos de cálculo y validación de cuadre independientes de Excel COM
+        public static List<DateTime> CalcularRangoFechas(IEnumerable<SesionListItem> items)
+        {
+            if (items == null) return new List<DateTime>();
+            var fechasSesiones = items
+                .Where(s => s.FechaSesion.HasValue)
+                .Select(s => s.FechaSesion.Value.Date)
+                .ToList();
+
+            if (!fechasSesiones.Any())
+                return new List<DateTime>();
+
+            DateTime minDate = fechasSesiones.Min();
+            DateTime maxDate = fechasSesiones.Max();
+            var allDates = new List<DateTime>();
+            for (DateTime d = minDate; d <= maxDate; d = d.AddDays(1))
+                allDates.Add(d);
+
+            return allDates;
+        }
+
+        public static IReadOnlyList<(int IdPrograma, int Sesiones, double Horas)> CalcularPorPrograma(IEnumerable<SesionListItem> items)
+        {
+            if (items == null) return new List<(int, int, double)>();
+            return items
+                .GroupBy(i => i.IdPrograma)
+                .Select(g => (
+                    IdPrograma: g.Key,
+                    Sesiones: g.Count(),
+                    Horas: Math.Round(g.Sum(x => x.Horas), 1)
+                ))
+                .OrderBy(x => x.IdPrograma)
+                .ToList();
+        }
+
+        public static bool ValidarCuadre(
+            IReadOnlyCollection<SesionListItem> items,
+            CuadreCorrida esperado,
+            out string error,
+            out bool marcarBannerParcial)
+        {
+            error = null;
+            marcarBannerParcial = false;
+
+            if (items == null || items.Count == 0)
+            {
+                if (esperado != null && esperado.RequiereCompleto && (esperado.Sesiones > 0 || esperado.Horas > 0))
+                {
+                    string huerfanasMsg = esperado.SesionesHuerfanas > 0 ? $" (+{esperado.SesionesHuerfanas} sesiones huérfanas en la base, sin vinculación)" : "";
+                    error = $"CUADRE_FALLA: items=0/0h/0vac · corrida={esperado.Sesiones}/{esperado.Horas:0.#}h/{esperado.SesionesVacantes}vac{huerfanasMsg}. Exportación cancelada.";
+                    return false;
+                }
+                marcarBannerParcial = true;
+                return true;
+            }
+
+            double horasItems = items.Sum(i => i.Horas);
+            int vacItems = items.Count(i => i.EsVacante == 1);
+
+            if (esperado != null)
+            {
+                var porProgActual = CalcularPorPrograma(items);
+                bool cuadra = items.Count == esperado.Sesiones
+                           && Math.Abs(horasItems - esperado.Horas) < 0.5
+                           && vacItems == esperado.SesionesVacantes
+                           && porProgActual.All(p => esperado.PorPrograma.Any(ep => ep.IdPrograma == p.IdPrograma && ep.Sesiones == p.Sesiones && Math.Abs(ep.Horas - p.Horas) < 0.5));
+
+                if (!cuadra)
+                {
+                    if (esperado.RequiereCompleto)
+                    {
+                        string huerfanasMsg = esperado.SesionesHuerfanas > 0 ? $" (+{esperado.SesionesHuerfanas} sesiones huérfanas en la base, sin vinculación)" : "";
+                        error = $"CUADRE_FALLA: items={items.Count}/{horasItems:0.#}h/{vacItems}vac · corrida={esperado.Sesiones}/{esperado.Horas:0.#}h/{esperado.SesionesVacantes}vac{huerfanasMsg}. Exportación cancelada.";
+                        return false;
+                    }
+                    marcarBannerParcial = true;
+                }
+            }
+            else
+            {
+                marcarBannerParcial = true;
+            }
+
+            return true;
         }
     }
 }

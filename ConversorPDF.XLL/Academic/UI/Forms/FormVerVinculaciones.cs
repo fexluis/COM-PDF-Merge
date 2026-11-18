@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using ConversorPDF.XLL.Academic.Application.DTOs;
 using ConversorPDF.XLL.Core.Helpers;
 using ConversorPDF.XLL.VisTimeline.Application.Services;
 using ConversorPDF.XLL.VisTimeline.UI;
@@ -28,6 +29,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
         private readonly IDbConnection _dbConnection;
         private readonly dynamic _excelApp;
         private readonly AgModoDatos _modo;
+        private readonly CuadreCorrida _cuadreEsperado;
         private Label lblModo;
         private Dictionary<string, Tercero> _cacheTerceros;
         private VistaVinculaciones _vistaActual = VistaVinculaciones.PorAsignaturas;
@@ -52,13 +54,14 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
         internal IReadOnlyList<ViolacionSesionInfo> ViolacionesGlobales => _violacionesGlobales;
         internal TreeView TreeVinculaciones => treeVinculaciones;
 
-        public FormVerVinculaciones(List<SesionListItem> items, IDbConnection dbConnection, dynamic excelApp, AgModoDatos modo = null)
+        public FormVerVinculaciones(List<SesionListItem> items, IDbConnection dbConnection, dynamic excelApp, AgModoDatos modo = null, CuadreCorrida cuadreEsperado = null)
         {
             InitializeComponent();
             _items = items;
             _dbConnection = dbConnection;
             _excelApp = excelApp;
             _modo = modo ?? AgModoDatos.Determinista;
+            _cuadreEsperado = cuadreEsperado;
             _cacheTerceros = new Dictionary<string, Tercero>();
 
             _salvedadRepository = new SalvedadConflictoRepository(_dbConnection, modo: _modo);
@@ -1694,7 +1697,7 @@ ORDER BY v.es_dura DESC, v.regla, v.id;";
 
                     // Confirmado: SemestresExcelExporter existe en Academic\Infrastructure\Excel\SemestresExcelExporter.cs
                     var exporter = new SemestresExcelExporter(_excelApp);
-                    exporter.Exportar(_items, periodoNombre, festivos, presenciales, _cacheTerceros);
+                    exporter.Exportar(_items, periodoNombre, festivos, presenciales, _cacheTerceros, _cuadreEsperado);
                     MessageBox.Show("Exportación finalizada.", "Exportar Semestres", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 else

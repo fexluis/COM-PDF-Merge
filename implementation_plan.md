@@ -831,6 +831,66 @@ Se corrigen las observaciones de la Ronda 428:
 | 1929 | `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgValidadorReglas.cs`, `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs` | Realizado |
 | 1930 | `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs` | Realizado |
 
+---
+
+## Ronda 430: Alcance Completo Staging Corrida, Cuadre Independiente, Identidad Fila-Vinculación, Visibilidad Homónimos y Validación Rango de Fechas
+
+### Resumen de la Ronda
+Se corrigen las causas que truncaban la exportación de corridas multi-programa/homónimas en Excel y se dota al proceso de cuadre de seguridad antes de modificar la hoja:
+- **1931**: Apertura de detalle staging por `IdCorrida` sin filtro implícito de programa/sede, garantizando la carga completa de sesiones ({1,2} con 2 228 sesiones y 8 912 horas).
+- **1932**: Cuadre independiente previo al volcado a Excel vía `CuadreCorrida` y `GetCuadreCorridaAsync`. Validación ejecutada ANTES de limpiar la hoja activa (`allCells.Clear()`); ante descuadre con `RequiereCompleto = true` se aborta sin borrar celdas; ante subconjunto intencional o módulo legado (`esperado = null`) se estampa banner superior de alerta parcial/filtrada.
+- **1933**: Fila = vinculación. Se reestructura la agrupación en `SemestresExcelExporter` con clave primaria `s.IdVinculacion` (199 filas para #104) y claves repetidas vacías. Nuevas columnas: `IdPrograma` (ej. `APT-53 [1]`), `Modalidad`, `Aula` (`IdAula`), `Sede`, `Subsede` separadas, `Vacante` (Sí/No) y `MotivoVacante`.
+- **1934**: Visibilidad de programas homónimos sin modificar `ConstruirContextoAsync`: visualización de `IdPrograma` en columna y registro canónico en logs `[AG] Corrida #N programas=[1,2]`.
+- **1935**: Prueba unitaria de rango de fechas demostrando que el set completo 2027-02-05 .. 2027-06-26 genera 142 columnas de fecha y la última fecha contiene 4 sesiones (16h), junto con tests para validación de cuadre y agrupación.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 1931 | `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs` | Realizado |
+| 1932 | `ConversorPDF.XLL/Academic/Application/DTOs/CuadreCorrida.cs`, `ConversorPDF.XLL/Academic/Domain/Interfaces/IAgScheduleRepository.cs`, `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgScheduleRepository.cs`, `ConversorPDF.XLL/Academic/Infrastructure/Excel/SemestresExcelExporter.cs`, `ConversorPDF.XLL/Academic/UI/Forms/FormVerVinculaciones.cs`, `ConversorPDF.XLL/ConversorPDF.XLL.csproj` | Realizado |
+| 1933 | `ConversorPDF.XLL/Academic/Infrastructure/Excel/SemestresExcelExporter.cs` | Realizado |
+| 1934 | `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`, `ConversorPDF.XLL/Academic/Infrastructure/Excel/SemestresExcelExporter.cs` | Realizado |
+| 1935 | `ConversorPDF.Tests/Academic/Infrastructure/Excel/SemestresExcelExporterTests.cs`, `ConversorPDF.Tests/Academic/Infrastructure/Persistence/AgScheduleRepositoryCuadreTests.cs` | Realizado |
+
+---
+
+## Ronda 431: Semántica Precisa de Banner de Cuadre, Fallback en Agrupación para IdVinculacion <= 0 y Detección de Sesiones Huérfanas
+
+### Resumen de la Ronda
+Se abordan las observaciones de revisión identificadas en la Ronda 430:
+- **1936**: Corrección semántica del banner en `SemestresExcelExporter`. Cuando `esperado == null` (exportación sin control de corrida, p. ej. desde módulos legados), no se presume un filtro arbitrario con `[VISTA FILTRADA]`, sino que se rotula explícitamente `[SIN CONTROL DE CUADRE: totales no verificados]`. Si hay control `esperado != null` pero no cuadra en exportación parcial, se detalla `[ALCANCE PARCIAL: {sesiones} sesiones / {horas} h / {vac} vac]`.
+- **1937**: Fallback compuesto en la clave de agrupación de `SemestresExcelExporter`. Para sesiones con `IdVinculacion <= 0` (manifiesto, conservadas o no asignadas), se agrupa por `n{IdPrograma}|{IdAula}|{IdAsignatura}|{IdTercero}|{Semestre}|{Grupo}|{Modalidad}`, previniendo que sesiones heterogéneas colapsen en una única fila física.
+- **1938**: Detección de sesiones huérfanas en persistencia y cuadre. Se añade `SesionesHuerfanas` a `CuadreCorrida` y se computa en `AgScheduleRepository.GetCuadreCorridaAsync` mediante `LEFT JOIN ag_vinculaciones` donde `v.IdVinculacion IS NULL`. Si hay huérfanas, el error de `CUADRE_FALLA` reporta `(+N sesiones huérfanas)`.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 1936 | `ConversorPDF.XLL/Academic/Infrastructure/Excel/SemestresExcelExporter.cs` | Realizado |
+| 1937 | `ConversorPDF.XLL/Academic/Infrastructure/Excel/SemestresExcelExporter.cs`, `ConversorPDF.Tests/Academic/Infrastructure/Excel/SemestresExcelExporterTests.cs` | Realizado |
+| 1938 | `ConversorPDF.XLL/Academic/Application/DTOs/CuadreCorrida.cs`, `ConversorPDF.XLL/Academic/Infrastructure/Persistence/Repositories/AgScheduleRepository.cs`, `ConversorPDF.XLL/Academic/Infrastructure/Excel/SemestresExcelExporter.cs`, `ConversorPDF.Tests/Academic/Infrastructure/Excel/SemestresExcelExporterTests.cs` | Realizado |
+
+---
+
+## Ronda 432: Discriminantes de Sede/Subsede/Periodo en Clave Fallback, Precisión de Texto de Huérfanas y Cuadre en Módulo Legado
+
+### Resumen de la Ronda
+Se atienden las observaciones de revisión de la Ronda 431:
+- **1939**: Enriquecimiento de la clave sintética de agrupación para `IdVinculacion <= 0` en `SemestresExcelExporter`. Se añaden discriminantes de localización y período: `n{s.IdPeriodo}|{s.IdPrograma}|{s.IdAula}|{s.IdAsignatura}|{s.IdTercero}|{s.Semestre}|{s.Grupo}|{s.Modalidad}|{s.SedeCiudad}|{s.Subsede}`, evitando que sesiones con misma aula/asignatura/docente pero en sedes o subsedes distintas colapsen en una única fila.
+- **1940**: Clarificación del alcance del conteo de huérfanas en el mensaje de error de `SemestresExcelExporter`. Al ser un conteo global en la base de datos de sesiones sin vinculación (`ag_sesiones` con `idvinculacion` nulo o inválido), se rotula con precisión: `(+{esperado.SesionesHuerfanas} sesiones huérfanas en la base, sin vinculación)`.
+- **1941**: Habilitación del cuadre de corrida en la exportación desde el módulo legado `FormVinculaciones`. Si las sesiones contienen un `IdCorrida` detectable, se consulta `GetCuadreCorridaAsync` con `RequiereCompleto = false` (para tolerar filtros activos del formulario) y se entrega al exportador, evitando que siempre aparezca el rótulo de "sin control de cuadre".
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 1939 | `ConversorPDF.XLL/Academic/Infrastructure/Excel/SemestresExcelExporter.cs`, `ConversorPDF.Tests/Academic/Infrastructure/Excel/SemestresExcelExporterTests.cs` | Realizado |
+| 1940 | `ConversorPDF.XLL/Academic/Infrastructure/Excel/SemestresExcelExporter.cs`, `ConversorPDF.Tests/Academic/Infrastructure/Excel/SemestresExcelExporterTests.cs` | Realizado |
+| 1941 | `ConversorPDF.XLL/Academic/UI/Forms/FormVinculaciones.cs` | Realizado |
+
+
+
 
 
 

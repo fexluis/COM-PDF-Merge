@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using ConversorPDF.XLL.Academic.Application.DTOs;
 using ConversorPDF.XLL.Academic.Domain.Enums;
 using ConversorPDF.XLL.Academic.Domain.Models.Genetica;
 using CSharpFunctionalExtensions;
@@ -21,6 +22,7 @@ namespace ConversorPDF.XLL.Academic.Domain.Interfaces
         Task<Result<long>> InsertCorridaAsync(AgCorrida corrida, CancellationToken ct);
         Task<Result> UpdateCorridaAsync(AgCorrida corrida, CancellationToken ct);
         Task<Result<AgCorrida>> GetCorridaByIdAsync(long idCorrida, CancellationToken ct);
+        Task<Result<CuadreCorrida>> GetCuadreCorridaAsync(long idCorrida, CancellationToken ct);
         Task<Result<AgCorrida>> GetUltimaCorridaAsync(int idPeriodo, int idPrograma, string subunidad, CancellationToken ct);
         Task<Result<long>> SaveIndividuoAsync(AgIndividuo individuo, CancellationToken ct);
         Task<Result<AgIndividuo>> GetIndividuoByIdAsync(long idIndividuo, CancellationToken ct);
