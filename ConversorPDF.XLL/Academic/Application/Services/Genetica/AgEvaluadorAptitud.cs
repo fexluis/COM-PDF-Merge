@@ -14,6 +14,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
     {
         private readonly IAgValidadorReglas _validadorReglas;
 
+        public bool IncluirDetalleJson { get; set; } = false;
+
         public AgEvaluadorAptitud(IAgValidadorReglas validadorReglas)
         {
             _validadorReglas = validadorReglas ?? throw new ArgumentNullException(nameof(validadorReglas));
@@ -21,10 +23,27 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 
         public void EvaluarAptitud(AgIndividuo individuo, AgContexto contexto)
         {
+            EvaluarAptitud(individuo, contexto, forzar: false, incluirDetalleJson: IncluirDetalleJson);
+        }
+
+        public void EvaluarAptitud(AgIndividuo individuo, AgContexto contexto, bool forzar, bool incluirDetalleJson = false)
+        {
             if (individuo == null) throw new ArgumentNullException(nameof(individuo));
             if (contexto == null) throw new ArgumentNullException(nameof(contexto));
 
-            _validadorReglas.Evaluar(individuo, contexto);
+            if (!forzar && individuo.Estado != AgEstadoIndividuo.NoEvaluado)
+            {
+                return; // No reevaluar clones exactos ya evaluados
+            }
+
+            if (_validadorReglas is AgValidadorReglas vr)
+            {
+                vr.Evaluar(individuo, contexto, incluirDetalleJson);
+            }
+            else
+            {
+                _validadorReglas.Evaluar(individuo, contexto);
+            }
 
             // F1: Cobertura de cursos programados
             double f1 = individuo.Genes != null ? individuo.Genes.Count : 0.0;

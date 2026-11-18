@@ -14,7 +14,14 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
     /// </summary>
     public class AgValidadorReglas : IAgValidadorReglas
     {
+        public bool IncluirDetalleJson { get; set; } = false;
+
         public void Evaluar(AgIndividuo individuo, AgContexto contexto)
+        {
+            Evaluar(individuo, contexto, IncluirDetalleJson);
+        }
+
+        public void Evaluar(AgIndividuo individuo, AgContexto contexto, bool incluirDetalleJson)
         {
             if (individuo == null) throw new ArgumentNullException(nameof(individuo));
             if (contexto == null) throw new ArgumentNullException(nameof(contexto));
@@ -526,41 +533,49 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 }
                 var ocupaciones = proyeccion.Value;
                 // Conservadas no son genes: ocupación fija con intervalo real, sin autocruces productivos.
-                foreach (var o in ocupaciones)
-                    foreach (var fija in contexto.SesionesConservadas.Where(s => s.Fecha.Date == o.Fecha &&
-                        s.Inicio < o.Fin && o.Inicio < s.Fin))
-                    {
-                        if (fija.Clave.IdAula == o.Gen.IdAula ||
-                            (AgCalendarioConflictos.DocenteReal(o.Gen, contexto) && fija.IdTercero == o.Gen.IdTercero))
+                if (contexto.SesionesConservadas != null && contexto.SesionesConservadas.Count > 0)
+                {
+                    foreach (var o in ocupaciones)
+                        foreach (var fija in contexto.SesionesConservadas.Where(s => s.Fecha.Date == o.Fecha &&
+                            s.Inicio < o.Fin && o.Inicio < s.Fin))
                         {
-                            individuo.Violaciones.Add(new AgViolacion(
-                                fija.Clave.IdAula == o.Gen.IdAula ? AgReglaViolacion.R2_SuperposicionAula
-                                    : AgReglaViolacion.R1_SuperposicionDocente,
-                                esDura: true,
-                                mensaje: $"Cruce con sesión CONSERVADA #{fija.Id} el {o.Fecha:yyyy-MM-dd} ({fija.Inicio}-{fija.Fin}).",
-                                idGen: o.Gen.Id));
-                            hardCount++;
+                            if (fija.Clave.IdAula == o.Gen.IdAula ||
+                                (AgCalendarioConflictos.DocenteReal(o.Gen, contexto) && fija.IdTercero == o.Gen.IdTercero))
+                            {
+                                individuo.Violaciones.Add(new AgViolacion(
+                                    fija.Clave.IdAula == o.Gen.IdAula ? AgReglaViolacion.R2_SuperposicionAula
+                                        : AgReglaViolacion.R1_SuperposicionDocente,
+                                    esDura: true,
+                                    mensaje: $"Cruce con sesión CONSERVADA #{fija.Id} el {o.Fecha:yyyy-MM-dd} ({fija.Inicio}-{fija.Fin}).",
+                                    idGen: o.Gen.Id));
+                                hardCount++;
+                            }
                         }
-                    }
-                var serializador = new JavaScriptSerializer();
+                }
+                JavaScriptSerializer serializador = null;
 
                 void Registrar(AgReglaViolacion regla, IEnumerable<AgCalendarioConflictos.Ocupacion> implicadas, string mensaje)
                 {
-                    var lista = implicadas.ToList();
-                    var indices = lista.Select(o => genes.IndexOf(o.Gen)).Distinct().ToArray();
-                    string detalle = serializador.Serialize(new
+                    string detalle = "{}";
+                    if (incluirDetalleJson)
                     {
-                        indicesGenes = indices,
-                        fecha = lista[0].Fecha.ToString("yyyy-MM-dd"),
-                        intervalos = lista.Select(o => new
+                        if (serializador == null) serializador = new JavaScriptSerializer();
+                        var lista = implicadas.ToList();
+                        var indices = lista.Select(o => genes.IndexOf(o.Gen)).Distinct().ToArray();
+                        detalle = serializador.Serialize(new
                         {
-                            o.Gen.IdAula,
-                            o.Gen.IdAsignatura,
-                            o.Gen.IdTercero,
-                            inicio = o.Inicio.ToString(),
-                            fin = o.Fin.ToString()
-                        }).ToArray()
-                    });
+                            indicesGenes = indices,
+                            fecha = lista[0].Fecha.ToString("yyyy-MM-dd"),
+                            intervalos = lista.Select(o => new
+                            {
+                                o.Gen.IdAula,
+                                o.Gen.IdAsignatura,
+                                o.Gen.IdTercero,
+                                inicio = o.Inicio.ToString(),
+                                fin = o.Fin.ToString()
+                            }).ToArray()
+                        });
+                    }
                     individuo.Violaciones.Add(new AgViolacion(regla, true, mensaje, detalleJson: detalle));
                     hardCount++;
                 }

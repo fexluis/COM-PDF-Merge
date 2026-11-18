@@ -223,10 +223,16 @@ T1 ── T2 ── T4 ── T6 ── T8 ─┐
 - **description**: Modificar `Mutar` para retornar `bool cambios` y omitir `Sellar` si no hubo mutación efectiva; evitar reparación de hijos en cruce si OX no modificó asignaciones; incorporar bandera `incluirDetalleJson` (`false` durante búsqueda generacional, `true` únicamente en evaluación del campeón final); no reevaluar clones exactos; preservar rigurosamente el orden de llamadas a `Random`.
 - **validation**: Trayectoria sembrada idéntica en corrida de verificación; reducción en conteo de serializaciones JSON y sellados redundantes; pruebas en verde.
 - **verification**: dotnet test .\ConversorPDF.Tests\ConversorPDF.Tests.csproj -c Debug --no-build --filter "FullyQualifiedName~AgQuickWinsTests|FullyQualifiedName~AgOperadorCruceTests|FullyQualifiedName~AgOperadorMutacionTests"
-- **evidence**: _evidence/<timestamp>/summary.md
-- **status**: pending
-- **log**: 
+- **evidence**: _evidence/20261117-t6/summary.md
+- **status**: done
+- **log**: Mutar retorna bool y omite Sellar sin mutaciones; HeredarOX detecta cambios y omite reparación de clones en Cruzar; bandera IncluirDetalleJson en AgValidadorReglas y AgEvaluadorAptitud; omisión de reevaluación de clones no modificados. 19 tests verdes en AgQuickWinsTests y operadores.
 - **files edited/created**:
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgOperadorCruce.cs
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgOperadorMutacion.cs
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgValidadorReglas.cs
+  - ConversorPDF.XLL/Academic/Application/Services/Genetica/AgEvaluadorAptitud.cs
+  - ConversorPDF.Tests/Academic/Application/Services/Genetica/AgQuickWinsTests.cs
+  - _evidence/20261117-t6/summary.md
 
 ### T7: Proyección ligera para búsqueda
 - **id**: T7

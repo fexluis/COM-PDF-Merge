@@ -46,14 +46,22 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             }
 
             // Aplicar OX (Order Crossover)
-            HeredarOX(h1, padre2, contexto);
-            HeredarOX(h2, padre1, contexto);
+            bool mod1 = HeredarOX(h1, padre2, contexto);
+            bool mod2 = HeredarOX(h2, padre1, contexto);
 
             // Reparación en cascada de docentes
             if (contexto != null)
             {
-                foreach (var hijo in new[] { h1, h2 })
+                var pares = new[] { (h1, mod1), (h2, mod2) };
+                foreach (var par in pares)
                 {
+                    var hijo = par.Item1;
+                    var modificado = par.Item2;
+                    if (!modificado)
+                    {
+                        continue;
+                    }
+
                     foreach (var gen in hijo.Genes)
                     {
                         if (gen.Estado == AgEstadoGen.Fijado || (contexto.ManifiestoCobertura != null && !contexto.PuedeGenerarAula(gen.IdAula))) continue;
@@ -92,11 +100,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             return (h1, h2);
         }
 
-        private void HeredarOX(AgIndividuo hijo, AgIndividuo donante, AgContexto contexto)
+        private bool HeredarOX(AgIndividuo hijo, AgIndividuo donante, AgContexto contexto)
         {
-            if (hijo.Genes == null || donante.Genes == null) return;
+            if (hijo.Genes == null || donante.Genes == null) return false;
             int n = Math.Min(hijo.Genes.Count, donante.Genes.Count);
-            if (n < 1) return;
+            if (n < 1) return false;
 
             AgAula AulaSrcDst(int idAula) =>
                 contexto?.AulasPorId != null && contexto.AulasPorId.TryGetValue(idAula, out var au) ? au : null;
@@ -110,6 +118,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 punto2 = t;
             }
 
+            bool cambios = false;
             for (int i = punto1; i <= punto2; i++)
             {
                 var dst = hijo.Genes[i];
@@ -134,6 +143,10 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 int progDst = dst.IdPrograma;
                 int progAula = (aDst != null && aDst.IdPrograma > 0) ? aDst.IdPrograma : progDst;
                 if (progAsig > 0 && progAula > 0 && progAsig != progAula) continue;
+
+                int origAsig = dst.IdAsignatura;
+                int origTercero = dst.IdTercero;
+                int origBloque = dst.IdBloqueHorario;
 
                 dst.IdAsignatura = src.IdAsignatura;
                 dst.IdTercero = src.IdTercero;
@@ -254,7 +267,18 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     dst.Grupo = string.IsNullOrWhiteSpace(aulaDst.Grupo) ? dst.Grupo : aulaDst.Grupo;
                 }
                 dst.ClaveGrupo = $"{dst.IdAsignatura}|{dst.IdAula}|{dst.Grupo}";
+
+                if (dst.IdAsignatura != origAsig || dst.IdTercero != origTercero || dst.IdBloqueHorario != origBloque)
+                {
+                    cambios = true;
+                }
             }
+
+            if (cambios)
+            {
+                hijo.Estado = AgEstadoIndividuo.NoEvaluado;
+            }
+            return cambios;
         }
     }
 }

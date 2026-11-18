@@ -24,10 +24,12 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         {
         }
 
-        public void Mutar(AgIndividuo individuo, double tasaMutacion, AgContexto contexto)
+        public bool Mutar(AgIndividuo individuo, double tasaMutacion, AgContexto contexto)
         {
             if (individuo == null) throw new ArgumentNullException(nameof(individuo));
             if (contexto == null) throw new ArgumentNullException(nameof(contexto));
+
+            bool huboCambios = false;
 
             var aulasValidas = contexto.Aulas.Where(a => contexto.PuedeGenerarAula(a.Id)).ToList();
             var bloquesValidos = contexto.Bloques.Where(b => b.Activo == 1).ToList();
@@ -80,6 +82,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     docCanon = contexto.IdTerceroVacante;
                 }
 
+                if (docCanon != genes[0].IdTercero || vacCanon != genes[0].EsVacante || motCanon != (genes[0].MotivoVacante ?? string.Empty))
+                {
+                    huboCambios = true;
+                }
+
                 // Fase 519 & 1815: sellar TODOS los genes del ClaveGrupo (incondicional)
                 foreach (var g in genes)
                 {
@@ -103,6 +110,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     }
                     else if (contexto.IdAulaCorrida > 0)
                     {
+                        if (gen.IdAula != contexto.IdAulaCorrida) huboCambios = true;
                         gen.IdAula = contexto.IdAulaCorrida;
                     }
                     else
@@ -118,6 +126,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         if (candidatas.Count > 0)
                         {
                             var elegida = candidatas[_random.Next(candidatas.Count)];
+                            if (gen.IdAula != elegida.Id) huboCambios = true;
                             gen.IdAula = elegida.Id;
                             string semNorm = AgFormatoAsignatura.SemestreRomano(elegida.Semestre);
                             if (semNorm != "SIN ASIGNAR")
@@ -135,7 +144,9 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 AgAula aulaMut = null;
                 if (gen.IdAula > 0 && contexto.AulasPorId != null && contexto.AulasPorId.TryGetValue(gen.IdAula, out aulaMut))
                 {
-                    var progMut = contexto.Programas?.FirstOrDefault(p => p.Id == aulaMut.IdPrograma);
+                    var progMut = (contexto.ProgramasPorId != null && contexto.ProgramasPorId.TryGetValue(aulaMut.IdPrograma, out var pgM))
+                        ? pgM
+                        : contexto.Programas?.FirstOrDefault(p => p.Id == aulaMut.IdPrograma);
                     duracionObjetivo = AgUnidadesSemanales.HorasSesionAula(aulaMut, AgNivelAcademicoCatalogo.Desde(progMut?.Modalidad));
                 }
                 else
@@ -164,6 +175,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     if (candidatos.Count > 0)
                     {
                         var bloqueNuevo = candidatos[_random.Next(candidatos.Count)];
+                        if (gen.IdBloqueHorario != bloqueNuevo.Id) huboCambios = true;
                         gen.AsignarBloque(bloqueNuevo);
                     }
                 }
@@ -193,13 +205,20 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 
                         if (candidatosMismoDia.Count > 0)
                         {
-                            gen.AsignarBloque(candidatosMismoDia[_random.Next(candidatosMismoDia.Count)]);
+                            var bloqueNuevo = candidatosMismoDia[_random.Next(candidatosMismoDia.Count)];
+                            if (gen.IdBloqueHorario != bloqueNuevo.Id) huboCambios = true;
+                            gen.AsignarBloque(bloqueNuevo);
                         }
                     }
                 }
             }
 
-            AgCoherenciaGrupo.Sellar(individuo, contexto); // Fase 521
+            if (huboCambios)
+            {
+                individuo.Estado = AgEstadoIndividuo.NoEvaluado;
+                AgCoherenciaGrupo.Sellar(individuo, contexto); // Fase 521
+            }
+            return huboCambios;
         }
     }
 }
