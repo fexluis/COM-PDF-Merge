@@ -1,5 +1,5 @@
-# Baseline medido 2026-11-17 tras certificar Wave 3 (T4 y T5) de Rendimiento AG Corrida 105 (Ronda 435)
-TOTAL: 1690
-PASSED: 1690
+# Baseline medido 2026-11-17 tras certificar Wave 4 (T6 y T7) de Rendimiento AG Corrida 105 (Ronda 436)
+TOTAL: 1698
+PASSED: 1698
 FAILED: 0
 SKIPPED: 0
