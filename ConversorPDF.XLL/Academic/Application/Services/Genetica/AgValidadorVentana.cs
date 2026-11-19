@@ -482,35 +482,37 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 informe.AgregarBloqueo($"Ninguna de las {contexto.Asignaturas.Count} asignaturas a programar tiene docentes habilitados en el Pool ni en catálogo general.");
             }
 
-            // Fase 2046: Poblar informe con el déficit docente estructural por concurrencia real por franja/jornada
+            // Fase 2046 / Fase 2090 / Fase 2096 / Fase 2100 / Fase 2105: Poblar informe con el déficit docente estructural considerando concurrencia por jornada en un solo pase O(N)
             if (contexto.AulaAsignaturas != null && contexto.AulasPorId != null)
             {
-                foreach (var porAsig in contexto.AulaAsignaturas.GroupBy(aa => aa.IdAsignatura))
+                var deficitBase = ConstruirDeficitBase(contexto);
+                Dictionary<int, List<int>> sedesPorAsig = null;
+                if (LoggerHelper.ModoVerboso)
                 {
-                    int idAsig = porAsig.Key;
-                    int docs = 0;
-                    if (contexto.PoolPorAsignatura != null && contexto.PoolPorAsignatura.TryGetValue(idAsig, out var pool))
-                    {
-                        docs = pool.Count(p => p.Activo == 1 && (contexto.IdTerceroVacante <= 0 || p.IdTercero != contexto.IdTerceroVacante));
-                    }
+                    sedesPorAsig = contexto.AulaAsignaturas
+                        .GroupBy(aa => aa.IdAsignatura)
+                        .ToDictionary(
+                            g => g.Key,
+                            g => g.Select(aa => contexto.AulasPorId.TryGetValue(aa.IdAula, out var a) && a != null ? a.IdSede : 0).Distinct().ToList()
+                        );
+                }
 
-                    int maxConcurrentes = porAsig
-                        .Where(aa =>
-                        {
-                            int idSede = 0;
-                            if (contexto.AulasPorId.TryGetValue(aa.IdAula, out var a) && a != null) idSede = a.IdSede;
-                            return !contexto.EstaConsentida(idAsig, idSede);
-                        })
-                        .Select(aa => contexto.AulasPorId.TryGetValue(aa.IdAula, out var a) ? a : null)
-                        .Where(a => a != null)
-                        .GroupBy(a => a.Jornada ?? string.Empty)
-                        .Select(g => g.Select(a => (a.Semestre ?? string.Empty, a.Grupo ?? string.Empty, a.IdSede)).Distinct().Count())
-                        .DefaultIfEmpty(0).Max();
-
-                    int deficit = Math.Max(0, maxConcurrentes - docs);
+                foreach (var kvp in deficitBase)
+                {
+                    int idAsig = kvp.Key;
+                    var info = kvp.Value;
+                    int deficit = Math.Max(0, info.MaxConcurrentes - info.Docs);
                     if (deficit > 0)
                     {
                         informe.DeficitDocentePorAsignatura[idAsig] = deficit;
+                    }
+
+                    if (LoggerHelper.ModoVerboso && sedesPorAsig != null)
+                    {
+                        sedesPorAsig.TryGetValue(idAsig, out var sedesDistinct);
+                        var estadoConsentidas = (sedesDistinct ?? new List<int>())
+                            .Select(s => $"{s}:{(contexto.EstaConsentida(idAsig, s) ? "consentida" : "no-consentida")}");
+                        LoggerHelper.Debug($"[AG-TOPE] PreVuelo asig={idAsig} cohortes={info.Cohortes} maxConcurrentes={info.MaxConcurrentes} docs={info.Docs} deficit={deficit} sedes=[{string.Join(", ", estadoConsentidas)}]");
                     }
                 }
             }
@@ -618,8 +620,78 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         }
 
         /// <summary>
-        /// Calcula el déficit estructural de docentes frente a grupos/aulas concurrentes por cohorte (Fase 2021, 2026, 2031, 2036).
-        /// Σ por asignatura no consentida de max(0, cohortes - docentesHabilitados).
+        /// Calcula el déficit estructural de docentes para una asignatura específica evaluando la concurrencia por jornada (Fase 2090, 2096, 2100).
+        /// Una sola fuente canónica de verdad compartida por el diagnóstico pre-vuelo y el cálculo de fallback.
+        /// </summary>
+        /// <param name="c">Contexto de optimización.</param>
+        /// <param name="idAsignatura">Identificador de la asignatura.</param>
+        /// <param name="cohortes">Total de cohortes (Semestre, Grupo, Sede) no consentidas demandadas.</param>
+        /// <param name="docs">Docentes habilitados activos en el pool.</param>
+        /// <returns>Déficit estructural no negativo (maxConcurrentes - docs).</returns>
+        internal static int CalcularDeficitPorAsignatura(AgContexto c, int idAsignatura, out int cohortes, out int docs)
+        {
+            cohortes = 0;
+            docs = 0;
+            if (c?.AulaAsignaturas == null || c.AulasPorId == null) return 0;
+
+            var dict = ConstruirDeficitBase(c);
+            if (dict.TryGetValue(idAsignatura, out var tupla))
+            {
+                cohortes = tupla.Cohortes;
+                docs = tupla.Docs;
+                return Math.Max(0, tupla.MaxConcurrentes - docs);
+            }
+
+            return 0;
+        }
+
+        /// <summary>
+        /// Construye en un solo recorrido O(N) el diccionario base de cohortes, concurrencia por jornada y docentes por asignatura (Fase 2100).
+        /// </summary>
+        internal static Dictionary<int, (int Cohortes, int MaxConcurrentes, int Docs)> ConstruirDeficitBase(AgContexto c)
+        {
+            var resultado = new Dictionary<int, (int Cohortes, int MaxConcurrentes, int Docs)>();
+            if (c?.AulaAsignaturas == null || c.AulasPorId == null) return resultado;
+
+            foreach (var grupo in c.AulaAsignaturas.GroupBy(aa => aa.IdAsignatura))
+            {
+                int idAsig = grupo.Key;
+                int docs = 0;
+                if (c.PoolPorAsignatura != null && c.PoolPorAsignatura.TryGetValue(idAsig, out var pool))
+                {
+                    docs = pool.Count(p => p.Activo == 1 && (c.IdTerceroVacante <= 0 || p.IdTercero != c.IdTerceroVacante));
+                }
+
+                var demanda = grupo
+                    .Where(aa => c.AulasPorId.TryGetValue(aa.IdAula, out var a) && a != null
+                              && !c.EstaConsentida(idAsig, a.IdSede))
+                    .Select(aa =>
+                    {
+                        var a = c.AulasPorId[aa.IdAula];
+                        return (Jornada: (a.Jornada ?? string.Empty).Trim().ToUpperInvariant(),
+                                Semestre: a.Semestre ?? string.Empty,
+                                Grupo: a.Grupo ?? string.Empty,
+                                Sede: a.IdSede);
+                    })
+                    .Distinct()
+                    .ToList();
+
+                int cohortes = demanda.Count;
+                int maxConcurrentes = demanda
+                    .GroupBy(d => d.Jornada)
+                    .Select(g => g.Select(d => (d.Semestre, d.Grupo, d.Sede)).Distinct().Count())
+                    .DefaultIfEmpty(0)
+                    .Max();
+
+                resultado[idAsig] = (cohortes, maxConcurrentes, docs);
+            }
+
+            return resultado;
+        }
+
+        /// <summary>
+        /// Calcula el déficit estructural de docentes frente a grupos/aulas concurrentes por cohorte y jornada (Fase 2021, 2026, 2031, 2036, 2090, 2096, 2100).
+        /// Σ por asignatura no consentida de max(0, maxConcurrentes - docentesHabilitados).
         /// Retorna -1 si el contexto está incompleto para desactivar el tope de forma segura.
         /// </summary>
         public static int CalcularDeficitEstructural(AgContexto contexto, InformeFactibilidad informe = null)
@@ -636,43 +708,25 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             }
 
             int deficitTotal = 0;
+            var deficitBase = ConstruirDeficitBase(contexto);
 
-            foreach (var grupoAsig in contexto.AulaAsignaturas
-                         .Where(aa =>
-                         {
-                             int idSede = 0;
-                             if (contexto.AulasPorId != null && contexto.AulasPorId.TryGetValue(aa.IdAula, out var a))
-                             {
-                                 idSede = a.IdSede;
-                             }
-                             // Fase 2033: Unificar predicado de consentimiento en EstaConsentida
-                             return !contexto.EstaConsentida(aa.IdAsignatura, idSede);
-                         })
-                         .GroupBy(aa => aa.IdAsignatura))
+            foreach (var kvp in deficitBase)
             {
-                // Cohortes académicas efectivas (Semestre, Grupo, Sede) sin IdAula para medir concurrencia real
-                int cohortes = grupoAsig
-                    .Select(aa =>
-                    {
-                        var aula = contexto.AulasPorId != null && contexto.AulasPorId.TryGetValue(aa.IdAula, out var a) ? a : null;
-                        return (Semestre: aula?.Semestre ?? string.Empty, Grupo: aula?.Grupo ?? string.Empty, Sede: aula?.IdSede ?? 0);
-                    })
-                    .Distinct()
-                    .Count();
+                int idAsig = kvp.Key;
+                var info = kvp.Value;
+                int deficit = Math.Max(0, info.MaxConcurrentes - info.Docs);
+                deficitTotal += deficit;
 
-                int docentesHabilitados = 0;
-                if (contexto.PoolPorAsignatura != null && contexto.PoolPorAsignatura.TryGetValue(grupoAsig.Key, out var pool))
+                if (LoggerHelper.ModoVerboso)
                 {
-                    docentesHabilitados = pool.Count(p => p.Activo == 1 && (contexto.IdTerceroVacante <= 0 || p.IdTercero != contexto.IdTerceroVacante));
-                }
-
-                int deficit = cohortes - docentesHabilitados;
-                if (deficit > 0)
-                {
-                    deficitTotal += deficit;
+                    LoggerHelper.Debug($"[AG-TOPE] Fallback asig={idAsig} cohortes={info.Cohortes} maxConcurrentes={info.MaxConcurrentes} docs={info.Docs} deficit={deficit}");
                 }
             }
 
+            if (LoggerHelper.ModoVerboso)
+            {
+                LoggerHelper.Debug($"[AG-TOPE] fallback total calculado: {deficitTotal}");
+            }
             LoggerHelper.Warning($"[AG-TOPE] fallback usado: {deficitTotal}");
             return deficitTotal;
         }

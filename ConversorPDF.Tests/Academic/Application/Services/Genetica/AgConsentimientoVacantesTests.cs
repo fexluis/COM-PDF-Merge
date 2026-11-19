@@ -338,5 +338,125 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             // Assert
             vigente.Should().BeFalse();
         }
+
+        [Fact]
+        public void FormatearDetalle_WhenMultiplesCohortesMismaSede_ShouldAgruparPorAsignaturaYSede()
+        {
+            // Arrange (Fase 2083): 37 con cohortes en semestres III y IV en sede 5 (VALLE)
+            var detalle = new List<VacanteEstructuralInfo>
+            {
+                new VacanteEstructuralInfo { IdAsignatura = 37, IdSede = 5, Semestre = "IV", Grupo = "B", Motivo = "SIN_CANDIDATOS" },
+                new VacanteEstructuralInfo { IdAsignatura = 37, IdSede = 5, Semestre = "III", Grupo = "A", Motivo = "SIN_CANDIDATOS" }
+            };
+
+            // Act
+            string formato = AgConsentimientoVacantes.FormatearDetalle(detalle, id => id == 5 ? "sede VALLE" : $"sede {id}");
+
+            // Assert
+            formato.Should().Be("37: sede VALLE · III, IV → SIN_CANDIDATOS");
+        }
+
+        [Fact]
+        public void FormatearDetalle_WhenSemestresDesordenados_ShouldOrdenarPorOrdenRomanoArabigo()
+        {
+            // Arrange (Fase 2083): semestres fuera de orden numérico (IV, I, X, II)
+            var detalle = new List<VacanteEstructuralInfo>
+            {
+                new VacanteEstructuralInfo { IdAsignatura = 42, IdSede = 1, Semestre = "IV", Grupo = "A", Motivo = "SIN_CANDIDATOS" },
+                new VacanteEstructuralInfo { IdAsignatura = 42, IdSede = 1, Semestre = "I", Grupo = "B", Motivo = "SIN_CANDIDATOS" },
+                new VacanteEstructuralInfo { IdAsignatura = 42, IdSede = 1, Semestre = "X", Grupo = "C", Motivo = "SIN_CANDIDATOS" },
+                new VacanteEstructuralInfo { IdAsignatura = 42, IdSede = 1, Semestre = "II", Grupo = "D", Motivo = "SIN_CANDIDATOS" }
+            };
+
+            // Act
+            string formato = AgConsentimientoVacantes.FormatearDetalle(detalle);
+
+            // Assert: el orden debe ser I, II, IV, X (no alfabético donde IV iría antes de II o X antes de IV)
+            formato.Should().Be("42: sede 1 · I, II, IV, X → SIN_CANDIDATOS");
+        }
+
+        [Fact]
+        public void FormatearDetalle_WhenResolverSedeNula_ShouldFallbackASedeIdYReportarMotivoModal()
+        {
+            // Arrange (Fase 2083): detalle con sede 0 y sede 3
+            var detalle = new List<VacanteEstructuralInfo>
+            {
+                new VacanteEstructuralInfo { IdAsignatura = 55, IdSede = 0, Semestre = "II", Grupo = "U", Motivo = "NO_CUMPLE_REQUISITOS" },
+                new VacanteEstructuralInfo { IdAsignatura = 55, IdSede = 3, Semestre = "V", Grupo = "V", Motivo = "NO_CUMPLE_REQUISITOS" }
+            };
+
+            // Act: sin resolver personalizado (null)
+            string formato = AgConsentimientoVacantes.FormatearDetalle(detalle, null);
+
+            // Assert
+            formato.Should().Be("55: sede N/D · II; sede 3 · V → NO_CUMPLE_REQUISITOS");
+        }
+
+        [Fact]
+        public void EstaConsentida_WhenSedeCeroOInvalida_ShouldMatchClaveConSedeCero()
+        {
+            // Arrange (Fase 2091, 2095): Clave registrada como "37:0" para aula sin sede resuelta (IdSede = 0 o negativo)
+            var ctx = new AgContexto();
+            ctx.ClavesVacantesConsentidas.Add("37:0");
+
+            // Act & Assert
+            ctx.EstaConsentida(37, 0).Should().BeTrue();
+            ctx.EstaConsentida(37, -1).Should().BeTrue();
+            ctx.EstaConsentida(37, 1).Should().BeFalse();
+        }
+
+        [Fact]
+        public void Calcular_WhenAulaSinSede_ShouldRegistrarClaveConSedeCero()
+        {
+            // Arrange (Fase 2091, 2095): Aula con IdSede = 0
+            var ctx = new AgContexto();
+            var asig = new Asignatura { Id = 53, Nombre = "Derecho", IdPrograma = 1, Semestre = "I" };
+            ctx.AsignaturasPorId[53] = asig;
+            var aula = new AgAula { Id = 812, IdSede = 0, Semestre = "I", Grupo = "U", IdPrograma = 1 };
+            ctx.AulasPorId[812] = aula;
+            ctx.AulaAsignaturas.Add(new AgAulaAsignatura { IdAula = 812, IdAsignatura = 53 });
+
+            // Act
+            var detalle = AgConsentimientoVacantes.Calcular(ctx, out var asigs, out var claves);
+
+            // Assert
+            claves.Should().Contain("53:0");
+            ctx.ClavesVacantesConsentidas = claves;
+            ctx.EstaConsentida(53, 0).Should().BeTrue();
+        }
+
+        [Fact]
+        public void FormatearDetalle_WhenMotivosMixtos_ShouldElegirMotivoModal()
+        {
+            // Arrange (Fase 2093, 2095): 3 cohortes con motivos: SIN_CANDIDATOS, NO_CUMPLE_REQUISITOS, NO_CUMPLE_REQUISITOS
+            var detalle = new List<VacanteEstructuralInfo>
+            {
+                new VacanteEstructuralInfo { IdAsignatura = 77, IdSede = 1, Semestre = "I", Grupo = "A", Motivo = "SIN_CANDIDATOS" },
+                new VacanteEstructuralInfo { IdAsignatura = 77, IdSede = 1, Semestre = "II", Grupo = "B", Motivo = "NO_CUMPLE_REQUISITOS" },
+                new VacanteEstructuralInfo { IdAsignatura = 77, IdSede = 2, Semestre = "III", Grupo = "C", Motivo = "NO_CUMPLE_REQUISITOS" }
+            };
+
+            // Act
+            string formato = AgConsentimientoVacantes.FormatearDetalle(detalle);
+
+            // Assert: la moda es NO_CUMPLE_REQUISITOS (2 contra 1)
+            formato.Should().Contain("→ NO_CUMPLE_REQUISITOS");
+        }
+
+        [Fact]
+        public void FormatearDetalle_WhenResolverSedeRetornaVacio_ShouldFallbackASedeId()
+        {
+            // Arrange (Fase 2101): resolverSede devuelve string vacío o espacios para IdSede = 5
+            var detalle = new List<VacanteEstructuralInfo>
+            {
+                new VacanteEstructuralInfo { IdAsignatura = 37, IdSede = 5, Semestre = "III", Grupo = "A", Motivo = "SIN_CANDIDATOS" }
+            };
+
+            // Act
+            string formato = AgConsentimientoVacantes.FormatearDetalle(detalle, id => "   ");
+
+            // Assert: no debe quedar vacío antes de '· III', sino 'sede 5 · III'
+            formato.Should().Be("37: sede 5 · III → SIN_CANDIDATOS");
+        }
     }
 }

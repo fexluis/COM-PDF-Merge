@@ -165,5 +165,64 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             texto.Should().Contain("SIN_PLAN_OLEADA=1");
             texto.Should().Contain("SIN_BLOQUE_NIVEL=0");
         }
+
+        [Fact]
+        public void ResumenCorto_ConR15_ReportaReglaDura()
+        {
+            // Arrange (Fase 2088): Campeón con violación R15_VacanteExcedida
+            var ind = new AgIndividuo();
+            ind.Violaciones.Add(new AgViolacion(AgReglaViolacion.R15_VacanteExcedida, true, "Vacantes liberadas por el AG (15) exceden el déficit estructural (0)."));
+            ind.HardViolations = 1;
+
+            // Act
+            string resumen = AgDiagnosticoInfactibilidad.ResumenCorto(ind, new AgContexto(), AgMotivoParada.Estancamiento, 1);
+
+            // Assert
+            var lineas = resumen.Split('\n');
+            lineas.Length.Should().BeGreaterThanOrEqualTo(2);
+            lineas[1].Should().Be("Reglas duras: [R15_VacanteExcedida x1]");
+        }
+
+        [Fact]
+        public void Describir_ReportaReglasDurasNoDocentes()
+        {
+            // Arrange (Fase 2088): Campeón con violaciones duras que no involucran cruces de docentes (R15 y R16)
+            var ind = new AgIndividuo();
+            ind.Violaciones.Add(new AgViolacion(AgReglaViolacion.R15_VacanteExcedida, true, "Exceso vacantes"));
+            ind.Violaciones.Add(new AgViolacion(AgReglaViolacion.R16_VacanteEstructuralNoConsentida, true, "Vacante sin consentimiento"));
+            ind.HardViolations = 2;
+
+            // Act
+            var res = AgDiagnosticoInfactibilidad.Describir(ind, new AgContexto());
+
+            // Assert
+            res.Should().NotBeEmpty();
+            res[0].Should().Contain("ReglasDuras=[R15_VacanteExcedida x1, R16_VacanteEstructuralNoConsentida x1]");
+            res[0].Should().Contain("paresDocente=0");
+        }
+
+        [Fact]
+        public void Describir_ParticionVacantes_SumaTotalVacantes()
+        {
+            // Arrange (Fase 2099): 5 genes vacantes cubriendo cada categoría de la partición exacta
+            var contexto = new AgContexto();
+            contexto.AsignaturasVacantesConsentidas.Add(10); // Asig 10 consentida
+
+            var ind = new AgIndividuo();
+            ind.Violaciones.Add(new AgViolacion(AgReglaViolacion.R15_VacanteExcedida, true, "Exceso vacantes"));
+            ind.HardViolations = 1;
+            ind.Genes.Add(new AgGen { Id = 1, IdAsignatura = 10, IdSede = 1, EsVacante = 1, MotivoVacante = "SIN_CANDIDATOS" });
+            ind.Genes.Add(new AgGen { Id = 2, IdAsignatura = 20, IdSede = 1, EsVacante = 1, MotivoVacante = "SIN_DISPONIBILIDAD" });
+            ind.Genes.Add(new AgGen { Id = 3, IdAsignatura = 30, IdSede = 1, EsVacante = 1, MotivoVacante = "SIN_CANDIDATOS" });
+            ind.Genes.Add(new AgGen { Id = 4, IdAsignatura = 40, IdSede = 1, EsVacante = 1, MotivoVacante = "SIN_PLAN_OLEADA" });
+            ind.Genes.Add(new AgGen { Id = 5, IdAsignatura = 50, IdSede = 1, EsVacante = 1, MotivoVacante = "" });
+
+            // Act
+            var res = AgDiagnosticoInfactibilidad.Describir(ind, contexto);
+
+            // Assert
+            string texto = string.Join("\n", res);
+            texto.Should().Contain("Vacantes=5 (CONSENTIDAS=1, LIBERADAS_POR_AG=1, ESTRUCTURALES_NC=1, NO_DOCENTE=1, INDETERMINADAS=1)");
+        }
     }
 }

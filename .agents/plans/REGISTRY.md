@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 469 | 470 | 2026-11-18 |
-| `fase` | 2074 | 2075 | 2026-11-18 |
+| `ronda` | 475 | 476 | 2026-11-19 |
+| `fase` | 2107 | 2108 | 2026-11-19 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -178,6 +178,12 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-141 | 2026-11-18 | `(revisión e implementación Ronda 467 — Fases 2066–2068: aseguramiento idempotente del consentimiento informado en punto único, erradicación del doble diálogo P07/optimización, cobertura de pruebas con manifiesto nulo vs construido y SetEquals, y cierre de registro)` | `Wave —` → `Ronda 467` | `Fase 2066–2068` | closed | sin build/tests (restricción Paso 6) | pendiente |
 | R-142 | 2026-11-18 | `(revisión e implementación Ronda 468 — Fases 2069–2072: erradicación definitiva del doble diálogo retirando llamada de P07, unificación de etiquetas de log [CONSENTIMIENTO], helper puro EsVigente con cobertura y trazabilidad)` | `Wave —` → `Ronda 468` | `Fase 2069–2072` | closed | sin build/tests (restricción Paso 6) | pendiente |
 | R-143 | 2026-11-18 | `(revisión e implementación Ronda 469 — Fases 2073–2074: precondición de manifiesto antes de consentimiento en corrida, y cierre de ciclo con gate/release)` | `Wave —` → `Ronda 469` | `Fase 2073–2074` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-144 | 2026-11-19 | `(revisión e implementación Ronda 470 — Fases 2075–2078: servicio ICierrePeriodoResolver en Application, sustitución de validación 15/12 en FormSesionesAcademicas, ventana canónica de períodos en CatalogCacheService con invalidación en FormPeriodos/AgFormGeneradorHorarios y suite CierrePeriodoResolverTests)` | `Wave —` → `Ronda 470` | `Fase 2075–2078` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-145 | 2026-11-19 | `(revisión e implementación Ronda 471 — Fases 2079–2082: corrección de mojibake UTF-8 con BOM en servicio nuevo, refresco granular no destructivo en CatalogCacheService, blindaje de año 0 en fallback de CierrePeriodoResolver y eliminación de variable muerta fechaLimite)` | `Wave —` → `Ronda 471` | `Fase 2079–2082` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-146 | 2026-11-19 | `(revisión e implementación Ronda 472 — Fases 2083–2089: formato asig/sede/semestre del consentimiento, instrumentación DEBUG [AG-CONSENT]/[AG-TOPE]/[AG-HARD]/[AG-VAC]/[AG-VACACION]/[AG-SNAPSHOT]/[AG-PARADA], reglas duras explícitas en el modal y gate P08, y cierre con suite completa)` | `Wave —` → `Ronda 472` | `Fase 2083–2089` | closed | PASS (Full 1801 tests) | `073cb6c` |
+| R-147 | 2026-11-19 | `(revisión e implementación Ronda 473 — Fases 2090–2095: unificación de R15 a cohortes y fórmula única de déficit, soporte de sede 0 en EstaConsentida/Calcular, extractor de clasificador único AgClasificadorVacante/AgOrigenVacante, motivo modal en FormatearDetalle, resolución determinista de sede en diálogo y suite de regresión)` | `Wave —` → `Ronda 473` | `Fase 2090–2095` | closed | sin build/tests (restricción Paso 6) | `073cb6c` |
+| R-148 | 2026-11-19 | `(revisión e implementación Ronda 474 — Fases 2096–2102: concurrencia por jornada en déficit estructural O(N), discriminante de cohorte en genes incompletos, origen Indeterminado para motivos vacíos, partición exacta de vacantes en diagnóstico, fallback de etiqueta de sede y suite de regresión)` | `Wave —` → `Ronda 474` | `Fase 2096–2102` | closed | sin build/tests (restricción Paso 6) | `073cb6c` |
+| R-149 | 2026-11-19 | `(revisión e implementación Ronda 475 — Fases 2103–2107: corrección de sintaxis en AgValidadorReglasTests, agregación de cohortes concurrentes por jornada en R15, lazy/caching de sedesPorAsig y normalización de jornada en déficit, rotulado de sesiones en [AG-VAC] y gate de compilación con suite completa 1824 tests)` | `Wave —` → `Ronda 475` | `Fase 2103–2107` | closed | PASS (Full 1824 tests) | `9c473f8` |
 
 
 

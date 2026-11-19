@@ -501,6 +501,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     {
                         motivo = motivoModal;
                     }
+
+                    if (LoggerHelper.ModoVerboso)
+                    {
+                        LoggerHelper.Debug($"[AG-VACACION] Sellar Grupo={grp.Key} reales={reales.Count} motivoModal={motivoModal} motivoFinal={motivo} fallback={string.IsNullOrWhiteSpace(motivoModal)}");
+                    }
                 }
                 else
                 {

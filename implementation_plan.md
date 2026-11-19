@@ -273,6 +273,138 @@ Las citas `implementation_plan.md:NNNN` anteriores al corte apuntan al archivo m
 | 2073 | `AgFormGeneradorHorarios.cs` | Implementado |
 | 2074 | `REGISTRY.md`, `implementation_plan.md`, `walkthrough.md`, release scripts | En ejecución / Cierre |
 
+---
+
+## Ronda 470: Corrección de advertencia Fecha Límite Excedida en Sesiones Académicas según ventana canónica de período (Fases 2075–2078)
+
+### Resumen de la Ronda
+- **Fase 2075:** Creación del servicio desacoplado `ICierrePeriodoResolver` y `CierrePeriodoResolver` en `ConversorPDF.XLL.Academic.Application` junto a su DTO `ResultadoCierrePeriodo`, estableciendo la precedencia canónica: ventana temporal del período (`periodo.TryObtenerVentana`) como fuente primaria, y fallback al 15/12 del año resuelto solo si el período carece de ventana válida. Inclusión de constantes documentadas `DiaCierreSemestre = 15` y `MesCierreSemestre = 12` (hallazgo H8).
+- **Fase 2076:** Sustitución de la regla rígida del 15/12 en `FormSesionesAcademicas.cs:683-691` por evaluación con `_cierrePeriodoResolver.Evaluar(periodoSeleccionado, dtpFinal.Value.Date, DateTime.Today)`, preservando el diálogo modal confirmable y emitiendo traza diagnóstica `LoggerHelper.Warning` con el origen evaluado.
+- **Fase 2077:** Extensión de la consulta de catálogos en `CatalogCacheService.cs` para incluir `PeriodoInicio` y `PeriodoFin` con protección ante esquemas antiguos (`pragma_table_info`), e invalidación explícita del caché en `FormPeriodos.cs` (guardar/eliminar) y `AgFormGeneradorHorarios.cs` (extensión de ventana en corrida). Inclusión de los nuevos archivos en `ConversorPDF.XLL.csproj`.
+- **Fase 2078:** Creación de la suite de pruebas unitarias `CierrePeriodoResolverTests.cs` en `ConversorPDF.Tests` con xUnit + FluentAssertions, cubriendo la regresión del defecto (período 2027-01 con fecha 02/02/2027), rebase de fin de período, fallbacks de año y formato de mensajes.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2075 | `ICierrePeriodoResolver.cs`, `CierrePeriodoResolver.cs`, `ResultadoCierrePeriodo.cs` | Implementado |
+| 2076 | `FormSesionesAcademicas.cs` | Implementado |
+| 2077 | `CatalogCacheService.cs`, `FormPeriodos.cs`, `AgFormGeneradorHorarios.cs`, `ConversorPDF.XLL.csproj` | Implementado |
+| 2078 | `CierrePeriodoResolverTests.cs` | Implementado |
+
+---
+
+## Ronda 471: Corrección de mojibake en servicio nuevo y coherencia de caché de períodos (Fases 2079–2082)
+
+### Resumen de la Ronda
+- **Fase 2079:** Reescritura limpia en UTF-8 con BOM de `CierrePeriodoResolver.cs`, `ICierrePeriodoResolver.cs`, `ResultadoCierrePeriodo.cs` y `CierrePeriodoResolverTests.cs`, erradicando la doble codificación CP1252/UTF-8 (mojibake) en literales de mensaje al usuario y documentación XML.
+- **Fase 2080:** Reemplazo de la invalidación destructiva global `CatalogCacheService.Invalidate()` por métodos granulares no destructivos `CatalogCacheService.ActualizarPeriodo` y `EliminarPeriodo`, actualizando las invocaciones en `FormPeriodos.cs` (guardar/eliminar) y `AgFormGeneradorHorarios.cs:792` para evitar vaciar catálogos en memoria enlazados en UI.
+- **Fase 2081:** Validación de rango válido de año (1..9999) en `CierrePeriodoResolver.ResolverAnioFallback` ante nombres malformados o con año cero (`"0000-01"`), evitando `ArgumentOutOfRangeException` en `new DateTime(0, 12, 15)`. Cobertura en `CierrePeriodoResolverTests.cs`.
+- **Fase 2082:** Eliminación de la variable muerta `fechaLimite` en `FormSesionesAcademicas.cs:681` tras la sustitución de la validación del 15/12 en F2076, documentando que el bucle de generación se rige por horas acumuladas y safety guard.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2079 | `CierrePeriodoResolver.cs`, `ICierrePeriodoResolver.cs`, `ResultadoCierrePeriodo.cs`, `CierrePeriodoResolverTests.cs` | Implementado |
+| 2080 | `CatalogCacheService.cs`, `FormPeriodos.cs`, `AgFormGeneradorHorarios.cs` | Implementado |
+| 2081 | `CierrePeriodoResolver.cs`, `CierrePeriodoResolverTests.cs` | Implementado |
+| 2082 | `FormSesionesAcademicas.cs` | Implementado |
+
+---
+
+## Ronda 472: Diagnóstico forense del bloqueo P08 y trazabilidad DEBUG del consentimiento, tope estructural y vacantes (Fases 2083–2089)
+
+### Resumen de la Ronda
+- **Fase 2083:** En `AgConsentimientoVacantes.cs`, creación de `FormatearDetalle` y `OrdenSemestre` con orden numérico arábigo estándar (1..12) vía `AgFormatoAsignatura.SemestreArabigo`. Integración en `AgFormGeneradorHorarios.cs` con el resolver en cadena `ResolverEtiquetaSedeConsentimiento(idSede)` (nombre → subunidad → subunidad de contexto → sede {id} / sede N/D). Cobertura con 3 tests en `AgConsentimientoVacantesTests.cs`.
+- **Fase 2084:** Instrumentación DEBUG `[AG-CONSENT]` en `AgConsentimientoVacantes.Calcular` (decisión de wildcard/parcial/ninguna, cohortes demandadas, pool de activos y detección de aviso cuando `IdSede == 0`) y en `AgFormGeneradorHorarios.AsegurarConsentimientoVacantes` (universo antes y después del diálogo).
+- **Fase 2085:** Instrumentación DEBUG `[AG-TOPE]` en pre-vuelo de `AgValidadorVentana.cs:485-516` (maxConcurrentes, docs, déficit y estado de consentimiento por sede), en fallback de `CalcularDeficitEstructural` (cálculo por asignatura y total) y en `AgGeneradorHorarios.cs:106-109` (fuente del tope estructural).
+- **Fase 2086:** Desglose forense del campeón infactible en `AgGeneradorHorarios.cs` bajo `LoggerHelper.ModoVerboso`: `[AG-HARD]` (reglas duras y violaciones individuales), `[AG-VAC]` (conteo de consentidas vs liberadas por AG), `[AG-SNAPSHOT]` (detalles del gen vacante o en conflicto con tercero del pool) y `[AG-PARADA]` (motivo de parada, estancamiento e historial de últimas 10 generaciones).
+- **Fase 2087:** Trazabilidad causal `[AG-VACACION]` de liberaciones en `AgAsignadorTercero.DiagnosticarMotivoVacante`, `AgCoherenciaGrupo.Sellar` (motivo modal vs fallback) y en la rama de mutación de `AgOperadorMutacion.cs` (`SinAlternoDisponible` vs `CalendarioNoVerificable`).
+- **Fase 2088:** En `AgDiagnosticoInfactibilidad.Describir`, reporte explícito de `ReglasDuras=[...]` y separación de vacantes `CONSENTIDAS` vs `LIBERADAS_POR_AG`. Inserción de reglas duras como segunda línea en `ResumenCorto`. Emisión de advertencia `[AG-GATE]` en `AgFormGeneradorHorarios.cs:3256-3266` previo al modal de infactibilidad. Cobertura en `AgDiagnosticoInfactibilidadTests.cs`.
+- **Fase 2089:** Compilación limpia de `ConversorPDF.XLL` y ejecución exitosa de la suite de pruebas completa en `ConversorPDF.Tests` (1801 pruebas superadas, 0 errores). Cierre documental y sincronización de registro.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2083 | `AgConsentimientoVacantes.cs`, `AgFormGeneradorHorarios.cs`, `AgConsentimientoVacantesTests.cs` | Implementado |
+| 2084 | `AgConsentimientoVacantes.cs`, `AgFormGeneradorHorarios.cs` | Implementado |
+| 2085 | `AgValidadorVentana.cs`, `AgGeneradorHorarios.cs` | Implementado |
+| 2086 | `AgGeneradorHorarios.cs` | Implementado |
+| 2087 | `AgAsignadorTercero.cs`, `AgCoherenciaGrupo.cs`, `AgOperadorMutacion.cs` | Implementado |
+| 2088 | `AgDiagnosticoInfactibilidad.cs`, `AgFormGeneradorHorarios.cs`, `AgDiagnosticoInfactibilidadTests.cs` | Implementado |
+| 2089 | `REGISTRY.md`, `implementation_plan.md`, `walkthrough.md` | Implementado |
+
+---
+
+## Ronda 473: Diagnóstico forense con trazabilidad correcta, pero causa raíz de R15 sin corregir (unidades y consentimiento sede 0) (Fases 2090–2095)
+
+### Resumen de la Ronda
+- **Fase 2090:** Unificación de la unidad de conteo en R15 (`AgValidadorReglas.cs:725-745`) a cohortes (`cohortesLiberadas`, clave `{asig}|{sede}|{sem}|{grp}`) preservando el número total de sesiones para telemetría. Unificación del cálculo de déficit estructural en `AgValidadorVentana.cs` con el helper canónico `CalcularDeficitPorAsignatura(AgContexto c, int idAsignatura, out int cohortes, out int docs)`, consumido tanto por el pre-vuelo de factibilidad como por el fallback.
+- **Fase 2091:** Corrección de fuga de consentimiento ante sedes no resueltas o nulas (`IdSede <= 0`): registro de clave compuesta `{asig}:0` en `AgConsentimientoVacantes.Calcular` y soporte de `Math.Max(0, idSede)` en `AgContexto.EstaConsentida`.
+- **Fase 2092:** Extracción canónica de `AgOrigenVacante` (Domain/Enums) y `AgClasificadorVacante` (Application/Services/Genetica). Sustitución de clasificadores ad-hoc duplicados en `AgValidadorReglas.cs`, `AgGeneradorHorarios.cs` (`[AG-VAC]`) y `AgDiagnosticoInfactibilidad.cs` (`cLiberadas`).
+- **Fase 2093:** Corrección del cálculo de motivo en `AgConsentimientoVacantes.FormatearDetalle` para obtener la moda estadística (`GroupBy(x => x.Motivo).OrderByDescending(m => m.Count()).ThenBy(m => m.Key)`) en lugar de `FirstOrDefault()`.
+- **Fase 2094:** Eliminación del fallback ambiguo `_contextoActual.Subunidad` en `AgFormGeneradorHorarios.ResolverEtiquetaSedeConsentimiento` (prioriza `_contextoActual.SedesPorId`, luego `_sedes`, y finalmente `$"sede {idSede}"`). Ordenación determinista de sedes por clave en `FormatearDetalle`.
+- **Fase 2095:** Cobertura de pruebas unitarias (`AgValidadorReglasTests.cs`, `AgConsentimientoVacantesTests.cs`, `AgValidadorVentanaTests.cs`, `AgMotivoVacanteTests.cs`). Sincronización documental en `REGISTRY.md` (R-147), `implementation_plan.md` y `walkthrough.md`.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2090 | `AgValidadorReglas.cs`, `AgValidadorVentana.cs` | Implementado |
+| 2091 | `AgConsentimientoVacantes.cs`, `AgContexto.cs` | Implementado |
+| 2092 | `AgOrigenVacante.cs`, `AgClasificadorVacante.cs`, `AgValidadorReglas.cs`, `AgGeneradorHorarios.cs`, `AgDiagnosticoInfactibilidad.cs`, `ConversorPDF.XLL.csproj` | Implementado |
+| 2093 | `AgConsentimientoVacantes.cs` | Implementado |
+| 2094 | `AgFormGeneradorHorarios.cs`, `AgConsentimientoVacantes.cs` | Implementado |
+| 2095 | `AgValidadorReglasTests.cs`, `AgConsentimientoVacantesTests.cs`, `AgValidadorVentanaTests.cs`, `AgMotivoVacanteTests.cs`, `REGISTRY.md`, `implementation_plan.md`, `walkthrough.md` | Implementado |
+
+---
+
+## Ronda 474: R15 en cohortes aplicado, pero el déficit perdió la concurrencia por jornada (regresión F2031/F2036) y persisten fugas de clasificación (Fases 2096–2102)
+
+### Resumen de la Ronda
+- **Fase 2096:** Restitución de la concurrencia por jornada en el cálculo de déficit estructural de `AgValidadorVentana.CalcularDeficitPorAsignatura` (`maxConcurrentes = demanda.GroupBy(d => d.Jornada)...DefaultIfEmpty(0).Max()`), retornando `Math.Max(0, maxConcurrentes - docs)`. Corrección del test a `DeficitDocentePorAsignatura[10].Should().Be(1)` y adición de test con dos jornadas y un docente con déficit 0.
+- **Fase 2097:** Creación del helper canónico `AgClasificadorVacante.ClaveCohorte(AgGen g)` con discriminante por aula y gen (`{asig}|{sede}|aula:{aula}|gen:{id}`) cuando faltan `Semestre` o `Grupo`, evitando que genes incompletos colapsen en una única cohorte en `AgValidadorReglas.cs` (R15) y `AgGeneradorHorarios.cs` (`[AG-VAC]`).
+- **Fase 2098:** Adición de `AgOrigenVacante.Indeterminado` para tratar motivos vacíos, nulos o desconocidos (`AgMotivoVacante.Ninguno`). Ignorado explícito en `AgValidadorReglas.cs` para evitar falsos positivos de R15 y R16 ante genes mutados antes del sellado.
+- **Fase 2099:** Corrección del detalle de vacantes en `AgDiagnosticoInfactibilidad.Describir`, incorporando el desglose de `ESTRUCTURALES_NC`, `NO_DOCENTE` e `INDETERMINADAS`, garantizando la partición exacta `CONSENTIDAS + LIBERADAS_POR_AG + ESTRUCTURALES_NC + NO_DOCENTE + INDETERMINADAS == Vacantes`.
+- **Fase 2100:** Optimización algorítmica de O(G×A) a O(N) mediante la precomputación del diccionario base en `AgValidadorVentana.ConstruirDeficitBase(AgContexto c)`, consumido en un solo pase por `ValidarFactibilidad`, `CalcularDeficitEstructural` y `CalcularDeficitPorAsignatura`.
+- **Fase 2101:** Salvaguarda en `AgConsentimientoVacantes.FormatearDetalle` ante `resolverSede` retornando vacío o espacios, cayendo a `$"sede {id}"` o `"sede N/D"`. Renombrado de test obsoleto en `AgValidadorVentanaTests.cs`.
+- **Fase 2102:** Cobertura de pruebas unitarias (`AgValidadorVentanaTests.cs`, `AgMotivoVacanteTests.cs`, `AgValidadorReglasTests.cs`, `AgDiagnosticoInfactibilidadTests.cs`, `AgConsentimientoVacantesTests.cs`) y sincronización documental de cierre en `REGISTRY.md` (R-148), `implementation_plan.md` y `walkthrough.md`.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2096 | `AgValidadorVentana.cs`, `AgValidadorVentanaTests.cs` | Implementado |
+| 2097 | `AgClasificadorVacante.cs`, `AgValidadorReglas.cs`, `AgGeneradorHorarios.cs`, `AgMotivoVacanteTests.cs` | Implementado |
+| 2098 | `AgOrigenVacante.cs`, `AgClasificadorVacante.cs`, `AgValidadorReglas.cs`, `AgMotivoVacanteTests.cs`, `AgValidadorReglasTests.cs` | Implementado |
+| 2099 | `AgDiagnosticoInfactibilidad.cs`, `AgDiagnosticoInfactibilidadTests.cs` | Implementado |
+| 2100 | `AgValidadorVentana.cs` | Implementado |
+| 2101 | `AgConsentimientoVacantes.cs`, `AgValidadorVentanaTests.cs`, `AgConsentimientoVacantesTests.cs` | Implementado |
+| 2102 | `REGISTRY.md`, `implementation_plan.md`, `walkthrough.md` | Implementado |
+
+---
+
+## Ronda 475: Error de compilación en la suite y R15 aún compara agregados distintos (max por jornada vs total de cohortes) (Fases 2103–2107)
+
+### Resumen de la Ronda
+- **Fase 2103:** Eliminación de la llave de cierre redundante en `AgValidadorReglasTests.cs:1885` originada en la fusión de F2102, resolviendo el error `CS1022`/`CS1513` que impedía la compilación del proyecto de pruebas.
+- **Fase 2104:** Alineación de la métrica de agregación en R15 (`AgValidadorReglas.cs:730-760`): `liberadasPorAsignatura` almacena `(Jornada, Cohorte)` y totaliza la suma de máximos concurrentes por jornada (`liberadasPorAsignatura.Values.Sum(...)`), igualando la unidad del tope estructural `MaxVacantesForzadas`. Cobertura en `AgValidadorReglasTests.cs`.
+- **Fase 2105:** En `AgValidadorVentana.cs`, confinamiento de la construcción de `sedesPorAsig` dentro de `if (LoggerHelper.ModoVerboso)` y normalización de `Jornada` a mayúsculas con `Trim().ToUpperInvariant()`, garantizando consistencia insensible a mayúsculas y eliminando allocations O(N) innecesarias en producción.
+- **Fase 2106:** Precisión del rotulado de telemetría en `AgGeneradorHorarios.cs:410-440` (`[AG-VAC]`), separando claramente `estructuralesAsignaturas` de `estructuralesSesiones` para erradicar contradicciones con el reporte de violaciones R16.
+- **Fase 2107:** Gate de verificación obligatorio: compilación limpia de la solución y ejecución exitosa de la suite completa en `ConversorPDF.Tests` (1824 pruebas superadas, 0 errores). Cierre y sincronización de registro `R-149`.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2103 | `AgValidadorReglasTests.cs` | Implementado |
+| 2104 | `AgValidadorReglas.cs`, `AgValidadorReglasTests.cs` | Implementado |
+| 2105 | `AgValidadorVentana.cs` | Implementado |
+| 2106 | `AgGeneradorHorarios.cs` | Implementado |
+| 2107 | `REGISTRY.md`, `implementation_plan.md`, `walkthrough.md`, `ConversorPDF.Tests` (1824 tests) | Implementado |
+
 
 
 

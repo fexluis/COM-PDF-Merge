@@ -147,9 +147,10 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
                 return true;
             }
 
+            // Fase 2030, 2034, 2091: Evaluar claves compuestas soportando sede 0 (Math.Max(0, idSede))
             if (ClavesVacantesConsentidas != null && ClavesVacantesConsentidas.Count > 0)
             {
-                if (idSede > 0 && ClavesVacantesConsentidas.Contains($"{idAsignatura}:{idSede}"))
+                if (ClavesVacantesConsentidas.Contains($"{idAsignatura}:{Math.Max(0, idSede)}"))
                 {
                     return true;
                 }

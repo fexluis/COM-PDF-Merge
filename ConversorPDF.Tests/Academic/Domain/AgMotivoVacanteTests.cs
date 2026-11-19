@@ -167,5 +167,44 @@ namespace ConversorPDF.Tests.Academic.Domain
         {
             AgMotivoVacanteExtensions.Desde(codigo).Should().Be(esperado);
         }
+
+        [Theory]
+        [InlineData("SIN_PLAN_OLEADA", AgOrigenVacante.NoDocente)]
+        [InlineData("SIN_BLOQUE_NIVEL", AgOrigenVacante.NoDocente)]
+        [InlineData("SIN_CANDIDATOS", AgOrigenVacante.EstructuralDocente)]
+        [InlineData("NO_CUMPLE_REQUISITOS", AgOrigenVacante.EstructuralDocente)]
+        [InlineData("POOL_VACIO", AgOrigenVacante.EstructuralDocente)]
+        [InlineData("SIN_DISPONIBILIDAD", AgOrigenVacante.LiberadaAg)]
+        [InlineData("FUERA_DE_VENTANA", AgOrigenVacante.LiberadaAg)]
+        [InlineData("OTRO_MOTIVO", AgOrigenVacante.Indeterminado)]
+        [InlineData("", AgOrigenVacante.Indeterminado)]
+        [InlineData(null, AgOrigenVacante.Indeterminado)]
+        [InlineData("DESCONOCIDO", AgOrigenVacante.Indeterminado)]
+        public void Clasificar_ShouldCategorizeCorrectly(string motivo, AgOrigenVacante esperado)
+        {
+            AgClasificadorVacante.Clasificar(motivo).Should().Be(esperado);
+        }
+
+        [Fact]
+        public void ClaveCohorte_WhenGenesIncompletos_ShouldDiscriminarPorAulaYGen()
+        {
+            // Arrange (Fase 2097): 3 genes sin Semestre ni Grupo pero con distinta aula/id
+            var g1 = new AgGen { Id = 1, IdAsignatura = 10, IdSede = 1, IdAula = 101, Semestre = "", Grupo = "" };
+            var g2 = new AgGen { Id = 2, IdAsignatura = 10, IdSede = 1, IdAula = 102, Semestre = null, Grupo = null };
+            var g3 = new AgGen { Id = 3, IdAsignatura = 10, IdSede = 1, IdAula = 101, Semestre = " ", Grupo = " " };
+
+            // Act
+            string c1 = AgClasificadorVacante.ClaveCohorte(g1);
+            string c2 = AgClasificadorVacante.ClaveCohorte(g2);
+            string c3 = AgClasificadorVacante.ClaveCohorte(g3);
+
+            // Assert: no deben colapsar en una sola cohorte 10|1||
+            c1.Should().Be("10|1|aula:101|gen:1");
+            c2.Should().Be("10|1|aula:102|gen:2");
+            c3.Should().Be("10|1|aula:101|gen:3");
+
+            var set = new HashSet<string> { c1, c2, c3 };
+            set.Should().HaveCount(3);
+        }
     }
 }

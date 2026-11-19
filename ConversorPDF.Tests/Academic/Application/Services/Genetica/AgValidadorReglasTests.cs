@@ -288,8 +288,8 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             contexto.BloquesPorId[1] = CrearBloque(1, diaSemana: 2);
 
             var individuo = new AgIndividuo();
-            individuo.Genes.Add(new AgGen { Id = 1, IdTercero = 0, EsVacante = 1, IdAsignatura = 10, IdPrograma = 1, Semestre = "I", IdAula = 1, IdBloqueHorario = 1 });
-            individuo.Genes.Add(new AgGen { Id = 2, IdTercero = 0, EsVacante = 1, IdAsignatura = 11, IdPrograma = 1, Semestre = "I", IdAula = 1, IdBloqueHorario = 1 });
+            individuo.Genes.Add(new AgGen { Id = 1, IdTercero = 0, EsVacante = 1, IdAsignatura = 10, IdPrograma = 1, Semestre = "I", IdAula = 1, IdBloqueHorario = 1, MotivoVacante = "SIN_DISPONIBILIDAD" });
+            individuo.Genes.Add(new AgGen { Id = 2, IdTercero = 0, EsVacante = 1, IdAsignatura = 11, IdPrograma = 1, Semestre = "I", IdAula = 1, IdBloqueHorario = 1, MotivoVacante = "SIN_DISPONIBILIDAD" });
 
             // Act
             _sut.Evaluar(individuo, contexto);
@@ -311,8 +311,8 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             contexto.BloquesPorId[1] = CrearBloque(1, diaSemana: 2);
 
             var individuo = new AgIndividuo();
-            individuo.Genes.Add(new AgGen { Id = 1, IdTercero = 0, EsVacante = 1, IdAsignatura = 10, IdPrograma = 1, Semestre = "I", IdAula = 1, IdBloqueHorario = 1 });
-            individuo.Genes.Add(new AgGen { Id = 2, IdTercero = 0, EsVacante = 1, IdAsignatura = 11, IdPrograma = 1, Semestre = "I", IdAula = 1, IdBloqueHorario = 1 });
+            individuo.Genes.Add(new AgGen { Id = 1, IdTercero = 0, EsVacante = 1, IdAsignatura = 10, IdPrograma = 1, Semestre = "I", IdAula = 1, IdBloqueHorario = 1, MotivoVacante = "SIN_DISPONIBILIDAD" });
+            individuo.Genes.Add(new AgGen { Id = 2, IdTercero = 0, EsVacante = 1, IdAsignatura = 11, IdPrograma = 1, Semestre = "I", IdAula = 1, IdBloqueHorario = 1, MotivoVacante = "SIN_DISPONIBILIDAD" });
             individuo.Genes.Add(new AgGen { Id = 3, IdTercero = 0, EsVacante = 1, IdAsignatura = 12, IdPrograma = 1, Semestre = "I", IdAula = 1, IdBloqueHorario = 1 }); // 1 forzada
 
             // Act
@@ -335,8 +335,8 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             contexto.BloquesPorId[1] = CrearBloque(1, diaSemana: 2);
 
             var individuo = new AgIndividuo();
-            individuo.Genes.Add(new AgGen { Id = 1, IdTercero = 0, EsVacante = 1, IdAsignatura = 10, IdSede = 1, IdAula = 1, IdBloqueHorario = 1 });
-            individuo.Genes.Add(new AgGen { Id = 2, IdTercero = 0, EsVacante = 1, IdAsignatura = 10, IdSede = 2, IdAula = 2, IdBloqueHorario = 1 });
+            individuo.Genes.Add(new AgGen { Id = 1, IdTercero = 0, EsVacante = 1, IdAsignatura = 10, IdSede = 1, IdAula = 1, IdBloqueHorario = 1, MotivoVacante = "SIN_DISPONIBILIDAD" });
+            individuo.Genes.Add(new AgGen { Id = 2, IdTercero = 0, EsVacante = 1, IdAsignatura = 10, IdSede = 2, IdAula = 2, IdBloqueHorario = 1, MotivoVacante = "SIN_DISPONIBILIDAD" });
 
             // Act
             _sut.Evaluar(individuo, contexto);
@@ -1805,6 +1805,108 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             individuo.Violaciones.Should().NotContain(v => v.Regla == AgReglaViolacion.R15_VacanteExcedida);
             individuo.Violaciones.Should().ContainSingle(v => v.Regla == AgReglaViolacion.R7_CoberturaHorariaIncompleta);
             individuo.HardViolations.Should().Be(1);
+        }
+
+        [Fact]
+        public void R15_WhenMultiplesSesionesMismaCohorte_ShouldCountSingleCohorte()
+        {
+            // Arrange (Fase 2090, 2095): 15 sesiones liberadas pertenecientes a la MISMA cohorte (Asig 37, Sede 1, Semestre III, Grupo A)
+            // Con tope = 1 cohorte, no debe excederse el déficit estructural (1 cohorte <= 1)
+            var contexto = new AgContexto();
+            contexto.MaxVacantesForzadas = 1;
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
+
+            var individuo = new AgIndividuo();
+            for (int i = 1; i <= 15; i++)
+            {
+                individuo.Genes.Add(new AgGen
+                {
+                    Id = i,
+                    IdAsignatura = 37,
+                    IdSede = 1,
+                    Semestre = "III",
+                    Grupo = "A",
+                    IdAula = 1,
+                    IdBloqueHorario = 1,
+                    EsVacante = 1,
+                    IdTercero = 0,
+                    MotivoVacante = AgMotivoVacante.SIN_DISPONIBILIDAD.Codigo()
+                });
+            }
+
+            // Act
+            _sut.Evaluar(individuo, contexto);
+
+            // Assert: 1 cohorte liberada <= tope 1 => sin violación R15
+            individuo.Violaciones.Should().NotContain(v => v.Regla == AgReglaViolacion.R15_VacanteExcedida);
+            individuo.HardViolations.Should().Be(0);
+        }
+
+        [Fact]
+        public void R15_WhenGenesIncompletosDistintasAulas_ShouldCountMultiplesCohortes()
+        {
+            // Arrange (Fase 2097): 3 genes sin Semestre ni Grupo de distinta aula liberados por el AG
+            // Con tope = 1, deben contarse como 3 cohortes distintas y disparar R15
+            var contexto = new AgContexto();
+            contexto.MaxVacantesForzadas = 1;
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
+
+            var individuo = new AgIndividuo();
+            individuo.Genes.Add(new AgGen { Id = 1, IdAsignatura = 37, IdSede = 1, IdAula = 101, Semestre = "", Grupo = "", EsVacante = 1, IdTercero = 0, MotivoVacante = "SIN_DISPONIBILIDAD" });
+            individuo.Genes.Add(new AgGen { Id = 2, IdAsignatura = 37, IdSede = 1, IdAula = 102, Semestre = "", Grupo = "", EsVacante = 1, IdTercero = 0, MotivoVacante = "SIN_DISPONIBILIDAD" });
+            individuo.Genes.Add(new AgGen { Id = 3, IdAsignatura = 37, IdSede = 1, IdAula = 103, Semestre = "", Grupo = "", EsVacante = 1, IdTercero = 0, MotivoVacante = "SIN_DISPONIBILIDAD" });
+
+            // Act
+            _sut.Evaluar(individuo, contexto);
+
+            // Assert: 3 cohortes > tope 1 => violación R15
+            individuo.Violaciones.Should().Contain(v => v.Regla == AgReglaViolacion.R15_VacanteExcedida && v.Mensaje.Contains("3 cohortes"));
+        }
+
+        [Fact]
+        public void R15_WhenMotivoVacioOIndeterminado_ShouldIgnoreInR15AndR16()
+        {
+            // Arrange (Fase 2098): Genes con motivo vacío o desconocido (origen Indeterminado) no deben contarse como liberadas por AG ni como estructurales
+            var contexto = new AgContexto();
+            contexto.MaxVacantesForzadas = 0;
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
+
+            var individuo = new AgIndividuo();
+            individuo.Genes.Add(new AgGen { Id = 1, IdAsignatura = 37, IdSede = 1, IdAula = 101, Semestre = "I", Grupo = "A", EsVacante = 1, IdTercero = 0, MotivoVacante = "" });
+            individuo.Genes.Add(new AgGen { Id = 2, IdAsignatura = 37, IdSede = 1, IdAula = 101, Semestre = "I", Grupo = "A", EsVacante = 1, IdTercero = 0, MotivoVacante = "DESCONOCIDO" });
+
+            // Act
+            _sut.Evaluar(individuo, contexto);
+
+            // Assert: no debe emitir R15 ni R16
+            individuo.Violaciones.Should().NotContain(v => v.Regla == AgReglaViolacion.R15_VacanteExcedida);
+            individuo.Violaciones.Should().NotContain(v => v.Regla == AgReglaViolacion.R16_VacanteEstructuralNoConsentida);
+        }
+
+        [Fact]
+        public void R15_WhenCohortesLiberadasEnDistintasJornadas_ShouldMedirConcurrenciaPorJornada()
+        {
+            // Arrange (Fase 2104): 1 cohorte liberada en Mañana y 1 en Tarde (2 cohortes totales).
+            // Con tope = 1 cohorte concurrente, la concurrencia máxima por jornada es Max(1, 1) = 1 <= 1 => no excede el tope.
+            var contexto = new AgContexto();
+            contexto.MaxVacantesForzadas = 1;
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
+
+            contexto.AulasPorId[101] = new AgAula { Id = 101, IdSede = 1, Semestre = "I", Grupo = "A", Jornada = "MANANA", Estado = AgEstadoAula.Disponible };
+            contexto.AulasPorId[102] = new AgAula { Id = 102, IdSede = 1, Semestre = "I", Grupo = "B", Jornada = "TARDE", Estado = AgEstadoAula.Disponible };
+
+            contexto.BloquesPorId[1] = CrearBloque(1, diaSemana: 2);
+
+            var individuo = new AgIndividuo();
+            individuo.Genes.Add(new AgGen { Id = 1, IdAsignatura = 37, IdSede = 1, IdAula = 101, IdBloqueHorario = 1, Semestre = "I", Grupo = "A", EsVacante = 1, IdTercero = 0, MotivoVacante = "SIN_DISPONIBILIDAD" });
+            individuo.Genes.Add(new AgGen { Id = 2, IdAsignatura = 37, IdSede = 1, IdAula = 102, IdBloqueHorario = 1, Semestre = "I", Grupo = "B", EsVacante = 1, IdTercero = 0, MotivoVacante = "SIN_DISPONIBILIDAD" });
+
+            // Act
+            _sut.Evaluar(individuo, contexto);
+
+            // Assert: concurrencia máxima es 1 <= tope 1 => sin violación R15
+            individuo.Violaciones.Should().NotContain(v => v.Regla == AgReglaViolacion.R15_VacanteExcedida);
+            individuo.HardViolations.Should().Be(0);
         }
     }
 }

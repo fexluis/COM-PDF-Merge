@@ -74,6 +74,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
         /// </summary>
         private string _ultimoEstadoGenerado = string.Empty;
         private readonly IAcademicDateSyncService _dateSyncService;
+        private readonly ICierrePeriodoResolver _cierrePeriodoResolver;
 
         // FASE 237 / F1.5: Bandera para evitar disparos recursivos en CellValueChanged durante sincronización interna
         private bool _sincronizandoGrid = false;
@@ -120,6 +121,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
             _generador = new GeneradorSesionesRecurrentes();
             _sesionesGeneradas = new List<Sesion>();
             _dateSyncService = new AcademicDateSyncService();
+            _cierrePeriodoResolver = new CierrePeriodoResolver();
 
             if (idVinculacion.HasValue)
             {
@@ -676,14 +678,15 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
 
                 // 3. Preparación de Variables
                 DateTime fechaActual = dtpInicio.Value.Date;
-                DateTime fechaLimite = dtpFinal.Value.Date;
+                // fechaLimite eliminado (F2076/F2082): el aviso usa ICierrePeriodoResolver; el bucle no tiene cota de fecha.
 
-                int anioActual = DateTime.Now.Year;
-                DateTime limiteDiciembre = new DateTime(anioActual, 12, 15);
-                if (fechaLimite > limiteDiciembre)
+                var periodoSeleccionado = cmbPeriodos.SelectedItem as Periodo;
+                var evaluacion = _cierrePeriodoResolver.Evaluar(periodoSeleccionado, dtpFinal.Value.Date, DateTime.Today);
+                if (evaluacion.ExcedeLimite)
                 {
-                    var respuesta = MessageBox.Show($"La fecha final supera el 15 de diciembre del año {anioActual}. ¿Desea continuar de todos modos?",
-                                                    "Fecha Límite Excedida", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                    LoggerHelper.Warning($"[FormSesionesAcademicas] Fecha límite excedida: {dtpFinal.Value.Date:yyyy-MM-dd} supera {evaluacion.Limite:yyyy-MM-dd} (Origen: {(evaluacion.LimiteEsVentanaPeriodo ? "VentanaPeriodo" : "Fallback15Diciembre")}).");
+                    var respuesta = MessageBox.Show(evaluacion.Mensaje, "Fecha Límite Excedida",
+                                                    MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                     if (respuesta != DialogResult.Yes) return;
                 }
                 double horasAcumuladas = 0;

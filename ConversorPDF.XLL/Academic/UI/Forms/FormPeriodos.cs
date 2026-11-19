@@ -7,6 +7,7 @@ using System.Windows.Forms;
 using ConversorPDF.XLL.Academic.Application.DTOs;
 using ConversorPDF.XLL.Academic.Application.Interfaces;
 using ConversorPDF.XLL.Academic.Application.Services;
+using ConversorPDF.XLL.Academic.Domain.Models;
 using ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories;
 using ConversorPDF.XLL.Core.Helpers;
 
@@ -187,6 +188,14 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
 
                 if (result.IsSuccess)
                 {
+                    CatalogCacheService.ActualizarPeriodo(new Periodo
+                    {
+                        IdPeriodo = result.Value,
+                        PeriodoNombre = dto.PeriodoNombre,
+                        PeriodoInicio = dto.PeriodoInicio,
+                        PeriodoFin = dto.PeriodoFin,
+                        Activo = dto.Activo == 1
+                    });
                     MessageBox.Show("Período guardado correctamente.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     CargarPeriodos();
                 }
@@ -223,6 +232,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
 
                 if (result.IsSuccess)
                 {
+                    CatalogCacheService.EliminarPeriodo(_currentPeriodo.IdPeriodo);
                     MessageBox.Show("Período eliminado correctamente.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     CargarPeriodos();
                 }

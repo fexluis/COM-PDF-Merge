@@ -4,6 +4,7 @@ using System.Linq;
 using ConversorPDF.XLL.Academic.Domain.Enums;
 using ConversorPDF.XLL.Academic.Domain.Models;
 using ConversorPDF.XLL.Academic.Domain.Models.Genetica;
+using ConversorPDF.XLL.Core.Helpers;
 
 namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 {
@@ -200,30 +201,52 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         {
             if (gen == null || contexto == null) return AgMotivoVacante.SIN_CANDIDATOS.Codigo();
 
+            string motivo;
+            int poolCount = 0;
+            int activosCount = 0;
+            int habilitadosCount = 0;
+
             if (!contexto.PoolPorAsignatura.TryGetValue(gen.IdAsignatura, out var pool) || pool.Count == 0 || !pool.Any(p => p.Activo == 1))
             {
-                return AgMotivoVacante.SIN_CANDIDATOS.Codigo();
+                motivo = AgMotivoVacante.SIN_CANDIDATOS.Codigo();
             }
-
-            // Fase 1902: si el gen carece de programa o semestre (mutación/recombinación), no atribuir erróneamente a NO_CUMPLE_REQUISITOS
-            if (gen.IdPrograma <= 0 || string.IsNullOrWhiteSpace(gen.Semestre))
+            else
             {
-                return AgMotivoVacante.SIN_DISPONIBILIDAD.Codigo();
+                poolCount = pool.Count;
+                activosCount = pool.Count(p => p.Activo == 1 && (contexto.IdTerceroVacante <= 0 || p.IdTercero != contexto.IdTerceroVacante));
+
+                // Fase 1902: si el gen carece de programa o semestre (mutación/recombinación), no atribuir erróneamente a NO_CUMPLE_REQUISITOS
+                if (gen.IdPrograma <= 0 || string.IsNullOrWhiteSpace(gen.Semestre))
+                {
+                    motivo = AgMotivoVacante.SIN_DISPONIBILIDAD.Codigo();
+                }
+                else
+                {
+                    habilitadosCount = pool.Count(p => p.Activo == 1 && contexto.EsDocenteHabilitado(p.IdTercero, gen.IdPrograma, gen.IdAsignatura, gen.Semestre));
+
+                    // Si existen candidatos en pool para la materia pero ninguno habilitado para este programa/semestre
+                    if (habilitadosCount == 0)
+                    {
+                        motivo = AgMotivoVacante.NO_CUMPLE_REQUISITOS.Codigo();
+                    }
+                    // Si las fechas del gen caen fuera de la ventana semestral
+                    else if (contexto.Ventana != null && gen.FechaInicioEstimada.HasValue && !contexto.Ventana.Contiene(gen.FechaInicioEstimada.Value))
+                    {
+                        motivo = AgMotivoVacante.FUERA_DE_VENTANA.Codigo();
+                    }
+                    else
+                    {
+                        motivo = AgMotivoVacante.SIN_DISPONIBILIDAD.Codigo();
+                    }
+                }
             }
 
-            // Si existen candidatos en pool para la materia pero ninguno habilitado para este programa/semestre
-            if (!pool.Any(p => p.Activo == 1 && contexto.EsDocenteHabilitado(p.IdTercero, gen.IdPrograma, gen.IdAsignatura, gen.Semestre)))
+            if (LoggerHelper.ModoVerboso)
             {
-                return AgMotivoVacante.NO_CUMPLE_REQUISITOS.Codigo();
+                LoggerHelper.Debug($"[AG-VACACION] Diagnosticar gen={gen.Id} asig={gen.IdAsignatura} pool={poolCount} activos={activosCount} habilitados={habilitadosCount} gen prog={gen.IdPrograma}/sem={gen.Semestre} motivo={motivo}");
             }
 
-            // Si las fechas del gen caen fuera de la ventana semestral
-            if (contexto.Ventana != null && gen.FechaInicioEstimada.HasValue && !contexto.Ventana.Contiene(gen.FechaInicioEstimada.Value))
-            {
-                return AgMotivoVacante.FUERA_DE_VENTANA.Codigo();
-            }
-
-            return AgMotivoVacante.SIN_DISPONIBILIDAD.Codigo();
+            return motivo;
         }
 
         /// <summary>

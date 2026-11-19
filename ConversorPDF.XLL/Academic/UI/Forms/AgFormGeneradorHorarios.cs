@@ -789,6 +789,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
 
                         periodoExtendido = true;
                         _contextoActual = null;
+                        CatalogCacheService.ActualizarPeriodo(rExt.Value);
                         traza.Dato("PeriodoExtendido", $"{perFin:yyyy-MM-dd} -> {periodoSel.PeriodoFin}");
                         LoggerHelper.Info($"[PERIODO] Ventana extendida idperiodo={periodoSel.IdPeriodo} {perFin:yyyy-MM-dd}->{periodoSel.PeriodoFin} actor={Environment.UserName}");
 
@@ -1442,6 +1443,8 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
         /// <summary>
         /// Asegura de forma idempotente el consentimiento informado de vacantes estructurales (Fases 2052, 2055, 2064, 2066, 2069, 2070).
         /// Reutiliza el consentimiento vigente si el universo no ha cambiado evitando diálogos duplicados.
+        /// Fase 2083: Presentación clara por asignatura, sede y semestres.
+        /// Fase 2084: Trazabilidad [AG-CONSENT] de estado antes/después del diálogo.
         /// </summary>
         private bool AsegurarConsentimientoVacantes(bool interactivo = true)
         {
@@ -1455,6 +1458,11 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
 
             bool vigente = AgConsentimientoVacantes.EsVigente(_contextoActual, asigs, claves);
 
+            if (LoggerHelper.ModoVerboso)
+            {
+                LoggerHelper.Debug($"[AG-CONSENT] Asegurar: universo={asigs.Count} materias, {detalle.Count} cohortes, vigente={vigente}, PERMITE_VACANTES={_contextoActual?.PermiteVacantes ?? false}, AsignaturasConsentidas={_contextoActual?.AsignaturasVacantesConsentidas?.Count ?? 0}, ClavesConsentidas={_contextoActual?.ClavesVacantesConsentidas?.Count ?? 0}");
+            }
+
             if (vigente)
             {
                 Log($"[CONSENTIMIENTO] Reutilizando universo vigente ({asigs.Count} asignaturas, {detalle.Count} cohortes).");
@@ -1463,9 +1471,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
 
             if (!interactivo) return false;
 
-            string lista = string.Join("\n• ", detalle
-                .GroupBy(d => d.IdAsignatura)
-                .Select(g => $"{g.Key}: {g.Select(x => $"{x.Semestre}/{x.Grupo} sede {x.IdSede}").Distinct().Count()} cohorte(s) → {g.First().Motivo}"));
+            string lista = AgConsentimientoVacantes.FormatearDetalle(detalle, ResolverEtiquetaSedeConsentimiento);
 
             MarcarDecisionPreparacion();
             var dialogRes = MessageBox.Show(this,
@@ -1479,6 +1485,10 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 Log("[CONSENTIMIENTO] Cancelado por el usuario: vacantes estructurales sin autorizar.");
                 _contextoActual?.AsignaturasVacantesConsentidas?.Clear();
                 _contextoActual?.ClavesVacantesConsentidas?.Clear();
+                if (LoggerHelper.ModoVerboso)
+                {
+                    LoggerHelper.Debug("[AG-CONSENT] Post-diálogo: Cancelado por usuario.");
+                }
                 return false;
             }
 
@@ -1488,8 +1498,37 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 _contextoActual.AsignaturasVacantesConsentidas = asigs;
                 _contextoActual.ClavesVacantesConsentidas = claves;
             }
+            if (LoggerHelper.ModoVerboso)
+            {
+                LoggerHelper.Debug($"[AG-CONSENT] Post-diálogo: Aceptado. AsignaturasConsentidas={_contextoActual?.AsignaturasVacantesConsentidas?.Count ?? 0}, ClavesConsentidas={_contextoActual?.ClavesVacantesConsentidas?.Count ?? 0}");
+            }
             Log($"[CONSENTIMIENTO] Aceptado por el usuario: {asigs.Count} asignaturas ({detalle.Count} cohortes) pasarán a VACANTE.");
             return true;
+        }
+
+        /// <summary>
+        /// Resuelve la etiqueta legible de sede para el diálogo de consentimiento estructurado (Fases 2083, 2094).
+        /// Prioriza el catálogo en memoria del contexto (SedesPorId), luego la lista de sedes de la vista, y fallback determinista a sede {id}.
+        /// </summary>
+        private string ResolverEtiquetaSedeConsentimiento(int idSede)
+        {
+            if (idSede <= 0) return "sede N/D";
+
+            if (_contextoActual?.SedesPorId != null &&
+                _contextoActual.SedesPorId.TryGetValue(idSede, out var s) && s != null)
+            {
+                if (!string.IsNullOrWhiteSpace(s.Nombre)) return $"sede {s.Nombre}";
+                if (!string.IsNullOrWhiteSpace(s.Subunidad)) return $"sede {s.Subunidad}";
+            }
+
+            var sede = _sedes?.FirstOrDefault(x => x.Id == idSede);
+            if (sede != null)
+            {
+                if (!string.IsNullOrWhiteSpace(sede.Nombre)) return $"sede {sede.Nombre}";
+                if (!string.IsNullOrWhiteSpace(sede.Subunidad)) return $"sede {sede.Subunidad}";
+            }
+
+            return $"sede {idSede}";
         }
 
         /// <summary>
@@ -3214,6 +3253,17 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     traza.Fallo("P08_ValidarFactibilidadCampeon", new Exception("Solución infactible con violaciones duras"), AgCausaFallo.SolucionInfactible);
                     traza.Fin(false, $"Solución infactible: {_ultimoResultado.MejorIndividuo?.HardViolations ?? 0} violaciones duras.");
                     Log($"[ERROR] Optimización sin factibilidad: {_ultimoResultado.MejorIndividuo?.HardViolations ?? 0} violaciones duras no resueltas. Staging omitido.");
+
+                    // Fase 2088: Trazabilidad explícita del bloqueo P08 [AG-GATE] con reglas duras y vacantes
+                    var durasGate = (_ultimoResultado.MejorIndividuo?.Violaciones ?? new List<AgViolacion>())
+                        .Where(v => v.EsDura)
+                        .GroupBy(v => v.Regla)
+                        .Select(g => $"{g.Key}x{g.Count()}")
+                        .ToList();
+                    string maxForzStr = contexto?.MaxVacantesForzadas >= 0 ? contexto.MaxVacantesForzadas.ToString() : "n/a";
+                    int vacsTotal = _ultimoResultado.MejorIndividuo?.Vacantes ?? 0;
+                    int consentidasCount = _ultimoResultado.MejorIndividuo?.Genes?.Count(g => (g.EsVacante == 1 || g.IdTercero <= 0) && (contexto?.EstaConsentida(g.IdAsignatura, g.IdSede) ?? false)) ?? 0;
+                    LoggerHelper.Warning($"[AG-GATE] HARD={_ultimoResultado.MejorIndividuo?.HardViolations ?? 0} reglas=[{string.Join(",", durasGate)}] MaxForzadas={maxForzStr} Vacantes={vacsTotal} Consentidas={consentidasCount} staging=OMITIDO causa=SolucionInfactible");
 
                     string mensajeDetallado;
                     try

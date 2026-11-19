@@ -105,7 +105,18 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 contexto.ConstruirIndices();
                 if (contexto.MaxVacantesForzadas < 0)
                 {
+                    string fuente = informe?.DeficitDocentePorAsignatura != null && informe.DeficitDocentePorAsignatura.Count > 0
+                        ? "informe"
+                        : "fallback";
                     contexto.MaxVacantesForzadas = AgValidadorVentana.CalcularDeficitEstructural(contexto, informe);
+                    if (LoggerHelper.ModoVerboso)
+                    {
+                        LoggerHelper.Debug($"[AG-TOPE] MaxVacantesForzadas={contexto.MaxVacantesForzadas} fuente={fuente} asignaturasConsentidas={contexto.AsignaturasVacantesConsentidas?.Count ?? 0} claves={contexto.ClavesVacantesConsentidas?.Count ?? 0}");
+                    }
+                }
+                else if (LoggerHelper.ModoVerboso)
+                {
+                    LoggerHelper.Debug($"[AG-TOPE] MaxVacantesForzadas={contexto.MaxVacantesForzadas} fuente=predefinido asignaturasConsentidas={contexto.AsignaturasVacantesConsentidas?.Count ?? 0} claves={contexto.ClavesVacantesConsentidas?.Count ?? 0}");
                 }
                 swIndices.Stop();
                 resultado.TiempoIndicesMs = swIndices.ElapsedMilliseconds;
@@ -129,6 +140,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 AgIndividuo mejorGlobal = (poblacion.Count > 0 ? poblacion.OrderByDescending(ind => ind.Fitness).FirstOrDefault() : null)?.Clonar() ?? new AgIndividuo();
                 double mejorHist = double.NegativeInfinity;
                 int estancadas = 0;
+                int mejorGenNumero = 0;
                 var parada = AgMotivoParada.NoDefinida;
                 long duracionUltimaTransicionMs = resultado.TiempoPoblacionInicialMs;
 
@@ -151,6 +163,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     {
                         mejorHist = mejorGlobal.Fitness;
                         estancadas = 0;
+                        mejorGenNumero = gen;
                     }
                     else
                     {
@@ -358,6 +371,142 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         LoggerHelper.WarningLimitado(
                             $"DiagInfactibleFallido|{resultado.IdCorrida}",
                             $"[AG-CAUSAS-DETALLE] no generado: {exDiag.Message}");
+                    }
+                }
+
+                // Fase 2086: Diagnóstico forense detallado en modo verboso ([AG-HARD], [AG-VAC], [AG-SNAPSHOT], [AG-PARADA])
+                if (LoggerHelper.ModoVerboso)
+                {
+                    LoggerHelper.Debug($"[AG-HARD] campeon HARD={mejorGlobal.HardViolations} detalle={detalleDuro} descuadre={descuadre:+#;-#;0} reglas=[{string.Join(", ", duras.Select(d => $"{d.Regla} x{d.Total}"))}]");
+
+                    int vIdx = 1;
+                    var listaDuras = (mejorGlobal.Violaciones ?? new List<AgViolacion>()).Where(v => v.EsDura).Take(50).ToList();
+                    foreach (var v in listaDuras)
+                    {
+                        AgGen genRef = null;
+                        if (v.IdGen.HasValue && mejorGlobal.Genes != null)
+                        {
+                            genRef = mejorGlobal.Genes.FirstOrDefault(g => g.Id == v.IdGen.Value);
+                        }
+
+                        int idAsig = genRef?.IdAsignatura ?? 0;
+                        int idSede = genRef?.IdSede ?? 0;
+                        int idAula = genRef?.IdAula ?? 0;
+                        int idTercero = genRef?.IdTercero ?? 0;
+                        string consentidaStr = genRef != null
+                            ? (contexto.EstaConsentida(idAsig, idSede) ? "True" : "False")
+                            : "—";
+
+                        LoggerHelper.Debug($"[AG-HARD] v{vIdx++} regla={v.Regla} gen={v.IdGen ?? 0} asig={idAsig} sede={idSede} aula={idAula} tercero={idTercero} consentida={consentidaStr} msg=\"{v.Mensaje}\"");
+                    }
+
+                    // [AG-VAC] (Fase 2086, 2092)
+                    var genesVac = (mejorGlobal.Genes ?? new List<AgGen>())
+                        .Where(g => g.EsVacante == 1 || g.IdTercero <= 0)
+                        .ToList();
+
+                    int cConsentidas = genesVac.Count(g => contexto.EstaConsentida(g.IdAsignatura, g.IdSede));
+                    var estructuralesSesiones = new Dictionary<int, int>();
+                    var cohortesLiberadasSet = new HashSet<string>(StringComparer.Ordinal);
+                    int cLiberadasSesiones = 0;
+                    int cPoolVacio = 0;
+
+                    foreach (var g in genesVac)
+                    {
+                        if (contexto.EstaConsentida(g.IdAsignatura, g.IdSede)) continue;
+
+                        bool poolVacio = !contexto.PoolPorAsignatura.TryGetValue(g.IdAsignatura, out var pl) || pl == null || pl.Count == 0 || !pl.Any(p => p.Activo == 1);
+                        if (poolVacio) cPoolVacio++;
+
+                        var origen = AgClasificadorVacante.Clasificar(g.MotivoVacante);
+                        if (origen == AgOrigenVacante.EstructuralDocente)
+                        {
+                            estructuralesSesiones[g.IdAsignatura] = estructuralesSesiones.TryGetValue(g.IdAsignatura, out var n) ? n + 1 : 1;
+                        }
+                        else if (origen == AgOrigenVacante.LiberadaAg)
+                        {
+                            cLiberadasSesiones++;
+                            cohortesLiberadasSet.Add(AgClasificadorVacante.ClaveCohorte(g));
+                        }
+                    }
+
+                    int cLiberadasCohortes = cohortesLiberadasSet.Count;
+                    string estSesionesStr = string.Join(",", estructuralesSesiones.Select(kv => $"{kv.Key}x{kv.Value}"));
+                    LoggerHelper.Debug(
+                        $"[AG-VAC] consentidasEnGenes={cConsentidas} liberadasCohortes={cLiberadasCohortes} " +
+                        $"liberadasSesiones={cLiberadasSesiones} estructuralesAsignaturas={estructuralesSesiones.Count} " +
+                        $"estructuralesSesiones=[{estSesionesStr}] poolVacio={cPoolVacio}");
+
+                    var liberadasGenes = genesVac
+                        .Where(g => !contexto.EstaConsentida(g.IdAsignatura, g.IdSede) &&
+                                    AgClasificadorVacante.Clasificar(g.MotivoVacante) == AgOrigenVacante.LiberadaAg)
+                        .Take(50)
+                        .ToList();
+
+                    foreach (var lg in liberadasGenes)
+                    {
+                        LoggerHelper.Debug($"[AG-VAC] liberada asig={lg.IdAsignatura} sede={lg.IdSede} aula={lg.IdAula} cohorte={lg.Semestre}/{lg.Grupo} gen={lg.Id} motivo={lg.MotivoVacante} consentida={contexto.EstaConsentida(lg.IdAsignatura, lg.IdSede)}");
+                    }
+
+                    // [AG-SNAPSHOT] para genes que originaron violaciones o vacantes liberadas
+                    var genesSnapshot = new List<AgGen>();
+                    foreach (var v in listaDuras)
+                    {
+                        if (v.IdGen.HasValue)
+                        {
+                            var g = mejorGlobal.Genes?.FirstOrDefault(x => x.Id == v.IdGen.Value);
+                            if (g != null && !genesSnapshot.Contains(g)) genesSnapshot.Add(g);
+                        }
+                        else if (!string.IsNullOrWhiteSpace(v.DetalleJson))
+                        {
+                            try
+                            {
+                                var match = System.Text.RegularExpressions.Regex.Match(v.DetalleJson, @"\""indicesGenes\""\s*:\s*\[([^\]]+)\]");
+                                if (match.Success)
+                                {
+                                    var idxStrs = match.Groups[1].Value.Split(',');
+                                    foreach (var s in idxStrs)
+                                    {
+                                        if (int.TryParse(s.Trim(), out int idx) && idx >= 0 && idx < (mejorGlobal.Genes?.Count ?? 0))
+                                        {
+                                            var g = mejorGlobal.Genes[idx];
+                                            if (!genesSnapshot.Contains(g)) genesSnapshot.Add(g);
+                                        }
+                                    }
+                                }
+                            }
+                            catch { }
+                        }
+                    }
+
+                    if (duras.Any(d => d.Regla == AgReglaViolacion.R15_VacanteExcedida || d.Regla == AgReglaViolacion.R16_VacanteEstructuralNoConsentida))
+                    {
+                        foreach (var lg in liberadasGenes)
+                        {
+                            if (!genesSnapshot.Contains(lg)) genesSnapshot.Add(lg);
+                        }
+                    }
+
+                    foreach (var sg in genesSnapshot.Take(50))
+                    {
+                        int idTerceroReal = 0;
+                        if (contexto.PoolPorAsignatura != null && contexto.PoolPorAsignatura.TryGetValue(sg.IdAsignatura, out var pl) && pl != null)
+                        {
+                            var primeroActivo = pl.FirstOrDefault(p => p.Activo == 1 && (contexto.IdTerceroVacante <= 0 || p.IdTercero != contexto.IdTerceroVacante));
+                            if (primeroActivo != null) idTerceroReal = primeroActivo.IdTercero;
+                        }
+
+                        string franjaStr = contexto.BloquesPorId != null && contexto.BloquesPorId.TryGetValue(sg.IdBloqueHorario, out var blq) ? (blq.Franja ?? blq.HorarioTexto ?? blq.Id.ToString()) : "N/D";
+                        LoggerHelper.Debug($"[AG-SNAPSHOT] gen={sg.Id} asig={sg.IdAsignatura} prog={sg.IdPrograma} sede={sg.IdSede} sem={sg.Semestre} grupo={sg.Grupo} aula={sg.IdAula} bloque={sg.IdBloqueHorario} dia={sg.DiaSemana} patrón={sg.PatronSemanal} franja={franjaStr} tercero={sg.IdTercero} esVacante={sg.EsVacante} motivo={sg.MotivoVacante} terceroRealPool={idTerceroReal}");
+                    }
+
+                    // [AG-PARADA]
+                    LoggerHelper.Debug($"[AG-PARADA] motivo={parada} gen={resultado.GeneracionesEjecutadas}/{generacionesMax} estancadas={estancadas}/{estancamientoMax} mejorGen={mejorGenNumero}");
+                    if (resultado.HistorialConvergencia != null && resultado.HistorialConvergencia.Count > 0)
+                    {
+                        var ultimas = resultado.HistorialConvergencia.Skip(Math.Max(0, resultado.HistorialConvergencia.Count - 10)).ToList();
+                        string histStr = string.Join(" | ", ultimas.Select(b => $"{b.Generacion}:f={b.MejorFitness:F2},h={b.HardViolations},v={b.Vacantes}"));
+                        LoggerHelper.Debug($"[AG-PARADA] hist=[{histStr}]");
                     }
                 }
 

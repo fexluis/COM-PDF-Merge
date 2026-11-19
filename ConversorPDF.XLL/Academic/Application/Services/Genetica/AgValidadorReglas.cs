@@ -707,38 +707,56 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 }
             }
 
-            // Fase 2018 / 2022 / 2030 / 2054 / 2060: Separar R15 (liberadas por el AG) de R16 (estructurales no consentidas)
+            // Fase 2018 / 2022 / 2030 / 2054 / 2060 / 2090 / 2092 / 2104: Separar R15 (liberadas por el AG) de R16 (estructurales no consentidas)
             // R16 evalúa vacantes estructurales sin consentimiento previo (emite una violación por asignatura)
-            // R15 evalúa vacantes liberadas por el AG frente al déficit estructural permitido
-            // Vacantes con origen NoDocente (SIN_PLAN_OLEADA, SIN_BLOQUE_NIVEL) se excluyen de R15 y R16 (reportadas por R7/R14)
+            // R15 evalúa vacantes liberadas por el AG frente al déficit estructural permitido, midiendo cohortes concurrentes por jornada
+            // Vacantes con origen NoDocente (SIN_PLAN_OLEADA, SIN_BLOQUE_NIVEL) e Indeterminado se excluyen de R15 y R16
             var estructurales = new Dictionary<int, int>();
-            int liberadas = 0;
+            var liberadasPorAsignatura = new Dictionary<int, List<(string Jornada, string Cohorte)>>();
+            int sesionesLiberadas = 0;
 
             foreach (var g in individuo.Genes.Where(g => g.EsVacante == 1 && g.IdTercero <= 0))
             {
                 if (contexto.EstaConsentida(g.IdAsignatura, g.IdSede)) continue;
-                var origen = ClasificarOrigen(g.MotivoVacante);
-                if (origen == OrigenVacante.NoDocente)
+                var origen = AgClasificadorVacante.Clasificar(g.MotivoVacante);
+                if (origen == AgOrigenVacante.NoDocente || origen == AgOrigenVacante.Indeterminado)
                 {
                     continue;
                 }
 
-                if (origen == OrigenVacante.EstructuralDocente)
+                if (origen == AgOrigenVacante.EstructuralDocente)
                 {
                     estructurales[g.IdAsignatura] = estructurales.TryGetValue(g.IdAsignatura, out var n) ? n + 1 : 1;
                 }
                 else
                 {
-                    liberadas++;
+                    sesionesLiberadas++;
+                    if (!liberadasPorAsignatura.TryGetValue(g.IdAsignatura, out var lista))
+                    {
+                        liberadasPorAsignatura[g.IdAsignatura] = lista = new List<(string, string)>();
+                    }
+
+                    string jornada = contexto.AulasPorId != null
+                        && contexto.AulasPorId.TryGetValue(g.IdAula, out var aula) && aula != null
+                        ? (aula.Jornada ?? string.Empty).Trim().ToUpperInvariant()
+                        : string.Empty;
+
+                    lista.Add((jornada, AgClasificadorVacante.ClaveCohorte(g)));
                 }
             }
+
+            int liberadas = liberadasPorAsignatura.Values.Sum(l =>
+                l.GroupBy(x => x.Jornada)
+                 .Select(g => g.Select(x => x.Cohorte).Distinct().Count())
+                 .DefaultIfEmpty(0)
+                 .Max());
 
             if (contexto.MaxVacantesForzadas >= 0 && liberadas > contexto.MaxVacantesForzadas)
             {
                 individuo.Violaciones.Add(new AgViolacion(
                     AgReglaViolacion.R15_VacanteExcedida,
                     esDura: true,
-                    mensaje: $"Vacantes liberadas por el AG ({liberadas}) exceden el déficit estructural ({contexto.MaxVacantesForzadas})."));
+                    mensaje: $"Vacantes liberadas por el AG ({liberadas} cohortes concurrentes / {sesionesLiberadas} sesiones) exceden el déficit estructural ({contexto.MaxVacantesForzadas} cohortes)."));
                 hardCount++;
             }
 
@@ -754,30 +772,6 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             individuo.HardViolations = hardCount;
             individuo.SoftViolations = softScore;
             individuo.Estado = hardCount == 0 ? AgEstadoIndividuo.Factible : AgEstadoIndividuo.Infactible;
-        }
-
-        private enum OrigenVacante
-        {
-            EstructuralDocente,
-            NoDocente,
-            LiberadaAg
-        }
-
-        private static OrigenVacante ClasificarOrigen(string motivo)
-        {
-            var cod = AgMotivoVacanteExtensions.Desde(motivo);
-            if (cod == AgMotivoVacante.SIN_PLAN_OLEADA || cod == AgMotivoVacante.SIN_BLOQUE_NIVEL)
-            {
-                return OrigenVacante.NoDocente;
-            }
-
-            if (cod == AgMotivoVacante.SIN_CANDIDATOS || cod == AgMotivoVacante.NO_CUMPLE_REQUISITOS
-                || cod == AgMotivoVacante.POOL_VACIO)
-            {
-                return OrigenVacante.EstructuralDocente;
-            }
-
-            return OrigenVacante.LiberadaAg;
         }
     }
 }

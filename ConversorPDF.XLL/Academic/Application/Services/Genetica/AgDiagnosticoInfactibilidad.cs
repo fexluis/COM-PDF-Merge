@@ -152,9 +152,15 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             var asignaturasUnicas = paresList.SelectMany(p => new[] { p.IdAsig1, p.IdAsig2 }).Where(a => a > 0).Distinct().ToList();
             var aulasUnicas = paresList.SelectMany(p => new[] { p.IdAula1, p.IdAula2 }).Where(a => a > 0).Distinct().ToList();
 
+            var durasPorRegla = duras
+                .GroupBy(v => v.Regla)
+                .Select(g => $"{g.Key} x{g.Count()}")
+                .ToList();
+            string reglasDurasStr = durasPorRegla.Count > 0 ? string.Join(", ", durasPorRegla) : "Ninguna";
+
             lineas.Add(string.Format(CultureInfo.InvariantCulture,
-                "[AG-CAUSAS-DETALLE] HARD={0} · paresDocente={1} (R1={2}, R7={3}: entreGenes={4}, ocupacionExterna={5}) · docentes={6} · asignaturas={7} · aulas={8}",
-                individuo.HardViolations, paresList.Count, r1Count, r7Count, r7EntreGenes, r7Externa,
+                "[AG-CAUSAS-DETALLE] HARD={0} · ReglasDuras=[{1}] · paresDocente={2} (R1={3}, R7={4}: entreGenes={5}, ocupacionExterna={6}) · docentes={7} · asignaturas={8} · aulas={9}",
+                individuo.HardViolations, reglasDurasStr, paresList.Count, r1Count, r7Count, r7EntreGenes, r7Externa,
                 docentesUnicos.Count, asignaturasUnicas.Count, aulasUnicas.Count));
 
             if (detalleIlegible > 0)
@@ -286,9 +292,15 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     .Select(g => $"{g.Key}={g.Count()}")
                     .ToList();
 
+                int cConsentidas = genesVac.Count(g => contexto != null && contexto.EstaConsentida(g.IdAsignatura, g.IdSede));
+                int cLiberadas = genesVac.Count(g => (contexto == null || !contexto.EstaConsentida(g.IdAsignatura, g.IdSede)) && AgClasificadorVacante.Clasificar(g.MotivoVacante) == AgOrigenVacante.LiberadaAg);
+                int cEstructuralesNc = genesVac.Count(g => (contexto == null || !contexto.EstaConsentida(g.IdAsignatura, g.IdSede)) && AgClasificadorVacante.Clasificar(g.MotivoVacante) == AgOrigenVacante.EstructuralDocente);
+                int cNoDocente = genesVac.Count(g => (contexto == null || !contexto.EstaConsentida(g.IdAsignatura, g.IdSede)) && AgClasificadorVacante.Clasificar(g.MotivoVacante) == AgOrigenVacante.NoDocente);
+                int cIndeterminado = genesVac.Count(g => (contexto == null || !contexto.EstaConsentida(g.IdAsignatura, g.IdSede)) && AgClasificadorVacante.Clasificar(g.MotivoVacante) == AgOrigenVacante.Indeterminado);
+
                 lineas.Add(string.Format(CultureInfo.InvariantCulture,
-                    "[AG-CAUSAS-DETALLE] Vacantes={0} · motivoRegistrado=[{1}] [POOL_VACIO={2}, SIN_HABILITACION_ACTIVA={3}, SIN_HABILITACION_PROGRAMA_SEMESTRE={4}, SIN_DISPONIBILIDAD_HORARIA_NO_VERIFICADA={5}, GEN_INCOMPLETO={6}, SIN_BLOQUE_NIVEL={7}, SIN_PLAN_OLEADA={8}]",
-                    genesVac.Count, string.Join(",", porMotivoReg),
+                    "[AG-CAUSAS-DETALLE] Vacantes={0} (CONSENTIDAS={1}, LIBERADAS_POR_AG={2}, ESTRUCTURALES_NC={3}, NO_DOCENTE={4}, INDETERMINADAS={5}) · motivoRegistrado=[{6}] [POOL_VACIO={7}, SIN_HABILITACION_ACTIVA={8}, SIN_HABILITACION_PROGRAMA_SEMESTRE={9}, SIN_DISPONIBILIDAD_HORARIA_NO_VERIFICADA={10}, GEN_INCOMPLETO={11}, SIN_BLOQUE_NIVEL={12}, SIN_PLAN_OLEADA={13}]",
+                    genesVac.Count, cConsentidas, cLiberadas, cEstructuralesNc, cNoDocente, cIndeterminado, string.Join(",", porMotivoReg),
                     cPoolVacio, cSinHabActiva, cSinHabProgSem, cSinDispHoraria, cGenIncompleto, cSinBloque, cSinPlanOleada));
 
                 if (cSinHabProgSem > 0 || cPoolVacio > 0)
@@ -317,9 +329,17 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 var lVac = desc.FirstOrDefault(l => l.Contains("Vacantes="));
                 var lAcc = desc.FirstOrDefault(l => l.Contains("Accion:"));
 
+                var duras = (individuo?.Violaciones ?? new List<AgViolacion>())
+                    .Where(v => v.EsDura)
+                    .GroupBy(v => v.Regla)
+                    .Select(g => $"{g.Key} x{g.Count()}")
+                    .ToList();
+                string reglasDurasStr = duras.Count > 0 ? string.Join(", ", duras) : "Ninguna";
+
                 var partes = new List<string>
                 {
-                    $"Optimización finalizada sin factibilidad (HARD={hardViolations}, Parada={motivoParada})."
+                    $"Optimización finalizada sin factibilidad (HARD={hardViolations}, Parada={motivoParada}).",
+                    $"Reglas duras: [{reglasDurasStr}]"
                 };
 
                 if (!string.IsNullOrEmpty(l0)) partes.Add(l0.Replace("[AG-CAUSAS-DETALLE] ", string.Empty));

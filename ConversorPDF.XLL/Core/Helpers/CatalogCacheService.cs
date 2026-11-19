@@ -41,8 +41,13 @@ namespace ConversorPDF.XLL.Core.Helpers
                 try
                 {
                     var sw = System.Diagnostics.Stopwatch.StartNew();
-                    string query = @"
-                        SELECT idperiodo as IdPeriodo, periodo as PeriodoNombre, activo as Activo FROM periodos;
+                    bool tieneVentana = PeriodosTieneVentana(db);
+                    string queryPeriodos = tieneVentana
+                        ? "SELECT idperiodo as IdPeriodo, periodo as PeriodoNombre, periodo_inicio as PeriodoInicio, periodo_fin as PeriodoFin, activo as Activo FROM periodos;"
+                        : "SELECT idperiodo as IdPeriodo, periodo as PeriodoNombre, NULL as PeriodoInicio, NULL as PeriodoFin, activo as Activo FROM periodos;";
+
+                    string query = $@"
+                        {queryPeriodos}
                         SELECT * FROM sedes WHERE activo = 1;
                         SELECT * FROM programas;
                         SELECT *, 
@@ -94,6 +99,59 @@ namespace ConversorPDF.XLL.Core.Helpers
                 Programas.Clear();
                 Asignaturas.Clear();
                 Terceros.Clear();
+            }
+        }
+
+        /// <summary>
+        /// Actualiza o agrega un período en el caché en memoria de forma no destructiva (Fase 2080).
+        /// </summary>
+        public static void ActualizarPeriodo(Periodo actualizado)
+        {
+            if (actualizado == null) return;
+            lock (_lock)
+            {
+                int i = Periodos.FindIndex(p => p.IdPeriodo == actualizado.IdPeriodo);
+                if (i >= 0)
+                {
+                    Periodos[i].PeriodoNombre = actualizado.PeriodoNombre;
+                    Periodos[i].PeriodoInicio = actualizado.PeriodoInicio;
+                    Periodos[i].PeriodoFin = actualizado.PeriodoFin;
+                    Periodos[i].Activo = actualizado.Activo;
+                }
+                else
+                {
+                    Periodos.Add(actualizado);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Elimina un período del caché en memoria sin invalidar el resto de catálogos (Fase 2080).
+        /// </summary>
+        public static void EliminarPeriodo(int idPeriodo)
+        {
+            lock (_lock)
+            {
+                var p = Periodos.FirstOrDefault(x => x.IdPeriodo == idPeriodo);
+                if (p != null)
+                {
+                    Periodos.Remove(p);
+                }
+            }
+        }
+
+        private static bool PeriodosTieneVentana(IDbConnection db)
+        {
+            try
+            {
+                var cols = db.Query<string>("SELECT name FROM pragma_table_info('periodos');")
+                             .Select(x => x.ToLowerInvariant())
+                             .ToList();
+                return cols.Contains("periodo_inicio") && cols.Contains("periodo_fin");
+            }
+            catch
+            {
+                return false;
             }
         }
     }

@@ -4,6 +4,7 @@ using System.Linq;
 using ConversorPDF.XLL.Academic.Domain.Enums;
 using ConversorPDF.XLL.Academic.Domain.Models;
 using ConversorPDF.XLL.Academic.Domain.Models.Genetica;
+using ConversorPDF.XLL.Core.Helpers;
 
 namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 {
@@ -112,8 +113,17 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         {
                             // Fase 2016 / Fase 2025: sólo se libera a vacante si el grupo es verificable, la asignación es inviable y no hay alterno
                             vacCanon = 1;
+                            int docAnterior = docCanon;
                             docCanon = 0;
                             motCanon = AgAsignadorTercero.DiagnosticarMotivoVacante(genes[0], contexto);
+                            if (LoggerHelper.ModoVerboso)
+                            {
+                                LoggerHelper.Debug($"[AG-VACACION] gen={genes[0].Id} asig={genes[0].IdAsignatura} causa=SinAlternoDisponible docAnterior={docAnterior} motivo={motCanon}");
+                            }
+                        }
+                        else if (!grupoVerificable && LoggerHelper.ModoVerboso)
+                        {
+                            LoggerHelper.Debug($"[AG-VACACION] gen={genes[0].Id} asig={genes[0].IdAsignatura} causa=CalendarioNoVerificable err={propio.Error}");
                         }
                     }
                 }

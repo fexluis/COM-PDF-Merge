@@ -743,10 +743,10 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
         }
 
         [Fact]
-        public void ValidarFactibilidad_WhenDemandaExcedeDocentesPorFranja_ShouldPopulateDeficitDocentePorAsignatura()
+        public void ValidarFactibilidad_WhenDemandaExcedeDocentesEnMismaJornada_ShouldPopulateDeficitDocentePorAsignatura()
         {
-            // Arrange (Fase 2046): Asignatura 10 con 2 cohortes en Jornada MAÑANA y 1 en TARDE. Concurrencia máxima = 2.
-            // Pool con 1 docente habilitado => déficit estructural = 2 - 1 = 1.
+            // Arrange (Fase 2046 / Fase 2090 / Fase 2096 / Fase 2101): Asignatura 10 con 3 cohortes académicas (A, B en Mañana, C en Tarde).
+            // Con la fórmula unificada de concurrencia por jornada, maxConcurrentes = 2 (Mañana) - 1 docente en pool => déficit estructural = 1.
             var contexto = new AgContexto();
             contexto.Asignaturas.Add(new Asignatura { Id = 10, Nombre = "Economía", Horas = 32 });
             contexto.Ventana = new VentanaSemestre
@@ -781,6 +781,40 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
         }
 
         [Fact]
+        public void ValidarFactibilidad_WhenDosJornadasYUnDocente_ShouldHaveDeficitCero()
+        {
+            // Arrange (Fase 2096): 2 cohortes en jornadas distintas (Mañana y Tarde) cubiertas por 1 solo docente => maxConcurrentes = 1, déficit = 0
+            var contexto = new AgContexto();
+            contexto.Asignaturas.Add(new Asignatura { Id = 20, Nombre = "Derecho", Horas = 32 });
+            contexto.Ventana = new VentanaSemestre
+            {
+                FechaInicio = DateTime.Today,
+                FechaFin = DateTime.Today.AddDays(90)
+            };
+
+            contexto.AulasPorId[1] = new AgAula { Id = 1, IdSede = 1, Semestre = "1", Grupo = "A", Jornada = "MANANA", DiasVentana = "1,2,3,4,5" };
+            contexto.AulasPorId[2] = new AgAula { Id = 2, IdSede = 1, Semestre = "1", Grupo = "A", Jornada = "TARDE", DiasVentana = "1,2,3,4,5" };
+
+            contexto.AulaAsignaturas.Add(new AgAulaAsignatura { IdAula = 1, IdAsignatura = 20 });
+            contexto.AulaAsignaturas.Add(new AgAulaAsignatura { IdAula = 2, IdAsignatura = 20 });
+
+            contexto.Bloques.Add(new AgBloqueHorario { Id = 1, Activo = 1, DuracionHoras = 4, Franja = "MANANA" });
+            contexto.Bloques.Add(new AgBloqueHorario { Id = 2, Activo = 1, DuracionHoras = 4, Franja = "TARDE" });
+
+            contexto.PoolPorAsignatura[20] = new List<TerceroAsignatura>
+            {
+                new TerceroAsignatura { IdTercero = 201, Activo = 1 }
+            };
+
+            // Act
+            var res = _sut.ValidarFactibilidad(contexto);
+
+            // Assert: no debe haber déficit estructural para asignatura 20
+            res.IsSuccess.Should().BeTrue();
+            res.Value.DeficitDocentePorAsignatura.Should().NotContainKey(20);
+        }
+
+        [Fact]
         public void ValidarFactibilidad_WhenContextoIncompleto_ShouldNotMutaMaxVacantesForzadas()
         {
             // Arrange (Fase 2027: ValidarFactibilidad es de solo lectura y no muta MaxVacantesForzadas)
@@ -792,6 +826,33 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
 
             // Assert: se preserva -1 sin mutar a 0
             contexto.MaxVacantesForzadas.Should().Be(-1);
+        }
+
+        [Fact]
+        public void CalcularDeficitPorAsignatura_WhenInvocadoDirectamente_ShouldComputeIdenticalDeficit()
+        {
+            // Arrange (Fase 2090, 2095): 3 cohortes con 1 docente activo => déficit = 2
+            var contexto = new AgContexto();
+            contexto.AulasPorId[1] = new AgAula { Id = 1, IdSede = 1, Semestre = "1", Grupo = "A" };
+            contexto.AulasPorId[2] = new AgAula { Id = 2, IdSede = 1, Semestre = "1", Grupo = "B" };
+            contexto.AulasPorId[3] = new AgAula { Id = 3, IdSede = 2, Semestre = "1", Grupo = "A" };
+
+            contexto.AulaAsignaturas.Add(new AgAulaAsignatura { IdAula = 1, IdAsignatura = 10 });
+            contexto.AulaAsignaturas.Add(new AgAulaAsignatura { IdAula = 2, IdAsignatura = 10 });
+            contexto.AulaAsignaturas.Add(new AgAulaAsignatura { IdAula = 3, IdAsignatura = 10 });
+
+            contexto.PoolPorAsignatura[10] = new List<TerceroAsignatura>
+            {
+                new TerceroAsignatura { IdTercero = 101, Activo = 1 }
+            };
+
+            // Act
+            int deficit = AgValidadorVentana.CalcularDeficitPorAsignatura(contexto, 10, out int cohortes, out int docs);
+
+            // Assert
+            cohortes.Should().Be(3);
+            docs.Should().Be(1);
+            deficit.Should().Be(2);
         }
     }
 }
