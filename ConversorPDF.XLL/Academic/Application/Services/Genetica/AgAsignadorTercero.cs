@@ -192,7 +192,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             return BuscarAlterno(gen, contexto, individuo);
         }
 
-        public string DiagnosticarMotivo(AgGen gen, AgContexto contexto)
+        /// <summary>
+        /// Diagnostica el motivo formal de vacante para un gen no asignado o liberado (Fase 1902 / Fase 2013).
+        /// Versión estática invocable desde operadores genéticos sin requerir instancia.
+        /// </summary>
+        public static string DiagnosticarMotivoVacante(AgGen gen, AgContexto contexto)
         {
             if (gen == null || contexto == null) return AgMotivoVacante.SIN_CANDIDATOS.Codigo();
 
@@ -220,6 +224,14 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             }
 
             return AgMotivoVacante.SIN_DISPONIBILIDAD.Codigo();
+        }
+
+        /// <summary>
+        /// Sobrecarga de instancia para preservar compatibilidad con llamadores existentes.
+        /// </summary>
+        public string DiagnosticarMotivo(AgGen gen, AgContexto contexto)
+        {
+            return DiagnosticarMotivoVacante(gen, contexto);
         }
     }
 

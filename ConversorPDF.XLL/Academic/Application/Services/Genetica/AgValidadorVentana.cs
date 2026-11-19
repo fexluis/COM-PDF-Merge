@@ -482,6 +482,39 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 informe.AgregarBloqueo($"Ninguna de las {contexto.Asignaturas.Count} asignaturas a programar tiene docentes habilitados en el Pool ni en catálogo general.");
             }
 
+            // Fase 2046: Poblar informe con el déficit docente estructural por concurrencia real por franja/jornada
+            if (contexto.AulaAsignaturas != null && contexto.AulasPorId != null)
+            {
+                foreach (var porAsig in contexto.AulaAsignaturas.GroupBy(aa => aa.IdAsignatura))
+                {
+                    int idAsig = porAsig.Key;
+                    int docs = 0;
+                    if (contexto.PoolPorAsignatura != null && contexto.PoolPorAsignatura.TryGetValue(idAsig, out var pool))
+                    {
+                        docs = pool.Count(p => p.Activo == 1 && (contexto.IdTerceroVacante <= 0 || p.IdTercero != contexto.IdTerceroVacante));
+                    }
+
+                    int maxConcurrentes = porAsig
+                        .Where(aa =>
+                        {
+                            int idSede = 0;
+                            if (contexto.AulasPorId.TryGetValue(aa.IdAula, out var a) && a != null) idSede = a.IdSede;
+                            return !contexto.EstaConsentida(idAsig, idSede);
+                        })
+                        .Select(aa => contexto.AulasPorId.TryGetValue(aa.IdAula, out var a) ? a : null)
+                        .Where(a => a != null)
+                        .GroupBy(a => a.Jornada ?? string.Empty)
+                        .Select(g => g.Select(a => (a.Semestre ?? string.Empty, a.Grupo ?? string.Empty, a.IdSede)).Distinct().Count())
+                        .DefaultIfEmpty(0).Max();
+
+                    int deficit = Math.Max(0, maxConcurrentes - docs);
+                    if (deficit > 0)
+                    {
+                        informe.DeficitDocentePorAsignatura[idAsig] = deficit;
+                    }
+                }
+            }
+
             return Result.Success(informe);
         }
 
@@ -582,6 +615,66 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             }
 
             return Result.Success();
+        }
+
+        /// <summary>
+        /// Calcula el déficit estructural de docentes frente a grupos/aulas concurrentes por cohorte (Fase 2021, 2026, 2031, 2036).
+        /// Σ por asignatura no consentida de max(0, cohortes - docentesHabilitados).
+        /// Retorna -1 si el contexto está incompleto para desactivar el tope de forma segura.
+        /// </summary>
+        public static int CalcularDeficitEstructural(AgContexto contexto, InformeFactibilidad informe = null)
+        {
+            if (informe?.DeficitDocentePorAsignatura != null && informe.DeficitDocentePorAsignatura.Count > 0)
+            {
+                return informe.DeficitDocentePorAsignatura.Values.Where(v => v > 0).Sum();
+            }
+
+            if (contexto?.Asignaturas == null || contexto.Asignaturas.Count == 0
+                || contexto.AulaAsignaturas == null || contexto.BloquesPorId == null)
+            {
+                return -1; // contexto incompleto: tope desactivado, no 0
+            }
+
+            int deficitTotal = 0;
+
+            foreach (var grupoAsig in contexto.AulaAsignaturas
+                         .Where(aa =>
+                         {
+                             int idSede = 0;
+                             if (contexto.AulasPorId != null && contexto.AulasPorId.TryGetValue(aa.IdAula, out var a))
+                             {
+                                 idSede = a.IdSede;
+                             }
+                             // Fase 2033: Unificar predicado de consentimiento en EstaConsentida
+                             return !contexto.EstaConsentida(aa.IdAsignatura, idSede);
+                         })
+                         .GroupBy(aa => aa.IdAsignatura))
+            {
+                // Cohortes académicas efectivas (Semestre, Grupo, Sede) sin IdAula para medir concurrencia real
+                int cohortes = grupoAsig
+                    .Select(aa =>
+                    {
+                        var aula = contexto.AulasPorId != null && contexto.AulasPorId.TryGetValue(aa.IdAula, out var a) ? a : null;
+                        return (Semestre: aula?.Semestre ?? string.Empty, Grupo: aula?.Grupo ?? string.Empty, Sede: aula?.IdSede ?? 0);
+                    })
+                    .Distinct()
+                    .Count();
+
+                int docentesHabilitados = 0;
+                if (contexto.PoolPorAsignatura != null && contexto.PoolPorAsignatura.TryGetValue(grupoAsig.Key, out var pool))
+                {
+                    docentesHabilitados = pool.Count(p => p.Activo == 1 && (contexto.IdTerceroVacante <= 0 || p.IdTercero != contexto.IdTerceroVacante));
+                }
+
+                int deficit = cohortes - docentesHabilitados;
+                if (deficit > 0)
+                {
+                    deficitTotal += deficit;
+                }
+            }
+
+            LoggerHelper.Warning($"[AG-TOPE] fallback usado: {deficitTotal}");
+            return deficitTotal;
         }
     }
 }

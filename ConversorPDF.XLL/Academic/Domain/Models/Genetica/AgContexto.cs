@@ -88,6 +88,12 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
         public int IdSede { get; set; }
         public int IdAulaCorrida { get; set; }
         public int IdTerceroVacante { get; set; }
+
+        /// <summary>
+        /// Tope estructural de vacantes forzadas calculadas en pre-vuelo (Fase 2018).
+        /// Valor negativo (-1) desactiva el límite cuando no hay cálculo de déficit.
+        /// </summary>
+        public int MaxVacantesForzadas { get; set; } = -1;
         public string Subunidad { get; set; }
         public string SemestreActual { get; set; } = string.Empty;
         public string GrupoActual { get; set; } = string.Empty;
@@ -125,11 +131,39 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
             get => _vacantesConsentidas ?? (_vacantesConsentidas = new HashSet<int>());
             set => _vacantesConsentidas = value ?? new HashSet<int>();
         }
-        public bool PermiteVacantes => AsignaturasVacantesConsentidas != null && AsignaturasVacantesConsentidas.Count > 0;
+
+        /// <summary>
+        /// Tokens de consentimiento con soporte de granularidad: "asignatura" (wildcard) o "asignatura:sede" (Fase 2030).
+        /// </summary>
+        public HashSet<string> ClavesVacantesConsentidas { get; set; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// Determina si una vacante en la asignatura y sede especificadas está consentida (Fase 2030, 2034).
+        /// </summary>
+        public bool EstaConsentida(int idAsignatura, int idSede)
+        {
+            if (AsignaturasVacantesConsentidas != null && AsignaturasVacantesConsentidas.Contains(idAsignatura))
+            {
+                return true;
+            }
+
+            if (ClavesVacantesConsentidas != null && ClavesVacantesConsentidas.Count > 0)
+            {
+                if (idSede > 0 && ClavesVacantesConsentidas.Contains($"{idAsignatura}:{idSede}"))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public bool PermiteVacantes => (AsignaturasVacantesConsentidas != null && AsignaturasVacantesConsentidas.Count > 0)
+            || (ClavesVacantesConsentidas != null && ClavesVacantesConsentidas.Count > 0);
 
         // Índices O(1) para evaluación rápida
         public Dictionary<int, AgAula> AulasPorId { get; private set; }
-        public Dictionary<int, AgBloqueHorario> BloquesPorId { get; private set; }
+        public Dictionary<int, AgBloqueHorario> BloquesPorId { get; set; }
         public Dictionary<int, Asignatura> AsignaturasPorId { get; private set; }
         public Dictionary<int, Programa> ProgramasPorId { get; private set; }
         public Dictionary<int, double> UnidadHorasPorAulaId { get; private set; }

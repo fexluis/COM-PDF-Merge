@@ -103,6 +103,10 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 // 2. Construir Índices de Contexto
                 var swIndices = Stopwatch.StartNew();
                 contexto.ConstruirIndices();
+                if (contexto.MaxVacantesForzadas < 0)
+                {
+                    contexto.MaxVacantesForzadas = AgValidadorVentana.CalcularDeficitEstructural(contexto, informe);
+                }
                 swIndices.Stop();
                 resultado.TiempoIndicesMs = swIndices.ElapsedMilliseconds;
 
@@ -323,13 +327,21 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     .Select(g => $"{g.Key}x{g.Count()}")
                     .ToList();
 
+                // Fase 2018 / Fase 2022: Métrica de vacantes forzadas excluyendo consentidas
+                var consentidas = contexto.AsignaturasVacantesConsentidas ?? new HashSet<int>();
+                int vacantesForzadas = (mejorGlobal.Genes ?? new List<AgGen>())
+                    .Count(g => g.EsVacante == 1 && g.IdTercero <= 0 && !consentidas.Contains(g.IdAsignatura));
+
+                string maxForz = contexto.MaxVacantesForzadas >= 0
+                    ? contexto.MaxVacantesForzadas.ToString(System.Globalization.CultureInfo.InvariantCulture) : "n/a";
+
                 resultado.MotivoParada = parada;
                 resultado.Estancadas = estancadas;
                 LoggerHelper.Info(
                     $"[AG-CAUSAS] Corrida {resultado.IdCorrida}: Parada={parada} " +
                     $"Gen={resultado.GeneracionesEjecutadas}/{generacionesMax} Estancadas={estancadas}/{estancamientoMax} " +
                     $"HARD={mejorGlobal.HardViolations} Detalle={detalleDuro} Descuadre={descuadre:+#;-#;0} " +
-                    $"[{string.Join(",", porRegla)}] Vacantes={mejorGlobal.Vacantes} [{string.Join(",", porMotivo)}]");
+                    $"[{string.Join(",", porRegla)}] Vacantes={mejorGlobal.Vacantes} Forzadas={vacantesForzadas} MaxForzadas={maxForz} [{string.Join(",", porMotivo)}]");
 
                 // Fase 1994: Desglose forense del campeón infactible (causalidad de conflictos y vacantes)
                 if (mejorGlobal.HardViolations > 0)

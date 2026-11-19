@@ -29,7 +29,7 @@ namespace ConversorPDF.XLL.Academic.Domain.Enums
         R7b_CoberturaHorariaIncompleta = 23,
         R8_DiasDuplicadosGrupo = 24,            // Fase 456: Días repetidos en el mismo grupo de una asignatura multi-día
         R8_DiaFueraDePatron = 25,               // Fase 456: Día no permitido en la especificación del patrón semanal
-        R9_VacanteSinCentinela = 26,            // Fase 464: Gen vacante no asignado al tercero centinela VACANTE
+        R9_VacanteConDocenteReal = 26,          // Fase 2019 / Fase 2024: Gen vacante asignado a docente real (≠ 0 y ≠ centinela)
         R9_CentinelaEnNoVacante = 27,           // Fase 464: Gen no vacante asignado al tercero centinela VACANTE
         R10_CoherenciaDocenteGrupo = 28,        // Fase 544: Incoherencia de múltiples docentes en el mismo ClaveGrupo
         R11_DuracionSesionInvalida = 29,        // Fase 935 / Fase 1030: Reservada, no emitida; duración gobernada por bloques canónicos
@@ -37,6 +37,7 @@ namespace ConversorPDF.XLL.Academic.Domain.Enums
         R13_OleadasDispersas = 31,              // Fase 935 / Fase 1030: Reservada, no emitida; oleadas diferidas a fase de promoción
         R14_BloqueHorarioNoAsignado = 32,       // Fase 900: Gen con carga horaria pero sin bloque asignado (0)
         R14_BloqueSolapadoPorIntervalo = 33,    // Fase 935/957: Bloques con solape temporal por intervalo matemático
+        R15_VacanteExcedida = 34,               // Fase 2018: Total de vacantes forzadas supera el déficit estructural calculado
 
         // Restricciones Blandas (Soft Constraints)
         S1_HuecosHorarios = 101,

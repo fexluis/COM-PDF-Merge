@@ -174,16 +174,18 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     }
                 }
 
-                // --- R9: Centinela VACANTE (Fase 464) ---
+                // --- R9: Centinela VACANTE (Fase 464 / Fase 2014) ---
+                // Se acepta tanto IdTercero = 0 (vacante canónica explícita) como IdTerceroVacante (compatibilidad histórica).
+                // Constituye violación HARD si el gen está marcado como vacante pero tiene un docente real asignado (IdTercero > 0 ≠ centinela).
                 if (contexto.IdTerceroVacante > 0)
                 {
                     bool tieneCentinela = gen.IdTercero == contexto.IdTerceroVacante;
-                    if (gen.EsVacante == 1 && !tieneCentinela)
+                    if (gen.EsVacante == 1 && gen.IdTercero > 0 && !tieneCentinela)
                     {
                         individuo.Violaciones.Add(new AgViolacion(
-                            AgReglaViolacion.R9_VacanteSinCentinela,
+                            AgReglaViolacion.R9_VacanteConDocenteReal,
                             esDura: true,
-                            mensaje: $"Gen {gen.Id} vacante con idTercero={gen.IdTercero} ≠ VACANTE({contexto.IdTerceroVacante}).",
+                            mensaje: $"Gen {gen.Id} vacante con idTercero={gen.IdTercero} real asignado (≠ 0 y ≠ VACANTE {contexto.IdTerceroVacante}).",
                             idGen: gen.Id));
                         hardCount++;
                     }
@@ -702,6 +704,23 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                             }
                         }
                     }
+                }
+            }
+
+            // Fase 2018 / Fase 2022 / Fase 2030: R15_VacanteExcedida (Tope antidegeneración de vacantes forzadas)
+            // Excluye las vacantes consentidas (por asignatura o par asignatura:sede) para no inflar las vacantes forzadas
+            if (contexto.MaxVacantesForzadas >= 0)
+            {
+                int forzadas = individuo.Genes.Count(g =>
+                    g.EsVacante == 1 && g.IdTercero <= 0 && !contexto.EstaConsentida(g.IdAsignatura, g.IdSede));
+
+                if (forzadas > contexto.MaxVacantesForzadas)
+                {
+                    individuo.Violaciones.Add(new AgViolacion(
+                        AgReglaViolacion.R15_VacanteExcedida,
+                        esDura: true,
+                        mensaje: $"Vacantes forzadas ({forzadas}) exceden el déficit estructural permitido ({contexto.MaxVacantesForzadas})."));
+                    hardCount++;
                 }
             }
 

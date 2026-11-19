@@ -90,7 +90,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 {
                     g.MotivoVacante = AgMotivoVacante.SIN_PLAN_OLEADA.Codigo();
                 }
-                if (ctx?.IdTerceroVacante > 0) { g.IdTercero = ctx.IdTerceroVacante; }
+                // Fase 2019: vacante canónica explícita con IdTercero = 0
+                g.IdTercero = 0;
                 LoggerHelper.WarningLimitado($"InsuficienciaFechas|{ctx?.IdCorrida}|{g.IdAula}|{g.IdAsignatura}",
                     $"[Coherencia] Gen {g.Id}: aula {g.IdAula} asig {g.IdAsignatura} solo ubicó {g.FechasGen.Count}/{targetSesiones} sesiones; conserva {g.HorasGen:0.#} h pendientes de cobertura.");
             }
@@ -196,7 +197,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         g.IdBloqueHorario = 0;
                         g.Estado = AgEstadoGen.Incompleto;
                         g.EsVacante = 1;
-                        if (ctx?.IdTerceroVacante > 0) g.IdTercero = ctx.IdTerceroVacante;
+                        // Fase 2019: vacante canónica explícita con IdTercero = 0
+                        g.IdTercero = 0;
                         g.MotivoVacante = AgMotivoVacante.SIN_BLOQUE_NIVEL.Codigo();
                         LoggerHelper.WarningLimitado(
                             $"NivelDuracionSinBloque|{ctx?.IdCorrida}|{g.IdAula}|{g.DiaSemana}|{uNivel}",
@@ -458,7 +460,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     foreach (var g in genes.Where(g => g.Estado != AgEstadoGen.Fijado))
                     {
                         g.EsVacante = 1;
-                        g.IdTercero = ctx?.IdTerceroVacante ?? 0;
+                        // Fase 2014: vacante canónica explícita con IdTercero = 0 en lugar del centinela
+                        g.IdTercero = 0;
                         // Fase 1896-B: no propagar motivo ajeno a genes que ya tengan causa propia
                         if (string.IsNullOrEmpty(g.MotivoVacante))
                         {
@@ -475,7 +478,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 
                 if (reales.Count == 0)
                 {
-                    doc = ctx?.IdTerceroVacante ?? 0;
+                    // Fase 2014: vacante canónica explícita con IdTercero = 0 en lugar del centinela
+                    doc = 0;
                     vac = 1;
                     // Fase 1904 / Fase 1996: elegir el motivo modal no vacío del grupo en lugar del primero arbitrario
                     var motivoModal = genes

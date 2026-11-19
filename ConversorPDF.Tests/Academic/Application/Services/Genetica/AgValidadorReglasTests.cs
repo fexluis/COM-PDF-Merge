@@ -240,8 +240,109 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             _sut.Evaluar(individuo, contexto);
 
             // Assert
-            individuo.Violaciones.Should().Contain(v => v.Regla == AgReglaViolacion.R9_VacanteSinCentinela && v.EsDura);
+            individuo.Violaciones.Should().Contain(v => v.Regla == AgReglaViolacion.R9_VacanteConDocenteReal && v.EsDura);
             individuo.HardViolations.Should().BeGreaterThan(0);
+        }
+
+        [Fact]
+        public void Evaluar_WhenGenVacanteConIdTerceroCero_ShouldNotRecordR9Violation()
+        {
+            // Arrange (Fase 2014: vacante canónica con IdTercero = 0 es válida sin centinela)
+            var contexto = new AgContexto();
+            contexto.IdTerceroVacante = 192;
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
+            contexto.AulasPorId[1] = new AgAula { Id = 1, Estado = AgEstadoAula.Disponible, Grupo = null };
+            contexto.BloquesPorId[1] = CrearBloque(1, diaSemana: 2);
+
+            var individuo = new AgIndividuo();
+            individuo.Genes.Add(new AgGen
+            {
+                Id = 1,
+                IdTercero = 0,
+                EsVacante = 1,
+                MotivoVacante = "SIN_DISPONIBILIDAD",
+                IdAsignatura = 10,
+                IdPrograma = 1,
+                Semestre = "I",
+                IdAula = 1,
+                IdBloqueHorario = 1,
+                FechaInicioEstimada = new DateTime(2026, 2, 10),
+                FechaFinEstimada = new DateTime(2026, 3, 10)
+            });
+
+            // Act
+            _sut.Evaluar(individuo, contexto);
+
+            // Assert
+            individuo.Violaciones.Should().NotContain(v => v.Regla == AgReglaViolacion.R9_VacanteConDocenteReal);
+        }
+
+        [Fact]
+        public void Evaluar_WhenVacantesForzadasExcedenTope_ShouldRecordR15HardViolation()
+        {
+            // Arrange (Fase 2018: R15_VacanteExcedida ante exceso de vacantes forzadas)
+            var contexto = new AgContexto();
+            contexto.MaxVacantesForzadas = 1;
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
+            contexto.AulasPorId[1] = new AgAula { Id = 1, Estado = AgEstadoAula.Disponible, Grupo = null };
+            contexto.BloquesPorId[1] = CrearBloque(1, diaSemana: 2);
+
+            var individuo = new AgIndividuo();
+            individuo.Genes.Add(new AgGen { Id = 1, IdTercero = 0, EsVacante = 1, IdAsignatura = 10, IdPrograma = 1, Semestre = "I", IdAula = 1, IdBloqueHorario = 1 });
+            individuo.Genes.Add(new AgGen { Id = 2, IdTercero = 0, EsVacante = 1, IdAsignatura = 11, IdPrograma = 1, Semestre = "I", IdAula = 1, IdBloqueHorario = 1 });
+
+            // Act
+            _sut.Evaluar(individuo, contexto);
+
+            // Assert: 2 vacantes forzadas > tope 1 => violación R15
+            individuo.Violaciones.Should().Contain(v => v.Regla == AgReglaViolacion.R15_VacanteExcedida && v.EsDura);
+            individuo.HardViolations.Should().BeGreaterThan(0);
+        }
+
+        [Fact]
+        public void Evaluar_WhenVacantesConsentidasPresentes_ShouldExcludeThemFromR15Count()
+        {
+            // Arrange (Fase 2022: vacantes consentidas se excluyen del cómputo de forzadas)
+            var contexto = new AgContexto();
+            contexto.MaxVacantesForzadas = 1;
+            contexto.AsignaturasVacantesConsentidas = new HashSet<int> { 10, 11 }; // 10 y 11 consentidas
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
+            contexto.AulasPorId[1] = new AgAula { Id = 1, Estado = AgEstadoAula.Disponible, Grupo = null };
+            contexto.BloquesPorId[1] = CrearBloque(1, diaSemana: 2);
+
+            var individuo = new AgIndividuo();
+            individuo.Genes.Add(new AgGen { Id = 1, IdTercero = 0, EsVacante = 1, IdAsignatura = 10, IdPrograma = 1, Semestre = "I", IdAula = 1, IdBloqueHorario = 1 });
+            individuo.Genes.Add(new AgGen { Id = 2, IdTercero = 0, EsVacante = 1, IdAsignatura = 11, IdPrograma = 1, Semestre = "I", IdAula = 1, IdBloqueHorario = 1 });
+            individuo.Genes.Add(new AgGen { Id = 3, IdTercero = 0, EsVacante = 1, IdAsignatura = 12, IdPrograma = 1, Semestre = "I", IdAula = 1, IdBloqueHorario = 1 }); // 1 forzada
+
+            // Act
+            _sut.Evaluar(individuo, contexto);
+
+            // Assert: 2 consentidas + 1 forzada (<= tope 1) => SIN violación R15
+            individuo.Violaciones.Should().NotContain(v => v.Regla == AgReglaViolacion.R15_VacanteExcedida);
+        }
+
+        [Fact]
+        public void Evaluar_WhenConsentimientoGranularPorSede_ShouldDistinguishCohortes()
+        {
+            // Arrange (Fase 2030: consentimiento granular por par asignatura:sede)
+            var contexto = new AgContexto();
+            contexto.MaxVacantesForzadas = 0; // Cero vacantes forzadas permitidas
+            contexto.ClavesVacantesConsentidas.Add("10:1"); // Solo consentida en Sede 1, NO en Sede 2
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
+            contexto.AulasPorId[1] = new AgAula { Id = 1, IdSede = 1, Estado = AgEstadoAula.Disponible };
+            contexto.AulasPorId[2] = new AgAula { Id = 2, IdSede = 2, Estado = AgEstadoAula.Disponible };
+            contexto.BloquesPorId[1] = CrearBloque(1, diaSemana: 2);
+
+            var individuo = new AgIndividuo();
+            individuo.Genes.Add(new AgGen { Id = 1, IdTercero = 0, EsVacante = 1, IdAsignatura = 10, IdSede = 1, IdAula = 1, IdBloqueHorario = 1 });
+            individuo.Genes.Add(new AgGen { Id = 2, IdTercero = 0, EsVacante = 1, IdAsignatura = 10, IdSede = 2, IdAula = 2, IdBloqueHorario = 1 });
+
+            // Act
+            _sut.Evaluar(individuo, contexto);
+
+            // Assert: Gen 1 está consentido por sede; Gen 2 no está consentido => forzadas = 1 > tope 0 => R15 emitida
+            individuo.Violaciones.Should().Contain(v => v.Regla == AgReglaViolacion.R15_VacanteExcedida && v.EsDura);
         }
 
         [Fact]

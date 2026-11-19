@@ -86,6 +86,8 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
         private AgContexto _contextoActual;
         private AgResultadoCorrida _ultimoResultado;
         private long _idCorridaCargada;
+        private ISet<int> _vacantesAutorizadas = new HashSet<int>(); // Fase 2037: conjunto explícito de vacantes autorizadas por el usuario
+        private ISet<string> _vacantesAutorizadasClaves = new HashSet<string>(StringComparer.OrdinalIgnoreCase); // Fase 2045: claves granulares asig:sede
         private bool _actualizandoComboCorridas;
         private bool _refrescandoComboCorridas;
         private string _claveFiltroEnVuelo; // Fase 1637: filtro en vuelo para no marcar pendiente si los filtros no cambiaron
@@ -1696,15 +1698,30 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                         traza.Fin(false, "Cancelado por cobertura incompleta");
                         Log($"[DIAGNÓSTICO PRE-VUELO] Cancelado por el usuario debido a {asigSinPool}/{totalAsig} asignaturas sin pool.");
                         _contextoActual?.AsignaturasVacantesConsentidas?.Clear();
+                        _contextoActual?.ClavesVacantesConsentidas?.Clear();
                         return;
                     }
 
                     _contextoActual.AsignaturasVacantesConsentidas = new HashSet<int>(asignaturasSinPool.Select(a => a.Id));
+                    // Fase 2034: Poblar claves vacantes consentidas por par asignatura:sede
+                    _contextoActual.ClavesVacantesConsentidas = new HashSet<string>(
+                        _contextoActual.AulaAsignaturas != null
+                            ? _contextoActual.AulaAsignaturas
+                                .Where(aa => _contextoActual.AsignaturasVacantesConsentidas.Contains(aa.IdAsignatura))
+                                .Select(aa =>
+                                {
+                                    int idSede = _contextoActual.AulasPorId != null && _contextoActual.AulasPorId.TryGetValue(aa.IdAula, out var a) ? a.IdSede : 0;
+                                    return $"{aa.IdAsignatura}:{idSede}";
+                                })
+                                .Distinct()
+                            : Enumerable.Empty<string>(),
+                        StringComparer.OrdinalIgnoreCase);
                     Log($"[DIAGNÓSTICO PRE-VUELO] Aceptado por el usuario: {asigSinPool}/{totalAsig} asignaturas pasarán a VACANTE.");
                 }
                 else
                 {
                     _contextoActual?.AsignaturasVacantesConsentidas?.Clear();
+                    _contextoActual?.ClavesVacantesConsentidas?.Clear();
                 }
 
                 var factibilidadResult = await _validadorVentana.ValidarFactibilidadAsync(_contextoActual, CancellationToken.None);
@@ -2408,6 +2425,8 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             _idCorridaCargada = 0;   // Fase 850: Evita apuntar a corrida previa si falla la optimización
             _contextoActual = null;                  // Fase 856: Limpiar contexto previo para evitar resolución con catálogos obsoletos
             _aulasConfirmadasEnIntento.Clear();
+            _vacantesAutorizadas.Clear();            // Fase 2043: reset de autorizaciones entre corridas
+            _vacantesAutorizadasClaves.Clear();
             btnPromoverProduccion.Enabled = false;   // Fase 856: Deshabilitar promoción hasta que la nueva corrida sea exitosa
             var traza = CrearTraza("EjecucionCorridaAG"); // Fase 606 (antes: "OptimizacionAG")
             traza.Inicio();
@@ -3329,9 +3348,17 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                             }
                         }
                         dict["planFechado"] = planFechado;
-                        dict["vacantesConsentidas"] = contexto.AsignaturasVacantesConsentidas != null
-                            ? contexto.AsignaturasVacantesConsentidas.OrderBy(id => id).ToList()
-                            : new List<int>();
+                        // Fase 2034: Persistir vacantes consentidas admitiendo int y "asig:sede"
+                        var listaConsentidas = new List<object>();
+                        if (contexto.AsignaturasVacantesConsentidas != null)
+                        {
+                            foreach (var id in contexto.AsignaturasVacantesConsentidas.OrderBy(x => x)) listaConsentidas.Add(id);
+                        }
+                        if (contexto.ClavesVacantesConsentidas != null)
+                        {
+                            foreach (var clave in contexto.ClavesVacantesConsentidas.OrderBy(x => x)) listaConsentidas.Add(clave);
+                        }
+                        dict["vacantesConsentidas"] = listaConsentidas;
                         if (aulaCorrida != null)
                         {
                             dict["huella"] = AgHuellaPlanVentana.Calcular(contexto, aulaCorrida, planFechado: planFechado);
@@ -3343,9 +3370,9 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                         throw new InvalidOperationException("SNAPSHOT_PLAN_FECHADO_SERIALIZACION_ERROR", ex);
                     }
                 }
-                // Fase 1923 / Fase 1928: Diferenciar calidad del horario vs promovibilidad
+                // Fase 1923, 1928 & 2037: Diferenciar calidad del horario vs promovibilidad bajo autorización explícita
                 bool calidad = stagingOk && mejor != null && mejor.HardViolations == 0 && mejor.Vacantes == 0;
-                bool promovible = stagingOk && AgCompuertaPromocion.EsPromovible(corrida, mejor, sesiones, contexto, permitirVacantes: true);
+                bool promovible = stagingOk && AgCompuertaPromocion.EsPromovible(corrida, mejor, sesiones, contexto, permitirVacantes: true, autorizacionVacantes: _vacantesAutorizadas, autorizacionVacantesClaves: _vacantesAutorizadasClaves);
                 if (stagingOk)
                 {
                     if (sesiones.IsFailure)
@@ -3433,8 +3460,8 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                         calidad ? "Estado: Horario factible."
                             : $"Estado: Resultado parcial. HARD={mejor?.HardViolations ?? 0}; vacantes={mejor?.Vacantes ?? 0}; sesiones vacantes={sesionesVacantes}; horas vacantes={horasVacantes:0.#}.");
                 }
-                // T6 requiere sustitución transaccional con ratificación vigente; no habilitar promoción aquí.
-                btnPromoverProduccion.Enabled = contexto.CandidatosCobertura.Count == 0 && promovible;
+                // T6 requiere sustitución transaccional con ratificación vigente; no habilitar promoción aquí si hay candidatos cobertura.
+                btnPromoverProduccion.Enabled = contexto.CandidatosCobertura.Count == 0 && (promovible || (stagingOk && mejor != null && mejor.HardViolations == 0));
 
                 // Fase 599: Resumen de fin de corrida
                 LoggerHelper.Resumen("FinCorridaAG",
@@ -3469,7 +3496,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 if (stagingOk)
                 {
                     await CargarModuloResultadosAsync(idCorrida);
-                    btnPromoverProduccion.Enabled = contexto.CandidatosCobertura.Count == 0 && promovible;
+                    btnPromoverProduccion.Enabled = contexto.CandidatosCobertura.Count == 0 && (promovible || (stagingOk && mejor != null && mejor.HardViolations == 0));
                     tabControlPrincipal.SelectedTab = tabResultados;
                 }
                 else
@@ -4403,39 +4430,21 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     }
                 }
 
-                // FASE 1871/1885: Restaurar asignaturas vacantes consentidas desde propiedad tipada o fallback ParametrosJson
+                // FASE 1871/1885/2039: Restaurar asignaturas vacantes consentidas y claves granulares desde corrida
                 if (_contextoActual != null && corridaEfectiva != null)
                 {
-                    if (corridaEfectiva.VacantesConsentidas != null && corridaEfectiva.VacantesConsentidas.Count > 0)
-                    {
-                        _contextoActual.AsignaturasVacantesConsentidas = new HashSet<int>(corridaEfectiva.VacantesConsentidas);
-                    }
-                    else if (!string.IsNullOrWhiteSpace(corridaEfectiva.ParametrosJson))
-                    {
-                        try
-                        {
-                            var ser = new System.Web.Script.Serialization.JavaScriptSerializer { MaxJsonLength = 512 * 1024 };
-                            var dict = ser.DeserializeObject(corridaEfectiva.ParametrosJson) as Dictionary<string, object>;
-                            if (dict != null && dict.TryGetValue("vacantesConsentidas", out var vacObj) && vacObj is System.Collections.IEnumerable list)
-                            {
-                                var ids = new HashSet<int>();
-                                foreach (var item in list)
-                                {
-                                    if (item != null && int.TryParse(item.ToString(), out int id)) ids.Add(id);
-                                }
-                                _contextoActual.AsignaturasVacantesConsentidas = ids;
-                                corridaEfectiva.VacantesConsentidas = ids;
-                            }
-                        }
-                        catch (Exception exJson)
-                        {
-                            LoggerHelper.Warning($"[AG] Error al deserializar vacantes consentidas desde ParametrosJson: {exJson.Message}");
-                        }
-                    }
+                    var (asigs, claves) = AgCompuertaPromocion.VacantesConsentidasEnCorrida(corridaEfectiva);
+                    _contextoActual.AsignaturasVacantesConsentidas = asigs;
+                    _contextoActual.ClavesVacantesConsentidas = claves;
+                    corridaEfectiva.VacantesConsentidas = asigs;
                 }
 
-                // Fase 1923: permitirVacantes: true para habilitar botón; la compuerta real es la justificación al promover
-                btnPromoverProduccion.Enabled = corridaDbRes.IsSuccess && AgCompuertaPromocion.EsPromovible(corridaEfectiva, ind, sesionesRes, _contextoActual, permitirVacantes: true);
+                // Fase 2043: limpiar autorizaciones previas al cargar corrida
+                _vacantesAutorizadas.Clear();
+                _vacantesAutorizadasClaves.Clear();
+
+                // Fase 1923, 2032, 2037 & 2044: EsPromovibleSolicitable habilita el botón si la solución es viable; la autorización se exige en el clic
+                btnPromoverProduccion.Enabled = corridaDbRes.IsSuccess && AgCompuertaPromocion.EsPromovibleSolicitable(corridaEfectiva, ind, sesionesRes);
                 LoggerHelper.Info($"[AG] Corrida #{corrida.IdCorrida} cargada: individuo #{ind?.Id ?? 0}, HARD={ind?.HardViolations ?? 0}, promover={btnPromoverProduccion.Enabled}.");
                 Log($"[AG] Corrida #{corrida.IdCorrida} cargada desde el selector ({corrida.TotalSesiones} sesiones en staging).");
             }
@@ -4661,12 +4670,16 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     }).ToList();
                 dgvViolaciones.Refresh();
 
-                // Fase 1815: compuerta centralizada tras recálculo
+                // Fase 1815 & 2032: compuerta centralizada tras recálculo
                 var corridaDbRes = await _scheduleRepository.GetCorridaByIdAsync(idCorrida, CancellationToken.None);
                 var sesionesRes = await _scheduleRepository.GetSesionesStagingAsync(idCorrida, CancellationToken.None);
                 var corridaEfectiva = corridaDbRes.IsSuccess ? corridaDbRes.Value : null;
-                // Fase 1923: permitirVacantes: true para habilitar botón; la compuerta real es la justificación al promover
-                btnPromoverProduccion.Enabled = corridaDbRes.IsSuccess && AgCompuertaPromocion.EsPromovible(corridaEfectiva, ind, sesionesRes, _contextoActual, permitirVacantes: true);
+                // Fase 2043: limpiar autorizaciones previas al recalcular
+                _vacantesAutorizadas.Clear();
+                _vacantesAutorizadasClaves.Clear();
+
+                // Fase 1923, 2032, 2037 & 2044: EsPromovibleSolicitable habilita el botón si la solución es viable; la autorización se exige en el clic
+                btnPromoverProduccion.Enabled = corridaDbRes.IsSuccess && AgCompuertaPromocion.EsPromovibleSolicitable(corridaEfectiva, ind, sesionesRes);
 
                 MessageBox.Show(this,
                     $"Recálculo completado para la corrida #{idCorrida}.\n\n" +
@@ -4727,8 +4740,8 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
 
                     var indActual = _ultimoResultado?.MejorIndividuo;
                     var sesionesRes = await _scheduleRepository.GetSesionesStagingAsync(idCorrida, CancellationToken.None);
-                    // Fase 1923: permitirVacantes: true para habilitar botón; la compuerta real es la justificación al promover
-                    btnPromoverProduccion.Enabled = indActual != null && sesionesRes.IsSuccess && AgCompuertaPromocion.EsPromovible(verif.Value, indActual, sesionesRes, _contextoActual, permitirVacantes: true);
+                    // Fase 1923, 2032, 2037 & 2044: EsPromovibleSolicitable habilita el botón si la solución es viable; la autorización se exige en el clic
+                    btnPromoverProduccion.Enabled = indActual != null && sesionesRes.IsSuccess && AgCompuertaPromocion.EsPromovibleSolicitable(verif.Value, indActual, sesionesRes);
                 }
                 else
                 {
@@ -4822,19 +4835,59 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             }
 
             string justificacionVacante = null;
-            // Fases 320 y 330: Advertencia y justificación explícita si existen vacantes
+            // Fases 320, 330, 2032 & 2037: Advertencia y selección explícita de asignaturas vacantes autorizadas
             if (ind.Vacantes > 0)
             {
-                var confirmVac = MessageBox.Show(
-                    $"Esta solución contiene {ind.Vacantes} sesión(es) en estado VACANTE (sin docente asignado).\n" +
-                    "Se promoverán a producción con docente vacío o sin asignar.\n\n" +
-                    "¿Desea continuar con la promoción parcial a pesar de las vacantes activas?",
-                    "Advertencia de Vacantes Activas",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Warning);
+                var noConsentidasGenes = (ind.Genes ?? Enumerable.Empty<AgGen>())
+                    .Where(g => g.EsVacante == 1 || g.IdTercero <= 0)
+                    .Where(g => _contextoActual != null ? !_contextoActual.EstaConsentida(g.IdAsignatura, g.IdSede) : true)
+                    .ToList();
 
-                if (confirmVac != DialogResult.Yes) return;
-                justificacionVacante = $"Promoción parcial autorizada con {ind.Vacantes} vacante(s) pendientes.";
+                var noConsentidas = noConsentidasGenes
+                    .Select(g => g.IdAsignatura)
+                    .Distinct()
+                    .ToList();
+
+                if (noConsentidas.Count > 0)
+                {
+                    using (var dlg = new FormAutorizacionVacantes(ind, _contextoActual))
+                    {
+                        if (dlg.ShowDialog(this) != DialogResult.OK) return;
+                        _vacantesAutorizadas = dlg.Autorizadas ?? new HashSet<int>();
+                        _vacantesAutorizadasClaves = dlg.AutorizadasClaves ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    }
+
+                    // Fase 2043: Intersecar con las vacantes no consentidas de la corrida actual para evitar fuga de permisos
+                    var noConsentidasAsigsSet = new HashSet<int>(noConsentidas);
+                    var noConsentidasClavesSet = new HashSet<string>(noConsentidasGenes.Select(g => $"{g.IdAsignatura}:{g.IdSede}"), StringComparer.OrdinalIgnoreCase);
+                    _vacantesAutorizadas.IntersectWith(noConsentidasAsigsSet);
+                    _vacantesAutorizadasClaves.IntersectWith(noConsentidasClavesSet);
+
+                    if (_vacantesAutorizadas.Count == 0 && _vacantesAutorizadasClaves.Count == 0)
+                    {
+                        MessageBox.Show(this, "Debe seleccionar al menos una asignatura para autorizar la promoción con vacantes.",
+                            "Autorización Requerida", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+
+                    // Fase 2045: Preservar granularidad asig:sede en la justificación
+                    var tokensJustificacion = _vacantesAutorizadasClaves.Count > 0
+                        ? _vacantesAutorizadasClaves
+                        : _vacantesAutorizadas.Select(id => id.ToString());
+                    justificacionVacante = $"Promoción parcial autorizada con {ind.Vacantes} vacante(s) pendientes (asignaturas: {string.Join(", ", tokensJustificacion)}).";
+                }
+                else
+                {
+                    var confirmVac = MessageBox.Show(
+                        $"Esta solución contiene {ind.Vacantes} sesión(es) en estado VACANTE consentida.\n\n" +
+                        "¿Desea continuar con la promoción a producción?",
+                        "Confirmar Vacantes Consentidas",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Question);
+
+                    if (confirmVac != DialogResult.Yes) return;
+                    justificacionVacante = $"Promoción autorizada con {ind.Vacantes} vacante(s) consentidas.";
+                }
             }
 
             var confirm = MessageBox.Show(
@@ -4915,12 +4968,11 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             finally
             {
                 this.Cursor = Cursors.Default;
-                // Fase 1520 (G4) & Fase 1815: el botón sólo se re-habilita si la solución sigue siendo promovible bajo compuerta centralizada
+                // Fase 1520 (G4), 1815, 2037 & 2048: el botón se evalúa consistentemente con EsPromovibleSolicitable
                 var corridaDbRes = await _scheduleRepository.GetCorridaByIdAsync(_ultimoResultado.IdCorrida, CancellationToken.None);
                 var sesionesRes = await _scheduleRepository.GetSesionesStagingAsync(_ultimoResultado.IdCorrida, CancellationToken.None);
                 var corridaEfectiva = corridaDbRes.IsSuccess ? corridaDbRes.Value : null;
-                // Fase 1923: permitirVacantes: true para habilitar botón; la compuerta real es la justificación al promover
-                btnPromoverProduccion.Enabled = corridaDbRes.IsSuccess && AgCompuertaPromocion.EsPromovible(corridaEfectiva, ind, sesionesRes, _contextoActual, permitirVacantes: true);
+                btnPromoverProduccion.Enabled = corridaDbRes.IsSuccess && AgCompuertaPromocion.EsPromovibleSolicitable(corridaEfectiva, ind, sesionesRes);
             }
         }
 

@@ -18,6 +18,7 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
         public List<string> Bloqueos => BloqueosCriticos;
         public List<string> Advertencias { get; set; }
         public Dictionary<int, AgMotivoVacante> AsignaturasVacantes { get; set; }
+        public Dictionary<int, int> DeficitDocentePorAsignatura { get; set; }
 
         public InformeFactibilidad()
         {
@@ -25,6 +26,7 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
             BloqueosCriticos = new List<string>();
             Advertencias = new List<string>();
             AsignaturasVacantes = new Dictionary<int, AgMotivoVacante>();
+            DeficitDocentePorAsignatura = new Dictionary<int, int>();
         }
 
         public void AgregarBloqueo(string mensaje)

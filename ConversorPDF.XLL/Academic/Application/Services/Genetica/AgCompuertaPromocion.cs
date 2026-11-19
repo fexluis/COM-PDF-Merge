@@ -242,7 +242,9 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             AgIndividuo individuo,
             Result<IReadOnlyCollection<AgSesion>> sesionesResult,
             AgContexto contexto = null,
-            bool permitirVacantes = false)
+            bool permitirVacantes = false,
+            ISet<int> autorizacionVacantes = null,
+            ISet<string> autorizacionVacantesClaves = null)
         {
             if (individuo == null)
             {
@@ -254,21 +256,58 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 return Result.Failure($"La solución presenta {individuo.HardViolations} restricciones duras (HARD).");
             }
 
-            // FASE 1874/1883/1885/1886: Ruta caliente tipada; solo evalúa JSON si la propiedad tipada no tiene datos
-            bool permitir = permitirVacantes
-                || (corrida?.VacantesConsentidas != null && corrida.VacantesConsentidas.Count > 0)
-                || VacantesConsentidasEnCorrida(corrida).Count > 0;
+            // FASE 1874/1883/1885/1886, 2018, 2023, 2029, 2033, 2039, 2045 & 2049: Validación estricta y autorización explícita de vacantes no consentidas (solo lectura)
+            var (asigsCorrida, clavesCorrida) = VacantesConsentidasEnCorrida(corrida);
 
-            if (!permitir)
+            bool ConsentidaLocal(AgGen g) =>
+                contexto != null ? contexto.EstaConsentida(g.IdAsignatura, g.IdSede)
+                                 : asigsCorrida.Contains(g.IdAsignatura) || clavesCorrida.Contains($"{g.IdAsignatura}:{g.IdSede}");
+
+            var noConsentidasGenes = (individuo.Genes ?? Enumerable.Empty<AgGen>())
+                .Where(g => g.EsVacante == 1 || g.IdTercero <= 0)
+                .Where(g => !ConsentidaLocal(g))
+                .ToList();
+
+            var noConsentidas = noConsentidasGenes
+                .Select(g => g.IdAsignatura)
+                .Distinct()
+                .ToList();
+
+            // Fase 2033 & 2049: Unificar predicado de consentimiento entre contexto y corrida
+            bool tieneConsentidas = (contexto?.PermiteVacantes == true)
+                                 || (corrida?.VacantesConsentidas?.Count ?? 0) > 0
+                                 || asigsCorrida.Count > 0
+                                 || clavesCorrida.Count > 0;
+            bool permitir = permitirVacantes || tieneConsentidas;
+
+            // Fase 2029, 2038 & 2045: La compuerta no autogenera consentimiento; exige autorización explícita sin mutar corrida
+            if (noConsentidas.Count > 0)
             {
-                if (individuo.Vacantes > 0)
+                var autorizadas = autorizacionVacantes ?? new HashSet<int>();
+                var autorizadasClaves = autorizacionVacantesClaves ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                if (!permitirVacantes)
                 {
-                    return Result.Failure($"El individuo presenta {individuo.Vacantes} vacantes pendientes.");
+                    return Result.Failure($"La solución contiene vacantes no consentidas en asignaturas: {string.Join(",", noConsentidas)}.");
                 }
 
-                if (individuo.Genes != null && individuo.Genes.Any(g => g.EsVacante == 1 || g.IdTercero <= 0))
+                // Fase 2045: Validar cobertura tanto por ID de asignatura como por clave granular asig:sede
+                var genesNoCubiertos = noConsentidasGenes
+                    .Where(g => !autorizadas.Contains(g.IdAsignatura) && !autorizadasClaves.Contains($"{g.IdAsignatura}:{g.IdSede}"))
+                    .ToList();
+
+                if (genesNoCubiertos.Count > 0)
                 {
-                    return Result.Failure("La solución contiene genes en estado vacante.");
+                    var faltantesAsigs = genesNoCubiertos.Select(g => g.IdAsignatura).Distinct().ToList();
+                    return Result.Failure($"La autorización no cubre las asignaturas: {string.Join(",", faltantesAsigs)}. La justificación debe declarar 'asignaturas: {string.Join(",", noConsentidas)}'.");
+                }
+
+                LoggerHelper.Warning($"[Compuerta] Promoción autorizada con vacantes en: {string.Join(",", noConsentidas)}.");
+            }
+            else if (!permitir)
+            {
+                if (individuo.Vacantes > 0 || (individuo.Genes != null && individuo.Genes.Any(g => g.EsVacante == 1 || g.IdTercero <= 0)))
+                {
+                    return Result.Failure("La solución contiene genes en estado vacante sin consentimiento ni autorización.");
                 }
             }
 
@@ -306,6 +345,22 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         }
 
         /// <summary>
+        /// Evalúa si la solución es preliminarmente viable para iniciar el proceso de promoción
+        /// (sin violaciones HARD y con sesiones de staging válidas), habilitando el botón de promoción
+        /// en la UI para que solicite la autorización de vacantes si se requiere (Fase 2044).
+        /// </summary>
+        public static bool EsPromovibleSolicitable(
+            AgCorrida corrida,
+            AgIndividuo individuo,
+            Result<IReadOnlyCollection<AgSesion>> sesionesResult)
+        {
+            if (corrida == null || individuo == null) return false;
+            if (individuo.HardViolations > 0) return false;
+            if (sesionesResult.IsFailure || sesionesResult.Value == null || sesionesResult.Value.Count == 0) return false;
+            return true;
+        }
+
+        /// <summary>
         /// Evalúa si la solución es promovible a producción de acuerdo a la compuerta centralizada.
         /// </summary>
         public static bool EsPromovible(
@@ -313,19 +368,27 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             AgIndividuo individuo,
             Result<IReadOnlyCollection<AgSesion>> sesionesResult,
             AgContexto contexto = null,
-            bool permitirVacantes = false)
+            bool permitirVacantes = false,
+            ISet<int> autorizacionVacantes = null,
+            ISet<string> autorizacionVacantesClaves = null)
         {
-            // FASE 1885/1886: Ruta caliente sin deserialización JSON si la propiedad tipada ya está poblada
-            bool permitir = permitirVacantes || (corrida?.VacantesConsentidas != null && corrida.VacantesConsentidas.Count > 0);
+            // FASE 1885/1886 & 2033: Ruta caliente sin deserialización JSON si la propiedad tipada ya está poblada
+            bool permitir = permitirVacantes
+                || (corrida?.VacantesConsentidas != null && corrida.VacantesConsentidas.Count > 0)
+                || (contexto?.PermiteVacantes == true);
             if (!permitir)
             {
-                var vacsHistoricas = VacantesConsentidasEnCorrida(corrida);
-                if (vacsHistoricas.Count > 0)
+                var (asigsHist, clavesHist) = VacantesConsentidasEnCorrida(corrida);
+                if (asigsHist.Count > 0 || clavesHist.Count > 0)
                 {
                     permitir = true;
                     if (corrida != null)
                     {
-                        corrida.VacantesConsentidas = vacsHistoricas;
+                        corrida.VacantesConsentidas = asigsHist;
+                    }
+                    if (contexto != null && clavesHist.Count > 0 && (contexto.ClavesVacantesConsentidas == null || contexto.ClavesVacantesConsentidas.Count == 0))
+                    {
+                        contexto.ClavesVacantesConsentidas = clavesHist;
                     }
                 }
             }
@@ -336,28 +399,32 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 contexto.AsignaturasVacantesConsentidas = corrida.VacantesConsentidas;
             }
 
-            return ValidarPromocion(corrida, individuo, sesionesResult, contexto, permitir).IsSuccess;
+            return ValidarPromocion(corrida, individuo, sesionesResult, contexto, permitirVacantes, autorizacionVacantes, autorizacionVacantesClaves).IsSuccess;
         }
 
         /// <summary>
-        /// FASE 1874/1883/1886: Obtiene las vacantes consentidas de la corrida (fallback acotado a 512KB para datos históricos).
+        /// FASE 1874/1883/1886, 2034 y 2039: Obtiene las vacantes consentidas de la corrida (asignaturas y claves por sede).
         /// </summary>
-        internal static HashSet<int> VacantesConsentidasEnCorrida(AgCorrida corrida)
+        internal static (HashSet<int> Asignaturas, HashSet<string> Claves) VacantesConsentidasEnCorrida(AgCorrida corrida)
         {
-            var res = new HashSet<int>();
+            var asigs = new HashSet<int>();
+            var claves = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             if (corrida == null)
             {
-                return res;
+                return (asigs, claves);
             }
 
             if (corrida.VacantesConsentidas != null && corrida.VacantesConsentidas.Count > 0)
             {
-                return corrida.VacantesConsentidas;
+                foreach (var id in corrida.VacantesConsentidas)
+                {
+                    asigs.Add(id);
+                }
             }
 
             if (string.IsNullOrWhiteSpace(corrida.ParametrosJson))
             {
-                return res;
+                return (asigs, claves);
             }
 
             try
@@ -368,9 +435,20 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 {
                     foreach (var item in list)
                     {
-                        if (item != null && int.TryParse(item.ToString(), out int id))
+                        if (item == null) continue;
+                        string s = item.ToString().Trim();
+                        if (s.Contains(':'))
                         {
-                            res.Add(id);
+                            claves.Add(s);
+                            string[] partes = s.Split(':');
+                            if (partes.Length > 0 && int.TryParse(partes[0], out int asigId))
+                            {
+                                asigs.Add(asigId);
+                            }
+                        }
+                        else if (int.TryParse(s, out int id))
+                        {
+                            asigs.Add(id);
                         }
                     }
                 }
@@ -380,7 +458,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 LoggerHelper.Warning($"[AG] Error al deserializar vacantes consentidas de corrida #{corrida.Id}: {ex.Message}");
             }
 
-            return res;
+            return (asigs, claves);
         }
 
         /// <summary>

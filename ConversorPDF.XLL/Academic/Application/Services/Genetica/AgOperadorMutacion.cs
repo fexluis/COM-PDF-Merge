@@ -12,6 +12,16 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
     /// </summary>
     public class AgOperadorMutacion
     {
+        private static readonly string[] MotivosNoAsignables =
+        {
+            AgMotivoVacante.SIN_PLAN_OLEADA.Codigo(),
+            AgMotivoVacante.SIN_BLOQUE_NIVEL.Codigo()
+        };
+
+        private static bool EsNoAsignable(string motivo) =>
+            !string.IsNullOrEmpty(motivo)
+            && MotivosNoAsignables.Contains(motivo.Trim(), StringComparer.OrdinalIgnoreCase);
+
         private readonly Random _random;
 
         public AgOperadorMutacion(Random random = null)
@@ -43,43 +53,104 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             foreach (var grp in grupos)
             {
                 var genes = grp.ToList();
+
+                // Fases 2012 / 2015: exclusión estricta de grupos con algún gen fijado para evitar reversión en Sellar
+                if (genes.Any(g => g.Estado == AgEstadoGen.Fijado))
+                {
+                    continue;
+                }
+
+                // Fase 2017 / Fase 2025: Preservar grupos con causas estructurales no asignables (comparación case-insensitive)
+                if (genes.Any(g => EsNoAsignable(g.MotivoVacante)))
+                {
+                    continue;
+                }
+
                 int docCanon = genes[0].IdTercero;
                 int vacCanon = genes[0].EsVacante;
                 string motCanon = genes[0].MotivoVacante ?? string.Empty;
 
-                // Fase 519, 533 & 1815: Selección y aplicación grupal con verificación de disponibilidad fechada.
-                // Si ningún candidato alterno resulta compatible con el grupo y sus fechas, se conserva la asignación existente.
-                if (_random.NextDouble() < tasaMutacion
-                    && vacCanon == 0
-                    && contexto.PoolPorAsignatura.TryGetValue(genes[0].IdAsignatura, out var poolAsig))
+                bool tienePool = contexto.PoolPorAsignatura.TryGetValue(genes[0].IdAsignatura, out var poolAsig);
+
+                // Fase 519, 533, 1815, 2012, 2016, 2020, 2025 & 2028: Mutación de docente en grupo asignado.
+                // Sorteo de RNG con cortocircuito para preservar trayectoria determinista.
+                if (vacCanon == 0 && tienePool && _random.NextDouble() < tasaMutacion)
                 {
                     var habilitados = poolAsig
                         .Where(p => p.Activo == 1 && (contexto.IdTerceroVacante <= 0 || p.IdTercero != contexto.IdTerceroVacante))
+                        .OrderBy(p => p.VecesAsignada)
+                        .ThenBy(p => p.IdTercero)
                         .ToList();
-                    if (habilitados.Count > 0)
-                    {
-                        var orden = habilitados
-                            .OrderBy(p => p.VecesAsignada)
-                            .ThenBy(p => p.IdTercero)
-                            .ToList();
 
-                        foreach (var cand in orden)
+                    int alterno = 0;
+                    foreach (var cand in habilitados)
+                    {
+                        if (cand.IdTercero == docCanon) continue;
+                        if (AgAsignadorTercero.DisponibleGrupo(cand.IdTercero, genes[0], individuo, contexto))
                         {
-                            if (cand.IdTercero == docCanon) continue;
-                            if (AgAsignadorTercero.DisponibleGrupo(cand.IdTercero, genes[0], individuo, contexto))
-                            {
-                                docCanon = cand.IdTercero;
-                                vacCanon = 0;
-                                motCanon = string.Empty;
-                                break;
-                            }
+                            alterno = cand.IdTercero;
+                            break;
                         }
-                        // Si ningún candidato alterno resulta compatible, se conserva docCanon previo
+                    }
+
+                    if (alterno > 0)
+                    {
+                        docCanon = alterno;
+                        vacCanon = 0;
+                        motCanon = string.Empty;
+                    }
+                    else
+                    {
+                        // Fase 2028: Proyectar calendario únicamente cuando no hay alterno y se evalúa la liberación
+                        var propio = AgCalendarioConflictos.Crear(genes, contexto);
+                        bool grupoVerificable = propio.IsSuccess;
+
+                        bool actualDisponible = docCanon > 0 && grupoVerificable
+                            && AgAsignadorTercero.DisponibleGrupo(docCanon, genes[0], individuo, contexto);
+
+                        if (!actualDisponible && grupoVerificable)
+                        {
+                            // Fase 2016 / Fase 2025: sólo se libera a vacante si el grupo es verificable, la asignación es inviable y no hay alterno
+                            vacCanon = 1;
+                            docCanon = 0;
+                            motCanon = AgAsignadorTercero.DiagnosticarMotivoVacante(genes[0], contexto);
+                        }
                     }
                 }
-                else if (vacCanon == 1 && contexto.IdTerceroVacante > 0)
+                // Fase 2015 & 2020: Movimiento inverso. Grupo vacante reintenta recuperar docente si surge disponibilidad en el pool
+                else if (vacCanon == 1 && tienePool && _random.NextDouble() < tasaMutacion)
                 {
-                    docCanon = contexto.IdTerceroVacante;
+                    var habilitados = poolAsig
+                        .Where(p => p.Activo == 1 && (contexto.IdTerceroVacante <= 0 || p.IdTercero != contexto.IdTerceroVacante))
+                        .OrderBy(p => p.VecesAsignada)
+                        .ThenBy(p => p.IdTercero)
+                        .ToList();
+
+                    int recuperado = 0;
+                    foreach (var cand in habilitados)
+                    {
+                        if (AgAsignadorTercero.DisponibleGrupo(cand.IdTercero, genes[0], individuo, contexto))
+                        {
+                            recuperado = cand.IdTercero;
+                            break;
+                        }
+                    }
+
+                    if (recuperado > 0)
+                    {
+                        docCanon = recuperado;
+                        vacCanon = 0;
+                        motCanon = string.Empty;
+                    }
+                }
+
+                if (vacCanon == 1 && docCanon != 0)
+                {
+                    // Fase 2014: Normalizar cualquier remanente histórico del centinela en vacantes a IdTercero = 0
+                    if (contexto.IdTerceroVacante <= 0 || docCanon == contexto.IdTerceroVacante)
+                    {
+                        docCanon = 0;
+                    }
                 }
 
                 if (docCanon != genes[0].IdTercero || vacCanon != genes[0].EsVacante || motCanon != (genes[0].MotivoVacante ?? string.Empty))
@@ -87,7 +158,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     huboCambios = true;
                 }
 
-                // Fase 519 & 1815: sellar TODOS los genes del ClaveGrupo (incondicional)
+                // Fase 519, 1815 & 2012: sellar TODOS los genes del ClaveGrupo (incondicional)
                 foreach (var g in genes)
                 {
                     g.IdTercero = docCanon;

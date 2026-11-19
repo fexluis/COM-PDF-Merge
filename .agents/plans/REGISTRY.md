@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 454 | 455 | 2026-11-18 |
-| `fase` | 2009 | 2010 | 2026-11-18 |
+| `ronda` | 463 | 464 | 2026-11-18 |
+| `fase` | 2051 | 2052 | 2026-11-18 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -163,6 +163,15 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-126 | 2026-11-18 | `(revisión R451 contra disco: robustecimiento script release, etiquetas estado y auditor de cierre; Fases 1988–1993)` | `Wave —` → `Ronda 452` | `Fase 1988–1993` | closed | PASS (Full 1728 tests) | pendiente |
 | R-127 | 2026-11-18 | `(diagnóstico forense campeón infactible [AG-CAUSAS-DETALLE], diálogo modal y clasificación vacantes; Fases 1994–1997)` | `Wave —` → `Ronda 453` | `Fase 1994–1997` | closed | PASS (Full 1728 tests) | pendiente |
 | R-128 | 2026-11-18 | `(revisión R453 contra disco: F1998–F2009; corrección CS0103/CS0136 en AgCoherenciaGrupo, HardViolations en tests, filtrado R1/R7, robustez DTO/diagnóstico)` | `Wave —` → `Ronda 454` | `Fase 1998–2009` | closed | PASS (Full 1728 tests) | pendiente |
+| R-129 | 2026-11-18 | `(revisión e implementación Ronda 455 — Fases 2012–2015: mutación a vacante explícita sin alterno, IdTercero=0 en Sellar/R9, movimiento inverso)` | `Wave —` → `Ronda 455` | `Fase 2012–2015` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-130 | 2026-11-18 | `(revisión e implementación Ronda 456 — Fases 2016–2020: blindaje antidegeneración, guarda motivos no asignables, R15_VacanteExcedida, IdTercero=0 en Coherencia y determinismo RNG)` | `Wave —` → `Ronda 456` | `Fase 2016–2020` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-131 | 2026-11-18 | `(revisión e implementación Ronda 457 — Fases 2021–2025: activación déficit estructural, exclusión vacantes consentidas de R15, compuerta estricta, unificación enum R9, verificación calendario en mutación)` | `Wave —` → `Ronda 457` | `Fase 2021–2025` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-132 | 2026-11-18 | `(revisión e implementación Ronda 458 — Fases 2026–2030: precisión déficit estructural, factibilidad de solo lectura, mutación diferida, compuerta no mutable, granularidad cohorte/sede)` | `Wave —` → `Ronda 458` | `Fase 2026–2030` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-133 | 2026-11-18 | `(revisión e implementación Ronda 459 — Fases 2031–2035: concurrencia temporal en déficit, proveedor de autorización de vacantes en promotor, unificación de fuentes de consentimiento, productor de claves y cobertura de pruebas)` | `Wave —` → `Ronda 459` | `Fase 2031–2035` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-134 | 2026-11-18 | `(revisión e implementación Ronda 460 — Fases 2036–2040: concurrencia por cohortes en déficit estructural, diálogo FormAutorizacionVacantes, parser fail-closed de justificación, preservación de asig:sede en relectura de corrida y cobertura de tests)` | `Wave —` → `Ronda 460` | `Fase 2036–2040` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-135 | 2026-11-18 | `(revisión e implementación Ronda 461 — Fases 2041–2045: registro de nuevos formularios en csproj, cohorte académica pura en déficit, aislamiento de autorizaciones entre corridas, compuerta preliminar solicitable y preservación integral de granularidad asig:sede)` | `Wave —` → `Ronda 461` | `Fase 2041–2045` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-136 | 2026-11-18 | `(revisión e implementación Ronda 462 — Fases 2046–2049: productor del déficit en pre-vuelo, soporte de vacantes sin sede asig:0, botón consistente en finally de promoción y compuerta de promoción de solo lectura)` | `Wave —` → `Ronda 462` | `Fase 2046–2049` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-137 | 2026-11-18 | `(verificación Ronda 463 — Fases 2050–2051 opcionales: sin defectos bloqueantes en Wave 462, precisión del déficit por patrón y momento de cálculo P07)` | `Wave —` → `Ronda 463` | `Fase 2050–2051` | closed | sin build/tests (restricción Paso 6) | pendiente |
 
 
 

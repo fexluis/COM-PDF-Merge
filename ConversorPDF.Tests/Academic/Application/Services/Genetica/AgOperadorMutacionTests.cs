@@ -72,9 +72,9 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
         }
 
         [Fact]
-        public void Mutar_WhenGenIsVacante_ShouldPreserveIdTerceroVacante()
+        public void Mutar_WhenGenIsVacante_ShouldNormalizeIdTerceroToZero()
         {
-            // Arrange (Fase 463 / Fase 470)
+            // Arrange (Fase 463 / Fase 470 / Fase 2014: normalización a IdTercero = 0)
             var sut = new AgOperadorMutacion(new Random(1));
             var individuo = new AgIndividuo();
             var genVacante = new AgGen
@@ -99,8 +99,263 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             // Act: mutación forzada al 100%
             sut.Mutar(individuo, 1.0, contexto);
 
-            // Assert: no muta a docente 50; preserva centinela 192
-            genVacante.IdTercero.Should().Be(192);
+            // Assert: no muta a docente 50 (sin habilitación); normaliza centinela a IdTercero = 0
+            genVacante.IdTercero.Should().Be(0);
+            genVacante.EsVacante.Should().Be(1);
+        }
+
+        [Fact]
+        public void Mutar_WhenDocenteActualLibreYSinAlterno_ShouldPreserveDocenteActual()
+        {
+            // Arrange (Fase 2016: si el docente actual está disponible y no hay alterno, NO se libera a vacante)
+            var sut = new AgOperadorMutacion(new Random(1));
+            var individuo = new AgIndividuo();
+            var gen = new AgGen
+            {
+                Id = 1,
+                IdAsignatura = 10,
+                IdTercero = 25,
+                IdAula = 1,
+                Grupo = "A",
+                Semestre = "I",
+                IdPrograma = 1,
+                IdBloqueHorario = 1,
+                FechaInicioEstimada = new DateTime(2026, 2, 10),
+                FechaFinEstimada = new DateTime(2026, 3, 10),
+                EsVacante = 0,
+                Estado = AgEstadoGen.Valido
+            };
+            individuo.Genes.Add(gen);
+
+            var contexto = new AgContexto();
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
+            contexto.BloquesPorId[1] = new AgBloqueHorario { Id = 1, DiaSemanaNumero = 1, HoraInicio = "08:00", HoraFin = "12:00", Activo = 1 };
+            contexto.RegistrarDocenteHabilitado(25, 1, 10, "I");
+            contexto.PoolPorAsignatura[10] = new List<TerceroAsignatura>
+            {
+                new TerceroAsignatura { IdTercero = 25, Activo = 1 } // Solo está el actual, sin alterno
+            };
+
+            // Act
+            sut.Mutar(individuo, 1.0, contexto);
+
+            // Assert: no degenera a vacante; conserva al docente actual disponible
+            gen.EsVacante.Should().Be(0);
+            gen.IdTercero.Should().Be(25);
+            gen.MotivoVacante.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void Mutar_WhenDocenteActualEnColisionYSinAlterno_ShouldMutateToVacanteExplicita()
+        {
+            // Arrange (Fase 2012 / Fase 2016: docente actual en colisión y sin alterno disponible => vacante explícita)
+            var sut = new AgOperadorMutacion(new Random(1));
+            var individuo = new AgIndividuo();
+
+            // Gen 1 ocupa al docente 25 en bloque 1
+            var gen1 = new AgGen
+            {
+                Id = 1,
+                IdAsignatura = 5,
+                IdTercero = 25,
+                IdAula = 1,
+                Grupo = "A",
+                Semestre = "I",
+                IdPrograma = 1,
+                IdBloqueHorario = 1,
+                FechaInicioEstimada = new DateTime(2026, 2, 10),
+                FechaFinEstimada = new DateTime(2026, 3, 10),
+                EsVacante = 0,
+                Estado = AgEstadoGen.Valido
+            };
+            // Gen 2 en otra aula/asignatura colisiona con el docente 25 en el mismo bloque y fechas
+            var gen2 = new AgGen
+            {
+                Id = 2,
+                IdAsignatura = 10,
+                IdTercero = 25,
+                IdAula = 2,
+                Grupo = "B",
+                Semestre = "I",
+                IdPrograma = 1,
+                IdBloqueHorario = 1,
+                FechaInicioEstimada = new DateTime(2026, 2, 10),
+                FechaFinEstimada = new DateTime(2026, 3, 10),
+                EsVacante = 0,
+                Estado = AgEstadoGen.Valido
+            };
+            individuo.Genes.Add(gen1);
+            individuo.Genes.Add(gen2);
+
+            var contexto = new AgContexto();
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
+            contexto.BloquesPorId[1] = new AgBloqueHorario { Id = 1, DiaSemanaNumero = 1, HoraInicio = "08:00", HoraFin = "12:00", Activo = 1 };
+            contexto.RegistrarDocenteHabilitado(25, 1, 5, "I");
+            contexto.RegistrarDocenteHabilitado(25, 1, 10, "I");
+            contexto.PoolPorAsignatura[10] = new List<TerceroAsignatura>
+            {
+                new TerceroAsignatura { IdTercero = 25, Activo = 1 } // Sin alterno
+            };
+
+            // Act: mutación sobre gen2
+            sut.Mutar(individuo, 1.0, contexto);
+
+            // Assert: al estar docente 25 colisionado y no haber alterno, gen2 pasa a vacante explícita
+            gen2.EsVacante.Should().Be(1);
+            gen2.IdTercero.Should().Be(0);
+            gen2.MotivoVacante.Should().Be(AgMotivoVacante.SIN_DISPONIBILIDAD.Codigo());
+        }
+
+        [Fact]
+        public void Mutar_WhenGrupoTieneMotivoNoAsignable_ShouldIgnoreGrupo()
+        {
+            // Arrange (Fase 2017: guarda contra reversión de SIN_PLAN_OLEADA / SIN_BLOQUE_NIVEL)
+            var sut = new AgOperadorMutacion(new Random(1));
+            var individuo = new AgIndividuo();
+            var gen = new AgGen
+            {
+                Id = 1,
+                IdAsignatura = 10,
+                IdTercero = 0,
+                IdAula = 1,
+                Grupo = "A",
+                Semestre = "I",
+                IdPrograma = 1,
+                IdBloqueHorario = 0,
+                EsVacante = 1,
+                MotivoVacante = AgMotivoVacante.SIN_PLAN_OLEADA.Codigo(),
+                Estado = AgEstadoGen.Incompleto
+            };
+            individuo.Genes.Add(gen);
+
+            var contexto = new AgContexto();
+            contexto.PoolPorAsignatura[10] = new List<TerceroAsignatura>
+            {
+                new TerceroAsignatura { IdTercero = 77, Activo = 1 }
+            };
+
+            // Act
+            sut.Mutar(individuo, 1.0, contexto);
+
+            // Assert: se ignora el grupo y se preserva intacto el motivo estructural
+            gen.EsVacante.Should().Be(1);
+            gen.IdTercero.Should().Be(0);
+            gen.MotivoVacante.Should().Be(AgMotivoVacante.SIN_PLAN_OLEADA.Codigo());
+        }
+
+        [Fact]
+        public void Mutar_WhenMotivoNoAsignableEnMinusculas_ShouldIgnoreGrupo()
+        {
+            // Arrange (Fase 2025: comparación case-insensitive para motivos no asignables)
+            var sut = new AgOperadorMutacion(new Random(1));
+            var individuo = new AgIndividuo();
+            var gen = new AgGen
+            {
+                Id = 1,
+                IdAsignatura = 10,
+                IdTercero = 0,
+                IdAula = 1,
+                Grupo = "A",
+                Semestre = "I",
+                IdPrograma = 1,
+                IdBloqueHorario = 0,
+                EsVacante = 1,
+                MotivoVacante = "sin_bloque_nivel",
+                Estado = AgEstadoGen.Incompleto
+            };
+            individuo.Genes.Add(gen);
+
+            var contexto = new AgContexto();
+            contexto.PoolPorAsignatura[10] = new List<TerceroAsignatura>
+            {
+                new TerceroAsignatura { IdTercero = 77, Activo = 1 }
+            };
+
+            // Act
+            sut.Mutar(individuo, 1.0, contexto);
+
+            // Assert: se ignora el grupo y se preserva el motivo
+            gen.EsVacante.Should().Be(1);
+            gen.IdTercero.Should().Be(0);
+            gen.MotivoVacante.Should().Be("sin_bloque_nivel");
+        }
+
+        [Fact]
+        public void Mutar_WhenBloqueInactivoNoVerificable_ShouldNotMutateToVacante()
+        {
+            // Arrange (Fase 2025: grupo con bloque inactivo o no verificable no debe liberarse a vacante)
+            var sut = new AgOperadorMutacion(new Random(1));
+            var individuo = new AgIndividuo();
+            var gen = new AgGen
+            {
+                Id = 1,
+                IdAsignatura = 10,
+                IdTercero = 25,
+                IdAula = 1,
+                Grupo = "A",
+                Semestre = "I",
+                IdPrograma = 1,
+                IdBloqueHorario = 99, // Bloque inactivo o inexistente en contexto
+                EsVacante = 0,
+                Estado = AgEstadoGen.Valido
+            };
+            individuo.Genes.Add(gen);
+
+            var contexto = new AgContexto();
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
+            contexto.PoolPorAsignatura[10] = new List<TerceroAsignatura>
+            {
+                new TerceroAsignatura { IdTercero = 25, Activo = 1 }
+            };
+
+            // Act
+            sut.Mutar(individuo, 1.0, contexto);
+
+            // Assert: no se vacía ni enmascara R14; mantiene su asignación
+            gen.EsVacante.Should().Be(0);
+            gen.IdTercero.Should().Be(25);
+        }
+
+        [Fact]
+        public void Mutar_WhenGrupoVacanteYSurgeAlterno_ShouldRecuperarDocente()
+        {
+            // Arrange (Fase 2015: movimiento inverso para recuperar docente en grupo vacante)
+            var sut = new AgOperadorMutacion(new Random(1));
+            var individuo = new AgIndividuo();
+            var gen = new AgGen
+            {
+                Id = 1,
+                IdAsignatura = 10,
+                IdTercero = 0,
+                IdAula = 1,
+                Grupo = "A",
+                Semestre = "I",
+                IdPrograma = 1,
+                IdBloqueHorario = 1,
+                FechaInicioEstimada = new DateTime(2026, 2, 10),
+                FechaFinEstimada = new DateTime(2026, 3, 10),
+                EsVacante = 1,
+                MotivoVacante = "SIN_DISPONIBILIDAD",
+                Estado = AgEstadoGen.Valido
+            };
+            individuo.Genes.Add(gen);
+
+            var contexto = new AgContexto();
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
+            contexto.BloquesPorId[1] = new AgBloqueHorario { Id = 1, DiaSemanaNumero = 1, HoraInicio = "08:00", HoraFin = "12:00", Activo = 1 };
+            contexto.RegistrarDocenteHabilitado(77, 1, 10, "I");
+            contexto.PoolPorAsignatura[10] = new List<TerceroAsignatura>
+            {
+                new TerceroAsignatura { IdTercero = 77, Activo = 1 }
+            };
+
+            // Act
+            sut.Mutar(individuo, 1.0, contexto);
+
+            // Assert
+            gen.EsVacante.Should().Be(0);
+            gen.IdTercero.Should().Be(77);
+            gen.MotivoVacante.Should().BeEmpty();
         }
 
         [Fact]

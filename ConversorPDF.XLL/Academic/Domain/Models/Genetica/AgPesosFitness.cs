@@ -55,7 +55,7 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
                 case AgReglaViolacion.R7_CoberturaHorariaIncompleta: return PenalidadHardCoberturaHoraria;
                 case AgReglaViolacion.R8_DiasDuplicadosGrupo: return PenalidadHardBase;
                 case AgReglaViolacion.R8_DiaFueraDePatron: return PenalidadHardBase;
-                case AgReglaViolacion.R9_VacanteSinCentinela: return PenalidadHardBase;
+                case AgReglaViolacion.R9_VacanteConDocenteReal: return PenalidadHardBase;
                 case AgReglaViolacion.R9_CentinelaEnNoVacante: return PenalidadHardBase;
                 case AgReglaViolacion.R10_CoherenciaDocenteGrupo: return PenalidadHardBase;
                 case AgReglaViolacion.R11_DuracionSesionInvalida: return PenalidadHardR11_Duracion;
@@ -63,6 +63,7 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
                 case AgReglaViolacion.R13_OleadasDispersas: return PenalidadHardR13_Oleadas;
                 case AgReglaViolacion.R14_BloqueHorarioNoAsignado: return PenalidadHardR14_Bloque;
                 case AgReglaViolacion.R14_BloqueSolapadoPorIntervalo: return PenalidadHardR14_Bloque;
+                case AgReglaViolacion.R15_VacanteExcedida: return PenalidadHardBase;
                 case AgReglaViolacion.S1_HuecosHorarios: return PesoS1_HuecosHorarios;
                 case AgReglaViolacion.S2_DesplazamientoInterSede: return PesoS2_DesplazamientoInterSede;
                 case AgReglaViolacion.S3_PreferenciaFranjaDocente: return PesoS3_PreferenciaFranja;

@@ -17,9 +17,9 @@
     <ExcelDnaCreate64BitAddIn>true</ExcelDnaCreate64BitAddIn>
     <!-- Excluir dependencias que no existen en .NET 4.8 y no deben empaquetarse -->
     <ExcelDnaExcludedDependencies>Microsoft.Bcl.HashCode.dll</ExcelDnaExcludedDependencies>
-    <Version>1.6.4.29</Version>
-    <AssemblyVersion>1.6.4.29</AssemblyVersion>
-    <FileVersion>1.6.4.29</FileVersion>
+    <Version>1.6.4.30</Version>
+    <AssemblyVersion>1.6.4.30</AssemblyVersion>
+    <FileVersion>1.6.4.30</FileVersion>
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
@@ -682,6 +682,10 @@
     <Compile Include="Academic\UI\Forms\FormAutorizarReclasificacion.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Academic\UI\Forms\FormAutorizacionVacantes.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Academic\UI\Forms\ItemVacanteDto.cs" />
     <Compile Include="Academic\Infrastructure\Persistence\Migrations\IMigrationTolerante.cs" />
     <Compile Include="Academic\Application\DTOs\AgContextoSeleccionDto.cs" />
     <Compile Include="Academic\Application\DTOs\AgVacanteGridDto.cs" />

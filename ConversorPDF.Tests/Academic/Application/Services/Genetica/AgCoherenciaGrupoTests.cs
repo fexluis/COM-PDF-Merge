@@ -251,7 +251,8 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             // Assert
             ind.Genes.Should().OnlyContain(g => g.EsVacante == 1);
             ind.Genes.Should().OnlyContain(g => g.MotivoVacante == ConversorPDF.XLL.Academic.Domain.Enums.AgMotivoVacante.SIN_PLAN_OLEADA.Codigo());
-            ind.Genes.Should().OnlyContain(g => g.IdTercero == 999);
+            // Fase 2014: vacante canónica explícita con IdTercero = 0
+            ind.Genes.Should().OnlyContain(g => g.IdTercero == 0);
         }
 
         [Fact]
@@ -289,7 +290,8 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             // Assert
             ind.Genes.Should().OnlyContain(g => g.EsVacante == 1);
             ind.Genes.Should().OnlyContain(g => g.MotivoVacante == ConversorPDF.XLL.Academic.Domain.Enums.AgMotivoVacante.SIN_BLOQUE_NIVEL.Codigo());
-            ind.Genes.Should().OnlyContain(g => g.IdTercero == 999);
+            // Fase 2014: vacante canónica explícita con IdTercero = 0
+            ind.Genes.Should().OnlyContain(g => g.IdTercero == 0);
         }
 
         [Fact]
@@ -549,6 +551,26 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             // Assert: el gen libre se desdobla a TARDE (4) y el fijado se preserva en MANANA (3)
             libre.IdBloqueHorario.Should().Be(4);
             fijado.IdBloqueHorario.Should().Be(3);
+        }
+
+        [Fact]
+        public void Sellar_GrupoSinDocenteReal_SellaConIdTerceroCero()
+        {
+            // Arrange (Fase 2014): grupo completamente vacante debe sellar con IdTercero = 0 y no con el centinela
+            var ind = new AgIndividuo();
+            ind.Genes.Add(new AgGen { Id = 1, ClaveGrupo = "G_VAC", IdTercero = 192, EsVacante = 1, MotivoVacante = "SIN_DISPONIBILIDAD", TotalHorasAsignatura = 16, HorasGen = 16 });
+            ind.Genes.Add(new AgGen { Id = 2, ClaveGrupo = "G_VAC", IdTercero = 0, EsVacante = 1, MotivoVacante = "SIN_DISPONIBILIDAD", TotalHorasAsignatura = 16, HorasGen = 16 });
+
+            var ctx = new AgContexto();
+            ctx.IdTerceroVacante = 192;
+
+            // Act
+            AgCoherenciaGrupo.Sellar(ind, ctx);
+
+            // Assert
+            ind.Genes.Should().OnlyContain(g => g.IdTercero == 0);
+            ind.Genes.Should().OnlyContain(g => g.EsVacante == 1);
+            ind.Genes.Should().OnlyContain(g => g.MotivoVacante == "SIN_DISPONIBILIDAD");
         }
     }
 }

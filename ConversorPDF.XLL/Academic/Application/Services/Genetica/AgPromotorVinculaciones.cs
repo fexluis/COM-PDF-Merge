@@ -133,9 +133,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     }
                 }
 
-                // Compuerta centralizada estricta de promoción y cobertura multiconjunto
+                // Compuerta centralizada estricta de promoción y cobertura multiconjunto (Fase 2029, 2032 & 2045)
                 bool permitirVacantes = !string.IsNullOrWhiteSpace(justificacionVacante);
-                var gateRes = AgCompuertaPromocion.ValidarPromocion(corridaRes.Value, individuo, stagingSesResult, contexto, permitirVacantes);
+                var (autorizadasAsigs, autorizadasClaves) = ParseAutorizacionVacantes(justificacionVacante);
+                var gateRes = AgCompuertaPromocion.ValidarPromocion(
+                    corridaRes.Value, individuo, stagingSesResult, contexto, permitirVacantes, autorizadasAsigs, autorizadasClaves);
                 if (gateRes.IsFailure)
                 {
                     return Result.Failure<AgPromocion>(gateRes.Error);
@@ -1029,6 +1031,61 @@ FROM sedes;";
                 LoggerHelper.Error($"[AgPromotorVinculaciones] Error recuperando contexto sellado para corrida #{corrida.Id}", ex);
                 return Result.Failure<AgContexto>($"Error al recuperar el contexto sellado: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// Parsea los IDs de asignaturas y claves granulares asig:sede autorizadas desde la cadena de justificación de vacantes (Fase 2032, 2038 y 2045).
+        /// Exige token explícito (fail-closed): "asignaturas: 1, 36:2", "asig=10:1,20" o "materias: 10".
+        /// Si no contiene un token explícito de asignaturas/materias, no autoriza ninguna para prevenir autorizaciones espurias.
+        /// </summary>
+        internal static (HashSet<int> Asigs, HashSet<string> Claves) ParseAutorizacionVacantes(string justificacion)
+        {
+            var asigs = new HashSet<int>();
+            var claves = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            if (string.IsNullOrWhiteSpace(justificacion))
+            {
+                return (asigs, claves);
+            }
+
+            var match = System.Text.RegularExpressions.Regex.Match(
+                justificacion,
+                @"(?:asig(?:naturas)?|materias?)\s*[=:]\s*([0-9][0-9,:\s]*)",
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            if (!match.Success)
+            {
+                return (asigs, claves); // sin token explícito => sin autorización (fail-closed)
+            }
+
+            string rawList = match.Groups[1].Value;
+            var tokens = rawList.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var rawToken in tokens)
+            {
+                string token = rawToken.Trim();
+                if (token.Contains(':'))
+                {
+                    var partes = token.Split(':');
+                    if (partes.Length == 2 &&
+                        int.TryParse(partes[0].Trim(), out int asigId) && asigId > 0 &&
+                        int.TryParse(partes[1].Trim(), out int sedeId))
+                    {
+                        if (sedeId > 0)
+                        {
+                            claves.Add($"{asigId}:{sedeId}");
+                        }
+                        else
+                        {
+                            asigs.Add(asigId);
+                        }
+                    }
+                }
+                else if (int.TryParse(token, out int id) && id > 0)
+                {
+                    asigs.Add(id);
+                }
+            }
+
+            return (asigs, claves);
         }
     }
 }
