@@ -163,6 +163,118 @@ Las citas `walkthrough.md:NNNN` anteriores al corte apuntan al archivo monolitic
 | F2050 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgValidadorVentana.cs:484-517` (opcional sin cambios de código) |
 | F2051 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgValidadorVentana.cs:484-517`, `AgFormGeneradorHorarios.cs:1690-1712` (opcional sin cambios de código) |
 
+---
+
+## Ronda 464 — Consentimiento sobre demanda real de la corrida y separación de vacantes estructurales (R16) de liberadas (R15) (Fases 2052–2056)
+
+### Resumen de la Ronda
+- **Fase 2052:** Creación de `AgConsentimientoVacantes.cs` y `VacanteEstructuralInfo.cs`. El consentimiento se evalúa sobre la demanda real `ctx.AulaAsignaturas` y `AulasPorId`, evitando incluir materias del catálogo ajenas al programa de la corrida.
+- **Fase 2053:** `AgContexto.cs` incorpora `PoolExiste` y `PoolHabilitado(idAsignatura, idPrograma, semestre)`. `AgFabricaIndividuos.cs` discrimina `SIN_CANDIDATOS` (sin registros) de `NO_CUMPLE_REQUISITOS` (docente presente pero no habilitado para ese programa/semestre). Telemetría `PoolEfectivo` en la carga del contexto.
+- **Fase 2054:** Adición de `R16_VacanteEstructuralNoConsentida = 35` en `AgReglaViolacion.cs` y penalización en `AgPesosFitness.cs`. En `AgValidadorReglas.cs`, `R16` evalúa vacantes estructurales no consentidas (1 por asignatura) y `R15` evalúa vacantes liberadas frente a `MaxVacantesForzadas`.
+- **Fase 2055:** Diálogo informado en `AgFormGeneradorHorarios.cs` agrupando por asignatura demandada con cohorte/sede y motivo. Persistencia dual (`int` y `"asig:sede"`) en `parametrosDict` y `dict["vacantesConsentidas"]`.
+- **Fase 2056:** Registro de `AgConsentimientoVacantes.cs` y `VacanteEstructuralInfo.cs` en `ConversorPDF.XLL.csproj`. Pruebas en `AgConsentimientoVacantesTests.cs`, `AgFabricaIndividuosTests.cs` y `AgValidadorReglasTests.cs` incluyendo regresión de Corrida #110.
+
+### Verificación de Principios (Ronda 464)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2052 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgConsentimientoVacantes.cs:1-55`, `VacanteEstructuralInfo.cs:1-17`, `AgFormGeneradorHorarios.cs:1684-1725, 2673-2715` |
+| F2053 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgContexto.cs:336-360`, `AgFabricaIndividuos.cs:941-965`, `AgFormGeneradorHorarios.cs:1406-1420` |
+| F2054 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReglaViolacion.cs:41`, `AgPesosFitness.cs:67`, `AgValidadorReglas.cs:710-755` |
+| F2055 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:1684-1725, 2673-2715, 2925-2930, 3350-3362` |
+| F2056 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `ConversorPDF.XLL.csproj:697-698`, `AgConsentimientoVacantesTests.cs:1-100`, `AgFabricaIndividuosTests.cs:493-514`, `AgValidadorReglasTests.cs:1525-1685` |
+
+---
+
+## Ronda 465 — Corrección de regresión centinela, alineación de semilla cohorte y granularidad sin wildcard prematuro (Fases 2057–2061)
+
+### Resumen de la Ronda
+- **Fase 2057:** En `AgFabricaIndividuos.cs`, corrección de `hayActivosReales` y `hayInactivosReales` excluyendo `IdTerceroVacante`. Un pool con solo el centinela devuelve `SIN_CANDIDATOS` (evita falsa clasificación `NO_CUMPLE_REQUISITOS`, resolviendo la regresión de F1996).
+- **Fase 2058:** Creación de la sobrecarga `ClasificarMotivo(c, a, semestre, idPrograma)` en `AgFabricaIndividuos.cs` y su consumo en `AgConsentimientoVacantes.cs`, alineando la semilla de clasificación con la cohorte del aula en asignaturas MultiSemestre.
+- **Fase 2059:** En `AgConsentimientoVacantes.cs`, se emite `asigs.Add(g.Key)` únicamente si todas las cohortes demandadas de la asignatura carecen de docente habilitado. Si solo una cohorte carece de docente, se restringe al par granular `claves.Add($"{asig}:{sede}")`.
+- **Fase 2060:** En `AgValidadorReglas.cs`, incorporación de `OrigenVacante.NoDocente` para motivos `SIN_PLAN_OLEADA` y `SIN_BLOQUE_NIVEL`, excluyéndolos de los contadores `R15` (liberadas) y `R16` (estructurales docentes).
+- **Fase 2061:** Seguimiento git mediante `git add` de los 3 archivos nuevos (`AgConsentimientoVacantes.cs`, `VacanteEstructuralInfo.cs`, `AgConsentimientoVacantesTests.cs`), sincronización en `REGISTRY.md` (fila R-139, §2 `ronda=465`, `fase=2061`) y pruebas de validación añadidas en las 3 suites de tests.
+
+### Verificación de Principios (Ronda 465)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2057 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFabricaIndividuos.cs:940-970`, `AgFabricaIndividuosTests.cs:516-555` |
+| F2058 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFabricaIndividuos.cs:342-344, 942-972`, `AgConsentimientoVacantes.cs:55-75`, `AgFabricaIndividuosTests.cs:556-580`, `AgConsentimientoVacantesTests.cs:145-180` |
+| F2059 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgConsentimientoVacantes.cs:25-85`, `AgConsentimientoVacantesTests.cs:111-144` |
+| F2060 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgValidadorReglas.cs:715-785`, `AgValidadorReglasTests.cs:1690-1775` |
+| F2061 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `git status (archivos seguidos en index)`, `REGISTRY.md:27-28, 176` |
+
+---
+
+## Ronda 466 — Aislamiento de motivos no docentes en fallos de patrón, filtro de aulas generables y reutilización de consentimiento informado (Fases 2062–2065)
+
+### Resumen de la Ronda
+- **Fase 2062:** En `AgFabricaIndividuos.cs:715`, asignación de `AgMotivoVacante.SIN_PLAN_OLEADA` cuando `resPatron.IsFailure`, eliminando la falsa clasificación como `SIN_DISPONIBILIDAD` que incrementaba `liberadas` en `R15`.
+- **Fase 2063:** En `AgConsentimientoVacantes.cs:32`, adición del filtro `ctx.ManifiestoCobertura == null || ctx.PuedeGenerarAula(aa.IdAula)`, descartando cohortes en aulas no disponibles o bloqueadas.
+- **Fase 2064:** En `AgFormGeneradorHorarios.cs:2675-2715`, verificación de idempotencia en Optimización mediante `SetEquals`; se reutiliza el consentimiento aprobado en pre-vuelo P07 evitando el doble diálogo modal idéntico.
+- **Fase 2065:** Trazabilidad formal en `REGISTRY.md` (fila R-140, §2 `ronda=466`, `fase=2065`) y validación mediante tests unitarios añadidos en las suites correspondientes.
+
+### Verificación de Principios (Ronda 466)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2062 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFabricaIndividuos.cs:715`, `AgFabricaIndividuosTests.cs:583-605`, `AgValidadorReglasTests.cs:1780-1810` |
+| F2063 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgConsentimientoVacantes.cs:32`, `AgConsentimientoVacantesTests.cs:186-215` |
+| F2064 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:2675-2715` |
+| F2065 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `REGISTRY.md:27-28, 177`, suites de pruebas en disco |
+
+---
+
+## Ronda 467 — Consentimiento informado idempotente y unificado, erradicación de doble diálogo P07/optimización y cobertura de pruebas (Fases 2066–2068)
+
+### Resumen de la Ronda
+- **Fase 2066:** Extracción de método unificado e idempotente `AsegurarConsentimientoVacantes(bool interactivo)` en `AgFormGeneradorHorarios.cs:1446-1496`, consumido en `EjecutarDiagnosticoPreVueloAsync` e `IniciarOptimizacionAsync`.
+- **Fase 2067:** Cobertura de pruebas unitarias en `AgConsentimientoVacantesTests.cs`: inclusión con manifiesto nulo, exclusión con manifiesto construido, idempotencia de `SetEquals` con mismo universo y disparador ante divergencia de claves.
+- **Fase 2068:** Cierre formal en `REGISTRY.md` (fila R-141, §2 `ronda=467`, `fase=2068`), sincronización de bitácoras vivas e indexado en control de versiones.
+
+### Verificación de Principios (Ronda 467)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2066 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:1446-1496, 1741, 2700` |
+| F2067 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgConsentimientoVacantesTests.cs:186-327` |
+| F2068 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `REGISTRY.md:27-28, 178`, `implementation_plan.md`, `walkthrough.md` |
+
+---
+
+## Ronda 468 — Erradicación definitiva del doble diálogo de consentimiento, unificación de logs y helper puro EsVigente (Fases 2069–2072)
+
+### Resumen de la Ronda
+- **Fase 2069:** Eliminación de la llamada a `AsegurarConsentimientoVacantes` en `EjecutarDiagnosticoPreVueloAsync` (P07). El flujo garantiza que la consulta modal ocurra en un único punto canónico en `IniciarOptimizacionAsync` tras construir el manifiesto de cobertura.
+- **Fase 2070:** Normalización de logs con la etiqueta `[CONSENTIMIENTO]` en `AgFormGeneradorHorarios.cs`.
+- **Fase 2071:** Implementación de `AgConsentimientoVacantes.EsVigente` y pruebas unitarias dedicadas en `AgConsentimientoVacantesTests.cs`.
+- **Fase 2072:** Registro en `REGISTRY.md` (fila R-142, §2 `ronda=468`, `fase=2072`), verificación de rotación e indexación en git stage.
+
+### Verificación de Principios (Ronda 468)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2069 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:1730-1745, 2690-2705` |
+| F2070 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:1446-1496` |
+| F2071 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgConsentimientoVacantes.cs:86-95`, `AgConsentimientoVacantesTests.cs:282-340` |
+| F2072 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `REGISTRY.md:27-28, 179`, `implementation_plan.md`, `walkthrough.md` |
+
+---
+
+## Ronda 469 — Precondición de manifiesto antes de consentimiento en corrida y cierre de ciclo (Fases 2073–2074)
+
+### Resumen de la Ronda
+- **Fase 2073:** Reordenamiento en `AgFormGeneradorHorarios.cs:2690-2705`: precondición de cobertura evaluada antes de invocar `AsegurarConsentimientoVacantes`.
+- **Fase 2074:** Cierre y gate de las olas 464–469, registro en `REGISTRY.md` (fila R-143, §2 `ronda=469`, `fase=2074`), compilación y empaquetado release v1.6.4.31.
+
+### Verificación de Principios (Ronda 469)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2073 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:2690-2705` |
+| F2074 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `REGISTRY.md:27-28, 180`, `implementation_plan.md`, `walkthrough.md` |
+
 
 
 

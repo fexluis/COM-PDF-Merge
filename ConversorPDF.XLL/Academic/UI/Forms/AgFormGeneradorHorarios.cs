@@ -1404,6 +1404,21 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                         .Select(a => a.AulaRef).ToList()
                     : new List<string>();
                 traza.Dato("CoberturaDocente", $"{asignaturasConPool}/{totalAsignaturas}");
+                // Fase 2053: Telemetría de pool efectivo por programa/semestre sobre asignaturas demandadas
+                if (ctx.AulaAsignaturas != null && ctx.AulasPorId != null && ctx.AsignaturasPorId != null)
+                {
+                    var efectivos = ctx.AulaAsignaturas
+                        .Select(aa =>
+                        {
+                            ctx.AulasPorId.TryGetValue(aa.IdAula, out var au);
+                            ctx.AsignaturasPorId.TryGetValue(aa.IdAsignatura, out var asg);
+                            int idProg = (asg?.IdPrograma ?? 0) > 0 ? asg.IdPrograma : (au?.IdPrograma ?? 0);
+                            int habCount = ctx.PoolHabilitado(aa.IdAsignatura, idProg, au?.Semestre).Count;
+                            return $"{aa.IdAsignatura}:{habCount}";
+                        })
+                        .Distinct();
+                    traza.Dato("PoolEfectivo", string.Join(" ", efectivos));
+                }
                 traza.Dato("AulasSinAsignaturas", aulasHuerfanas.Count);
                 if (aulasHuerfanas.Count > 0)
                     traza.Advertencia("AulasHuerfanasAlcance",
@@ -1422,6 +1437,59 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
 
                 return Result.Success(ctx);
             }
+        }
+
+        /// <summary>
+        /// Asegura de forma idempotente el consentimiento informado de vacantes estructurales (Fases 2052, 2055, 2064, 2066, 2069, 2070).
+        /// Reutiliza el consentimiento vigente si el universo no ha cambiado evitando diálogos duplicados.
+        /// </summary>
+        private bool AsegurarConsentimientoVacantes(bool interactivo = true)
+        {
+            var detalle = AgConsentimientoVacantes.Calcular(_contextoActual, out var asigs, out var claves);
+            if (detalle.Count == 0)
+            {
+                _contextoActual?.AsignaturasVacantesConsentidas?.Clear();
+                _contextoActual?.ClavesVacantesConsentidas?.Clear();
+                return true;
+            }
+
+            bool vigente = AgConsentimientoVacantes.EsVigente(_contextoActual, asigs, claves);
+
+            if (vigente)
+            {
+                Log($"[CONSENTIMIENTO] Reutilizando universo vigente ({asigs.Count} asignaturas, {detalle.Count} cohortes).");
+                return true;
+            }
+
+            if (!interactivo) return false;
+
+            string lista = string.Join("\n• ", detalle
+                .GroupBy(d => d.IdAsignatura)
+                .Select(g => $"{g.Key}: {g.Select(x => $"{x.Semestre}/{x.Grupo} sede {x.IdSede}").Distinct().Count()} cohorte(s) → {g.First().Motivo}"));
+
+            MarcarDecisionPreparacion();
+            var dialogRes = MessageBox.Show(this,
+                $"Estas materias quedarán en VACANTE (sin docente habilitado para su programa/semestre):\n• {lista}\n\n¿Autoriza continuar?",
+                "Vacantes estructurales de la corrida",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning);
+
+            if (dialogRes != DialogResult.Yes)
+            {
+                Log("[CONSENTIMIENTO] Cancelado por el usuario: vacantes estructurales sin autorizar.");
+                _contextoActual?.AsignaturasVacantesConsentidas?.Clear();
+                _contextoActual?.ClavesVacantesConsentidas?.Clear();
+                return false;
+            }
+
+            ReanudarValidacionPreparacion();
+            if (_contextoActual != null)
+            {
+                _contextoActual.AsignaturasVacantesConsentidas = asigs;
+                _contextoActual.ClavesVacantesConsentidas = claves;
+            }
+            Log($"[CONSENTIMIENTO] Aceptado por el usuario: {asigs.Count} asignaturas ({detalle.Count} cohortes) pasarán a VACANTE.");
+            return true;
         }
 
         /// <summary>
@@ -1666,63 +1734,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     return;
                 }
 
-                // Fase 295, 296, 303 & 321: Validar cobertura de pool docente (Consentimiento de Vacante)
-                int totalAsig = _contextoActual.Asignaturas.Count;
-                var asignaturasSinPool = _contextoActual.Asignaturas
-                    .Where(a => !(_contextoActual.PoolPorAsignatura != null &&
-                                  _contextoActual.PoolPorAsignatura.TryGetValue(a.Id, out var pl) &&
-                                  pl.Any(p => p.Activo == 1)))
-                    .ToList();
-                int asigSinPool = asignaturasSinPool.Count;
-                int asigConPool = totalAsig - asigSinPool;
-
-                traza.Dato("CoberturaDocente", $"{asigConPool}/{totalAsig}");
-
-                if (asigSinPool > 0)
-                {
-                    string listaSin = AgFormatoAsignatura.BulletList(asignaturasSinPool);
-                    traza.Dato("AsignaturasSinDocente", listaSin.Replace("\n", " "));
-                    traza.Causa(AgCausaFallo.SinPoolDocente, $"{asigSinPool}/{totalAsig} → VACANTE");
-                    Log($"[PRE-VUELO] {asigSinPool}/{totalAsig} asignaturas SIN docente habilitado en 'terceros_asignaturas':\n• {listaSin}");
-
-                    var dialogRes = MessageBox.Show(this,
-                        $"Hay {asigSinPool} de {totalAsig} asignaturas sin docente habilitado en el pool:\n• {listaSin}\n\n" +
-                        "Se marcarán como VACANTE (es_vacante=1) con penalización suave y podrá resolverlas después en el Panel de Vacantes.\n\n" +
-                        "¿Continuar con la optimización?",
-                        "Diagnóstico Pre-Vuelo",
-                        MessageBoxButtons.YesNo,
-                        MessageBoxIcon.Warning);
-
-                    if (dialogRes != DialogResult.Yes)
-                    {
-                        traza.Fin(false, "Cancelado por cobertura incompleta");
-                        Log($"[DIAGNÓSTICO PRE-VUELO] Cancelado por el usuario debido a {asigSinPool}/{totalAsig} asignaturas sin pool.");
-                        _contextoActual?.AsignaturasVacantesConsentidas?.Clear();
-                        _contextoActual?.ClavesVacantesConsentidas?.Clear();
-                        return;
-                    }
-
-                    _contextoActual.AsignaturasVacantesConsentidas = new HashSet<int>(asignaturasSinPool.Select(a => a.Id));
-                    // Fase 2034: Poblar claves vacantes consentidas por par asignatura:sede
-                    _contextoActual.ClavesVacantesConsentidas = new HashSet<string>(
-                        _contextoActual.AulaAsignaturas != null
-                            ? _contextoActual.AulaAsignaturas
-                                .Where(aa => _contextoActual.AsignaturasVacantesConsentidas.Contains(aa.IdAsignatura))
-                                .Select(aa =>
-                                {
-                                    int idSede = _contextoActual.AulasPorId != null && _contextoActual.AulasPorId.TryGetValue(aa.IdAula, out var a) ? a.IdSede : 0;
-                                    return $"{aa.IdAsignatura}:{idSede}";
-                                })
-                                .Distinct()
-                            : Enumerable.Empty<string>(),
-                        StringComparer.OrdinalIgnoreCase);
-                    Log($"[DIAGNÓSTICO PRE-VUELO] Aceptado por el usuario: {asigSinPool}/{totalAsig} asignaturas pasarán a VACANTE.");
-                }
-                else
-                {
-                    _contextoActual?.AsignaturasVacantesConsentidas?.Clear();
-                    _contextoActual?.ClavesVacantesConsentidas?.Clear();
-                }
+                // Fase 2069: el consentimiento informado no se solicita en P07 (pre-vuelo sin ejecución); se asegura una sola vez en IniciarOptimizacionAsync tras el manifiesto.
 
                 var factibilidadResult = await _validadorVentana.ValidarFactibilidadAsync(_contextoActual, CancellationToken.None);
 
@@ -2676,56 +2688,19 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 }
 
                 ReanudarValidacionPreparacion();
-                // Fase 295, 296, 303 & 321: Validar cobertura de pool docente (Consentimiento de Vacante)
-                int totalAsigOpt = _contextoActual.Asignaturas.Count;
-                var asignaturasSinPoolOpt = _contextoActual.Asignaturas
-                    .Where(a => !(_contextoActual.PoolPorAsignatura != null &&
-                                  _contextoActual.PoolPorAsignatura.TryGetValue(a.Id, out var pl) &&
-                                  pl.Any(p => p.Activo == 1)))
-                    .ToList();
-                int asigSinPoolOpt = asignaturasSinPoolOpt.Count;
-                int asigConPoolOpt = totalAsigOpt - asigSinPoolOpt;
-
-                traza.Dato("CoberturaDocente", $"{asigConPoolOpt}/{totalAsigOpt}");
-
-                if (asigSinPoolOpt > 0)
-                {
-                    string listaSinOpt = AgFormatoAsignatura.BulletList(asignaturasSinPoolOpt);
-                    traza.Dato("AsignaturasSinDocente", listaSinOpt.Replace("\n", " "));
-                    traza.Causa(AgCausaFallo.SinPoolDocente, $"{asigSinPoolOpt}/{totalAsigOpt} → VACANTE");
-                    Log($"[OPTIMIZACIÓN] {asigSinPoolOpt}/{totalAsigOpt} asignaturas SIN docente habilitado en 'terceros_asignaturas':\n• {listaSinOpt}");
-
-                    MarcarDecisionPreparacion();
-                    var dialogRes = MessageBox.Show(this,
-                        $"Hay {asigSinPoolOpt} de {totalAsigOpt} asignaturas sin docente habilitado en el pool:\n• {listaSinOpt}\n\n" +
-                        "Se marcarán como VACANTE (es_vacante=1) con penalización suave y podrá resolverlas después en el Panel de Vacantes.\n\n" +
-                        "¿Continuar con la optimización?",
-                        "Validación Pre-Vuelo",
-                        MessageBoxButtons.YesNo,
-                        MessageBoxIcon.Warning);
-
-                    if (dialogRes != DialogResult.Yes)
-                    {
-                        traza.Fin(false, "Cancelado por cobertura incompleta");
-                        Log($"[OPTIMIZACIÓN] Cancelado por el usuario debido a {asigSinPoolOpt}/{totalAsigOpt} asignaturas sin pool.");
-                        cancelacionDetectada = true;
-                        _contextoActual?.AsignaturasVacantesConsentidas?.Clear();
-                        EstablecerEstadoOptimizacion(EstadoVisualOptimizacion.Cancelado, "POOL_CONTINUACION_RECHAZADA");
-                        return;
-                    }
-
-                    ReanudarValidacionPreparacion();
-                    _contextoActual.AsignaturasVacantesConsentidas = new HashSet<int>(asignaturasSinPoolOpt.Select(a => a.Id));
-                    Log($"[OPTIMIZACIÓN] Aceptado por el usuario: {asigSinPoolOpt}/{totalAsigOpt} asignaturas pasarán a VACANTE.");
-                }
-                else
-                {
-                    _contextoActual?.AsignaturasVacantesConsentidas?.Clear();
-                }
-
+                // Fase 2073: Guard de precondición antes de interactuar con el usuario o registrar consentimiento.
                 // Captura final tras cualquier recarga de escalado; ninguna corrida pierde su manifiesto.
                 if (_contextoActual.ManifiestoCobertura == null || _contextoActual.ValidacionPlanAprobado == null)
                     throw new InvalidOperationException("PREPARACION_COBERTURA_AUSENTE");
+
+                // Fase 295, 296, 303 & 321: Validar cobertura de pool docente (Consentimiento de Vacante)
+                // Fase 2052, Fase 2055, Fase 2064, Fase 2066 & Fase 2069: Consentimiento informado idempotente
+                if (!AsegurarConsentimientoVacantes(interactivo: true))
+                {
+                    cancelacionDetectada = true;
+                    EstablecerEstadoOptimizacion(EstadoVisualOptimizacion.Cancelado, "CONSENTIMIENTO_RECHAZADO");
+                    return;
+                }
                 // T1: una nueva corrida no purga staging, histórico ni auditoría de corridas anteriores.
                 _ctsEjecucion.Token.ThrowIfCancellationRequested();
 
@@ -2934,7 +2909,11 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 {
                     { "intentoId", intento.ToString("D") },
                     { "version", App.APP_VERSION },
-                    { "vacantesConsentidas", _contextoActual.AsignaturasVacantesConsentidas != null ? _contextoActual.AsignaturasVacantesConsentidas.OrderBy(id => id).ToList() : new List<int>() },
+                    { "vacantesConsentidas", (_contextoActual.AsignaturasVacantesConsentidas ?? Enumerable.Empty<int>())
+                        .OrderBy(id => id)
+                        .Cast<object>()
+                        .Concat((_contextoActual.ClavesVacantesConsentidas ?? Enumerable.Empty<string>()).OrderBy(x => x))
+                        .ToList() },
                     { "manifiestoCobertura", _contextoActual.ManifiestoCobertura },
                     { "planCanonico", _contextoActual.PlanAprobadoSnapshot },
                     { "validacionPlan", _contextoActual.ValidacionPlanAprobado },

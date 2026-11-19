@@ -333,6 +333,29 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
         public bool TryGetBloque(int dia, double dur, out AgBloqueHorario b)
             => TryGetBloque(dia, dur, null, out b);
 
+        /// <summary>
+        /// Determina si existe algún registro en el catálogo/pool para la asignatura (Fase 2053).
+        /// </summary>
+        public bool PoolExiste(int idAsignatura) =>
+            PoolPorAsignatura != null && PoolPorAsignatura.TryGetValue(idAsignatura, out var p) && p != null && p.Count > 0;
+
+        /// <summary>
+        /// Obtiene los candidatos activos y habilitados en el pool docente para el programa, asignatura y semestre dados (Fase 2053).
+        /// Excluye el centinela de vacante.
+        /// </summary>
+        public IReadOnlyList<TerceroAsignatura> PoolHabilitado(int idAsignatura, int idPrograma, string semestre)
+        {
+            if (PoolPorAsignatura == null || !PoolPorAsignatura.TryGetValue(idAsignatura, out var pool) || pool == null)
+            {
+                return Array.Empty<TerceroAsignatura>();
+            }
+
+            return pool.Where(p => p.Activo == 1
+                                && (IdTerceroVacante <= 0 || p.IdTercero != IdTerceroVacante)
+                                && EsDocenteHabilitado(p.IdTercero, idPrograma, idAsignatura, semestre))
+                       .ToList();
+        }
+
         public bool EsDocenteHabilitado(int idTercero, int idPrograma, int idAsignatura, string semestre)
         {
             if (idTercero <= 0) return false;

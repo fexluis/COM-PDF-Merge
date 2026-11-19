@@ -1520,5 +1520,291 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             individuo.Violaciones.Should().Contain(v => v.Regla == AgReglaViolacion.R5_HabilitacionDocentePool && !v.EsDura);
             individuo.HardViolations.Should().Be(0);
         }
+
+        [Fact]
+        public void R15_WhenEstructuralesConsentidasYLiberadasBajoTope_ShouldBeFeasible()
+        {
+            // Arrange (Fase 2054): 48 estructurales consentidas + 15 liberadas, tope 24 => HARD=0
+            var contexto = new AgContexto();
+            contexto.MaxVacantesForzadas = 24;
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
+
+            for (int i = 1; i <= 48; i++)
+            {
+                contexto.AsignaturasVacantesConsentidas.Add(100 + i);
+            }
+
+            var individuo = new AgIndividuo();
+            for (int i = 1; i <= 48; i++)
+            {
+                individuo.Genes.Add(new AgGen
+                {
+                    Id = i,
+                    IdAsignatura = 100 + i,
+                    IdAula = 1,
+                    IdBloqueHorario = 1,
+                    EsVacante = 1,
+                    IdTercero = 0,
+                    MotivoVacante = AgMotivoVacante.SIN_CANDIDATOS.Codigo()
+                });
+            }
+            for (int i = 1; i <= 15; i++)
+            {
+                individuo.Genes.Add(new AgGen
+                {
+                    Id = 100 + i,
+                    IdAsignatura = 200 + i,
+                    IdAula = 1,
+                    IdBloqueHorario = 1,
+                    EsVacante = 1,
+                    IdTercero = 0,
+                    MotivoVacante = AgMotivoVacante.SIN_DISPONIBILIDAD.Codigo()
+                });
+            }
+
+            // Act
+            _sut.Evaluar(individuo, contexto);
+
+            // Assert
+            individuo.HardViolations.Should().Be(0);
+            individuo.Violaciones.Should().NotContain(v => v.Regla == AgReglaViolacion.R15_VacanteExcedida);
+            individuo.Violaciones.Should().NotContain(v => v.Regla == AgReglaViolacion.R16_VacanteEstructuralNoConsentida);
+        }
+
+        [Fact]
+        public void R16_WhenEstructuralNoConsentida_ShouldEmitOnePerSubject()
+        {
+            // Arrange (Fase 2054): 48 genes en 9 materias estructurales sin consentir => 9 violaciones R16, R15=0
+            var contexto = new AgContexto();
+            contexto.MaxVacantesForzadas = 24;
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
+
+            var individuo = new AgIndividuo();
+            for (int i = 1; i <= 48; i++)
+            {
+                int asigId = 10 + (i % 9);
+                individuo.Genes.Add(new AgGen
+                {
+                    Id = i,
+                    IdAsignatura = asigId,
+                    IdAula = 1,
+                    IdBloqueHorario = 1,
+                    EsVacante = 1,
+                    IdTercero = 0,
+                    MotivoVacante = AgMotivoVacante.NO_CUMPLE_REQUISITOS.Codigo()
+                });
+            }
+
+            // Act
+            _sut.Evaluar(individuo, contexto);
+
+            // Assert
+            individuo.Violaciones.Count(v => v.Regla == AgReglaViolacion.R16_VacanteEstructuralNoConsentida).Should().Be(9);
+            individuo.Violaciones.Should().NotContain(v => v.Regla == AgReglaViolacion.R15_VacanteExcedida);
+            individuo.HardViolations.Should().Be(9);
+        }
+
+        [Fact]
+        public void R15_WhenLiberadasExcedenTope_ShouldEmitSingleAggregate()
+        {
+            // Arrange (Fase 2054): 30 liberadas, tope 24 => 1 violación R15
+            var contexto = new AgContexto();
+            contexto.MaxVacantesForzadas = 24;
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
+
+            var individuo = new AgIndividuo();
+            for (int i = 1; i <= 30; i++)
+            {
+                individuo.Genes.Add(new AgGen
+                {
+                    Id = i,
+                    IdAsignatura = 100 + i,
+                    IdAula = 1,
+                    IdBloqueHorario = 1,
+                    EsVacante = 1,
+                    IdTercero = 0,
+                    MotivoVacante = AgMotivoVacante.SIN_DISPONIBILIDAD.Codigo()
+                });
+            }
+
+            // Act
+            _sut.Evaluar(individuo, contexto);
+
+            // Assert
+            individuo.Violaciones.Count(v => v.Regla == AgReglaViolacion.R15_VacanteExcedida).Should().Be(1);
+            individuo.HardViolations.Should().Be(1);
+        }
+
+        [Fact]
+        public void Corrida110_Regression_EstructuralesConsentidas_ShouldBeFeasible()
+        {
+            // Arrange (Fase 2056): Fixture regresión Corrida #110 (48 estructurales consentidas + 15 liberadas, tope 24 => HARD=0, R16=0)
+            var contexto = new AgContexto();
+            contexto.MaxVacantesForzadas = 24;
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
+
+            int[] asigsEstructurales = { 37, 38, 39, 40, 41, 42, 53, 54, 55, 56 };
+            foreach (var asigId in asigsEstructurales)
+            {
+                contexto.AsignaturasVacantesConsentidas.Add(asigId);
+            }
+
+            var individuo = new AgIndividuo();
+            for (int i = 0; i < 48; i++)
+            {
+                individuo.Genes.Add(new AgGen
+                {
+                    Id = i + 1,
+                    IdAsignatura = asigsEstructurales[i % asigsEstructurales.Length],
+                    IdAula = 1,
+                    IdBloqueHorario = 1,
+                    EsVacante = 1,
+                    IdTercero = 0,
+                    MotivoVacante = AgMotivoVacante.NO_CUMPLE_REQUISITOS.Codigo()
+                });
+            }
+
+            for (int i = 0; i < 15; i++)
+            {
+                individuo.Genes.Add(new AgGen
+                {
+                    Id = 50 + i,
+                    IdAsignatura = 200 + i,
+                    IdAula = 1,
+                    IdBloqueHorario = 1,
+                    EsVacante = 1,
+                    IdTercero = 0,
+                    MotivoVacante = AgMotivoVacante.SIN_DISPONIBILIDAD.Codigo()
+                });
+            }
+
+            // Act
+            _sut.Evaluar(individuo, contexto);
+
+            // Assert
+            individuo.HardViolations.Should().Be(0);
+            individuo.Violaciones.Should().NotContain(v => v.Regla == AgReglaViolacion.R16_VacanteEstructuralNoConsentida);
+            individuo.Violaciones.Should().NotContain(v => v.Regla == AgReglaViolacion.R15_VacanteExcedida);
+            individuo.Estado.Should().Be(AgEstadoIndividuo.Factible);
+        }
+
+        [Fact]
+        public void R15_WhenVacanteSinPlanOleada_ShouldNotCountAsLiberada()
+        {
+            // Arrange (Fase 2060): Genes con motivo SIN_PLAN_OLEADA no deben contarse como liberadas ni inflar R15
+            var contexto = new AgContexto();
+            contexto.MaxVacantesForzadas = 5;
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
+
+            var individuo = new AgIndividuo();
+            // 10 genes con SIN_PLAN_OLEADA (superaría el tope de 5 si se contaran como liberadas)
+            for (int i = 1; i <= 10; i++)
+            {
+                individuo.Genes.Add(new AgGen
+                {
+                    Id = i,
+                    IdAsignatura = 100 + i,
+                    IdAula = 1,
+                    IdBloqueHorario = 1,
+                    EsVacante = 1,
+                    IdTercero = 0,
+                    MotivoVacante = AgMotivoVacante.SIN_PLAN_OLEADA.Codigo()
+                });
+            }
+
+            // Act
+            _sut.Evaluar(individuo, contexto);
+
+            // Assert: No debe disparar R15 ni R16
+            individuo.Violaciones.Should().NotContain(v => v.Regla == AgReglaViolacion.R15_VacanteExcedida);
+            individuo.Violaciones.Should().NotContain(v => v.Regla == AgReglaViolacion.R16_VacanteEstructuralNoConsentida);
+        }
+
+        [Fact]
+        public void R16_WhenVacanteSinBloqueNivel_ShouldNotEmit()
+        {
+            // Arrange (Fase 2060): Genes con motivo SIN_BLOQUE_NIVEL son causa no docente (R14) y no emiten R16
+            var contexto = new AgContexto();
+            contexto.MaxVacantesForzadas = 5;
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
+
+            var individuo = new AgIndividuo();
+            individuo.Genes.Add(new AgGen
+            {
+                Id = 1,
+                IdAsignatura = 50,
+                IdAula = 1,
+                IdBloqueHorario = 1,
+                EsVacante = 1,
+                IdTercero = 0,
+                MotivoVacante = AgMotivoVacante.SIN_BLOQUE_NIVEL.Codigo()
+            });
+
+            // Act
+            _sut.Evaluar(individuo, contexto);
+
+            // Assert
+            individuo.Violaciones.Should().NotContain(v => v.Regla == AgReglaViolacion.R16_VacanteEstructuralNoConsentida);
+            individuo.Violaciones.Should().NotContain(v => v.Regla == AgReglaViolacion.R15_VacanteExcedida);
+        }
+
+        [Fact]
+        public void CorridaConPlanInfactible_ShouldNotEmitR15()
+        {
+            // Arrange (Fase 2060): Corrida con 20 vacantes por plan infactible y tope forzadas = 0
+            var contexto = new AgContexto();
+            contexto.MaxVacantesForzadas = 0;
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
+
+            var individuo = new AgIndividuo();
+            for (int i = 1; i <= 20; i++)
+            {
+                individuo.Genes.Add(new AgGen
+                {
+                    Id = i,
+                    IdAsignatura = 10 + i,
+                    IdAula = 1,
+                    IdBloqueHorario = 1,
+                    EsVacante = 1,
+                    IdTercero = 0,
+                    MotivoVacante = AgMotivoVacante.SIN_PLAN_OLEADA.Codigo()
+                });
+            }
+
+            // Act
+            _sut.Evaluar(individuo, contexto);
+
+            // Assert
+            individuo.Violaciones.Should().NotContain(v => v.Regla == AgReglaViolacion.R15_VacanteExcedida);
+        }
+
+        [Fact]
+        public void R15_WhenPatronNoConstruible_ShouldNotCountAsLiberada()
+        {
+            // Arrange (Fase 2062): Gen con patrón no construible (motivo SIN_PLAN_OLEADA y IdTercero=0)
+            var contexto = new AgContexto();
+            contexto.MaxVacantesForzadas = 0;
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 1), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
+
+            var individuo = new AgIndividuo();
+            individuo.Genes.Add(new AgGen
+            {
+                Id = 1,
+                IdAsignatura = 10,
+                IdAula = 1,
+                IdBloqueHorario = 1,
+                EsVacante = 1,
+                IdTercero = 0,
+                MotivoVacante = AgMotivoVacante.SIN_PLAN_OLEADA.Codigo()
+            });
+
+            // Act
+            _sut.Evaluar(individuo, contexto);
+
+            // Assert: No debe contar como liberada (R15), pero sí reportar R7 (Fase 1077/1085/2062)
+            individuo.Violaciones.Should().NotContain(v => v.Regla == AgReglaViolacion.R15_VacanteExcedida);
+            individuo.Violaciones.Should().ContainSingle(v => v.Regla == AgReglaViolacion.R7_CoberturaHorariaIncompleta);
+            individuo.HardViolations.Should().Be(1);
+        }
     }
 }

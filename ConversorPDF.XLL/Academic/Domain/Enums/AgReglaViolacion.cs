@@ -38,6 +38,7 @@ namespace ConversorPDF.XLL.Academic.Domain.Enums
         R14_BloqueHorarioNoAsignado = 32,       // Fase 900: Gen con carga horaria pero sin bloque asignado (0)
         R14_BloqueSolapadoPorIntervalo = 33,    // Fase 935/957: Bloques con solape temporal por intervalo matemático
         R15_VacanteExcedida = 34,               // Fase 2018: Total de vacantes forzadas supera el déficit estructural calculado
+        R16_VacanteEstructuralNoConsentida = 35, // Fase 2054: Asignatura con vacante estructural sin consentimiento previo
 
         // Restricciones Blandas (Soft Constraints)
         S1_HuecosHorarios = 101,

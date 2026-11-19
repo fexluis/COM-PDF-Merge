@@ -340,7 +340,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     if (esVacante == 1)
                     {
                         idDocente = contexto.IdTerceroVacante;
-                        var motivo = ClasificarMotivo(contexto, asig);
+                        // Fase 2058: Clasificar con el semestre y programa de la cohorte/aula real
+                        var motivo = ClasificarMotivo(contexto, asig, aula?.Semestre ?? asig.Semestre, asig.IdPrograma > 0 ? asig.IdPrograma : (aula?.IdPrograma ?? 0));
                         motivoVacante = motivo.Codigo();
                         candidatosPool = 0;
                     }
@@ -711,7 +712,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                                 $"PatronNoConstruible|{idCorrida}|{aula?.Id}|{asig?.Id}",
                                 $"[AG] Patrón no construible en aula={aula?.Id}, asig={asig?.Id}, dias=[{string.Join(",", diasK)}], horas={totalHoras:0.#}, unidad={unidadPatron}: {resPatron.Error}");
                             esVacante = 1;
-                            motivoVacante = AgMotivoVacante.SIN_DISPONIBILIDAD.Codigo();
+                            // Fase 2062: Asignar motivo no docente para evitar que compute falsamente como liberada por el AG en R15
+                            motivoVacante = AgMotivoVacante.SIN_PLAN_OLEADA.Codigo();
                             if (contexto.IdTerceroVacante > 0)
                             {
                                 idDocente = contexto.IdTerceroVacante;
@@ -935,31 +937,38 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         }
 
         /// <summary>
-        /// Clasifica el motivo por el cual una asignatura queda en condición de vacante (Fase 319).
+        /// Clasifica el motivo por el cual una asignatura queda en condición de vacante (Fases 319, 2053, 2057, 2058).
         /// Prioridad descendente: POOL_VACIO / SIN_CANDIDATOS -> NO_CUMPLE_REQUISITOS -> SIN_DISPONIBILIDAD.
         /// </summary>
         public static AgMotivoVacante ClasificarMotivo(AgContexto c, Asignatura a)
+            => ClasificarMotivo(c, a, a?.Semestre, a?.IdPrograma ?? 0);
+
+        /// <summary>
+        /// Sobrecarga con semestre y programa específicos de la cohorte/aula demandada (Fase 2058).
+        /// Excluye el centinela vacante para no convertir falsamente SIN_CANDIDATOS en NO_CUMPLE_REQUISITOS (Fase 2057 / F1996).
+        /// </summary>
+        public static AgMotivoVacante ClasificarMotivo(AgContexto c, Asignatura a, string semestre, int idPrograma)
         {
             if (c == null || a == null) return AgMotivoVacante.SIN_CANDIDATOS;
 
-            if (c.PoolPorAsignatura == null || !c.PoolPorAsignatura.TryGetValue(a.Id, out var pool) || pool.Count == 0)
+            if (!c.PoolExiste(a.Id))
             {
                 return (c.Docentes?.Count ?? 0) == 0 ? AgMotivoVacante.POOL_VACIO : AgMotivoVacante.SIN_CANDIDATOS;
             }
 
-            // Fase 1996: Excluir el centinela IdTerceroVacante en el conteo de habilitados y activos reales
-            int idCentinela = c.IdTerceroVacante > 0 ? c.IdTerceroVacante : -1;
-            var activosReales = pool.Where(p => p.Activo == 1 && p.IdTercero != idCentinela).ToList();
-
-            if (activosReales.Count == 0)
+            int centinela = c.IdTerceroVacante;
+            var filas = c.PoolPorAsignatura[a.Id];
+            bool hayActivosReales = filas.Any(p => p.Activo == 1 && (centinela <= 0 || p.IdTercero != centinela));
+            if (!hayActivosReales)
             {
-                // Si todas las filas en pool están inactivas -> NO_CUMPLE_REQUISITOS; si el único en pool era el centinela -> SIN_CANDIDATOS
-                bool hayInactivos = pool.Any(p => p.Activo == 0 && p.IdTercero != idCentinela);
-                return hayInactivos ? AgMotivoVacante.NO_CUMPLE_REQUISITOS : AgMotivoVacante.SIN_CANDIDATOS;
+                bool hayInactivosReales = filas.Any(p => p.Activo == 0 && (centinela <= 0 || p.IdTercero != centinela));
+                return hayInactivosReales ? AgMotivoVacante.NO_CUMPLE_REQUISITOS : AgMotivoVacante.SIN_CANDIDATOS;
             }
 
-            // Si existen en pool con activo=1 pero ninguno habilitado para el programa/semestre
-            if (!activosReales.Any(p => c.EsDocenteHabilitado(p.IdTercero, a.IdPrograma, a.Id, a.Semestre)))
+            int progEfectivo = idPrograma > 0 ? idPrograma : a.IdPrograma;
+            string semEfectivo = !string.IsNullOrWhiteSpace(semestre) ? semestre : a.Semestre;
+
+            if (c.PoolHabilitado(a.Id, progEfectivo, semEfectivo).Count == 0)
             {
                 return AgMotivoVacante.NO_CUMPLE_REQUISITOS;
             }

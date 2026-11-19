@@ -161,6 +161,118 @@ Las citas `implementation_plan.md:NNNN` anteriores al corte apuntan al archivo m
 | 2050 | `AgValidadorVentana.cs` | Opcional / Evaluada sin acción bloqueante |
 | 2051 | `AgValidadorVentana.cs`, `AgFormGeneradorHorarios.cs` | Opcional / Evaluada sin acción bloqueante |
 
+---
+
+## Ronda 464: Consentimiento sobre demanda real de la corrida y separación de vacantes estructurales (R16) de liberadas (R15) (Fases 2052–2056)
+
+### Resumen de la Ronda
+- **Fase 2052:** Creación de `AgConsentimientoVacantes.cs` y `VacanteEstructuralInfo.cs`. El consentimiento de vacantes se calcula estrictamente sobre la demanda real aula-asignatura de la corrida (`ctx.AulaAsignaturas` con `AulasPorId`), eliminando la contaminación de asignaturas del catálogo de programas homónimos. Unificación del cálculo en `AgFormGeneradorHorarios.cs`.
+- **Fase 2053:** En `AgContexto.cs`, incorporación de `PoolExiste(idAsignatura)` y `PoolHabilitado(idAsignatura, idPrograma, semestre)`. En `AgFabricaIndividuos.cs`, orden de causas en `ClasificarMotivo` discriminando `SIN_CANDIDATOS` (sin registro en pool) frente a `NO_CUMPLE_REQUISITOS` (docente registrado pero no habilitado para el programa/semestre). Telemetría de `PoolEfectivo` en la carga del contexto.
+- **Fase 2054:** En `AgReglaViolacion.cs` y `AgPesosFitness.cs`, incorporación de `R16_VacanteEstructuralNoConsentida`. En `AgValidadorReglas.cs`, separación de R15 (vacantes liberadas por el AG frente a `MaxVacantesForzadas`) de R16 (vacantes estructurales no consentidas, emitiendo una infracción agregada por asignatura).
+- **Fase 2055:** Diálogo informado en `AgFormGeneradorHorarios.cs` (pre-vuelo y optimización) agrupando asignaturas demandadas con detalle de cohortes/sede y motivo. Persistencia dual íntegra (`int` y `"asig:sede"`) en `ParametrosJson` y `dict["vacantesConsentidas"]`.
+- **Fase 2056:** Registro de `AgConsentimientoVacantes.cs` y `VacanteEstructuralInfo.cs` en `ConversorPDF.XLL.csproj`. Pruebas unitarias y de regresión en `AgConsentimientoVacantesTests.cs`, `AgFabricaIndividuosTests.cs` y `AgValidadorReglasTests.cs` cubriendo el caso Corrida #110 (`HARD=0`, `R16=0`).
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2052 | `AgConsentimientoVacantes.cs`, `VacanteEstructuralInfo.cs`, `AgFormGeneradorHorarios.cs`, `ConversorPDF.XLL.csproj` | Implementado (código y tests en disco; Paso 6 sin compilación) |
+| 2053 | `AgContexto.cs`, `AgFabricaIndividuos.cs`, `AgFormGeneradorHorarios.cs` | Implementado (código y tests en disco; Paso 6 sin compilación) |
+| 2054 | `AgReglaViolacion.cs`, `AgPesosFitness.cs`, `AgValidadorReglas.cs` | Implementado (código y tests en disco; Paso 6 sin compilación) |
+| 2055 | `AgFormGeneradorHorarios.cs`, `AgCompuertaPromocion.cs` | Implementado (código y tests en disco; Paso 6 sin compilación) |
+| 2056 | `ConversorPDF.XLL.csproj`, `AgConsentimientoVacantesTests.cs`, `AgFabricaIndividuosTests.cs`, `AgValidadorReglasTests.cs` | Implementado (código y tests en disco; Paso 6 sin compilación) |
+
+---
+
+## Ronda 465: Corrección de regresión centinela, alineación de semilla cohorte y granularidad sin wildcard prematuro (Fases 2057–2061)
+
+### Resumen de la Ronda
+- **Fase 2057:** En `AgFabricaIndividuos.cs`, restauración de la exclusión estricta de `IdTerceroVacante` al evaluar candidatos activos e inactivos reales en `ClasificarMotivo`. Evita que un pool que contiene únicamente al centinela clasifique erróneamente como `NO_CUMPLE_REQUISITOS` en lugar de `SIN_CANDIDATOS` (regresión F1996).
+- **Fase 2058:** Incorporación de sobrecarga `ClasificarMotivo(c, a, semestre, idPrograma)` en `AgFabricaIndividuos.cs`, invocada tanto en la fábrica cromosómica como en `AgConsentimientoVacantes.cs` con `aula.Semestre` y `idProg`, unificando la evaluación para asignaturas MultiSemestre.
+- **Fase 2059:** En `AgConsentimientoVacantes.cs`, agrupación por asignatura y emisión de wildcard (`asigs.Add`) únicamente si **todas** las cohortes demandadas de la asignatura carecen de docente habilitado; de lo contrario, se mantiene el consentimiento acotado por clave `asig:sede`, previniendo enmascarar sedes con docentes.
+- **Fase 2060:** En `AgValidadorReglas.cs`, incorporación de `OrigenVacante` y `ClasificarOrigen`. Vacantes con motivos de causas no docentes (`SIN_PLAN_OLEADA`, `SIN_BLOQUE_NIVEL`) se excluyen del cálculo de vacantes liberadas en `R15` y de vacantes estructurales en `R16`, evitando inflar falsos positivos cuando el plan de oleadas es infactible.
+- **Fase 2061:** Seguimiento git mediante `git add` de los 3 archivos nuevos (`AgConsentimientoVacantes.cs`, `VacanteEstructuralInfo.cs`, `AgConsentimientoVacantesTests.cs`), actualización de contadores (§2 `ronda=465`, `fase=2061`) y registro de fila R-139 en `REGISTRY.md`. Pruebas unitarias de cobertura añadidas en `AgFabricaIndividuosTests.cs`, `AgConsentimientoVacantesTests.cs` y `AgValidadorReglasTests.cs`.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2057 | `AgFabricaIndividuos.cs`, `AgFabricaIndividuosTests.cs` | Implementado (código y tests en disco; Paso 6 sin compilación) |
+| 2058 | `AgFabricaIndividuos.cs`, `AgConsentimientoVacantes.cs`, `AgFabricaIndividuosTests.cs`, `AgConsentimientoVacantesTests.cs` | Implementado (código y tests en disco; Paso 6 sin compilación) |
+| 2059 | `AgConsentimientoVacantes.cs`, `AgConsentimientoVacantesTests.cs` | Implementado (código y tests en disco; Paso 6 sin compilación) |
+| 2060 | `AgValidadorReglas.cs`, `AgValidadorReglasTests.cs` | Implementado (código y tests en disco; Paso 6 sin compilación) |
+| 2061 | `git add`, `REGISTRY.md`, `AgConsentimientoVacantesTests.cs`, `AgFabricaIndividuosTests.cs`, `AgValidadorReglasTests.cs` | Implementado (archivos seguidos; Paso 6 sin compilación) |
+
+---
+
+## Ronda 466: Aislamiento de motivos no docentes en fallos de patrón, filtro de aulas generables y reutilización de consentimiento informado (Fases 2062–2065)
+
+### Resumen de la Ronda
+- **Fase 2062:** En `AgFabricaIndividuos.cs:715`, corrección del motivo de vacante cuando falla la construcción del patrón semanal (`resPatron.IsFailure`), asignando `AgMotivoVacante.SIN_PLAN_OLEADA` en lugar de `SIN_DISPONIBILIDAD`. Previene que fallas temporales del plan cuenten falsamente como liberadas por el AG e inflen `R15_VacanteExcedida`.
+- **Fase 2063:** En `AgConsentimientoVacantes.cs`, filtrado de cohortes demandadas exigiendo `ctx.ManifiestoCobertura == null || ctx.PuedeGenerarAula(aa.IdAula)`, evitando consentir o listar aulas bloqueadas o excluidas de la corrida.
+- **Fase 2064:** En `AgFormGeneradorHorarios.cs`, optimización de UX evaluando `_contextoActual.AsignaturasVacantesConsentidas.SetEquals(asigsOpt) && _contextoActual.ClavesVacantesConsentidas.SetEquals(clavesOpt)`. Si el consentimiento de P07 está vigente e idéntico, se reutiliza sin duplicar el diálogo modal ante el usuario.
+- **Fase 2065:** Trazabilidad formal en `REGISTRY.md` con fila R-140 y contadores §2 (`ronda=466`, `fase=2065`). Pruebas unitarias de soporte implementadas en `AgFabricaIndividuosTests.cs`, `AgValidadorReglasTests.cs` y `AgConsentimientoVacantesTests.cs`.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2062 | `AgFabricaIndividuos.cs`, `AgFabricaIndividuosTests.cs`, `AgValidadorReglasTests.cs` | Implementado (código y tests en disco; Paso 6 sin compilación) |
+| 2063 | `AgConsentimientoVacantes.cs`, `AgConsentimientoVacantesTests.cs` | Implementado (código y tests en disco; Paso 6 sin compilación) |
+| 2064 | `AgFormGeneradorHorarios.cs` | Implementado (código y tests en disco; Paso 6 sin compilación) |
+| 2065 | `REGISTRY.md`, `AgConsentimientoVacantesTests.cs`, `AgFabricaIndividuosTests.cs`, `AgValidadorReglasTests.cs` | Implementado (trazabilidad y tests en disco; Paso 6 sin compilación) |
+
+---
+
+## Ronda 467: Consentimiento informado idempotente y unificado, erradicación de doble diálogo P07/optimización y cobertura de pruebas (Fases 2066–2068)
+
+### Resumen de la Ronda
+- **Fase 2066:** Extracción de método unificado e idempotente `AsegurarConsentimientoVacantes(bool interactivo)` en `AgFormGeneradorHorarios.cs` (líneas 1446–1496), llamado tanto en diagnóstico pre-vuelo P07 (`EjecutarDiagnosticoPreVueloAsync`) como en optimización (`IniciarOptimizacionAsync`). Elimina duplicación de lógica y garantiza reutilización limpia basada en `SetEquals`.
+- **Fase 2067:** Cobertura de pruebas unitarias en `AgConsentimientoVacantesTests.cs` evaluando: inclusión total de aulas cuando el manifiesto es nulo, exclusión de aulas no generables cuando el manifiesto está construido, reutilización vía `SetEquals` ante mismo universo, y requerimiento de confirmación (no-reutilización) ante cambios en claves compuestas.
+- **Fase 2068:** Trazabilidad formal en `REGISTRY.md` con fila R-141 y contadores §2 (`ronda=467`, `fase=2068`). Sincronización de planes vivos (`implementation_plan.md`, `walkthrough.md`) y seguimiento en git.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2066 | `AgFormGeneradorHorarios.cs` | Implementado (código en disco; Paso 6 sin compilación) |
+| 2067 | `AgConsentimientoVacantesTests.cs` | Implementado (tests en disco; Paso 6 sin compilación) |
+| 2068 | `REGISTRY.md`, `implementation_plan.md`, `walkthrough.md` | Implementado (trazabilidad y documentación; Paso 6 sin compilación) |
+
+---
+
+## Ronda 468: Erradicación definitiva del doble diálogo de consentimiento, unificación de logs y helper puro EsVigente (Fases 2069–2072)
+
+### Resumen de la Ronda
+- **Fase 2069:** Eliminación de la invocación de `AsegurarConsentimientoVacantes` en el pre-vuelo P07 (`EjecutarDiagnosticoPreVueloAsync`). El consentimiento informado queda asegurado en un único punto canónico en `IniciarOptimizacionAsync` tras construirse el manifiesto y evaluarse el escalado, erradicando el doble diálogo modal.
+- **Fase 2070:** Homogeneización de etiquetas de log en `AgFormGeneradorHorarios.cs:1446-1496` bajo el prefijo unificado `[CONSENTIMIENTO] Reutilizando universo vigente...`, `[CONSENTIMIENTO] Cancelado por el usuario...` y `[CONSENTIMIENTO] Aceptado por el usuario...`, evitando la mezcla engañosa con `[OPTIMIZACIÓN]` previa a la corrida.
+- **Fase 2071:** Extracción del método puro `AgConsentimientoVacantes.EsVigente(AgContexto, HashSet<int>, HashSet<string>)` y cobertura de pruebas en `AgConsentimientoVacantesTests.cs`: `EsVigente_WhenMismoUniverso_ShouldBeTrue`, `EsVigente_WhenFaltaUnaClave_ShouldBeFalse` y `EsVigente_WhenAsignaturasNulas_ShouldBeFalse`.
+- **Fase 2072:** Registro formal en `REGISTRY.md` con fila R-142 y contadores §2 (`ronda=468`, `fase=2072`), verificación de umbrales de rotación e indexación en control de versiones.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2069 | `AgFormGeneradorHorarios.cs` | Implementado (código en disco; Paso 6 sin compilación) |
+| 2070 | `AgFormGeneradorHorarios.cs` | Implementado (código en disco; Paso 6 sin compilación) |
+| 2071 | `AgConsentimientoVacantes.cs`, `AgConsentimientoVacantesTests.cs` | Implementado (código y tests en disco; Paso 6 sin compilación) |
+| 2072 | `REGISTRY.md`, `implementation_plan.md`, `walkthrough.md` | Implementado (trazabilidad y documentación; Paso 6 sin compilación) |
+
+---
+
+## Ronda 469: Precondición de manifiesto antes de consentimiento en corrida y cierre de ciclo (Fases 2073–2074)
+
+### Resumen de la Ronda
+- **Fase 2073:** Reordenamiento estricto en `IniciarOptimizacionAsync` de `AgFormGeneradorHorarios.cs:2690-2705`: el guard `_contextoActual.ManifiestoCobertura == null || _contextoActual.ValidacionPlanAprobado == null` se evalúa **antes** de `AsegurarConsentimientoVacantes`. Esto garantiza que nunca se dispare el diálogo modal ni se registren conjuntos de vacantes si la corrida carece de manifiesto válido.
+- **Fase 2074:** Cierre y verificación integral de las olas 464–469, trazabilidad en `REGISTRY.md` con fila R-143 y contadores §2 (`ronda=469`, `fase=2074`), ejecución de gate y empaquetado release v1.6.4.31.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2073 | `AgFormGeneradorHorarios.cs` | Implementado |
+| 2074 | `REGISTRY.md`, `implementation_plan.md`, `walkthrough.md`, release scripts | En ejecución / Cierre |
+
 
 
 

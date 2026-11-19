@@ -707,26 +707,77 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 }
             }
 
-            // Fase 2018 / Fase 2022 / Fase 2030: R15_VacanteExcedida (Tope antidegeneración de vacantes forzadas)
-            // Excluye las vacantes consentidas (por asignatura o par asignatura:sede) para no inflar las vacantes forzadas
-            if (contexto.MaxVacantesForzadas >= 0)
-            {
-                int forzadas = individuo.Genes.Count(g =>
-                    g.EsVacante == 1 && g.IdTercero <= 0 && !contexto.EstaConsentida(g.IdAsignatura, g.IdSede));
+            // Fase 2018 / 2022 / 2030 / 2054 / 2060: Separar R15 (liberadas por el AG) de R16 (estructurales no consentidas)
+            // R16 evalúa vacantes estructurales sin consentimiento previo (emite una violación por asignatura)
+            // R15 evalúa vacantes liberadas por el AG frente al déficit estructural permitido
+            // Vacantes con origen NoDocente (SIN_PLAN_OLEADA, SIN_BLOQUE_NIVEL) se excluyen de R15 y R16 (reportadas por R7/R14)
+            var estructurales = new Dictionary<int, int>();
+            int liberadas = 0;
 
-                if (forzadas > contexto.MaxVacantesForzadas)
+            foreach (var g in individuo.Genes.Where(g => g.EsVacante == 1 && g.IdTercero <= 0))
+            {
+                if (contexto.EstaConsentida(g.IdAsignatura, g.IdSede)) continue;
+                var origen = ClasificarOrigen(g.MotivoVacante);
+                if (origen == OrigenVacante.NoDocente)
                 {
-                    individuo.Violaciones.Add(new AgViolacion(
-                        AgReglaViolacion.R15_VacanteExcedida,
-                        esDura: true,
-                        mensaje: $"Vacantes forzadas ({forzadas}) exceden el déficit estructural permitido ({contexto.MaxVacantesForzadas})."));
-                    hardCount++;
+                    continue;
                 }
+
+                if (origen == OrigenVacante.EstructuralDocente)
+                {
+                    estructurales[g.IdAsignatura] = estructurales.TryGetValue(g.IdAsignatura, out var n) ? n + 1 : 1;
+                }
+                else
+                {
+                    liberadas++;
+                }
+            }
+
+            if (contexto.MaxVacantesForzadas >= 0 && liberadas > contexto.MaxVacantesForzadas)
+            {
+                individuo.Violaciones.Add(new AgViolacion(
+                    AgReglaViolacion.R15_VacanteExcedida,
+                    esDura: true,
+                    mensaje: $"Vacantes liberadas por el AG ({liberadas}) exceden el déficit estructural ({contexto.MaxVacantesForzadas})."));
+                hardCount++;
+            }
+
+            foreach (var kv in estructurales)
+            {
+                individuo.Violaciones.Add(new AgViolacion(
+                    AgReglaViolacion.R16_VacanteEstructuralNoConsentida,
+                    esDura: true,
+                    mensaje: $"Asignatura {kv.Key}: {kv.Value} sesión(es) sin docente y sin consentimiento (cargue pool o autorice la vacante)."));
+                hardCount++;
             }
 
             individuo.HardViolations = hardCount;
             individuo.SoftViolations = softScore;
             individuo.Estado = hardCount == 0 ? AgEstadoIndividuo.Factible : AgEstadoIndividuo.Infactible;
+        }
+
+        private enum OrigenVacante
+        {
+            EstructuralDocente,
+            NoDocente,
+            LiberadaAg
+        }
+
+        private static OrigenVacante ClasificarOrigen(string motivo)
+        {
+            var cod = AgMotivoVacanteExtensions.Desde(motivo);
+            if (cod == AgMotivoVacante.SIN_PLAN_OLEADA || cod == AgMotivoVacante.SIN_BLOQUE_NIVEL)
+            {
+                return OrigenVacante.NoDocente;
+            }
+
+            if (cod == AgMotivoVacante.SIN_CANDIDATOS || cod == AgMotivoVacante.NO_CUMPLE_REQUISITOS
+                || cod == AgMotivoVacante.POOL_VACIO)
+            {
+                return OrigenVacante.EstructuralDocente;
+            }
+
+            return OrigenVacante.LiberadaAg;
         }
     }
 }

@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 463 | 464 | 2026-11-18 |
-| `fase` | 2051 | 2052 | 2026-11-18 |
+| `ronda` | 469 | 470 | 2026-11-18 |
+| `fase` | 2074 | 2075 | 2026-11-18 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -172,6 +172,12 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-135 | 2026-11-18 | `(revisión e implementación Ronda 461 — Fases 2041–2045: registro de nuevos formularios en csproj, cohorte académica pura en déficit, aislamiento de autorizaciones entre corridas, compuerta preliminar solicitable y preservación integral de granularidad asig:sede)` | `Wave —` → `Ronda 461` | `Fase 2041–2045` | closed | sin build/tests (restricción Paso 6) | pendiente |
 | R-136 | 2026-11-18 | `(revisión e implementación Ronda 462 — Fases 2046–2049: productor del déficit en pre-vuelo, soporte de vacantes sin sede asig:0, botón consistente en finally de promoción y compuerta de promoción de solo lectura)` | `Wave —` → `Ronda 462` | `Fase 2046–2049` | closed | sin build/tests (restricción Paso 6) | pendiente |
 | R-137 | 2026-11-18 | `(verificación Ronda 463 — Fases 2050–2051 opcionales: sin defectos bloqueantes en Wave 462, precisión del déficit por patrón y momento de cálculo P07)` | `Wave —` → `Ronda 463` | `Fase 2050–2051` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-138 | 2026-11-18 | `(revisión e implementación Ronda 464 — Fases 2052–2056: consentimiento calculado sobre demanda real aula-asignatura, distinción SIN_CANDIDATOS vs NO_CUMPLE_REQUISITOS, separación R15 de R16 estructural, diálogo informado con asig:sede y registro en csproj con cobertura de regresión)` | `Wave —` → `Ronda 464` | `Fase 2052–2056` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-139 | 2026-11-18 | `(revisión e implementación Ronda 465 — Fases 2057–2061: corrección del centinela en ClasificarMotivo, alineación de semilla cohorte aula-semestre, preservación de granularidad sede sin wildcard espurio, neutralización de causas no docentes en R15 y tracking de archivos)` | `Wave —` → `Ronda 465` | `Fase 2057–2061` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-140 | 2026-11-18 | `(revisión e implementación Ronda 466 — Fases 2062–2065: motivo no docente en patrón no construible para blindar R15, exclusión de aulas no generables en consentimiento, reutilización de diálogo informado y trazabilidad de cierre)` | `Wave —` → `Ronda 466` | `Fase 2062–2065` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-141 | 2026-11-18 | `(revisión e implementación Ronda 467 — Fases 2066–2068: aseguramiento idempotente del consentimiento informado en punto único, erradicación del doble diálogo P07/optimización, cobertura de pruebas con manifiesto nulo vs construido y SetEquals, y cierre de registro)` | `Wave —` → `Ronda 467` | `Fase 2066–2068` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-142 | 2026-11-18 | `(revisión e implementación Ronda 468 — Fases 2069–2072: erradicación definitiva del doble diálogo retirando llamada de P07, unificación de etiquetas de log [CONSENTIMIENTO], helper puro EsVigente con cobertura y trazabilidad)` | `Wave —` → `Ronda 468` | `Fase 2069–2072` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-143 | 2026-11-18 | `(revisión e implementación Ronda 469 — Fases 2073–2074: precondición de manifiesto antes de consentimiento en corrida, y cierre de ciclo con gate/release)` | `Wave —` → `Ronda 469` | `Fase 2073–2074` | closed | sin build/tests (restricción Paso 6) | pendiente |
 
 
 

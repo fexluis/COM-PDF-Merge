@@ -490,5 +490,117 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             genesSabado.Should().NotBeEmpty();
             genesSabado.Should().OnlyContain(g => g.IdBloqueHorario == 6);
         }
+
+        [Fact]
+        public void Fabrica_WhenHabilitacionEnCatalogoSinPoolEfectivo_ShouldClassifyNoCumpleRequisitos()
+        {
+            // Arrange (Fase 2053): Docente registrado en pool para la asignatura pero no habilitado para el programa/semestre
+            var contexto = new AgContexto();
+            contexto.IdPrograma = 1;
+            var asig = new Asignatura { Id = 37, Nombre = "Economía", IdPrograma = 1, Semestre = "I" };
+
+            contexto.PoolPorAsignatura[37] = new List<TerceroAsignatura>
+            {
+                new TerceroAsignatura { Id = 1, IdTercero = 10, IdAsignatura = 37, IdPrograma = 2, Semestre = "V", Activo = 1 }
+            };
+            contexto.RegistrarDocenteHabilitado(10, 2, 37, "V");
+
+            // Act
+            var motivo = AgFabricaIndividuos.ClasificarMotivo(contexto, asig);
+
+            // Assert
+            motivo.Should().Be(AgMotivoVacante.NO_CUMPLE_REQUISITOS);
+        }
+
+        [Fact]
+        public void Fabrica_WhenPoolSoloCentinelaActivo_ShouldClassifySinCandidatos()
+        {
+            // Arrange (Fase 2057 / Regresión F1996): El único registro en pool es el centinela vacante activo
+            var contexto = new AgContexto();
+            contexto.IdPrograma = 1;
+            contexto.IdTerceroVacante = 9999;
+            var asig = new Asignatura { Id = 38, Nombre = "Finanzas", IdPrograma = 1, Semestre = "I" };
+
+            contexto.PoolPorAsignatura[38] = new List<TerceroAsignatura>
+            {
+                new TerceroAsignatura { Id = 1, IdTercero = 9999, IdAsignatura = 38, IdPrograma = 1, Semestre = "I", Activo = 1 }
+            };
+
+            // Act
+            var motivo = AgFabricaIndividuos.ClasificarMotivo(contexto, asig);
+
+            // Assert: No hay candidatos reales en el catálogo -> SIN_CANDIDATOS, no NO_CUMPLE_REQUISITOS
+            motivo.Should().Be(AgMotivoVacante.SIN_CANDIDATOS);
+        }
+
+        [Fact]
+        public void Fabrica_WhenPoolConFilasInactivasReales_ShouldClassifyNoCumpleRequisitos()
+        {
+            // Arrange (Fase 2057): Hay docentes reales en catálogo pero todos están inactivos
+            var contexto = new AgContexto();
+            contexto.IdPrograma = 1;
+            contexto.IdTerceroVacante = 9999;
+            var asig = new Asignatura { Id = 39, Nombre = "Estadística", IdPrograma = 1, Semestre = "I" };
+
+            contexto.PoolPorAsignatura[39] = new List<TerceroAsignatura>
+            {
+                new TerceroAsignatura { Id = 1, IdTercero = 50, IdAsignatura = 39, IdPrograma = 1, Semestre = "I", Activo = 0 }
+            };
+
+            // Act
+            var motivo = AgFabricaIndividuos.ClasificarMotivo(contexto, asig);
+
+            // Assert: Hay docentes en el pool pero no cumplen requisitos de activación -> NO_CUMPLE_REQUISITOS
+            motivo.Should().Be(AgMotivoVacante.NO_CUMPLE_REQUISITOS);
+        }
+
+        [Fact]
+        public void Fabrica_WhenAsignaturaMultiSemestre_ShouldClassifyConSemestreDeAula()
+        {
+            // Arrange (Fase 2058): Asignatura declarada como "MultiSemestre", pero aula específica para semestre "II"
+            var contexto = new AgContexto();
+            contexto.IdPrograma = 1;
+            var asig = new Asignatura { Id = 40, Nombre = "Proyecto", IdPrograma = 1, Semestre = "MultiSemestre" };
+
+            // Docente habilitado solo para semestre "II"
+            contexto.PoolPorAsignatura[40] = new List<TerceroAsignatura>
+            {
+                new TerceroAsignatura { Id = 1, IdTercero = 77, IdAsignatura = 40, IdPrograma = 1, Semestre = "II", Activo = 1 }
+            };
+            contexto.RegistrarDocenteHabilitado(77, 1, 40, "II");
+
+            // Act: Clasificar con semestre de aula "II" -> SIN_DISPONIBILIDAD (porque sí está habilitado para "II")
+            var motivoAula = AgFabricaIndividuos.ClasificarMotivo(contexto, asig, "II", 1);
+            // Act: Clasificar con semestre "III" -> NO_CUMPLE_REQUISITOS
+            var motivoOtro = AgFabricaIndividuos.ClasificarMotivo(contexto, asig, "III", 1);
+
+            // Assert
+            motivoAula.Should().Be(AgMotivoVacante.SIN_DISPONIBILIDAD);
+            motivoOtro.Should().Be(AgMotivoVacante.NO_CUMPLE_REQUISITOS);
+        }
+
+        [Fact]
+        public void Fabrica_WhenPatronNoConstruible_ShouldUseMotivoNoDocente()
+        {
+            // Arrange (Fase 2062): Ventana insuficiente para construir el patrón
+            var contexto = new AgContexto();
+            contexto.IdPrograma = 1;
+            // Ventana de 1 solo día
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 2), new DateTime(2026, 2, 2), AgOrigenVentana.Presencial).Value;
+
+            contexto.Aulas.Add(new AgAula { Id = 1, DiasVentana = "LUN", HorasDia = 4, Estado = AgEstadoAula.Disponible });
+            contexto.Asignaturas.Add(new Asignatura { Id = 10, Nombre = "Física", Horas = 64, HorasSemanales = 4, IdPrograma = 1 });
+            contexto.Bloques.Add(new AgBloqueHorario { Id = 1, DiaSemanaNumero = 1, DuracionHoras = 4, Activo = 1 });
+
+            var sut = new AgFabricaIndividuos();
+
+            // Act
+            var ind = sut.CrearAleatorio(contexto, 1, 0);
+
+            // Assert: Cuando el patrón no es construible, el gen debe tener motivo no docente (SIN_PLAN_OLEADA), no SIN_DISPONIBILIDAD
+            var genesVacantes = ind.Genes.Where(g => g.EsVacante == 1).ToList();
+            genesVacantes.Should().NotBeEmpty();
+            genesVacantes.Should().OnlyContain(g => g.MotivoVacante == AgMotivoVacante.SIN_PLAN_OLEADA.Codigo());
+        }
     }
 }

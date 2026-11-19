@@ -64,6 +64,7 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
                 case AgReglaViolacion.R14_BloqueHorarioNoAsignado: return PenalidadHardR14_Bloque;
                 case AgReglaViolacion.R14_BloqueSolapadoPorIntervalo: return PenalidadHardR14_Bloque;
                 case AgReglaViolacion.R15_VacanteExcedida: return PenalidadHardBase;
+                case AgReglaViolacion.R16_VacanteEstructuralNoConsentida: return PenalidadHardBase;
                 case AgReglaViolacion.S1_HuecosHorarios: return PesoS1_HuecosHorarios;
                 case AgReglaViolacion.S2_DesplazamientoInterSede: return PesoS2_DesplazamientoInterSede;
                 case AgReglaViolacion.S3_PreferenciaFranjaDocente: return PesoS3_PreferenciaFranja;
