@@ -249,7 +249,8 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Excel
                     tituloC2 = ws.Cells[1, cabecerasFijas.Length];
                     rangeTitulo = ws.Range[tituloC1, tituloC2];
                     rangeTitulo.Merge();
-                    string tituloBase = "PROGRAMACION DOCENTE PERIODO " + (periodoNombre ?? "").Trim();
+                    // Fase 2115: Título explícito de hoja de trabajo para la programación docente
+                    string tituloBase = "HOJA DE TRABAJO PROGRAMACION DOCENTE PERIODO " + (periodoNombre ?? "").Trim();
                     rangeTitulo.Value = marcarBannerParcial ? $"{bannerParcialTexto} {tituloBase}" : tituloBase;
                     tituloFont = rangeTitulo.Font;
                     tituloFont.Bold = true;

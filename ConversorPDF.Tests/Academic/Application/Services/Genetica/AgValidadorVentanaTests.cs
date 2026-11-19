@@ -581,7 +581,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             result.Value.EsFactible.Should().BeFalse();
             result.Value.Bloqueos.Should().Contain(b =>
                 b.Contains("[I5_INFACTIBLE]") &&
-                b.Contains("no añade ranuras útiles") &&
+                b.Contains("no añade días") &&
                 b.Contains("no existe bloque activo"));
         }
 
@@ -854,6 +854,228 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             docs.Should().Be(1);
             deficit.Should().Be(2);
         }
+
+        [Fact]
+        public void ValidarFactibilidad_WhenEscalonNoReducePendientesPorPatronesRigidos_ShouldEmitirAdvertenciaPatrones()
+        {
+            // Arrange (Fase 2110 / Fase 2111 / Fase 2114)
+            var contexto = new AgContexto();
+            var inicio = new DateTime(2027, 2, 5);
+            var fin = new DateTime(2027, 5, 30);
+            contexto.Ventana = VentanaSemestre.Crear(1, "2027-1", inicio, fin, AgOrigenVentana.Presencial).Value;
+
+            var aula = new AgAula
+            {
+                Id = 1,
+                AulaRef = "3|1|1|I|A",
+                DiasVentana = "MAR-VIE",
+                Jornada = "MANANA",
+                HorasDia = 4,
+                Capacidad = 30,
+                IdPrograma = 1
+            };
+            contexto.Aulas.Add(aula);
+            contexto.AulasPorId[1] = aula;
+
+            // Bloques para MAR-VIE y LUN-VIE
+            for (int d = 1; d <= 5; d++)
+            {
+                contexto.Bloques.Add(new AgBloqueHorario
+                {
+                    Id = d,
+                    DiaSemanaNumero = d,
+                    Franja = "MANANA",
+                    DuracionHoras = 4,
+                    Activo = 1
+                });
+            }
+
+            // 6 materias: 12,12,8,8,12,12 = 64 sesiones > 61 ranuras
+            int[] sesiones = { 12, 12, 8, 8, 12, 12 };
+            string[] patrones = { "2,3", "2,3", "4,5", "4,5", "2,3", "4,5" };
+            for (int i = 1; i <= 6; i++)
+            {
+                contexto.Asignaturas.Add(new Asignatura { Id = i, Horas = sesiones[i - 1] * 4 });
+                var aa = new AgAulaAsignatura
+                {
+                    IdAula = 1,
+                    IdAsignatura = i,
+                    HorasObjetivo = sesiones[i - 1] * 4,
+                    DiasPatron = patrones[i - 1],
+                    OrigenPatron = "LEGADO"
+                };
+                contexto.AulaAsignaturas.Add(aa);
+                contexto.AulaAsignaturaPorAulaAsig[(1, i)] = aa;
+            }
+
+            // 4 festivos en MAR-VIE y 2 en Lunes
+            contexto.Festivos.Add((new DateTime(2027, 2, 9), new DateTime(2027, 2, 9)));
+            contexto.Festivos.Add((new DateTime(2027, 3, 24), new DateTime(2027, 3, 24)));
+            contexto.Festivos.Add((new DateTime(2027, 4, 1), new DateTime(2027, 4, 1)));
+            contexto.Festivos.Add((new DateTime(2027, 4, 2), new DateTime(2027, 4, 2)));
+            contexto.Festivos.Add((new DateTime(2027, 3, 22), new DateTime(2027, 3, 22)));
+            contexto.Festivos.Add((new DateTime(2027, 5, 17), new DateTime(2027, 5, 17)));
+            contexto.ConstruirIndices();
+
+            // Act
+            var res = _sut.ValidarFactibilidad(contexto);
+
+            // Assert
+            res.IsSuccess.Should().BeTrue();
+            string bloqueos = string.Join(" | ", res.Value.BloqueosCriticos);
+            bloqueos.Should().Contain("[I5_INFACTIBLE]");
+            bloqueos.Should().Contain("no reduce las sesiones pendientes");
+            bloqueos.Should().NotContain("Escale la ventana a 'LUN-VIE' (capacidad 75)");
+        }
+
+        [Fact]
+        public void ValidarFactibilidad_WhenEscalonResuelveCompletamenteConAutomaticas_ShouldSugerirEscalonSimple()
+        {
+            // Arrange (Fase 2117 / Fase 2118)
+            var contexto = new AgContexto();
+            var inicio = new DateTime(2027, 2, 5);
+            var fin = new DateTime(2027, 5, 30);
+            contexto.Ventana = VentanaSemestre.Crear(1, "2027-1", inicio, fin, AgOrigenVentana.Presencial).Value;
+
+            var aula = new AgAula
+            {
+                Id = 1,
+                AulaRef = "3|1|1|I|A",
+                DiasVentana = "MAR-VIE",
+                Jornada = "MANANA",
+                HorasDia = 4,
+                Capacidad = 30,
+                IdPrograma = 1
+            };
+            contexto.Aulas.Add(aula);
+            contexto.AulasPorId[1] = aula;
+
+            for (int d = 1; d <= 5; d++)
+            {
+                contexto.Bloques.Add(new AgBloqueHorario
+                {
+                    Id = d,
+                    DiaSemanaNumero = d,
+                    Franja = "MANANA",
+                    DuracionHoras = 4,
+                    Activo = 1
+                });
+            }
+
+            int[] sesiones = { 12, 12, 8, 8, 12, 12 };
+            for (int i = 1; i <= 6; i++)
+            {
+                contexto.Asignaturas.Add(new Asignatura { Id = i, Horas = sesiones[i - 1] * 4 });
+                var aa = new AgAulaAsignatura
+                {
+                    IdAula = 1,
+                    IdAsignatura = i,
+                    HorasObjetivo = sesiones[i - 1] * 4,
+                    DiasPatron = string.Empty,
+                    OrigenPatron = "AUTOMATICO"
+                };
+                contexto.AulaAsignaturas.Add(aa);
+                contexto.AulaAsignaturaPorAulaAsig[(1, i)] = aa;
+            }
+
+            contexto.Festivos.Add((new DateTime(2027, 2, 9), new DateTime(2027, 2, 9)));
+            contexto.Festivos.Add((new DateTime(2027, 3, 24), new DateTime(2027, 3, 24)));
+            contexto.Festivos.Add((new DateTime(2027, 4, 1), new DateTime(2027, 4, 1)));
+            contexto.Festivos.Add((new DateTime(2027, 4, 2), new DateTime(2027, 4, 2)));
+            contexto.Festivos.Add((new DateTime(2027, 3, 22), new DateTime(2027, 3, 22)));
+            contexto.Festivos.Add((new DateTime(2027, 5, 17), new DateTime(2027, 5, 17)));
+            contexto.ConstruirIndices();
+
+            // Act
+            var res = _sut.ValidarFactibilidad(contexto);
+
+            // Assert
+            res.IsSuccess.Should().BeTrue();
+            string bloqueos = string.Join(" | ", res.Value.BloqueosCriticos);
+            bloqueos.Should().Contain("[I5_INFACTIBLE]");
+            bloqueos.Should().Contain("Escale la ventana a 'LUN-VIE' (capacidad 75) o amplíe el semestre.");
+        }
+
+        [Fact]
+        public void ValidarFactibilidad_WhenEscalonReducePeroNoEliminaPendientes_ShouldDeclararResidual()
+        {
+            // Arrange (Fase 2123 / Fase 2125)
+            var contexto = new AgContexto();
+            var inicio = new DateTime(2027, 2, 5);
+            var fin = new DateTime(2027, 5, 30);
+            contexto.Ventana = VentanaSemestre.Crear(1, "2027-1", inicio, fin, AgOrigenVentana.Presencial).Value;
+
+            var aula = new AgAula
+            {
+                Id = 1,
+                AulaRef = "3|1|1|I|A",
+                DiasVentana = "MAR-VIE",
+                Jornada = "MANANA",
+                HorasDia = 4,
+                Capacidad = 30,
+                IdPrograma = 1
+            };
+            contexto.Aulas.Add(aula);
+            contexto.AulasPorId[1] = aula;
+
+            for (int d = 1; d <= 5; d++)
+            {
+                contexto.Bloques.Add(new AgBloqueHorario
+                {
+                    Id = d,
+                    DiaSemanaNumero = d,
+                    Franja = "MANANA",
+                    DuracionHoras = 4,
+                    Activo = 1
+                });
+            }
+
+            // 4 materias rígidas (16,16 en 2,3 -> 32 sesiones > 31 capacidad carril) + (8,8 en 4,5 -> 16 sesiones)
+            // + 1 AUTOMATICA (17 sesiones) => Demanda total 65 > 61 capacidad MAR-VIE (pendienteBase = 4)
+            int[] sesiones = { 16, 16, 8, 8, 17 };
+            string[] patrones = { "2,3", "2,3", "4,5", "4,5", "" };
+            for (int i = 1; i <= 5; i++)
+            {
+                contexto.Asignaturas.Add(new Asignatura { Id = i, Horas = sesiones[i - 1] * 4 });
+                var aa = new AgAulaAsignatura
+                {
+                    IdAula = 1,
+                    IdAsignatura = i,
+                    HorasObjetivo = sesiones[i - 1] * 4,
+                    DiasPatron = patrones[i - 1],
+                    OrigenPatron = string.IsNullOrEmpty(patrones[i - 1]) ? "AUTOMATICO" : "LEGADO"
+                };
+                contexto.AulaAsignaturas.Add(aa);
+                contexto.AulaAsignaturaPorAulaAsig[(1, i)] = aa;
+            }
+
+            contexto.Festivos.Add((new DateTime(2027, 2, 9), new DateTime(2027, 2, 9)));
+            contexto.Festivos.Add((new DateTime(2027, 3, 24), new DateTime(2027, 3, 24)));
+            contexto.Festivos.Add((new DateTime(2027, 4, 1), new DateTime(2027, 4, 1)));
+            contexto.Festivos.Add((new DateTime(2027, 4, 2), new DateTime(2027, 4, 2)));
+            contexto.Festivos.Add((new DateTime(2027, 3, 22), new DateTime(2027, 3, 22)));
+            contexto.Festivos.Add((new DateTime(2027, 5, 17), new DateTime(2027, 5, 17)));
+            contexto.ConstruirIndices();
+
+            // Act
+            var res = _sut.ValidarFactibilidad(contexto);
+
+            // Assert
+            res.IsSuccess.Should().BeTrue();
+            string bloqueos = string.Join(" | ", res.Value.BloqueosCriticos);
+            bloqueos.Should().Contain("[I5_INFACTIBLE]");
+            bloqueos.Should().Contain("reduce las sesiones pendientes de 4 a 2");
+            bloqueos.Should().Contain("pero no las elimina");
+            bloqueos.Should().NotContain("no reduce las sesiones pendientes");
+        }
+
+        [Theory]
+        [InlineData(AgResultadoEscaladoUI.RechazadoPorUsuario, true)]
+        [InlineData(AgResultadoEscaladoUI.SinCambios, false)]
+        [InlineData(AgResultadoEscaladoUI.AplicadoExitosamente, false)]
+        [InlineData(AgResultadoEscaladoUI.FalloAlAplicar, false)]
+        public void PreVuelo_Override_ShouldDependerDelConsentimiento(AgResultadoEscaladoUI resultado, bool esperado)
+            => AgPreVueloEscalado.ContinuarPeseAInfactibilidad(resultado).Should().Be(esperado);
     }
 }
 

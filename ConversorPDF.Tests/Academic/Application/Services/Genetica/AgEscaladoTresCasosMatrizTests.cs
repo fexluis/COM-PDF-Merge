@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ConversorPDF.XLL.Academic.Application.Services.Genetica;
 using ConversorPDF.XLL.Academic.Domain.Enums;
 using ConversorPDF.XLL.Academic.Domain.Models;
@@ -297,6 +298,75 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             bloqueos.Should().NotContain("Escale la ventana a 'JUE-DOM'");
         }
 
+        // FASE 2111 / FASE 2114: Caso corrida 113/115 - 64 sesiones (12,12,8,8,12,12) en MAR-VIE con 61 ranuras -> propone LUN-VIE (75)
+        [Fact]
+        public void Evaluar_Caso5_MarVie_64Sesiones_FinMayo_ShouldProponerLunVie()
+        {
+            var inicio = new DateTime(2027, 2, 5); // viernes
+            var fin = new DateTime(2027, 5, 30);   // domingo (16 semanas + 3 días)
+            var contexto = CrearContextoMatriz(16, "MAR-VIE", new[] { 12, 12, 8, 8, 12, 12 }, fechaInicio: inicio, fechaFin: fin);
+            // 4 festivos en hábiles de MAR-VIE y 2 festivos en lunes
+            foreach (var f in DiasHabiles(inicio, fin, 1, new[] { 2, 3, 4, 5 })) contexto.Festivos.Add((f, f));
+            foreach (var f in DiasHabiles(inicio, fin, 2, new[] { 1 })) contexto.Festivos.Add((f, f));
+            contexto.ConstruirIndices();
+
+            var decisiones = new AgEscaladorRanuraAula(() => null).Evaluar(contexto);
+
+            decisiones.Should().ContainSingle();
+            var d = decisiones.Single();
+            d.Desde.Should().Be("MAR-VIE");
+            d.Hacia.Should().Be("LUN-VIE");
+            d.CapacidadAntes.Should().Be(61);
+            d.CapacidadDespues.Should().Be(75);
+            d.Aplica.Should().BeTrue();
+        }
+
+        // FASE 2111 / FASE 2114: Con patrones rígidos MAR-MIÉ / JUE-VIE no se debe silenciar la propuesta
+        [Fact]
+        public void Evaluar_Caso6_MarVie_PatronesRigidos_ShouldNoSilenciarPropuesta()
+        {
+            var inicio = new DateTime(2027, 2, 5);
+            var fin = new DateTime(2027, 5, 30);
+            var contexto = CrearContextoMatriz(16, "MAR-VIE", new[] { 12, 12, 8, 8, 12, 12 }, fechaInicio: inicio, fechaFin: fin);
+            foreach (var f in DiasHabiles(inicio, fin, 1, new[] { 2, 3, 4, 5 })) contexto.Festivos.Add((f, f));
+            foreach (var f in DiasHabiles(inicio, fin, 2, new[] { 1 })) contexto.Festivos.Add((f, f));
+            FijarPatrones(contexto, new[] { "2,3", "2,3", "4,5", "4,5", "2,3", "4,5" }, "LEGADO");
+            contexto.ConstruirIndices();
+
+            var decisiones = new AgEscaladorRanuraAula(() => null).Evaluar(contexto);
+
+            decisiones.Should().NotBeEmpty("una saturación con patrones rígidos debe producir escalón y/o candidatas de reclasificación");
+            decisiones.Any(d => d.DemandaPendiente > 0 || d.ReclasificacionesPropuestas.Count > 0).Should().BeTrue();
+        }
+
+        private static void FijarPatrones(AgContexto c, string[] patrones, string origen)
+        {
+            for (int i = 0; i < c.AulaAsignaturas.Count; i++)
+            {
+                c.AulaAsignaturas[i].DiasPatron = patrones[i];
+                c.AulaAsignaturas[i].OrigenPatron = origen;
+                if (c.AulaAsignaturaPorAulaAsig.TryGetValue((c.AulaAsignaturas[i].IdAula, c.AulaAsignaturas[i].IdAsignatura), out var aa))
+                {
+                    aa.DiasPatron = patrones[i];
+                    aa.OrigenPatron = origen;
+                }
+            }
+        }
+
+        private static IEnumerable<DateTime> DiasHabiles(DateTime inicio, DateTime fin, int cantidad, int[] diasIso)
+        {
+            var cuenta = new Dictionary<int, int>();
+            for (var d = inicio; d <= fin; d = d.AddDays(1))
+            {
+                int iso = d.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)d.DayOfWeek;
+                if (!diasIso.Contains(iso)) { continue; }
+                cuenta.TryGetValue(iso, out int n);
+                if (n >= cantidad) { continue; }
+                cuenta[iso] = n + 1;
+                yield return d;
+            }
+        }
+
         private static void FijarPatron(AgContexto contexto, string diasPatron)
         {
             foreach (var aa in contexto.AulaAsignaturas)
@@ -310,6 +380,112 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
                 kv.Value.DiasPatron = diasPatron;
                 kv.Value.OrigenPatron = "FIJO";
             }
+        }
+
+        private static AgContexto CrearContextoMatriz(
+            int w,
+            string diasVentana,
+            int[] sesionesPorMateria,
+            int horasDia = 4,
+            string modalidadPrograma = "PRESENCIAL",
+            DateTime? fechaInicio = null,
+            DateTime? fechaFin = null)
+        {
+            var fInicio = fechaInicio ?? new DateTime(2026, 8, 3);
+            var fFin = fechaFin ?? fInicio.AddDays(7 * w - 1);
+
+            var contexto = new AgContexto();
+            contexto.Ventana = VentanaSemestre.Crear(
+                1, "2026-2", fInicio, fFin, AgOrigenVentana.Presencial).Value;
+
+            contexto.Programas.Add(new Programa
+            {
+                Id = 1,
+                Nombre = "Programa Matriz",
+                Modalidad = modalidadPrograma
+            });
+
+            var aula = new AgAula
+            {
+                Id = 1,
+                AulaRef = "A101",
+                Subunidad = "",
+                DiasVentana = diasVentana,
+                Jornada = "MANANA",
+                HorasDia = horasDia,
+                Estado = AgEstadoAula.Disponible,
+                Capacidad = 30,
+                IdPrograma = 1,
+                Semestre = "I"
+            };
+            contexto.Aulas.Add(aula);
+
+            for (int d = 1; d <= 7; d++)
+            {
+                if (d == 6)
+                {
+                    contexto.Bloques.Add(new AgBloqueHorario
+                    {
+                        Id = 61,
+                        DiaSemanaNumero = 6,
+                        Franja = "MANANA",
+                        DuracionHoras = horasDia == 8 ? 8 : 4,
+                        Activo = 1
+                    });
+                    if (horasDia == 4)
+                    {
+                        contexto.Bloques.Add(new AgBloqueHorario
+                        {
+                            Id = 62,
+                            DiaSemanaNumero = 6,
+                            Franja = "TARDE",
+                            DuracionHoras = 4,
+                            Activo = 1
+                        });
+                    }
+                }
+                else
+                {
+                    contexto.Bloques.Add(new AgBloqueHorario
+                    {
+                        Id = d,
+                        DiaSemanaNumero = d,
+                        Franja = "MANANA",
+                        DuracionHoras = horasDia,
+                        Activo = 1
+                    });
+                }
+            }
+
+            for (int i = 1; i <= sesionesPorMateria.Length; i++)
+            {
+                int sesiones = sesionesPorMateria[i - 1];
+                var asig = new Asignatura
+                {
+                    Id = i,
+                    Nombre = $"Materia {i}",
+                    IdPrograma = 1,
+                    Semestre = "I",
+                    Subunidad = "",
+                    Creditos = 3,
+                    Horas = sesiones * horasDia
+                };
+                contexto.Asignaturas.Add(asig);
+
+                var aa = new AgAulaAsignatura
+                {
+                    IdAula = 1,
+                    IdAsignatura = i,
+                    HorasObjetivo = sesiones * horasDia,
+                    DiasPatron = string.Empty,
+                    OrigenPatron = "AUTOMATICO"
+                };
+                contexto.AulaAsignaturas.Add(aa);
+                contexto.AulaAsignaturaPorAulaAsig.Add((1, i), aa);
+            }
+
+            contexto.ConstruirIndices();
+            return contexto;
         }
 
         private static AgContexto CrearContextoMatriz(

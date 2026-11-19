@@ -2151,14 +2151,6 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             return false;
         }
 
-        private enum AgResultadoEscaladoUI
-        {
-            SinCambios,
-            AplicadoExitosamente,
-            RechazadoPorUsuario,
-            FalloAlAplicar
-        }
-
         /// <summary>
         /// Evalúa si la demanda de las aulas excede la capacidad o satura los carriles de su ventana actual.
         /// Si detecta saturación, presenta un diálogo modal detallado con la ruta propuesta, ranuras antes/después,
@@ -2726,11 +2718,42 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     }
                 }
 
+                // Fase 2116 / Fase 2127: el override explícito del usuario (Yes tras rechazar el escalado) prevalece sobre el fail-fast de ventana.
+                bool continuarPeseAInfactibilidad = AgPreVueloEscalado.ContinuarPeseAInfactibilidad(resEscaladoOpt);
+
                 ReanudarValidacionPreparacion();
+
                 // Fase 2073: Guard de precondición antes de interactuar con el usuario o registrar consentimiento.
                 // Captura final tras cualquier recarga de escalado; ninguna corrida pierde su manifiesto.
                 if (_contextoActual.ManifiestoCobertura == null || _contextoActual.ValidacionPlanAprobado == null)
                     throw new InvalidOperationException("PREPARACION_COBERTURA_AUSENTE");
+
+                // Fase 2113 / Fase 2114 / Fase 2116 / Fase 2120: fail-fast antes de persistir la corrida sólo si NO hay override explícito.
+                // Si el escalador no propuso nada (SinCambios), se ofrece la opción de continuar con sesiones pendientes o violaciones.
+                if (!continuarPeseAInfactibilidad)
+                {
+                    var factibilidadPrevia = await Task.Run(() => _validadorVentana.ValidarFactibilidad(_contextoActual),
+                        _ctsEjecucion.Token);
+                    if (factibilidadPrevia.IsFailure || !factibilidadPrevia.Value.EsFactible)
+                    {
+                        string msgPrev = factibilidadPrevia.IsFailure
+                            ? factibilidadPrevia.Error
+                            : string.Join("\n• ", factibilidadPrevia.Value.BloqueosCriticos);
+                        MarcarDecisionPreparacion();
+                        var contInf = MessageBox.Show(this,
+                            msgPrev + "\n\nLa corrida resultará con sesiones sin ubicar o violaciones.\n" +
+                            "¿Desea continuar con la optimización de todos modos?",
+                            "Infactible", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                        if (contInf != DialogResult.Yes)
+                        {
+                            MarcarErrorPreparacion("P08_FactibilidadPrevia");
+                            traza.Fallo("P08_FactibilidadPrevia", new Exception(msgPrev), AgCausaFallo.VentanaInfactible);
+                            Log($"[ERROR] Corrida no iniciada por decisión del usuario: {msgPrev}");
+                            return;
+                        }
+                        Log("[OPTIMIZACIÓN] Continuación autorizada pese a infactibilidad pre-via.");
+                    }
+                }
 
                 // Fase 295, 296, 303 & 321: Validar cobertura de pool docente (Consentimiento de Vacante)
                 // Fase 2052, Fase 2055, Fase 2064, Fase 2066 & Fase 2069: Consentimiento informado idempotente

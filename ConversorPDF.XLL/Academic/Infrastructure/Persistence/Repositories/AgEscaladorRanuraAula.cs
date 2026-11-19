@@ -513,19 +513,21 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                 string paso = AgEscaleraVentanas.Siguiente(aula.DiasVentana);
                 string destino = aula.DiasVentana;
                 AgResultadoEvaluacionVentana despues = evalMismaVentana;
+                // Fase 2108 / Fase 2114: Retener evaluación del escalón para observabilidad fidedigna sin falsear capDespues
+                AgResultadoEvaluacionVentana evalPaso = null;
 
                 if (autorizadasAula.Count > 0)
                 {
                     // Si con reclasificación en la misma ventana aún quedan pendientes y hay escalón disponible, evaluar siguiente escalón
                     if (!evalMismaVentana.CabeEnPlazo && !string.IsNullOrEmpty(paso))
                     {
-                        var evalSiguiente = AgEvaluadorDemandaVentana.Evaluar(paso, aula.Jornada, unidad,
+                        evalPaso = AgEvaluadorDemandaVentana.Evaluar(paso, aula.Jornada, unidad,
                             ctxSimulado, aula, contexto.Ventana.FechaInicio, contexto.Ventana.FechaFin, ct);
 
-                        if (AgEvaluadorDemandaVentana.PasoMejora(evalMismaVentana, evalSiguiente))
+                        if (AgEvaluadorDemandaVentana.PasoMejora(evalMismaVentana, evalPaso))
                         {
                             destino = paso;
-                            despues = evalSiguiente;
+                            despues = evalPaso;
                         }
                     }
                 }
@@ -534,7 +536,7 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                     // Sin autorizaciones: flujo nominal de escalera si hay saturación
                     if (antes.HaySaturacion && !string.IsNullOrEmpty(paso))
                     {
-                        var evalPaso = AgEvaluadorDemandaVentana.Evaluar(paso, aula.Jornada, unidad,
+                        evalPaso = AgEvaluadorDemandaVentana.Evaluar(paso, aula.Jornada, unidad,
                             contexto, aula, contexto.Ventana.FechaInicio, contexto.Ventana.FechaFin, ct);
 
                         if (AgEvaluadorDemandaVentana.PasoMejora(antes, evalPaso))
@@ -545,11 +547,16 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                     }
                 }
 
-                // FASE 1856: Trazabilidad enriquecida de omisión del escalador en nivel Info
+                // FASE 1856 / FASE 2108 / FASE 2114: Trazabilidad enriquecida y fidedigna de omisión del escalador en nivel Info
                 // Si no hay saturación, no hay candidatos y no hay autorizaciones, omitir
                 if (!antes.HaySaturacion && candidatos.Count == 0 && autorizadasAula.Count == 0)
                 {
-                    LoggerHelper.Info($"[ESCALADO] ESCALADOR_OMITIR aula={aula.Id} ref={aula.AulaRef} dias={aula.DiasVentana} capAntes={antes.CapacidadTotal} motivo=cabe_en_plazo_y_sin_candidatos");
+                    LoggerHelper.Info(
+                        $"[ESCALADO] ESCALADOR_OMITIR aula={aula.Id} ref={aula.AulaRef} dias={aula.DiasVentana} " +
+                        $"capAntes={antes.CapacidadTotal} pendAntes={antes.DemandaPendiente} antesError='{antes.Error}' " +
+                        $"paso='{paso}' pasoCap={(evalPaso != null ? evalPaso.CapacidadTotal.ToString() : "n/a")} " +
+                        $"pasoPend={(evalPaso != null ? evalPaso.DemandaPendiente.ToString() : "n/a")} " +
+                        $"pasoError='{(evalPaso != null ? evalPaso.Error : string.Empty)}' candidatos={candidatos.Count} motivo=cabe_en_plazo_y_sin_candidatos");
                     contexto.Traza?.Dato("EscaladorOmitir", $"aula={aula.Id} ref={aula.AulaRef} motivo=cabe_en_plazo_y_sin_candidatos");
                     continue;
                 }
@@ -561,7 +568,12 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
 
                 if (!hayCambioVentana && !hayAutorizaciones && !hayCandidatos)
                 {
-                    LoggerHelper.Info($"[ESCALADO] ESCALADOR_OMITIR aula={aula.Id} ref={aula.AulaRef} dias={aula.DiasVentana} capAntes={antes.CapacidadTotal} capDespues={despues?.CapacidadTotal ?? antes.CapacidadTotal} motivo=sin_propuesta_viable");
+                    LoggerHelper.Info(
+                        $"[ESCALADO] ESCALADOR_OMITIR aula={aula.Id} ref={aula.AulaRef} dias={aula.DiasVentana} " +
+                        $"capAntes={antes.CapacidadTotal} pendAntes={antes.DemandaPendiente} antesError='{antes.Error}' " +
+                        $"paso='{paso}' pasoCap={(evalPaso != null ? evalPaso.CapacidadTotal.ToString() : "n/a")} " +
+                        $"pasoPend={(evalPaso != null ? evalPaso.DemandaPendiente.ToString() : "n/a")} " +
+                        $"pasoError='{(evalPaso != null ? evalPaso.Error : string.Empty)}' candidatos={candidatos.Count} motivo=sin_propuesta_viable");
                     contexto.Traza?.Dato("EscaladorOmitir", $"aula={aula.Id} ref={aula.AulaRef} motivo=sin_propuesta_viable");
                     continue;
                 }

@@ -142,7 +142,7 @@ namespace ConversorPDF.Tests.Academic.UI.Forms
         public void AmbasRutas_PreparanOrigenAntesDeSincronizarOEscalar_YDisponibleConservaSuRuta()
         {
             var fuente = Fuente();
-            var diagnostico = Entre(fuente, "private async Task EjecutarDiagnosticoPreVueloAsync()", "private enum AgResultadoEscaladoUI");
+            var diagnostico = Entre(fuente, "private async Task EjecutarDiagnosticoPreVueloAsync()", "private async Task<AgResultadoEscaladoUI> EvaluarYAplicarEscaladoAsync");
             foreach (var ruta in new[] { diagnostico, Inicio() })
             {
                 Antes(ruta, "await PrepararCoberturaAntesDeCambiosAsync(", "SincronizarConfirmadoAsync(");
@@ -151,7 +151,7 @@ namespace ConversorPDF.Tests.Academic.UI.Forms
                 ruta.Should().Contain("await ConstruirContextoAsync(");
                 ruta.Should().Contain("await EvaluarYAplicarEscaladoAsync("); // Disponible: se mantiene escalado heredado.
             }
-            var preparacion = Entre(fuente, "private async Task<bool> PrepararCoberturaAntesDeCambiosAsync(", "private enum AgResultadoEscaladoUI");
+            var preparacion = Entre(fuente, "private async Task<bool> PrepararCoberturaAntesDeCambiosAsync(", "private async Task<AgResultadoEscaladoUI> EvaluarYAplicarEscaladoAsync");
             preparacion.Should().Contain("ObtenerCombinacionesSeleccionadas()");
             preparacion.Should().Contain("StringComparison.OrdinalIgnoreCase");
             preparacion.Should().NotContain("ExtraerCohorte(").And.NotContain("FirstOrDefault(");

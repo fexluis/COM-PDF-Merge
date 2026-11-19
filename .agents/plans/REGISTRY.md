@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 475 | 476 | 2026-11-19 |
-| `fase` | 2107 | 2108 | 2026-11-19 |
+| `ronda` | 481 | 482 | 2026-11-19 |
+| `fase` | 2128 | 2129 | 2026-11-19 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -184,6 +184,12 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-147 | 2026-11-19 | `(revisión e implementación Ronda 473 — Fases 2090–2095: unificación de R15 a cohortes y fórmula única de déficit, soporte de sede 0 en EstaConsentida/Calcular, extractor de clasificador único AgClasificadorVacante/AgOrigenVacante, motivo modal en FormatearDetalle, resolución determinista de sede en diálogo y suite de regresión)` | `Wave —` → `Ronda 473` | `Fase 2090–2095` | closed | sin build/tests (restricción Paso 6) | `073cb6c` |
 | R-148 | 2026-11-19 | `(revisión e implementación Ronda 474 — Fases 2096–2102: concurrencia por jornada en déficit estructural O(N), discriminante de cohorte en genes incompletos, origen Indeterminado para motivos vacíos, partición exacta de vacantes en diagnóstico, fallback de etiqueta de sede y suite de regresión)` | `Wave —` → `Ronda 474` | `Fase 2096–2102` | closed | sin build/tests (restricción Paso 6) | `073cb6c` |
 | R-149 | 2026-11-19 | `(revisión e implementación Ronda 475 — Fases 2103–2107: corrección de sintaxis en AgValidadorReglasTests, agregación de cohortes concurrentes por jornada en R15, lazy/caching de sedesPorAsig y normalización de jornada en déficit, rotulado de sesiones en [AG-VAC] y gate de compilación con suite completa 1824 tests)` | `Wave —` → `Ronda 475` | `Fase 2103–2107` | closed | PASS (Full 1824 tests) | `9c473f8` |
+| R-150 | 2026-11-19 | `(revisión Ronda 476 — Fases 2108–2113: observabilidad en escalador, infactibilidad de capacidad evaluable en oleadas/PasoMejora, consejo de ventana condicionado a mejora real, cobertura 64/61 y fail-fast pre-persistencia)` | `Wave —` → `Ronda 476` | `Fase 2108–2113` | closed | falso positivo documentación (superada por R-151) | `9c473f8` |
+| R-151 | 2026-11-19 | `(revisión Ronda 477 — Fases 2114–2115: aplicación real de Fases 2108–2113 en disco, atribución de título y normalización EOL en SemestresExcelExporter)` | `Wave —` → `Ronda 477` | `Fase 2114–2115` | closed | PASS (Full 1833 tests) | pendiente |
+| R-152 | 2026-11-19 | `(revisión Ronda 478 — Fases 2116–2119: override explícito en fail-fast pre-vuelo, consejo de ventana con pendiente residual, discriminación de ganancia previa a evaluación pesada y cotas conservadoras sin plan)` | `Wave —` → `Ronda 478` | `Fase 2116–2119` | closed | PASS (Full 1833 tests) | pendiente |
+| R-153 | 2026-11-19 | `(revisión Ronda 479 — Fases 2120–2123: override con SinCambios en fail-fast pre-vuelo, distinción bloque/festivo en escalón sin ganancia, rotulado En riesgo en diálogo y cobertura residual/override)` | `Wave —` → `Ronda 479` | `Fase 2120–2123` | closed | PASS (Full 1833 tests) | pendiente |
+| R-154 | 2026-11-19 | `(revisión Ronda 480 — Fases 2124–2126: extracción AgResultadoEscaladoUI a Domain/Enums, assert exacto y fixture de rama residual, y causa neutra por ocurrencias en escalón sin ganancia)` | `Wave —` → `Ronda 480` | `Fase 2124–2126` | closed | PASS (Full 1833 tests) | pendiente |
+| R-155 | 2026-11-19 | `(revisión Ronda 481 — Fases 2127–2128: predicado único de override en AgPreVueloEscalado y mensaje del escalón por días reales sin rama muerta)` | `Wave —` → `Ronda 481` | `Fase 2127–2128` | closed | PASS (Full 1833 tests) | pendiente |
 
 
 

@@ -70,10 +70,25 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             return AgOrdenAsignaturas.PorHoras(resultado);
         }
 
+        /// <summary>
+        /// Infactibilidad de calendario/capacidad: resultado evaluable, no error estructural (Fase 2109 / Fase 2114).
+        /// </summary>
+        internal static bool EsInfactibilidadDeCapacidad(string codigo)
+        {
+            if (string.IsNullOrEmpty(codigo)) { return false; }
+            return codigo.StartsWith("I5_SIN_CAPACIDAD", StringComparison.Ordinal)
+                || codigo.StartsWith("I5_SIN_SEMANAS_HABILES", StringComparison.Ordinal);
+        }
+
+        private static bool EsErrorEstructural(string codigo) =>
+            !string.IsNullOrEmpty(codigo) && !EsInfactibilidadDeCapacidad(codigo);
+
         internal static bool PasoMejora(AgResultadoEvaluacionVentana antes, AgResultadoEvaluacionVentana despues)
         {
-            if (antes.CabeEnPlazo || !string.IsNullOrEmpty(antes.Error) || !string.IsNullOrEmpty(despues.Error)
-                || despues.CapacidadTotal <= antes.CapacidadTotal || despues.DemandaPendiente > antes.DemandaPendiente) { return false; }
+            if (antes == null || despues == null || antes.CabeEnPlazo
+                || EsErrorEstructural(antes.Error) || EsErrorEstructural(despues.Error)
+                || despues.CapacidadTotal <= antes.CapacidadTotal
+                || despues.DemandaPendiente > antes.DemandaPendiente) { return false; }
             bool conserva = antes.Plan == null || despues.Plan != null
                 && antes.Plan.Planes.Where(p => !antes.Plan.Infactibles.Contains(p.IdAsignatura))
                     .All(p => despues.Plan.Planes.Any(n => n.IdAsignatura == p.IdAsignatura && n.Sesiones.Count >= p.Sesiones.Count));
@@ -121,6 +136,23 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 contexto.EsFestivo, contexto.Bloques, jornada, patrones, ct, diagnostico);
             if (evaluacion.IsFailure)
             {
+                if (EsInfactibilidadDeCapacidad(evaluacion.Error))
+                {
+                    // Fase 2109 / Fase 2114 / Fase 2119 / Fase 2122: la capacidad insuficiente es infactibilidad evaluable, no error duro.
+                    // Pendiente por asignatura no determinable sin plan: se declaran cotas conservadoras (demanda completa).
+                    res.Error = string.Empty;
+                    res.Motivo = evaluacion.Error + " | pendiente por asignatura no determinable sin plan: cota superior (demanda completa)";
+                    res.HaySaturacion = true;
+                    res.BusquedaAgotada = true;
+                    res.DemandaPendiente = Math.Max(0, res.DemandaTotal - res.CapacidadTotal);
+                    res.DeficitHoras = res.DemandaPendiente * unidad;
+                    res.IdAsignaturasSaturadas = requeridas.Keys.OrderBy(id => id).ToList();
+                    res.SesionesPendientesPorAsignatura = requeridas.ToDictionary(p => p.Key, p => p.Value);
+                    res.HorasPendientesPorAsignatura = requeridas.ToDictionary(p => p.Key, p => p.Value * unidad);
+                    LoggerHelper.Warning($"[AG-ESCALADO] Infactibilidad evaluable sin plan (cotas conservadoras): " +
+                        $"deficit={res.DemandaPendiente} demanda={res.DemandaTotal} capacidad={res.CapacidadTotal} | {evaluacion.Error}");
+                    return res;
+                }
                 res.Error = evaluacion.Error;
                 res.Motivo = evaluacion.Error;
                 res.HaySaturacion = true;

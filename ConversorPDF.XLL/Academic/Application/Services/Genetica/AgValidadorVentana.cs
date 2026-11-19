@@ -310,7 +310,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         }
                         else
                         {
-                            // FASE 1856: Validar ganancia real antes de sugerir el escalón
+                            // FASE 1856 / FASE 2110 / FASE 2114: Validar ganancia real antes de sugerir el escalón
                             var ranurasEscalon = AgRanuras.PorVentana(escalon, contexto.Bloques, au.Jornada, unidadAu);
                             int capEscalon = 0;
                             if (ranurasEscalon.Count > 0)
@@ -326,13 +326,48 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                                 }
                             }
 
-                            if (capEscalon > capacidadTotalRanuras)
+                            if (capEscalon <= capacidadTotalRanuras)
                             {
-                                consejoEscalon = $" Escale la ventana a '{escalon}' (capacidad {capEscalon}) o amplíe el semestre.";
+                                // FASE 2118 / FASE 2121 / FASE 2126 / FASE 2128: Conteo por días reales y sin rama muerta.
+                                var ranurasNuevas = ranurasEscalon
+                                    .Where(r => !ranurasAu.Any(b => b.Dia == r.Dia)).ToList();
+                                int diasNuevos = ranurasNuevas.Select(r => r.Dia).Distinct().Count();
+                                consejoEscalon = diasNuevos == 0
+                                    ? $" El siguiente escalón '{escalon}' no añade días: no existe bloque activo de " +
+                                      $"{unidadAu:0} h para la jornada '{au.Jornada}' en ag_bloque_horario. Configure bloques " +
+                                      "para esa jornada o amplíe el semestre."
+                                    : $" El siguiente escalón '{escalon}' añade {diasNuevos} día(s) sin ninguna ocurrencia útil " +
+                                      $"en la ventana {ini:yyyy-MM-dd}..{fin:yyyy-MM-dd} (festivo o fuera de rango). Amplíe el " +
+                                      "semestre o reasigne el carril de las materias saturadas.";
                             }
                             else
                             {
-                                consejoEscalon = $" El siguiente escalón '{escalon}' no añade ranuras útiles (no existe bloque activo de {unidadAu:0} h para la jornada '{au.Jornada}' en ag_bloque_horario). Configure bloques para esa jornada o amplíe el semestre.";
+                                int pendienteBase = Math.Max(0, totalSesionesAula - capacidadTotalRanuras);
+                                var evalEscalon = AgEvaluadorDemandaVentana.Evaluar(escalon, au.Jornada, unidadAu,
+                                    contexto, au, ini, fin);
+                                bool reducePendiente = (string.IsNullOrEmpty(evalEscalon.Error)
+                                    || AgEvaluadorDemandaVentana.EsInfactibilidadDeCapacidad(evalEscalon.Error))
+                                    && evalEscalon.DemandaPendiente < pendienteBase;
+
+                                // FASE 2117: Distinguir si el escalón resuelve completamente o deja pendientes residuales por patrones.
+                                if (reducePendiente && evalEscalon.CabeEnPlazo)
+                                {
+                                    consejoEscalon = $" Escale la ventana a '{escalon}' (capacidad {capEscalon}) o amplíe el semestre.";
+                                }
+                                else if (reducePendiente)
+                                {
+                                    consejoEscalon = $" Escale la ventana a '{escalon}' (capacidad {capEscalon}): reduce las sesiones " +
+                                        $"pendientes de {pendienteBase} a {evalEscalon.DemandaPendiente}, pero no las elimina porque los " +
+                                        "patrones vigentes (ag_aula_asignatura.dias_patron) no cubren el día añadido. Libere a AUTOMATICO " +
+                                        "al menos una materia saturada o amplíe el semestre.";
+                                }
+                                else
+                                {
+                                    consejoEscalon = $" El siguiente escalón '{escalon}' añade {capEscalon - capacidadTotalRanuras} " +
+                                        "ranuras semanales, pero no reduce las sesiones pendientes: ningún patrón vigente " +
+                                        "(ag_aula_asignatura.dias_patron) usa el día añadido. Libere a AUTOMATICO al menos una " +
+                                        "materia saturada, reasigne su carril o amplíe el semestre.";
+                                }
                             }
                         }
 

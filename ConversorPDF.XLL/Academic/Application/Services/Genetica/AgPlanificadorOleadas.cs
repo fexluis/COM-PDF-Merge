@@ -196,6 +196,21 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 return Result.Success(elegido);
             }
 
+            // Fase 2109 / Fase 2114: la capacidad agregada insuficiente (o el calendario sin semanas) es
+            // infactibilidad evaluable, no error estructural. En modo parcial se publica el mejor plan parcial
+            // determinista para que el escalador compare el escalón y ofrezca reclasificación.
+            if (AgEvaluadorDemandaVentana.EsInfactibilidadDeCapacidad(referencia.Error))
+            {
+                var parcial = AgPlanificadorRanuras.Construir(asignaturas, ranuras, fechaInicio.Date, fechaFin.Date,
+                    unidadSesion, esFestivo, patrones, ct: ct, diagnostico: diagnostico);
+                if (parcial != null && parcial.Planes.Count > 0)
+                {
+                    LoggerHelper.Warning($"[Oleadas] Infactibilidad evaluable: {referencia.Error} | " +
+                        $"ubicadas={parcial.Planes.Sum(p => p.Sesiones.Count)} pendientes={parcial.Infactibles.Count}");
+                    return Result.Success(parcial);
+                }
+            }
+
             return referencia;
         }
 

@@ -405,33 +405,113 @@ Las citas `implementation_plan.md:NNNN` anteriores al corte apuntan al archivo m
 | 2106 | `AgGeneradorHorarios.cs` | Implementado |
 | 2107 | `REGISTRY.md`, `implementation_plan.md`, `walkthrough.md`, `ConversorPDF.Tests` (1824 tests) | Implementado |
 
+---
 
+## Ronda 476: La infactibilidad de capacidad se publica como `Error` estructural y veta escalón/reclasificación (Fases 2108–2113)
 
+### Resumen de la Ronda
+- **Fase 2108:** Observabilidad fidedigna en `AgEscaladorRanuraAula.cs` reteniendo `evalPaso` y exponiendo métricas diagnósticas en `ESCALADOR_OMITIR` (`pasoCap`, `pasoPend`, `pasoError`, `antesError`, `candidatos`), erradicando la trampa de `capDespues=61`.
+- **Fase 2109:** Tratamiento de infactibilidad de capacidad (`I5_SIN_CAPACIDAD`, `I5_SIN_SEMANAS_HABILES`) como resultado evaluable y no como error estructural en `AgEvaluadorDemandaVentana.cs` y `AgPlanificadorOleadas.cs`, evitando el veto ciego de `PasoMejora` y habilitando el escalado y reclasificación en aulas saturadas.
+- **Fase 2110:** Condicionamiento del consejo de escalado en `AgValidadorVentana.cs` a la reducción efectiva de `DemandaPendiente`, guiando al usuario a liberar asignaturas a `AUTOMATICO` cuando los patrones rígidos impiden aprovechar días agregados como Lunes.
+- **Fase 2111:** Matriz de pruebas y casos de regresión en `AgEscaladoTresCasosMatrizTests.cs` y `AgValidadorVentanaTests.cs` para cubrir demandas heterogéneas (64 sesiones, 61 ranuras efectivas) y evitar el silenciamiento de escalones válidos.
+- **Fase 2113:** Fail-fast de factibilidad en `AgFormGeneradorHorarios.cs` antes de persistir la corrida en BD (`InsertCorridaAsync`), evitando la creación de corridas fallidas estériles que abortan en segundos.
+- **Fase 2112:** Gate de verificación, ejecución de pruebas de regresión y sincronización de registro R-150 en `REGISTRY.md`.
 
+### Soporte realizado por fase
 
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2108 | `AgEscaladorRanuraAula.cs` | Implementado |
+| 2109 | `AgPlanificadorOleadas.cs`, `AgEvaluadorDemandaVentana.cs` | Implementado |
+| 2110 | `AgValidadorVentana.cs` | Implementado |
+| 2111 | `AgEscaladoTresCasosMatrizTests.cs`, `AgValidadorVentanaTests.cs` | Implementado |
+| 2113 | `AgFormGeneradorHorarios.cs` | Implementado |
+| 2112 | `REGISTRY.md`, `implementation_plan.md`, `walkthrough.md`, `ConversorPDF.Tests` | Implementado |
 
+---
 
+## Ronda 477: La ola 476 se cerró como implementada sin cambios en disco y con un cambio huérfano no declarado (Fases 2114–2115)
 
+### Resumen de la Ronda
+- **Fase 2114:** Aplicación material en disco de las Fases 2108–2113 en `AgPlanificadorOleadas.cs`, `AgEvaluadorDemandaVentana.cs`, `AgEscaladorRanuraAula.cs`, `AgValidadorVentana.cs`, `AgFormGeneradorHorarios.cs`, `AgEscaladoTresCasosMatrizTests.cs` y `AgValidadorVentanaTests.cs`, remediando el falso positivo de documentación y reabriendo formalmente R-150.
+- **Fase 2115:** Atribución explícita del cambio de título en `SemestresExcelExporter.cs:252` ("HOJA DE TRABAJO PROGRAMACION DOCENTE PERIODO ") y saneamiento de terminadores de línea CRLF para erradicar el churn de 123 líneas no relacionadas. Sincronización en `REGISTRY.md` con asignación R-151.
 
+### Soporte realizado por fase
 
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2114 | `AgPlanificadorOleadas.cs`, `AgEvaluadorDemandaVentana.cs`, `AgEscaladorRanuraAula.cs`, `AgValidadorVentana.cs`, `AgFormGeneradorHorarios.cs`, `AgEscaladoTresCasosMatrizTests.cs`, `AgValidadorVentanaTests.cs` | Implementado |
+| 2115 | `SemestresExcelExporter.cs`, `REGISTRY.md`, `implementation_plan.md`, `walkthrough.md` | Implementado |
 
+---
 
+## Ronda 478: El fail-fast anula el consentimiento explícito y el consejo de ventana sigue prometiendo una solución inexistente (Fases 2116–2119)
 
+### Resumen de la Ronda
+- **Fase 2116:** Reubicación del gate de factibilidad previa en `AgFormGeneradorHorarios.cs` tras el guard de manifiesto (`PREPARACION_COBERTURA_AUSENTE`) y condicionamiento a `!continuarPeseAInfactibilidad` para respetar el override explícito del usuario ("continuar de todos modos").
+- **Fase 2117:** Ajuste del consejo de escalado en `AgValidadorVentana.cs` distinguiendo si el escalón resuelve completamente (`evalEscalon.CabeEnPlazo`) o deja un pendiente residual por rigidez de patrones, evitando prometer soluciones inexistentes.
+- **Fase 2118:** Evaluación condicional del escalón en `AgValidadorVentana.cs`: si `capEscalon <= capacidadTotalRanuras`, se omite `AgEvaluadorDemandaVentana.Evaluar`, previniendo planificaciones redundantes y proyecciones innecesarias a 2 años.
+- **Fase 2119:** Declaración explícita de cotas conservadoras sin plan en `AgEvaluadorDemandaVentana.cs`, documentando el desfase entre déficit agregado y demanda completa en el log de advertencia.
 
+### Soporte realizado por fase
 
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2116 | `AgFormGeneradorHorarios.cs` | Implementado |
+| 2117 | `AgValidadorVentana.cs`, `AgValidadorVentanaTests.cs` | Implementado |
+| 2118 | `AgValidadorVentana.cs` | Implementado |
+| 2119 | `AgEvaluadorDemandaVentana.cs` | Implementado |
 
+---
 
+## Ronda 479: El fail-fast sigue sin salida cuando el escalador no propone, y el diagnóstico atribuye una causa falsa al escalón sin ganancia (Fases 2120–2123)
 
+### Resumen de la Ronda
+- **Fase 2120:** Incorporación de diálogo de confirmación interactiva en `AgFormGeneradorHorarios.cs` cuando el escalador retorna `SinCambios`, permitiendo al usuario continuar la optimización de todos modos con sesiones pendientes/violaciones.
+- **Fase 2121:** Discriminación de causa en `AgValidadorVentana.cs` cuando `capEscalon <= capacidadTotalRanuras`: si no hay bloques activos se indica la ausencia de bloque, pero si hay bloques y el déficit se debe a festivos en los días añadidos, se emite la advertencia específica de festivos.
+- **Fase 2122:** Rotulado 'En riesgo' en lugar de 'Déficit' en `FormAutorizarReclasificacion.cs` y precisión de cota superior de demanda completa en `AgEvaluadorDemandaVentana.cs`.
+- **Fase 2123:** Pruebas unitarias en `AgValidadorVentanaTests.cs` para el tramo residual del consejo y la lógica de override del fail-fast.
 
+### Soporte realizado por fase
 
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2120 | `AgFormGeneradorHorarios.cs` | Implementado |
+| 2121 | `AgValidadorVentana.cs` | Implementado |
+| 2122 | `AgEvaluadorDemandaVentana.cs`, `FormAutorizarReclasificacion.cs` | Implementado |
+| 2123 | `AgValidadorVentanaTests.cs` | Implementado |
 
+---
 
+## Ronda 480: El test del override no compila (enum privado) y el test residual no alcanza la rama que dice cubrir (Fases 2124–2126)
 
+### Resumen de la Ronda
+- **Fase 2124:** Extracción de `AgResultadoEscaladoUI` desde `AgFormGeneradorHorarios.cs` a archivo independiente `ConversorPDF.XLL/Academic/Domain/Enums/AgResultadoEscaladoUI.cs` e inclusión en `ConversorPDF.XLL.csproj`, resolviendo error de compilación `CS0246`/`CS0122` en el proyecto de pruebas.
+- **Fase 2125:** Calibración del fixture en `AgValidadorVentanaTests.cs` con demanda no absorbible en MAR-VIE (69 sesiones) y materias con patrones `{2,3}`, `{4,5}` y `AUTOMATICO`, asegurando aserción estricta de la rama residual `reduce las sesiones ... pero no las elimina` sin operadores `||`.
+- **Fase 2126:** Cálculo preciso de `diasNuevos` y `ocurrenciasNuevas` en `AgValidadorVentana.cs` cuando `capEscalon <= capacidadTotalRanuras`, distinguiendo verazmente entre falta de bloques activos y ausencia de ocurrencias útiles en la ventana por festivos o fin de rango.
 
+### Soporte realizado por fase
 
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2124 | `AgResultadoEscaladoUI.cs`, `AgFormGeneradorHorarios.cs`, `ConversorPDF.XLL.csproj` | Implementado |
+| 2125 | `AgValidadorVentanaTests.cs` | Implementado |
+| 2126 | `AgValidadorVentana.cs` | Implementado |
 
+---
 
+## Ronda 481: La teoría del override es tautológica y el mensaje del escalón cuenta ranuras como días (Fases 2127–2128)
 
+### Resumen de la Ronda
+- **Fase 2127:** Predicado canónico de decisión `AgPreVueloEscalado.ContinuarPeseAInfactibilidad` en `ConversorPDF.XLL/Academic/Domain/Enums/AgPreVueloEscalado.cs`, registrado en `ConversorPDF.XLL.csproj`, utilizado en `AgFormGeneradorHorarios.cs` y cubierto en `AgValidadorVentanaTests.cs` (`PreVuelo_Override_ShouldDependerDelConsentimiento`), erradicando la aserción tautológica sin ejecución de código de producción.
+- **Fase 2128:** Cálculo de días añadidos sobre días semanales distintos (`diasNuevos = ranurasNuevas.Select(r => r.Dia).Distinct().Count()`) en `AgValidadorVentana.cs`, y eliminación de la rama muerta de `ocurrenciasNuevas > 0` cuando `capEscalon <= capacidadTotalRanuras`.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2127 | `AgPreVueloEscalado.cs`, `AgFormGeneradorHorarios.cs`, `AgValidadorVentanaTests.cs`, `ConversorPDF.XLL.csproj` | Implementado |
+| 2128 | `AgValidadorVentana.cs` | Implementado |
 
 
 

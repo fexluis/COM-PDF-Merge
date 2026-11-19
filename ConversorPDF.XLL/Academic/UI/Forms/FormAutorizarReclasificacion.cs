@@ -140,8 +140,9 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
                     ? $" [{c.SemestreGrupo}]"
                     : string.Empty;
 
+                // Fase 2122: Rotular 'En riesgo' en vez de 'Déficit' para cotas superiores sin plan factible
                 string infoDeficit = c.SesionesPendientes > 0
-                    ? $" | Déficit: {c.SesionesPendientes} ses ({c.HorasPendientes:0.#}h)"
+                    ? $" | En riesgo: {c.SesionesPendientes} ses ({c.HorasPendientes:0.#}h)"
                     : string.Empty;
 
                 string diasAnt = !string.IsNullOrWhiteSpace(c.DiasPatronAnterior)
