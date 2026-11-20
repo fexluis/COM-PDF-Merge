@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ConversorPDF.XLL.Academic.Application.Services.Genetica;
+using ConversorPDF.XLL.Academic.Domain.Enums;
 using ConversorPDF.XLL.Academic.Domain.Models.Genetica;
 using FluentAssertions;
 using Xunit;
@@ -733,5 +734,221 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             res.Value.Infactibles.Should().Contain(1);
             res.Value.VentanaSugerida.Should().Be("JUE-DOM");
         }
+
+        #region Pruebas de Realineación de Oleadas (Fase 2131)
+
+        [Fact]
+        public void RealinearOleadas_CarrilConSolape_DesplazaHaciaAdelante()
+        {
+            // Arrange
+            var ventana = VentanaSemestre.Crear(1, "2027-1", new DateTime(2027, 2, 1), new DateTime(2027, 6, 30), AgOrigenVentana.Presencial).Value;
+            var ctx = new AgContexto
+            {
+                Ventana = ventana,
+                Aulas = new List<AgAula> { new AgAula { Id = 1, Nombre = "Aula 101", Jornada = AgFranjaJornada.MANANA, DiasVentana = "1,2,3,4,5,6" } }
+            };
+
+            var individuo = new AgIndividuo
+            {
+                Genes = new List<AgGen>
+                {
+                    // Asignatura 101: 16h (LUN y MAR), del 1 al 14 de feb
+                    new AgGen { Id = 1, IdAsignatura = 101, IdAula = 1, ClaveGrupo = "G1", DiasPatron = "1,2", DiaSemana = 1, IdTercero = 10, FechaInicioEstimada = new DateTime(2027, 2, 1), FechaFinEstimada = new DateTime(2027, 2, 14), TotalHorasAsignatura = 16.0, HorasGen = 8.0 },
+                    new AgGen { Id = 2, IdAsignatura = 101, IdAula = 1, ClaveGrupo = "G1", DiasPatron = "1,2", DiaSemana = 2, IdTercero = 10, FechaInicioEstimada = new DateTime(2027, 2, 1), FechaFinEstimada = new DateTime(2027, 2, 14), TotalHorasAsignatura = 16.0, HorasGen = 8.0 },
+                    // Asignatura 102: 16h (LUN y MAR), solapada: empieza el 8 de feb antes de que termine 101
+                    new AgGen { Id = 3, IdAsignatura = 102, IdAula = 1, ClaveGrupo = "G1", DiasPatron = "1,2", DiaSemana = 1, IdTercero = 20, FechaInicioEstimada = new DateTime(2027, 2, 8), FechaFinEstimada = new DateTime(2027, 2, 21), TotalHorasAsignatura = 16.0, HorasGen = 8.0 },
+                    new AgGen { Id = 4, IdAsignatura = 102, IdAula = 1, ClaveGrupo = "G1", DiasPatron = "1,2", DiaSemana = 2, IdTercero = 20, FechaInicioEstimada = new DateTime(2027, 2, 8), FechaFinEstimada = new DateTime(2027, 2, 21), TotalHorasAsignatura = 16.0, HorasGen = 8.0 }
+                }
+            };
+
+            // Act
+            var res = AgPlanificadorOleadas.RealinearOleadas(individuo, ctx);
+
+            // Assert
+            res.Exito.Should().BeTrue();
+            res.HuboCambios.Should().BeTrue();
+            res.CarrilesReparados.Should().Be(1);
+
+            var asig101Fin = individuo.Genes.Where(g => g.IdAsignatura == 101).Max(g => g.FechaFinEstimada.Value);
+            var asig102Ini = individuo.Genes.Where(g => g.IdAsignatura == 102).Min(g => g.FechaInicioEstimada.Value);
+            asig102Ini.Should().BeAfter(asig101Fin);
+
+            individuo.Genes.Where(g => g.IdAsignatura == 102).Sum(g => g.HorasGen).Should().Be(16.0);
+            individuo.Genes.First(g => g.IdAsignatura == 102).IdTercero.Should().Be(20);
+        }
+
+        [Fact]
+        public void RealinearOleadas_NoCabeEnVentana_DevuelveFalloYNoCambia()
+        {
+            // Arrange (ventana muy corta: solo 2 semanas)
+            var ventana = VentanaSemestre.Crear(1, "2027-1", new DateTime(2027, 2, 1), new DateTime(2027, 2, 14), AgOrigenVentana.Presencial).Value;
+            var ctx = new AgContexto
+            {
+                Ventana = ventana,
+                Aulas = new List<AgAula> { new AgAula { Id = 1, Nombre = "Aula 101", Jornada = AgFranjaJornada.MANANA, DiasVentana = "1,2,3,4,5,6" } }
+            };
+
+            var iniOrig = new DateTime(2027, 2, 8);
+            var finOrig = new DateTime(2027, 2, 14);
+
+            var individuo = new AgIndividuo
+            {
+                Genes = new List<AgGen>
+                {
+                    new AgGen { Id = 1, IdAsignatura = 101, IdAula = 1, ClaveGrupo = "G1", DiasPatron = "1,2", DiaSemana = 1, FechaInicioEstimada = new DateTime(2027, 2, 1), FechaFinEstimada = new DateTime(2027, 2, 14), TotalHorasAsignatura = 16.0, HorasGen = 8.0 },
+                    new AgGen { Id = 2, IdAsignatura = 101, IdAula = 1, ClaveGrupo = "G1", DiasPatron = "1,2", DiaSemana = 2, FechaInicioEstimada = new DateTime(2027, 2, 1), FechaFinEstimada = new DateTime(2027, 2, 14), TotalHorasAsignatura = 16.0, HorasGen = 8.0 },
+                    new AgGen { Id = 3, IdAsignatura = 102, IdAula = 1, ClaveGrupo = "G1", DiasPatron = "1,2", DiaSemana = 1, FechaInicioEstimada = iniOrig, FechaFinEstimada = finOrig, TotalHorasAsignatura = 16.0, HorasGen = 8.0 },
+                    new AgGen { Id = 4, IdAsignatura = 102, IdAula = 1, ClaveGrupo = "G1", DiasPatron = "1,2", DiaSemana = 2, FechaInicioEstimada = iniOrig, FechaFinEstimada = finOrig, TotalHorasAsignatura = 16.0, HorasGen = 8.0 }
+                }
+            };
+
+            // Act
+            var res = AgPlanificadorOleadas.RealinearOleadas(individuo, ctx);
+
+            // Assert
+            res.Fallos.Should().Be(1);
+            res.CarrilesReparados.Should().Be(0);
+            res.HuboCambios.Should().BeFalse();
+
+            // Fechas originales intactas
+            individuo.Genes.First(g => g.IdAsignatura == 102).FechaInicioEstimada.Should().Be(iniOrig);
+            individuo.Genes.First(g => g.IdAsignatura == 102).FechaFinEstimada.Should().Be(finOrig);
+        }
+
+        [Fact]
+        public void RealinearOleadas_CarrilSinSolape_NoCambiaNada()
+        {
+            // Arrange: ya son estrictamente secuenciales
+            var ventana = VentanaSemestre.Crear(1, "2027-1", new DateTime(2027, 2, 1), new DateTime(2027, 6, 30), AgOrigenVentana.Presencial).Value;
+            var ctx = new AgContexto
+            {
+                Ventana = ventana,
+                Aulas = new List<AgAula> { new AgAula { Id = 1, Nombre = "Aula 101", Jornada = AgFranjaJornada.MANANA, DiasVentana = "1,2,3,4,5,6" } }
+            };
+
+            var individuo = new AgIndividuo
+            {
+                Genes = new List<AgGen>
+                {
+                    new AgGen { Id = 1, IdAsignatura = 101, IdAula = 1, ClaveGrupo = "G1", DiasPatron = "1,2", DiaSemana = 1, FechaInicioEstimada = new DateTime(2027, 2, 1), FechaFinEstimada = new DateTime(2027, 2, 14), TotalHorasAsignatura = 16.0, HorasGen = 8.0 },
+                    new AgGen { Id = 2, IdAsignatura = 102, IdAula = 1, ClaveGrupo = "G1", DiasPatron = "1,2", DiaSemana = 1, FechaInicioEstimada = new DateTime(2027, 2, 15), FechaFinEstimada = new DateTime(2027, 2, 28), TotalHorasAsignatura = 16.0, HorasGen = 8.0 }
+                }
+            };
+
+            // Act
+            var res = AgPlanificadorOleadas.RealinearOleadas(individuo, ctx);
+
+            // Assert
+            res.HuboCambios.Should().BeFalse();
+            res.CarrilesReparados.Should().Be(0);
+            res.Fallos.Should().Be(0);
+        }
+
+        [Fact]
+        public void RealinearOleadas_FestivoEnTramo_RecalculaK()
+        {
+            // Arrange: Lunes 15 de febrero es festivo
+            var ventana = VentanaSemestre.Crear(1, "2027-1", new DateTime(2027, 2, 1), new DateTime(2027, 6, 30), AgOrigenVentana.Presencial).Value;
+            var festivoLunes = new DateTime(2027, 2, 15);
+            var ctx = new AgContexto
+            {
+                Ventana = ventana,
+                Aulas = new List<AgAula> { new AgAula { Id = 1, Nombre = "Aula 101", Jornada = AgFranjaJornada.MANANA, DiasVentana = "1,2,3,4,5,6" } }
+            };
+            ctx.Festivos.Add((festivoLunes, festivoLunes));
+            ctx.ConstruirIndices();
+
+            var individuo = new AgIndividuo
+            {
+                Genes = new List<AgGen>
+                {
+                    new AgGen { Id = 1, IdAsignatura = 101, IdAula = 1, ClaveGrupo = "G1", DiasPatron = "1,2", DiaSemana = 1, FechaInicioEstimada = new DateTime(2027, 2, 1), FechaFinEstimada = new DateTime(2027, 2, 14), TotalHorasAsignatura = 16.0, HorasGen = 8.0 },
+                    new AgGen { Id = 2, IdAsignatura = 101, IdAula = 1, ClaveGrupo = "G1", DiasPatron = "1,2", DiaSemana = 2, FechaInicioEstimada = new DateTime(2027, 2, 1), FechaFinEstimada = new DateTime(2027, 2, 14), TotalHorasAsignatura = 16.0, HorasGen = 8.0 },
+                    new AgGen { Id = 3, IdAsignatura = 102, IdAula = 1, ClaveGrupo = "G1", DiasPatron = "1,2", DiaSemana = 1, FechaInicioEstimada = new DateTime(2027, 2, 8), FechaFinEstimada = new DateTime(2027, 2, 21), TotalHorasAsignatura = 16.0, HorasGen = 8.0 },
+                    new AgGen { Id = 4, IdAsignatura = 102, IdAula = 1, ClaveGrupo = "G1", DiasPatron = "1,2", DiaSemana = 2, FechaInicioEstimada = new DateTime(2027, 2, 8), FechaFinEstimada = new DateTime(2027, 2, 21), TotalHorasAsignatura = 16.0, HorasGen = 8.0 }
+                }
+            };
+
+            // Act
+            var res = AgPlanificadorOleadas.RealinearOleadas(individuo, ctx);
+
+            // Assert
+            res.Exito.Should().BeTrue();
+            res.HuboCambios.Should().BeTrue();
+            var fechas102 = individuo.Genes.Where(g => g.IdAsignatura == 102).SelectMany(g => g.FechasGen).ToList();
+            fechas102.Should().HaveCount(4); // 4 sesiones de 4h = 16h
+            fechas102.Should().NotContain(festivoLunes);
+        }
+
+        [Fact]
+        public void RealinearOleadas_DiasPatronDistintos_NoSeMezclan()
+        {
+            // Arrange: 2 carriles distintos en la misma aula
+            var ventana = VentanaSemestre.Crear(1, "2027-1", new DateTime(2027, 2, 1), new DateTime(2027, 6, 30), AgOrigenVentana.Presencial).Value;
+            var ctx = new AgContexto
+            {
+                Ventana = ventana,
+                Aulas = new List<AgAula> { new AgAula { Id = 1, Nombre = "Aula 101", Jornada = AgFranjaJornada.MANANA, DiasVentana = "1,2,3,4,5,6" } }
+            };
+
+            var individuo = new AgIndividuo
+            {
+                Genes = new List<AgGen>
+                {
+                    // Carril "1,2" con solape
+                    new AgGen { Id = 1, IdAsignatura = 101, IdAula = 1, ClaveGrupo = "G1", DiasPatron = "1,2", DiaSemana = 1, FechaInicioEstimada = new DateTime(2027, 2, 1), FechaFinEstimada = new DateTime(2027, 2, 14), TotalHorasAsignatura = 16.0, HorasGen = 8.0 },
+                    new AgGen { Id = 2, IdAsignatura = 102, IdAula = 1, ClaveGrupo = "G1", DiasPatron = "1,2", DiaSemana = 1, FechaInicioEstimada = new DateTime(2027, 2, 8), FechaFinEstimada = new DateTime(2027, 2, 21), TotalHorasAsignatura = 16.0, HorasGen = 8.0 },
+                    // Carril "4,5" sin solape (secuencial)
+                    new AgGen { Id = 3, IdAsignatura = 201, IdAula = 1, ClaveGrupo = "G1", DiasPatron = "4,5", DiaSemana = 4, FechaInicioEstimada = new DateTime(2027, 2, 4), FechaFinEstimada = new DateTime(2027, 2, 14), TotalHorasAsignatura = 16.0, HorasGen = 8.0 },
+                    new AgGen { Id = 4, IdAsignatura = 202, IdAula = 1, ClaveGrupo = "G1", DiasPatron = "4,5", DiaSemana = 4, FechaInicioEstimada = new DateTime(2027, 2, 18), FechaFinEstimada = new DateTime(2027, 2, 28), TotalHorasAsignatura = 16.0, HorasGen = 8.0 }
+                }
+            };
+
+            // Act
+            var res = AgPlanificadorOleadas.RealinearOleadas(individuo, ctx);
+
+            // Assert
+            res.CarrilesEvaluados.Should().Be(2);
+            res.CarrilesReparados.Should().Be(1);
+            // El carril 4,5 se mantiene intacto
+            individuo.Genes.First(g => g.IdAsignatura == 201).FechaInicioEstimada.Should().Be(new DateTime(2027, 2, 4));
+            individuo.Genes.First(g => g.IdAsignatura == 202).FechaInicioEstimada.Should().Be(new DateTime(2027, 2, 18));
+        }
+
+        [Fact]
+        public void RealinearOleadas_Idempotente()
+        {
+            // Arrange
+            var ventana = VentanaSemestre.Crear(1, "2027-1", new DateTime(2027, 2, 1), new DateTime(2027, 6, 30), AgOrigenVentana.Presencial).Value;
+            var ctx = new AgContexto
+            {
+                Ventana = ventana,
+                Aulas = new List<AgAula> { new AgAula { Id = 1, Nombre = "Aula 101", Jornada = AgFranjaJornada.MANANA, DiasVentana = "1,2,3,4,5,6" } }
+            };
+
+            var individuo = new AgIndividuo
+            {
+                Genes = new List<AgGen>
+                {
+                    new AgGen { Id = 1, IdAsignatura = 101, IdAula = 1, ClaveGrupo = "G1", DiasPatron = "1,2", DiaSemana = 1, FechaInicioEstimada = new DateTime(2027, 2, 1), FechaFinEstimada = new DateTime(2027, 2, 14), TotalHorasAsignatura = 16.0, HorasGen = 8.0 },
+                    new AgGen { Id = 2, IdAsignatura = 102, IdAula = 1, ClaveGrupo = "G1", DiasPatron = "1,2", DiaSemana = 1, FechaInicioEstimada = new DateTime(2027, 2, 8), FechaFinEstimada = new DateTime(2027, 2, 21), TotalHorasAsignatura = 16.0, HorasGen = 8.0 }
+                }
+            };
+
+            // Act 1
+            var res1 = AgPlanificadorOleadas.RealinearOleadas(individuo, ctx);
+            res1.HuboCambios.Should().BeTrue();
+            var iniPost1 = individuo.Genes.First(g => g.IdAsignatura == 102).FechaInicioEstimada.Value;
+
+            // Act 2
+            var res2 = AgPlanificadorOleadas.RealinearOleadas(individuo, ctx);
+
+            // Assert 2
+            res2.HuboCambios.Should().BeFalse();
+            res2.CarrilesReparados.Should().Be(0);
+            individuo.Genes.First(g => g.IdAsignatura == 102).FechaInicioEstimada.Value.Should().Be(iniPost1);
+        }
+
+        #endregion
     }
 }

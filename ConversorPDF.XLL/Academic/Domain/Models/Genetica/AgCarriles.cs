@@ -78,6 +78,12 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
         }
 
         /// <summary>
+        /// Genera la clave canónica de carril por aula y patrón semanal (Fase 2140 / Fase 2156).
+        /// </summary>
+        internal static string ClaveCarril(AgGen g) =>
+            $"{g.IdAula}|{(string.IsNullOrWhiteSpace(g.DiasPatron) ? "DEF" : g.DiasPatron)}";
+
+        /// <summary>
         /// Días residuales de ventana impar (por ejemplo, en ventana de 5 días, el 5º día que queda sin rotar).
         /// </summary>
         [System.Obsolete("F1176: el modelo de ranuras no descarta días; usar AgCarriles.DelCarril(ranuras, idx).")]

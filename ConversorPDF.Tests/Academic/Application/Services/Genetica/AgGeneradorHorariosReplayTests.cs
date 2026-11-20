@@ -16,6 +16,10 @@ using Xunit;
 
 namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
 {
+    [CollectionDefinition("AgGeneradorHorarios", DisableParallelization = true)]
+    public sealed class AgGeneradorHorariosCollection { }
+
+    [Collection("AgGeneradorHorarios")]
     public class AgGeneradorHorariosReplayTests
     {
         [Fact]
@@ -145,6 +149,61 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             string hash2 = AgCorrida105Fixture.CalcularHashIndividuo(res2.Value.MejorIndividuo);
             hash1.Should().NotBe(hash2);
         }
+
+        #region Pruebas de Determinismo y Replay con Realineación de Campeón (Fase 2134)
+
+        [Fact]
+        public async Task Replay_ConRealineacionActiva_ProduceMismoHashYDeterminismo()
+        {
+            // Arrange
+            const int seed = 777;
+            var contexto1 = AgCorrida105Fixture.CrearContexto105(seed);
+            var contexto2 = AgCorrida105Fixture.CrearContexto105(seed);
+
+            var valMock = new Mock<IAgValidadorVentana>();
+            valMock.Setup(v => v.ValidarFactibilidadAsync(It.IsAny<AgContexto>(), It.IsAny<CancellationToken>()))
+                   .ReturnsAsync(Result.Success(new InformeFactibilidad { EsFactible = true }));
+
+            var sut1 = new AgGeneradorHorarios(valMock.Object, CrearEvaluadorDeterminista().Object, seed: seed);
+            var sut2 = new AgGeneradorHorarios(valMock.Object, CrearEvaluadorDeterminista().Object, seed: seed);
+
+            // Act
+            var res1 = await sut1.EjecutarOptimizacionAsync(contexto1, 6, 3, 0.8, 0.1, 1, null, CancellationToken.None);
+            var res2 = await sut2.EjecutarOptimizacionAsync(contexto2, 6, 3, 0.8, 0.1, 1, null, CancellationToken.None);
+
+            // Assert
+            res1.IsSuccess.Should().BeTrue();
+            res2.IsSuccess.Should().BeTrue();
+
+            string hash1 = AgCorrida105Fixture.CalcularHashIndividuo(res1.Value.MejorIndividuo);
+            string hash2 = AgCorrida105Fixture.CalcularHashIndividuo(res2.Value.MejorIndividuo);
+
+            hash1.Should().NotBeNullOrWhiteSpace();
+            hash1.Should().Be(hash2);
+        }
+
+        [Fact]
+        public void Replay_FlagEstatico_EsRestauradoTrasPrueba()
+        {
+            // Arrange
+            bool estadoOriginal = AgGeneradorHorarios.RealineacionOleadasActiva;
+            try
+            {
+                // Act & Assert (Fase 2159: verificación de conmutación y restauración del flag estático)
+                AgGeneradorHorarios.RealineacionOleadasActiva = false;
+                AgGeneradorHorarios.RealineacionOleadasActiva.Should().BeFalse();
+
+                AgGeneradorHorarios.RealineacionOleadasActiva = true;
+                AgGeneradorHorarios.RealineacionOleadasActiva.Should().BeTrue();
+            }
+            finally
+            {
+                AgGeneradorHorarios.RealineacionOleadasActiva = estadoOriginal;
+            }
+            AgGeneradorHorarios.RealineacionOleadasActiva.Should().Be(estadoOriginal);
+        }
+
+        #endregion
 
         private static Mock<IAgEvaluadorAptitud> CrearEvaluadorDeterminista()
         {

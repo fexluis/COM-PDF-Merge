@@ -515,3 +515,117 @@ Las citas `walkthrough.md:NNNN` anteriores al corte apuntan al archivo monolitic
 | F2127 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPreVueloEscalado.cs`, `AgFormGeneradorHorarios.cs:2715-2725`, `AgValidadorVentanaTests.cs:1065-1073`, `ConversorPDF.XLL.csproj:783` |
 | F2128 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgValidadorVentana.cs:330-342` |
 
+---
+
+## Ronda 482 — Hotfix del campeón con Forward Shifting por carril para eliminación de solapes R6/R13 (Fases 2129–2135)
+
+### Resumen de la Ronda
+- **Fase 2129:** Se extrajo `ConstruirSemanasValidas` y se implementó `RealinearOleadas` con la clase anidada `ResultadoRealineacion` en `AgPlanificadorOleadas.cs`, efectuando un forward shifting determinista en dos fases (calcular -> validar -> aplicar) agrupado por cohorte, aula y patrón semanal, preservando horas totales e invariantes I1/I2.
+- **Fase 2130:** Se insertó el hook post-evolución en `AgGeneradorHorarios.cs` con clon profundo previo, sellado y evaluación, con reversión al original si no hay mejora neta en violaciones HARD (`hardPost >= hardPre`), log estructurado `[AG-REPARACION]` y flag estático de activación `RealineacionOleadasActiva = true`.
+- **Fase 2131:** Se crearon 6 pruebas unitarias en `AgPlanificadorOleadasTests.cs` cubriendo desplazamiento por solape, rechazo seguro por ventana insuficiente, neutralidad sin solapes, recálculo de `k` con festivos intermedios, independencia entre carriles distintos e idempotencia estricta.
+- **Fase 2132:** Se añadieron pruebas de regresión en `AgValidadorReglasOleadasTests.cs` verificando que un individuo campeón con múltiples solapes en carril queda completamente limpio de `R6_SecuenciaCurricular` y `R13_SolapeOleadas`, y que el caso infactible mantiene el HARD sin degradación.
+- **Fase 2133:** Se incorporó prueba de integración end-to-end en `AgGeneradorHorariosTests.cs` asegurando convergencia con `HardViolations == 0` y fechas secuenciales entregadas en el mejor individuo del resultado.
+- **Fase 2134:** Se añadieron pruebas de reproducibilidad y control por flag en `AgGeneradorHorariosReplayTests.cs` garantizando paridad exacta de hash estructural bajo la misma semilla y conmutación de estado del flag estático.
+- **Fase 2135:** Se implementó prueba de coherencia de grupo en `AgCoherenciaGrupoTests.cs` comprobando que `Sellar` post-reparación mantiene `FechasGen` dentro del rango y concordancia con el día de semana sin festivos ni duplicados.
+
+### Verificación de Principios (Ronda 482)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2129 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorOleadas.cs:281-283, 655-1070` |
+| F2130 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgGeneradorHorarios.cs:28-34, 315-365` |
+| F2131 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorOleadasTests.cs:740-955` |
+| F2132 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgValidadorReglasOleadasTests.cs:340-410` |
+| F2133 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgGeneradorHorariosTests.cs:110-180` |
+| F2134 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgGeneradorHorariosReplayTests.cs:148-200` |
+| F2135 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgCoherenciaGrupoTests.cs:575-635` |
+
+---
+
+## Ronda 483 — Corrección de compilación en pruebas, paridad de clave carril, preservación I1/I2 y franjas, robustez de cursor y nota documental (Fases 2136–2149)
+
+### Resumen de la Ronda
+- **Fase 2136:** Se corrigieron los nombres de enum en `AgValidadorReglasOleadasTests.cs:366-380` utilizando `AgReglaViolacion.R6_SecuenciaAsignaturas` y `AgReglaViolacion.R13_OleadasDispersas`.
+- **Fase 2137:** Se normalizó la configuración de festivos en `AgPlanificadorOleadasTests.cs:853-858` y `AgCoherenciaGrupoTests.cs:585-595` mediante `ctx.Festivos.Add(...)` y `ctx.ConstruirIndices()`.
+- **Fase 2138:** Se preservó la discriminación por `(Dia, Franja)` en `AgPlanificadorOleadas.cs:940-970`, eliminando el colapso con `Distinct()` ciego cuando existen múltiples ranuras o bloques en el mismo día.
+- **Fase 2139:** Se suprimió el ajuste residual de horas sueltas que rompía I2 en `AgPlanificadorOleadas.cs:980-1010`, implementando validación estricta de `FechasGen.Count * Unidad == HorasGen` por gen.
+- **Fase 2140:** Se unificó la clave de carril en `AgPlanificadorOleadas.cs:698-705` y `AgValidadorReglas.cs:332-336, 427-431` mediante `ClaveCarril(g)` y agrupación por `AgCalendarioConflictos.Cohorte(g)`.
+- **Fase 2141:** Se resolvieron ranuras desde los genes (`DiaSemana`, `IdBloqueHorario` / `Franja`) con fallback canónico en `AgPlanificadorOleadas.cs:815-840`.
+- **Fase 2142:** Se registró fielmente `hardPost` antes de la restauración del clon en el log de rollback de `AgGeneradorHorarios.cs:342-348`.
+- **Fase 2143:** Se restringió `RealineacionOleadasActiva` a `internal` en `AgGeneradorHorarios.cs:32` y se implementó prueba conductual en `AgGeneradorHorariosReplayTests.cs:181-215`.
+- **Fase 2144:** Se pobló `contexto.AulaAsignaturas` con llamada a `ConstruirIndices()` y se afirmó la secuencia sin condiciones en `AgGeneradorHorariosTests.cs:146-180`.
+- **Fase 2145:** Se sembraron fechas en la oleada inicial y se validaron invariantes para genes reparados en `AgCoherenciaGrupoTests.cs:600-630`.
+- **Fase 2146:** Se revirtió `AgValidadorVentanaTests.cs` a HEAD restaurando el escenario original.
+- **Fase 2147:** Se poblaron `ctx.Aulas` y `ctx.Bloques` en `CrearContextoBase()` de `AgValidadorReglasOleadasTests.cs:36-47`.
+- **Fase 2148:** Se generó la nota documental `docs/articles/changes/2026-11-19-realineacion-campeon-r1.md` y se ajustó la trazabilidad en `REGISTRY.md`.
+- **Fase 2149:** Se implementó `TieneDiaUtilPosterior` en `AgPlanificadorOleadas.cs:880-915` para descartar falsos positivos de `NoCabe` cuando el slice contiene días hábiles tras `prevFin`.
+
+### Verificación de Principios (Ronda 483)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2136 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgValidadorReglasOleadasTests.cs:366-380` |
+| F2137 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorOleadasTests.cs:853-858`, `AgCoherenciaGrupoTests.cs:585-595` |
+| F2138 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorOleadas.cs:940-970` |
+| F2139 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorOleadas.cs:980-1010` |
+| F2140 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorOleadas.cs:698-705`, `AgValidadorReglas.cs:332-336, 427-431` |
+| F2141 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorOleadas.cs:815-840` |
+| F2142 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgGeneradorHorarios.cs:342-348` |
+| F2143 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgGeneradorHorarios.cs:32`, `AgGeneradorHorariosReplayTests.cs:181-215` |
+| F2144 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgGeneradorHorariosTests.cs:146-180` |
+| F2145 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgCoherenciaGrupoTests.cs:600-630` |
+| F2146 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgValidadorVentanaTests.cs` (HEAD restaurado) |
+| F2147 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgValidadorReglasOleadasTests.cs:36-47` |
+| F2148 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `2026-11-19-realineacion-campeon-r1.md`, `REGISTRY.md:193-194` |
+| F2149 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorOleadas.cs:880-915` |
+
+---
+
+## Ronda 484 — Balance de llaves en AgPlanificadorOleadas, validación de franjas y fechas duplicadas, paridad de clave carril en AgCarriles, aislamiento paralelo xUnit y trazabilidad documental (Fases 2150–2158)
+
+### Resumen de la Ronda
+- **Fase 2150:** Se eliminó la llave de cierre redundante en `AgPlanificadorOleadas.cs` tras el método `TieneDiaUtilPosterior`, restaurando la paridad estructural de llaves en la clase.
+- **Fase 2151:** Se deduplicaron las fechas en la asignación por gen en `AgPlanificadorOleadas.cs`, incorporando la guarda `FranjaAmbigua` cuando el gen no resuelve franja y existen múltiples sesiones en el mismo día, junto con validación de unicidad de fechas.
+- **Fase 2152:** Se normalizaron los días efectivos en `AsignaturaCarril.Dias` mediante `ranuras.Select(r => r.Dia).Distinct().OrderBy(d => d).ToList()` en `AgPlanificadorOleadas.cs`, alineando el patrón semanal con las ranuras materializadas.
+- **Fase 2153:** Se aisló la ejecución concurrente en xUnit definiendo la colección `[CollectionDefinition("AgGeneradorHorarios", DisableParallelization = true)]` en `AgGeneradorHorariosReplayTests.cs` y anotando `AgGeneradorHorariosTests.cs`.
+- **Fase 2154:** Se renombró formalmente el test de integración en `AgGeneradorHorariosTests.cs` a `EjecutarOptimizacionAsync_CampeonFinal_EntregaFechasSecuencialesEInvariantesI1I2`, asegurando validación de invariantes I1/I2 y secuencia de fechas sin asunciones espurias.
+- **Fase 2155:** Se parametrizó `CrearContextoBase(bool conColeccionesIndexadas = false)` en `AgValidadorReglasOleadasTests.cs`, poblando e indexando colecciones base únicamente para pruebas del planificador de oleadas.
+- **Fase 2156:** Se centralizó el helper canónico `ClaveCarril(AgGen g)` en el modelo de dominio `AgCarriles.cs` y se unificó su uso en `AgPlanificadorOleadas.cs` y `AgValidadorReglas.cs`.
+- **Fase 2157:** Se sincronizó la numeración en `.agents/plans/REGISTRY.md` con contadores `ronda = 484` y `fase = 2158`, insertando la asignación `R-158`.
+- **Fase 2158:** Se enriqueció el mensaje de rechazo de carril por no múltiplo con `I2_DemandaNoMultiplo({actual.TotalHoras:0.#}h/{actual.Unidad:0.#}h)` en `AgPlanificadorOleadas.cs`.
+
+### Verificación de Principios (Ronda 484)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2150 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorOleadas.cs:1100-1105` |
+| F2151 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorOleadas.cs:970-1040` |
+| F2152 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorOleadas.cs:935-945` |
+| F2153 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgGeneradorHorariosReplayTests.cs:18-22`, `AgGeneradorHorariosTests.cs:18-20` |
+| F2154 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgGeneradorHorariosTests.cs:115-125` |
+| F2155 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgValidadorReglasOleadasTests.cs:20-55, 350-355` |
+| F2156 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgCarriles.cs:18-24`, `AgPlanificadorOleadas.cs:700-705`, `AgValidadorReglas.cs:334, 429` |
+| F2157 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `REGISTRY.md:25-29, 194-196` |
+| F2158 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorOleadas.cs:860-870` |
+
+---
+
+## Ronda 485 — Corrección de aserción del flag, aserciones I1/I2 en integración, validación estricta de día en gen único, eliminación de wrapper redundante y gate focalizado (Fases 2159–2163)
+
+### Resumen de la Ronda
+- **Fase 2159:** Se corrigió la prueba en `AgGeneradorHorariosReplayTests.cs` renombrándola a `Replay_FlagEstatico_EsRestauradoTrasPrueba`, probando la alternancia y restauración fiel del flag estático.
+- **Fase 2160:** Se incorporaron las aserciones de invariantes I1/I2 en `AgGeneradorHorariosTests.cs`, verificando suma exacta de horas, sesiones proporcionales a la unidad de 4h y unicidad de fechas.
+- **Fase 2161:** Se eliminó la excepción de gen único en `AgPlanificadorOleadas.cs`, forzando la concordancia estricta de `DiaSemana` para todas las asignaturas y emitiendo `DiaDesconocido` si `DiaSemana <= 0`.
+- **Fase 2162:** Se actualizó la trazabilidad en `.agents/plans/REGISTRY.md` asentando las asignaciones R-158 y R-159 con evidencia del gate PASS (83 pruebas superadas).
+- **Fase 2163:** Se suprimió el método puente `AgPlanificadorOleadas.ClaveCarril` migrando la agrupación hacia el helper canónico `AgCarriles.ClaveCarril(g)`.
+
+### Verificación de Principios (Ronda 485)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2159 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgGeneradorHorariosReplayTests.cs:185-203` |
+| F2160 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgGeneradorHorariosTests.cs:183-195` |
+| F2161 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorOleadas.cs:960-985, 1045-1060` |
+| F2162 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `REGISTRY.md:25-29, 194-196` |
+| F2163 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorOleadas.cs:750-760` |
+

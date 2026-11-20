@@ -572,5 +572,64 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             ind.Genes.Should().OnlyContain(g => g.EsVacante == 1);
             ind.Genes.Should().OnlyContain(g => g.MotivoVacante == "SIN_DISPONIBILIDAD");
         }
+
+        #region Pruebas de Invariantes I1/I2 y FechasGen Post-Realineación (Fase 2135)
+
+        [Fact]
+        public void Sellar_PostRealineacion_GarantizaInvariantesI1I2YConsistenciaFechasGen()
+        {
+            // Arrange
+            var ventana = VentanaSemestre.Crear(1, "2027-1", new DateTime(2027, 2, 1), new DateTime(2027, 6, 30), AgOrigenVentana.Presencial).Value;
+            var ctx = new AgContexto
+            {
+                Ventana = ventana,
+                Aulas = new List<AgAula>
+                {
+                    new AgAula { Id = 1, Nombre = "Aula 101", Jornada = AgFranjaJornada.MANANA, DiasVentana = "1,2,3,4,5,6", IdPrograma = 1 }
+                },
+                Programas = new List<Programa>
+                {
+                    new Programa { Id = 1, Modalidad = "PREGRADO" }
+                }
+            };
+            ctx.Festivos.Add((new DateTime(2027, 5, 1), new DateTime(2027, 5, 1)));
+            ctx.ConstruirIndices();
+
+            var ind = new AgIndividuo
+            {
+                Genes = new List<AgGen>
+                {
+                    // Asig 101 (16h, 2 genes LUN y MAR con fechas iniciales sembradas)
+                    new AgGen { Id = 1, IdAsignatura = 101, IdAula = 1, ClaveGrupo = "101-A", DiasPatron = "1,2", DiaSemana = 1, IdTercero = 10, FechaInicioEstimada = new DateTime(2027, 2, 1), FechaFinEstimada = new DateTime(2027, 2, 14), TotalHorasAsignatura = 16.0, HorasGen = 8.0, FechasGen = new List<DateTime> { new DateTime(2027, 2, 1), new DateTime(2027, 2, 8) } },
+                    new AgGen { Id = 2, IdAsignatura = 101, IdAula = 1, ClaveGrupo = "101-A", DiasPatron = "1,2", DiaSemana = 2, IdTercero = 10, FechaInicioEstimada = new DateTime(2027, 2, 1), FechaFinEstimada = new DateTime(2027, 2, 14), TotalHorasAsignatura = 16.0, HorasGen = 8.0, FechasGen = new List<DateTime> { new DateTime(2027, 2, 2), new DateTime(2027, 2, 9) } },
+                    // Asig 102 (16h, 2 genes LUN y MAR) con solape
+                    new AgGen { Id = 3, IdAsignatura = 102, IdAula = 1, ClaveGrupo = "102-A", DiasPatron = "1,2", DiaSemana = 1, IdTercero = 20, FechaInicioEstimada = new DateTime(2027, 2, 8), FechaFinEstimada = new DateTime(2027, 2, 21), TotalHorasAsignatura = 16.0, HorasGen = 8.0 },
+                    new AgGen { Id = 4, IdAsignatura = 102, IdAula = 1, ClaveGrupo = "102-A", DiasPatron = "1,2", DiaSemana = 2, IdTercero = 20, FechaInicioEstimada = new DateTime(2027, 2, 8), FechaFinEstimada = new DateTime(2027, 2, 21), TotalHorasAsignatura = 16.0, HorasGen = 8.0 }
+                }
+            };
+
+            // Act: Realineación determinista seguida del sellado canónico
+            var rep = AgPlanificadorOleadas.RealinearOleadas(ind, ctx);
+            rep.HuboCambios.Should().BeTrue();
+
+            AgCoherenciaGrupo.Sellar(ind, ctx);
+
+            // Assert: Invariante I1 (Σ HorasGen == TotalHorasAsignatura)
+            ind.Genes.Where(g => g.IdAsignatura == 101).Sum(g => g.HorasGen).Should().Be(16.0);
+            ind.Genes.Where(g => g.IdAsignatura == 102).Sum(g => g.HorasGen).Should().Be(16.0);
+
+            // Invariante de coherencia de fechas en ventana y rango estimado
+            foreach (var g in ind.Genes)
+            {
+                g.FechasGen.Should().NotBeNull();
+                g.FechasGen.Should().NotBeEmpty();
+                g.FechasGen.Should().OnlyHaveUniqueItems();
+                g.FechasGen.Should().OnlyContain(f => f >= g.FechaInicioEstimada.Value && f <= g.FechaFinEstimada.Value);
+                g.FechasGen.Should().OnlyContain(f => !ctx.EsFestivo(f));
+                g.FechasGen.Should().OnlyContain(f => (f.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)f.DayOfWeek) == g.DiaSemana);
+            }
+        }
+
+        #endregion
     }
 }

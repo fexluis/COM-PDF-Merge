@@ -17,7 +17,7 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
     {
         private readonly AgValidadorReglas _sut = new AgValidadorReglas();
 
-        private AgContexto CrearContextoBase()
+        private AgContexto CrearContextoBase(bool conColeccionesIndexadas = false)
         {
             var ctx = new AgContexto();
             ctx.Ventana = VentanaSemestre.Crear(1, "2027-1", new DateTime(2027, 2, 1), new DateTime(2027, 6, 30), AgOrigenVentana.Presencial).Value;
@@ -42,6 +42,14 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             ctx.RegistrarDocenteHabilitado(60, 1, 153, "IX");
             ctx.RegistrarDocenteHabilitado(70, 1, 154, "X");
             ctx.RegistrarDocenteHabilitado(80, 1, 156, "X");
+
+            // Fase 2147 / Fase 2155: Poblar colecciones base e indexar solo cuando sea requerido
+            if (conColeccionesIndexadas)
+            {
+                foreach (var a in ctx.AulasPorId.Values) ctx.Aulas.Add(a);
+                foreach (var b in ctx.BloquesPorId.Values) ctx.Bloques.Add(b);
+                ctx.ConstruirIndices();
+            }
 
             return ctx;
         }
@@ -336,6 +344,72 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             ind.Violaciones.Should().NotContain(v => v.Regla == AgReglaViolacion.R5_HabilitacionDocentePool
                 && v.Mensaje.Contains("MATEMATICA I"));
         }
+
+        #region Pruebas de Validación R6 y R13 post-reparación (Fase 2132)
+
+        [Fact]
+        public void RealinearOleadas_CampeonConSolapesR6R13_EliminaViolaciones()
+        {
+            // Arrange (Fase 2155: se requieren colecciones indexadas para AgPlanificadorOleadas)
+            var ctx = CrearContextoBase(conColeccionesIndexadas: true);
+            ctx.AulaAsignaturaPorAulaAsig[(30, 148)] = new AgAulaAsignatura { IdAula = 30, IdAsignatura = 148, OrdenCurricular = 1 };
+            ctx.AulaAsignaturaPorAulaAsig[(30, 149)] = new AgAulaAsignatura { IdAula = 30, IdAsignatura = 149, OrdenCurricular = 2 };
+            ctx.AulaAsignaturaPorAulaAsig[(30, 150)] = new AgAulaAsignatura { IdAula = 30, IdAsignatura = 150, OrdenCurricular = 3 };
+
+            var ind = new AgIndividuo();
+            // Asig 148: del 4 al 27 de feb
+            ind.Genes.Add(new AgGen { Id = 1, IdTercero = 10, IdAsignatura = 148, IdPrograma = 1, IdSede = 1, Semestre = "IX", Grupo = "A", ClaveGrupo = "IX-A", IdAula = 30, IdBloqueHorario = 24, DiaSemana = 4, DiasPatron = "4,5", TotalHorasAsignatura = 16.0, HorasGen = 8.0, FechaInicioEstimada = new DateTime(2027, 2, 4), FechaFinEstimada = new DateTime(2027, 2, 27) });
+            ind.Genes.Add(new AgGen { Id = 2, IdTercero = 10, IdAsignatura = 148, IdPrograma = 1, IdSede = 1, Semestre = "IX", Grupo = "A", ClaveGrupo = "IX-A", IdAula = 30, IdBloqueHorario = 29, DiaSemana = 5, DiasPatron = "4,5", TotalHorasAsignatura = 16.0, HorasGen = 8.0, FechaInicioEstimada = new DateTime(2027, 2, 4), FechaFinEstimada = new DateTime(2027, 2, 27) });
+
+            // Asig 149: solapada del 11 de feb al 6 de mar (empieza antes del fin de 148)
+            ind.Genes.Add(new AgGen { Id = 3, IdTercero = 20, IdAsignatura = 149, IdPrograma = 1, IdSede = 1, Semestre = "IX", Grupo = "A", ClaveGrupo = "IX-A", IdAula = 30, IdBloqueHorario = 24, DiaSemana = 4, DiasPatron = "4,5", TotalHorasAsignatura = 16.0, HorasGen = 8.0, FechaInicioEstimada = new DateTime(2027, 2, 11), FechaFinEstimada = new DateTime(2027, 3, 6) });
+            ind.Genes.Add(new AgGen { Id = 4, IdTercero = 20, IdAsignatura = 149, IdPrograma = 1, IdSede = 1, Semestre = "IX", Grupo = "A", ClaveGrupo = "IX-A", IdAula = 30, IdBloqueHorario = 29, DiaSemana = 5, DiasPatron = "4,5", TotalHorasAsignatura = 16.0, HorasGen = 8.0, FechaInicioEstimada = new DateTime(2027, 2, 11), FechaFinEstimada = new DateTime(2027, 3, 6) });
+
+            // Asig 150: solapada del 18 de feb al 13 de mar
+            ind.Genes.Add(new AgGen { Id = 5, IdTercero = 30, IdAsignatura = 150, IdPrograma = 1, IdSede = 1, Semestre = "IX", Grupo = "A", ClaveGrupo = "IX-A", IdAula = 30, IdBloqueHorario = 24, DiaSemana = 4, DiasPatron = "4,5", TotalHorasAsignatura = 16.0, HorasGen = 8.0, FechaInicioEstimada = new DateTime(2027, 2, 18), FechaFinEstimada = new DateTime(2027, 3, 13) });
+            ind.Genes.Add(new AgGen { Id = 6, IdTercero = 30, IdAsignatura = 150, IdPrograma = 1, IdSede = 1, Semestre = "IX", Grupo = "A", ClaveGrupo = "IX-A", IdAula = 30, IdBloqueHorario = 29, DiaSemana = 5, DiasPatron = "4,5", TotalHorasAsignatura = 16.0, HorasGen = 8.0, FechaInicioEstimada = new DateTime(2027, 2, 18), FechaFinEstimada = new DateTime(2027, 3, 13) });
+
+            // Pre-evaluación: debe tener violaciones R6 y R13 (Fase 2136)
+            _sut.Evaluar(ind, ctx);
+            ind.Violaciones.Should().Contain(v => v.Regla == AgReglaViolacion.R6_SecuenciaAsignaturas);
+            ind.Violaciones.Should().Contain(v => v.Regla == AgReglaViolacion.R13_OleadasDispersas);
+
+            // Act
+            var rep = AgPlanificadorOleadas.RealinearOleadas(ind, ctx);
+            rep.HuboCambios.Should().BeTrue();
+
+            AgCoherenciaGrupo.Sellar(ind, ctx);
+            _sut.Evaluar(ind, ctx);
+
+            // Assert (Fase 2136 / Fase 2147)
+            ind.Violaciones.Should().NotContain(v => v.Regla == AgReglaViolacion.R6_SecuenciaAsignaturas);
+            ind.Violaciones.Should().NotContain(v => v.Regla == AgReglaViolacion.R13_OleadasDispersas);
+        }
+
+        [Fact]
+        public void RealinearOleadas_CuandoNoCabeEnVentana_ConservaHardOriginalSinRegresion()
+        {
+            // Arrange (ventana angosta de 2 semanas)
+            var ctx = CrearContextoBase();
+            ctx.Ventana = VentanaSemestre.Crear(1, "2027-1", new DateTime(2027, 2, 1), new DateTime(2027, 2, 14), AgOrigenVentana.Presencial).Value;
+
+            var ind = new AgIndividuo();
+            ind.Genes.Add(new AgGen { Id = 1, IdTercero = 10, IdAsignatura = 148, IdPrograma = 1, IdSede = 1, Semestre = "IX", Grupo = "A", ClaveGrupo = "IX-A", IdAula = 30, IdBloqueHorario = 24, DiaSemana = 4, DiasPatron = "4,5", TotalHorasAsignatura = 16.0, HorasGen = 8.0, FechaInicioEstimada = new DateTime(2027, 2, 4), FechaFinEstimada = new DateTime(2027, 2, 14) });
+            ind.Genes.Add(new AgGen { Id = 2, IdTercero = 20, IdAsignatura = 149, IdPrograma = 1, IdSede = 1, Semestre = "IX", Grupo = "A", ClaveGrupo = "IX-A", IdAula = 30, IdBloqueHorario = 24, DiaSemana = 4, DiasPatron = "4,5", TotalHorasAsignatura = 16.0, HorasGen = 8.0, FechaInicioEstimada = new DateTime(2027, 2, 8), FechaFinEstimada = new DateTime(2027, 2, 14) });
+
+            _sut.Evaluar(ind, ctx);
+            int hardPre = ind.HardViolations;
+
+            // Act
+            var rep = AgPlanificadorOleadas.RealinearOleadas(ind, ctx);
+
+            // Assert
+            rep.HuboCambios.Should().BeFalse();
+            rep.Fallos.Should().Be(1);
+            rep.Detalle.Should().Contain(d => d.Contains("motivo=NoCabe"));
+        }
+
+        #endregion
     }
 }
 

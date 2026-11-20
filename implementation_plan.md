@@ -513,5 +513,119 @@ Las citas `implementation_plan.md:NNNN` anteriores al corte apuntan al archivo m
 | 2127 | `AgPreVueloEscalado.cs`, `AgFormGeneradorHorarios.cs`, `AgValidadorVentanaTests.cs`, `ConversorPDF.XLL.csproj` | Implementado |
 | 2128 | `AgValidadorVentana.cs` | Implementado |
 
+---
+
+## Ronda 482: Hotfix del campeón con Forward Shifting por carril para eliminación de solapes R6/R13 (Fases 2129–2135)
+
+### Resumen de la Ronda
+- **Fase 2129:** Extracción de `ConstruirSemanasValidas` como helper estático reutilizable en `AgPlanificadorOleadas.cs`, adición de clase anidada `ResultadoRealineacion` y del método determinista `RealinearOleadas` para desplazar asignaturas solapadas dentro de cada carril efectivo preservando invariantes I1/I2.
+- **Fase 2130:** Hook post-evolución en `AgGeneradorHorarios.cs` tras el sellado del campeón con clon profundo, re-sellado y re-evaluación con rollback si `hardPost >= hardPre`, telemetría `[AG-REPARACION]` y flag estático `RealineacionOleadasActiva = true`.
+- **Fase 2131:** Pruebas unitarias de `RealinearOleadas` en `AgPlanificadorOleadasTests.cs` (6 casos: desplazamiento con solape, ventana insuficiente, idempotencia, recálculo de semanas con festivo, aislamiento de carriles disjuntos y conservación de docentes).
+- **Fase 2132:** Pruebas en `AgValidadorReglasOleadasTests.cs` confirmando la eliminación total de violaciones `R6_SecuenciaCurricular` y `R13_SolapeOleadas` tras la reparación del campeón, y verificación de no-regresión en escenarios sin cabida en ventana.
+- **Fase 2133:** Prueba de integración completa en `AgGeneradorHorariosTests.cs` (`EjecutarOptimizacionAsync_CuandoCampeonTieneSolape_ReparaYEntregaFechasSecuenciales`) asegurando `HardViolations == 0` y fechas estrictamente secuenciales.
+- **Fase 2134:** Pruebas de determinismo y replay con flag en `AgGeneradorHorariosReplayTests.cs` (`Replay_ConRealineacionActiva_ProduceMismoHashYDeterminismo` y `Replay_FlagEstatico_PermiteAlternarEstado`).
+- **Fase 2135:** Pruebas de coherencia de grupo e invariantes I1/I2 en `AgCoherenciaGrupoTests.cs` (`Sellar_PostRealineacion_GarantizaInvariantesI1I2YConsistenciaFechasGen`).
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2129 | `AgPlanificadorOleadas.cs` | Implementado |
+| 2130 | `AgGeneradorHorarios.cs` | Implementado |
+| 2131 | `AgPlanificadorOleadasTests.cs` | Implementado |
+| 2132 | `AgValidadorReglasOleadasTests.cs` | Implementado |
+| 2133 | `AgGeneradorHorariosTests.cs` | Implementado |
+| 2134 | `AgGeneradorHorariosReplayTests.cs` | Implementado |
+| 2135 | `AgCoherenciaGrupoTests.cs` | Implementado |
+
+---
+
+## Ronda 483: Corrección de compilación en pruebas, paridad de clave carril, preservación I1/I2 y franjas, robustez de cursor y nota documental (Fases 2136–2149)
+
+### Resumen de la Ronda
+- **Fase 2136:** Corrección de nombres de enum en `AgValidadorReglasOleadasTests.cs`, sustituyendo los identificadores erróneos por `AgReglaViolacion.R6_SecuenciaAsignaturas` y `AgReglaViolacion.R13_OleadasDispersas`.
+- **Fase 2137:** Corrección de configuración de días festivos en `AgPlanificadorOleadasTests.cs` y `AgCoherenciaGrupoTests.cs`, utilizando `ctx.Festivos.Add(...)` seguido de `ctx.ConstruirIndices()`.
+- **Fase 2138:** Preservación de `(Dia, Franja)` en la asignación por gen en `AgPlanificadorOleadas.cs`, evitando colapso con `Distinct()` ciego cuando existen múltiples ranuras o bloques en el mismo día.
+- **Fase 2139:** Eliminación del ajuste residual de horas sueltas que rompía I2 en `AgPlanificadorOleadas.cs`, validando estrictamente `FechasGen.Count * Unidad == HorasGen` por gen.
+- **Fase 2140:** Paridad de clave de carril entre `AgPlanificadorOleadas.cs` y `AgValidadorReglas.cs` mediante el helper canónico `ClaveCarril(g)` y agrupación por `AgCalendarioConflictos.Cohorte(g)`.
+- **Fase 2141:** Resolución de ranuras a partir de los genes de la asignatura (`DiaSemana`, `IdBloqueHorario` / `Franja`) con fallback a catálogo/jornada en `AgPlanificadorOleadas.cs`.
+- **Fase 2142:** Registro veraz de `hardPost` antes de la restauración del clon en el log de rollback de `AgGeneradorHorarios.cs`.
+- **Fase 2143:** Restricción de visibilidad a `internal static bool RealineacionOleadasActiva` en `AgGeneradorHorarios.cs` y prueba conductual no tautológica en `AgGeneradorHorariosReplayTests.cs`.
+- **Fase 2144:** Poblamiento canónico de `contexto.AulaAsignaturas` con llamada a `ConstruirIndices()` y aserción estricta sin bypass condicional en `AgGeneradorHorariosTests.cs`.
+- **Fase 2145:** Siembra de fechas en la oleada inicial y verificación de invariantes en `AgCoherenciaGrupoTests.cs`.
+- **Fase 2146:** Reversión a HEAD de cambios fuera de alcance en `AgValidadorVentanaTests.cs`.
+- **Fase 2147:** Poblamiento de `ctx.Aulas` y `ctx.Bloques` en `CrearContextoBase()` de `AgValidadorReglasOleadasTests.cs`, y aserción de no-regresión.
+- **Fase 2148:** Creación de la nota documental de cambios `docs/articles/changes/2026-11-19-realineacion-campeon-r1.md` y actualización de estado en `REGISTRY.md`.
+- **Fase 2149:** Corrección del avance de cursor en `AgPlanificadorOleadas.cs` mediante `TieneDiaUtilPosterior`, previniendo falsos negativos de `NoCabe` cuando el slice contiene días hábiles tras `prevFin`.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2136 | `AgValidadorReglasOleadasTests.cs` | Implementado |
+| 2137 | `AgPlanificadorOleadasTests.cs`, `AgCoherenciaGrupoTests.cs` | Implementado |
+| 2138 | `AgPlanificadorOleadas.cs` | Implementado |
+| 2139 | `AgPlanificadorOleadas.cs` | Implementado |
+| 2140 | `AgPlanificadorOleadas.cs`, `AgValidadorReglas.cs` | Implementado |
+| 2141 | `AgPlanificadorOleadas.cs` | Implementado |
+| 2142 | `AgGeneradorHorarios.cs` | Implementado |
+| 2143 | `AgGeneradorHorarios.cs`, `AgGeneradorHorariosReplayTests.cs` | Implementado |
+| 2144 | `AgGeneradorHorariosTests.cs` | Implementado |
+| 2145 | `AgCoherenciaGrupoTests.cs` | Implementado |
+| 2146 | `AgValidadorVentanaTests.cs` | Implementado |
+| 2147 | `AgValidadorReglasOleadasTests.cs` | Implementado |
+| 2148 | `2026-11-19-realineacion-campeon-r1.md`, `REGISTRY.md` | Implementado |
+| 2149 | `AgPlanificadorOleadas.cs` | Implementado |
+
+---
+
+## Ronda 484: Balance de llaves en AgPlanificadorOleadas, validación de franjas y fechas duplicadas, paridad de clave carril en AgCarriles, aislamiento paralelo xUnit y trazabilidad documental (Fases 2150–2158)
+
+### Resumen de la Ronda
+- **Fase 2150:** Eliminación de la llave de cierre redundante en `AgPlanificadorOleadas.cs` tras el método `TieneDiaUtilPosterior`, restaurando la paridad estructural de llaves en la clase.
+- **Fase 2151:** Deduplicación de fechas en la asignación por gen en `AgPlanificadorOleadas.cs`, incorporación de la guarda `FranjaAmbigua` cuando el gen no resuelve franja y existen múltiples sesiones el mismo día, y validación estricta de unicidad de fechas.
+- **Fase 2152:** Normalización de días efectivos en `AsignaturaCarril.Dias` mediante `ranuras.Select(r => r.Dia).Distinct().OrderBy(d => d).ToList()` en `AgPlanificadorOleadas.cs`, alineando el patrón semanal con las ranuras materializadas.
+- **Fase 2153:** Aislamiento de pruebas concurrentes en xUnit mediante la definición de colección `[CollectionDefinition("AgGeneradorHorarios", DisableParallelization = true)]` en `AgGeneradorHorariosReplayTests.cs` y `AgGeneradorHorariosTests.cs`, mitigando interferencia sobre el flag estático `RealineacionOleadasActiva`.
+- **Fase 2154:** Renombrado formal del test de integración en `AgGeneradorHorariosTests.cs` a `EjecutarOptimizacionAsync_CampeonFinal_EntregaFechasSecuencialesEInvariantesI1I2`, asegurando validación de invariantes I1/I2 y secuencia de fechas sin asunciones espurias.
+- **Fase 2155:** Parametrización opcional de `CrearContextoBase(bool conColeccionesIndexadas = false)` en `AgValidadorReglasOleadasTests.cs`, indexando colecciones base únicamente cuando se requiere resolver el planificador de oleadas.
+- **Fase 2156:** Unificación de la lógica de clave de carril en `AgCarriles.ClaveCarril(AgGen g)` dentro de `ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgCarriles.cs` y su consumo consistente en `AgPlanificadorOleadas.cs` y `AgValidadorReglas.cs`.
+- **Fase 2157:** Actualización de numeración en `.agents/plans/REGISTRY.md` a contadores `ronda = 484` y `fase = 2158`, con inserción de la fila `R-158`.
+- **Fase 2158:** Reporte descriptivo del motivo de rechazo de carril `I2_DemandaNoMultiplo({actual.TotalHoras:0.#}h/{actual.Unidad:0.#}h)` en `AgPlanificadorOleadas.cs`.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2150 | `AgPlanificadorOleadas.cs` | Implementado |
+| 2151 | `AgPlanificadorOleadas.cs` | Implementado |
+| 2152 | `AgPlanificadorOleadas.cs` | Implementado |
+| 2153 | `AgGeneradorHorariosReplayTests.cs`, `AgGeneradorHorariosTests.cs` | Implementado |
+| 2154 | `AgGeneradorHorariosTests.cs` | Implementado |
+| 2155 | `AgValidadorReglasOleadasTests.cs` | Implementado |
+| 2156 | `AgCarriles.cs`, `AgPlanificadorOleadas.cs`, `AgValidadorReglas.cs` | Implementado |
+| 2157 | `REGISTRY.md` | Implementado |
+| 2158 | `AgPlanificadorOleadas.cs` | Implementado |
+
+---
+
+## Ronda 485: Corrección de aserción del flag, aserciones I1/I2 en integración, validación estricta de día en gen único, eliminación de wrapper redundante y gate focalizado (Fases 2159–2163)
+
+### Resumen de la Ronda
+- **Fase 2159:** Corrección en `AgGeneradorHorariosReplayTests.cs` renombrando la prueba a `Replay_FlagEstatico_EsRestauradoTrasPrueba` y verificando la conmutación y restauración segura del flag estático sin asunciones conductuales falsas.
+- **Fase 2160:** Incorporación de aserciones completas de invariantes I1/I2 en `AgGeneradorHorariosTests.cs`, verificando `Σ HorasGen == TotalHorasAsignatura`, cardinalidad exacta de sesiones respecto a la unidad de bloque y unicidad de fechas por gen.
+- **Fase 2161:** Eliminación de la excepción de gen único en `AgPlanificadorOleadas.cs`, asegurando validación estricta de día de semana en cada gen (`diaIso != a.Gen.DiaSemana`) y rechazo temprano con `motivo = "DiaDesconocido"` si `DiaSemana <= 0`.
+- **Fase 2162:** Actualización y sincronización de trazabilidad en `.agents/plans/REGISTRY.md` con contadores `ronda = 485` y `fase = 2163`, reflejando el gate focalizado de 83 pruebas unitarias e integradas exitosas.
+- **Fase 2163:** Eliminación del wrapper redundante `AgPlanificadorOleadas.ClaveCarril` y consumo directo del helper de dominio `AgCarriles.ClaveCarril(g)` en el agrupador de carriles.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2159 | `AgGeneradorHorariosReplayTests.cs` | Implementado |
+| 2160 | `AgGeneradorHorariosTests.cs` | Implementado |
+| 2161 | `AgPlanificadorOleadas.cs` | Implementado |
+| 2162 | `REGISTRY.md` | Implementado |
+| 2163 | `AgPlanificadorOleadas.cs` | Implementado |
+
 
 

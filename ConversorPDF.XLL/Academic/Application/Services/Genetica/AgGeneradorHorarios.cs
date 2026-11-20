@@ -26,6 +26,12 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         private readonly AgOperadorCruce _operadorCruce;
         private readonly AgOperadorMutacion _operadorMutacion;
 
+        /// <summary>
+        /// Controla si se ejecuta la reparación post-evolución del campeón mediante forward shifting por carril (Fase 2130 / Fase 2143).
+        /// Activo por defecto; puede desactivarse internamente para pruebas de replay/determinismo.
+        /// </summary>
+        internal static bool RealineacionOleadasActiva = true;
+
         public AgGeneradorHorarios(
             IAgValidadorVentana validadorVentana,
             IAgEvaluadorAptitud evaluadorAptitud)
@@ -306,17 +312,57 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 
                 stopwatch.Stop();
 
-                // Fase 582: sellado canónico + re-evaluación del campeón antes de publicarse
+                // Fase 582 / Fase 2130: sellado canónico + re-evaluación y reparación de campeón (R1 Forward Shifting)
                 var swCamp = Stopwatch.StartNew();
                 AgCoherenciaGrupo.Sellar(mejorGlobal, contexto);
-                if (_evaluadorAptitud is AgEvaluadorAptitud evalApt)
+
+                void EvaluarCampeon()
                 {
-                    evalApt.EvaluarAptitud(mejorGlobal, contexto, forzar: true, incluirDetalleJson: true);
+                    if (_evaluadorAptitud is AgEvaluadorAptitud evalAptInstance)
+                    {
+                        evalAptInstance.EvaluarAptitud(mejorGlobal, contexto, forzar: true, incluirDetalleJson: true);
+                    }
+                    else
+                    {
+                        _evaluadorAptitud.EvaluarAptitud(mejorGlobal, contexto);
+                    }
                 }
-                else
+
+                EvaluarCampeon();
+                int hardPre = mejorGlobal.HardViolations;
+                int vacPre = mejorGlobal.Vacantes;
+
+                if (RealineacionOleadasActiva)
                 {
-                    _evaluadorAptitud.EvaluarAptitud(mejorGlobal, contexto);
+                    var original = mejorGlobal.Clonar();
+                    var rep = AgPlanificadorOleadas.RealinearOleadas(mejorGlobal, contexto);
+                    if (rep.HuboCambios)
+                    {
+                        AgCoherenciaGrupo.Sellar(mejorGlobal, contexto);
+                        EvaluarCampeon();
+                        int hardPost = mejorGlobal.HardViolations;
+                        if (hardPost >= hardPre)
+                        {
+                            mejorGlobal = original; // rollback total
+                            rep.Detalle.Add($"rollback: {hardPre}->{hardPost}");
+                        }
+                    }
+
+                    LoggerHelper.Info(
+                        $"[AG-REPARACION] Hard {hardPre}->{mejorGlobal.HardViolations} " +
+                        $"carriles={rep.CarrilesReparados}/{rep.CarrilesEvaluados} asigs={rep.AsignaturasDesplazadas} " +
+                        $"fallos={rep.Fallos} vacantes {vacPre}->{mejorGlobal.Vacantes} " +
+                        $"{(rep.Error.Length > 0 ? "error=" + rep.Error : string.Empty)}");
+
+                    if (rep.Detalle.Count > 0 && LoggerHelper.ModoVerboso)
+                    {
+                        foreach (var d in rep.Detalle)
+                        {
+                            LoggerHelper.Debug($"[AG-REPARACION] {d}");
+                        }
+                    }
                 }
+
                 swCamp.Stop();
                 resultado.TiempoCampeonFinalMs = swCamp.ElapsedMilliseconds;
 

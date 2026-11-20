@@ -329,9 +329,9 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             // --- R6: Secuencia curricular por carril dentro de la cohorte (Fase 1056 / Fase 1075) ---
             foreach (var g in porGrupo)
             {
-                // Fase 1075: Agrupar por IdAula y carril (DiasPatron) para no penalizar aulas distintas de la misma cohorte
+                // Fase 1075 / Fase 2140 / Fase 2156: Agrupar por IdAula y carril (DiasPatron) mediante helper canónico en modelo
                 var porCarril = g.Where(x => x.FechaInicioEstimada.HasValue && x.FechaFinEstimada.HasValue)
-                                 .GroupBy(x => $"{x.IdAula}|{(string.IsNullOrWhiteSpace(x.DiasPatron) ? "DEF" : x.DiasPatron)}");
+                                 .GroupBy(x => AgCarriles.ClaveCarril(x));
 
                 foreach (var carrilGrp in porCarril)
                 {
@@ -424,9 +424,9 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             // --- R13: Oleadas no solapadas dentro del mismo carril (Fase 1056 / Fase 1075 / I4) ---
             foreach (var g in porGrupo)
             {
-                // Fase 1075: Agrupar por IdAula y carril (DiasPatron)
+                // Fase 1075 / Fase 2140 / Fase 2156: Agrupar por IdAula y carril (DiasPatron)
                 var porCarril = g.Where(x => x.FechaInicioEstimada.HasValue && x.FechaFinEstimada.HasValue)
-                                 .GroupBy(x => $"{x.IdAula}|{(string.IsNullOrWhiteSpace(x.DiasPatron) ? "DEF" : x.DiasPatron)}");
+                                 .GroupBy(x => AgCarriles.ClaveCarril(x));
 
                 foreach (var carrilGrp in porCarril)
                 {

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ConversorPDF.XLL.Academic.Domain.Enums;
+using ConversorPDF.XLL.Academic.Domain.Models;
 using ConversorPDF.XLL.Academic.Domain.Models.Genetica;
 using ConversorPDF.XLL.Core.Helpers;
 using CSharpFunctionalExtensions;
@@ -278,32 +280,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 ranuras = ventana.Select(d => new AgRanura(d, AgFranjaJornada.NOCHE, unidad)).ToList();
             }   // Fase 1263: llave restituida
 
-            // 1. Obtener los slices semanales disponibles en la ventana semestral
-            var semanasValidas = new List<(DateTime Inicio, DateTime Fin)>();
-            for (var c = fechaInicio.Date; c <= fechaFin.Date;)
-            {
-                bool hayDiaVentana = false;
-                for (int i = 0; i < 7 && !hayDiaVentana; i++)
-                {
-                    if (c > DateTime.MaxValue.Date.AddDays(-i)) break;
-                    var d = c.AddDays(i);
-                    if (d > fechaFin.Date) break;
-                    int iso = d.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)d.DayOfWeek;
-                    if (ventana.Contains(iso) && (esFestivo == null || !esFestivo(d)))
-                    {
-                        hayDiaVentana = true;
-                    }
-                }
-
-                if (hayDiaVentana)
-                {
-                    var finSem = c > DateTime.MaxValue.Date.AddDays(-6) || c.AddDays(6) > fechaFin.Date ? fechaFin.Date : c.AddDays(6);
-                    semanasValidas.Add((c, finSem));
-                }
-
-                if (c > DateTime.MaxValue.Date.AddDays(-7) || c.AddDays(7) > fechaFin.Date) break;
-                c = c.AddDays(7);
-            }
+            // 1. Obtener los slices semanales disponibles en la ventana semestral (Fase 2129: helper canónico compartido)
+            var semanasValidas = ConstruirSemanasValidas(ventana, fechaInicio, fechaFin, esFestivo);
 
             int W = semanasValidas.Count;
 
@@ -357,7 +335,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 Patrones = ordenadas.Select(a => diasPatronPorAsignatura != null
                              && diasPatronPorAsignatura.TryGetValue(a.IdAsignatura, out var p)
                              && !string.IsNullOrWhiteSpace(p) ? p : string.Empty).ToList(),
-                SemanasValidas = semanasValidas,
+                SemanasValidas = semanasValidas.ToList(),
                 W = W,
                 Unidad = unidad,
                 EsFestivo = esFestivo,
@@ -672,6 +650,499 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     return false;
             }
             return true;
+        }
+
+        /// <summary>
+        /// Obtiene los slices semanales disponibles en la ventana entre fechaInicio y fechaFin
+        /// que contienen al menos un día hábil perteneciente a los días de la ventana (Fase 2129).
+        /// </summary>
+        internal static IReadOnlyList<(DateTime Inicio, DateTime Fin)> ConstruirSemanasValidas(
+            IReadOnlyList<int> diasVentana, DateTime fechaInicio, DateTime fechaFin, Func<DateTime, bool> esFestivo)
+        {
+            var semanasValidas = new List<(DateTime Inicio, DateTime Fin)>();
+            if (diasVentana == null || diasVentana.Count == 0 || fechaFin < fechaInicio)
+            {
+                return semanasValidas;
+            }
+
+            var diasSet = new HashSet<int>(diasVentana);
+            for (var c = fechaInicio.Date; c <= fechaFin.Date;)
+            {
+                bool hayDiaVentana = false;
+                for (int i = 0; i < 7 && !hayDiaVentana; i++)
+                {
+                    if (c > DateTime.MaxValue.Date.AddDays(-i)) break;
+                    var d = c.AddDays(i);
+                    if (d > fechaFin.Date) break;
+                    int iso = d.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)d.DayOfWeek;
+                    if (diasSet.Contains(iso) && (esFestivo == null || !esFestivo(d)))
+                    {
+                        hayDiaVentana = true;
+                    }
+                }
+
+                if (hayDiaVentana)
+                {
+                    var finSem = c > DateTime.MaxValue.Date.AddDays(-6) || c.AddDays(6) > fechaFin.Date ? fechaFin.Date : c.AddDays(6);
+                    semanasValidas.Add((c, finSem));
+                }
+
+                if (c > DateTime.MaxValue.Date.AddDays(-7) || c.AddDays(7) > fechaFin.Date) break;
+                c = c.AddDays(7);
+            }
+
+            return semanasValidas;
+        }
+
+        /// <summary>
+        /// Resultado de la operación de realineación determinista de oleadas por carril (Fase 2129).
+        /// </summary>
+        internal sealed class ResultadoRealineacion
+        {
+            internal bool Exito;
+            internal bool HuboCambios;
+            internal int CarrilesEvaluados;
+            internal int CarrilesReparados;
+            internal int AsignaturasDesplazadas;
+            internal int Fallos;
+            internal readonly List<string> Detalle = new List<string>();
+            internal string Error = string.Empty;
+        }
+
+        private sealed class AsignaturaCarril
+        {
+            public int IdAsignatura;
+            public List<AgGen> Genes;
+            public DateTime Ini;
+            public DateTime Fin;
+            public int OrdenCurricular;
+            public IReadOnlyList<int> Dias;
+            public double Unidad;
+            public double TotalHoras;
+            public int SesionesRequeridas;
+            public IReadOnlyList<AgRanura> Ranuras;
+            public int Slots;
+        }
+
+        private sealed class AccionGen
+        {
+            public AgGen Gen;
+            public DateTime FechaInicio;
+            public DateTime FechaFin;
+            public List<DateTime> FechasGen;
+            public double HorasGen;
+            public string PatronSemanal;
+        }
+
+        /// <summary>
+        /// Repara el individuo campeón secuenciando las oleadas solapadas dentro de cada carril efectivo
+        /// mediante forward shifting determinista sobre las semanas hábiles de la ventana (Fase 2129).
+        /// </summary>
+        internal static ResultadoRealineacion RealinearOleadas(AgIndividuo ind, AgContexto ctx)
+        {
+            if (ind?.Genes == null || ind.Genes.Count == 0)
+            {
+                return new ResultadoRealineacion { Exito = true, HuboCambios = false };
+            }
+            if (ctx?.Ventana == null)
+            {
+                return new ResultadoRealineacion { Exito = false, Error = "Ventana semestral no resuelta." };
+            }
+
+            var res = new ResultadoRealineacion { Exito = true };
+            var planificadorPatron = new AgPlanificadorPatronSemanal();
+
+            // 1) Carriles efectivos por cohorte y carril canónico (Fase 2140 / Fase 2163)
+            var carriles = ind.Genes
+                .Where(g => g.EsVacante == 0
+                         && g.FechaInicioEstimada.HasValue
+                         && g.FechaFinEstimada.HasValue)
+                .GroupBy(g => (Cohorte: AgCalendarioConflictos.Cohorte(g), Carril: AgCarriles.ClaveCarril(g)))
+                .OrderBy(k => k.Key.Cohorte, StringComparer.Ordinal)
+                .ThenBy(k => k.Key.Carril, StringComparer.Ordinal)
+                .ToList();
+
+            foreach (var carrilGrp in carriles)
+            {
+                res.CarrilesEvaluados++;
+                var genes = carrilGrp.ToList();
+                var porAsig = genes.GroupBy(g => g.IdAsignatura).ToList();
+                if (porAsig.Count <= 1) continue;
+
+                int idAulaCarril = genes.FirstOrDefault()?.IdAula ?? 0;
+                var aula = ctx.Aulas?.FirstOrDefault(a => a.Id == idAulaCarril)
+                    ?? (ctx.AulasPorId != null && ctx.AulasPorId.TryGetValue(idAulaCarril, out var aPorId) ? aPorId : null);
+
+                var asigs = new List<AsignaturaCarril>();
+                foreach (var gAsig in porAsig)
+                {
+                    var asigGenes = gAsig.ToList();
+                    var primerGen = asigGenes.FirstOrDefault();
+                    if (primerGen == null) continue;
+
+                    int ordenCurricular = 999;
+                    if (ctx.AulaAsignaturaPorAulaAsig != null && primerGen.IdAula > 0 &&
+                        ctx.AulaAsignaturaPorAulaAsig.TryGetValue((primerGen.IdAula, primerGen.IdAsignatura), out var aaExacta))
+                    {
+                        ordenCurricular = (aaExacta != null && aaExacta.OrdenCurricular > 0) ? aaExacta.OrdenCurricular : 999;
+                    }
+                    else if (ctx.AulaAsignaturasPorId != null &&
+                             ctx.AulaAsignaturasPorId.TryGetValue(primerGen.IdAsignatura, out var aaDef))
+                    {
+                        ordenCurricular = (aaDef != null && aaDef.OrdenCurricular > 0) ? aaDef.OrdenCurricular : 999;
+                    }
+
+                    var prog = ctx.Programas?.FirstOrDefault(p => p.Id == primerGen.IdPrograma || (aula != null && p.Id == aula.IdPrograma));
+                    double unidad = aula != null ? AgUnidadesSemanales.HorasSesionAula(aula, AgNivelAcademicoCatalogo.Desde(prog?.Modalidad)) : 4.0;
+                    if (unidad <= 0) unidad = 4.0;
+
+                    double totalHoras = asigGenes.Max(g => g.TotalHorasAsignatura);
+                    if (totalHoras <= 0) totalHoras = asigGenes.Sum(g => g.HorasGen);
+                    int sesionesRequeridas = (int)Math.Ceiling(totalHoras / unidad);
+
+                    // Parseo de días
+                    IReadOnlyList<int> dias = AgCarriles.Ventana(primerGen.DiasPatron);
+                    if (dias.Count == 0)
+                    {
+                        dias = asigGenes.Select(g => g.DiaSemana).Distinct().OrderBy(d => d).ToList();
+                    }
+                    if (dias.Count == 0 && aula != null)
+                    {
+                        dias = AgCarriles.Ventana(aula.DiasVentana);
+                    }
+                    if (dias.Count == 0)
+                    {
+                        dias = new List<int> { 1, 2, 3, 4, 5, 6 };
+                    }
+
+                    // Fase 2141: Ranuras derivadas de los genes con fallback a catálogo/jornada
+                    var ranurasGen = asigGenes
+                        .Select(g => (g.DiaSemana, Franja: ctx.BloquesPorId != null && g.IdBloqueHorario > 0 && ctx.BloquesPorId.TryGetValue(g.IdBloqueHorario, out var b) ? b.Franja : null))
+                        .Where(x => x.DiaSemana > 0)
+                        .Select(x => new AgRanura(x.DiaSemana, x.Franja ?? (AgRanuras.FranjasDe(x.DiaSemana, aula?.Jornada, unidad).FirstOrDefault() ?? AgFranjaJornada.MANANA), unidad))
+                        .GroupBy(r => (r.Dia, r.Franja)).Select(g => g.First()).ToList();
+
+                    IReadOnlyList<AgRanura> ranuras = ranurasGen;
+                    if (ranuras.Count == 0)
+                    {
+                        ranuras = AgRanuras.PorVentana(dias, ctx.Bloques, aula?.Jornada, unidad);
+                    }
+                    if (ranuras == null || ranuras.Count == 0)
+                    {
+                        ranuras = dias.Select(d => new AgRanura(d, AgRanuras.FranjasDe(d, aula?.Jornada, unidad).FirstOrDefault() ?? AgFranjaJornada.NOCHE, unidad)).ToList();
+                    }
+
+                    var diasEfectivos = ranuras.Select(r => r.Dia).Distinct().OrderBy(d => d).ToList();
+                    if (diasEfectivos.Count == 0) diasEfectivos = dias.ToList();
+
+                    asigs.Add(new AsignaturaCarril
+                    {
+                        IdAsignatura = gAsig.Key,
+                        Genes = asigGenes,
+                        Ini = asigGenes.Min(g => g.FechaInicioEstimada.Value),
+                        Fin = asigGenes.Max(g => g.FechaFinEstimada.Value),
+                        OrdenCurricular = ordenCurricular,
+                        Dias = diasEfectivos,
+                        Unidad = unidad,
+                        TotalHoras = totalHoras,
+                        SesionesRequeridas = sesionesRequeridas,
+                        Ranuras = ranuras,
+                        Slots = Math.Max(1, ranuras.Count)
+                    });
+                }
+
+                if (asigs.Count <= 1) continue;
+
+                var orden = asigs
+                    .OrderBy(a => a.OrdenCurricular > 0 ? a.OrdenCurricular : 999)
+                    .ThenBy(a => a.Ini)
+                    .ThenBy(a => a.IdAsignatura)
+                    .ToList();
+
+                if (!HaySolape(orden)) continue;
+
+                var diasCarril = asigs.SelectMany(a => a.Dias).Distinct().OrderBy(d => d).ToList();
+                if (diasCarril.Count == 0 && aula != null)
+                {
+                    diasCarril = AgCarriles.Ventana(aula.DiasVentana).ToList();
+                }
+                if (diasCarril.Count == 0)
+                {
+                    diasCarril = new List<int> { 1, 2, 3, 4, 5, 6 };
+                }
+
+                var slices = ConstruirSemanasValidas(diasCarril, ctx.Ventana.FechaInicio, ctx.Ventana.FechaFin, ctx.EsFestivo);
+                if (slices.Count == 0)
+                {
+                    res.Fallos++;
+                    res.Detalle.Add($"cohorte={carrilGrp.Key.Cohorte} carril={carrilGrp.Key.Carril} motivo=I5_SIN_SEMANAS");
+                    continue;
+                }
+
+                // 2) Fase de cálculo (no muta todavía)
+                var acciones = new List<AccionGen>();
+                var prevFin = orden[0].Fin;
+                int cursor = 0;
+                bool carrilOk = true;
+                string motivo = string.Empty;
+
+                for (int i = 1; i < orden.Count && carrilOk; i++)
+                {
+                    var actual = orden[i];
+
+                    // Fase 2149: Avanzar cursor buscando un slice que tenga días útiles estrictamente posteriores a prevFin
+                    while (cursor < slices.Count && !TieneDiaUtilPosterior(slices[cursor], diasCarril, prevFin, ctx.EsFestivo))
+                    {
+                        cursor++;
+                    }
+                    if (cursor >= slices.Count)
+                    {
+                        carrilOk = false;
+                        motivo = $"NoCabe(cursor={cursor}/{slices.Count})";
+                        break;
+                    }
+
+                    DateTime ini = slices[cursor].Inicio;
+                    if (ini <= prevFin)
+                    {
+                        for (var d = slices[cursor].Inicio.Date; d <= slices[cursor].Fin.Date; d = d.AddDays(1))
+                        {
+                            int iso = d.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)d.DayOfWeek;
+                            if (d > prevFin.Date && diasCarril.Contains(iso) && !ctx.EsFestivo(d))
+                            {
+                                ini = d;
+                                break;
+                            }
+                        }
+                    }
+
+                    int k = Math.Max(1, (int)Math.Ceiling(actual.SesionesRequeridas / (double)actual.Slots));
+                    DateTime fin = default(DateTime);
+                    AgPatronSemanal patronExitoso = null;
+
+                    while (true)
+                    {
+                        if (cursor + k > slices.Count)
+                        {
+                            carrilOk = false;
+                            motivo = $"NoCabe(cursor={cursor}+k={k}/{slices.Count})";
+                            break;
+                        }
+                        fin = slices[cursor + k - 1].Fin;
+                        var resPatron = planificadorPatron.Construir(
+                            actual.Dias, (int)actual.TotalHoras, ini, fin, ctx.EsFestivo, actual.Unidad);
+                        if (resPatron.IsSuccess)
+                        {
+                            patronExitoso = resPatron.Value;
+                            break;
+                        }
+                        k++;
+                    }
+                    if (!carrilOk) break;
+
+                    var sesiones = AgPlanificadorRanuras.Materializar(
+                        actual.IdAsignatura, actual.Ranuras, actual.SesionesRequeridas, ini, fin, ctx.EsFestivo);
+                    if (sesiones == null || sesiones.Count < actual.SesionesRequeridas)
+                    {
+                        carrilOk = false;
+                        motivo = $"Capacidad(sesiones={sesiones?.Count ?? 0}/{actual.SesionesRequeridas})";
+                        break;
+                    }
+
+                    // Acciones por gen (Fase 2138: preservación de franja y sin colapso de sesiones en el mismo día)
+                    var accionesAsig = new List<AccionGen>();
+                    string patronStr = patronExitoso != null && patronExitoso.SesionesPorSemana != null
+                        ? string.Join(",", patronExitoso.SesionesPorSemana)
+                        : string.Empty;
+
+                    bool sinRanura = false;
+                    foreach (var gen in actual.Genes)
+                    {
+                        if (gen.DiaSemana <= 0)
+                        {
+                            sinRanura = true;
+                            motivo = "DiaDesconocido";
+                            break;
+                        }
+
+                        string franjaGen = ctx.BloquesPorId != null && gen.IdBloqueHorario > 0
+                            && ctx.BloquesPorId.TryGetValue(gen.IdBloqueHorario, out var bGen) ? bGen.Franja : null;
+
+                        var fechas = sesiones
+                            .Where(s => s.Ranura.Dia == gen.DiaSemana
+                                     && (franjaGen == null || string.Equals(s.Ranura.Franja, franjaGen, StringComparison.OrdinalIgnoreCase)))
+                            .Select(s => s.Fecha)
+                            .Distinct()
+                            .OrderBy(d => d)
+                            .ToList();
+
+                        int sesionesDia = sesiones.Count(s => s.Ranura.Dia == gen.DiaSemana
+                            && (franjaGen == null || string.Equals(s.Ranura.Franja, franjaGen, StringComparison.OrdinalIgnoreCase)));
+                        if (franjaGen == null && sesionesDia > fechas.Count)
+                        {
+                            sinRanura = true;
+                            motivo = "FranjaAmbigua";
+                            break;
+                        }
+
+                        if (fechas.Count == 0)
+                        {
+                            sinRanura = true;
+                            break;
+                        }
+
+                        accionesAsig.Add(new AccionGen
+                        {
+                            Gen = gen,
+                            FechaInicio = ini,
+                            FechaFin = fin,
+                            FechasGen = fechas,
+                            HorasGen = fechas.Count * actual.Unidad,
+                            PatronSemanal = patronStr
+                        });
+                    }
+
+                    if (sinRanura)
+                    {
+                        carrilOk = false;
+                        if (string.IsNullOrEmpty(motivo)) motivo = "SinRanura";
+                        break;
+                    }
+
+                    // Fase 2139 / Fase 2158: Validación estricta de Invariantes I1 e I2 sin reparto residual arbitrario
+                    bool validaInvariantes = true;
+                    if (Math.Abs(actual.TotalHoras - actual.SesionesRequeridas * actual.Unidad) > 0.001)
+                    {
+                        validaInvariantes = false;
+                        motivo = $"I2_DemandaNoMultiplo({actual.TotalHoras:0.#}h/{actual.Unidad:0.#}h)";
+                    }
+
+                    if (ini < ctx.Ventana.FechaInicio || fin > ctx.Ventana.FechaFin) validaInvariantes = false;
+                    foreach (var a in accionesAsig)
+                    {
+                        if (a.FechasGen.Count != a.FechasGen.Distinct().Count())
+                        {
+                            validaInvariantes = false;
+                            motivo = "FechasDuplicadas";
+                            break;
+                        }
+                        if (Math.Abs(a.FechasGen.Count * actual.Unidad - a.HorasGen) > 0.001)
+                        {
+                            validaInvariantes = false;
+                            motivo = "I2";
+                            break;
+                        }
+                        if (a.FechasGen.Any(f => f < ctx.Ventana.FechaInicio || f > ctx.Ventana.FechaFin))
+                        {
+                            validaInvariantes = false;
+                            break;
+                        }
+                        if (a.FechasGen.Any(f => ctx.EsFestivo(f)))
+                        {
+                            validaInvariantes = false;
+                            break;
+                        }
+                        // Fase 2161: Validación estricta de día de semana en cada gen sin excepción para gen único
+                        if (a.Gen.DiaSemana <= 0)
+                        {
+                            validaInvariantes = false;
+                            motivo = "DiaDesconocido";
+                            break;
+                        }
+                        if (a.FechasGen.Any(f =>
+                        {
+                            int diaIso = f.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)f.DayOfWeek;
+                            return diaIso != a.Gen.DiaSemana;
+                        }))
+                        {
+                            validaInvariantes = false;
+                            motivo = "DiaInvalido";
+                            break;
+                        }
+                    }
+                    if (Math.Abs(accionesAsig.Sum(a => a.HorasGen) - actual.TotalHoras) > 0.001)
+                    {
+                        validaInvariantes = false;
+                    }
+                    if (accionesAsig.Sum(a => a.FechasGen.Count) != actual.SesionesRequeridas)
+                    {
+                        validaInvariantes = false;
+                    }
+
+                    if (!validaInvariantes)
+                    {
+                        carrilOk = false;
+                        if (string.IsNullOrEmpty(motivo)) motivo = "I1/I2";
+                        break;
+                    }
+
+                    acciones.AddRange(accionesAsig);
+                    prevFin = fin;
+                    cursor += k;
+                }
+
+                if (!carrilOk)
+                {
+                    res.Fallos++;
+                    res.Detalle.Add($"cohorte={carrilGrp.Key.Cohorte} carril={carrilGrp.Key.Carril} motivo={motivo}");
+                    continue;
+                }
+
+                // 3) Aplicar en el carril
+                foreach (var a in acciones)
+                {
+                    a.Gen.FechaInicioEstimada = a.FechaInicio;
+                    a.Gen.FechaFinEstimada = a.FechaFin;
+                    a.Gen.FechasGen = a.FechasGen;
+                    a.Gen.HorasGen = a.HorasGen;
+                    a.Gen.PatronSemanal = a.PatronSemanal;
+                }
+                res.CarrilesReparados++;
+                res.AsignaturasDesplazadas += Math.Max(0, orden.Count - 1);
+            }
+
+            res.HuboCambios = res.CarrilesReparados > 0;
+            return res;
+        }
+
+        private static bool TieneDiaUtilPosterior((DateTime Inicio, DateTime Fin) s, IReadOnlyList<int> dias, DateTime prevFin, Func<DateTime, bool> festivo)
+        {
+            var diasSet = new HashSet<int>(dias);
+            for (var d = s.Inicio.Date; d <= s.Fin.Date; d = d.AddDays(1))
+            {
+                if (d > prevFin.Date)
+                {
+                    int iso = d.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)d.DayOfWeek;
+                    if (diasSet.Contains(iso) && (festivo == null || !festivo(d)))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        private static bool HaySolape(IReadOnlyList<AsignaturaCarril> orden)
+        {
+            if (orden == null || orden.Count <= 1) return false;
+
+            for (int idx = 1; idx < orden.Count; idx++)
+            {
+                if (orden[idx].Ini < orden[idx - 1].Fin) return true;
+            }
+
+            for (int i = 0; i < orden.Count; i++)
+            {
+                for (int j = i + 1; j < orden.Count; j++)
+                {
+                    if (orden[i].Ini <= orden[j].Fin && orden[j].Ini <= orden[i].Fin)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
     }
 }

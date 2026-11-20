@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 481 | 482 | 2026-11-19 |
-| `fase` | 2128 | 2129 | 2026-11-19 |
+| `ronda` | 485 | 486 | 2026-11-20 |
+| `fase` | 2163 | 2164 | 2026-11-20 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -190,6 +190,10 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-153 | 2026-11-19 | `(revisión Ronda 479 — Fases 2120–2123: override con SinCambios en fail-fast pre-vuelo, distinción bloque/festivo en escalón sin ganancia, rotulado En riesgo en diálogo y cobertura residual/override)` | `Wave —` → `Ronda 479` | `Fase 2120–2123` | closed | PASS (Full 1833 tests) | pendiente |
 | R-154 | 2026-11-19 | `(revisión Ronda 480 — Fases 2124–2126: extracción AgResultadoEscaladoUI a Domain/Enums, assert exacto y fixture de rama residual, y causa neutra por ocurrencias en escalón sin ganancia)` | `Wave —` → `Ronda 480` | `Fase 2124–2126` | closed | PASS (Full 1833 tests) | pendiente |
 | R-155 | 2026-11-19 | `(revisión Ronda 481 — Fases 2127–2128: predicado único de override en AgPreVueloEscalado y mensaje del escalón por días reales sin rama muerta)` | `Wave —` → `Ronda 481` | `Fase 2127–2128` | closed | PASS (Full 1833 tests) | pendiente |
+| R-156 | 2026-11-19 | `(revisión Ronda 482 — Fases 2129–2135: hotfix del campeón con forward shifting por carril para eliminación de solapes R6/R13, hook con rollback y suite de pruebas)` | `Wave —` → `Ronda 482` | `Fase 2129–2135` | closed | pendiente (gate; suite roja: F2136/F2137) | pendiente |
+| R-157 | 2026-11-19 | `(revisión Ronda 483 — Fases 2136–2149: corrección de compilación en pruebas, paridad de clave carril, preservación I1/I2 y franjas, robustez de cursor y nota documental)` | `Wave —` → `Ronda 483` | `Fase 2136–2149` | closed | sin escisión (bajo umbral) | pendiente |
+| R-158 | 2026-11-20 | `(revisión Ronda 484 — Fases 2150–2158: balance de llaves en AgPlanificadorOleadas, validación de franjas y fechas duplicadas, paridad de clave carril en AgCarriles, aislamiento paralelo xUnit y trazabilidad documental)` | `Wave —` → `Ronda 484` | `Fase 2150–2158` | closed | PASS (Full 1845 tests) | pendiente |
+| R-159 | 2026-11-20 | `(revisión Ronda 485 — Fases 2159–2163: corrección de aserción del flag, aserciones I1/I2 en test de integración, validación estricta de día en gen único, eliminación de wrapper redundante y gate focalizado)` | `Wave —` → `Ronda 485` | `Fase 2159–2163` | closed | PASS (Full 1845 tests) | pendiente |
 
 
 
