@@ -74,7 +74,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             IReadOnlyList<string> patrones,
             IReadOnlyList<IReadOnlyList<AgRanura>> bandasCanonicas,
             Func<IReadOnlyList<IReadOnlyList<AgRanura>>, AgEvaluacionParticion> evaluar,
-            Func<AgEvaluacionParticion, bool> esAdmisible = null)
+            Func<AgEvaluacionParticion, bool> esAdmisible = null,
+            IReadOnlyList<AgOpcionParticion> opciones = null)
         {
             if (evaluar == null) throw new ArgumentNullException(nameof(evaluar));
 
@@ -87,6 +88,38 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 throw new ArgumentException("Carriles inválidos.", nameof(bandasCanonicas));
 
             var referencia = evaluar(bandasCanonicas);
+
+            // Fase 2180 / Fase 2187 / Fase 2188: Evaluación focalizada de catálogo con gate de mejora y fallback
+            if (opciones != null && opciones.Count > 0)
+            {
+                int evaluadasOpciones = 0;
+                var candidatasOpciones = new List<AgEvaluacionParticion>();
+                foreach (var op in opciones.Take(AgOpcionesParticion.MaxOpcionesDecision))
+                {
+                    if (op == null || !ConservaRanuras(ranuras, op.Carriles)) continue;
+                    var ev = evaluar(op.Carriles);
+                    evaluadasOpciones++;
+                    if (esAdmisible != null && !esAdmisible(ev)) continue;
+                    if (!AlojaPatrones(op.Carriles, patrones)) continue;
+                    candidatasOpciones.Add(ev);
+                }
+
+                var elegidaOpcion = candidatasOpciones
+                    .Where(ev => ev.PatronesNoAlojables <= referencia.PatronesNoAlojables)
+                    .Where(ev => ev.Resultado.Infactibles.Count < referencia.Resultado.Infactibles.Count
+                              || (ev.Resultado.Infactibles.Count == referencia.Resultado.Infactibles.Count
+                                  && ev.Makespan < referencia.Makespan))
+                    .OrderBy(ev => ev.Resultado.Infactibles.Count)
+                    .ThenBy(ev => ev.Makespan)
+                    .ThenBy(ev => ev.Clave, StringComparer.Ordinal)
+                    .FirstOrDefault();
+
+                if (elegidaOpcion != null)
+                {
+                    return new AgSeleccionParticion(true, referencia, elegidaOpcion, evaluadasOpciones, 0);
+                }
+                // Fase 2187: sin opción que mejore la referencia, fallback a la enumeración contigua de Particiones()
+            }
 
             bool hayPatronValido = false;
             if (patrones != null)
@@ -249,6 +282,12 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 }
             }
             return res;
+        }
+
+        private static bool AlojaPatrones(IReadOnlyList<IReadOnlyList<AgRanura>> bandas, IReadOnlyList<string> patrones)
+        {
+            if (patrones == null || patrones.Count == 0) return true;
+            return ContarPatronesNoAlojables(bandas, patrones) == 0;
         }
 
         private static bool AlojaPatron(IReadOnlyList<IReadOnlyList<AgRanura>> bandas, IReadOnlyList<int> diasPatron)

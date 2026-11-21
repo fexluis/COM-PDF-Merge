@@ -50,8 +50,13 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
             public List<int> IdAsignaturasBottleneck { get; set; } = new List<int>();
             public List<AgReclasificacionPatron> ReclasificacionesPropuestas { get; set; } = new List<AgReclasificacionPatron>();
             public List<AgReclasificacionPatron> ReclasificacionesAutorizadas { get; set; } = new List<AgReclasificacionPatron>();
+            public string ParticionPreferente { get; set; } = string.Empty;
+            public bool ParticionMejora { get; set; }
+            public bool ParticionDifiereDeReferencia { get; set; }
+            public bool ConservaPatronOrigen { get; set; } = true;
             public bool Aplica => (!string.IsNullOrWhiteSpace(Hacia) && !string.Equals(Desde, Hacia, StringComparison.OrdinalIgnoreCase) && Mejora && CapacidadDespues > CapacidadAntes)
-                || (ReclasificacionesAutorizadas != null && ReclasificacionesAutorizadas.Count > 0);
+                || (ReclasificacionesAutorizadas != null && ReclasificacionesAutorizadas.Count > 0)
+                || (ParticionMejora && ParticionDifiereDeReferencia);
             internal AgContexto ContextoOrigen { get; set; }
             internal int? PerfilPropuesto { get; set; }
             internal int? PerfilAplicado { get; set; }
@@ -485,8 +490,15 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                 var programa = contexto.Programas.FirstOrDefault(p => p.Id == aula.IdPrograma);
                 double unidad = AgUnidadesSemanales.HorasSesionAula(aula, AgNivelAcademicoCatalogo.Desde(programa?.Modalidad));
 
+                var ranurasAntes = AgRanuras.PorVentana(aula.DiasVentana, contexto.Bloques, aula.Jornada, unidad);
+                var patronesAula = contexto.AulaAsignaturaPorAulaAsig.Values
+                    .Where(a => a.IdAula == aula.Id && !string.IsNullOrWhiteSpace(a.DiasPatron))
+                    .Select(a => a.DiasPatron)
+                    .ToList();
+
+                var opcionActual = AgOpcionesParticion.Resolver(aula.DiasVentana, ranurasAntes, patronesAula);
                 var antes = AgEvaluadorDemandaVentana.Evaluar(aula.DiasVentana, aula.Jornada, unidad,
-                    contexto, aula, contexto.Ventana.FechaInicio, contexto.Ventana.FechaFin, ct);
+                    contexto, aula, contexto.Ventana.FechaInicio, contexto.Ventana.FechaFin, ct, opcion: opcionActual);
 
                 // Paso 2: Siempre consultar candidatos de reclasificación independientemente del siguiente escalón y de la saturación
                 var candidatos = IdentificarPatronesRedistribuibles(contexto, aula, antes, ct);
@@ -506,28 +518,39 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                 ctxSimulado.AulaAsignaturas = ctxSimulado.AulaAsignaturaPorAulaAsig.Values.ToList();
                 ctxSimulado.ConstruirIndices();
 
+                var patronesSimulados = ctxSimulado.AulaAsignaturaPorAulaAsig.Values
+                    .Where(a => a.IdAula == aula.Id && !string.IsNullOrWhiteSpace(a.DiasPatron))
+                    .Select(a => a.DiasPatron)
+                    .ToList();
+                var opcionMisma = AgOpcionesParticion.Resolver(aula.DiasVentana, ranurasAntes, patronesSimulados);
+
                 // Simular primero en la misma ventana
                 var evalMismaVentana = AgEvaluadorDemandaVentana.Evaluar(aula.DiasVentana, aula.Jornada, unidad,
-                    ctxSimulado, aula, contexto.Ventana.FechaInicio, contexto.Ventana.FechaFin, ct);
+                    ctxSimulado, aula, contexto.Ventana.FechaInicio, contexto.Ventana.FechaFin, ct, opcion: opcionMisma);
 
                 string paso = AgEscaleraVentanas.Siguiente(aula.DiasVentana);
                 string destino = aula.DiasVentana;
                 AgResultadoEvaluacionVentana despues = evalMismaVentana;
                 // Fase 2108 / Fase 2114: Retener evaluación del escalón para observabilidad fidedigna sin falsear capDespues
                 AgResultadoEvaluacionVentana evalPaso = null;
+                AgOpcionParticion opcionPaso = null;
+                AgOpcionParticion opcionUsada = opcionMisma ?? opcionActual;
 
                 if (autorizadasAula.Count > 0)
                 {
                     // Si con reclasificación en la misma ventana aún quedan pendientes y hay escalón disponible, evaluar siguiente escalón
                     if (!evalMismaVentana.CabeEnPlazo && !string.IsNullOrEmpty(paso))
                     {
+                        var ranurasPaso = AgRanuras.PorVentana(paso, ctxSimulado.Bloques, aula.Jornada, unidad);
+                        var opcionesPasoSim = AgOpcionesParticion.Resolver(paso, ranurasPaso, patronesSimulados, "escalar");
                         evalPaso = AgEvaluadorDemandaVentana.Evaluar(paso, aula.Jornada, unidad,
-                            ctxSimulado, aula, contexto.Ventana.FechaInicio, contexto.Ventana.FechaFin, ct);
+                            ctxSimulado, aula, contexto.Ventana.FechaInicio, contexto.Ventana.FechaFin, ct, opcion: opcionesPasoSim);
 
                         if (AgEvaluadorDemandaVentana.PasoMejora(evalMismaVentana, evalPaso))
                         {
                             destino = paso;
                             despues = evalPaso;
+                            opcionUsada = opcionesPasoSim;
                         }
                     }
                 }
@@ -536,20 +559,80 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                     // Sin autorizaciones: flujo nominal de escalera si hay saturación
                     if (antes.HaySaturacion && !string.IsNullOrEmpty(paso))
                     {
+                        var ranurasPaso = AgRanuras.PorVentana(paso, contexto.Bloques, aula.Jornada, unidad);
+                        opcionPaso = AgOpcionesParticion.Resolver(paso, ranurasPaso, patronesAula, "escalar");
                         evalPaso = AgEvaluadorDemandaVentana.Evaluar(paso, aula.Jornada, unidad,
-                            contexto, aula, contexto.Ventana.FechaInicio, contexto.Ventana.FechaFin, ct);
+                            contexto, aula, contexto.Ventana.FechaInicio, contexto.Ventana.FechaFin, ct, opcion: opcionPaso);
 
                         if (AgEvaluadorDemandaVentana.PasoMejora(antes, evalPaso))
                         {
                             destino = paso;
                             despues = evalPaso;
+                            opcionUsada = opcionPaso;
                         }
                     }
                 }
 
+                // FASE 2207 / FASE 2208: Evaluar referencia sin opción bajo la misma base de patrones (simulados si hubo reclasificación)
+                // y reutilizar 'antes' como referencia si no hubo opción en la ventana actual.
+                AgResultadoEvaluacionVentana referencia = autorizadasAula.Count > 0
+                    ? AgEvaluadorDemandaVentana.Evaluar(aula.DiasVentana, aula.Jornada, unidad,
+                          ctxSimulado, aula, contexto.Ventana.FechaInicio, contexto.Ventana.FechaFin, ct)
+                    : (opcionActual == null
+                        ? antes
+                        : AgEvaluadorDemandaVentana.Evaluar(aula.DiasVentana, aula.Jornada, unidad,
+                              contexto, aula, contexto.Ventana.FechaInicio, contexto.Ventana.FechaFin, ct));
+
+                string particionPreferente = opcionUsada?.CarrilesTexto ?? string.Empty;
+                var patronesConserva = autorizadasAula.Count > 0 ? patronesSimulados : patronesAula;
+                bool conservaPatron = opcionUsada != null
+                    && OpcionConservaPatrones(opcionUsada, patronesConserva);
+
+                // FASE 2209: Comparar franjas completas contra la partición canónica para detectar cambios en días con múltiples franjas (ej. 6M vs 6T)
+                int cantCanonicas = AgCarriles.Cantidad(ranurasAntes);
+                var canonicas = Enumerable.Range(0, cantCanonicas)
+                    .Select(c => (IReadOnlyList<AgRanura>)AgCarriles.DelCarril(ranurasAntes, c))
+                    .ToList();
+                string canonicaTexto = string.Join("|", canonicas.Select(c => string.Join(",", c.Select(TokenRanura))));
+
+                bool particionDifiere = opcionUsada != null
+                    && !string.IsNullOrEmpty(particionPreferente)
+                    && (!string.Equals(particionPreferente, canonicaTexto, StringComparison.OrdinalIgnoreCase)
+                        || !ParticionesIguales(evalMismaVentana.Plan?.Particion, referencia.Plan?.Particion));
+
+                // FASE 2215: Contar patrones no alojables sobre la referencia real (no sobre canónicos)
+                int noAlojRef = AgParticionCarriles.ContarPatronesNoAlojables(
+                    referencia.Plan?.Particion?.Select(b => b.Select(dia => new AgRanura(dia, AgFranjaJornada.NOCHE, unidad)).ToList())
+                        .Cast<IReadOnlyList<AgRanura>>().ToList() ?? canonicas,
+                    patronesConserva);
+                int noAlojOpt = opcionUsada?.Carriles != null
+                    ? AgParticionCarriles.ContarPatronesNoAlojables(opcionUsada.Carriles, patronesConserva)
+                    : 0;
+
+                // FASE 2206 / FASE 2215: particionDifiere es condición necesaria. Requiere reducción de no-alojables, infactibles o demanda.
+                bool particionMejora = opcionUsada != null
+                    && particionDifiere
+                    && despues.DemandaPendiente <= antes.DemandaPendiente
+                    && (noAlojOpt < noAlojRef
+                        || (evalMismaVentana.Plan?.Infactibles?.Count ?? 0) < (referencia.Plan?.Infactibles?.Count ?? 0)
+                        || evalMismaVentana.DemandaPendiente < referencia.DemandaPendiente);
+
+                // FASE 2216: Referencia comparada de la ventana destino cuando el destino escala
+                var referenciaComparada = string.Equals(destino, aula.DiasVentana, StringComparison.OrdinalIgnoreCase)
+                    ? referencia
+                    : (particionMejora
+                        ? AgEvaluadorDemandaVentana.Evaluar(destino, aula.Jornada, unidad,
+                              contexto, aula, contexto.Ventana.FechaInicio, contexto.Ventana.FechaFin, ct)
+                        : null);
+
+                bool hayMejoraParticion = !string.IsNullOrEmpty(particionPreferente)
+                    && particionMejora
+                    && particionDifiere
+                    && (referenciaComparada == null || (despues.Plan?.Infactibles?.Count ?? 0) <= (referenciaComparada.Plan?.Infactibles?.Count ?? 0));
+
                 // FASE 1856 / FASE 2108 / FASE 2114: Trazabilidad enriquecida y fidedigna de omisión del escalador en nivel Info
                 // Si no hay saturación, no hay candidatos y no hay autorizaciones, omitir
-                if (!antes.HaySaturacion && candidatos.Count == 0 && autorizadasAula.Count == 0)
+                if (!antes.HaySaturacion && candidatos.Count == 0 && autorizadasAula.Count == 0 && !hayMejoraParticion)
                 {
                     LoggerHelper.Info(
                         $"[ESCALADO] ESCALADOR_OMITIR aula={aula.Id} ref={aula.AulaRef} dias={aula.DiasVentana} " +
@@ -566,7 +649,7 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                 bool hayAutorizaciones = autorizadasAula.Count > 0;
                 bool hayCandidatos = candidatos.Count > 0;
 
-                if (!hayCambioVentana && !hayAutorizaciones && !hayCandidatos)
+                if (!hayCambioVentana && !hayAutorizaciones && !hayCandidatos && !hayMejoraParticion)
                 {
                     LoggerHelper.Info(
                         $"[ESCALADO] ESCALADOR_OMITIR aula={aula.Id} ref={aula.AulaRef} dias={aula.DiasVentana} " +
@@ -589,6 +672,10 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                     Subunidad = aula.Subunidad,
                     Desde = aula.DiasVentana,
                     Hacia = destino,
+                    ParticionPreferente = particionPreferente,
+                    ParticionMejora = particionMejora,
+                    ParticionDifiereDeReferencia = particionDifiere,
+                    ConservaPatronOrigen = conservaPatron,
                     DemandaSesiones = antes.DemandaTotal,
                     CapacidadAntes = antes.CapacidadTotal,
                     CapacidadDespues = despues.CapacidadTotal,
@@ -815,10 +902,12 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                             bool contextoCompatible = huellaContexto == d.HuellaContextoAntes || huellaContexto == d.HuellaContextoDespues;
                             LoggerHelper.Debug($"[AG-RANURAS-TMP] GUARDAR_HUELLAS perfil={idArbol} ref={d.AulaRef} contextoAntes={huellaContexto == d.HuellaContextoAntes} contextoDespues={huellaContexto == d.HuellaContextoDespues} sqlAntes={huellaSql == d.HuellaPersistidaAntes} sqlDespues={huellaSql == d.HuellaPersistidaDespues}");
 
+                            var liberarEsperado = d.ConservaPatronOrigen ? null : d.IdAsignaturasBottleneck;
+
                             // Reaplicación idempotente: si ya está en el postestado exacto, confirmar sin nuevas escrituras
                             if (d.PerfilAplicado == idArbol && contextoCompatible && !string.IsNullOrEmpty(d.HuellaPersistidaDespues)
                                 && huellaSql == d.HuellaPersistidaDespues
-                                && AgHuellaEscaladoPersistido.EstadoCompleto(db, tx, d.AulaRef, d.Subunidad, idArbol, d.Hacia, d.IdAsignaturasBottleneck, d.ReclasificacionesAutorizadas))
+                                && AgHuellaEscaladoPersistido.EstadoCompleto(db, tx, d.AulaRef, d.Subunidad, idArbol, d.Hacia, liberarEsperado, d.ReclasificacionesAutorizadas))
                             {
                                 resultado.Confirmadas++;
                                 LoggerHelper.Debug($"[AG-RANURAS-TMP] GUARDAR_IDEMPOTENTE perfil={idArbol} ref={d.AulaRef}");
@@ -832,7 +921,7 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                             }
 
                             string esperado = AgHuellaEscaladoPersistido.Calcular(db, tx, d.AulaRef, d.Subunidad,
-                                idArbol, d.Hacia, d.IdAsignaturasBottleneck, d.ReclasificacionesAutorizadas);
+                                idArbol, d.Hacia, liberarEsperado, d.ReclasificacionesAutorizadas);
 
                             int modificadas = 0;
                             if (!string.Equals(d.Desde, d.Hacia, StringComparison.OrdinalIgnoreCase))
@@ -855,7 +944,7 @@ AND COALESCE(dias_ventana,'')=@Desde;",
                                 }
                             }
 
-                            if (d.IdAsignaturasBottleneck.Count > 0)
+                            if (d.IdAsignaturasBottleneck.Count > 0 && !d.ConservaPatronOrigen)
                             {
                                 await db.ExecuteAsync(new CommandDefinition(@"
 UPDATE ag_aula_asignatura SET dias_patron=''
@@ -898,7 +987,7 @@ AND COALESCE(dias_patron,'')=@DiasAntes;",
                             }
 
                             if (AgHuellaEscaladoPersistido.Calcular(db, tx, d.AulaRef, d.Subunidad, idArbol) != esperado
-                                || !AgHuellaEscaladoPersistido.EstadoCompleto(db, tx, d.AulaRef, d.Subunidad, idArbol, d.Hacia, d.IdAsignaturasBottleneck, d.ReclasificacionesAutorizadas))
+                                || !AgHuellaEscaladoPersistido.EstadoCompleto(db, tx, d.AulaRef, d.Subunidad, idArbol, d.Hacia, liberarEsperado, d.ReclasificacionesAutorizadas))
                             {
                                 throw new InvalidOperationException("Postcondiciones incompletas. Operación revertida.");
                             }
@@ -926,7 +1015,19 @@ AND COALESCE(dias_patron,'')=@DiasAntes;",
                 par.Key.PerfilAplicado = idArbol;
             }
 
-            resultado.Exito = true;
+            bool huboCambioVentana = decisionesAplicables.Any(x => !string.Equals(x.Desde, x.Hacia, StringComparison.OrdinalIgnoreCase));
+            bool huboReclasificacion = decisionesAplicables.Any(x => x.ReclasificacionesAutorizadas != null && x.ReclasificacionesAutorizadas.Count > 0);
+
+            if (resultado.Confirmadas > 0 && resultado.Modificadas == 0 && !huboCambioVentana && !huboReclasificacion)
+            {
+                resultado.Exito = true;
+                resultado.Confirmadas = 0; // SinCambios
+                resultado.Advertencia = "Partición ya vigente; sin cambios persistidos.";
+            }
+            else
+            {
+                resultado.Exito = true;
+            }
             try
             {
                 if (resultado.Modificadas > 0) { ConversorPDF.XLL.Core.Sync.SyncContext.Scheduler?.MarkDirty(); }
@@ -937,7 +1038,86 @@ AND COALESCE(dias_patron,'')=@DiasAntes;",
             return resultado;
         }
 
-        private static string HuellaAccion(Decision d)
+        private static bool OpcionConservaPatrones(AgOpcionParticion opcion, IReadOnlyList<string> patrones)
+        {
+            if (opcion == null || opcion.Carriles == null || opcion.Carriles.Count == 0) return false;
+            if (patrones == null || patrones.Count == 0) return true;
+            // Si la partición fracciona el sábado (6M/6T), no puede conservar patrones íntegros de día 6
+            if (!string.IsNullOrEmpty(opcion.CarrilesTexto) &&
+                (opcion.CarrilesTexto.IndexOf("6M", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                 opcion.CarrilesTexto.IndexOf("6T", StringComparison.OrdinalIgnoreCase) >= 0) &&
+                patrones.Any(p => AgCarriles.Ventana(p).Contains(6)))
+            {
+                return false;
+            }
+
+            var patronesDias = patrones
+                .Where(p => !string.IsNullOrWhiteSpace(p))
+                .Select(p => (IReadOnlyList<int>)AgCarriles.Ventana(p))
+                .Where(d => d.Count > 0)
+                .ToList();
+
+            if (patronesDias.Count == 0) return true;
+            if (patronesDias.Count > opcion.Carriles.Count) return false;
+
+            return PuedeAlojarInyectivo(opcion.Carriles, patronesDias, 0, new bool[opcion.Carriles.Count]);
+        }
+
+        private static bool PuedeAlojarInyectivo(
+            IReadOnlyList<IReadOnlyList<AgRanura>> carriles,
+            IReadOnlyList<IReadOnlyList<int>> patronesDias,
+            int indicePatron,
+            bool[] carrilUsado)
+        {
+            if (indicePatron >= patronesDias.Count) return true;
+
+            var dias = patronesDias[indicePatron];
+            for (int c = 0; c < carriles.Count; c++)
+            {
+                if (carrilUsado[c]) continue;
+
+                var diasCarril = carriles[c].Select(r => r.Dia).Distinct().ToHashSet();
+                if (dias.All(d => diasCarril.Contains(d)))
+                {
+                    carrilUsado[c] = true;
+                    if (PuedeAlojarInyectivo(carriles, patronesDias, indicePatron + 1, carrilUsado))
+                    {
+                        return true;
+                    }
+                    carrilUsado[c] = false;
+                }
+            }
+
+            return false;
+        }
+
+        private static string TokenRanura(AgRanura r)
+        {
+            if (r == null) return string.Empty;
+            if (r.Dia == 6)
+            {
+                if (string.Equals(r.Franja, AgFranjaJornada.MANANA, StringComparison.OrdinalIgnoreCase)) return "6M";
+                if (string.Equals(r.Franja, AgFranjaJornada.TARDE, StringComparison.OrdinalIgnoreCase)) return "6T";
+            }
+            return r.Dia.ToString(CultureInfo.InvariantCulture);
+        }
+
+        private static bool ParticionesIguales(IReadOnlyList<IReadOnlyList<int>> a, IReadOnlyList<IReadOnlyList<int>> b)
+        {
+            if (ReferenceEquals(a, b)) return true;
+            if (a == null || b == null || a.Count != b.Count) return false;
+            for (int i = 0; i < a.Count; i++)
+            {
+                if (a[i] == null || b[i] == null || a[i].Count != b[i].Count) return false;
+                for (int j = 0; j < a[i].Count; j++)
+                {
+                    if (a[i][j] != b[i][j]) return false;
+                }
+            }
+            return true;
+        }
+
+        internal static string HuellaAccion(Decision d)
         {
             var partes = new List<string>
             {
@@ -947,8 +1127,13 @@ AND COALESCE(dias_patron,'')=@DiasAntes;",
                 d.DemandaPendiente.ToString(CultureInfo.InvariantCulture),
                 d.FechaLimite.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
                 d.PerfilPropuesto.HasValue ? d.PerfilPropuesto.Value.ToString(CultureInfo.InvariantCulture) : null,
-                d.IdAsignaturasBottleneck == null ? null : string.Join(",", d.IdAsignaturasBottleneck.OrderBy(id => id))
+                d.IdAsignaturasBottleneck == null ? null : string.Join(",", d.IdAsignaturasBottleneck.OrderBy(id => id)),
+                d.ParticionPreferente ?? string.Empty
             };
+
+            partes.Add(d.ParticionMejora ? "pm=1" : "pm=0");
+            partes.Add(d.ParticionDifiereDeReferencia ? "pdr=1" : "pdr=0");
+            partes.Add(d.ConservaPatronOrigen ? "cp=1" : "cp=0");
 
             if (d.ReclasificacionesAutorizadas != null && d.ReclasificacionesAutorizadas.Count > 0)
             {

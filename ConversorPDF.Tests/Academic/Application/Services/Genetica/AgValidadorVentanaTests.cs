@@ -1076,6 +1076,67 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
         [InlineData(AgResultadoEscaladoUI.FalloAlAplicar, false)]
         public void PreVuelo_Override_ShouldDependerDelConsentimiento(AgResultadoEscaladoUI resultado, bool esperado)
             => AgPreVueloEscalado.ContinuarPeseAInfactibilidad(resultado).Should().Be(esperado);
+
+        [Fact]
+        public void ValidadorYEscalador_MismaParticion_ParaPatronesMarVie()
+        {
+            // Arrange: aula MAR-VIE con dos materias con patrones 2,3 y 4,5
+            var contexto = new AgContexto();
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 2), new DateTime(2026, 6, 1), AgOrigenVentana.Presencial).Value;
+            var aula = new AgAula
+            {
+                Id = 10,
+                AulaRef = "A10",
+                Subunidad = "",
+                DiasVentana = "MAR-VIE",
+                Jornada = "NOCHE",
+                HorasDia = 4,
+                Capacidad = 30,
+                Estado = AgEstadoAula.Disponible
+            };
+            contexto.Aulas.Add(aula);
+
+            for (int d = 2; d <= 5; d++)
+            {
+                contexto.Bloques.Add(new AgBloqueHorario
+                {
+                    Id = d,
+                    DiaSemanaNumero = d,
+                    Franja = "NOCHE",
+                    DuracionHoras = 4,
+                    Activo = 1
+                });
+            }
+
+            contexto.Asignaturas.Add(new Asignatura { Id = 101, Nombre = "Materia A", Horas = 32 });
+            contexto.Asignaturas.Add(new Asignatura { Id = 102, Nombre = "Materia B", Horas = 32 });
+
+            contexto.AulaAsignaturaPorAulaAsig[(10, 101)] = new AgAulaAsignatura
+            {
+                IdAula = 10,
+                IdAsignatura = 101,
+                HorasObjetivo = 32,
+                DiasPatron = "2,3",
+                OrigenPatron = "MANUAL"
+            };
+            contexto.AulaAsignaturaPorAulaAsig[(10, 102)] = new AgAulaAsignatura
+            {
+                IdAula = 10,
+                IdAsignatura = 102,
+                HorasObjetivo = 32,
+                DiasPatron = "4,5",
+                OrigenPatron = "MANUAL"
+            };
+            contexto.AulaAsignaturas = new List<AgAulaAsignatura>(contexto.AulaAsignaturaPorAulaAsig.Values);
+            contexto.ConstruirIndices();
+
+            // Act
+            var resValidador = _sut.ValidarFactibilidad(contexto);
+
+            // Assert
+            resValidador.IsSuccess.Should().BeTrue();
+            resValidador.Value.BloqueosCriticos.Should().NotContain(b => b.Contains("I5_DIA_SATURADO"));
+        }
     }
 }
 

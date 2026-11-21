@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 485 | 486 | 2026-11-20 |
-| `fase` | 2163 | 2164 | 2026-11-20 |
+| `ronda` | 494 | 495 | 2026-11-20 |
+| `fase` | 2216 | 2217 | 2026-11-20 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -194,6 +194,12 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-157 | 2026-11-19 | `(revisión Ronda 483 — Fases 2136–2149: corrección de compilación en pruebas, paridad de clave carril, preservación I1/I2 y franjas, robustez de cursor y nota documental)` | `Wave —` → `Ronda 483` | `Fase 2136–2149` | closed | sin escisión (bajo umbral) | pendiente |
 | R-158 | 2026-11-20 | `(revisión Ronda 484 — Fases 2150–2158: balance de llaves en AgPlanificadorOleadas, validación de franjas y fechas duplicadas, paridad de clave carril en AgCarriles, aislamiento paralelo xUnit y trazabilidad documental)` | `Wave —` → `Ronda 484` | `Fase 2150–2158` | closed | PASS (Full 1845 tests) | pendiente |
 | R-159 | 2026-11-20 | `(revisión Ronda 485 — Fases 2159–2163: corrección de aserción del flag, aserciones I1/I2 en test de integración, validación estricta de día en gen único, eliminación de wrapper redundante y gate focalizado)` | `Wave —` → `Ronda 485` | `Fase 2159–2163` | closed | PASS (Full 1845 tests) | pendiente |
+| R-160 | 2026-11-20 | `(revisión Ronda 488 — Fases 2179–2184: catálogo de dos opciones de partición, evaluación focalizada, propagación evaluador-planificador, escalado antes/paso y preservación de origen en decisión)` | `Wave —` → `Ronda 488` | `Fase 2179–2184` | closed | sin escisión (bajo umbral) | pendiente |
+| R-161 | 2026-11-20 | `(revisión Ronda 489 — Fases 2185–2192: resolución de opción por ventana sin mezcla de ranuras, clasificación precisa de origen, fallback de opciones a enumeración, gate de mejora estricta, franja de sábado en sello, preservación de origen en limpieza, semántica de aplicación y tests límite)` | `Wave —` → `Ronda 489` | `Fase 2185–2192` | closed | sin escisión (bajo umbral) | pendiente |
+| R-162 | 2026-11-20 | `(revisión Ronda 490 — Fases 2193–2199: alineación postcondición con preservación de patrones, sellado de flags en HuellaAccion, paridad evaluador/validador con catálogo, alcance de decisión de partición en escalador, desacople de acción en catálogo, firma única de Evaluar y cobertura integral)` | `Wave —` → `Ronda 490` | `Fase 2193–2199` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-163 | 2026-11-20 | `(revisión Ronda 491 — Fases 2200–2205: partición de referencia en ParticionMejora, evaluación de conservación con patrones simulados, semántica SinCambios en aplicación sin escrituras, tabla de verdad estricta de Aplica con ParticionDifiereDeReferencia, validación de acción en catálogo y suite de borde)` | `Wave —` → `Ronda 491` | `Fase 2200–2205` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-164 | 2026-11-20 | `(revisión Ronda 492 — Fases 2206–2211: particionDifiere necesaria para ParticionMejora, referencia comparable en simulación, atajo de referencia sin opción, comparación de franjas contra partición canónica, eliminación de MaxOpciones/ResolverLista y filtro de decisiones aplicables en SinCambios)` | `Wave —` → `Ronda 492` | `Fase 2206–2211` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-165 | 2026-11-20 | `(revisión Ronda 494 — Fases 2212–2216: noAlojRef sobre referencia real en ParticionMejora, referencia comparada de la ventana destino en escalado con opción y cierre de ciclo)` | `Wave —` → `Ronda 494` | `Fase 2212–2216` | closed | sin build/tests (restricción Paso 6) | pendiente |
 
 
 

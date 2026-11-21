@@ -101,7 +101,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         }
 
         public static AgResultadoEvaluacionVentana Evaluar(string diasVentana, string jornada, double unidad,
-            AgContexto contexto, AgAula aula, DateTime ini, DateTime fin, CancellationToken ct = default(CancellationToken))
+            AgContexto contexto, AgAula aula, DateTime ini, DateTime fin, CancellationToken ct = default(CancellationToken),
+            AgOpcionParticion opcion = null)
         {
             ct.ThrowIfCancellationRequested();
             var res = new AgResultadoEvaluacionVentana
@@ -132,8 +133,9 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     "patrones=" + string.Join(";", contexto.AulaAsignaturaPorAulaAsig.Values.Where(a => a.IdAula == aula.Id).OrderBy(a => a.IdAsignatura)
                         .Select(a => $"{a.IdAsignatura}:{a.OrigenPatron}:{a.DiasPatron}:efectivo={(patrones.ContainsKey(a.IdAsignatura) ? patrones[a.IdAsignatura] : "LIBRE")}")));
             }
+            var listaOpciones = opcion != null ? new[] { opcion } : null;
             var evaluacion = planificador.ConstruirEvaluacion(demandas, diasVentana, ini, fin, unidad,
-                contexto.EsFestivo, contexto.Bloques, jornada, patrones, ct, diagnostico);
+                contexto.EsFestivo, contexto.Bloques, jornada, patrones, ct, diagnostico, listaOpciones);
             if (evaluacion.IsFailure)
             {
                 if (EsInfactibilidadDeCapacidad(evaluacion.Error))

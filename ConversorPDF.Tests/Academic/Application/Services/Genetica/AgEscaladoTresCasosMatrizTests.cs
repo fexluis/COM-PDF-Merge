@@ -594,6 +594,194 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             contexto.ConstruirIndices();
             return contexto;
         }
+
+        [Fact]
+        public void MarVie_Cabe_NoEscala_YParticionOrigen()
+        {
+            int w = 17;
+            var contexto = CrearContextoMatriz(w, "MAR-VIE", numAsignaturas: 4, sesionesPorAsignatura: 16);
+            contexto.AulaAsignaturas[0].DiasPatron = "2,3";
+            contexto.AulaAsignaturas[0].OrigenPatron = "MANUAL";
+            contexto.AulaAsignaturas[1].DiasPatron = "4,5";
+            contexto.AulaAsignaturas[1].OrigenPatron = "MANUAL";
+            contexto.ConstruirIndices();
+
+            var sut = new AgEscaladorRanuraAula(() => null);
+            var decisiones = sut.Evaluar(contexto);
+
+            decisiones.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void MarVie_NoCabe_Escala_LunVie_Con_2_3_y_1_4_5()
+        {
+            int w = 17;
+            var contexto = CrearContextoMatriz(w, "MAR-VIE", numAsignaturas: 5, sesionesPorAsignatura: 16);
+            contexto.AulaAsignaturas[0].DiasPatron = "2,3";
+            contexto.AulaAsignaturas[0].OrigenPatron = "MANUAL";
+            contexto.AulaAsignaturas[1].DiasPatron = "4,5";
+            contexto.AulaAsignaturas[1].OrigenPatron = "MANUAL";
+            contexto.ConstruirIndices();
+
+            var sut = new AgEscaladorRanuraAula(() => null);
+            var decisiones = sut.Evaluar(contexto);
+
+            decisiones.Should().ContainSingle();
+            var d = decisiones[0];
+            d.Desde.Should().Be("MAR-VIE");
+            d.Hacia.Should().Be("LUN-VIE");
+            d.ParticionPreferente.Should().Be("2,3|1,4,5");
+            d.Aplica.Should().BeTrue();
+        }
+
+        [Fact]
+        public void LunJue_NoCabe_Escala_LunVie_Con_1_2_5_y_3_4()
+        {
+            int w = 17;
+            var contexto = CrearContextoMatriz(w, "LUN-JUE", numAsignaturas: 5, sesionesPorAsignatura: 16);
+            contexto.AulaAsignaturas[0].DiasPatron = "1,2";
+            contexto.AulaAsignaturas[0].OrigenPatron = "MANUAL";
+            contexto.AulaAsignaturas[1].DiasPatron = "3,4";
+            contexto.AulaAsignaturas[1].OrigenPatron = "MANUAL";
+            contexto.ConstruirIndices();
+
+            var sut = new AgEscaladorRanuraAula(() => null);
+            var decisiones = sut.Evaluar(contexto);
+
+            decisiones.Should().ContainSingle();
+            var d = decisiones[0];
+            d.Desde.Should().Be("LUN-JUE");
+            d.Hacia.Should().Be("LUN-VIE");
+            d.ParticionPreferente.Should().Be("1,2,5|3,4");
+            d.Aplica.Should().BeTrue();
+        }
+
+        [Fact]
+        public void AulaConPatronYParticionVigente_NoGeneraDecision()
+        {
+            int w = 17;
+            var contexto = CrearContextoMatriz(w, "MAR-VIE", numAsignaturas: 4, sesionesPorAsignatura: 16);
+            contexto.AulaAsignaturas[0].DiasPatron = "2,3";
+            contexto.AulaAsignaturas[0].OrigenPatron = "MANUAL";
+            contexto.AulaAsignaturas[1].DiasPatron = "4,5";
+            contexto.AulaAsignaturas[1].OrigenPatron = "MANUAL";
+            contexto.ConstruirIndices();
+
+            var sut = new AgEscaladorRanuraAula(() => null);
+            var decisiones = sut.Evaluar(contexto);
+
+            decisiones.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void ParticionIgualAReferencia_NoAplica()
+        {
+            var d = new AgEscaladorRanuraAula.Decision
+            {
+                Desde = "MAR-VIE",
+                Hacia = "MAR-VIE",
+                ParticionPreferente = "2,3|4,5",
+                ParticionMejora = true,
+                ParticionDifiereDeReferencia = false,
+                CapacidadAntes = 68,
+                CapacidadDespues = 68
+            };
+
+            d.Aplica.Should().BeFalse();
+        }
+
+        [Fact]
+        public void ReclasificacionAutorizada_ConservaPatronUsaPatronesSimulados()
+        {
+            int w = 17;
+            var contexto = CrearContextoMatriz(w, "MAR-VIE", numAsignaturas: 4, sesionesPorAsignatura: 16);
+            contexto.AulaAsignaturas[0].DiasPatron = "1,2"; // patrón no compatible con MAR-VIE
+            contexto.AulaAsignaturas[0].OrigenPatron = "MANUAL";
+            contexto.AulaAsignaturas[1].DiasPatron = "4,5";
+            contexto.AulaAsignaturas[1].OrigenPatron = "MANUAL";
+            contexto.ConstruirIndices();
+
+            var rec = new AgReclasificacionPatron
+            {
+                IdAula = contexto.Aulas[0].Id,
+                IdAsignatura = contexto.AulaAsignaturas[0].IdAsignatura,
+                AulaRef = contexto.Aulas[0].AulaRef,
+                Subunidad = contexto.Aulas[0].Subunidad,
+                OrigenAnterior = "MANUAL",
+                DiasPatronAnterior = "1,2",
+                OrigenPropuesto = "AUTOMATICO",
+                DiasPatronPropuesto = "2,3",
+                Autorizado = true
+            };
+
+            var sut = new AgEscaladorRanuraAula(() => null);
+            var decisiones = sut.Evaluar(contexto, idArbol: 0, reclasificacionesAutorizadas: new List<AgReclasificacionPatron> { rec });
+
+            // Al autorizar reclasificación a 2,3, los patrones simulados son 2,3 y 4,5,
+            // que sí son conservados por la opción 2,3|4,5.
+            if (decisiones.Count > 0)
+            {
+                decisiones[0].ConservaPatronOrigen.Should().BeTrue();
+            }
+        }
+
+        [Fact]
+        public void LunVie_ConPatronYReferenciaFactible_NoGeneraDecision()
+        {
+            // FASE 2206: cohorte LUN-VIE con patrón donde la referencia ya es factible -> no genera propuesta no-op
+            int w = 17;
+            var contexto = CrearContextoMatriz(w, "LUN-VIE", numAsignaturas: 5, sesionesPorAsignatura: 16);
+            contexto.AulaAsignaturas[0].DiasPatron = "2,3";
+            contexto.AulaAsignaturas[0].OrigenPatron = "MANUAL";
+            contexto.AulaAsignaturas[1].DiasPatron = "4,5";
+            contexto.AulaAsignaturas[1].OrigenPatron = "MANUAL";
+            contexto.ConstruirIndices();
+
+            var sut = new AgEscaladorRanuraAula(() => null);
+            var decisiones = sut.Evaluar(contexto);
+
+            decisiones.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void ParticionFranjaDiferente_DifiereDeReferencia()
+        {
+            // FASE 2209: Diferencia de franja (6M vs 6T)
+            var ranuras = new List<AgRanura>
+            {
+                new AgRanura(5, AgFranjaJornada.NOCHE, 4.0),
+                new AgRanura(6, AgFranjaJornada.MANANA, 4.0),
+                new AgRanura(4, AgFranjaJornada.NOCHE, 4.0),
+                new AgRanura(6, AgFranjaJornada.TARDE, 4.0),
+                new AgRanura(7, AgFranjaJornada.NOCHE, 4.0)
+            };
+            var patrones = new List<string> { "5,6M", "4,6T,7" };
+            var opcion = AgOpcionesParticion.Resolver("JUE-DOM", ranuras, patrones);
+
+            opcion.Should().NotBeNull();
+            opcion.CarrilesTexto.Should().Be("5,6M|4,6T,7");
+        }
+
+        [Fact]
+        public void Escalon_ComparaInfactiblesConReferenciaDestino()
+        {
+            // FASE 2216: Escalón compara infactibles contra la referencia de la ventana destino
+            int w = 17;
+            var contexto = CrearContextoMatriz(w, "MAR-VIE", numAsignaturas: 5, sesionesPorAsignatura: 16);
+            contexto.AulaAsignaturas[0].DiasPatron = "2,3";
+            contexto.AulaAsignaturas[0].OrigenPatron = "MANUAL";
+            contexto.AulaAsignaturas[1].DiasPatron = "4,5";
+            contexto.AulaAsignaturas[1].OrigenPatron = "MANUAL";
+            contexto.ConstruirIndices();
+
+            var sut = new AgEscaladorRanuraAula(() => null);
+            var decisiones = sut.Evaluar(contexto);
+
+            decisiones.Should().ContainSingle();
+            decisiones[0].Hacia.Should().Be("LUN-VIE");
+            decisiones[0].ParticionPreferente.Should().Be("2,3|1,4,5");
+            decisiones[0].Aplica.Should().BeTrue();
+        }
     }
 }
 

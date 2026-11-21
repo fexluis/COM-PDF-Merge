@@ -259,6 +259,13 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     var demandasAu = AgEvaluadorDemandaVentana.Demandas(contexto, au, fallbackPermitido: false);
                     if (demandasAu.Count == 0) continue;
 
+                    var patronesLista = contexto.AulaAsignaturaPorAulaAsig != null
+                        ? contexto.AulaAsignaturaPorAulaAsig.Values
+                            .Where(a => a.IdAula == au.Id && !string.IsNullOrWhiteSpace(a.DiasPatron))
+                            .Select(a => a.DiasPatron)
+                            .ToList()
+                        : new List<string>();
+
                     // Fase 1142 / Fase 1158: Capacidad real medida en ranuras efectivas (SAB cuenta 2 veces si tiene M+T)
                     var ranurasAu = AgRanuras.PorVentana(au.DiasVentana, contexto.Bloques, au.Jornada, unidadAu);
                     int carrilesAu = ranurasAu.Count > 0 ? AgCarriles.Cantidad(ranurasAu) : AgCarriles.Cantidad(ventanaAu);
@@ -343,8 +350,9 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                             else
                             {
                                 int pendienteBase = Math.Max(0, totalSesionesAula - capacidadTotalRanuras);
+                                var opcionEscalon = AgOpcionesParticion.Resolver(escalon, ranurasEscalon, patronesLista, "escalar");
                                 var evalEscalon = AgEvaluadorDemandaVentana.Evaluar(escalon, au.Jornada, unidadAu,
-                                    contexto, au, ini, fin);
+                                    contexto, au, ini, fin, opcion: opcionEscalon);
                                 bool reducePendiente = (string.IsNullOrEmpty(evalEscalon.Error)
                                     || AgEvaluadorDemandaVentana.EsInfactibilidadDeCapacidad(evalEscalon.Error))
                                     && evalEscalon.DemandaPendiente < pendienteBase;
@@ -417,7 +425,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 
                     if (!todasConAlternativa)
                     {
-                        var evalDemanda = AgEvaluadorDemandaVentana.Evaluar(au.DiasVentana, au.Jornada, unidadAu, contexto, au, ini, fin);
+                        var opcionActualVal = AgOpcionesParticion.Resolver(au.DiasVentana, ranurasAu, patronesLista);
+                        var evalDemanda = AgEvaluadorDemandaVentana.Evaluar(au.DiasVentana, au.Jornada, unidadAu, contexto, au, ini, fin, opcion: opcionActualVal);
                         if (evalDemanda.HaySaturacion || evalDemanda.SaturacionCarriles)
                         {
                             informe.AgregarBloqueo(

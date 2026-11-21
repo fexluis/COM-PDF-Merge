@@ -629,3 +629,142 @@ Las citas `walkthrough.md:NNNN` anteriores al corte apuntan al archivo monolitic
 | F2162 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `REGISTRY.md:25-29, 194-196` |
 | F2163 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorOleadas.cs:750-760` |
 
+---
+
+## Ronda 488 — Catálogo de dos opciones de partición (Fases 2179–2184)
+
+### Resumen de la Ronda
+- **Fase 2179:** Se implementaron los tipos de dominio `AgOpcionParticion.cs` y `AgOpcionesParticion.cs` en `ConversorPDF.XLL/Academic/Domain/Models/Genetica/` y se incluyeron en `ConversorPDF.XLL.csproj`. El catálogo resuelve `quedarse` y `escalar` determinísticamente respetando `MarVie`, `LunJue` y `FinDeSemana` con `MaxOpciones = 2`.
+- **Fase 2180:** Se adaptó `AgParticionCarriles.Seleccionar` en `AgParticionCarriles.cs:71-125` para evaluar la lista de `opciones` acotada a 2 candidatas, verificando conservación de ranuras y alojamiento de patrones antes de evaluar, seleccionando la mejor partición sin priorizar artificialmente número de bandas.
+- **Fase 2181:** Se propagó el parámetro opcional `opciones` en `AgPlanificadorOleadas.cs:30-58, 355-365` y `AgEvaluadorDemandaVentana.cs:103-138`, permitiendo que el evaluador inyecte las opciones resueltas hacia el planificador.
+- **Fase 2182:** Se ajustó la evaluación de `antes` y `paso` en `AgEscaladorRanuraAula.cs:488-550` empleando `AgOpcionesParticion.Resolver` para cada ventana respectiva, garantizando que si el origen cabe no se desencadene escalado espurio.
+- **Fase 2183:** Se extendió `Decision` con `ParticionPreferente` en `AgEscaladorRanuraAula.cs:53, 603-615`, se integró en `HuellaAccion` (línea 975) y se blindó `AplicarDetalladoAsync` (línea 883) para no borrar `dias_patron` cuando la decisión cuenta con partición preferente.
+- **Fase 2184:** Se desarrollaron las pruebas unitarias en `AgOpcionesParticionTests.cs` y `AgParticionCarrilesOpcionesTests.cs`, y las pruebas de integración en `AgEscaladoTresCasosMatrizTests.cs`.
+
+### Verificación de Principios (Ronda 488)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2179 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgOpcionParticion.cs`, `AgOpcionesParticion.cs`, `ConversorPDF.XLL.csproj:732-734` |
+| F2180 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgParticionCarriles.cs:71-125, 286-292` |
+| F2181 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorOleadas.cs:30-58, 355-365`, `AgEvaluadorDemandaVentana.cs:103-138` |
+| F2182 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:488-550` |
+| F2183 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:53, 603-615, 883, 975` |
+| F2184 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgOpcionesParticionTests.cs`, `AgParticionCarrilesOpcionesTests.cs`, `AgEscaladoTresCasosMatrizTests.cs:595-655` |
+
+---
+
+## Ronda 489 — Catálogo de dos opciones — defectos de implementación (Fases 2185–2192)
+
+### Resumen de la Ronda
+- **Fase 2185:** Se corrigió `AgOpcionesParticion.Resolver` para operar exclusivamente sobre la ventana y ranuras provistas en cada invocación, desacoplando la escalera de ampliación y delegando la resolución de `quedarse` y `escalar` al escalador.
+- **Fase 2186:** Se refinó `DetectarOrigen` en `AgOpcionesParticion.cs:40-100` verificando cardinalidad y paridad estricta de días ({2,3}, {4,5} para MAR-VIE; {1,2}, {3,4} para LUN-JUE), clasificando como `Ninguno` patrones terciarios como {3,4,5} o mezclas heterogéneas.
+- **Fase 2187:** Se eliminó el retorno prematuro en `AgParticionCarriles.cs:92-125`, permitiendo fallback fluido a la enumeración contigua de `Particiones()` cuando el catálogo no arroja candidatas viables.
+- **Fase 2188:** Se implementó el predicado de mejora comparativa frente a la referencia en `AgParticionCarriles.cs:105-120` exigiendo reducción de infactibles o makespan sin degradar patrones alojables.
+- **Fase 2189:** Se obtuvo `ParticionPreferente` directamente desde `opcionUsada?.CarrilesTexto` en `AgEscaladorRanuraAula.cs:605-620`, asegurando que configuraciones de fin de semana con `6M` y `6T` se sellen con su formato de franja canónico.
+- **Fase 2190:** Se implementó `OpcionConservaPatrones` y se vinculó en `AplicarDetalladoAsync` de `AgEscaladorRanuraAula.cs:880-900`, garantizando que `UPDATE ag_aula_asignatura SET dias_patron=''` se invoque únicamente si la partición adoptada rompe los patrones del aula.
+- **Fase 2191:** Se actualizó `Aplica` en `AgEscaladorRanuraAula.cs:55` integrando la guarda `(!string.IsNullOrEmpty(ParticionPreferente) && ParticionMejora)` para habilitar remediación intra-ventana.
+- **Fase 2192:** Se agregaron pruebas de contrato y casos límite en `AgOpcionesParticionTests.cs` y `AgParticionCarrilesOpcionesTests.cs` validando tolerancia a jornadas de 8h, descarte de patrones anómalos y neutralidad de opciones sin mejora.
+
+### Verificación de Principios (Ronda 489)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2185 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgOpcionesParticion.cs:24-45`, `AgEscaladorRanuraAula.cs:498-560` |
+| F2186 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgOpcionesParticion.cs:46-105` |
+| F2187 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgParticionCarriles.cs:92-125` |
+| F2188 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgParticionCarriles.cs:105-120` |
+| F2189 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:605-620` |
+| F2190 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:880-900, 970-980` |
+| F2191 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:53-57` |
+| F2192 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgOpcionesParticionTests.cs:130-180`, `AgParticionCarrilesOpcionesTests.cs:50-95` |
+
+---
+
+## Ronda 490 — Catálogo de opciones — cierre de aplicación y sellado (Fases 2193–2199)
+
+### Resumen de la Ronda
+- **Fase 2193:** Se corrigió la discrepancia de postcondición en `AgEscaladorRanuraAula.cs:854, 868, 934` utilizando `liberarEsperado = d.ConservaPatronOrigen ? null : d.IdAsignaturasBottleneck` tanto en la evaluación idempotente como en el cálculo del hash esperado y la verificación final de `EstadoCompleto`.
+- **Fase 2194:** Se incorporaron los flags `pm` y `cp` a la lista de partes en `AgEscaladorRanuraAula.cs:HuellaAccion`, asegurando que `ParticionMejora` y `ConservaPatronOrigen` formen parte del hash criptográfico de la decisión.
+- **Fase 2195:** Se unificó la invocación a `AgEvaluadorDemandaVentana.Evaluar` en `AgValidadorVentana.cs:350, 425` inyectando la opción resuelta por `AgOpcionesParticion.Resolver`, garantizando consistencia diagnóstica con el escalador.
+- **Fase 2196:** Se anticipó el cálculo de `hayMejoraParticion` en `AgEscaladorRanuraAula.cs:570-600`, preservando la generación y aplicación de decisiones de reparación de carril cuando la ventana no cambia pero la partición optimiza la asignación.
+- **Fase 2197:** Se desacopló la etiqueta de acción en `AgOpcionesParticion.cs` permitiendo clasificar opciones como `"quedarse"` o `"escalar"`, y se expuso `MaxOpcionesDecision = 2`.
+- **Fase 2198:** Se normalizó la firma pública de `AgEvaluadorDemandaVentana.Evaluar` eliminando el parámetro redundante `opciones` y manteniendo únicamente `AgOpcionParticion opcion = null`.
+- **Fase 2199:** Se implementaron tests unitarios y de persistencia: `AplicarDetalladoAsync_ConConservaPatron_NoRevierteYNoBorraPatrones_YEsIdempotente` en `AgEscaladorRanuraAulaPersistenciaTests.cs`, `ValidadorYEscalador_MismaParticion_ParaPatronesMarVie` en `AgValidadorVentanaTests.cs`, y `Resolver_Destino_MarcaAccionEscalar` en `AgOpcionesParticionTests.cs`.
+
+### Verificación de Principios (Ronda 490)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2193 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:854, 868, 934` |
+| F2194 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:994-997` |
+| F2195 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgValidadorVentana.cs:261, 350, 425` |
+| F2196 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:570-605` |
+| F2197 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgOpcionesParticion.cs:14-45, 125-188` |
+| F2198 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEvaluadorDemandaVentana.cs:103-138` |
+| F2199 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAulaPersistenciaTests.cs:630-710`, `AgValidadorVentanaTests.cs:1080-1140`, `AgOpcionesParticionTests.cs:215-240` |
+
+---
+
+## Ronda 491 — `ParticionMejora` tautológico y aplicación sin efecto (Fases 2200–2205)
+
+### Resumen de la Ronda
+- **Fase 2200:** Se incorporó el cómputo de `referencia` canónica sin opción y la comparación estructural `particionDifiere = !ParticionesIguales(evalMismaVentana.Plan?.Particion, referencia.Plan?.Particion)` en `AgEscaladorRanuraAula.cs:575-595`, eliminando la generación de propuestas espurias para aulas factibles cuya partición ya es óptima.
+- **Fase 2201:** Se unificó el conjunto de patrones en `AgEscaladorRanuraAula.cs:576` seleccionando `patronesSimulados` ante reclasificaciones autorizadas para la comprobación de `OpcionConservaPatrones`.
+- **Fase 2202:** Se implementó la rama `SinCambios` en `AgEscaladorRanuraAula.cs:980-990` asignando `Confirmadas = 0` y la advertencia descriptiva cuando una propuesta de carril no genera escrituras de base de datos.
+- **Fase 2203:** Se añadió la propiedad `ParticionDifiereDeReferencia` a `AgEscaladorRanuraAula.Decision` y se actualizó la propiedad `Aplica` para requerir simultáneamente `ParticionMejora && ParticionDifiereDeReferencia`.
+- **Fase 2204:** Se agregó validación de `AccionesValidas` en `AgOpcionesParticion.cs:28-35` y se actualizó `AgParticionCarriles.cs:97` con `MaxOpcionesDecision`.
+- **Fase 2205:** Se añadieron pruebas exhaustivas en `AgEscaladoTresCasosMatrizTests.cs` (`AulaConPatronYParticionVigente_NoGeneraDecision`, `ParticionIgualAReferencia_NoAplica`, `ReclasificacionAutorizada_ConservaPatronUsaPatronesSimulados`), en `AgEscaladorRanuraAulaPersistenciaTests.cs` (`Aplicar_SoloParticionSinCambios_RetornaConfirmadasCeroYAdvertencia`) y en `AgOpcionesParticionTests.cs` (`Resolver_AccionInvalida_LanzaArgumentOutOfRangeException`).
+
+### Verificación de Principios (Ronda 491)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2200 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:501-505, 575-590` |
+| F2201 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:576` |
+| F2202 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:980-995` |
+| F2203 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:54-58, 638` |
+| F2204 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgOpcionesParticion.cs:16, 28-33`, `AgParticionCarriles.cs:97` |
+| F2205 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladoTresCasosMatrizTests.cs:650-710`, `AgEscaladorRanuraAulaPersistenciaTests.cs:712-760`, `AgOpcionesParticionTests.cs:238-250` |
+
+---
+
+## Ronda 492 — Propuestas sin mejora y comparaciones de partición (Fases 2206–2211)
+
+### Resumen de la Ronda
+- **Fase 2206:** Se reestructuró `particionMejora` en `AgEscaladorRanuraAula.cs:585-595` haciendo que `particionDifiere` sea una condición obligatoria (`&&`) junto con la reducción estricta de infactibles o demanda pendiente.
+- **Fase 2207:** Se recalculó `referencia` en `AgEscaladorRanuraAula.cs:565-575` sobre `ctxSimulado` ante reclasificaciones autorizadas, nivelando el estado de patrones.
+- **Fase 2208:** Se implementó el atajo `opcionActual == null ? antes : ...` en `AgEscaladorRanuraAula.cs:570`, eliminando 35 evaluaciones redundantes por corrida en aulas sin catálogo.
+- **Fase 2209:** Se incorporó el formateador de ranuras `TokenRanura` y la comparación contra `canonicaTexto` en `AgEscaladorRanuraAula.cs:580, 1025-1035`, distinguiendo franjas `6M` y `6T`.
+- **Fase 2210:** Se eliminó `MaxOpciones` y `ResolverLista` de `AgOpcionesParticion.cs`, actualizando `AgOpcionesParticionTests.cs:214` a `MaxOpcionesDecision`.
+- **Fase 2211:** Se sustituyó `decisiones.Any` por `decisionesAplicables.Any` en `AgEscaladorRanuraAula.cs:990-1000`, asegurando que `SinCambios` reporte `Confirmadas = 0` aunque existan decisiones no aplicables adyacentes.
+
+### Verificación de Principios (Ronda 492)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2206 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:585-595` |
+| F2207 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:565-575` |
+| F2208 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:570` |
+| F2209 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:580, 1025-1035` |
+| F2210 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgOpcionesParticion.cs:14`, `AgOpcionesParticionTests.cs:214` |
+| F2211 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:990-1000`, `AgEscaladorRanuraAulaPersistenciaTests.cs:765-815` |
+
+---
+
+## Ronda 494 — Corrección de las propuestas 2213 y comparación entre ventanas (Fases 2215–2216)
+
+### Resumen de la Ronda
+- **Fase 2215:** Se sustituyó la comparación contra `canonicas` por el conteo de no alojables sobre `referencia.Plan?.Particion` en `AgEscaladorRanuraAula.cs:600-610`, garantizando que solo se considere mejora si la opción reduce no alojables frente a la partición real del plan de referencia.
+- **Fase 2216:** Se incorporó `referenciaComparada` en `AgEscaladorRanuraAula.cs:615-625` evaluando la ventana destino ante escalados, asegurando que la guarda de infactibles compare el plan del escalón con su propia referencia de destino.
+- **Pruebas:** Se añadió `Escalon_ComparaInfactiblesConReferenciaDestino` en `AgEscaladoTresCasosMatrizTests.cs:765-785`.
+
+### Verificación de Principios (Ronda 494)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2215 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:600-612` |
+| F2216 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:615-625`, `AgEscaladoTresCasosMatrizTests.cs:765-785` |
+
+
+

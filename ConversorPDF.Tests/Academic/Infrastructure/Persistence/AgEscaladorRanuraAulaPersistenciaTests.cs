@@ -630,6 +630,226 @@ VALUES (@IdAula, 102, '7', 'FIJO');", new { IdAula = idAula });
             }
         }
 
+        [Fact]
+        public async Task AplicarDetalladoAsync_ConConservaPatron_NoRevierteYNoBorraPatrones_YEsIdempotente()
+        {
+            // Arrange
+            string aulaRef = "A103";
+            long idAula = 0;
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                conn.Execute(@"
+INSERT INTO ag_aula (aula_ref, jornada, horas_dia, dias_ventana, subunidad)
+VALUES (@Ref, 'MANANA', 4, 'MAR-VIE', '');", new { Ref = aulaRef });
+
+                idAula = conn.QueryFirstOrDefault<long>("SELECT id FROM ag_aula WHERE aula_ref = @Ref;", new { Ref = aulaRef });
+
+                conn.Execute(@"
+INSERT INTO ag_aula_asignatura (id_aula, id_asignatura, dias_patron, origen_patron)
+VALUES (@IdAula, 101, '2,3', 'AUTOMATICO');
+INSERT INTO ag_aula_asignatura (id_aula, id_asignatura, dias_patron, origen_patron)
+VALUES (@IdAula, 102, '4,5', 'AUTOMATICO');", new { IdAula = idAula });
+            }
+
+            var sut = new AgEscaladorRanuraAula(_connectionFactory);
+            var contexto = CrearContextoNominal(4, "MAR-VIE", 24, aulaRef);
+            contexto.AulaAsignaturaPorAulaAsig[(1, 101)].DiasPatron = "2,3";
+            contexto.AulaAsignaturaPorAulaAsig[(1, 101)].OrigenPatron = "AUTOMATICO";
+            contexto.AulaAsignaturaPorAulaAsig[(1, 101)].HorasObjetivo = 48;
+            contexto.Asignaturas.Add(new Asignatura { Id = 102, IdPrograma = 1, Semestre = "I", Horas = 48 });
+            contexto.AulaAsignaturaPorAulaAsig.Add((1, 102), new AgAulaAsignatura
+            {
+                IdAula = 1,
+                IdAsignatura = 102,
+                HorasObjetivo = 48,
+                OrdenCurricular = 2,
+                OrigenPatron = "AUTOMATICO",
+                DiasPatron = "4,5"
+            });
+
+            using (var db = _connectionFactory())
+            {
+                db.Open();
+                db.Execute("UPDATE ag_aula_asignatura SET horas_objetivo=48, orden_curricular=CASE id_asignatura WHEN 101 THEN 1 ELSE 2 END;");
+            }
+
+            var decisiones = sut.Evaluar(contexto, 0);
+            decisiones.Should().ContainSingle();
+            var d = decisiones[0];
+            Assert.True(d.ConservaPatronOrigen, $"Desde={d.Desde}, Hacia={d.Hacia}, Particion={d.ParticionPreferente}, Mejora={d.ParticionMejora}, Difiere={d.ParticionDifiereDeReferencia}");
+
+            // Act 1: Primera aplicación
+            var res1 = await sut.AplicarDetalladoAsync(decisiones, 0, CancellationToken.None);
+
+            // Assert 1: Éxito sin rollback
+            Assert.True(res1.Exito, $"ERROR: '{res1.Error}' (Advertencia: '{res1.Advertencia}', Confirmadas: {res1.Confirmadas})");
+            res1.Confirmadas.Should().Be(1);
+            string.IsNullOrEmpty(res1.Error).Should().BeTrue();
+
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                string p1 = conn.QueryFirstOrDefault<string>(
+                    "SELECT dias_patron FROM ag_aula_asignatura WHERE id_aula = @Id AND id_asignatura = 101;",
+                    new { Id = idAula });
+                string p2 = conn.QueryFirstOrDefault<string>(
+                    "SELECT dias_patron FROM ag_aula_asignatura WHERE id_aula = @Id AND id_asignatura = 102;",
+                    new { Id = idAula });
+                p1.Should().Be("2,3", "el patrón 2,3 se debe conservar intacto");
+                p2.Should().Be("4,5", "el patrón 4,5 se debe conservar intacto");
+            }
+
+            // Act 2: Segunda aplicación (idempotente)
+            var res2 = await sut.AplicarDetalladoAsync(decisiones, 0, CancellationToken.None);
+
+            // Assert 2: Confirmada de forma idempotente sin nuevas escrituras
+            res2.Exito.Should().BeTrue();
+            res2.Confirmadas.Should().Be(1);
+            res2.Modificadas.Should().Be(0);
+        }
+
+        [Fact]
+        public async Task Aplicar_SoloParticionSinCambios_RetornaConfirmadasCeroYAdvertencia()
+        {
+            // Arrange: decisión con Desde == Hacia y sin reclasificaciones
+            string aulaRef = "A104";
+            long idAula = 0;
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                conn.Execute(@"
+INSERT INTO ag_aula (aula_ref, jornada, horas_dia, dias_ventana, subunidad)
+VALUES (@Ref, 'MANANA', 4, 'MAR-VIE', '');", new { Ref = aulaRef });
+
+                idAula = conn.QueryFirstOrDefault<long>("SELECT id FROM ag_aula WHERE aula_ref = @Ref;", new { Ref = aulaRef });
+
+                conn.Execute(@"
+INSERT INTO ag_aula_asignatura (id_aula, id_asignatura, horas_objetivo, orden_curricular, dias_patron, origen_patron)
+VALUES (@IdAula, 101, 32, 1, '2,3', 'AUTOMATICO');", new { IdAula = idAula });
+            }
+
+            var sut = new AgEscaladorRanuraAula(_connectionFactory);
+            var contexto = CrearContextoNominal(4, "MAR-VIE", 16, aulaRef);
+            contexto.Aulas[0].Id = (int)idAula;
+            var aa = contexto.AulaAsignaturaPorAulaAsig[(1, 101)];
+            aa.IdAula = (int)idAula;
+            aa.DiasPatron = "2,3";
+            aa.OrigenPatron = "AUTOMATICO";
+            aa.HorasObjetivo = 32;
+            aa.OrdenCurricular = 1;
+            contexto.AulaAsignaturaPorAulaAsig.Remove((1, 101));
+            contexto.AulaAsignaturaPorAulaAsig[((int)idAula, 101)] = aa;
+            contexto.AulaAsignaturas = contexto.AulaAsignaturaPorAulaAsig.Values.ToList();
+            contexto.ConstruirIndices();
+
+            var d = new AgEscaladorRanuraAula.Decision
+            {
+                IdAula = (int)idAula,
+                AulaRef = aulaRef,
+                Subunidad = "",
+                Desde = "MAR-VIE",
+                Hacia = "MAR-VIE",
+                ParticionPreferente = "2,3|4,5",
+                ParticionMejora = true,
+                ParticionDifiereDeReferencia = true,
+                ConservaPatronOrigen = true,
+                CapacidadAntes = 64,
+                CapacidadDespues = 64,
+                ContextoOrigen = contexto,
+                HuellaContextoAntes = AgHuellaPlanVentana.Calcular(contexto, contexto.Aulas[0]),
+                HuellaPersistidaAntes = AgHuellaEscaladoPersistido.Calcular(_connectionFactory(), null, aulaRef, "", 0)
+            };
+            d.HuellaDecision = AgEscaladorRanuraAula.HuellaAccion(d);
+            // Act
+            var res = await sut.AplicarDetalladoAsync(new List<AgEscaladorRanuraAula.Decision> { d }, 0, CancellationToken.None);
+
+            // Assert: Confirmadas = 0 (SinCambios) y advertencia descriptiva
+            res.Exito.Should().BeTrue();
+            res.Confirmadas.Should().Be(0);
+            res.Modificadas.Should().Be(0);
+            res.Advertencia.Should().Contain("Partición ya vigente; sin cambios persistidos.");
+        }
+
+        [Fact]
+        public async Task Aplicar_DecisionNoAplicableConVentanaDistinta_NoSuprimeSinCambiosYRetornaConfirmadasCero()
+        {
+            // FASE 2211: Decisión no aplicable con ventana distinta no debe suprimir SinCambios
+            string aulaRef = "A105";
+            long idAula = 0;
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                conn.Execute(@"
+INSERT INTO ag_aula (aula_ref, jornada, horas_dia, dias_ventana, subunidad)
+VALUES (@Ref, 'MANANA', 4, 'MAR-VIE', '');", new { Ref = aulaRef });
+
+                idAula = conn.QueryFirstOrDefault<long>("SELECT id FROM ag_aula WHERE aula_ref = @Ref;", new { Ref = aulaRef });
+
+                conn.Execute(@"
+INSERT INTO ag_aula_asignatura (id_aula, id_asignatura, horas_objetivo, orden_curricular, dias_patron, origen_patron)
+VALUES (@IdAula, 101, 32, 1, '2,3', 'AUTOMATICO');", new { IdAula = idAula });
+            }
+
+            var sut = new AgEscaladorRanuraAula(_connectionFactory);
+            var contexto = CrearContextoNominal(4, "MAR-VIE", 16, aulaRef);
+            contexto.Aulas[0].Id = (int)idAula;
+            var aa = contexto.AulaAsignaturaPorAulaAsig[(1, 101)];
+            aa.IdAula = (int)idAula;
+            aa.DiasPatron = "2,3";
+            aa.OrigenPatron = "AUTOMATICO";
+            aa.HorasObjetivo = 32;
+            aa.OrdenCurricular = 1;
+            contexto.AulaAsignaturaPorAulaAsig.Remove((1, 101));
+            contexto.AulaAsignaturaPorAulaAsig[((int)idAula, 101)] = aa;
+            contexto.AulaAsignaturas = contexto.AulaAsignaturaPorAulaAsig.Values.ToList();
+            contexto.ConstruirIndices();
+
+            var dAplicable = new AgEscaladorRanuraAula.Decision
+            {
+                IdAula = (int)idAula,
+                AulaRef = aulaRef,
+                Subunidad = "",
+                Desde = "MAR-VIE",
+                Hacia = "MAR-VIE",
+                ParticionPreferente = "2,3|4,5",
+                ParticionMejora = true,
+                ParticionDifiereDeReferencia = true,
+                ConservaPatronOrigen = true,
+                CapacidadAntes = 64,
+                CapacidadDespues = 64,
+                ContextoOrigen = contexto,
+                HuellaContextoAntes = AgHuellaPlanVentana.Calcular(contexto, contexto.Aulas[0]),
+                HuellaPersistidaAntes = AgHuellaEscaladoPersistido.Calcular(_connectionFactory(), null, aulaRef, "", 0)
+            };
+            dAplicable.HuellaDecision = AgEscaladorRanuraAula.HuellaAccion(dAplicable);
+            var dNoAplicable = new AgEscaladorRanuraAula.Decision
+            {
+                IdAula = 999,
+                AulaRef = "INEXISTENTE",
+                Subunidad = "",
+                Desde = "MAR-VIE",
+                Hacia = "LUN-VIE", // ventana distinta pero NO aplica
+                Mejora = false,
+                CapacidadAntes = 64,
+                CapacidadDespues = 80,
+                ContextoOrigen = contexto
+            };
+            dNoAplicable.HuellaDecision = AgEscaladorRanuraAula.HuellaAccion(dNoAplicable);
+
+            dAplicable.Aplica.Should().BeTrue();
+            dNoAplicable.Aplica.Should().BeFalse();
+
+            // Act
+            var res = await sut.AplicarDetalladoAsync(new List<AgEscaladorRanuraAula.Decision> { dAplicable, dNoAplicable }, 0, CancellationToken.None);
+
+            // Assert: SinCambios respetado para las decisiones aplicables
+            Assert.True(res.Exito, $"res.Error: '{res.Error}'");
+            res.Confirmadas.Should().Be(0);
+            res.Modificadas.Should().Be(0);
+            res.Advertencia.Should().Contain("Partición ya vigente; sin cambios persistidos.");
+        }
+
         private void SembrarDemanda(AgContexto contexto)
         {
             // La propuesta ahora exige que la demanda del contexto exista también en la BD de prueba.

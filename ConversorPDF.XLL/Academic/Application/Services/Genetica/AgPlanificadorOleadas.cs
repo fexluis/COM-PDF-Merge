@@ -31,10 +31,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             IReadOnlyList<(int IdAsignatura, double Horas, int OrdenCurricular)> asignaturas,
             string diasVentana, DateTime fechaInicio, DateTime fechaFin, double unidadSesion,
             Func<DateTime, bool> esFestivo = null, IReadOnlyCollection<AgBloqueHorario> bloques = null,
-            string jornada = null, IReadOnlyDictionary<int, string> diasPatronPorAsignatura = null, string diagnostico = null)
+            string jornada = null, IReadOnlyDictionary<int, string> diasPatronPorAsignatura = null, string diagnostico = null,
+            IReadOnlyList<AgOpcionParticion> opciones = null)
         {
             return ConstruirInterno(asignaturas, diasVentana, fechaInicio, fechaFin, unidadSesion,
-                esFestivo, bloques, jornada, diasPatronPorAsignatura, false, System.Threading.CancellationToken.None, diagnostico);
+                esFestivo, bloques, jornada, diasPatronPorAsignatura, false, System.Threading.CancellationToken.None, diagnostico, opciones);
         }
 
         internal Result<AgPlanOleadasResultado> ConstruirEvaluacion(
@@ -42,10 +43,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             string diasVentana, DateTime fechaInicio, DateTime fechaFin, double unidadSesion,
             Func<DateTime, bool> esFestivo = null, IReadOnlyCollection<AgBloqueHorario> bloques = null,
             string jornada = null, IReadOnlyDictionary<int, string> diasPatronPorAsignatura = null,
-            System.Threading.CancellationToken ct = default(System.Threading.CancellationToken), string diagnostico = null)
+            System.Threading.CancellationToken ct = default(System.Threading.CancellationToken), string diagnostico = null,
+            IReadOnlyList<AgOpcionParticion> opciones = null)
         {
             return ConstruirInterno(asignaturas, diasVentana, fechaInicio, fechaFin, unidadSesion,
-                esFestivo, bloques, jornada, diasPatronPorAsignatura, true, ct, diagnostico);
+                esFestivo, bloques, jornada, diasPatronPorAsignatura, true, ct, diagnostico, opciones);
         }
 
         private Result<AgPlanOleadasResultado> ConstruirInterno(
@@ -53,7 +55,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             string diasVentana, DateTime fechaInicio, DateTime fechaFin, double unidadSesion,
             Func<DateTime, bool> esFestivo, IReadOnlyCollection<AgBloqueHorario> bloques,
             string jornada, IReadOnlyDictionary<int, string> patrones, bool permitirParcial,
-            System.Threading.CancellationToken ct, string diagnostico)
+            System.Threading.CancellationToken ct, string diagnostico,
+            IReadOnlyList<AgOpcionParticion> opciones = null)
         {
             ct.ThrowIfCancellationRequested();
             if (fechaFin < fechaInicio || unidadSesion <= 0 || double.IsNaN(unidadSesion) || double.IsInfinity(unidadSesion))
@@ -86,7 +89,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 return Result.Failure<AgPlanOleadasResultado>("I1_CONF_RANURA: ventana sin ranuras activas.");
             }
             var referencia = ConstruirReferencia(asignaturas, diasVentana, fechaInicio, fechaFin,
-                unidadSesion, esFestivo, bloques, jornada, patrones);
+                unidadSesion, esFestivo, bloques, jornada, patrones, opciones);
             if (referencia.IsFailure && !referencia.Error.StartsWith("I5_", StringComparison.Ordinal))
             {
                 LoggerHelper.Debug($"[AG-RANURAS-TMP] ELEGIR {diagnostico} plan=error_referencia motivo={referencia.Error} candidatoEjecutado=false");
@@ -229,7 +232,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             Func<DateTime, bool> esFestivo = null,
             IReadOnlyCollection<AgBloqueHorario> bloques = null,
             string jornada = null,
-            IReadOnlyDictionary<int, string> diasPatronPorAsignatura = null)   // Fase 1226
+            IReadOnlyDictionary<int, string> diasPatronPorAsignatura = null,   // Fase 1226
+            IReadOnlyList<AgOpcionParticion> opciones = null)   // Fase 2180 / Fase 2187
         {
             System.Threading.Interlocked.Increment(ref _construcciones);
 
@@ -355,7 +359,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 ctx.Patrones,
                 canonicas,
                 bandas => EvaluarParticion(ctx, diasVentana, bandas),
-                ev => EsParticionFiel(ctx, ev));
+                ev => EsParticionFiel(ctx, ev),
+                opciones);
 
             if (seleccion.Cambiada)
             {
