@@ -37,6 +37,27 @@ Marcador común: `[AG-RANURAS-TMP]`.
 - AgEscaladorRanuraAula: plazo efectivo frente a plazo del aula; motivos de omisión, propuestas, coincidencias de huellas, idempotencia, commit o reversión. Sin contenidos de SQL ni huellas completas.
 - AgMaterializadorSesiones y AgExpansorSesiones: composición antes/después del sellado, entrada con FechasGen o calendario legacy, salida, errores y resumen guardado.
 
+## Política de emisión de trazabilidad de particiones (Ronda 493/496 - Fases 2222, 2226, 2228, 2231)
+
+Para controlar el ruido y evitar duplicados en la línea `[Oleadas] Partición:`:
+
+- **`origen=catalogo`**: Registrado vía `WarningLimitado` siempre (incluye `cambiada=false`).
+  - Semántica de campos: `opcion=CarrilesTexto` (opción elegida del catálogo).
+- **`origen=catalogo_fallback`**: Registrado vía `WarningLimitado` solo si `cambiada=true`.
+  - Semántica de campos: `opcion=opción intentada` (del catálogo); `particionElegida=contigua` (`elegida.Clave`).
+- **`origen=enumeracion`**: Registrado vía `WarningLimitado` solo si `cambiada=true`.
+  - Semántica de campos: `opcion=''` (sin catálogo).
+- **Métricas de evaluación**:
+  - `candidatasEvaluadas`: particiones contiguas evaluadas por `Particiones()`.
+  - `opcionesEvaluadas`: opciones de catálogo evaluadas por `OpcionesDecision`.
+- **Detalle por asignatura**: Registrado en nivel `Debug` únicamente cuando `ModoVerboso` o `activo=True`.
+
+### Guía de lectura del flujo de partición y escalado
+1. **EVALUAR**: Inicialización de demandas y capacidad.
+2. **referencia (enumeración)**: Evaluación base de la partición sin opción.
+3. **antes (catálogo)**: Resolución con patrones efectivos de catálogo (`origen=catalogo`).
+4. **misma / paso**: Simulación en ventana actual o escalón siguiente (`destino`).
+
 ## How to use
 
 Tras autorizar compilación y cargar el binario actualizado:

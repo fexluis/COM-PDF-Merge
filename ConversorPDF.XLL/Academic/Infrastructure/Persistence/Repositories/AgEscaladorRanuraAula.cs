@@ -491,10 +491,8 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                 double unidad = AgUnidadesSemanales.HorasSesionAula(aula, AgNivelAcademicoCatalogo.Desde(programa?.Modalidad));
 
                 var ranurasAntes = AgRanuras.PorVentana(aula.DiasVentana, contexto.Bloques, aula.Jornada, unidad);
-                var patronesAula = contexto.AulaAsignaturaPorAulaAsig.Values
-                    .Where(a => a.IdAula == aula.Id && !string.IsNullOrWhiteSpace(a.DiasPatron))
-                    .Select(a => a.DiasPatron)
-                    .ToList();
+                // FASE 2218: Obtener patrones efectivos (excluyendo AUTOMATICO) alineado con AgEvaluadorDemandaVentana
+                var patronesAula = PatronesEfectivos(contexto, aula.Id);
 
                 var opcionActual = AgOpcionesParticion.Resolver(aula.DiasVentana, ranurasAntes, patronesAula);
                 var antes = AgEvaluadorDemandaVentana.Evaluar(aula.DiasVentana, aula.Jornada, unidad,
@@ -518,10 +516,8 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                 ctxSimulado.AulaAsignaturas = ctxSimulado.AulaAsignaturaPorAulaAsig.Values.ToList();
                 ctxSimulado.ConstruirIndices();
 
-                var patronesSimulados = ctxSimulado.AulaAsignaturaPorAulaAsig.Values
-                    .Where(a => a.IdAula == aula.Id && !string.IsNullOrWhiteSpace(a.DiasPatron))
-                    .Select(a => a.DiasPatron)
-                    .ToList();
+                // FASE 2218: Obtener patrones simulados efectivos (excluyendo AUTOMATICO)
+                var patronesSimulados = PatronesEfectivos(ctxSimulado, aula.Id);
                 var opcionMisma = AgOpcionesParticion.Resolver(aula.DiasVentana, ranurasAntes, patronesSimulados);
 
                 // Simular primero en la misma ventana
@@ -585,8 +581,10 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
 
                 string particionPreferente = opcionUsada?.CarrilesTexto ?? string.Empty;
                 var patronesConserva = autorizadasAula.Count > 0 ? patronesSimulados : patronesAula;
+                // FASE 2219: Evaluar conservación y no-alojables sobre patrones efectivos
                 bool conservaPatron = opcionUsada != null
-                    && OpcionConservaPatrones(opcionUsada, patronesConserva);
+                    && OpcionConservaPatrones(opcionUsada, patronesConserva)
+                    && AgParticionCarriles.ContarPatronesNoAlojables(opcionUsada.Carriles, patronesConserva) == 0;
 
                 // FASE 2209: Comparar franjas completas contra la partición canónica para detectar cambios en días con múltiples franjas (ej. 6M vs 6T)
                 int cantCanonicas = AgCarriles.Cantidad(ranurasAntes);
@@ -902,7 +900,7 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                             bool contextoCompatible = huellaContexto == d.HuellaContextoAntes || huellaContexto == d.HuellaContextoDespues;
                             LoggerHelper.Debug($"[AG-RANURAS-TMP] GUARDAR_HUELLAS perfil={idArbol} ref={d.AulaRef} contextoAntes={huellaContexto == d.HuellaContextoAntes} contextoDespues={huellaContexto == d.HuellaContextoDespues} sqlAntes={huellaSql == d.HuellaPersistidaAntes} sqlDespues={huellaSql == d.HuellaPersistidaDespues}");
 
-                            var liberarEsperado = d.ConservaPatronOrigen ? null : d.IdAsignaturasBottleneck;
+                            var liberarEsperado = (d.ConservaPatronOrigen && string.Equals(d.Desde, d.Hacia, StringComparison.OrdinalIgnoreCase)) ? null : d.IdAsignaturasBottleneck;
 
                             // Reaplicación idempotente: si ya está en el postestado exacto, confirmar sin nuevas escrituras
                             if (d.PerfilAplicado == idArbol && contextoCompatible && !string.IsNullOrEmpty(d.HuellaPersistidaDespues)
@@ -944,7 +942,7 @@ AND COALESCE(dias_ventana,'')=@Desde;",
                                 }
                             }
 
-                            if (d.IdAsignaturasBottleneck.Count > 0 && !d.ConservaPatronOrigen)
+                            if (d.IdAsignaturasBottleneck.Count > 0 && (!d.ConservaPatronOrigen || !string.Equals(d.Desde, d.Hacia, StringComparison.OrdinalIgnoreCase)))
                             {
                                 await db.ExecuteAsync(new CommandDefinition(@"
 UPDATE ag_aula_asignatura SET dias_patron=''
@@ -1038,18 +1036,33 @@ AND COALESCE(dias_patron,'')=@DiasAntes;",
             return resultado;
         }
 
-        private static bool OpcionConservaPatrones(AgOpcionParticion opcion, IReadOnlyList<string> patrones)
+        /// <summary>
+        /// Obtiene los patrones efectivos de un aula excluyendo orígenes AUTOMATICO (Fase 2218, Fase 2250).
+        /// Incluye fallback a AulaAsignaturas si el índice por aula-asignatura no ha sido construido.
+        /// Misma semántica que AgEvaluadorDemandaVentana.cs:124-126.
+        /// </summary>
+        internal static IReadOnlyList<string> PatronesEfectivos(AgContexto ctx, int idAula)
+        {
+            var aulas = (ctx.AulaAsignaturaPorAulaAsig != null && ctx.AulaAsignaturaPorAulaAsig.Count > 0)
+                ? (IEnumerable<AgAulaAsignatura>)ctx.AulaAsignaturaPorAulaAsig.Values
+                : (IEnumerable<AgAulaAsignatura>)ctx.AulaAsignaturas
+                ?? Enumerable.Empty<AgAulaAsignatura>();
+
+            return aulas.Where(a => a.IdAula == idAula
+                    && !string.Equals(a.OrigenPatron, "AUTOMATICO", StringComparison.OrdinalIgnoreCase)
+                    && !string.IsNullOrWhiteSpace(a.DiasPatron))
+                .Select(a => a.DiasPatron).ToList();
+        }
+
+        /// <summary>
+        /// Determina si una opción de partición puede alojar todos los patrones de días requeridos (Fases 2247-2248).
+        /// Aplica semántica muchos-a-uno: cada patrón debe ser compatible con al menos un carril de la opción.
+        /// Si el patrón incluye día 6 (sábado), se valida que el carril contenga ranuras para dicho día sin vetos globales de texto.
+        /// </summary>
+        internal static bool OpcionConservaPatrones(AgOpcionParticion opcion, IReadOnlyList<string> patrones)
         {
             if (opcion == null || opcion.Carriles == null || opcion.Carriles.Count == 0) return false;
             if (patrones == null || patrones.Count == 0) return true;
-            // Si la partición fracciona el sábado (6M/6T), no puede conservar patrones íntegros de día 6
-            if (!string.IsNullOrEmpty(opcion.CarrilesTexto) &&
-                (opcion.CarrilesTexto.IndexOf("6M", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                 opcion.CarrilesTexto.IndexOf("6T", StringComparison.OrdinalIgnoreCase) >= 0) &&
-                patrones.Any(p => AgCarriles.Ventana(p).Contains(6)))
-            {
-                return false;
-            }
 
             var patronesDias = patrones
                 .Where(p => !string.IsNullOrWhiteSpace(p))
@@ -1058,37 +1071,36 @@ AND COALESCE(dias_patron,'')=@DiasAntes;",
                 .ToList();
 
             if (patronesDias.Count == 0) return true;
-            if (patronesDias.Count > opcion.Carriles.Count) return false;
 
-            return PuedeAlojarInyectivo(opcion.Carriles, patronesDias, 0, new bool[opcion.Carriles.Count]);
-        }
-
-        private static bool PuedeAlojarInyectivo(
-            IReadOnlyList<IReadOnlyList<AgRanura>> carriles,
-            IReadOnlyList<IReadOnlyList<int>> patronesDias,
-            int indicePatron,
-            bool[] carrilUsado)
-        {
-            if (indicePatron >= patronesDias.Count) return true;
-
-            var dias = patronesDias[indicePatron];
-            for (int c = 0; c < carriles.Count; c++)
+            // Fases 2247 / 2248: Modelo muchos-a-uno sin veto blanket de sábado.
+            for (int i = 0; i < patronesDias.Count; i++)
             {
-                if (carrilUsado[c]) continue;
-
-                var diasCarril = carriles[c].Select(r => r.Dia).Distinct().ToHashSet();
-                if (dias.All(d => diasCarril.Contains(d)))
+                var dias = patronesDias[i];
+                bool alojable = false;
+                for (int c = 0; c < opcion.Carriles.Count; c++)
                 {
-                    carrilUsado[c] = true;
-                    if (PuedeAlojarInyectivo(carriles, patronesDias, indicePatron + 1, carrilUsado))
+                    var carril = opcion.Carriles[c];
+                    var diasCarril = carril.Select(r => r.Dia).Distinct().ToHashSet();
+                    if (dias.All(d => diasCarril.Contains(d)))
                     {
-                        return true;
+                        // Si el patrón requiere sábado (día 6), el carril debe contener ranura de sábado
+                        if (dias.Contains(6) && !carril.Any(r => r.Dia == 6))
+                        {
+                            continue;
+                        }
+
+                        alojable = true;
+                        break;
                     }
-                    carrilUsado[c] = false;
+                }
+
+                if (!alojable)
+                {
+                    return false;
                 }
             }
 
-            return false;
+            return true;
         }
 
         private static string TokenRanura(AgRanura r)

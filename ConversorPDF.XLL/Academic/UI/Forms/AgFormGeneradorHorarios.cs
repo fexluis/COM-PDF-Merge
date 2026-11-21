@@ -20,6 +20,7 @@ using ConversorPDF.XLL.Academic.Domain.Models;
 using ConversorPDF.XLL.Academic.Domain.Models.Genetica;
 using ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories;
 using ConversorPDF.XLL.Academic.Infrastructure.Persistence.Context;
+using ConversorPDF.XLL.Academic.UI.Controls;
 using ConversorPDF.XLL.Core.Enums;
 using ConversorPDF.XLL.Core.Helpers;
 using ConversorPDF.XLL.Core.Sync;
@@ -469,7 +470,7 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
                 {
                     int dx = e.X - node.Bounds.X;
                     var c = CalcularColumnasNivel6();
-                    if ((dx >= c.DxManana && dx < c.DxSep1) || (dx >= c.DxLunJue && dx < c.DxSep2) || (dx >= c.DxHoras4 && dx < c.DxFin))
+                    if ((dx >= c.DxManana && dx < c.DxSep1) || (dx >= c.DxDias[0] && dx < c.DxSep2) || (dx >= c.DxHoras4 && dx < c.DxFin))
                     {
                         treeContextoAcademico.Cursor = Cursors.Hand;
                         return;
@@ -5247,12 +5248,9 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             public int DxNoche;
             public int DxSep1;
 
-            // Grupo B: Días Ventana (5 opciones: Lun-Jue, Mar-Vie, Jue-Sab, Vie-Sab, Vie-Dom)
-            public int DxLunJue;
-            public int DxMarVie;
-            public int DxJueSab;
-            public int DxVieSab;
-            public int DxVieDom;
+            // Grupo B: Días Ventana (9 opciones: 8 canónicas de AgDiasVentana + alias ISO terminal)
+            public int[] DxDias;
+            public int StepDias;
             public int DxSep2;
 
             // Grupo C: Horas Día (2 opciones: 4h, 8h)
@@ -5267,17 +5265,28 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
         {
             int xBase = ObtenerXBaseNivel6(n6);
             int anchoCliente = treeContextoAcademico.ClientSize.Width;
-            int anchoDisp = Math.Max(684, anchoCliente - xBase - 150 - 12);
+            int minimoTotal = 740;
+            int anchoDisp = Math.Max(minimoTotal, anchoCliente - xBase - 150 - 12);
 
-            // Reparto proporcional 30% / 48% / 22%
-            int wJornada = Math.Max(186, (int)(anchoDisp * 0.30));
-            int wDias = Math.Max(370, (int)(anchoDisp * 0.48));
-            int wHoras = Math.Max(128, anchoDisp - wJornada - wDias);
+            // Reparto proporcional para acomodar las 9 opciones de ventana (8 canónicas + alias ISO terminal)
+            int wJornada = Math.Max(170, (int)(anchoDisp * 0.24));
+            int wDias = Math.Max(460, (int)(anchoDisp * 0.60));
+            int wHoras = Math.Max(96, anchoDisp - wJornada - wDias);
+            if (wJornada + wDias + wHoras > anchoDisp)
+            {
+                wDias = anchoDisp - wJornada - wHoras;
+            }
 
-            // Pasos internos con mínimos por control (62, 74, 64 px)
-            int stepJ = Math.Max(62, (wJornada - 10) / 3);
-            int stepD = Math.Max(74, (wDias - 10) / 5);
-            int stepH = Math.Max(64, (wHoras - 10) / 2);
+            // Pasos internos con mínimos por control (54, 44, 48 px)
+            int stepJ = Math.Max(54, (wJornada - 10) / 3);
+            int stepD = Math.Max(44, (wDias - 10) / AgNivel6Ventanas.Cantidad);
+            int stepH = Math.Max(48, (wHoras - 10) / 2);
+
+            int[] dxDias = new int[AgNivel6Ventanas.Cantidad];
+            for (int i = 0; i < AgNivel6Ventanas.Cantidad; i++)
+            {
+                dxDias[i] = 150 + wJornada + 10 + i * stepD;
+            }
 
             var c = new AgColumnasNivel6
             {
@@ -5289,12 +5298,9 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 DxNoche = 150 + 2 * stepJ,
                 DxSep1 = 150 + wJornada,
 
-                // Grupo B - Días Ventana
-                DxLunJue = 150 + wJornada + 10,
-                DxMarVie = 150 + wJornada + 10 + stepD,
-                DxJueSab = 150 + wJornada + 10 + 2 * stepD,
-                DxVieSab = 150 + wJornada + 10 + 3 * stepD,
-                DxVieDom = 150 + wJornada + 10 + 4 * stepD,
+                // Grupo B - Días Ventana (9 opciones: 8 canónicas + alias ISO terminal)
+                DxDias = dxDias,
+                StepDias = stepD,
                 DxSep2 = 150 + wJornada + wDias,
 
                 // Grupo C - Horas Día
@@ -5971,13 +5977,15 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             DibujarRadioButtonConTexto(g, bounds.X + c.DxNoche, baseY, "Noche", filaActiva && jNorm == "NOCHE", textColor);
             DibujarSeparadorVertical(g, bounds.X + c.DxSep1, bounds);
 
-            // Dimension 2: Días Ventana
-            string dv = (key.DiasVentana ?? "").ToUpperInvariant();
-            DibujarRadioButtonConTexto(g, bounds.X + c.DxLunJue, baseY, "Lun-Jue", filaActiva && dv == "LUN-JUE", textColor);
-            DibujarRadioButtonConTexto(g, bounds.X + c.DxMarVie, baseY, "Mar-Vie", filaActiva && dv == "MAR-VIE", textColor);
-            DibujarRadioButtonConTexto(g, bounds.X + c.DxJueSab, baseY, "Jue-Sab", filaActiva && dv == "JUE-SAB", textColor);
-            DibujarRadioButtonConTexto(g, bounds.X + c.DxVieSab, baseY, "Vie-Sab", filaActiva && dv == "VIE-SAB", textColor);
-            DibujarRadioButtonConTexto(g, bounds.X + c.DxVieDom, baseY, "Vie-Dom", filaActiva && dv == "VIE-DOM", textColor);
+            // Dimension 2: Días Ventana (9 opciones: 8 canónicas + alias ISO terminal de AgDiasVentana con normalización ISO)
+            for (int i = 0; i < AgNivel6Ventanas.Cantidad; i++)
+            {
+                string clave = AgNivel6Ventanas.Claves[i];
+                bool activo = filaActiva && AgNivel6Ventanas.Coincide(key.DiasVentana, clave);
+                string textoRadio = AgNivel6Ventanas.FormatearRadio(clave, c.StepDias);
+                int posX = c.DxDias[i];
+                DibujarRadioButtonConTexto(g, bounds.X + posX, baseY, textoRadio, activo, textColor);
+            }
             DibujarSeparadorVertical(g, bounds.X + c.DxSep2, bounds);
 
             // Dimension 3: Horas por día
@@ -6040,26 +6048,14 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             {
                 key.Jornada = "NOCHE";
             }
-            // Grupo B — Días Ventana
-            else if (dx >= c.DxLunJue && dx < c.DxMarVie)
+            // Grupo B — Días Ventana (9 opciones canónicas/alias de AgDiasVentana con resolución precisa de clic)
+            else if (dx >= c.DxDias[0] && dx < c.DxSep2)
             {
-                key.DiasVentana = "LUN-JUE";
-            }
-            else if (dx >= c.DxMarVie && dx < c.DxJueSab)
-            {
-                key.DiasVentana = "MAR-VIE";
-            }
-            else if (dx >= c.DxJueSab && dx < c.DxVieSab)
-            {
-                key.DiasVentana = "JUE-SAB";
-            }
-            else if (dx >= c.DxVieSab && dx < c.DxVieDom)
-            {
-                key.DiasVentana = "VIE-SAB";
-            }
-            else if (dx >= c.DxVieDom && dx < c.DxSep2)
-            {
-                key.DiasVentana = "VIE-DOM";
+                string seleccion = AgNivel6Ventanas.ResolverPorX(dx, c.DxDias, c.DxSep2, c.StepDias);
+                if (!string.IsNullOrEmpty(seleccion))
+                {
+                    key.DiasVentana = seleccion;
+                }
             }
             // Grupo C — Horas Día
             else if (dx >= c.DxHoras4 && dx < c.DxHoras8)
@@ -6089,11 +6085,6 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             ActualizarToolTipNivel6(node, key);
         }
 
-        private static readonly HashSet<string> EtiquetasVentanaRadio = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            "LUN-JUE", "MAR-VIE", "JUE-SAB", "VIE-SAB", "VIE-DOM"
-        };
-
         private void ActualizarToolTipNivel6(TreeNode node, AgNodoArbolKey key)
         {
             if (node == null)
@@ -6102,13 +6093,21 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
             }
 
             string dv = key?.DiasVentana?.Trim();
-            if (!string.IsNullOrWhiteSpace(dv) && !EtiquetasVentanaRadio.Contains(dv))
+            if (string.IsNullOrWhiteSpace(dv))
             {
-                node.ToolTipText = $"Ventana actual: {dv} ({AgDiasVentana.AIso(dv)})";
+                node.ToolTipText = null;
+                return;
+            }
+
+            string canonica = AgNivel6Ventanas.ClaveCanonica(dv);
+            string iso = AgDiasVentana.AIso(dv);
+            if (!string.IsNullOrWhiteSpace(iso))
+            {
+                node.ToolTipText = $"Ventana actual: {canonica} ({iso})";
             }
             else
             {
-                node.ToolTipText = null;
+                node.ToolTipText = $"Ventana no estándar: {dv}";
             }
         }
 
@@ -6275,7 +6274,7 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                 const int BordeArbol = 1; // Compensación BorderStyle.FixedSingle (Fase 1049)
                 lblColJornada.Left = c.XBase + c.DxManana - BordeArbol;
                 sepNivel6A.Left = c.XBase + c.DxSep1 - BordeArbol;
-                lblColDias.Left = c.XBase + c.DxLunJue - BordeArbol;
+                lblColDias.Left = c.XBase + c.DxDias[0] - BordeArbol;
                 sepNivel6B.Left = c.XBase + c.DxSep2 - BordeArbol;
                 lblColHorasDia.Left = c.XBase + c.DxHoras4 - BordeArbol;
             }

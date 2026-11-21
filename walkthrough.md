@@ -766,5 +766,179 @@ Las citas `walkthrough.md:NNNN` anteriores al corte apuntan al archivo monolitic
 | F2215 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:600-612` |
 | F2216 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:615-625`, `AgEscaladoTresCasosMatrizTests.cs:765-785` |
 
+---
+
+## Ronda 493 — Catálogo inerte por filtro asimétrico y trazabilidad de rama (Fases 2218–2222)
+
+### Resumen de la Ronda
+- **Fase 2218:** Se centralizó la extracción de patrones efectivos en el helper `PatronesEfectivos` en `AgEscaladorRanuraAula.cs:1038-1048` excluyendo `AUTOMATICO`, alineando la semántica con `AgEvaluadorDemandaVentana.cs:124-126` y sustituyendo la consulta en `patronesAula` (líneas 493-497) y `patronesSimulados` (líneas 520-523).
+- **Fase 2219:** Se niveló `conservaPatron` en `AgEscaladorRanuraAula.cs:586-590` evaluando con los patrones efectivos y requiriendo que `ContarPatronesNoAlojables(opcionUsada.Carriles, patronesConserva) == 0`, evitando el borrado de `dias_patron` durante `AplicarDetalladoAsync`.
+- **Fase 2220:** Se dotó a `AgSeleccionParticion` de las propiedades `Origen` y `OpcionTexto` en `AgParticionCarriles.cs:43-65` y se propagaron en `Seleccionar` (retornando `"catalogo"` o `"enumeracion"`). En `AgPlanificadorOleadas.cs:365-385`, se formateó la línea `[Oleadas] Partición:` con `origen`, `opcion`, `cambiada`, `bandas`, `noAlojables`, `infactibles`, `makespan` y `candidatasEvaluadas`.
+- **Fase 2221:** Se implementaron pruebas para patrones mixtos y trazabilidad: `PatronesLegadoYAutomatico_DetectarOrigenUsaSoloEfectivos` en `AgOpcionesParticionTests.cs`, `Seleccionar_ExponeOrigenYOpcionTexto` y `Seleccionar_CatalogoSinCambio_ReportaOrigenCatalogo` en `AgParticionCarrilesOpcionesTests.cs`, y `Escalador_ConPatronesMixtos_SeleccionaCatalogo` y `ConservaPatronOrigen_NoBorraDiasPatron` en `AgEscaladoTresCasosMatrizTests.cs`.
+- **Fase 2222:** Se documentó la política de emisión (Info para `catalogo` siempre y para `enumeracion` solo con `cambiada=true`) y la guía de lectura en `docs/articles/changes/2026-11-14-debug-ranuras-corrida84.md`.
+
+### Verificación de Principios (Ronda 493)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2218 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:493-497, 520-523, 1038-1048` |
+| F2219 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:586-590` |
+| F2220 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgParticionCarriles.cs:43-65, 123-128`, `AgPlanificadorOleadas.cs:365-385` |
+| F2221 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgOpcionesParticionTests.cs`, `AgParticionCarrilesOpcionesTests.cs`, `AgEscaladoTresCasosMatrizTests.cs` |
+| F2222 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `docs/articles/changes/2026-11-14-debug-ranuras-corrida84.md` |
+
+---
+
+## Ronda 495 — Catálogo con texto lossy y sin fallback (Fases 2223–2227)
+
+### Resumen de la Ronda
+- **Fase 2223:** Se restauró la continuidad hacia la enumeración contigua cuando el catálogo no mejora la referencia en `AgParticionCarriles.cs:128-135`, evitando la pérdida de mejoras de `Particiones()` y rotulando el origen como `catalogo_fallback`.
+- **Fase 2224:** Se reemplazó el uso de `Clave` por `op.CarrilesTexto` en la lista evaluada en `AgParticionCarriles.cs:100-125`, preservando los literales de franja horaria (`5,6M|4,6T,7`).
+- **Fase 2225:** Se garantizó que ante un catálogo sin mejora o enumeración sin cambio, `OpcionTexto` conserve la opción intentada (`textoOpcionIntentada`) en lugar de vaciarse en `AgParticionCarriles.cs:115, 155, 248`, actualizando la aserción correspondiente en `AgParticionCarrilesOpcionesTests.cs`.
+- **Fase 2226:** Se reemplazó `LoggerHelper.Info` por `LoggerHelper.WarningLimitado` en `AgPlanificadorOleadas.cs:365-385`, deduplicando trazas por clave `OleadasParticion|{diagnostico}|{origen}|{cambiada}`.
+- **Fase 2227:** Se crearon las pruebas `Catalogo_4567_OpcionTexto_ConservaFranjas`, `CatalogoSinMejora_EjecutaEnumeracion` y `CatalogoSinMejora_RegistraOpcionIntentada` en `AgParticionCarrilesOpcionesTests.cs`.
+
+### Verificación de Principios (Ronda 495)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2223 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgParticionCarriles.cs:128-135, 152-167, 245-265` |
+| F2224 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgParticionCarriles.cs:100-125` |
+| F2225 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgParticionCarriles.cs:115, 155, 248`, `AgParticionCarrilesOpcionesTests.cs:228-229` |
+| F2226 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorOleadas.cs:365-385` |
+| F2227 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgParticionCarrilesOpcionesTests.cs:235-365` |
+
+---
+
+## Ronda 496 — `opcion` con dos significados y contador mixto (Fases 2228–2231)
+
+### Resumen de la Ronda
+- **Fase 2228:** Se unificó `OpcionTexto` para transportar fielmente la opción de catálogo evaluada (`textoOpcionIntentada`) y se incorporó `ParticionElegidaTexto` en `AgSeleccionParticion` para capturar la clave contigua elegida (`elegida.Clave`), evitando la sobrecarga semántica del campo en `AgParticionCarriles.cs:40-70, 260-270`.
+- **Fase 2229:** Se añadieron contadores segregados en `AgSeleccionParticion`: `CandidatasEvaluadas` (contiguas) y `OpcionesEvaluadas` (catálogo), reflejando ambos en la traza de `AgPlanificadorOleadas.cs:365-388`.
+- **Fase 2230:** Se corrigió la guarda de salida temprana en `AgParticionCarriles.cs:155-165` requiriendo `!catalogoEvaluado` para retornar, garantizando la ejecución de la enumeración contigua de fallback.
+- **Fase 2231:** Se crearon las pruebas unitarias `CatalogoFallback_OpcionTextoEsLaIntentada`, `CatalogoFallback_ParticionElegidaEsLaContigua`, `CatalogoFallback_OpcionesEvaluadasEsUno` y `SinPatronesSinInfactibles_NoEnumera` en `AgParticionCarrilesOpcionesTests.cs`, y se actualizó la guía operativa en `docs/articles/changes/2026-11-14-debug-ranuras-corrida84.md`.
+
+### Verificación de Principios (Ronda 496)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2228 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgParticionCarriles.cs:40-70, 260-270`, `AgPlanificadorOleadas.cs:375-385` |
+| F2229 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgParticionCarriles.cs:40-70, 165-175`, `AgPlanificadorOleadas.cs:380-388` |
+| F2230 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgParticionCarriles.cs:155-165` |
+| F2231 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgParticionCarrilesOpcionesTests.cs:365-500`, `docs/articles/changes/2026-11-14-debug-ranuras-corrida84.md` |
+
+---
+
+## Ronda 497 — Catálogo exitoso reporta cero candidatas (Fase 2232)
+
+### Resumen de la Ronda
+- **Fase 2232:** Se pasó `evaluadasOpciones` en el parámetro `candidatasEvaluadas` del constructor `AgSeleccionParticion` en `AgParticionCarriles.cs:141`, documentando la semántica en el encabezado de clase y validando que en selección exitosa de catálogo `CandidatasEvaluadas > 0`.
+
+### Verificación de Principios (Ronda 497)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2232 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgParticionCarriles.cs:40-45, 138-144`, `AgParticionCarrilesOpcionesTests.cs:520-560` |
+
+---
+
+## Ronda 498 — El árbol no marca la ventana seleccionada (Fases 2233–2237)
+
+### Resumen de la Ronda
+- **Fase 2233:** Se introdujo la comparación normalizada por ISO en `AgFormGeneradorHorarios.cs:5980-5990` a través de `AgNivel6Ventanas.Coincide`, permitiendo que valores guardados como `"1,2,3,4,5"`, `"1,2,3,4"` o alias textuales coincidan fielmente con el botón correspondiente.
+- **Fase 2234:** Se integraron las 8 opciones de ventana de `AgDiasVentana.Opciones` en el árbol de Nivel 6, actualizando las proporciones horizontales en `CalcularColumnasNivel6` (`wJornada` 26%, `wDias` 56%, `wHoras` 18%) y proveyendo formateo adaptativo compacto en `AgNivel6Ventanas.FormatearRadio`.
+- **Fase 2235:** Se sustituyó el hit-test fijo por `AgNivel6Ventanas.ResolverPorX` en `ProcesarClickDimensionNivel6`, verificando los 8 intervalos e imponiendo un límite de paso (`finBoton = Math.Min(posiciones[7] + step, fin)`) para suprimir la selección involuntaria de `VIE-DOM` en clics sobre el margen libre.
+- **Fase 2236:** Se homogeneizó la emisión del tooltip en `ActualizarToolTipNivel6`, mostrando la clave canónica y la codificación ISO para cualquier ventana configurada.
+- **Fase 2237:** Se implementó la suite completa de pruebas unitarias en `AgNivel6VentanasTests.cs` (índices canónicos e ISO, comparación cruzada, formateo adaptativo, hit-test por intervalo y descarte de espacio muerto).
+
+### Verificación de Principios (Ronda 498)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2233 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgNivel6Ventanas.cs:65-85`, `AgFormGeneradorHorarios.cs:5985-5992` |
+| F2234 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgNivel6Ventanas.cs:17-48`, `AgFormGeneradorHorarios.cs:5266-5310` |
+| F2235 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgNivel6Ventanas.cs:120-160`, `AgFormGeneradorHorarios.cs:6055-6065` |
+| F2236 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:6110-6135` |
+| F2237 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgNivel6VentanasTests.cs:1-150` |
+
+---
+
+## Ronda 499 — Clic de día rompe la distinción ISO `4,5,6,7` / `JUE-DOM` (Fases 2238–2242)
+
+### Resumen de la Ronda
+- **Fase 2238:** Se introdujo la guarda `EsAliasIsoTerminal` en `AgFormGeneradorHorarios.cs:6055-6065`, impidiendo que un clic sobre el radio `Jue-Dom` reescriba el valor si la celda ya almacena el alias terminal `"4,5,6,7"`.
+- **Fase 2239:** Se aseguró la correspondencia directa del catálogo en `AgNivel6Ventanas.cs:15-55` vinculándolo a `AgDiasVentana.Opciones.Keys` y congelando `Claves` mediante `Array.AsReadOnly`.
+- **Fase 2240:** Se depuraron los campos `DxLunJue`, `DxMarVie`, `DxJueSab`, `DxVieSab` y `DxVieDom` de `AgColumnasNivel6`, migrando todas las referencias visuales e interactivas al vector dinámico `DxDias[i]`.
+- **Fase 2241:** Se resolvió el desborde visual en `CalcularColumnasNivel6` fijando el umbral base en 700 píxeles y recalculando `wDias` dinámicamente si la suma de anchuras supera el espacio disponible.
+- **Fase 2242:** Se añadieron pruebas unitarias en `AgNivel6VentanasTests.cs` certificando la preservación del alias `4,5,6,7`, la inmutabilidad de la colección de claves y el formato responsivo de etiquetas.
+
+### Verificación de Principios (Ronda 499)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2238 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgNivel6Ventanas.cs:60-65`, `AgFormGeneradorHorarios.cs:6055-6065` |
+| F2239 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgNivel6Ventanas.cs:15-20, 50-55` |
+| F2240 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:5245-5260, 5295-5305` |
+| F2241 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:5265-5285` |
+| F2242 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgNivel6VentanasTests.cs:150-220` |
+
+---
+
+## Ronda 500 — Sin forma de elegir `4,5,6,7` frente a `JUE-DOM` (Fases 2243–2244)
+
+### Resumen de la Ronda
+- **Fase 2243:** Se incorporó `"4,5,6,7"` como la novena opción explícita en `AgNivel6Ventanas.cs`, ajustando `Indice` y `Coincide` para priorizar la concordancia exacta e impedir que el cálculo ISO confunda `4,5,6,7` con `JUE-DOM`. Se removió la guarda restrictiva de clic en `AgFormGeneradorHorarios.cs:6051-6060` habilitando la selección bidireccional y se amplió el ancho mínimo del layout (`minimoTotal = 740`, `stepD = Math.Max(44, ...)`).
+- **Fase 2244:** Se fijó el orden contractual del catálogo en `AgNivel6Ventanas.cs` y se extendió la suite en `AgNivel6VentanasTests.cs` con pruebas para la resolución de los 9 índices, la no colisión ISO entre `4,5,6,7` y `JUE-DOM`, la reasignación libre por clic y la consistencia total con `AgDiasVentana.Opciones`.
+
+### Verificación de Principios (Ronda 500)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2243 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgNivel6Ventanas.cs:15-28, 60-120`, `AgFormGeneradorHorarios.cs:5265-5285, 6050-6060` |
+| F2244 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgNivel6VentanasTests.cs:1-240` |
+
+---
+
+## Ronda 501 — Alias terminal con espacios y residuo sin uso (Fases 2245–2246)
+
+### Resumen de la Ronda
+- **Fase 2245:** Se implementó `NormalizarToken` en `AgNivel6Ventanas.cs:60-75` para depurar espacios en listas de días (e.g. `"4, 5, 6, 7"` -> `"4,5,6,7"`), resolviendo la degradación involuntaria a `JUE-DOM` en `Indice` y `Coincide`. Se agregaron casos de prueba unitaria en `AgNivel6VentanasTests.cs` validando el alias con espacios y separadores.
+- **Fase 2246:** Se eliminó la declaración residual del campo estático no utilizado `EtiquetasVentanaRadio` en `AgFormGeneradorHorarios.cs:6088`.
+
+### Verificación de Principios (Ronda 501)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2245 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgNivel6Ventanas.cs:60-145`, `AgNivel6VentanasTests.cs:50-95` |
+| F2246 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:6080-6090` |
+
+---
+
+## Ronda 502 — Corrección de asimetrías en conservación de patrones y fuentes de datos (Fases 2247–2250)
+
+### Resumen de la Ronda
+- **Fase 2247:** Se migró `OpcionConservaPatrones` en `AgEscaladorRanuraAula.cs` a semántica muchos-a-uno, removiendo la limitación inyectiva que anulaba la conservación de patrones en cohortes con más de 2 asignaturas.
+- **Fase 2248:** Se eliminó la guarda textual de sábado (`6M`/`6T`), verificando en su lugar la existencia de ranuras para el día 6 directamente en las ranuras del carril evaluado.
+- **Fase 2249:** Se condicionó la lectura de `aa.DiasPatron` en `AgPlanificadorPatronSemanal.DiasKDe` a que `aa.OrigenPatron` sea distinto de `AUTOMATICO`, unificando el comportamiento con `PatronesEfectivos`.
+- **Fase 2250:** Se aplicó fallback seguro a `contexto.AulaAsignaturas` en `PatronesEfectivos` y `AgEvaluadorDemandaVentana.Evaluar` en caso de que `contexto.AulaAsignaturaPorAulaAsig` no se encuentre inicializado.
+
+### Verificación de Principios (Ronda 502)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2247 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:1050-1085`, `AgEscaladoTresCasosMatrizTests.cs:835-855` |
+| F2248 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:1065-1085`, `AgEscaladoTresCasosMatrizTests.cs:855-870` |
+| F2249 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorPatronSemanal.cs:28-35`, `AgEscaladoTresCasosMatrizTests.cs:870-890` |
+| F2250 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:1040-1050`, `AgEvaluadorDemandaVentana.cs:124-135`, `AgEscaladoTresCasosMatrizTests.cs:890-910` |
+
+
+
+
+
+
+
+
+
+
 
 

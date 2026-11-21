@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ConversorPDF.XLL.Academic.Application.Services.Genetica;
+using ConversorPDF.XLL.Academic.Domain.Models;
 using ConversorPDF.XLL.Academic.Domain.Models.Genetica;
+using ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories;
 using FluentAssertions;
 using Xunit;
 
@@ -246,6 +249,30 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
 
             Action act = () => AgOpcionesParticion.Resolver("LUN-JUE", ranuras, patrones, "invalida");
             act.Should().Throw<ArgumentOutOfRangeException>();
+        }
+
+        [Fact]
+        public void PatronesLegadoYAutomatico_DetectarOrigenUsaSoloEfectivos()
+        {
+            // FASE 2218 / FASE 2221: Convivencia de patrones LEGADO/MANUAL y AUTOMATICO filtra AUTOMATICO
+            var ctx = new AgContexto
+            {
+                AulaAsignaturas = new List<AgAulaAsignatura>
+                {
+                    new AgAulaAsignatura { IdAula = 10, IdAsignatura = 1, DiasPatron = "2,3", OrigenPatron = "MANUAL" },
+                    new AgAulaAsignatura { IdAula = 10, IdAsignatura = 2, DiasPatron = "4,5", OrigenPatron = "LEGADO" },
+                    new AgAulaAsignatura { IdAula = 10, IdAsignatura = 3, DiasPatron = "1,2", OrigenPatron = "AUTOMATICO" },
+                    new AgAulaAsignatura { IdAula = 10, IdAsignatura = 4, DiasPatron = "3,4", OrigenPatron = "AUTOMATICO" },
+                    new AgAulaAsignatura { IdAula = 10, IdAsignatura = 5, DiasPatron = "5", OrigenPatron = "AUTOMATICO" }
+                }
+            };
+            ctx.ConstruirIndices();
+
+            var efectivos = AgEscaladorRanuraAula.PatronesEfectivos(ctx, 10);
+            efectivos.Should().BeEquivalentTo(new[] { "2,3", "4,5" });
+
+            var origen = AgOpcionesParticion.DetectarOrigen(efectivos);
+            origen.Should().Be(AgOpcionesParticion.Origen.MarVie);
         }
     }
 }

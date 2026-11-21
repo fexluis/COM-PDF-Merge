@@ -121,7 +121,12 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             res.DemandaTotal = requeridas.Values.Sum();
             var ranuras = AgRanuras.PorVentana(diasVentana, contexto.Bloques, jornada, unidad);
             res.CapacidadTotal = ranuras.Sum(r => AgPlanificadorTemporal.ContarOcurrencias(r.Dia, ini, fin, contexto.EsFestivo));
-            var patrones = contexto.AulaAsignaturaPorAulaAsig.Values.Where(a => a.IdAula == aula.Id
+            // Fase 2250: Fallback a AulaAsignaturas si el índice por aula-asignatura no ha sido construido
+            var aulaAsigs = (contexto.AulaAsignaturaPorAulaAsig != null && contexto.AulaAsignaturaPorAulaAsig.Count > 0)
+                ? (IEnumerable<AgAulaAsignatura>)contexto.AulaAsignaturaPorAulaAsig.Values
+                : (IEnumerable<AgAulaAsignatura>)contexto.AulaAsignaturas
+                ?? Enumerable.Empty<AgAulaAsignatura>();
+            var patrones = aulaAsigs.Where(a => a.IdAula == aula.Id
                 && !string.Equals(a.OrigenPatron, "AUTOMATICO", StringComparison.OrdinalIgnoreCase)
                 && !string.IsNullOrWhiteSpace(a.DiasPatron)).ToDictionary(a => a.IdAsignatura, a => a.DiasPatron);
             var planificador = new AgPlanificadorOleadas();
@@ -130,7 +135,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             if (LoggerHelper.ModoVerboso)
             {
                 LoggerHelper.Debug($"[AG-RANURAS-TMP] EVALUAR {diagnostico} dias={diasVentana} jornada={jornada} unidad={unidad} plazo={ini:yyyy-MM-dd}..{fin:yyyy-MM-dd} demanda={res.DemandaTotal} capacidad={res.CapacidadTotal} " +
-                    "patrones=" + string.Join(";", contexto.AulaAsignaturaPorAulaAsig.Values.Where(a => a.IdAula == aula.Id).OrderBy(a => a.IdAsignatura)
+                    "patrones=" + string.Join(";", aulaAsigs.Where(a => a.IdAula == aula.Id).OrderBy(a => a.IdAsignatura)
                         .Select(a => $"{a.IdAsignatura}:{a.OrigenPatron}:{a.DiasPatron}:efectivo={(patrones.ContainsKey(a.IdAsignatura) ? patrones[a.IdAsignatura] : "LIBRE")}")));
             }
             var listaOpciones = opcion != null ? new[] { opcion } : null;

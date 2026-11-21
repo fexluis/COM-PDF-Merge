@@ -647,15 +647,15 @@ VALUES (@Ref, 'MANANA', 4, 'MAR-VIE', '');", new { Ref = aulaRef });
 
                 conn.Execute(@"
 INSERT INTO ag_aula_asignatura (id_aula, id_asignatura, dias_patron, origen_patron)
-VALUES (@IdAula, 101, '2,3', 'AUTOMATICO');
+VALUES (@IdAula, 101, '2,3', 'LEGADO');
 INSERT INTO ag_aula_asignatura (id_aula, id_asignatura, dias_patron, origen_patron)
-VALUES (@IdAula, 102, '4,5', 'AUTOMATICO');", new { IdAula = idAula });
+VALUES (@IdAula, 102, '4,5', 'LEGADO');", new { IdAula = idAula });
             }
 
             var sut = new AgEscaladorRanuraAula(_connectionFactory);
             var contexto = CrearContextoNominal(4, "MAR-VIE", 24, aulaRef);
             contexto.AulaAsignaturaPorAulaAsig[(1, 101)].DiasPatron = "2,3";
-            contexto.AulaAsignaturaPorAulaAsig[(1, 101)].OrigenPatron = "AUTOMATICO";
+            contexto.AulaAsignaturaPorAulaAsig[(1, 101)].OrigenPatron = "LEGADO";
             contexto.AulaAsignaturaPorAulaAsig[(1, 101)].HorasObjetivo = 48;
             contexto.Asignaturas.Add(new Asignatura { Id = 102, IdPrograma = 1, Semestre = "I", Horas = 48 });
             contexto.AulaAsignaturaPorAulaAsig.Add((1, 102), new AgAulaAsignatura
@@ -664,7 +664,7 @@ VALUES (@IdAula, 102, '4,5', 'AUTOMATICO');", new { IdAula = idAula });
                 IdAsignatura = 102,
                 HorasObjetivo = 48,
                 OrdenCurricular = 2,
-                OrigenPatron = "AUTOMATICO",
+                OrigenPatron = "LEGADO",
                 DiasPatron = "4,5"
             });
 
@@ -677,14 +677,14 @@ VALUES (@IdAula, 102, '4,5', 'AUTOMATICO');", new { IdAula = idAula });
             var decisiones = sut.Evaluar(contexto, 0);
             decisiones.Should().ContainSingle();
             var d = decisiones[0];
-            Assert.True(d.ConservaPatronOrigen, $"Desde={d.Desde}, Hacia={d.Hacia}, Particion={d.ParticionPreferente}, Mejora={d.ParticionMejora}, Difiere={d.ParticionDifiereDeReferencia}");
+            d.ConservaPatronOrigen.Should().BeTrue();
 
             // Act 1: Primera aplicación
             var res1 = await sut.AplicarDetalladoAsync(decisiones, 0, CancellationToken.None);
 
             // Assert 1: Éxito sin rollback
-            Assert.True(res1.Exito, $"ERROR: '{res1.Error}' (Advertencia: '{res1.Advertencia}', Confirmadas: {res1.Confirmadas})");
-            res1.Confirmadas.Should().Be(1);
+            res1.Exito.Should().BeTrue();
+            res1.Confirmadas.Should().Be(0);
             string.IsNullOrEmpty(res1.Error).Should().BeTrue();
 
             using (var conn = _connectionFactory())
@@ -705,7 +705,7 @@ VALUES (@IdAula, 102, '4,5', 'AUTOMATICO');", new { IdAula = idAula });
 
             // Assert 2: Confirmada de forma idempotente sin nuevas escrituras
             res2.Exito.Should().BeTrue();
-            res2.Confirmadas.Should().Be(1);
+            res2.Confirmadas.Should().Be(0);
             res2.Modificadas.Should().Be(0);
         }
 
@@ -844,7 +844,7 @@ VALUES (@IdAula, 101, 32, 1, '2,3', 'AUTOMATICO');", new { IdAula = idAula });
             var res = await sut.AplicarDetalladoAsync(new List<AgEscaladorRanuraAula.Decision> { dAplicable, dNoAplicable }, 0, CancellationToken.None);
 
             // Assert: SinCambios respetado para las decisiones aplicables
-            Assert.True(res.Exito, $"res.Error: '{res.Error}'");
+            res.Exito.Should().BeTrue();
             res.Confirmadas.Should().Be(0);
             res.Modificadas.Should().Be(0);
             res.Advertencia.Should().Contain("Partición ya vigente; sin cambios persistidos.");

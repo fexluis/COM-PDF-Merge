@@ -27,7 +27,9 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         /// <returns>Lista inmutable de días de la semana ISO válidos [1..7].</returns>
         public static IReadOnlyList<int> DiasKDe(AgAulaAsignatura aa, AgAula aula = null, int carril = 0)
         {
-            if (aa != null && !string.IsNullOrWhiteSpace(aa.DiasPatron))
+            // Fase 2249: Excluir orígenes AUTOMATICO al sembrar patrones (misma semántica que PatronesEfectivos)
+            if (aa != null && !string.IsNullOrWhiteSpace(aa.DiasPatron)
+                && !string.Equals(aa.OrigenPatron, "AUTOMATICO", StringComparison.OrdinalIgnoreCase))
             {
                 var dias = aa.DiasPatron.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
                                         .Select(s => int.TryParse(s.Trim(), out int d) ? d : 0)

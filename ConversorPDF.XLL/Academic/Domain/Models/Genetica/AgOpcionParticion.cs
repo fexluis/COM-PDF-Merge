@@ -13,6 +13,19 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
         public string CarrilesTexto { get; }
         public IReadOnlyList<IReadOnlyList<AgRanura>> Carriles { get; }
 
+        public AgOpcionParticion(IReadOnlyList<IReadOnlyList<AgRanura>> carriles)
+            : this(string.Empty, string.Empty, string.Empty, carriles)
+        {
+        }
+
+        public AgOpcionParticion(
+            string accion,
+            string carrilesTexto,
+            IReadOnlyList<IReadOnlyList<AgRanura>> carriles)
+            : this(string.Empty, accion, carrilesTexto, carriles)
+        {
+        }
+
         public AgOpcionParticion(
             string ventana,
             string accion,

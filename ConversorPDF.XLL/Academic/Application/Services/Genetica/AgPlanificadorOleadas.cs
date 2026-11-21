@@ -89,7 +89,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 return Result.Failure<AgPlanOleadasResultado>("I1_CONF_RANURA: ventana sin ranuras activas.");
             }
             var referencia = ConstruirReferencia(asignaturas, diasVentana, fechaInicio, fechaFin,
-                unidadSesion, esFestivo, bloques, jornada, patrones, opciones);
+                unidadSesion, esFestivo, bloques, jornada, patrones, opciones, diagnostico);
             if (referencia.IsFailure && !referencia.Error.StartsWith("I5_", StringComparison.Ordinal))
             {
                 LoggerHelper.Debug($"[AG-RANURAS-TMP] ELEGIR {diagnostico} plan=error_referencia motivo={referencia.Error} candidatoEjecutado=false");
@@ -233,7 +233,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             IReadOnlyCollection<AgBloqueHorario> bloques = null,
             string jornada = null,
             IReadOnlyDictionary<int, string> diasPatronPorAsignatura = null,   // Fase 1226
-            IReadOnlyList<AgOpcionParticion> opciones = null)   // Fase 2180 / Fase 2187
+            IReadOnlyList<AgOpcionParticion> opciones = null,   // Fase 2180 / Fase 2187
+            string diagnostico = null)
         {
             System.Threading.Interlocked.Increment(ref _construcciones);
 
@@ -362,16 +363,32 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 ev => EsParticionFiel(ctx, ev),
                 opciones);
 
-            if (seleccion.Cambiada)
+            // FASE 2220 / FASE 2222 / FASE 2226 / FASE 2228 / FASE 2229: Trazabilidad de partición con origen, opción y contadores separados.
+            // Regla de emisión: origen=catalogo siempre (incluso si cambiada=false); origen=enumeracion/catalogo_fallback solo si cambiada=true.
+            // Control de duplicados mediante WarningLimitado por clave (diagnostico|origen|cambiada).
+            bool registrarLog = string.Equals(seleccion.Origen, "catalogo", StringComparison.OrdinalIgnoreCase) || seleccion.Cambiada;
+            if (registrarLog)
             {
                 var r = seleccion.Referencia;
                 var e = seleccion.Elegida;
-                LoggerHelper.Info(
-                    $"[Oleadas] Partición por patrón: ventana='{diasVentana}'; " +
-                    $"bandas={string.Join("|", e.Clave.Split('|').Select(b => "{" + b.Replace('.', ',') + "}"))}; " +
-                    $"noAlojables={r.PatronesNoAlojables}→{e.PatronesNoAlojables}; " +
-                    $"infactibles={r.Resultado.Infactibles.Count}→{e.Resultado.Infactibles.Count}; " +
-                    $"makespan={r.Makespan}→{e.Makespan}; candidatasEvaluadas={seleccion.CandidatasEvaluadas}.");
+                string bandasClave = !string.IsNullOrEmpty(e?.Clave) ? e.Clave : (r?.Clave ?? string.Empty);
+                string bandasTexto = !string.IsNullOrEmpty(bandasClave)
+                    ? string.Join("|", bandasClave.Split('|').Select(b => "{" + b.Replace('.', ',') + "}"))
+                    : string.Empty;
+
+                string parteParticionElegida = string.Equals(seleccion.Origen, "catalogo_fallback", StringComparison.OrdinalIgnoreCase)
+                    ? $"particionElegida='{seleccion.ParticionElegidaTexto}'; "
+                    : string.Empty;
+
+                LoggerHelper.WarningLimitado(
+                    $"OleadasParticion|{diagnostico}|{seleccion.Origen}|{seleccion.Cambiada}",
+                    $"[Oleadas] Partición: ventana='{diasVentana}'; origen={seleccion.Origen}; " +
+                    $"opcion='{seleccion.OpcionTexto}'; {parteParticionElegida}cambiada={seleccion.Cambiada}; " +
+                    $"bandas={bandasTexto}; " +
+                    $"noAlojables={r?.PatronesNoAlojables ?? 0}→{e?.PatronesNoAlojables ?? 0}; " +
+                    $"infactibles={r?.Resultado?.Infactibles?.Count ?? 0}→{e?.Resultado?.Infactibles?.Count ?? 0}; " +
+                    $"makespan={r?.Makespan ?? 0}→{e?.Makespan ?? 0}; " +
+                    $"candidatasEvaluadas={seleccion.CandidatasEvaluadas}; opcionesEvaluadas={seleccion.OpcionesEvaluadas}.");
             }
 
             return Result.Success(seleccion.Elegida.Resultado);

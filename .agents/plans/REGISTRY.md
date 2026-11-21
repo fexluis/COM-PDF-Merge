@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 494 | 495 | 2026-11-20 |
-| `fase` | 2216 | 2217 | 2026-11-20 |
+| `ronda` | 502 | 503 | 2026-11-21 |
+| `fase` | 2250 | 2251 | 2026-11-21 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -200,6 +200,15 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-163 | 2026-11-20 | `(revisión Ronda 491 — Fases 2200–2205: partición de referencia en ParticionMejora, evaluación de conservación con patrones simulados, semántica SinCambios en aplicación sin escrituras, tabla de verdad estricta de Aplica con ParticionDifiereDeReferencia, validación de acción en catálogo y suite de borde)` | `Wave —` → `Ronda 491` | `Fase 2200–2205` | closed | sin build/tests (restricción Paso 6) | pendiente |
 | R-164 | 2026-11-20 | `(revisión Ronda 492 — Fases 2206–2211: particionDifiere necesaria para ParticionMejora, referencia comparable en simulación, atajo de referencia sin opción, comparación de franjas contra partición canónica, eliminación de MaxOpciones/ResolverLista y filtro de decisiones aplicables en SinCambios)` | `Wave —` → `Ronda 492` | `Fase 2206–2211` | closed | sin build/tests (restricción Paso 6) | pendiente |
 | R-165 | 2026-11-20 | `(revisión Ronda 494 — Fases 2212–2216: noAlojRef sobre referencia real en ParticionMejora, referencia comparada de la ventana destino en escalado con opción y cierre de ciclo)` | `Wave —` → `Ronda 494` | `Fase 2212–2216` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-166 | 2026-11-21 | `(revisión e implementación Ronda 493 — Fases 2218–2222: filtro asimétrico de patrones efectivos, conservaPatron con patrones no-alojables, trazabilidad origen/opción en Oleadas, pruebas y política de emisión)` | `Wave —` → `Ronda 493` | `Fase 2218–2222` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-167 | 2026-11-21 | `(revisión e implementación Ronda 495 — Fases 2223–2227: fallback a enumeración en catálogo sin mejora, OpcionTexto con franjas CarrilesTexto, trazabilidad opción intentada, WarningLimitado y suite de pruebas)` | `Wave —` → `Ronda 495` | `Fase 2223–2227` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-168 | 2026-11-21 | `(revisión e implementación Ronda 496 — Fases 2228–2231: semántica unificada de OpcionTexto con ParticionElegidaTexto, separación OpcionesEvaluadas de CandidatasEvaluadas, fallback completo y cobertura)` | `Wave —` → `Ronda 496` | `Fase 2228–2231` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-169 | 2026-11-21 | `(revisión e implementación Ronda 497 — Fase 2232: CandidatasEvaluadas en catálogo exitoso reporta evaluadasOpciones)` | `Wave —` → `Ronda 497` | `Fase 2232` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-170 | 2026-11-21 | `(revisión e implementación Ronda 498 — Fases 2233–2237: soporte completo de 8 ventanas en árbol nivel 6 con normalización ISO, hit-test dinámico y suite de pruebas)` | `Wave —` → `Ronda 498` | `Fase 2233–2237` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-171 | 2026-11-21 | `(revisión e implementación Ronda 499 — Fases 2238–2242: preservación de alias ISO terminal 4,5,6,7, catálogo inmutable único, limpieza de layout y acotación de anchos mínimos)` | `Wave —` → `Ronda 499` | `Fase 2238–2242` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-172 | 2026-11-21 | `(revisión e implementación Ronda 500 — Fases 2243–2244: opción seleccionable explícita para alias terminal 4,5,6,7 frente a JUE-DOM y pruebas de conversión bidireccional)` | `Wave —` → `Ronda 500` | `Fase 2243–2244` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-173 | 2026-11-21 | `(revisión e implementación Ronda 501 — Fases 2245–2246: normalización de espacios en alias ISO terminal y eliminación de campo muerto EtiquetasVentanaRadio)` | `Wave —` → `Ronda 501` | `Fase 2245–2246` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-174 | 2026-11-21 | `(revisión e implementación Ronda 502 — Fases 2247–2250: alojabilidad muchos-a-uno en OpcionConservaPatrones, chequeo de ranuras de sábado, exclusión de AUTOMATICO en DiasKDe y fallback a AulaAsignaturas)` | `Wave —` → `Ronda 502` | `Fase 2247–2250` | closed | sin build/tests (restricción Paso 6) | pendiente |
 
 
 
