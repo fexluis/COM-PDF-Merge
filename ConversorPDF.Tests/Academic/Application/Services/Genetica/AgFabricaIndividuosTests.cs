@@ -602,5 +602,40 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             genesVacantes.Should().NotBeEmpty();
             genesVacantes.Should().OnlyContain(g => g.MotivoVacante == AgMotivoVacante.SIN_PLAN_OLEADA.Codigo());
         }
+
+        [Fact]
+        public void Fabrica_PatronAutomatico_NoBloqueaResiembra()
+        {
+            // Arrange (Fase 2253 / Fase 2255): Patrón AUTOMATICO no se considera declarado, permitiendo resiembra automática
+            var contexto = new AgContexto();
+            contexto.IdPrograma = 1;
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 2), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
+
+            var aula = new AgAula { Id = 1, DiasVentana = "MAR-VIE", HorasDia = 4, Estado = AgEstadoAula.Disponible };
+            contexto.Aulas.Add(aula);
+            contexto.Asignaturas.Add(new Asignatura { Id = 10, Nombre = "Física", Horas = 64, HorasSemanales = 4, IdPrograma = 1 });
+            contexto.Bloques.Add(new AgBloqueHorario { Id = 1, DiaSemanaNumero = 2, DuracionHoras = 4, Activo = 1 });
+            contexto.Bloques.Add(new AgBloqueHorario { Id = 2, DiaSemanaNumero = 3, DuracionHoras = 4, Activo = 1 });
+            contexto.Bloques.Add(new AgBloqueHorario { Id = 3, DiaSemanaNumero = 4, DuracionHoras = 4, Activo = 1 });
+            contexto.Bloques.Add(new AgBloqueHorario { Id = 4, DiaSemanaNumero = 5, DuracionHoras = 4, Activo = 1 });
+
+            contexto.AulaAsignaturaPorAulaAsig[(1, 10)] = new AgAulaAsignatura
+            {
+                IdAula = 1,
+                IdAsignatura = 10,
+                DiasPatron = "2,3",
+                OrigenPatron = "AUTOMATICO",
+                HorasObjetivo = 64
+            };
+
+            var sut = new AgFabricaIndividuos(new Random(42));
+
+            // Act
+            var ind = sut.CrearAleatorio(contexto, 1, 0);
+
+            // Assert: Genera genes válidos sin quedar bloqueado
+            ind.Should().NotBeNull();
+            ind.Genes.Should().NotBeEmpty();
+        }
     }
 }

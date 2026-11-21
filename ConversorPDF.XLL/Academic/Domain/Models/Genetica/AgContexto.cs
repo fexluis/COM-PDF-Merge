@@ -287,6 +287,28 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
             InvalidarIndiceBloques();
         }
 
+        /// <summary>
+        /// Obtiene la colección efectiva de relaciones aula-asignatura, asegurando que si el índice
+        /// rápido está vacío pero AulaAsignaturas contiene datos, se construyan los índices (Fase 2251).
+        /// </summary>
+        public static IEnumerable<AgAulaAsignatura> RelacionesAula(AgContexto ctx)
+        {
+            if (ctx == null) return Enumerable.Empty<AgAulaAsignatura>();
+            if ((ctx.AulaAsignaturaPorAulaAsig == null || ctx.AulaAsignaturaPorAulaAsig.Count == 0)
+                && ctx.AulaAsignaturas != null && ctx.AulaAsignaturas.Count > 0)
+            {
+                ctx.ConstruirIndices();
+            }
+            return ctx.AulaAsignaturaPorAulaAsig != null && ctx.AulaAsignaturaPorAulaAsig.Count > 0
+                ? ctx.AulaAsignaturaPorAulaAsig.Values
+                : (IEnumerable<AgAulaAsignatura>)(ctx.AulaAsignaturas ?? Enumerable.Empty<AgAulaAsignatura>());
+        }
+
+        /// <summary>
+        /// Obtiene la colección efectiva de relaciones aula-asignatura de este contexto (Fase 2251).
+        /// </summary>
+        public IEnumerable<AgAulaAsignatura> RelacionesAula() => RelacionesAula(this);
+
         // Fase 1125 / Fase 1127: Caché indexado de bloques por (DiaSemanaNumero, DuracionHoras) -> lista de bloques
         private Dictionary<(int, double), List<AgBloqueHorario>> _indiceBloquesDiaDur;
 

@@ -768,7 +768,7 @@ VALUES (@IdAula, 101, 32, 1, '2,3', 'AUTOMATICO');", new { IdAula = idAula });
             res.Exito.Should().BeTrue();
             res.Confirmadas.Should().Be(0);
             res.Modificadas.Should().Be(0);
-            res.Advertencia.Should().Contain("Partición ya vigente; sin cambios persistidos.");
+            res.Advertencia.Should().Contain("Sin cambios persistidos; la partición se recalcula en cada corrida.");
         }
 
         [Fact]
@@ -837,7 +837,7 @@ VALUES (@IdAula, 101, 32, 1, '2,3', 'AUTOMATICO');", new { IdAula = idAula });
             };
             dNoAplicable.HuellaDecision = AgEscaladorRanuraAula.HuellaAccion(dNoAplicable);
 
-            dAplicable.Aplica.Should().BeTrue();
+            dAplicable.Aplica.Should().BeFalse(); // FASE 2256: Solo partición (Desde == Hacia) no genera persistencia a BD
             dNoAplicable.Aplica.Should().BeFalse();
 
             // Act
@@ -847,7 +847,7 @@ VALUES (@IdAula, 101, 32, 1, '2,3', 'AUTOMATICO');", new { IdAula = idAula });
             res.Exito.Should().BeTrue();
             res.Confirmadas.Should().Be(0);
             res.Modificadas.Should().Be(0);
-            res.Advertencia.Should().Contain("Partición ya vigente; sin cambios persistidos.");
+            res.Advertencia.Should().Contain("Sin cambios persistidos; la partición se recalcula en cada corrida.");
         }
 
         private void SembrarDemanda(AgContexto contexto)

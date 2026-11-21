@@ -811,13 +811,13 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
         [Fact]
         public void ConservaPatronOrigen_NoBorraDiasPatron()
         {
-            // FASE 2219 / FASE 2221: Cuando ConservaPatronOrigen es true, no se borran los dias_patron
+            // FASE 2219 / FASE 2221 / FASE 2257: Cuando ConservaPatronOrigen es true, no se borran los dias_patron (desacoplado de Desde == Hacia)
             var decision = new AgEscaladorRanuraAula.Decision
             {
                 IdAula = 1,
                 AulaRef = "A101",
                 Desde = "MAR-VIE",
-                Hacia = "MAR-VIE",
+                Hacia = "LUN-VIE",
                 ParticionPreferente = "2,3|1,4,5",
                 ParticionMejora = true,
                 ParticionDifiereDeReferencia = true,
@@ -825,17 +825,35 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
                 IdAsignaturasBottleneck = new List<int> { 1, 2 }
             };
 
-            // Simulación de la condición en AplicarDetalladoAsync:
-            // if (d.IdAsignaturasBottleneck.Count > 0 && (!d.ConservaPatronOrigen || !string.Equals(d.Desde, d.Hacia, StringComparison.OrdinalIgnoreCase))) -> borra patrones
+            // Simulación de la condición en AplicarDetalladoAsync (Fase 2257: solo depende de !ConservaPatronOrigen):
+            // if (d.IdAsignaturasBottleneck.Count > 0 && !d.ConservaPatronOrigen) -> borra patrones
             bool deberiaBorrar = decision.IdAsignaturasBottleneck.Count > 0
-                && (!decision.ConservaPatronOrigen || !string.Equals(decision.Desde, decision.Hacia, StringComparison.OrdinalIgnoreCase));
+                && !decision.ConservaPatronOrigen;
             deberiaBorrar.Should().BeFalse();
         }
 
         [Fact]
-        public void OpcionConservaPatrones_MuchosAUno_AceptaMasPatronesQueCarriles()
+        public void Decision_SoloParticionSinCambioVentana_AplicaEsFalse()
         {
-            // FASE 2247: Modelo muchos-a-uno; 6 patrones sobre 2 carriles deben ser conservados
+            // FASE 2256: Decisiones donde Desde == Hacia y sin reclasificaciones no aplican a BD
+            var decision = new AgEscaladorRanuraAula.Decision
+            {
+                Desde = "MAR-VIE",
+                Hacia = "MAR-VIE",
+                ParticionPreferente = "2,3|4,5",
+                ParticionMejora = true,
+                ParticionDifiereDeReferencia = true,
+                CapacidadAntes = 64,
+                CapacidadDespues = 64
+            };
+
+            decision.Aplica.Should().BeFalse();
+        }
+
+        [Fact]
+        public void PatronesAlojables_SeisPatronesDosCarriles_True()
+        {
+            // FASE 2247 / FASE 2254 / FASE 2255: Modelo muchos-a-uno; 6 patrones sobre 2 carriles deben ser conservados
             var carril1 = new List<AgRanura> { new AgRanura(2, AgFranjaJornada.NOCHE, 4), new AgRanura(3, AgFranjaJornada.NOCHE, 4) };
             var carril2 = new List<AgRanura> { new AgRanura(4, AgFranjaJornada.NOCHE, 4), new AgRanura(5, AgFranjaJornada.NOCHE, 4) };
             var opcion = new AgOpcionParticion(new List<IReadOnlyList<AgRanura>> { carril1, carril2 });
@@ -843,21 +861,21 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             // 6 materias que comparten los 2 carriles (3 en carril 1, 3 en carril 2)
             var patrones = new List<string> { "2,3", "2,3", "2,3", "4,5", "4,5", "4,5" };
 
-            bool resultado = AgEscaladorRanuraAula.OpcionConservaPatrones(opcion, patrones);
+            bool resultado = AgEscaladorRanuraAula.PatronesAlojablesEnOpcion(opcion, patrones);
             resultado.Should().BeTrue();
         }
 
         [Fact]
-        public void OpcionConservaPatrones_ConSabadoEnCarril_ConservaPatron()
+        public void PatronesAlojables_ConSabadoEnCarril_ConservaPatron()
         {
-            // FASE 2248: Chequeo de ranura de sábado en carril vs regla blanket de texto
+            // FASE 2248 / FASE 2254: Chequeo de ranura de sábado en carril vs regla blanket de texto
             var carril1 = new List<AgRanura> { new AgRanura(5, AgFranjaJornada.MANANA, 4), new AgRanura(6, AgFranjaJornada.MANANA, 4) };
             var carril2 = new List<AgRanura> { new AgRanura(6, AgFranjaJornada.TARDE, 4), new AgRanura(7, AgFranjaJornada.MANANA, 4) };
             var opcion = new AgOpcionParticion(new List<IReadOnlyList<AgRanura>> { carril1, carril2 });
 
             var patrones = new List<string> { "5,6" };
 
-            bool resultado = AgEscaladorRanuraAula.OpcionConservaPatrones(opcion, patrones);
+            bool resultado = AgEscaladorRanuraAula.PatronesAlojablesEnOpcion(opcion, patrones);
             resultado.Should().BeTrue();
         }
 
@@ -880,9 +898,9 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
         }
 
         [Fact]
-        public void PatronesEfectivos_SinIndices_HaceFallbackAAulaAsignaturas()
+        public void RelacionesAula_IndiceVacio_UsaListaYConstruyeIndices()
         {
-            // FASE 2250: Fallback a AulaAsignaturas cuando AulaAsignaturaPorAulaAsig es null
+            // FASE 2250 / FASE 2251 / FASE 2255: Fallback a AulaAsignaturas cuando AulaAsignaturaPorAulaAsig está vacío
             var ctx = new AgContexto
             {
                 AulaAsignaturas = new List<AgAulaAsignatura>
@@ -892,9 +910,41 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
                     new AgAulaAsignatura { IdAula = 6, IdAsignatura = 3, DiasPatron = "1,2", OrigenPatron = "MANUAL" }
                 }
             };
-            // Sin llamar a ctx.ConstruirIndices(), AulaAsignaturaPorAulaAsig permanece null
+            // Sin llamar explícitamente a ctx.ConstruirIndices(), RelacionesAula invoca ConstruirIndices y puebla el diccionario
+            var relaciones = AgContexto.RelacionesAula(ctx).ToList();
+            relaciones.Should().HaveCount(3);
+            ctx.AulaAsignaturaPorAulaAsig.Should().NotBeNull();
+            ctx.AulaAsignaturaPorAulaAsig.Should().HaveCount(3);
+        }
+
+        [Fact]
+        public void Escalador_PatronesEfectivos_ExcluyeAutomatico()
+        {
+            // FASE 2250 / FASE 2251 / FASE 2255: PatronesEfectivos excluye AUTOMATICO y utiliza RelacionesAula
+            var ctx = new AgContexto
+            {
+                AulaAsignaturas = new List<AgAulaAsignatura>
+                {
+                    new AgAulaAsignatura { IdAula = 5, IdAsignatura = 1, DiasPatron = "2,3", OrigenPatron = "LEGADO" },
+                    new AgAulaAsignatura { IdAula = 5, IdAsignatura = 2, DiasPatron = "4,5", OrigenPatron = "AUTOMATICO" },
+                    new AgAulaAsignatura { IdAula = 6, IdAsignatura = 3, DiasPatron = "1,2", OrigenPatron = "MANUAL" }
+                }
+            };
             var patrones = AgEscaladorRanuraAula.PatronesEfectivos(ctx, 5);
             patrones.Should().ContainSingle().Which.Should().Be("2,3");
+        }
+
+        [Fact]
+        public void PatronesAlojables_Dia6SinRanura_False()
+        {
+            // FASE 2248 / FASE 2252 / FASE 2254 / FASE 2255: Patrón con día 6 en carril que carece de sábado retorna false
+            var carril1 = new List<AgRanura> { new AgRanura(2, AgFranjaJornada.NOCHE, 4), new AgRanura(3, AgFranjaJornada.NOCHE, 4) };
+            var carril2 = new List<AgRanura> { new AgRanura(4, AgFranjaJornada.NOCHE, 4), new AgRanura(5, AgFranjaJornada.NOCHE, 4) };
+            var opcion = new AgOpcionParticion(new List<IReadOnlyList<AgRanura>> { carril1, carril2 });
+
+            var patrones = new List<string> { "2,3", "6" };
+            bool conserva = AgEscaladorRanuraAula.PatronesAlojablesEnOpcion(opcion, patrones);
+            conserva.Should().BeFalse();
         }
     }
 }

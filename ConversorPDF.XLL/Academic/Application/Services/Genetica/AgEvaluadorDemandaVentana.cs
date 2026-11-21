@@ -27,14 +27,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         {
             var resultado = new List<(int, double, int)>();
             if (contexto == null || aula == null) return resultado;
-            if ((contexto.AulaAsignaturaPorAulaAsig == null || contexto.AulaAsignaturaPorAulaAsig.Count == 0) && contexto.AulaAsignaturas != null && contexto.AulaAsignaturas.Count > 0)
-            {
-                contexto.ConstruirIndices();
-            }
-
-            var relaciones = contexto.AulaAsignaturaPorAulaAsig != null && contexto.AulaAsignaturaPorAulaAsig.Count > 0
-                ? contexto.AulaAsignaturaPorAulaAsig.Values.Where(a => a.IdAula == aula.Id)
-                : (contexto.AulaAsignaturas ?? Enumerable.Empty<AgAulaAsignatura>()).Where(a => a.IdAula == aula.Id);
+            var relaciones = AgContexto.RelacionesAula(contexto).Where(a => a.IdAula == aula.Id);
 
             string semestre = AgFormatoAsignatura.SemestreRomano(aula.Semestre);
             foreach (var aa in relaciones)
@@ -121,11 +114,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             res.DemandaTotal = requeridas.Values.Sum();
             var ranuras = AgRanuras.PorVentana(diasVentana, contexto.Bloques, jornada, unidad);
             res.CapacidadTotal = ranuras.Sum(r => AgPlanificadorTemporal.ContarOcurrencias(r.Dia, ini, fin, contexto.EsFestivo));
-            // Fase 2250: Fallback a AulaAsignaturas si el índice por aula-asignatura no ha sido construido
-            var aulaAsigs = (contexto.AulaAsignaturaPorAulaAsig != null && contexto.AulaAsignaturaPorAulaAsig.Count > 0)
-                ? (IEnumerable<AgAulaAsignatura>)contexto.AulaAsignaturaPorAulaAsig.Values
-                : (IEnumerable<AgAulaAsignatura>)contexto.AulaAsignaturas
-                ?? Enumerable.Empty<AgAulaAsignatura>();
+            // Fase 2250 / Fase 2251: Fallback y construcción de índices si el índice por aula-asignatura no ha sido construido o está vacío
+            var aulaAsigs = AgContexto.RelacionesAula(contexto);
             var patrones = aulaAsigs.Where(a => a.IdAula == aula.Id
                 && !string.Equals(a.OrigenPatron, "AUTOMATICO", StringComparison.OrdinalIgnoreCase)
                 && !string.IsNullOrWhiteSpace(a.DiasPatron)).ToDictionary(a => a.IdAsignatura, a => a.DiasPatron);

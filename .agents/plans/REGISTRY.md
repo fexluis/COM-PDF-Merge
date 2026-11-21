@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 502 | 503 | 2026-11-21 |
-| `fase` | 2250 | 2251 | 2026-11-21 |
+| `ronda` | 511 | 512 | 2026-11-21 |
+| `fase` | 2283 | 2284 | 2026-11-21 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -209,6 +209,15 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-172 | 2026-11-21 | `(revisión e implementación Ronda 500 — Fases 2243–2244: opción seleccionable explícita para alias terminal 4,5,6,7 frente a JUE-DOM y pruebas de conversión bidireccional)` | `Wave —` → `Ronda 500` | `Fase 2243–2244` | closed | sin build/tests (restricción Paso 6) | pendiente |
 | R-173 | 2026-11-21 | `(revisión e implementación Ronda 501 — Fases 2245–2246: normalización de espacios en alias ISO terminal y eliminación de campo muerto EtiquetasVentanaRadio)` | `Wave —` → `Ronda 501` | `Fase 2245–2246` | closed | sin build/tests (restricción Paso 6) | pendiente |
 | R-174 | 2026-11-21 | `(revisión e implementación Ronda 502 — Fases 2247–2250: alojabilidad muchos-a-uno en OpcionConservaPatrones, chequeo de ranuras de sábado, exclusión de AUTOMATICO en DiasKDe y fallback a AulaAsignaturas)` | `Wave —` → `Ronda 502` | `Fase 2247–2250` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-175 | 2026-11-21 | `(revisión e implementación Ronda 503 — Fases 2251–2253: fallback y construcción de índices ante índice vacío en RelacionesAula, documentación de conservación estructural en OpcionConservaPatrones y exclusión de AUTOMATICO en tienePatronDeclarado de AgFabricaIndividuos)` | `Wave —` → `Ronda 503` | `Fase 2251–2253` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-176 | 2026-11-21 | `(revisión e implementación Ronda 504 — Fases 2254–2255: formalización de PatronesAlojablesEnOpcion con retiro de 2252 por diseño y cobertura de cuatro bordes)` | `Wave —` → `Ronda 504` | `Fase 2254–2255` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-177 | 2026-11-21 | `(revisión e implementación Ronda 505 — Fases 2256–2259: eliminación de persistencia de solo partición, desacople de ConservaPatronOrigen en liberación de cuello de botella, documentación y diagnóstico de escalado)` | `Wave —` → `Ronda 505` | `Fase 2256–2259` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-178 | 2026-11-21 | `(revisión Ronda 506 — Fases 2260–2263: criterio de selección AgCriterioParticion, propagación a planificador y evaluador, paridad en escalador y validador, trazabilidad y pruebas)` | `Wave —` → `Ronda 506` | `Fase 2260–2263` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-179 | 2026-11-21 | `(revisión Ronda 507 — Fases 2264–2267: criterio de partición de origen con guarda de sesiones ubicadas, propagación, paridad escalador-validador y suite de pruebas)` | `Wave —` → `Ronda 507` | `Fase 2264–2267` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-180 | 2026-11-21 | `(revisión Ronda 508 — Fases 2268–2271: re-emisión de criterio de partición de origen con guarda de cobertura de sesiones ubicadas, propagación, paridad escalador-validador y suite de pruebas)` | `Wave —` → `Ronda 508` | `Fase 2268–2271` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-181 | 2026-11-21 | `(revisión Ronda 509 — Fases 2272–2274: postcondición same-window sin sustitución de nodo, diagnóstico APLICAR previo a escritura y limpieza de flags en Decision)` | `Wave —` → `Ronda 509` | `Fase 2272–2274` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-182 | 2026-11-21 | `(revisión Ronda 510 — Fases 2275–2279: desacople de destino en sustitución de reclasificaciones en Calcular, aceptación de destino nulo en EstadoCompleto, precisión de advertencia SoloParticion, APLICAR previo a escrituras y exclusión de pm/pdr de huella)` | `Wave —` → `Ronda 510` | `Fase 2275–2279` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-183 | 2026-11-21 | `(revisión Ronda 511 — Fases 2280–2283: guarda de cambio de ventana con Hacia no vacío, validación estricta simétrica de reclasificación en escalador, huella v5 y advertencia SoloParticion unificada)` | `Wave —` → `Ronda 511` | `Fase 2280–2283` | closed | sin build/tests (restricción Paso 6) | pendiente |
 
 
 

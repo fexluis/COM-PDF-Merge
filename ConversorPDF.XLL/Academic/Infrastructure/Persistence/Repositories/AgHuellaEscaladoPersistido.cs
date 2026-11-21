@@ -30,13 +30,13 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                     if (destino != null && tabla == "ag_arbol_nodo" && perfil > 0
                         && Convert.ToInt32(valores["idarbol"], CultureInfo.InvariantCulture) == perfil
                         && SubunidadCoincide(valores, subunidad)) { valores["dias_ventana"] = destino; }
-                    if (destino != null && tabla == "ag_aula_asignatura" && liberar != null
+                    if (tabla == "ag_aula_asignatura" && liberar != null
                         && liberar.Contains(Convert.ToInt32(valores["id_asignatura"], CultureInfo.InvariantCulture))
                         && valores.ContainsKey("origen_patron") && Normalizar(valores["origen_patron"]) == "AUTOMATICO")
                     {
                         valores["dias_patron"] = string.Empty;
                     }
-                    if (destino != null && tabla == "ag_aula_asignatura" && reclasificaciones != null)
+                    if (tabla == "ag_aula_asignatura" && reclasificaciones != null)
                     {
                         int idAsigVal = Convert.ToInt32(valores["id_asignatura"], CultureInfo.InvariantCulture);
                         var rec = reclasificaciones.FirstOrDefault(r => r.IdAsignatura == idAsigVal
@@ -102,13 +102,17 @@ FROM ag_aula_asignatura WHERE id_aula=@Id;", new { aula.Id }, tx)
             IReadOnlyCollection<AgReclasificacionPatron> reclasificaciones = null)
         {
             var aulas = LeerAulas(db, tx, referencia, subunidad);
-            if (aulas.Count != 1 || !string.Equals(Convert.ToString(((IDictionary<string, object>)aulas[0])["dias_ventana"]), destino, StringComparison.Ordinal)) { return false; }
-            if (perfil > 0)
+            if (aulas.Count != 1) { return false; }
+            if (destino != null)
             {
-                var nodos = db.Query<string>(@"SELECT dias_ventana FROM ag_arbol_nodo
+                if (!string.Equals(Convert.ToString(((IDictionary<string, object>)aulas[0])["dias_ventana"]), destino, StringComparison.Ordinal)) { return false; }
+                if (perfil > 0)
+                {
+                    var nodos = db.Query<string>(@"SELECT dias_ventana FROM ag_arbol_nodo
 WHERE idarbol=@Perfil AND aula_ref=@Ref AND COALESCE(NULLIF(TRIM(subunidad),''),@Sub)=@Sub;",
-                    new { Perfil = perfil, Ref = referencia, Sub = subunidad ?? string.Empty }, tx).ToList();
-                if (nodos.Count != 1 || !string.Equals(nodos[0], destino, StringComparison.Ordinal)) { return false; }
+                        new { Perfil = perfil, Ref = referencia, Sub = subunidad ?? string.Empty }, tx).ToList();
+                    if (nodos.Count != 1 || !string.Equals(nodos[0], destino, StringComparison.Ordinal)) { return false; }
+                }
             }
             long id = Convert.ToInt64(((IDictionary<string, object>)aulas[0])["id"], CultureInfo.InvariantCulture);
             if (liberar != null && liberar.Count > 0)

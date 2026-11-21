@@ -426,7 +426,10 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 
                     if (!tienePlanFechadoValido)
                     {
-                        bool tienePatronDeclarado = aa != null && !string.IsNullOrWhiteSpace(aa.DiasPatron);
+                        // Fase 2249 / Fase 2253: El origen AUTOMATICO no se considera patrón declarado para no bloquear resiembra
+                        bool tienePatronDeclarado = aa != null
+                            && !string.IsNullOrWhiteSpace(aa.DiasPatron)
+                            && !string.Equals(aa.OrigenPatron, "AUTOMATICO", StringComparison.OrdinalIgnoreCase);
                         bool esAutomatica = !tienePatronDeclarado && string.IsNullOrWhiteSpace(ObtenerDiasPatron(asig.Id));
                         int cantCarriles = aula != null && !string.IsNullOrWhiteSpace(aula.DiasVentana)
                             ? AgCarriles.Cantidad(AgCarriles.Ventana(aula.DiasVentana)) : 1;

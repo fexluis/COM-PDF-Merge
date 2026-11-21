@@ -54,9 +54,19 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
             public bool ParticionMejora { get; set; }
             public bool ParticionDifiereDeReferencia { get; set; }
             public bool ConservaPatronOrigen { get; set; } = true;
+            public bool SoloParticion =>
+                !Aplica
+                && string.Equals(Desde, Hacia, StringComparison.OrdinalIgnoreCase)
+                && (ReclasificacionesAutorizadas == null || ReclasificacionesAutorizadas.Count == 0)
+                && (ParticionMejora || ParticionDifiereDeReferencia);
+            /// <summary>
+            /// Determina si la decisión requiere aplicar cambios persistentes en la base de datos (Fase 2256, Fase 2258).
+            /// La partición de carriles es efímera y se recalcula en cada corrida por el planificador de oleadas;
+            /// no posee campos persistidos en base de datos. Por ende, decisiones de solo partición (Desde == Hacia)
+            /// no generan escrituras SQL y no aplican directamente a base de datos.
+            /// </summary>
             public bool Aplica => (!string.IsNullOrWhiteSpace(Hacia) && !string.Equals(Desde, Hacia, StringComparison.OrdinalIgnoreCase) && Mejora && CapacidadDespues > CapacidadAntes)
-                || (ReclasificacionesAutorizadas != null && ReclasificacionesAutorizadas.Count > 0)
-                || (ParticionMejora && ParticionDifiereDeReferencia);
+                || (ReclasificacionesAutorizadas != null && ReclasificacionesAutorizadas.Count > 0);
             internal AgContexto ContextoOrigen { get; set; }
             internal int? PerfilPropuesto { get; set; }
             internal int? PerfilAplicado { get; set; }
@@ -583,7 +593,7 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                 var patronesConserva = autorizadasAula.Count > 0 ? patronesSimulados : patronesAula;
                 // FASE 2219: Evaluar conservación y no-alojables sobre patrones efectivos
                 bool conservaPatron = opcionUsada != null
-                    && OpcionConservaPatrones(opcionUsada, patronesConserva)
+                    && PatronesAlojablesEnOpcion(opcionUsada, patronesConserva)
                     && AgParticionCarriles.ContarPatronesNoAlojables(opcionUsada.Carriles, patronesConserva) == 0;
 
                 // FASE 2209: Comparar franjas completas contra la partición canónica para detectar cambios en días con múltiples franjas (ej. 6M vs 6T)
@@ -844,9 +854,14 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                 resultado.Exito = true;
                 resultado.Confirmadas = 0;
                 resultado.Modificadas = 0;
+                if (decisiones.Any(d => d != null && d.SoloParticion))
+                {
+                    resultado.Advertencia = "Sin cambios persistidos; la partición se recalcula en cada corrida.";
+                }
                 return resultado;
             }
 
+            Decision dActual = null;
             try
             {
                 using (var db = _connectionFactory())
@@ -856,6 +871,7 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                     {
                         foreach (var d in decisionesAplicables)
                         {
+                            dActual = d;
                             ct.ThrowIfCancellationRequested();
                             if (d == null || !d.Aplica || d.ContextoOrigen == null || string.IsNullOrEmpty(d.HuellaPersistidaAntes)
                                 || string.IsNullOrEmpty(d.HuellaDecision))
@@ -900,12 +916,16 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                             bool contextoCompatible = huellaContexto == d.HuellaContextoAntes || huellaContexto == d.HuellaContextoDespues;
                             LoggerHelper.Debug($"[AG-RANURAS-TMP] GUARDAR_HUELLAS perfil={idArbol} ref={d.AulaRef} contextoAntes={huellaContexto == d.HuellaContextoAntes} contextoDespues={huellaContexto == d.HuellaContextoDespues} sqlAntes={huellaSql == d.HuellaPersistidaAntes} sqlDespues={huellaSql == d.HuellaPersistidaDespues}");
 
-                            var liberarEsperado = (d.ConservaPatronOrigen && string.Equals(d.Desde, d.Hacia, StringComparison.OrdinalIgnoreCase)) ? null : d.IdAsignaturasBottleneck;
+                            bool cambiaVentana = !string.IsNullOrWhiteSpace(d.Hacia)
+                                && !string.Equals(d.Desde, d.Hacia, StringComparison.OrdinalIgnoreCase);
+                            string destinoEsperado = cambiaVentana ? d.Hacia : null;
+
+                            var liberarEsperado = (d.ConservaPatronOrigen && !cambiaVentana) ? null : d.IdAsignaturasBottleneck;
 
                             // Reaplicación idempotente: si ya está en el postestado exacto, confirmar sin nuevas escrituras
                             if (d.PerfilAplicado == idArbol && contextoCompatible && !string.IsNullOrEmpty(d.HuellaPersistidaDespues)
                                 && huellaSql == d.HuellaPersistidaDespues
-                                && AgHuellaEscaladoPersistido.EstadoCompleto(db, tx, d.AulaRef, d.Subunidad, idArbol, d.Hacia, liberarEsperado, d.ReclasificacionesAutorizadas))
+                                && AgHuellaEscaladoPersistido.EstadoCompleto(db, tx, d.AulaRef, d.Subunidad, idArbol, destinoEsperado, liberarEsperado, d.ReclasificacionesAutorizadas))
                             {
                                 resultado.Confirmadas++;
                                 LoggerHelper.Debug($"[AG-RANURAS-TMP] GUARDAR_IDEMPOTENTE perfil={idArbol} ref={d.AulaRef}");
@@ -919,10 +939,13 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                             }
 
                             string esperado = AgHuellaEscaladoPersistido.Calcular(db, tx, d.AulaRef, d.Subunidad,
-                                idArbol, d.Hacia, liberarEsperado, d.ReclasificacionesAutorizadas);
+                                idArbol, destinoEsperado, liberarEsperado, d.ReclasificacionesAutorizadas);
+
+                            LoggerHelper.Info($"[ESCALADO] APLICAR ref={d.AulaRef} desde={d.Desde} hacia={d.Hacia} " +
+                                $"conserva={d.ConservaPatronOrigen} liberar={(liberarEsperado?.Count ?? 0)} perfil={idArbol}");
 
                             int modificadas = 0;
-                            if (!string.Equals(d.Desde, d.Hacia, StringComparison.OrdinalIgnoreCase))
+                            if (cambiaVentana)
                             {
                                 modificadas = await db.ExecuteAsync(new CommandDefinition(@"
 UPDATE ag_aula SET dias_ventana=@Hacia
@@ -942,7 +965,7 @@ AND COALESCE(dias_ventana,'')=@Desde;",
                                 }
                             }
 
-                            if (d.IdAsignaturasBottleneck.Count > 0 && (!d.ConservaPatronOrigen || !string.Equals(d.Desde, d.Hacia, StringComparison.OrdinalIgnoreCase)))
+                            if (d.IdAsignaturasBottleneck.Count > 0 && (!d.ConservaPatronOrigen || cambiaVentana))
                             {
                                 await db.ExecuteAsync(new CommandDefinition(@"
 UPDATE ag_aula_asignatura SET dias_patron=''
@@ -955,9 +978,12 @@ AND id_asignatura IN @Ids AND UPPER(COALESCE(origen_patron,''))='AUTOMATICO';",
                             {
                                 foreach (var rec in d.ReclasificacionesAutorizadas)
                                 {
-                                    if (rec.IdAula <= 0 || rec.IdAula != idAula)
+                                    if (rec == null || !rec.Autorizado
+                                        || rec.IdAula <= 0 || rec.IdAula != idAula
+                                        || !string.Equals(rec.AulaRef, d.AulaRef, StringComparison.Ordinal)
+                                        || !string.Equals(rec.Subunidad ?? string.Empty, d.Subunidad ?? string.Empty, StringComparison.Ordinal))
                                     {
-                                        throw new InvalidOperationException($"La propuesta fue modificada: IdAula de la reclasificación ({rec.IdAula}) no coincide con el aula esperada ({idAula}). Recalcular.");
+                                        throw new InvalidOperationException($"La propuesta fue modificada: reclasificación no autorizada o no coincidente para asignatura {rec?.IdAsignatura} en aula {d.AulaRef}. Recalcular.");
                                     }
                                     int targetIdAula = idAula;
                                     int afectoRec = await db.ExecuteAsync(new CommandDefinition(@"
@@ -985,7 +1011,7 @@ AND COALESCE(dias_patron,'')=@DiasAntes;",
                             }
 
                             if (AgHuellaEscaladoPersistido.Calcular(db, tx, d.AulaRef, d.Subunidad, idArbol) != esperado
-                                || !AgHuellaEscaladoPersistido.EstadoCompleto(db, tx, d.AulaRef, d.Subunidad, idArbol, d.Hacia, liberarEsperado, d.ReclasificacionesAutorizadas))
+                                || !AgHuellaEscaladoPersistido.EstadoCompleto(db, tx, d.AulaRef, d.Subunidad, idArbol, destinoEsperado, liberarEsperado, d.ReclasificacionesAutorizadas))
                             {
                                 throw new InvalidOperationException("Postcondiciones incompletas. Operación revertida.");
                             }
@@ -1003,6 +1029,8 @@ AND COALESCE(dias_patron,'')=@DiasAntes;",
             }
             catch (Exception ex)
             {
+                LoggerHelper.Info($"[ESCALADO] APLICAR_FALLO ref={dActual?.AulaRef} desde={dActual?.Desde} hacia={dActual?.Hacia} " +
+                    $"conserva={dActual?.ConservaPatronOrigen} tipo={ex.GetType().Name} motivo={ex.Message}");
                 LoggerHelper.Debug($"[AG-RANURAS-TMP] GUARDAR_REVERTIDO perfil={idArbol} tipo={ex.GetType().Name} motivo={ex.Message}");
                 return new ResultadoAplicacion { Error = ex is OperationCanceledException ? "Operación cancelada." : ex.Message };
             }
@@ -1013,14 +1041,16 @@ AND COALESCE(dias_patron,'')=@DiasAntes;",
                 par.Key.PerfilAplicado = idArbol;
             }
 
-            bool huboCambioVentana = decisionesAplicables.Any(x => !string.Equals(x.Desde, x.Hacia, StringComparison.OrdinalIgnoreCase));
+            bool huboCambioVentana = decisionesAplicables.Any(x =>
+                !string.IsNullOrWhiteSpace(x.Hacia)
+                && !string.Equals(x.Desde, x.Hacia, StringComparison.OrdinalIgnoreCase));
             bool huboReclasificacion = decisionesAplicables.Any(x => x.ReclasificacionesAutorizadas != null && x.ReclasificacionesAutorizadas.Count > 0);
 
             if (resultado.Confirmadas > 0 && resultado.Modificadas == 0 && !huboCambioVentana && !huboReclasificacion)
             {
                 resultado.Exito = true;
                 resultado.Confirmadas = 0; // SinCambios
-                resultado.Advertencia = "Partición ya vigente; sin cambios persistidos.";
+                resultado.Advertencia = "Sin cambios persistidos; la partición se recalcula en cada corrida.";
             }
             else
             {
@@ -1037,29 +1067,27 @@ AND COALESCE(dias_patron,'')=@DiasAntes;",
         }
 
         /// <summary>
-        /// Obtiene los patrones efectivos de un aula excluyendo orígenes AUTOMATICO (Fase 2218, Fase 2250).
-        /// Incluye fallback a AulaAsignaturas si el índice por aula-asignatura no ha sido construido.
+        /// Obtiene los patrones efectivos de un aula excluyendo orígenes AUTOMATICO (Fase 2218, Fase 2250, Fase 2251).
+        /// Incluye fallback a AulaAsignaturas y construcción de índices si el índice por aula-asignatura no ha sido construido o está vacío.
         /// Misma semántica que AgEvaluadorDemandaVentana.cs:124-126.
         /// </summary>
         internal static IReadOnlyList<string> PatronesEfectivos(AgContexto ctx, int idAula)
         {
-            var aulas = (ctx.AulaAsignaturaPorAulaAsig != null && ctx.AulaAsignaturaPorAulaAsig.Count > 0)
-                ? (IEnumerable<AgAulaAsignatura>)ctx.AulaAsignaturaPorAulaAsig.Values
-                : (IEnumerable<AgAulaAsignatura>)ctx.AulaAsignaturas
-                ?? Enumerable.Empty<AgAulaAsignatura>();
-
-            return aulas.Where(a => a.IdAula == idAula
+            return AgContexto.RelacionesAula(ctx)
+                .Where(a => a.IdAula == idAula
                     && !string.Equals(a.OrigenPatron, "AUTOMATICO", StringComparison.OrdinalIgnoreCase)
                     && !string.IsNullOrWhiteSpace(a.DiasPatron))
                 .Select(a => a.DiasPatron).ToList();
         }
 
         /// <summary>
-        /// Determina si una opción de partición puede alojar todos los patrones de días requeridos (Fases 2247-2248).
-        /// Aplica semántica muchos-a-uno: cada patrón debe ser compatible con al menos un carril de la opción.
-        /// Si el patrón incluye día 6 (sábado), se valida que el carril contenga ranuras para dicho día sin vetos globales de texto.
+        /// Indica si TODOS los patrones son alojables en algún carril de la opción (muchos-a-uno).
+        /// Criterio estructural: día del patrón presente en el carril; si incluye sábado, el carril
+        /// debe tener al menos una ranura de día 6. NO evalúa capacidad semanal ni demanda:
+        /// eso lo valida AgPlanificadorOleadas. Se usa solo para decidir la limpieza de dias_patron.
+        /// (Fases 2247, 2248; 2252 retirada por diseño, Fase 2254).
         /// </summary>
-        internal static bool OpcionConservaPatrones(AgOpcionParticion opcion, IReadOnlyList<string> patrones)
+        internal static bool PatronesAlojablesEnOpcion(AgOpcionParticion opcion, IReadOnlyList<string> patrones)
         {
             if (opcion == null || opcion.Carriles == null || opcion.Carriles.Count == 0) return false;
             if (patrones == null || patrones.Count == 0) return true;
@@ -1133,7 +1161,7 @@ AND COALESCE(dias_patron,'')=@DiasAntes;",
         {
             var partes = new List<string>
             {
-                "propuesta-escalado-v4", d.IdAula.ToString(CultureInfo.InvariantCulture), d.AulaRef, d.Subunidad, d.Desde, d.Hacia,
+                "propuesta-escalado-v5", d.IdAula.ToString(CultureInfo.InvariantCulture), d.AulaRef, d.Subunidad, d.Desde, d.Hacia,
                 d.Mejora.ToString(), d.CapacidadAntes.ToString(CultureInfo.InvariantCulture),
                 d.CapacidadDespues.ToString(CultureInfo.InvariantCulture),
                 d.DemandaPendiente.ToString(CultureInfo.InvariantCulture),
@@ -1143,8 +1171,6 @@ AND COALESCE(dias_patron,'')=@DiasAntes;",
                 d.ParticionPreferente ?? string.Empty
             };
 
-            partes.Add(d.ParticionMejora ? "pm=1" : "pm=0");
-            partes.Add(d.ParticionDifiereDeReferencia ? "pdr=1" : "pdr=0");
             partes.Add(d.ConservaPatronOrigen ? "cp=1" : "cp=0");
 
             if (d.ReclasificacionesAutorizadas != null && d.ReclasificacionesAutorizadas.Count > 0)

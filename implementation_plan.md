@@ -928,6 +928,172 @@ Las citas `implementation_plan.md:NNNN` anteriores al corte apuntan al archivo m
 | 2249 | `AgPlanificadorPatronSemanal.cs`, `AgEscaladoTresCasosMatrizTests.cs` | Implementado |
 | 2250 | `AgEscaladorRanuraAula.cs`, `AgEvaluadorDemandaVentana.cs`, `AgEscaladoTresCasosMatrizTests.cs` | Implementado |
 
+---
+
+## Ronda 503: Cierre de conservación de patrones y fallback vacío (Fases 2251–2253)
+
+### Resumen de la Ronda
+- **Fase 2251:** Implementación de `AgContexto.RelacionesAula(ctx)` que verifica cardinalidad y ejecuta `ctx.ConstruirIndices()` si el índice `AulaAsignaturaPorAulaAsig` está vacío (0 filas) pero `AulaAsignaturas` contiene relaciones. Se integró en `PatronesEfectivos` (`AgEscaladorRanuraAula.cs`) y `Evaluar`/`Demandas` (`AgEvaluadorDemandaVentana.cs`).
+- **Fase 2252:** Documentación explícita del contrato de `OpcionConservaPatrones` en `AgEscaladorRanuraAula.cs` estableciendo que la comprobación de carriles es de carácter estructural (presencia de ranuras requeridas por el patrón, incluyendo sábado) y que la capacidad semanal de sesiones se valida en la evaluación de demanda downstream.
+- **Fase 2253:** Corrección en `AgFabricaIndividuos.cs:429` para excluir el origen `AUTOMATICO` de `tienePatronDeclarado`, permitiendo que asignaturas con patrones automáticos residuales sean tratadas como automáticas y no bloqueen la resiembra del genoma sin plan fechado.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2251 | `AgContexto.cs`, `AgEscaladorRanuraAula.cs`, `AgEvaluadorDemandaVentana.cs`, `AgEscaladoTresCasosMatrizTests.cs` | Implementado |
+| 2252 | `AgEscaladorRanuraAula.cs` | Retirada por diseño (capacidad pertenece a oleadas) |
+| 2253 | `AgFabricaIndividuos.cs`, `AgFabricaIndividuosTests.cs` | Implementado |
+
+---
+
+## Ronda 504: Cierre de conservación de patrones (Fases 2254–2255)
+
+### Resumen de la Ronda
+- **Fase 2254:** Formalización de `PatronesAlojablesEnOpcion` en `AgEscaladorRanuraAula.cs:586, 1053-1100` (anteriormente `OpcionConservaPatrones`), consolidando el criterio estructural (presencia de ranura para cada día del patrón y sábado) y registrando el retiro formal de 2252 ya que la capacidad semanal la evalúa `AgPlanificadorOleadas`.
+- **Fase 2255:** Cobertura de pruebas unitarias exhaustiva para los cuatro bordes (`RelacionesAula_IndiceVacio_UsaListaYConstruyeIndices`, `PatronesAlojables_SeisPatronesDosCarriles_True`, `PatronesAlojables_Dia6SinRanura_False`, `Escalador_PatronesEfectivos_ExcluyeAutomatico` en `AgEscaladoTresCasosMatrizTests.cs` y `Fabrica_PatronAutomatico_NoBloqueaResiembra` en `AgFabricaIndividuosTests.cs`).
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2254 | `AgEscaladorRanuraAula.cs`, `AgEscaladoTresCasosMatrizTests.cs` | Implementado |
+| 2255 | `AgEscaladoTresCasosMatrizTests.cs`, `AgFabricaIndividuosTests.cs` | Implementado |
+
+---
+
+## Ronda 505: Eliminación de persistencia de solo partición y desacople de ConservaPatronOrigen (Fases 2256–2259)
+
+### Resumen de la Ronda
+- **Fase 2256:** Eliminación de `(ParticionMejora && ParticionDifiereDeReferencia)` de la propiedad `AgEscaladorRanuraAula.Decision.Aplica`. Dado que las particiones de carriles son efímeras y se recalculan dinámicamente en memoria en cada corrida por `AgPlanificadorOleadas`, no existen campos ni columnas en base de datos para almacenar carriles. Por tanto, decisiones donde `Desde == Hacia` sin reclasificaciones autorizadas no generan escrituras persistentes (`Aplica = false`), impidiendo transacciones espurias y eliminando fallos en la verificación de huellas postcondición (`Calcular != esperado`).
+- **Fase 2257:** Desacople estricto de `liberarEsperado` y el vaciado de `dias_patron` para bottleneck respecto a `Desde == Hacia`. Ambas operaciones quedan condicionadas exclusivamente a `!d.ConservaPatronOrigen`. Cuando `ConservaPatronOrigen` es `true` (validado mediante `PatronesAlojablesEnOpcion`), se preservan los patrones incluso ante escalado de cambio de ventana, evitando borrados destructivos innecesarios.
+- **Fase 2258:** Documentación y armonización arquitectónica de la no-persistencia de solo partición en `AgEscaladorRanuraAula.cs`. Retención informativa en salida temprana de `AplicarDetalladoAsync`: si no hay decisiones aplicables a BD pero existen mejoras de partición, se emite advertencia de partición vigente sin modificaciones (`SinCambios`).
+- **Fase 2259:** Adición de trazabilidad diagnóstica `LoggerHelper.Info` previa a la validación de postcondiciones en `AplicarDetalladoAsync` (`APLICAR ref={ref} desde={desde} hacia={hacia} conserva={conserva} liberar={liberar} modificadas={modificadas} perfil={perfil}`), garantizando visibilidad inmediata de los parámetros de aplicación de cada decisión.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2256 | `AgEscaladorRanuraAula.cs`, `AgEscaladorRanuraAulaPersistenciaTests.cs`, `AgEscaladoTresCasosMatrizTests.cs` | Implementado |
+| 2257 | `AgEscaladorRanuraAula.cs`, `AgEscaladoTresCasosMatrizTests.cs` | Implementado |
+| 2258 | `AgEscaladorRanuraAula.cs` | Implementado |
+| 2259 | `AgEscaladorRanuraAula.cs` | Implementado |
+
+---
+
+## Ronda 506: Partición de origen preferente (Fases 2260–2263)
+
+### Resumen de la Ronda
+- **Fase 2260:** Introducción de `AgCriterioParticion` (`Estricto`, `PreferirOrigen`, `ForzarOrigen`) en `AgParticionCarriles.cs` y métodos de guarda `NoEmpeora` y `NoEmpeoraSinMakespan`. Permite que ante una referencia canónica con 0 infactibles y mismo makespan no se descarte la opción de catálogo de origen (`2,3|1,4,5`), eliminando la caída espuria a `catalogo_fallback` con carril aislado `{1}`.
+- **Fase 2261:** Propagación del parámetro `AgCriterioParticion` a través de `AgPlanificadorOleadas.Construir`, `ConstruirEvaluacion`, `ConstruirInterno` y `AgEvaluadorDemandaVentana.Evaluar` (valor por defecto `AgCriterioParticion.Estricto`).
+- **Fase 2262:** Paridad en la selección de partición entre escalador (`AgEscaladorRanuraAula.cs`) y validador (`AgValidadorVentana.cs`), configurando `PreferirOrigen` en las evaluaciones con opción (`opcionActual`, `opcionMisma`, `opcionPaso`, `opcionEscalon`) y conservando `Estricto` en la evaluación de la referencia sin opción.
+- **Fase 2263:** Trazabilidad enriquecida en log de oleadas (`criterio={criterio}`) y batería de pruebas unitarias (`AgParticionCarrilesOpcionesTests.cs`, `AgEscaladoTresCasosMatrizTests.cs`) para verificar selección preferente, preservación de guardas de no-empeoramiento y fallback nominal ante opciones adversas.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2260 | `AgParticionCarriles.cs` | Revisado |
+| 2261 | `AgPlanificadorOleadas.cs`, `AgEvaluadorDemandaVentana.cs` | Revisado |
+| 2262 | `AgEscaladorRanuraAula.cs`, `AgValidadorVentana.cs` | Revisado |
+| 2263 | `AgPlanificadorOleadas.cs`, `AgParticionCarrilesOpcionesTests.cs`, `AgEscaladoTresCasosMatrizTests.cs` | Revisado |
+
+---
+
+## Ronda 507: Criterio de partición de origen (implementación restante) (Fases 2264–2267)
+
+### Resumen de la Ronda
+- **Fase 2264:** Implementación de `AgCriterioParticion` (`Estricto`, `PreferirOrigen`, `ForzarOrigen`) en `AgParticionCarriles.cs` y de las funciones de guarda `NoEmpeora` y `NoEmpeoraSinMakespan` con verificación explícita de cobertura de sesiones ubicadas (`Ubicadas(ev) >= Ubicadas(r)`). Esto resuelve el descarte sistemático de `2,3|1,4,5` ante referencias 0/0, evitando la caída espuria a `catalogo_fallback` con carril `{1}`.
+- **Fase 2265:** Propagación del parámetro `AgCriterioParticion criterio = AgCriterioParticion.Estricto` a través de `AgPlanificadorOleadas.Construir`, `ConstruirEvaluacion`, `ConstruirInterno` y `AgEvaluadorDemandaVentana.Evaluar`.
+- **Fase 2266:** Paridad de criterio entre escalador (`AgEscaladorRanuraAula.cs`) y validador (`AgValidadorVentana.cs`), configurando `PreferirOrigen` en las llamadas que evalúan opciones estructuradas y manteniendo `Estricto` en la línea base de referencia sin opción.
+- **Fase 2267:** Incorporación de `criterio=` en el log de oleadas (`[Oleadas] Partición: ... criterio={criterio}; ...`) y suite de pruebas unitarias (`AgParticionCarrilesOpcionesTests.cs`, `AgEscaladoTresCasosMatrizTests.cs`) para verificar selección preferente, preservación de sesiones ubicadas y rechazo por degradación.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2264 | `AgParticionCarriles.cs` | Planificado |
+| 2265 | `AgPlanificadorOleadas.cs`, `AgEvaluadorDemandaVentana.cs` | Planificado |
+| 2266 | `AgEscaladorRanuraAula.cs`, `AgValidadorVentana.cs` | Planificado |
+| 2267 | `AgPlanificadorOleadas.cs`, `AgParticionCarrilesOpcionesTests.cs`, `AgEscaladoTresCasosMatrizTests.cs` | Planificado |
+
+---
+
+## Ronda 508: Criterio de partición de origen (re-emisión) (Fases 2268–2271)
+
+### Resumen de la Ronda
+- **Fase 2268:** Re-emisión de la definición de `AgCriterioParticion` (`Estricto`, `PreferirOrigen`, `ForzarOrigen`), cálculo auxiliar `Ubicadas` y predicados de guarda `NoEmpeora`/`NoEmpeoraSinMakespan` con verificación estricta de cobertura (`Ubicadas(ev) >= Ubicadas(r)`) en `AgParticionCarriles.cs:85-147`, permitiendo que la opción de catálogo `2,3|1,4,5` no se descarte frente a referencias canónicas 0/0.
+- **Fase 2269:** Propagación del parámetro `AgCriterioParticion criterio = AgCriterioParticion.Estricto` en `AgPlanificadorOleadas.Construir`, `ConstruirEvaluacion`, `ConstruirInterno` (`AgPlanificadorOleadas.cs:30-59, 236, 357-364`) y `AgEvaluadorDemandaVentana.Evaluar` (`AgEvaluadorDemandaVentana.cs:98, 131-133`).
+- **Fase 2270:** Paridad y alineación de criterio entre escalador (`AgEscaladorRanuraAula.cs:502-586`) y validador (`AgValidadorVentana.cs:353-355, 428-429`), empleando `PreferirOrigen` en evaluaciones con opción de catálogo y `Estricto` en la evaluación de referencia sin opción.
+- **Fase 2271:** Trazabilidad de partición en log de oleadas (`[Oleadas] ... criterio={criterio}; ...`, `AgPlanificadorOleadas.cs:377-391`) y batería de pruebas unitarias (`AgParticionCarrilesOpcionesTests.cs`, `AgEscaladoTresCasosMatrizTests.cs`) para verificar selección de catálogo de origen, guardas de cobertura y fallback nominal.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2268 | `AgParticionCarriles.cs` | Planificado |
+| 2269 | `AgPlanificadorOleadas.cs`, `AgEvaluadorDemandaVentana.cs` | Planificado |
+| 2270 | `AgEscaladorRanuraAula.cs`, `AgValidadorVentana.cs` | Planificado |
+| 2271 | `AgPlanificadorOleadas.cs`, `AgParticionCarrilesOpcionesTests.cs`, `AgEscaladoTresCasosMatrizTests.cs` | Planificado |
+
+---
+
+## Ronda 509: Cierre de 2258 y diagnóstico de aplicación (Fases 2272–2274)
+
+### Resumen de la Ronda
+- **Fase 2272:** Ajuste de postcondición same-window (`Desde == Hacia`) en `AgEscaladorRanuraAula.cs:898-1001` y `AgHuellaEscaladoPersistido.cs:100-145`. En decisiones solo de reclasificación o intra-ventana sin cambio de ventana, `destino` se pasa como `null` a `Calcular` y `EstadoCompleto`. `EstadoCompleto` omite la comprobación de `dias_ventana` en aula y nodo cuando `destino == null`, evitando fallos espurios de postcondición por divergencias preexistentes entre el árbol y `ag_aula`. Asimismo, `Calcular` no condiciona la sustitución de reclasificaciones ni liberación de cuellos de botella a `destino != null`.
+- **Fase 2273:** Adelanto del registro de log `[ESCALADO] APLICAR` previo a la ejecución del primer `UPDATE` en `AgEscaladorRanuraAula.cs` (~línea 925) y emisión diagnóstica `[ESCALADO] APLICAR_FALLO` con aula, desde, hacia, tipo y mensaje de excepción en el bloque `catch` para garantizar trazabilidad ante fallos de escritura SQL.
+- **Fase 2274:** Limpieza de propiedades residuales de partición en `AgEscaladorRanuraAula.Decision` (`ParticionMejora`, `ParticionDifiereDeReferencia`) y sus correspondientes tokens (`pm=`, `pdr=`) en `HuellaAccion`, una vez desacoplada la persistencia de decisiones intra-ventana.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2272 | `AgEscaladorRanuraAula.cs`, `AgHuellaEscaladoPersistido.cs` | Planificado |
+| 2273 | `AgEscaladorRanuraAula.cs` | Planificado |
+| 2274 | `AgEscaladorRanuraAula.cs` | Planificado |
+
+---
+
+## Ronda 510: Reclasificación en misma ventana rompe el hash esperado (Fases 2275–2279)
+
+### Resumen de la Ronda
+- **Fase 2275:** Desacople de `destino != null` para la sustitución de `liberar` (cuello de botella) y `reclasificaciones` en `AgHuellaEscaladoPersistido.Calcular` (`AgHuellaEscaladoPersistido.cs:33, 39`). Con `Desde == Hacia` (o `Hacia` vacío) y solo reclasificación, los `UPDATE` mutan `origen_patron` y `dias_patron`; al desacoplar la condición, el hash esperado refleja fielmente los cambios en `ag_aula_asignatura` sin requerir cambio de ventana.
+- **Fase 2276:** Adaptación de `AgHuellaEscaladoPersistido.EstadoCompleto` para aceptar `destino == null` (`AgHuellaEscaladoPersistido.cs:100-112`). Si `destino == null`, se verifica la existencia unívoca del aula y se omite la validación de `dias_ventana` en aula y nodo. En `AgEscaladorRanuraAula.cs` (líneas 907-917 y 998) se calcula `destinoEsperado = cambiaVentana ? d.Hacia : null` tanto para la rama idempotente como para la verificación postcondición.
+- **Fase 2277:** Corrección de la clasificación de advertencia `"Partición ya vigente; sin cambios persistidos."` en `AgEscaladorRanuraAula.cs:852-855`. Se introduce la propiedad `SoloParticion` (`ParticionMejora && !Aplica && Desde == Hacia && SinReclasificaciones`) evitando atribuir a partición decisiones de escalada rechazadas por falta de capacidad.
+- **Fase 2278:** Reubicación de la traza `[ESCALADO] APLICAR` previo al primer `UPDATE` SQL en `AgEscaladorRanuraAula.cs` (~línea 925) e incorporación de log `[ESCALADO] APLICAR_FALLO` con referencia, desde, hacia, conserva, tipo y mensaje de error en el bloque `catch`.
+- **Fase 2279:** Exclusión de los flags `pm=` y `pdr=` del cómputo de `HuellaAccion` en `AgEscaladorRanuraAula.cs:1155-1156`, manteniendo las propiedades en `Decision` para el diagnóstico de `SoloParticion` pero sin alterar el sello criptográfico de la acción.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2275 | `AgHuellaEscaladoPersistido.cs` | Implementado |
+| 2276 | `AgHuellaEscaladoPersistido.cs`, `AgEscaladorRanuraAula.cs` | Implementado |
+| 2277 | `AgEscaladorRanuraAula.cs` | Implementado |
+| 2278 | `AgEscaladorRanuraAula.cs` | Implementado |
+| 2279 | `AgEscaladorRanuraAula.cs` | Implementado |
+
+---
+
+## Ronda 511: `UPDATE ag_aula` se ejecuta con guarda distinta a `destinoEsperado` (Fases 2280–2283)
+
+### Resumen de la Ronda
+- **Fase 2280:** Sustitución de `!string.Equals(d.Desde, d.Hacia)` por `cambiaVentana` en `AgEscaladorRanuraAula.cs:948` y en el flag global `huboCambioVentana` (línea 1044). Si `Hacia` viene vacío o no nulo pero igual a `Desde`, no se ejecuta `UPDATE ag_aula SET dias_ventana` ni se modifica `ag_arbol_nodo`, manteniendo estricta paridad con `destinoEsperado = cambiaVentana ? d.Hacia : null`.
+- **Fase 2281:** Validación simétrica estricta de cada reclasificación en `AgEscaladorRanuraAula.cs:980-987`. Se verifica `rec != null && rec.Autorizado && rec.IdAula == idAula && rec.AulaRef == d.AulaRef && rec.Subunidad == d.Subunidad` antes de ejecutar cualquier `UPDATE` en `ag_aula_asignatura`, arrojando `InvalidOperationException` si la propuesta fue manipulada o presenta divergencias.
+- **Fase 2282:** Bump de versión del prefijo de acción en `HuellaAccion` de `propuesta-escalado-v4` a `propuesta-escalado-v5` (`AgEscaladorRanuraAula.cs:1164`) para reflejar la eliminación de los tokens `pm=` y `pdr=`.
+- **Fase 2283:** Ampliación de la guarda de `SoloParticion` en `AgEscaladorRanuraAula.cs:57-61` (`(ParticionMejora || ParticionDifiereDeReferencia)`) y unificación del texto de advertencia a `"Sin cambios persistidos; la partición se recalcula en cada corrida."` en las líneas 859 y 1048. Actualización de aserciones en tests correspondientes.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2280 | `AgEscaladorRanuraAula.cs` | Implementado |
+| 2281 | `AgEscaladorRanuraAula.cs` | Implementado |
+| 2282 | `AgEscaladorRanuraAula.cs`, `AgEscaladorRanuraAulaTests.cs` | Implementado |
+| 2283 | `AgEscaladorRanuraAula.cs`, `AgEscaladorRanuraAulaPersistenciaTests.cs`, `AgEscaladorRanuraAulaTests.cs` | Implementado |
+
+
 
 
 

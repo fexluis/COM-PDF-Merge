@@ -319,5 +319,45 @@ namespace ConversorPDF.Tests.Academic.Infrastructure.Persistence
 
             return contexto;
         }
+
+        [Fact]
+        public void DecisionSoloParticion_CuandoDifierePeroNoMejora_DevuelveTrue()
+        {
+            var decision = new AgEscaladorRanuraAula.Decision
+            {
+                AulaRef = "A101",
+                Subunidad = "",
+                Desde = "VIE-SAB",
+                Hacia = "VIE-SAB",
+                ParticionMejora = false,
+                ParticionDifiereDeReferencia = true,
+                CapacidadAntes = 6,
+                CapacidadDespues = 6
+            };
+
+            decision.SoloParticion.Should().BeTrue();
+            decision.Aplica.Should().BeFalse();
+        }
+
+        [Fact]
+        public void HuellaAccion_DebeComenzarConPropuestaEscaladoV5()
+        {
+            var decision = new AgEscaladorRanuraAula.Decision
+            {
+                IdAula = 1,
+                AulaRef = "A101",
+                Subunidad = "CENTRAL",
+                Desde = "LUN-JUE",
+                Hacia = "LUN-VIE",
+                ConservaPatronOrigen = true,
+                CapacidadAntes = 16,
+                CapacidadDespues = 20
+            };
+
+            string huella = AgEscaladorRanuraAula.HuellaAccion(decision);
+
+            huella.Should().NotBeNullOrWhiteSpace();
+            huella.Length.Should().Be(44);
+        }
     }
 }

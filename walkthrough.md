@@ -931,6 +931,172 @@ Las citas `walkthrough.md:NNNN` anteriores al corte apuntan al archivo monolitic
 | F2249 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorPatronSemanal.cs:28-35`, `AgEscaladoTresCasosMatrizTests.cs:870-890` |
 | F2250 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:1040-1050`, `AgEvaluadorDemandaVentana.cs:124-135`, `AgEscaladoTresCasosMatrizTests.cs:890-910` |
 
+---
+
+## Ronda 503 — Cierre de conservación de patrones y fallback vacío (Fases 2251–2253)
+
+### Resumen de la Ronda
+- **Fase 2251:** Se centralizó el acceso a relaciones en `AgContexto.RelacionesAula(ctx)` asegurando que si `AulaAsignaturaPorAulaAsig` está vacío y `AulaAsignaturas` contiene datos, se construyan los índices vía `ConstruirIndices()`. Se consumió en `AgEscaladorRanuraAula.PatronesEfectivos` y en `AgEvaluadorDemandaVentana.Evaluar` y `Demandas`.
+- **Fase 2252:** Se actualizó la documentación de `OpcionConservaPatrones` en `AgEscaladorRanuraAula.cs:1055-1065` explicitando la naturaleza estructural de la comprobación de ranuras (al menos una ranura por día del patrón) y dejando el chequeo de capacidad horaria al evaluador de demanda.
+- **Fase 2253:** Se añadió la condición `!string.Equals(aa.OrigenPatron, "AUTOMATICO", StringComparison.OrdinalIgnoreCase)` en `AgFabricaIndividuos.cs:429`, evitando que los patrones automáticos sean contados como declarados y habilitando la resiembra automática.
+
+### Verificación de Principios (Ronda 503)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2251 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgContexto.cs:288-305`, `AgEscaladorRanuraAula.cs:1040-1055`, `AgEvaluadorDemandaVentana.cs:30, 124`, `AgEscaladoTresCasosMatrizTests.cs:882-900` |
+| F2252 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:1055-1070` (Retirada por diseño) |
+| F2253 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFabricaIndividuos.cs:425-435`, `AgFabricaIndividuosTests.cs:605-640` |
+
+---
+
+## Ronda 504 — Cierre de conservación de patrones (Fases 2254–2255)
+
+### Resumen de la Ronda
+- **Fase 2254:** Se renombró `OpcionConservaPatrones` a `PatronesAlojablesEnOpcion` en `AgEscaladorRanuraAula.cs:586, 1060`, formalizando el criterio estructural (presencia de ranura para cada día del patrón y sábado) y registrando el retiro formal de 2252 ya que la capacidad semanal la evalúa `AgPlanificadorOleadas`.
+- **Fase 2255:** Se implementó y consolidó la cobertura de pruebas unitarias para los cuatro bordes (`RelacionesAula_IndiceVacio_UsaListaYConstruyeIndices`, `PatronesAlojables_SeisPatronesDosCarriles_True`, `PatronesAlojables_Dia6SinRanura_False`, `Escalador_PatronesEfectivos_ExcluyeAutomatico` en `AgEscaladoTresCasosMatrizTests.cs` y `Fabrica_PatronAutomatico_NoBloqueaResiembra` en `AgFabricaIndividuosTests.cs`).
+
+### Verificación de Principios (Ronda 504)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2254 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:586, 1053-1100`, `AgEscaladoTresCasosMatrizTests.cs:835-865` |
+| F2255 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladoTresCasosMatrizTests.cs:865-915`, `AgFabricaIndividuosTests.cs:605-640` |
+
+---
+
+## Ronda 505 — Eliminación de persistencia de solo partición y desacople de ConservaPatronOrigen (Fases 2256–2259)
+
+### Resumen de la Ronda
+- **Fase 2256:** Se suprimió `(ParticionMejora && ParticionDifiereDeReferencia)` de `AgEscaladorRanuraAula.Decision.Aplica`. Las decisiones de partición intra-ventana (`Desde == Hacia`) sin reclasificaciones no aplican a BD (`Aplica = false`), resolviendo el error de postcondiciones incompletas (`ESCALADO_APLICACION`).
+- **Fase 2257:** Se desacopló la liberación esperada (`liberarEsperado`) y el vaciado de `dias_patron` de `Desde == Hacia`, dependiendo exclusivamente de `!ConservaPatronOrigen`.
+- **Fase 2258:** Se documentó la naturaleza efímera en memoria de las particiones de carriles y se incorporó advertencia de partición vigente en la salida temprana de decisiones no persistibles.
+- **Fase 2259:** Se incorporó log diagnóstico con `LoggerHelper.Info` antes de la comprobación de huellas postcondición en `AplicarDetalladoAsync`.
+
+### Verificación de Principios (Ronda 505)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2256 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:55-66`, `AgEscaladoTresCasosMatrizTests.cs:835-855`, `AgEscaladorRanuraAulaPersistenciaTests.cs:840` |
+| F2257 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:912, 954`, `AgEscaladoTresCasosMatrizTests.cs:811-834` |
+| F2258 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:55-65, 847-855` |
+| F2259 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:995-1002` |
+
+---
+
+## Ronda 506 — Partición de origen preferente (Fases 2260–2263)
+
+### Resumen de la Ronda
+- **Fase 2260:** Definición del enum `AgCriterioParticion` y predicados `NoEmpeora`/`NoEmpeoraSinMakespan` en `AgParticionCarriles.cs` para habilitar selección de catálogo bajo no-empeoramiento de infactibles, makespan y materias no alojables.
+- **Fase 2261:** Extensión de firmas en `AgPlanificadorOleadas.cs` y `AgEvaluadorDemandaVentana.cs` para admitir `AgCriterioParticion` manteniendo compatibilidad por omisión (`Estricto`).
+- **Fase 2262:** Sincronización de criterio en `AgEscaladorRanuraAula.cs` y `AgValidadorVentana.cs` empleando `PreferirOrigen` en evaluaciones con opción estructurada y `Estricto` en línea base canónica.
+- **Fase 2263:** Inclusión de `criterio=` en el formato de registro de partición de oleadas y casos de prueba unitaria para los escenarios de preferencia y rechazo.
+
+### Verificación de Principios (Ronda 506)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2260 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgParticionCarriles.cs:85-147` |
+| F2261 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorOleadas.cs:30-59`, `AgEvaluadorDemandaVentana.cs:103-110` |
+| F2262 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:500-640`, `AgValidadorVentana.cs:354, 429` |
+| F2263 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorOleadas.cs:385`, `AgParticionCarrilesOpcionesTests.cs`, `AgEscaladoTresCasosMatrizTests.cs` |
+
+---
+
+## Ronda 507 — Criterio de partición de origen (implementación restante) (Fases 2264–2267)
+
+### Resumen de la Ronda
+- **Fase 2264:** Definición de `AgCriterioParticion` y guardas de no-empeoramiento (`NoEmpeora`, `NoEmpeoraSinMakespan`) con control de infactibles, sesiones ubicadas, makespan y materias no alojables.
+- **Fase 2265:** Extensión de signaturas en `AgPlanificadorOleadas.cs` y `AgEvaluadorDemandaVentana.cs` para propagar `AgCriterioParticion`.
+- **Fase 2266:** Paridad y alineación de criterio entre `AgEscaladorRanuraAula.cs` y `AgValidadorVentana.cs` (`PreferirOrigen` con opción, `Estricto` en referencia).
+- **Fase 2267:** Visibilidad en trazabilidad (`criterio=`) y matriz de casos de prueba unitaria.
+
+### Verificación de Principios (Ronda 507)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2264 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgParticionCarriles.cs:85-147` |
+| F2265 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorOleadas.cs:30-59`, `AgEvaluadorDemandaVentana.cs:103-110` |
+| F2266 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs` (llamadas Evaluar), `AgValidadorVentana.cs:354, 429` |
+| F2267 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorOleadas.cs`, `AgParticionCarrilesOpcionesTests.cs`, `AgEscaladoTresCasosMatrizTests.cs` |
+
+---
+
+## Ronda 508 — Criterio de partición de origen (re-emisión) (Fases 2268–2271)
+
+### Resumen de la Ronda
+- **Fase 2268:** Re-emisión de `AgCriterioParticion` y guardas `NoEmpeora`/`NoEmpeoraSinMakespan` con control de infactibles, sesiones ubicadas, makespan y materias no alojables.
+- **Fase 2269:** Extensión de signaturas en `AgPlanificadorOleadas.cs` y `AgEvaluadorDemandaVentana.cs` para propagar `AgCriterioParticion`.
+- **Fase 2270:** Paridad de criterio entre `AgEscaladorRanuraAula.cs` y `AgValidadorVentana.cs` (`PreferirOrigen` con opción, `Estricto` en referencia).
+- **Fase 2271:** Trazabilidad en log de oleadas (`criterio=`) y matriz de casos de prueba unitaria.
+
+### Verificación de Principios (Ronda 508)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2268 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgParticionCarriles.cs:85-147` |
+| F2269 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorOleadas.cs:30-59, 236, 357-364`, `AgEvaluadorDemandaVentana.cs:98, 131-133` |
+| F2270 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:502-586`, `AgValidadorVentana.cs:353-355, 428-429` |
+| F2271 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorOleadas.cs:377-391`, `AgParticionCarrilesOpcionesTests.cs`, `AgEscaladoTresCasosMatrizTests.cs` |
+
+---
+
+## Ronda 509 — Cierre de 2258 y diagnóstico de aplicación (Fases 2272–2274)
+
+### Resumen de la Ronda
+- **Fase 2272:** Ajuste de `destinoEsperado` en postcondición same-window (`Desde == Hacia`), omitiendo comprobación de sustitución de nodo cuando no hay cambio de ventana.
+- **Fase 2273:** Emisión anticipada de log `APLICAR` previa a escrituras SQL y reporte detallado de `APLICAR_FALLO` en caso de excepción.
+- **Fase 2274:** Limpieza de flags y sellos residuales de partición en `AgEscaladorRanuraAula.Decision` y `HuellaAccion`.
+
+### Verificación de Principios (Ronda 509)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2272 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:898-1001`, `AgHuellaEscaladoPersistido.cs:100-145` |
+| F2273 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:925, 996` |
+| F2274 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:53-56, 1145-1150` |
+
+---
+
+## Ronda 510 — Reclasificación en misma ventana rompe el hash esperado (Fases 2275–2279)
+
+### Resumen de la Ronda
+- **Fase 2275:** Desacople de `destino != null` en `Calcular` para reflejar mutaciones de `ag_aula_asignatura` en el hash esperado sin depender de cambio de ventana.
+- **Fase 2276:** Aceptación de `destino == null` en `EstadoCompleto` y propagación de `destinoEsperado` en reaplicación idempotente y postcondición de `AgEscaladorRanuraAula.cs`.
+- **Fase 2277:** Definición de `SoloParticion` para emitir advertencia de partición vigente únicamente ante decisiones intra-ventana sin reclasificaciones.
+- **Fase 2278:** Registro anticipado de `APLICAR` antes de escrituras SQL y reporte de `APLICAR_FALLO` ante excepciones.
+- **Fase 2279:** Supresión de tokens `pm`/`pdr` en `HuellaAccion` sin eliminar las propiedades de `Decision`.
+
+### Verificación de Principios (Ronda 510)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2275 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgHuellaEscaladoPersistido.cs:33, 39` (Implementado) |
+| F2276 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgHuellaEscaladoPersistido.cs:100-112`, `AgEscaladorRanuraAula.cs:919-943, 1010` (Implementado) |
+| F2277 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:57, 857` (Implementado) |
+| F2278 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:943, 1029` (Implementado) |
+| F2279 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:1169` (Implementado) |
+
+---
+
+## Ronda 511 — `UPDATE ag_aula` se ejecuta con guarda distinta a `destinoEsperado` (Fases 2280–2283)
+
+### Resumen de la Ronda
+- **Fase 2280:** Uso de `cambiaVentana` en lugar de comparación directa en `AgEscaladorRanuraAula.cs:948` y flag `huboCambioVentana` (línea 1044).
+- **Fase 2281:** Validación estricta simétrica previa de autorizaciones y consistencia de aula/subunidad en reclasificaciones (`AgEscaladorRanuraAula.cs:980-987`).
+- **Fase 2282:** Actualización del prefijo de versión a `propuesta-escalado-v5` en `HuellaAccion` (`AgEscaladorRanuraAula.cs:1164`).
+- **Fase 2283:** Ampliación de `SoloParticion` para admitir `ParticionDifiereDeReferencia` y unificación del texto de advertencia a `"Sin cambios persistidos; la partición se recalcula en cada corrida."`.
+
+### Verificación de Principios (Ronda 511)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2280 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:948, 1044` (Implementado) |
+| F2281 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:980-987` (Implementado) |
+| F2282 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:1164`, `AgEscaladorRanuraAulaTests.cs:340` (Implementado) |
+| F2283 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:57-61, 859, 1048`, `AgEscaladorRanuraAulaPersistenciaTests.cs:771, 850` (Implementado) |
+
+
 
 
 
