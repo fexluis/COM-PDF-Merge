@@ -17,9 +17,9 @@
     <ExcelDnaCreate64BitAddIn>true</ExcelDnaCreate64BitAddIn>
     <!-- Excluir dependencias que no existen en .NET 4.8 y no deben empaquetarse -->
     <ExcelDnaExcludedDependencies>Microsoft.Bcl.HashCode.dll</ExcelDnaExcludedDependencies>
-    <Version>1.6.4.38</Version>
-    <AssemblyVersion>1.6.4.38</AssemblyVersion>
-    <FileVersion>1.6.4.38</FileVersion>
+    <Version>1.6.4.39</Version>
+    <AssemblyVersion>1.6.4.39</AssemblyVersion>
+    <FileVersion>1.6.4.39</FileVersion>
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
