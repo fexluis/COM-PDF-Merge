@@ -24,7 +24,7 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
         public double PenalidadHardVentanaSemestral { get; set; } = 1000.0;
         public double PenalidadHardR11_Duracion { get; set; } = 1000.0;     // Fase 935 / Fase 1030: reservada
         public double PenalidadHardR12_CarrilesAula { get; set; } = 1000.0; // Fase 935 / Fase 1030: reservada
-        public double PenalidadHardR13_Oleadas { get; set; } = 1000.0;      // Fase 935 / Fase 1030: reservada
+        public double PenalidadHardR13_Oleadas { get; set; } = 1000.0;      // Fase 935 / Fase 1030 / Fase 2318: reservada para compatibilidad/deserialización
         public double PenalidadHardR14_Bloque { get; set; } = 1000.0;
 
         // Ponderaciones Blandas (Soft Weights)

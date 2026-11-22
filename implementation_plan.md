@@ -294,6 +294,38 @@ Las citas `implementation_plan.md:NNNN` anteriores al corte apuntan al archivo m
 |---|---|---|
 | 2316 | `AgAulaDimensionesSync.cs` | Implementado |
 
+---
+
+## Ronda 523: Consolidar R6 como regla canónica de carril y retirar R13 hard (Fases 2317–2319)
+
+### Resumen de la Ronda
+- **Fase 2317:** En `AgValidadorReglasOleadasTests.cs`, adición de pruebas unitarias para semántica canónica de carril: frontera compartida sin violación dura (`R6_FronteraCompartidaMismoCarril_NoEsViolacionDura`), solape real con violación dura R6 (`R6_SolapeRealMismoCarril_EsViolacionDura`), solape no adyacente con orden curricular all-pairs (`R6_SolapeNoAdyacenteConOrdenCurricularInvertido_EsViolacionDura`), ausencia de emisión de R13 en validador (`R13_NoSeEmiteEnValidador`) y actualización del test del realineador (`RealinearOleadas_CampeonConSolapesR6_EliminaViolaciones`).
+- **Fase 2318:** En `AgValidadorReglas.cs:314-412`, unificación estructural del control de carril en R6 con comparación estricta all-pairs (`Ini < Fin && Fin > Ini`) evaluando `Date` para permitir fronteras compartidas consecutivas, y retiro del bloque de evaluación dura de `R13_OleadasDispersas`. Actualización de comentarios en `AgReglaViolacion.cs:37` y `AgPesosFitness.cs:27,63` documentando R13 como reservada/no emitida y retenida para compatibilidad de deserialización.
+- **Fase 2319:** Verificación y sincronización de contratos de validación de carril en tests y documentación viva; mantenimiento de baseline y registro R-195 cerrado en `REGISTRY.md`.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2317 | `AgValidadorReglasOleadasTests.cs` | Implementado |
+| 2318 | `AgValidadorReglas.cs`, `AgReglaViolacion.cs`, `AgPesosFitness.cs` | Implementado |
+| 2319 | `AgValidadorReglasOleadasTests.cs`, `AgValidadorReglasTests.cs`, `.agents/plans/REGISTRY.md` | Implementado |
+
+---
+
+## Ronda 524: Alineación de HaySolape con R6 estricto y aislamiento de fixture de frontera compartida (Fases 2320–2321)
+
+### Resumen de la Ronda
+- **Fase 2320:** En `AgPlanificadorOleadas.cs:1147-1165`, alineación del método `HaySolape` con la semántica canónica de R6, unificando la verificación en un único bucle all-pairs con comparación estricta de intervalos (`Ini < Fin && Fin > Ini`) y eliminando la evaluación `<=` inclusiva que provocaba reintentos espurios de reparación en fronteras compartidas consecutivas (`Fin == Ini`). Se agregan pruebas `RealinearOleadas_FronteraCompartida_NoCambia` en `AgPlanificadorOleadasTests.cs` y `AgValidadorReglasOleadasTests.cs`.
+- **Fase 2321:** En `AgValidadorReglasOleadasTests.cs:351-403`, aislamiento del fixture de prueba `R6_FronteraCompartidaMismoCarril_NoEsViolacionDura` asignando docente idéntico (`IdTercero = 20`) y bloques horarios independientes (`IdBloqueHorario = 24` y `29`) en aula 30 y patrón 4, impidiendo falsas violaciones colaterales de R10 o R2/R14 en la fecha de frontera, e incorporando la aserción de invariante `ind.HardViolations.Should().Be(0)`.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2320 | `AgPlanificadorOleadas.cs`, `AgPlanificadorOleadasTests.cs`, `AgValidadorReglasOleadasTests.cs` | Implementado |
+| 2321 | `AgValidadorReglasOleadasTests.cs`, `.agents/plans/REGISTRY.md` | Implementado |
+
 
 
 

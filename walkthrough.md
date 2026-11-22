@@ -289,6 +289,38 @@ Las citas `walkthrough.md:NNNN` anteriores al corte apuntan al archivo monolitic
 |---|---|---|---|---|---|
 | F2316 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgAulaDimensionesSync.cs:69-78, 152-161` (Implementado) |
 
+---
+
+## Ronda 523 — Consolidar R6 como regla canónica de carril y retirar R13 hard (Fases 2317–2319)
+
+### Resumen de la Ronda
+- **Fase 2317:** Implementación de suite de pruebas para semántica de carril en `AgValidadorReglasOleadasTests.cs`, verificando tolerancia a frontera compartida, detección de solape real por R6, detección de solape no adyacente en orden curricular all-pairs, no emisión de R13 y sincronización del test del realineador.
+- **Fase 2318:** Sustitución de comparación adyacente en R6 por all-pairs estricto en `AgValidadorReglas.cs`, permitiendo fronteras coincidentes sin solape. Retiro completo de la emisión de `R13_OleadasDispersas` y actualización documental en `AgReglaViolacion.cs` y `AgPesosFitness.cs`.
+- **Fase 2319:** Cierre documental e integración en `REGISTRY.md` (fila R-195) y actualización de archivos vivos con alineación a contratos canónicos.
+
+### Verificación de Principios (Ronda 523)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2317 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgValidadorReglasOleadasTests.cs:348-435` (Implementado) |
+| F2318 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgValidadorReglas.cs:314-345, 389-391`, `AgReglaViolacion.cs:37`, `AgPesosFitness.cs:27` (Implementado) |
+| F2319 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `.agents/plans/REGISTRY.md:27-28, 232`, `implementation_plan.md`, `walkthrough.md` (Implementado) |
+
+---
+
+## Ronda 524 — Alineación de HaySolape con R6 estricto y aislamiento de fixture de frontera compartida (Fases 2320–2321)
+
+### Resumen de la Ronda
+- **Fase 2320:** Reemplazo de la evaluación con `<=` y bucle adyacente en `AgPlanificadorOleadas.HaySolape` por comparación all-pairs con límites estrictos (`Ini < Fin && Fin > Ini`), armonizando el realineador con la regla canónica R6 de carril. Pruebas de no alteración ante frontera compartida integradas en suites de oleadas y planificador.
+- **Fase 2321:** Aislamiento del fixture `R6_FronteraCompartidaMismoCarril_NoEsViolacionDura` en `AgValidadorReglasOleadasTests.cs`, unificando docente y diferenciando bloques para prevenir infracciones de R10 o R2/R14 en la fecha común, asegurando `HardViolations == 0`.
+
+### Verificación de Principios (Ronda 524)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2320 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorOleadas.cs:1147-1165`, `AgPlanificadorOleadasTests.cs:847-876`, `AgValidadorReglasOleadasTests.cs:597-613` (Implementado) |
+| F2321 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgValidadorReglasOleadasTests.cs:351-404`, `.agents/plans/REGISTRY.md:27-28, 233` (Implementado) |
+
 
 
 

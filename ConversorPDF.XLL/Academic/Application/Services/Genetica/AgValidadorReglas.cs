@@ -311,19 +311,32 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         .ThenBy(asigGrp => asigGrp.Min(x => x.FechaInicioEstimada.Value))
                         .ToList();
 
-                    for (int idx = 1; idx < orden.Count; idx++)
-                    {
-                        var previaFin = orden[idx - 1].Max(x => x.FechaFinEstimada.Value);
-                        var actualIni = orden[idx].Min(x => x.FechaInicioEstimada.Value);
-
-                        if (actualIni < previaFin)
+                    // Fase 2318: Semántica canónica all-pairs estricta para solapes en el mismo carril.
+                    // Frontera compartida (Ini == Fin) no es solape duro (Ini < Fin && Fin > Ini).
+                    var intervalos = orden
+                        .Select(asigGrp => new
                         {
+                            IdAsignatura = asigGrp.Key,
+                            Ini = asigGrp.Min(x => x.FechaInicioEstimada.Value.Date),
+                            Fin = asigGrp.Max(x => x.FechaFinEstimada.Value.Date),
+                            FirstGenId = asigGrp.FirstOrDefault()?.Id ?? 0
+                        })
+                        .ToList();
+
+                    for (int i = 0; i < intervalos.Count; i++)
+                    {
+                        for (int j = i + 1; j < intervalos.Count; j++)
+                        {
+                            bool solapa = intervalos[i].Ini < intervalos[j].Fin
+                                       && intervalos[j].Ini < intervalos[i].Fin;
+                            if (!solapa) continue;
+
                             hardCount++;
                             individuo.Violaciones.Add(new AgViolacion(
                                 AgReglaViolacion.R6_SecuenciaAsignaturas,
                                 esDura: true,
-                                mensaje: $"Solape de secuencia curricular en carril '{carrilGrp.Key}' de cohorte '{g.Key}': Asignatura {orden[idx].Key} inicia ({actualIni:yyyy-MM-dd}) antes de que finalice la previa {orden[idx - 1].Key} ({previaFin:yyyy-MM-dd}).",
-                                idGen: orden[idx].FirstOrDefault()?.Id ?? 0));
+                                mensaje: $"Solape de secuencia curricular en carril '{carrilGrp.Key}' de cohorte '{g.Key}': Asignatura {intervalos[i].IdAsignatura} ({intervalos[i].Ini:yyyy-MM-dd}..{intervalos[i].Fin:yyyy-MM-dd}) solapa con Asignatura {intervalos[j].IdAsignatura} ({intervalos[j].Ini:yyyy-MM-dd}..{intervalos[j].Fin:yyyy-MM-dd}).",
+                                idGen: intervalos[j].FirstGenId));
                         }
                     }
                 }
@@ -373,43 +386,9 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 }
             }
 
-            // --- R13: Oleadas no solapadas dentro del mismo carril (Fase 1056 / Fase 1075 / I4) ---
-            foreach (var g in porGrupo)
-            {
-                // Fase 1075 / Fase 2140 / Fase 2156: Agrupar por IdAula y carril (DiasPatron)
-                var porCarril = g.Where(x => x.FechaInicioEstimada.HasValue && x.FechaFinEstimada.HasValue)
-                                 .GroupBy(x => AgCarriles.ClaveCarril(x));
-
-                foreach (var carrilGrp in porCarril)
-                {
-                    var asigs = carrilGrp.GroupBy(x => x.IdAsignatura)
-                        .Select(grp => new
-                        {
-                            IdAsignatura = grp.Key,
-                            FechaInicio = grp.Min(x => x.FechaInicioEstimada.Value),
-                            FechaFin = grp.Max(x => x.FechaFinEstimada.Value),
-                            FirstGenId = grp.FirstOrDefault()?.Id ?? 0
-                        })
-                        .ToList();
-
-                    for (int i = 0; i < asigs.Count; i++)
-                    {
-                        for (int j = i + 1; j < asigs.Count; j++)
-                        {
-                            bool solapanFechas = asigs[i].FechaInicio <= asigs[j].FechaFin && asigs[j].FechaInicio <= asigs[i].FechaFin;
-                            if (solapanFechas)
-                            {
-                                hardCount++;
-                                individuo.Violaciones.Add(new AgViolacion(
-                                    AgReglaViolacion.R13_OleadasDispersas,
-                                    esDura: true,
-                                    mensaje: $"Solape de oleadas en carril '{carrilGrp.Key}' de cohorte '{g.Key}': Asignatura {asigs[i].IdAsignatura} ({asigs[i].FechaInicio:yyyy-MM-dd}..{asigs[i].FechaFin:yyyy-MM-dd}) solapa con Asignatura {asigs[j].IdAsignatura} ({asigs[j].FechaInicio:yyyy-MM-dd}..{asigs[j].FechaFin:yyyy-MM-dd}).",
-                                    idGen: asigs[j].FirstGenId));
-                            }
-                        }
-                    }
-                }
-            }
+            // --- R13: Oleadas no solapadas dentro del mismo carril (Fase 1056 / Fase 1075 / I4 / Fase 2318) ---
+            // Fase 2318: Retirada de emisión dura de R13. La semántica canónica de no solape en carril es gobernada exclusivamente
+            // por R6_SecuenciaAsignaturas en modalidad all-pairs con límites estrictos. R13 queda reservada/no emitida.
 
             // --- Fase 1077 & Fase 1085: Asignatura sin plan de oleada factible (I5) genera violación dura R7_CoberturaHorariaIncompleta ---
             foreach (var gen in genes.Where(g => g.EsVacante == 1 && g.MotivoVacante == AgMotivoVacante.SIN_PLAN_OLEADA.Codigo()))

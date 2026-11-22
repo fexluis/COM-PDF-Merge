@@ -845,6 +845,35 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
         }
 
         [Fact]
+        public void RealinearOleadas_FronteraCompartida_NoCambia()
+        {
+            // Arrange: frontera compartida (Fin de asig 101 == Ini de asig 102) en el mismo carril (Fase 2320)
+            var ventana = VentanaSemestre.Crear(1, "2027-1", new DateTime(2027, 2, 1), new DateTime(2027, 6, 30), AgOrigenVentana.Presencial).Value;
+            var ctx = new AgContexto
+            {
+                Ventana = ventana,
+                Aulas = new List<AgAula> { new AgAula { Id = 1, Nombre = "Aula 101", Jornada = AgFranjaJornada.MANANA, DiasVentana = "1,2,3,4,5,6" } }
+            };
+
+            var individuo = new AgIndividuo
+            {
+                Genes = new List<AgGen>
+                {
+                    new AgGen { Id = 1, IdAsignatura = 101, IdAula = 1, ClaveGrupo = "G1", DiasPatron = "1,2", DiaSemana = 1, FechaInicioEstimada = new DateTime(2027, 2, 1), FechaFinEstimada = new DateTime(2027, 2, 20), TotalHorasAsignatura = 16.0, HorasGen = 8.0 },
+                    new AgGen { Id = 2, IdAsignatura = 102, IdAula = 1, ClaveGrupo = "G1", DiasPatron = "1,2", DiaSemana = 1, FechaInicioEstimada = new DateTime(2027, 2, 20), FechaFinEstimada = new DateTime(2027, 3, 11), TotalHorasAsignatura = 16.0, HorasGen = 8.0 }
+                }
+            };
+
+            // Act
+            var res = AgPlanificadorOleadas.RealinearOleadas(individuo, ctx);
+
+            // Assert
+            res.HuboCambios.Should().BeFalse();
+            res.CarrilesReparados.Should().Be(0);
+            res.Fallos.Should().Be(0);
+        }
+
+        [Fact]
         public void RealinearOleadas_FestivoEnTramo_RecalculaK()
         {
             // Arrange: Lunes 15 de febrero es festivo

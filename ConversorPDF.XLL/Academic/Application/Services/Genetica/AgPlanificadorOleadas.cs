@@ -1144,26 +1144,23 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             return false;
         }
 
+        /// <summary>
+        /// Determina si existen solapes temporales estrictos entre pares de asignaturas en el mismo carril.
+        /// Fase 2320: Alineado con la semántica canónica de R6 (all-pairs estricto: Ini &lt; Fin &amp;&amp; Fin &gt; Ini),
+        /// permitiendo fronteras compartidas (Fin == Ini) sin disparar realineación innecesaria.
+        /// </summary>
         private static bool HaySolape(IReadOnlyList<AsignaturaCarril> orden)
         {
             if (orden == null || orden.Count <= 1) return false;
-
-            for (int idx = 1; idx < orden.Count; idx++)
-            {
-                if (orden[idx].Ini < orden[idx - 1].Fin) return true;
-            }
 
             for (int i = 0; i < orden.Count; i++)
             {
                 for (int j = i + 1; j < orden.Count; j++)
                 {
-                    if (orden[i].Ini <= orden[j].Fin && orden[j].Ini <= orden[i].Fin)
-                    {
+                    if (orden[i].Ini < orden[j].Fin && orden[j].Ini < orden[i].Fin)
                         return true;
-                    }
                 }
             }
-
             return false;
         }
     }

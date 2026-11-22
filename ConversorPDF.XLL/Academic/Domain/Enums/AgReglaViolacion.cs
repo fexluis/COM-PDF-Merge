@@ -34,7 +34,7 @@ namespace ConversorPDF.XLL.Academic.Domain.Enums
         R10_CoherenciaDocenteGrupo = 28,        // Fase 544: Incoherencia de múltiples docentes en el mismo ClaveGrupo
         R11_DuracionSesionInvalida = 29,        // Fase 935 / Fase 1030: Reservada, no emitida; duración gobernada por bloques canónicos
         R12_CarrilesConcurrentesMismaAula = 30, // Fase 935 / Fase 1030: Reservada, no emitida; solape cubierto por R2/R14 sin riesgo de falsos positivos
-        R13_OleadasDispersas = 31,              // Fase 935 / Fase 1030: Reservada, no emitida; oleadas diferidas a fase de promoción
+        R13_OleadasDispersas = 31,              // Fase 935 / Fase 1030 / Fase 2318: Reservada, no emitida; semántica canónica de carril all-pairs absorbida en R6
         R14_BloqueHorarioNoAsignado = 32,       // Fase 900: Gen con carga horaria pero sin bloque asignado (0)
         R14_BloqueSolapadoPorIntervalo = 33,    // Fase 935/957: Bloques con solape temporal por intervalo matemático
         R15_VacanteExcedida = 34,               // Fase 2018: Total de vacantes forzadas supera el déficit estructural calculado
