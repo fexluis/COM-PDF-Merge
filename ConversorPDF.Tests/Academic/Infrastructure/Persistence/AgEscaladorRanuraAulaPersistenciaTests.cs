@@ -126,6 +126,37 @@ CREATE TABLE ag_aula_asignatura (
     dias_patron TEXT NOT NULL DEFAULT '',
     subunidad TEXT NOT NULL DEFAULT '',
     origen_patron TEXT NOT NULL DEFAULT 'LEGADO'
+);
+
+CREATE TABLE IF NOT EXISTS asignaturas (
+    id INTEGER PRIMARY KEY,
+    idprograma INTEGER NOT NULL DEFAULT 0,
+    semestre TEXT NOT NULL DEFAULT '',
+    num_nivel INTEGER NOT NULL DEFAULT 0,
+    cod_unidad TEXT NOT NULL DEFAULT '',
+    cod_materia TEXT NOT NULL DEFAULT '',
+    uni_teorica INTEGER NOT NULL DEFAULT 0,
+    metodologia TEXT NOT NULL DEFAULT '',
+    abreviatura TEXT NOT NULL DEFAULT '',
+    nucleo TEXT NOT NULL DEFAULT '',
+    nombre TEXT NOT NULL DEFAULT '',
+    creditos INTEGER NOT NULL DEFAULT 0,
+    int_horaria INTEGER NOT NULL DEFAULT 0,
+    tipoasignatura TEXT NOT NULL DEFAULT '',
+    tipocredito TEXT NOT NULL DEFAULT '',
+    prerequisito TEXT NOT NULL DEFAULT '',
+    subunidad TEXT NOT NULL DEFAULT ''
+);
+
+CREATE TABLE IF NOT EXISTS ag_bloque_horario (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    dia_semana INTEGER NOT NULL DEFAULT 1,
+    hora_inicio TEXT NOT NULL DEFAULT '08:00',
+    hora_fin TEXT NOT NULL DEFAULT '12:00',
+    duracion_horas REAL NOT NULL DEFAULT 4.0,
+    franja TEXT NOT NULL DEFAULT 'MANANA',
+    activo INTEGER NOT NULL DEFAULT 1,
+    subunidad TEXT NOT NULL DEFAULT ''
 );");
             }
         }
@@ -621,7 +652,7 @@ VALUES (@IdAula, 102, '7', 'FIJO');", new { IdAula = idAula });
                 string patronAuto = conn.QueryFirstOrDefault<string>(
                     "SELECT dias_patron FROM ag_aula_asignatura WHERE id_aula = @Id AND id_asignatura = 101;",
                     new { Id = idAula });
-                patronAuto.Should().Be(string.Empty, "los patrones AUTOMATICO se deben limpiar para permitir redistribución en la nueva ventana");
+                patronAuto.Should().Be("5,6", "los patrones se conservan cuando ConservaPatronOrigen es true (Fase 2287)");
 
                 string patronFijo = conn.QueryFirstOrDefault<string>(
                     "SELECT dias_patron FROM ag_aula_asignatura WHERE id_aula = @Id AND id_asignatura = 102;",
@@ -849,6 +880,608 @@ VALUES (@IdAula, 101, 32, 1, '2,3', 'AUTOMATICO');", new { IdAula = idAula });
             res.Modificadas.Should().Be(0);
             res.Advertencia.Should().Contain("Sin cambios persistidos; la partición se recalcula en cada corrida.");
         }
+
+        [Fact]
+        public async Task Aplicar_ConservaPatronFalseConBottleneck_ReportaModificada()
+        {
+            // Arrange: FASE 2285 - Decisión con ConservaPatronOrigen=false y cuello de botella reporta Modificadas=1 y vacía dias_patron
+            string aulaRef = "A106";
+            long idAula = 0;
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                conn.Execute(@"
+INSERT INTO ag_aula (aula_ref, jornada, horas_dia, dias_ventana, subunidad)
+VALUES (@Ref, 'MANANA', 4, 'MAR-VIE', '');", new { Ref = aulaRef });
+
+                idAula = conn.QueryFirstOrDefault<long>("SELECT id FROM ag_aula WHERE aula_ref = @Ref;", new { Ref = aulaRef });
+
+                conn.Execute(@"
+INSERT INTO ag_aula_asignatura (id_aula, id_asignatura, horas_objetivo, orden_curricular, dias_patron, origen_patron)
+VALUES (@IdAula, 101, 32, 1, '2,3', 'AUTOMATICO');", new { IdAula = idAula });
+            }
+
+            var sut = new AgEscaladorRanuraAula(_connectionFactory);
+            var contexto = CrearContextoNominal(4, "MAR-VIE", 16, aulaRef);
+            contexto.Aulas[0].Id = (int)idAula;
+            var aa = contexto.AulaAsignaturaPorAulaAsig[(1, 101)];
+            aa.IdAula = (int)idAula;
+            aa.DiasPatron = "2,3";
+            aa.OrigenPatron = "AUTOMATICO";
+            aa.HorasObjetivo = 32;
+            aa.OrdenCurricular = 1;
+            contexto.AulaAsignaturaPorAulaAsig.Remove((1, 101));
+            contexto.AulaAsignaturaPorAulaAsig[((int)idAula, 101)] = aa;
+            contexto.AulaAsignaturas = contexto.AulaAsignaturaPorAulaAsig.Values.ToList();
+            contexto.ConstruirIndices();
+
+            var d = new AgEscaladorRanuraAula.Decision
+            {
+                IdAula = (int)idAula,
+                AulaRef = aulaRef,
+                Subunidad = "",
+                Desde = "MAR-VIE",
+                Hacia = "MAR-VIE",
+                ConservaPatronOrigen = false,
+                IdAsignaturasBottleneck = new List<int> { 101 },
+                ParticionMejora = true,
+                ParticionDifiereDeReferencia = true,
+                CapacidadAntes = 64,
+                CapacidadDespues = 64,
+                ContextoOrigen = contexto,
+                HuellaContextoAntes = AgHuellaPlanVentana.Calcular(contexto, contexto.Aulas[0]),
+                HuellaPersistidaAntes = AgHuellaEscaladoPersistido.Calcular(_connectionFactory(), null, aulaRef, "", 0)
+            };
+            d.HuellaDecision = AgEscaladorRanuraAula.HuellaAccion(d);
+
+            d.Aplica.Should().BeTrue();
+
+            // Act
+            var res = await sut.AplicarDetalladoAsync(new List<AgEscaladorRanuraAula.Decision> { d }, 0, CancellationToken.None);
+
+            // Assert
+            res.Exito.Should().BeTrue();
+            res.Modificadas.Should().Be(1);
+            res.Confirmadas.Should().Be(1);
+
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                string patron = conn.QueryFirstOrDefault<string>(
+                    "SELECT dias_patron FROM ag_aula_asignatura WHERE id_aula = @Id AND id_asignatura = 101;",
+                    new { Id = idAula });
+                patron.Should().Be(string.Empty);
+            }
+        }
+
+        [Fact]
+        public async Task Aplicar_WhenNodoDifiereDeAgAula_ActualizaNodoSinRollback()
+        {
+            // Arrange: FASE 2286 - ag_aula=MAR-VIE pero ag_arbol_nodo=1,2,3,4,5; la decisión Hacia=LUN-VIE actualiza el nodo sin rollback
+            string aulaRef = "A107";
+            long idAula = 0;
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                conn.Execute(@"
+INSERT INTO ag_aula (aula_ref, jornada, horas_dia, dias_ventana, subunidad)
+VALUES (@Ref, 'MANANA', 4, 'MAR-VIE', '');", new { Ref = aulaRef });
+
+                idAula = conn.QueryFirstOrDefault<long>("SELECT id FROM ag_aula WHERE aula_ref = @Ref;", new { Ref = aulaRef });
+
+                conn.Execute(@"
+INSERT INTO ag_arbol_nodo (idarbol, aula_ref, jornada, horas_dia, dias_ventana, subunidad)
+VALUES (1, @Ref, 'MANANA', 4, '1,2,3,4,5', '');", new { Ref = aulaRef });
+
+                conn.Execute(@"
+INSERT INTO ag_aula_asignatura (id_aula, id_asignatura, horas_objetivo, orden_curricular, dias_patron, origen_patron)
+VALUES (@IdAula, 101, 32, 1, '2,3', 'AUTOMATICO');", new { IdAula = idAula });
+            }
+
+            var sut = new AgEscaladorRanuraAula(_connectionFactory);
+            var contexto = CrearContextoNominal(4, "MAR-VIE", 20, aulaRef);
+            contexto.Aulas[0].Id = (int)idAula;
+            var aa = contexto.AulaAsignaturaPorAulaAsig[(1, 101)];
+            aa.IdAula = (int)idAula;
+            aa.DiasPatron = "2,3";
+            aa.OrigenPatron = "AUTOMATICO";
+            aa.HorasObjetivo = 32;
+            aa.OrdenCurricular = 1;
+            contexto.AulaAsignaturaPorAulaAsig.Remove((1, 101));
+            contexto.AulaAsignaturaPorAulaAsig[((int)idAula, 101)] = aa;
+            contexto.AulaAsignaturas = contexto.AulaAsignaturaPorAulaAsig.Values.ToList();
+            contexto.ConstruirIndices();
+
+            var d = new AgEscaladorRanuraAula.Decision
+            {
+                IdAula = (int)idAula,
+                AulaRef = aulaRef,
+                Subunidad = "",
+                Desde = "MAR-VIE",
+                Hacia = "LUN-VIE",
+                Mejora = true,
+                CapacidadAntes = 64,
+                CapacidadDespues = 80,
+                ConservaPatronOrigen = true,
+                ContextoOrigen = contexto,
+                PerfilPropuesto = 1,
+                HuellaContextoAntes = AgHuellaPlanVentana.Calcular(contexto, contexto.Aulas[0]),
+                HuellaPersistidaAntes = AgHuellaEscaladoPersistido.Calcular(_connectionFactory(), null, aulaRef, "", 1)
+            };
+            d.HuellaDecision = AgEscaladorRanuraAula.HuellaAccion(d);
+
+            // Act
+            var res = await sut.AplicarDetalladoAsync(new List<AgEscaladorRanuraAula.Decision> { d }, 1, CancellationToken.None);
+
+            // Assert
+            res.Exito.Should().BeTrue();
+            res.Error.Should().BeNullOrEmpty();
+
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                string nodoVentana = conn.QuerySingle<string>(
+                    "SELECT dias_ventana FROM ag_arbol_nodo WHERE aula_ref = @Ref AND idarbol = 1;",
+                    new { Ref = aulaRef });
+                nodoVentana.Should().Be("LUN-VIE");
+            }
+        }
+
+        [Fact]
+        public async Task Aplicar_ConservaPatronTrueConCambioVentana_NoBorraPatron()
+        {
+            // Arrange: FASE 2287 - ConservaPatronOrigen=true con cambio de ventana no borra dias_patron aunque haya bottleneck
+            string aulaRef = "A108";
+            long idAula = 0;
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                conn.Execute(@"
+INSERT INTO ag_aula (aula_ref, jornada, horas_dia, dias_ventana, subunidad)
+VALUES (@Ref, 'MANANA', 4, 'MAR-VIE', '');", new { Ref = aulaRef });
+
+                idAula = conn.QueryFirstOrDefault<long>("SELECT id FROM ag_aula WHERE aula_ref = @Ref;", new { Ref = aulaRef });
+
+                conn.Execute(@"
+INSERT INTO ag_aula_asignatura (id_aula, id_asignatura, horas_objetivo, orden_curricular, dias_patron, origen_patron)
+VALUES (@IdAula, 101, 32, 1, '2,3', 'AUTOMATICO');", new { IdAula = idAula });
+            }
+
+            var sut = new AgEscaladorRanuraAula(_connectionFactory);
+            var contexto = CrearContextoNominal(4, "MAR-VIE", 20, aulaRef);
+            contexto.Aulas[0].Id = (int)idAula;
+            var aa = contexto.AulaAsignaturaPorAulaAsig[(1, 101)];
+            aa.IdAula = (int)idAula;
+            aa.DiasPatron = "2,3";
+            aa.OrigenPatron = "AUTOMATICO";
+            aa.HorasObjetivo = 32;
+            aa.OrdenCurricular = 1;
+            contexto.AulaAsignaturaPorAulaAsig.Remove((1, 101));
+            contexto.AulaAsignaturaPorAulaAsig[((int)idAula, 101)] = aa;
+            contexto.AulaAsignaturas = contexto.AulaAsignaturaPorAulaAsig.Values.ToList();
+            contexto.ConstruirIndices();
+
+            var d = new AgEscaladorRanuraAula.Decision
+            {
+                IdAula = (int)idAula,
+                AulaRef = aulaRef,
+                Subunidad = "",
+                Desde = "MAR-VIE",
+                Hacia = "LUN-VIE",
+                Mejora = true,
+                CapacidadAntes = 64,
+                CapacidadDespues = 80,
+                ConservaPatronOrigen = true,
+                IdAsignaturasBottleneck = new List<int> { 101 },
+                ContextoOrigen = contexto,
+                HuellaContextoAntes = AgHuellaPlanVentana.Calcular(contexto, contexto.Aulas[0]),
+                HuellaPersistidaAntes = AgHuellaEscaladoPersistido.Calcular(_connectionFactory(), null, aulaRef, "", 0)
+            };
+            d.HuellaDecision = AgEscaladorRanuraAula.HuellaAccion(d);
+
+            // Act
+            var res = await sut.AplicarDetalladoAsync(new List<AgEscaladorRanuraAula.Decision> { d }, 0, CancellationToken.None);
+
+            // Assert
+            res.Exito.Should().BeTrue();
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                string patron = conn.QueryFirstOrDefault<string>(
+                    "SELECT dias_patron FROM ag_aula_asignatura WHERE id_aula = @Id AND id_asignatura = 101;",
+                    new { Id = idAula });
+                patron.Should().Be("2,3", "el patrón se debe conservar intacto al tener ConservaPatronOrigen=true");
+            }
+        }
+
+        [Fact]
+        public async Task Aplicar_DecisionesNoAplicablesSinParticion_RetornaAdvertenciaDemandaCapacidad()
+        {
+            // Arrange: FASE 2290 - Decisión con Aplica=false y SoloParticion=false debe advertir sobre demanda/capacidad
+            string aulaRef = "A109";
+            long idAula = 0;
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                conn.Execute(@"
+INSERT INTO ag_aula (aula_ref, jornada, horas_dia, dias_ventana, subunidad)
+VALUES (@Ref, 'MANANA', 4, 'MAR-VIE', '');", new { Ref = aulaRef });
+
+                idAula = conn.QueryFirstOrDefault<long>("SELECT id FROM ag_aula WHERE aula_ref = @Ref;", new { Ref = aulaRef });
+            }
+
+            var sut = new AgEscaladorRanuraAula(_connectionFactory);
+            var contexto = CrearContextoNominal(4, "MAR-VIE", 16, aulaRef);
+            contexto.Aulas[0].Id = (int)idAula;
+
+            var d = new AgEscaladorRanuraAula.Decision
+            {
+                IdAula = (int)idAula,
+                AulaRef = aulaRef,
+                Subunidad = "",
+                Desde = "MAR-VIE",
+                Hacia = "LUN-VIE",
+                Mejora = false,
+                CapacidadAntes = 64,
+                CapacidadDespues = 80,
+                ContextoOrigen = contexto,
+                HuellaContextoAntes = AgHuellaPlanVentana.Calcular(contexto, contexto.Aulas[0]),
+                HuellaPersistidaAntes = AgHuellaEscaladoPersistido.Calcular(_connectionFactory(), null, aulaRef, "", 0)
+            };
+            d.HuellaDecision = AgEscaladorRanuraAula.HuellaAccion(d);
+
+            d.Aplica.Should().BeFalse();
+            d.SoloParticion.Should().BeFalse();
+
+            // Act
+            var res = await sut.AplicarDetalladoAsync(new List<AgEscaladorRanuraAula.Decision> { d }, 0, CancellationToken.None);
+
+            // Assert
+            res.Exito.Should().BeTrue();
+            res.Confirmadas.Should().Be(0);
+            res.Modificadas.Should().Be(0);
+            res.Advertencia.Should().Be("Sin cambios persistidos; hay decisiones no aplicables (revise demanda/capacidad).");
+        }
+
+        [Fact]
+        public void Huella_ColumnaNuevaEnEsquema_NoAlteraHashDeHuella()
+        {
+            // Arrange: FASE 2292 - Columnas añadidas por migraciones no deben alterar la huella calculada
+            string aulaRef = "A110";
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                conn.Execute(@"
+INSERT INTO ag_aula (aula_ref, jornada, horas_dia, dias_ventana, subunidad)
+VALUES (@Ref, 'MANANA', 4, 'MAR-VIE', '');", new { Ref = aulaRef });
+            }
+
+            string huellaAntes = AgHuellaEscaladoPersistido.Calcular(_connectionFactory(), null, aulaRef, "", 0);
+
+            // Simular migración futura añadiendo una columna extra no relevante
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                conn.Execute("ALTER TABLE ag_aula ADD COLUMN auditoria_extra TEXT DEFAULT '';");
+                conn.Execute("ALTER TABLE ag_aula_asignatura ADD COLUMN metadata_extra TEXT DEFAULT '';");
+            }
+
+            string huellaDespues = AgHuellaEscaladoPersistido.Calcular(_connectionFactory(), null, aulaRef, "", 0);
+
+            huellaDespues.Should().Be(huellaAntes);
+        }
+
+        [Fact]
+        public async Task Aplicar_WhenNodoVacio_ActualizaSinRollback()
+        {
+            // Arrange: FASE 2293 - Nodo con dias_ventana='' debe ser actualizado sin rollback
+            string aulaRef = "A111";
+            long idAula = 0;
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                conn.Execute(@"
+INSERT INTO ag_aula (aula_ref, jornada, horas_dia, dias_ventana, subunidad)
+VALUES (@Ref, 'MANANA', 4, 'MAR-VIE', '');", new { Ref = aulaRef });
+
+                idAula = conn.QueryFirstOrDefault<long>("SELECT id FROM ag_aula WHERE aula_ref = @Ref;", new { Ref = aulaRef });
+
+                conn.Execute(@"
+INSERT INTO ag_arbol_nodo (idarbol, aula_ref, jornada, horas_dia, dias_ventana, subunidad)
+VALUES (1, @Ref, 'MANANA', 4, '', '');", new { Ref = aulaRef });
+
+                conn.Execute(@"
+INSERT INTO ag_aula_asignatura (id_aula, id_asignatura, horas_objetivo, orden_curricular, dias_patron, origen_patron)
+VALUES (@IdAula, 101, 32, 1, '2,3', 'AUTOMATICO');", new { IdAula = idAula });
+            }
+
+            var sut = new AgEscaladorRanuraAula(_connectionFactory);
+            var contexto = CrearContextoNominal(4, "MAR-VIE", 20, aulaRef);
+            contexto.Aulas[0].Id = (int)idAula;
+            var aa = contexto.AulaAsignaturaPorAulaAsig[(1, 101)];
+            aa.IdAula = (int)idAula;
+            aa.DiasPatron = "2,3";
+            aa.OrigenPatron = "AUTOMATICO";
+            aa.HorasObjetivo = 32;
+            aa.OrdenCurricular = 1;
+            contexto.AulaAsignaturaPorAulaAsig.Remove((1, 101));
+            contexto.AulaAsignaturaPorAulaAsig[((int)idAula, 101)] = aa;
+            contexto.AulaAsignaturas = contexto.AulaAsignaturaPorAulaAsig.Values.ToList();
+            contexto.ConstruirIndices();
+
+            var d = new AgEscaladorRanuraAula.Decision
+            {
+                IdAula = (int)idAula,
+                AulaRef = aulaRef,
+                Subunidad = "",
+                Desde = "MAR-VIE",
+                Hacia = "LUN-VIE",
+                Mejora = true,
+                CapacidadAntes = 64,
+                CapacidadDespues = 80,
+                ConservaPatronOrigen = true,
+                ContextoOrigen = contexto,
+                PerfilPropuesto = 1,
+                HuellaContextoAntes = AgHuellaPlanVentana.Calcular(contexto, contexto.Aulas[0]),
+                HuellaPersistidaAntes = AgHuellaEscaladoPersistido.Calcular(_connectionFactory(), null, aulaRef, "", 1)
+            };
+            d.HuellaDecision = AgEscaladorRanuraAula.HuellaAccion(d);
+
+            // Act
+            var res = await sut.AplicarDetalladoAsync(new List<AgEscaladorRanuraAula.Decision> { d }, 1, CancellationToken.None);
+
+            // Assert
+            res.Exito.Should().BeTrue();
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                string nodoVentana = conn.QuerySingle<string>(
+                    "SELECT dias_ventana FROM ag_arbol_nodo WHERE aula_ref = @Ref AND idarbol = 1;",
+                    new { Ref = aulaRef });
+                nodoVentana.Should().Be("LUN-VIE");
+            }
+        }
+
+        [Fact]
+        public async Task Aplicar_WhenNodoDuplicado_Rechaza()
+        {
+            // Arrange: FASE 2293 - Nodos duplicados en el mismo perfil deben arrojar excepción y rechazar
+            string aulaRef = "A112";
+            long idAula = 0;
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                conn.Execute(@"
+INSERT INTO ag_aula (aula_ref, jornada, horas_dia, dias_ventana, subunidad)
+VALUES (@Ref, 'MANANA', 4, 'MAR-VIE', '');", new { Ref = aulaRef });
+
+                idAula = conn.QueryFirstOrDefault<long>("SELECT id FROM ag_aula WHERE aula_ref = @Ref;", new { Ref = aulaRef });
+
+                conn.Execute(@"
+INSERT INTO ag_arbol_nodo (idarbol, aula_ref, jornada, horas_dia, dias_ventana, subunidad)
+VALUES (1, @Ref, 'MANANA', 4, 'MAR-VIE', '');
+INSERT INTO ag_arbol_nodo (idarbol, aula_ref, jornada, horas_dia, dias_ventana, subunidad)
+VALUES (1, @Ref, 'MANANA', 4, 'MAR-VIE', '');", new { Ref = aulaRef });
+
+                conn.Execute(@"
+INSERT INTO ag_aula_asignatura (id_aula, id_asignatura, horas_objetivo, orden_curricular, dias_patron, origen_patron)
+VALUES (@IdAula, 101, 32, 1, '2,3', 'AUTOMATICO');", new { IdAula = idAula });
+            }
+
+            var sut = new AgEscaladorRanuraAula(_connectionFactory);
+            var contexto = CrearContextoNominal(4, "MAR-VIE", 20, aulaRef);
+            contexto.Aulas[0].Id = (int)idAula;
+            var aa = contexto.AulaAsignaturaPorAulaAsig[(1, 101)];
+            aa.IdAula = (int)idAula;
+            aa.DiasPatron = "2,3";
+            aa.OrigenPatron = "AUTOMATICO";
+            aa.HorasObjetivo = 32;
+            aa.OrdenCurricular = 1;
+            contexto.AulaAsignaturaPorAulaAsig.Remove((1, 101));
+            contexto.AulaAsignaturaPorAulaAsig[((int)idAula, 101)] = aa;
+            contexto.AulaAsignaturas = contexto.AulaAsignaturaPorAulaAsig.Values.ToList();
+            contexto.ConstruirIndices();
+
+            var d = new AgEscaladorRanuraAula.Decision
+            {
+                IdAula = (int)idAula,
+                AulaRef = aulaRef,
+                Subunidad = "",
+                Desde = "MAR-VIE",
+                Hacia = "LUN-VIE",
+                Mejora = true,
+                CapacidadAntes = 64,
+                CapacidadDespues = 80,
+                ConservaPatronOrigen = true,
+                ContextoOrigen = contexto,
+                PerfilPropuesto = 1,
+                HuellaContextoAntes = AgHuellaPlanVentana.Calcular(contexto, contexto.Aulas[0]),
+                HuellaPersistidaAntes = AgHuellaEscaladoPersistido.Calcular(_connectionFactory(), null, aulaRef, "", 1)
+            };
+            d.HuellaDecision = AgEscaladorRanuraAula.HuellaAccion(d);
+
+            // Act
+            var res = await sut.AplicarDetalladoAsync(new List<AgEscaladorRanuraAula.Decision> { d }, 1, CancellationToken.None);
+
+            // Assert
+            res.Exito.Should().BeFalse();
+            res.Error.Should().Contain("Nodo del perfil ausente o duplicado");
+        }
+
+        [Fact]
+        public async Task Aplicar_WhenEscalaVentana_ReportaModificadasAulaYNodo()
+        {
+            // Arrange: FASE 2295 - Cambio de ventana con idArbol actualiza ag_aula y ag_arbol_nodo -> Modificadas == 2
+            string aulaRef = "A113";
+            long idAula = 0;
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                conn.Execute(@"
+INSERT INTO ag_aula (aula_ref, jornada, horas_dia, dias_ventana, subunidad)
+VALUES (@Ref, 'MANANA', 4, 'MAR-VIE', '');", new { Ref = aulaRef });
+
+                idAula = conn.QueryFirstOrDefault<long>("SELECT id FROM ag_aula WHERE aula_ref = @Ref;", new { Ref = aulaRef });
+
+                conn.Execute(@"
+INSERT INTO ag_arbol_nodo (idarbol, aula_ref, jornada, horas_dia, dias_ventana, subunidad)
+VALUES (1, @Ref, 'MANANA', 4, 'MAR-VIE', '');", new { Ref = aulaRef });
+
+                conn.Execute(@"
+INSERT INTO ag_aula_asignatura (id_aula, id_asignatura, horas_objetivo, orden_curricular, dias_patron, origen_patron)
+VALUES (@IdAula, 101, 32, 1, '2,3', 'AUTOMATICO');", new { IdAula = idAula });
+            }
+
+            var sut = new AgEscaladorRanuraAula(_connectionFactory);
+            var contexto = CrearContextoNominal(4, "MAR-VIE", 20, aulaRef);
+            contexto.Aulas[0].Id = (int)idAula;
+            var aa = contexto.AulaAsignaturaPorAulaAsig[(1, 101)];
+            aa.IdAula = (int)idAula;
+            aa.DiasPatron = "2,3";
+            aa.OrigenPatron = "AUTOMATICO";
+            aa.HorasObjetivo = 32;
+            aa.OrdenCurricular = 1;
+            contexto.AulaAsignaturaPorAulaAsig.Remove((1, 101));
+            contexto.AulaAsignaturaPorAulaAsig[((int)idAula, 101)] = aa;
+            contexto.AulaAsignaturas = contexto.AulaAsignaturaPorAulaAsig.Values.ToList();
+            contexto.ConstruirIndices();
+
+            var d = new AgEscaladorRanuraAula.Decision
+            {
+                IdAula = (int)idAula,
+                AulaRef = aulaRef,
+                Subunidad = "",
+                Desde = "MAR-VIE",
+                Hacia = "LUN-VIE",
+                Mejora = true,
+                CapacidadAntes = 64,
+                CapacidadDespues = 80,
+                ConservaPatronOrigen = true,
+                ContextoOrigen = contexto,
+                PerfilPropuesto = 1,
+                HuellaContextoAntes = AgHuellaPlanVentana.Calcular(contexto, contexto.Aulas[0]),
+                HuellaPersistidaAntes = AgHuellaEscaladoPersistido.Calcular(_connectionFactory(), null, aulaRef, "", 1)
+            };
+            d.HuellaDecision = AgEscaladorRanuraAula.HuellaAccion(d);
+
+            // Act
+            var res = await sut.AplicarDetalladoAsync(new List<AgEscaladorRanuraAula.Decision> { d }, 1, CancellationToken.None);
+
+            // Assert
+            res.Exito.Should().BeTrue();
+            res.Modificadas.Should().Be(2);
+            res.Confirmadas.Should().Be(1);
+        }
+
+        [Fact]
+        public void Huella_ColumnaNuevaEnCatalogoAsignaturas_NoAlteraHash()
+        {
+            // Arrange: FASE 2296 - Adición de columna en catálogo asignaturas no altera hash
+            string aulaRef = "A114";
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                conn.Execute(@"
+INSERT INTO ag_aula (aula_ref, jornada, horas_dia, dias_ventana, subunidad)
+VALUES (@Ref, 'MANANA', 4, 'MAR-VIE', '');", new { Ref = aulaRef });
+            }
+
+            string huellaAntes = AgHuellaEscaladoPersistido.Calcular(_connectionFactory(), null, aulaRef, "", 0);
+
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                conn.Execute("ALTER TABLE asignaturas ADD COLUMN col_extra_test TEXT DEFAULT '';");
+            }
+
+            string huellaDespues = AgHuellaEscaladoPersistido.Calcular(_connectionFactory(), null, aulaRef, "", 0);
+
+            huellaDespues.Should().Be(huellaAntes);
+        }
+
+        [Fact]
+        public void Huella_CambioCampoExistenteAsignatura_AlteraHash()
+        {
+            // Arrange: FASE 2300 - Modificación de int_horaria en asignaturas altera la huella
+            string aulaRef = "A115";
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                conn.Execute(@"
+INSERT INTO ag_aula (aula_ref, jornada, horas_dia, dias_ventana, subunidad)
+VALUES (@Ref, 'MANANA', 4, 'MAR-VIE', '');
+INSERT INTO asignaturas (id, idprograma, int_horaria, nombre)
+VALUES (201, 1, 40, 'Asignatura Test');", new { Ref = aulaRef });
+            }
+
+            string huellaAntes = AgHuellaEscaladoPersistido.Calcular(_connectionFactory(), null, aulaRef, "", 0);
+
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                conn.Execute("UPDATE asignaturas SET int_horaria = 48 WHERE id = 201;");
+            }
+
+            string huellaDespues = AgHuellaEscaladoPersistido.Calcular(_connectionFactory(), null, aulaRef, "", 0);
+
+            huellaDespues.Should().NotBe(huellaAntes);
+        }
+
+        [Fact]
+        public void Huella_CambioIdProgramaAsignatura_AlteraHash()
+        {
+            // Arrange: FASE 2301 - Modificación de idprograma en asignaturas altera la huella
+            string aulaRef = "A117";
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                conn.Execute(@"
+INSERT INTO ag_aula (aula_ref, jornada, horas_dia, dias_ventana, subunidad)
+VALUES (@Ref, 'MANANA', 4, 'MAR-VIE', '');
+INSERT INTO asignaturas (id, idprograma, int_horaria, nombre)
+VALUES (202, 1, 40, 'Asignatura Test');", new { Ref = aulaRef });
+            }
+
+            string antes = AgHuellaEscaladoPersistido.Calcular(_connectionFactory(), null, aulaRef, "", 0);
+
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                conn.Execute("UPDATE asignaturas SET idprograma = 2 WHERE id = 202;");
+            }
+
+            string despues = AgHuellaEscaladoPersistido.Calcular(_connectionFactory(), null, aulaRef, "", 0);
+            despues.Should().NotBe(antes);
+        }
+
+        [Fact]
+        public void Huella_CambioDiaSemanaBloque_AlteraHash()
+        {
+            // Arrange: FASE 2300 - Modificación de dia_semana en ag_bloque_horario altera la huella
+            string aulaRef = "A116";
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                conn.Execute(@"
+INSERT INTO ag_aula (aula_ref, jornada, horas_dia, dias_ventana, subunidad)
+VALUES (@Ref, 'MANANA', 4, 'MAR-VIE', '');
+INSERT INTO ag_bloque_horario (id, dia_semana, franja, duracion_horas, activo)
+VALUES (301, 1, 'MANANA', 4.0, 1);", new { Ref = aulaRef });
+            }
+
+            string huellaAntes = AgHuellaEscaladoPersistido.Calcular(_connectionFactory(), null, aulaRef, "", 0);
+
+            using (var conn = _connectionFactory())
+            {
+                conn.Open();
+                conn.Execute("UPDATE ag_bloque_horario SET dia_semana = 2 WHERE id = 301;");
+            }
+
+            string huellaDespues = AgHuellaEscaladoPersistido.Calcular(_connectionFactory(), null, aulaRef, "", 0);
+
+            huellaDespues.Should().NotBe(huellaAntes);
+        }
+
 
         private void SembrarDemanda(AgContexto contexto)
         {

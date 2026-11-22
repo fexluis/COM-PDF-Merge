@@ -234,7 +234,7 @@ VALUES (1, @Ref, '', 'VIE-DOM');", new { Ref = aulaRef });
 
                 string patronAuto = conn.QuerySingle<string>(
                     "SELECT dias_patron FROM ag_aula_asignatura WHERE id_aula=@Id AND id_asignatura=1;", new { Id = idAula });
-                patronAuto.Should().Be(string.Empty, "el patrón AUTOMATICO debe limpiarse para aprovechar los días adicionales");
+                patronAuto.Should().Be("5,6", "los patrones se conservan cuando ConservaPatronOrigen es true (Fase 2287)");
 
                 string patronFijo = conn.QuerySingle<string>(
                     "SELECT dias_patron FROM ag_aula_asignatura WHERE id_aula=@Id AND id_asignatura=2;", new { Id = idAula });
@@ -312,7 +312,7 @@ VALUES (@IdAula, 1, 80, 1, '', 'AUTOMATICO');", new { IdAula = idAula });
             var res1 = await sut.AplicarDetalladoAsync(decisiones, 0, CancellationToken.None);
             res1.Exito.Should().BeTrue();
             res1.Confirmadas.Should().Be(1);
-            res1.Modificadas.Should().Be(1);
+            res1.Modificadas.Should().Be(2);
 
             // Act 2: Segunda aplicación con el mismo lote de decisiones
             var res2 = await sut.AplicarDetalladoAsync(decisiones, 0, CancellationToken.None);

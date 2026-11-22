@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ConversorPDF.XLL.Academic.Domain.Enums;
 using ConversorPDF.XLL.Academic.Domain.Models;
 using ConversorPDF.XLL.Academic.Domain.Models.Genetica;
@@ -340,6 +341,40 @@ namespace ConversorPDF.Tests.Academic.Infrastructure.Persistence
         }
 
         [Fact]
+        public void DecisionConservaPatronFalseConBottleneck_DevuelveAplicaTrue()
+        {
+            var decision = new AgEscaladorRanuraAula.Decision
+            {
+                Desde = "MAR-VIE",
+                Hacia = "MAR-VIE",
+                ConservaPatronOrigen = false,
+                IdAsignaturasBottleneck = new List<int> { 101 },
+                ParticionMejora = true,
+                CapacidadAntes = 6,
+                CapacidadDespues = 6
+            };
+
+            decision.Aplica.Should().BeTrue();
+            decision.SoloParticion.Should().BeFalse();
+        }
+
+        [Fact]
+        public void DecisionAplica_CuandoMejoraConMismaCapacidad_DevuelveAplicaTrue()
+        {
+            var decision = new AgEscaladorRanuraAula.Decision
+            {
+                Desde = "LUN-JUE",
+                Hacia = "MAR-VIE",
+                Mejora = true,
+                CapacidadAntes = 16,
+                CapacidadDespues = 16
+            };
+
+            decision.Aplica.Should().BeTrue();
+            decision.SoloParticion.Should().BeFalse();
+        }
+
+        [Fact]
         public void HuellaAccion_DebeComenzarConPropuestaEscaladoV5()
         {
             var decision = new AgEscaladorRanuraAula.Decision
@@ -353,6 +388,9 @@ namespace ConversorPDF.Tests.Academic.Infrastructure.Persistence
                 CapacidadAntes = 16,
                 CapacidadDespues = 20
             };
+
+            AgEscaladorRanuraAula.HuellaAccionPartes(decision)[0]
+                .Should().Be("propuesta-escalado-v5");
 
             string huella = AgEscaladorRanuraAula.HuellaAccion(decision);
 

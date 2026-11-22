@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 511 | 512 | 2026-11-21 |
-| `fase` | 2283 | 2284 | 2026-11-21 |
+| `ronda` | 517 | 518 | 2026-11-21 |
+| `fase` | 2301 | 2302 | 2026-11-21 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -218,6 +218,12 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-181 | 2026-11-21 | `(revisión Ronda 509 — Fases 2272–2274: postcondición same-window sin sustitución de nodo, diagnóstico APLICAR previo a escritura y limpieza de flags en Decision)` | `Wave —` → `Ronda 509` | `Fase 2272–2274` | closed | sin build/tests (restricción Paso 6) | pendiente |
 | R-182 | 2026-11-21 | `(revisión Ronda 510 — Fases 2275–2279: desacople de destino en sustitución de reclasificaciones en Calcular, aceptación de destino nulo en EstadoCompleto, precisión de advertencia SoloParticion, APLICAR previo a escrituras y exclusión de pm/pdr de huella)` | `Wave —` → `Ronda 510` | `Fase 2275–2279` | closed | sin build/tests (restricción Paso 6) | pendiente |
 | R-183 | 2026-11-21 | `(revisión Ronda 511 — Fases 2280–2283: guarda de cambio de ventana con Hacia no vacío, validación estricta simétrica de reclasificación en escalador, huella v5 y advertencia SoloParticion unificada)` | `Wave —` → `Ronda 511` | `Fase 2280–2283` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-184 | 2026-11-21 | `(revisión e implementación Ronda 512 — Fases 2284–2288: condición bottleneck en Decision.Aplica, conteo de filas afectadas en modificadas, reconciliación de nodo en ag_arbol_nodo, preservación de patrones con ConservaPatronOrigen y preimágenes de huella v5)` | `Wave —` → `Ronda 512` | `Fase 2284–2288` | closed | escisión F2021_F2267 (sin build/tests por restricción Paso 6) | pendiente |
+| R-185 | 2026-11-21 | `(revisión e implementación Ronda 513 — Fases 2289–2292: blindaje de nulabilidad bottleneck, advertencia no-aplicables, eliminación de CapacidadDespues > CapacidadAntes en Aplica y proyección explícita de columnas en huella persistida)` | `Wave —` → `Ronda 513` | `Fase 2289–2292` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-186 | 2026-11-21 | `(revisión e implementación Ronda 514 — Fases 2293–2296: detección de nodo vacío/duplicado con cardinalidad exacta, proyección explícita ampliada de dominio, métrica de modificadas en ag_arbol_nodo y proyección selectiva en catálogos estáticos)` | `Wave —` → `Ronda 514` | `Fase 2293–2296` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-187 | 2026-11-21 | `(revisión e implementación Ronda 515 — Fases 2297–2298: ampliación de allowlists de catálogo existentes en huella y memoización de introspección de esquema con PRAGMA schema_version)` | `Wave —` → `Ronda 515` | `Fase 2297–2298` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-188 | 2026-11-21 | `(revisión e implementación Ronda 516 — Fases 2299–2300: alineación de allowlists de catálogo con esquema real de producción y corrección de fixtures de test)` | `Wave —` → `Ronda 516` | `Fase 2299–2300` | closed | sin build/tests (restricción Paso 6) | pendiente |
+| R-189 | 2026-11-21 | `(revisión e implementación Ronda 517 — Fase 2301: cobertura explícita de idprograma en pruebas de huella ante mutación de catálogo)` | `Wave —` → `Ronda 517` | `Fase 2301` | closed | build/tests en build-release 1.6.4.39 | pendiente |
 
 
 

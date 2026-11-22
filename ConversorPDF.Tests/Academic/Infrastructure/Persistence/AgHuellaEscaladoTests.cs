@@ -32,7 +32,7 @@ CREATE TABLE ag_aula(id INTEGER PRIMARY KEY,aula_ref TEXT,subunidad TEXT,jornada
 CREATE TABLE ag_aula_asignatura(id_aula INTEGER,id_asignatura INTEGER,horas_objetivo REAL,orden_curricular INTEGER,origen_patron TEXT,dias_patron TEXT);
 CREATE TABLE ag_arbol_nodo(id INTEGER PRIMARY KEY,idarbol INTEGER,aula_ref TEXT,subunidad TEXT,jornada TEXT,horas_dia INTEGER,dias_ventana TEXT);
 CREATE TABLE ag_arbol(id INTEGER PRIMARY KEY,fecha_fin TEXT);
-CREATE TABLE asignaturas(id INTEGER PRIMARY KEY,horas INTEGER);
+CREATE TABLE asignaturas(id INTEGER PRIMARY KEY,nombre TEXT);
 CREATE TABLE programas(id INTEGER PRIMARY KEY,modalidad TEXT);
 CREATE TABLE ag_bloque_horario(id INTEGER PRIMARY KEY,activo INTEGER);
 CREATE TABLE festivos(id INTEGER PRIMARY KEY,fecha TEXT);
@@ -40,7 +40,7 @@ CREATE TABLE auditoria(n INTEGER);
 INSERT INTO auditoria VALUES(0);
 CREATE TRIGGER contar_aula AFTER UPDATE ON ag_aula BEGIN UPDATE auditoria SET n=n+1; END;
 INSERT INTO ag_arbol VALUES(42,'2027-02-28'),(43,'2027-02-28');
-INSERT INTO asignaturas VALUES(101,40),(102,40);
+INSERT INTO asignaturas VALUES(101,'A1'),(102,'A2');
 INSERT INTO programas VALUES(1,'PRESENCIAL');
 INSERT INTO ag_bloque_horario VALUES(10,1);");
             }
@@ -64,7 +64,7 @@ INSERT INTO ag_bloque_horario VALUES(10,1);");
             var segunda = await sut.AplicarDetalladoAsync(decisiones, 42, ctx, CancellationToken.None);
             // Assert
             primera.Exito.Should().BeTrue(primera.Error);
-            primera.Modificadas.Should().Be(1);
+            primera.Modificadas.Should().Be(4);
             segunda.Exito.Should().BeTrue(segunda.Error);
             segunda.Confirmadas.Should().Be(1);
             segunda.Modificadas.Should().Be(0);
@@ -107,7 +107,7 @@ INSERT INTO ag_bloque_horario VALUES(10,1);");
                 { "bloque", "UPDATE ag_bloque_horario SET activo=0" },
                 { "festivo", "INSERT INTO festivos VALUES(1,'2027-02-20')" },
                 { "periodo", "UPDATE ag_arbol SET fecha_fin='2027-03-01' WHERE id=42" },
-                { "asignatura", "UPDATE asignaturas SET horas=44 WHERE id=101" },
+                { "asignatura", "UPDATE asignaturas SET nombre='A1_Mod' WHERE id=101" },
                 { "programa", "UPDATE programas SET modalidad='POSGRADO'" },
                 { "nodo", "UPDATE ag_arbol_nodo SET horas_dia=8 WHERE idarbol=42" },
                 { "aula", "UPDATE ag_aula SET jornada='TARDE'" }
@@ -288,6 +288,43 @@ INSERT INTO ag_bloque_horario VALUES(10,1);");
             // Assert
             result.Exito.Should().BeFalse();
             result.Confirmadas.Should().Be(0);
+        }
+
+        [Theory]
+        [InlineData("asignaturas", "int_horaria", "UPDATE asignaturas SET int_horaria=4 WHERE id=101;")]
+        [InlineData("ag_bloque_horario", "hora_inicio", "UPDATE ag_bloque_horario SET hora_inicio='07:00' WHERE id=10;")]
+        [InlineData("ag_arbol", "fecha_inicio", "UPDATE ag_arbol SET fecha_inicio='2027-02-01' WHERE id=42;")]
+        public void Huella_WhenColumnasCatalogoModificadas_AlteraHash(string tabla, string columna, string sqlUpdate)
+        {
+            // Arrange - FASE 2297/2298: Columnas de catálogo en allowlist alteran la huella al mutar su valor
+            Preparar();
+            using (var db = Conexion())
+            {
+                db.Open();
+                db.Execute($"ALTER TABLE {tabla} ADD COLUMN {columna} TEXT;");
+            }
+
+            string huellaAntes;
+            using (var db = Conexion())
+            {
+                db.Open();
+                huellaAntes = AgHuellaEscaladoPersistido.Calcular(db, null, "A1", "CENTRAL", 42);
+            }
+
+            using (var db = Conexion())
+            {
+                db.Open();
+                db.Execute(sqlUpdate);
+            }
+
+            string huellaDespues;
+            using (var db = Conexion())
+            {
+                db.Open();
+                huellaDespues = AgHuellaEscaladoPersistido.Calcular(db, null, "A1", "CENTRAL", 42);
+            }
+
+            huellaDespues.Should().NotBe(huellaAntes);
         }
 
         private string Ventana()

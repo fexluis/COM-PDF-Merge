@@ -60,13 +60,21 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                 && (ReclasificacionesAutorizadas == null || ReclasificacionesAutorizadas.Count == 0)
                 && (ParticionMejora || ParticionDifiereDeReferencia);
             /// <summary>
-            /// Determina si la decisión requiere aplicar cambios persistentes en la base de datos (Fase 2256, Fase 2258).
+            /// Determina si la decisión requiere aplicar cambios persistentes en la base de datos (Fase 2256, Fase 2258, Fase 2284, Fase 2291).
             /// La partición de carriles es efímera y se recalcula en cada corrida por el planificador de oleadas;
-            /// no posee campos persistidos en base de datos. Por ende, decisiones de solo partición (Desde == Hacia)
-            /// no generan escrituras SQL y no aplican directamente a base de datos.
+            /// no posee campos persistidos en base de datos. Decisiones de solo partición (Desde == Hacia)
+            /// sin reclasificaciones ni liberación de cuellos de botella no generan escrituras SQL.
+            /// Si ConservaPatronOrigen es falso y existen asignaturas bottleneck, se requiere vaciar dias_patron, por ende Aplica es true.
+            /// Si hay cambio de ventana y Mejora es true (incluso con igual capacidad por redistribución), Aplica es true.
             /// </summary>
-            public bool Aplica => (!string.IsNullOrWhiteSpace(Hacia) && !string.Equals(Desde, Hacia, StringComparison.OrdinalIgnoreCase) && Mejora && CapacidadDespues > CapacidadAntes)
-                || (ReclasificacionesAutorizadas != null && ReclasificacionesAutorizadas.Count > 0);
+            public bool Aplica =>
+                (!string.IsNullOrWhiteSpace(Hacia)
+                 && !string.Equals(Desde, Hacia, StringComparison.OrdinalIgnoreCase)
+                 && Mejora)
+                || (ReclasificacionesAutorizadas != null && ReclasificacionesAutorizadas.Count > 0)
+                || (!ConservaPatronOrigen
+                    && IdAsignaturasBottleneck != null
+                    && IdAsignaturasBottleneck.Count > 0);
             internal AgContexto ContextoOrigen { get; set; }
             internal int? PerfilPropuesto { get; set; }
             internal int? PerfilAplicado { get; set; }
@@ -858,6 +866,10 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                 {
                     resultado.Advertencia = "Sin cambios persistidos; la partición se recalcula en cada corrida.";
                 }
+                else if (decisiones.Any(d => d != null && !d.Aplica))
+                {
+                    resultado.Advertencia = "Sin cambios persistidos; hay decisiones no aplicables (revise demanda/capacidad).";
+                }
                 return resultado;
             }
 
@@ -920,7 +932,7 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                                 && !string.Equals(d.Desde, d.Hacia, StringComparison.OrdinalIgnoreCase);
                             string destinoEsperado = cambiaVentana ? d.Hacia : null;
 
-                            var liberarEsperado = (d.ConservaPatronOrigen && !cambiaVentana) ? null : d.IdAsignaturasBottleneck;
+                            var liberarEsperado = d.ConservaPatronOrigen ? null : d.IdAsignaturasBottleneck;
 
                             // Reaplicación idempotente: si ya está en el postestado exacto, confirmar sin nuevas escrituras
                             if (d.PerfilAplicado == idArbol && contextoCompatible && !string.IsNullOrEmpty(d.HuellaPersistidaDespues)
@@ -956,22 +968,45 @@ AND COALESCE(dias_ventana,'')=@Desde;",
 
                                 if (idArbol > 0)
                                 {
-                                    int nodos = await db.ExecuteAsync(new CommandDefinition(@"
+                                    var nodos = (await db.QueryAsync<string>(new CommandDefinition(@"
+SELECT dias_ventana FROM ag_arbol_nodo
+WHERE idarbol=@Perfil AND aula_ref=@Ref
+AND COALESCE(NULLIF(TRIM(subunidad),''),@Sub)=@Sub;",
+                                        new { Perfil = idArbol, Ref = d.AulaRef, Sub = d.Subunidad ?? string.Empty },
+                                        tx, cancellationToken: ct)).ConfigureAwait(false)).ToList();
+
+                                    if (nodos.Count != 1)
+                                        throw new InvalidOperationException("Nodo del perfil ausente o duplicado.");
+
+                                    string nodoActual = nodos[0] ?? string.Empty;
+
+                                    int nodosAfectados = await db.ExecuteAsync(new CommandDefinition(@"
 UPDATE ag_arbol_nodo SET dias_ventana=@Hacia
-WHERE idarbol=@Perfil AND aula_ref=@Ref AND COALESCE(NULLIF(TRIM(subunidad),''),@Sub)=@Sub
-AND COALESCE(dias_ventana,'')=@Desde;",
-                                        new { d.Hacia, d.Desde, Perfil = idArbol, Ref = d.AulaRef, Sub = d.Subunidad ?? string.Empty }, tx, cancellationToken: ct)).ConfigureAwait(false);
-                                    if (nodos != 1) { throw new InvalidOperationException("Nodo del perfil ausente, duplicado o modificado."); }
+WHERE idarbol=@Perfil AND aula_ref=@Ref
+AND COALESCE(NULLIF(TRIM(subunidad),''),@Sub)=@Sub
+AND COALESCE(dias_ventana,'')=@NodoActual;",
+                                        new { d.Hacia, Perfil = idArbol, Ref = d.AulaRef,
+                                              Sub = d.Subunidad ?? string.Empty, NodoActual = nodoActual },
+                                        tx, cancellationToken: ct)).ConfigureAwait(false);
+
+                                    if (nodosAfectados != 1)
+                                        throw new InvalidOperationException("Nodo del perfil ausente, duplicado o modificado.");
+
+                                    modificadas += nodosAfectados;
                                 }
                             }
 
-                            if (d.IdAsignaturasBottleneck.Count > 0 && (!d.ConservaPatronOrigen || cambiaVentana))
+                            if (!d.ConservaPatronOrigen
+                                && d.IdAsignaturasBottleneck != null
+                                && d.IdAsignaturasBottleneck.Count > 0)
                             {
-                                await db.ExecuteAsync(new CommandDefinition(@"
+                                int afectadasBottleneck = await db.ExecuteAsync(new CommandDefinition(@"
 UPDATE ag_aula_asignatura SET dias_patron=''
 WHERE id_aula = @IdAula
 AND id_asignatura IN @Ids AND UPPER(COALESCE(origen_patron,''))='AUTOMATICO';",
-                                    new { IdAula = idAula, Ids = d.IdAsignaturasBottleneck }, tx, cancellationToken: ct)).ConfigureAwait(false);
+                                    new { IdAula = idAula, Ids = d.IdAsignaturasBottleneck },
+                                    tx, cancellationToken: ct)).ConfigureAwait(false);
+                                modificadas += afectadasBottleneck;
                             }
 
                             if (d.ReclasificacionesAutorizadas != null && d.ReclasificacionesAutorizadas.Count > 0)
@@ -1045,8 +1080,9 @@ AND COALESCE(dias_patron,'')=@DiasAntes;",
                 !string.IsNullOrWhiteSpace(x.Hacia)
                 && !string.Equals(x.Desde, x.Hacia, StringComparison.OrdinalIgnoreCase));
             bool huboReclasificacion = decisionesAplicables.Any(x => x.ReclasificacionesAutorizadas != null && x.ReclasificacionesAutorizadas.Count > 0);
+            bool huboLiberacionBottleneck = decisionesAplicables.Any(x => !x.ConservaPatronOrigen && x.IdAsignaturasBottleneck != null && x.IdAsignaturasBottleneck.Count > 0);
 
-            if (resultado.Confirmadas > 0 && resultado.Modificadas == 0 && !huboCambioVentana && !huboReclasificacion)
+            if (resultado.Confirmadas > 0 && resultado.Modificadas == 0 && !huboCambioVentana && !huboReclasificacion && !huboLiberacionBottleneck)
             {
                 resultado.Exito = true;
                 resultado.Confirmadas = 0; // SinCambios
@@ -1157,7 +1193,7 @@ AND COALESCE(dias_patron,'')=@DiasAntes;",
             return true;
         }
 
-        internal static string HuellaAccion(Decision d)
+        internal static IReadOnlyList<string> HuellaAccionPartes(Decision d)
         {
             var partes = new List<string>
             {
@@ -1180,7 +1216,10 @@ AND COALESCE(dias_patron,'')=@DiasAntes;",
                     .Select(r => $"rec:{r.IdAula}:{r.AulaRef}:{r.Subunidad}:{r.IdAsignatura}:{r.OrigenAnterior}->{r.OrigenPropuesto}:{r.DiasPatronAnterior}->{r.DiasPatronPropuesto}:{r.Autorizado}"));
             }
 
-            return AgHuellaPlanVentana.Hash(partes);
+            return partes;
         }
+
+        internal static string HuellaAccion(Decision d) =>
+            AgHuellaPlanVentana.Hash(HuellaAccionPartes(d));
     }
 }
