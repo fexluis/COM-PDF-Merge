@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 524 | 525 | 2026-11-22 |
-| `fase` | 2321 | 2322 | 2026-11-22 |
+| `ronda` | 525 | 526 | 2026-11-22 |
+| `fase` | 2331 | 2332 | 2026-11-22 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -231,6 +231,7 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-194 | 2026-11-21 | `(revisión e implementación Ronda 522 — Fase 2316: consistencia post-commit de MarkDirty en métodos unitarios de sincronización)` | `Wave —` → `Ronda 522` | `Fase 2316` | closed | sin build/tests (restricción Paso 6 /ronda-review) | pendiente |
 | R-195 | 2026-11-21 | `(revisión e implementación Ronda 523 — Fases 2317–2319: consolidar R6 como regla canónica de carril y retirar R13 hard)` | `Wave 523` → `Ronda 523` | `Fase 2317–2319` | closed | sin build/tests (restricción Paso 6 /ronda-review) | pendiente |
 | R-196 | 2026-11-22 | `(revisión e implementación Ronda 524 — Fases 2320–2321: alineación de HaySolape con R6 estricto y aislamiento de fixture de frontera compartida)` | `Wave 524` → `Ronda 524` | `Fase 2320–2321` | closed | sin build/tests (restricción Paso 6 /ronda-review) | pendiente |
+| R-197 | 2026-11-22 | `2026-11-22-reparacion-automatica-r5-plan.md` | `Wave 525` → `Ronda 525` | `T1..T10` → `Fase 2322–2331` | closed | PASS (Full 2010) | HEAD |
 
 
 

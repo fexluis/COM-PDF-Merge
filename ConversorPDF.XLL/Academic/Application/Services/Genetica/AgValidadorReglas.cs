@@ -255,13 +255,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             var porGrupo = genes.Where(g => g.EsVacante == 0).GroupBy(x => Cohorte(x));
             foreach (var g in porGrupo)
             {
-                // Fase 1087 / Fase 1167: Calibrar maxCarriles usando el modelo de ranuras por aula
-                int maxCarriles = g.Select(x => AulaDe(x.IdAula))
-                    .Where(a => a != null && !string.IsNullOrWhiteSpace(a.DiasVentana))
-                    .Select(a => AgCarriles.Cantidad(AgRanuras.PorVentana(a.DiasVentana, contexto.Bloques, a.Jornada,
-                        AgUnidadesSemanales.HorasSesionAula(a, AgNivelAcademicoCatalogo.Desde(contexto.Programas?.FirstOrDefault(p => p.Id == a.IdPrograma)?.Modalidad)))))
-                    .DefaultIfEmpty(2)
-                    .Max();
+                // Fase 1087 / Fase 1167 / Fase 2325: Calibrar maxCarriles usando el helper único
+                int maxCarriles = MaxCarrilesCohorte(g, contexto);
 
                 // Fase 2304: Mapear intervalos y delegar detección de sobrecargas al modelo canónico AgConcurrenciaCohorte
                 var intervalos = g.Where(x => x.FechaInicioEstimada.HasValue && x.FechaFinEstimada.HasValue)
@@ -703,6 +698,23 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             individuo.HardViolations = hardCount;
             individuo.SoftViolations = softScore;
             individuo.Estado = hardCount == 0 ? AgEstadoIndividuo.Factible : AgEstadoIndividuo.Infactible;
+        }
+
+        /// <summary>
+        /// Calcula el máximo de carriles concurrentes permitidos para una cohorte según la configuración de sus aulas (Fase 1087 / Fase 1167 / Fase 2325).
+        /// </summary>
+        internal static int MaxCarrilesCohorte(IEnumerable<AgGen> genesCohorte, AgContexto contexto)
+        {
+            if (genesCohorte == null || contexto == null) return 2;
+            return genesCohorte
+                .Select(x => (contexto.AulasPorId != null && contexto.AulasPorId.TryGetValue(x.IdAula, out var a))
+                    ? a
+                    : (contexto.Aulas != null ? contexto.Aulas.FirstOrDefault(au => au.Id == x.IdAula) : null))
+                .Where(a => a != null && !string.IsNullOrWhiteSpace(a.DiasVentana))
+                .Select(a => AgCarriles.Cantidad(AgRanuras.PorVentana(a.DiasVentana, contexto.Bloques, a.Jornada,
+                    AgUnidadesSemanales.HorasSesionAula(a, AgNivelAcademicoCatalogo.Desde(contexto.Programas?.FirstOrDefault(p => p.Id == a.IdPrograma)?.Modalidad)))))
+                .DefaultIfEmpty(2)
+                .Max();
         }
     }
 }

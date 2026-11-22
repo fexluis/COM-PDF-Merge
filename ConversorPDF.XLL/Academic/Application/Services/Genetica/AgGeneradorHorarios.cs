@@ -32,6 +32,12 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         /// </summary>
         internal static bool RealineacionOleadasActiva = true;
 
+        /// <summary>
+        /// Controla si se ejecuta la reparación post-evolución de sobrecargas R5 (Fase 2328).
+        /// </summary>
+        internal static bool ReparacionR5Activa = true;
+        internal static AgModoReparacionR5 ReparacionR5Modo = AgModoReparacionR5.Completo;
+
         public AgGeneradorHorarios(
             IAgValidadorVentana validadorVentana,
             IAgEvaluadorAptitud evaluadorAptitud)
@@ -363,6 +369,25 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     }
                 }
 
+                // Fase 2328: Hook de reparación automática de sobrecargas R5
+                if (ReparacionR5Activa && ReparacionR5Modo != AgModoReparacionR5.Off && mejorGlobal.HardViolations > 0)
+                {
+                    var repR5 = AgReparadorR5.Ejecutar(mejorGlobal, contexto, _evaluadorAptitud, ReparacionR5Modo);
+                    if (repR5 != null)
+                    {
+                        resultado.ReparacionR5Intentos = repR5.Intentos;
+                        resultado.ReparacionR5HardPre = repR5.HardPre;
+                        resultado.ReparacionR5HardPost = repR5.HardPost;
+                        resultado.ReparacionR5DesperdicioPre = repR5.DesperdicioPre;
+                        resultado.ReparacionR5DesperdicioPost = repR5.DesperdicioPost;
+
+                        if (repR5.HuboMejora && repR5.Individuo != null)
+                        {
+                            mejorGlobal = repR5.Individuo;
+                        }
+                    }
+                }
+
                 swCamp.Stop();
                 resultado.TiempoCampeonFinalMs = swCamp.ElapsedMilliseconds;
 
@@ -521,7 +546,10 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                                     }
                                 }
                             }
-                            catch { }
+                            catch (Exception exSnap)
+                            {
+                                LoggerHelper.Debug($"[AG-SNAPSHOT] Error extrayendo genes: {exSnap.Message}");
+                            }
                         }
                     }
 

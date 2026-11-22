@@ -321,6 +321,33 @@ Las citas `walkthrough.md:NNNN` anteriores al corte apuntan al archivo monolitic
 | F2320 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorOleadas.cs:1147-1165`, `AgPlanificadorOleadasTests.cs:847-876`, `AgValidadorReglasOleadasTests.cs:597-613` (Implementado) |
 | F2321 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgValidadorReglasOleadasTests.cs:351-404`, `.agents/plans/REGISTRY.md:27-28, 233` (Implementado) |
 
+---
+
+## Ronda 525 — Reparación automática de R5 con inventario de ranuras (Fases 2322–2331)
+
+### Resumen de la Ronda
+- **Fases 2322–2323:** Creación y publicación de la rama de trabajo `reparacion-automatica-r5`, reserva de fila R-197 en `REGISTRY.md` y creación del plan formal `.agents/plans/2026-11-22-reparacion-automatica-r5-plan.md`.
+- **Fases 2324–2325:** Modelado de ranuras libres/liberables/ocupadas en `AgInventarioRanuras.cs`, creación de `AgReparadorR5.cs` y tipos de soporte desacoplados (`AgSobrecargaR5.cs`, `AgResultadoReparacionR5.cs`), y extracción de helper canónico `AgValidadorReglas.MaxCarrilesCohorte`.
+- **Fases 2326–2327:** Implementación de operadores C1 (desplazamiento temporal) y C2 (compresión en huecos reales) junto con V1–V6 pre-validaciones contra colisiones R6/docente/aula y reversión transaccional garantizada.
+- **Fase 2328:** Inyección de hook de reparación post-oleadas en `AgGeneradorHorarios.cs`.
+- **Fase 2329:** Integración de métricas de telemetría de reparación R5 en `AgResultadoCorrida.cs` y persistencia en JSON en `AgFormGeneradorHorarios.cs`.
+- **Fases 2330–2331:** Cobertura de 11 tests unitarios en `AgInventarioRanurasTests.cs` y `AgReparadorR5Tests.cs`, auditoría de tareas con `audit-tasks.ps1` limpia, y certificación completa con `verify.ps1 -Mode Full` (2010 tests passed).
+
+### Verificación de Principios (Ronda 525)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2322 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `git branch`: `reparacion-automatica-r5` (Implementado) |
+| F2323 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `REGISTRY.md:27-28, 234`, plan R-197 (Implementado) |
+| F2324 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgInventarioRanuras.cs:1-125` (Implementado) |
+| F2325 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR5.cs`, `AgSobrecargaR5.cs`, `AgResultadoReparacionR5.cs`, `AgValidadorReglas.cs:259-278` (Implementado) |
+| F2326 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR5.cs:125-245` (Implementado) |
+| F2327 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR5.cs:246-340` (Implementado) |
+| F2328 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgGeneradorHorarios.cs:33, 331-366`, `AgModoReparacionR5.cs` (Implementado) |
+| F2329 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgResultadoCorrida.cs:18-22`, `AgFormGeneradorHorarios.cs:3422-3430` (Implementado) |
+| F2330 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgInventarioRanurasTests.cs:1-76`, `AgReparadorR5Tests.cs:1-260` (Implementado) |
+| F2331 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `audit-tasks.ps1` (0 findings), `verify.ps1 -Mode Full` (2010 passed) |
+
 
 
 

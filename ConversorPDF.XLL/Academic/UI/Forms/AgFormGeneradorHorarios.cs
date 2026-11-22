@@ -3432,6 +3432,18 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                             foreach (var clave in contexto.ClavesVacantesConsentidas.OrderBy(x => x)) listaConsentidas.Add(clave);
                         }
                         dict["vacantesConsentidas"] = listaConsentidas;
+                        // Fase 2329: Persistir telemetría de reparación R5 en parametros_json
+                        if (_ultimoResultado != null)
+                        {
+                            dict["reparacionR5"] = new Dictionary<string, object>
+                            {
+                                { "intentos", _ultimoResultado.ReparacionR5Intentos },
+                                { "hardPre", _ultimoResultado.ReparacionR5HardPre },
+                                { "hardPost", _ultimoResultado.ReparacionR5HardPost },
+                                { "desperdicioPre", _ultimoResultado.ReparacionR5DesperdicioPre },
+                                { "desperdicioPost", _ultimoResultado.ReparacionR5DesperdicioPost }
+                            };
+                        }
                         if (aulaCorrida != null)
                         {
                             dict["huella"] = AgHuellaPlanVentana.Calcular(contexto, aulaCorrida, planFechado: planFechado);

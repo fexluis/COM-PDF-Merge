@@ -30,6 +30,13 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
         public long TiempoCampeonFinalMs { get; set; }
         public string Mensaje { get; set; }
 
+        // Telemetría de reparación R5 (Fase 2329)
+        public int ReparacionR5Intentos { get; set; }
+        public int ReparacionR5HardPre { get; set; }
+        public int ReparacionR5HardPost { get; set; }
+        public double ReparacionR5DesperdicioPre { get; set; }
+        public double ReparacionR5DesperdicioPost { get; set; }
+
         private bool? _esFactible;
         public bool EsFactible
         {

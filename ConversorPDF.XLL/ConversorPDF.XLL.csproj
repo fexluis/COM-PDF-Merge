@@ -788,6 +788,11 @@
     <Compile Include="Academic\Application\Services\Genetica\AgDimensionesPerfilResolver.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgConcurrenciaCohorte.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgResultadoConcurrencia.cs" />
+    <Compile Include="Academic\Domain\Enums\AgModoReparacionR5.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgInventarioRanuras.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgReparadorR5.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgResultadoReparacionR5.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgSobrecargaR5.cs" />
     <Compile Include="Academic\Infrastructure\Persistence\Repositories\AgFiltroSeleccionRepository.cs" />
     <Compile Include="Academic\UI\Controls\AgNivel6Ventanas.cs" />
     <Compile Include="Academic\UI\Controls\CheckedComboBox.cs" />

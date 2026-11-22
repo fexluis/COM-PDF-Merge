@@ -326,6 +326,37 @@ Las citas `implementation_plan.md:NNNN` anteriores al corte apuntan al archivo m
 | 2320 | `AgPlanificadorOleadas.cs`, `AgPlanificadorOleadasTests.cs`, `AgValidadorReglasOleadasTests.cs` | Implementado |
 | 2321 | `AgValidadorReglasOleadasTests.cs`, `.agents/plans/REGISTRY.md` | Implementado |
 
+---
+
+## Ronda 525: Reparación automática de R5 con inventario de ranuras (Fases 2322–2331)
+
+### Resumen de la Ronda
+- **Fase 2322 (T1):** Creación y publicación de rama de protección `reparacion-automatica-r5` en repositorio remoto (`origin/reparacion-automatica-r5`).
+- **Fase 2323 (T2):** Reserva de numeración en `REGISTRY.md` (§2 contadores Ronda 526 / Fase 2332, §3 fila R-197) y formalización del plan de ejecución `.agents/plans/2026-11-22-reparacion-automatica-r5-plan.md` (T1..T10, Fases 2322..2331).
+- **Fase 2324 (T3):** Creación del modelo `AgInventarioRanuras.cs` en `ConversorPDF.XLL/Academic/Application/Services/Genetica/`, modelando ranuras válidas, ocupadas, libres reales, liberables, cola muerta y balance por día para cálculo de desperdicio y capacidad de alojamiento.
+- **Fase 2325 (T4):** Creación del componente de reparación `AgReparadorR5.cs`, modelo de sobrecarga `AgSobrecargaR5.cs`, resultado `AgResultadoReparacionR5.cs` (cumpliendo Single Type Per File) y extracción del helper canónico `AgValidadorReglas.MaxCarrilesCohorte` evitando duplicación o divergencia de cálculo de carriles máximos.
+- **Fase 2326 (T5):** Implementación de operadores de forward shifting C1 (`GenerarDesplazamientos`) con ordenamiento decreciente de candidatos para resolver sobrecargas R5 hacia la cola de la ventana, y compresión C2 (`GenerarCompresiones`) restringido a ranuras libres reales en asignaturas automáticas.
+- **Fase 2327 (T6):** Implementación de operadores C3/C4 (`GenerarReRanuracionEIntercambio`) y validación estricta V1–V6 (`Validar`) previniendo violaciones de docente, aula, carril R6 o reglas duras con rollback garantizado.
+- **Fase 2328 (T7):** Integración del hook de reparación en `AgGeneradorHorarios.cs:33, 331-366` post-`RealinearOleadas` condicionado a `ReparacionR5Activa` y modo `AgModoReparacionR5`, con manejo y logging seguro de excepciones.
+- **Fase 2329 (T8):** Exposición de telemetría en `AgResultadoCorrida.cs` (`ReparacionR5Intentos`, `ReparacionR5HardPre`, `ReparacionR5HardPost`, `ReparacionR5DesperdicioPre`, `ReparacionR5DesperdicioPost`) y serialización del bloque `"reparacionR5"` en `ParametrosJson` dentro de `AgFormGeneradorHorarios.cs`.
+- **Fase 2330 (T9):** Cobertura de pruebas unitarias exhaustivas en `AgInventarioRanurasTests.cs` (3 pruebas) y `AgReparadorR5Tests.cs` (8 pruebas canónicas: fixture sintético, ausencia de ranuras, respeto a LEGADO/EsFijo, no creación de vacantes, rollback ante R6, minimización de desperdicio, determinismo e integración con evaluador).
+- **Fase 2331 (T10):** Auditoría estática con `audit-tasks.ps1` (0 errores, 0 advertencias), validación de preflight con `preflight.ps1` (OK) y certificación de suite completa `verify.ps1 -Mode Full` (2010 superados, 0 fallos, 0 omitidos).
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2322 | git (`reparacion-automatica-r5`) | Implementado |
+| 2323 | `.agents/plans/REGISTRY.md`, `.agents/plans/2026-11-22-reparacion-automatica-r5-plan.md` | Implementado |
+| 2324 | `AgInventarioRanuras.cs`, `ConversorPDF.XLL.csproj` | Implementado |
+| 2325 | `AgReparadorR5.cs`, `AgSobrecargaR5.cs`, `AgResultadoReparacionR5.cs`, `AgValidadorReglas.cs` | Implementado |
+| 2326 | `AgReparadorR5.cs` | Implementado |
+| 2327 | `AgReparadorR5.cs` | Implementado |
+| 2328 | `AgGeneradorHorarios.cs`, `AgModoReparacionR5.cs` | Implementado |
+| 2329 | `AgResultadoCorrida.cs`, `AgFormGeneradorHorarios.cs` | Implementado |
+| 2330 | `AgInventarioRanurasTests.cs`, `AgReparadorR5Tests.cs` | Implementado |
+| 2331 | `REGISTRY.md`, `implementation_plan.md`, `walkthrough.md` | Implementado |
+
 
 
 
