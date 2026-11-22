@@ -204,6 +204,96 @@ Las citas `walkthrough.md:NNNN` anteriores al corte apuntan al archivo monolitic
 |---|---|---|---|---|---|
 | F2301 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAulaPersistenciaTests.cs:1420-1447` (Implementado) |
 
+---
+
+## Ronda 518 — Selección autoritativa de ventana y escalado R5-aware (Fases 2302–2306)
+
+### Resumen de la Ronda
+- **Fase 2302:** Creación de pruebas unitarias RED en `AgDimensionesPerfilAulaTests.cs` y `AgConcurrenciaCohorteTests.cs`, y tests de escalado ante infactibilidad R5 en `AgEscaladorRanuraAulaTests.cs`.
+- **Fase 2303:** Implementación de `AgDimensionesPerfilResolver` (`Aplicar` y `Detectar`) y resolución autoritativa de dimensiones del perfil sobre `ctx.Aulas` en `AgFormGeneradorHorarios.cs`.
+- **Fase 2304:** Implementación de modelo único `AgConcurrenciaCohorte` y `AgResultadoConcurrencia`, unificación de evaluación R5 en `AgEvaluadorDemandaVentana` (`PasoMejora` y `Evaluar`) y refactor de R5 en `AgValidadorReglas`.
+- **Fase 2305:** Habilitación de escalado R5-aware en `AgEscaladorRanuraAula`, guarda de omisión considerando `R5Insatisfacible`, trazabilidad `R5_SIN_ESCALON` y condición de mejora R5 en `Decision.Mejora`.
+- **Fase 2306:** Implementación de `SincronizarLoteAsync` en `AgAulaDimensionesSync` y preflight de reconciliación en `AgFormGeneradorHorarios.cs`.
+
+### Verificación de Principios (Ronda 518)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2302 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgDimensionesPerfilAulaTests.cs`, `AgConcurrenciaCohorteTests.cs`, `AgEscaladorRanuraAulaTests.cs:398-418` (Implementado) |
+| F2303 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgDimensionesPerfilResolver.cs`, `AgContextoSeleccionDto.cs:62-72`, `AgFormGeneradorHorarios.cs:1128-1138` (Implementado) |
+| F2304 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgConcurrenciaCohorte.cs`, `AgResultadoConcurrencia.cs`, `AgResultadoEvaluacionVentana.cs:39-44`, `AgEvaluadorDemandaVentana.cs:81-105, 195-207`, `AgValidadorReglas.cs:266-278` (Implementado) |
+| F2305 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEscaladorRanuraAula.cs:556, 574, 651, 679-684, 712` (Implementado) |
+| F2306 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgAulaDimensionesSync.cs:160-198`, `AgFormGeneradorHorarios.cs:1115-1127` (Implementado) |
+
+---
+
+## Ronda 519 — R5 no evaluado tratado como factible, lote no atómico y dimensiones inválidas (Fases 2307–2310)
+
+### Resumen de la Ronda
+- **Fase 2307:** Exigencia estricta de `despues.R5Evaluado && despues.R5Factible` en `AgEvaluadorDemandaVentana.PasoMejora` y `AgEscaladorRanuraAula.Decision.Mejora`.
+- **Fase 2308:** Sincronización batch atómica en `AgAulaDimensionesSync.SincronizarLoteAsync` bajo una única transacción y conexión con rollback total ante error.
+- **Fase 2309:** Validación estricta de dimensiones de perfil (`DiasVentana`, `Jornada`, `HorasDia == 4 || 8`) en `AgDimensionesPerfilResolver` (`Aplicar` y `Detectar`).
+- **Fase 2310:** Validación unívoca de cohorte en `AgConcurrenciaCohorte.Calcular` evitando comparaciones erróneas de múltiples cohortes contra un solo `maxCarriles`.
+
+### Verificación de Principios (Ronda 519)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2307 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgEvaluadorDemandaVentana.cs:88-89`, `AgEscaladorRanuraAula.cs:680, 716-717`, `AgEscaladorRanuraAulaTests.cs:410-417` (Implementado) |
+| F2308 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgAulaDimensionesSync.cs:163-228` (Implementado) |
+| F2309 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgDimensionesPerfilResolver.cs:31-38, 65-72`, `AgDimensionesPerfilAulaTests.cs:53-68` (Implementado) |
+| F2310 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgConcurrenciaCohorte.cs:28-33`, `AgConcurrenciaCohorteTests.cs:76-90` (Implementado) |
+
+---
+
+## Ronda 520 — Fixture de resolución inválido, guard de cohorte unívoco y cobertura batch (Fases 2311–2313)
+
+### Resumen de la Ronda
+- **Fase 2311:** Actualización del fixture de prueba en `AgDimensionesPerfilAulaTests.cs` con dimensiones válidas (`Jornada="TARDE"`, `HorasDia=4`) satisfaciendo el validador `perfilValido`.
+- **Fase 2312:** Normalización exhaustiva de cohorte con `StringComparer.Ordinal` en `AgConcurrenciaCohorte.Calcular` y adición de test de mezcla de cohortes vacías/no vacías.
+- **Fase 2313:** Validación de existencia previa en `AgAulaDimensionesSync.SincronizarLoteAsync` con rollback ante aulas inexistentes y suite completa de pruebas transaccionales en `AgAulaDimensionesSyncTests.cs`.
+
+### Verificación de Principios (Ronda 520)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2311 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgDimensionesPerfilAulaTests.cs:14-36` (Implementado) |
+| F2312 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgConcurrenciaCohorte.cs:28-40`, `AgConcurrenciaCohorteTests.cs:88-102` (Implementado) |
+| F2313 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgAulaDimensionesSync.cs:195-230`, `AgAulaDimensionesSyncTests.cs:181-290` (Implementado) |
+
+---
+
+## Ronda 521 — Tolerancia post-commit en MarkDirty y validación de inversión de fechas en concurrencia (Fases 2314–2315)
+
+### Resumen de la Ronda
+- **Fase 2314:** Blindaje post-commit de `MarkDirty()` en `AgAulaDimensionesSync.SincronizarLoteAsync` con logging de advertencia.
+- **Fase 2315:** Detección de intervalos temporales invertidos en `AgConcurrenciaCohorte.Calcular` y adición de test unitario.
+
+### Verificación de Principios (Ronda 521)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2314 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgAulaDimensionesSync.cs:236-249` (Implementado) |
+| F2315 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgConcurrenciaCohorte.cs:38-48`, `AgConcurrenciaCohorteTests.cs:90-102` (Implementado) |
+
+---
+
+## Ronda 522 — Consistencia post-commit en métodos unitarios de sincronización (Fase 2316)
+
+### Resumen de la Ronda
+- **Fase 2316:** Blindaje post-commit de `MarkDirty()` en `AgAulaDimensionesSync.SincronizarAsync` y `SincronizarConfirmadoAsync`.
+
+### Verificación de Principios (Ronda 522)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2316 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgAulaDimensionesSync.cs:69-78, 152-161` (Implementado) |
+
+
+
+
+
+
 
 
 

@@ -59,12 +59,18 @@ namespace ConversorPDF.XLL.Academic.Application.DTOs
             ? ModalidadTutoriaCatalog.Plataforma 
             : ModalidadTutoriaCatalog.NormalizarTutoria(Modalidad);
 
+        private string _aulaRef;
+
         /// <summary>
         /// Clave natural unívoca de la tupla S (AulaRef).
         /// Incluye ModalidadEfectiva para evitar colisiones entre variantes presenciales y virtuales del mismo grupo.
-        /// Utiliza AgAulaFactory.ConstruirAulaRef para garantizar sincronía total con la entidad de aula (Fases 231 y 237).
+        /// Utiliza AgAulaFactory.ConstruirAulaRef para garantizar sincronía total con la entidad de aula (Fases 231, 237 y 2303).
         /// </summary>
-        public string AulaRef => AgAulaFactory.ConstruirAulaRef(IdPeriodo, IdSede, IdPrograma, Semestre, Grupo, ModalidadEfectiva);
+        public string AulaRef
+        {
+            get => _aulaRef ?? AgAulaFactory.ConstruirAulaRef(IdPeriodo, IdSede, IdPrograma, Semestre, Grupo, ModalidadEfectiva);
+            set => _aulaRef = value;
+        }
 
         public override string ToString() => AulaRef;
     }

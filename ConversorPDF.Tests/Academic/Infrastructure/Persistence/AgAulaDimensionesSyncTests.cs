@@ -177,5 +177,116 @@ VALUES ('3|1|1|III|A|PRESENCIAL', 'MANANA', 4, 'MAR-VIE', 'CENTRAL');");
             // Assert
             affected.Should().Be(1);
         }
+
+        [Fact]
+        public async Task SincronizarLoteAsync_WhenAllValid_UpdatesAtomicallyAndReturnsTotal()
+        {
+            // Arrange
+            using (var conn = CreateConnection())
+            {
+                conn.Open();
+                conn.Execute("INSERT INTO ag_aula (aula_ref, jornada, horas_dia, dias_ventana, subunidad) VALUES ('LOTE|1', 'MANANA', 4, 'MAR-VIE', 'CENTRAL');");
+                conn.Execute("INSERT INTO ag_aula (aula_ref, jornada, horas_dia, dias_ventana, subunidad) VALUES ('LOTE|2', 'MANANA', 4, 'MAR-VIE', 'CENTRAL');");
+            }
+            var sut = new AgAulaDimensionesSync(CreateConnection);
+            var diffs = new[]
+            {
+                ("LOTE|1", "TARDE", 8, "LUN-VIE", "CENTRAL"),
+                ("LOTE|2", "NOCHE", 4, "1,2,3,4,5", "CENTRAL")
+            };
+
+            // Act
+            var res = await sut.SincronizarLoteAsync(diffs, CancellationToken.None);
+
+            // Assert
+            res.IsSuccess.Should().BeTrue();
+            res.Value.Should().Be(2);
+
+            using (var conn = CreateConnection())
+            {
+                conn.Open();
+                var r1 = conn.QueryFirstOrDefault<(string jornada, int horas_dia, string dias_ventana)>("SELECT jornada, horas_dia, dias_ventana FROM ag_aula WHERE aula_ref = 'LOTE|1';");
+                r1.jornada.Should().Be("TARDE");
+                r1.horas_dia.Should().Be(8);
+                r1.dias_ventana.Should().Be("LUN-VIE");
+
+                var r2 = conn.QueryFirstOrDefault<(string jornada, int horas_dia, string dias_ventana)>("SELECT jornada, horas_dia, dias_ventana FROM ag_aula WHERE aula_ref = 'LOTE|2';");
+                r2.jornada.Should().Be("NOCHE");
+                r2.horas_dia.Should().Be(4);
+                r2.dias_ventana.Should().Be("1,2,3,4,5");
+            }
+        }
+
+        [Fact]
+        public async Task SincronizarLoteAsync_WhenAulaDoesNotExist_FailsAndRollsBack()
+        {
+            // Arrange
+            using (var conn = CreateConnection())
+            {
+                conn.Open();
+                conn.Execute("INSERT INTO ag_aula (aula_ref, jornada, horas_dia, dias_ventana, subunidad) VALUES ('LOTE|EXISTE', 'MANANA', 4, 'MAR-VIE', 'CENTRAL');");
+            }
+            var sut = new AgAulaDimensionesSync(CreateConnection);
+            var diffs = new[]
+            {
+                ("LOTE|EXISTE", "TARDE", 8, "LUN-VIE", "CENTRAL"),
+                ("LOTE|NO_EXISTE", "NOCHE", 4, "1,2,3,4,5", "CENTRAL")
+            };
+
+            // Act
+            var res = await sut.SincronizarLoteAsync(diffs, CancellationToken.None);
+
+            // Assert
+            res.IsFailure.Should().BeTrue();
+            res.Error.Should().Contain("LOTE|NO_EXISTE");
+
+            using (var conn = CreateConnection())
+            {
+                conn.Open();
+                var r = conn.QueryFirstOrDefault<(string jornada, int horas_dia, string dias_ventana)>("SELECT jornada, horas_dia, dias_ventana FROM ag_aula WHERE aula_ref = 'LOTE|EXISTE';");
+                r.jornada.Should().Be("MANANA");
+                r.horas_dia.Should().Be(4);
+                r.dias_ventana.Should().Be("MAR-VIE");
+            }
+        }
+
+        [Fact]
+        public async Task SincronizarLoteAsync_WhenTriggerFails_RollsBackAllAndReturnsFailure()
+        {
+            // Arrange
+            using (var conn = CreateConnection())
+            {
+                conn.Open();
+                conn.Execute("INSERT INTO ag_aula (aula_ref, jornada, horas_dia, dias_ventana, subunidad) VALUES ('LOTE|OK', 'MANANA', 4, 'MAR-VIE', 'CENTRAL');");
+                conn.Execute("INSERT INTO ag_aula (aula_ref, jornada, horas_dia, dias_ventana, subunidad) VALUES ('LOTE|FAIL', 'MANANA', 4, 'MAR-VIE', 'CENTRAL');");
+                conn.Execute(@"
+CREATE TRIGGER trg_fail_update BEFORE UPDATE ON ag_aula
+WHEN NEW.aula_ref = 'LOTE|FAIL'
+BEGIN
+    SELECT RAISE(ABORT, 'fallo simulado en trigger');
+END;");
+            }
+            var sut = new AgAulaDimensionesSync(CreateConnection);
+            var diffs = new[]
+            {
+                ("LOTE|OK", "TARDE", 8, "LUN-VIE", "CENTRAL"),
+                ("LOTE|FAIL", "NOCHE", 4, "1,2,3,4,5", "CENTRAL")
+            };
+
+            // Act
+            var res = await sut.SincronizarLoteAsync(diffs, CancellationToken.None);
+
+            // Assert
+            res.IsFailure.Should().BeTrue();
+
+            using (var conn = CreateConnection())
+            {
+                conn.Open();
+                var r = conn.QueryFirstOrDefault<(string jornada, int horas_dia, string dias_ventana)>("SELECT jornada, horas_dia, dias_ventana FROM ag_aula WHERE aula_ref = 'LOTE|OK';");
+                r.jornada.Should().Be("MANANA");
+                r.horas_dia.Should().Be(4);
+                r.dias_ventana.Should().Be("MAR-VIE");
+            }
+        }
     }
 }

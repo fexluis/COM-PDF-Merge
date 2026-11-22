@@ -263,66 +263,18 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     .DefaultIfEmpty(2)
                     .Max();
 
-                // Mapear intervalos [min(FechaInicioEstimada), max(FechaFinEstimada)] por asignatura
-                var asigsConFechas = g.Where(x => x.FechaInicioEstimada.HasValue && x.FechaFinEstimada.HasValue)
-                                      .GroupBy(x => x.IdAsignatura)
-                                      .Select(grp => new
-                                      {
-                                          IdAsignatura = grp.Key,
-                                          Ini = grp.Min(x => x.FechaInicioEstimada.Value.Date),
-                                          Fin = grp.Max(x => x.FechaFinEstimada.Value.Date)
-                                      })
-                                      .ToList();
+                // Fase 2304: Mapear intervalos y delegar detección de sobrecargas al modelo canónico AgConcurrenciaCohorte
+                var intervalos = g.Where(x => x.FechaInicioEstimada.HasValue && x.FechaFinEstimada.HasValue)
+                                  .Select(x => (IdAsignatura: x.IdAsignatura, Ini: x.FechaInicioEstimada.Value.Date, Fin: x.FechaFinEstimada.Value.Date));
 
-                if (asigsConFechas.Count > 0)
+                var sobrecargas = AgConcurrenciaCohorte.DetectarSobrecargas(intervalos, maxCarriles);
+                foreach (var s in sobrecargas)
                 {
-                    var minGlobal = asigsConFechas.Min(x => x.Ini);
-                    var maxGlobal = asigsConFechas.Max(x => x.Fin);
-
-                    DateTime? tramoIni = null;
-                    DateTime? tramoFin = null;
-                    int maxSobrecargaTramo = 0;
-
-                    for (var dia = minGlobal; dia <= maxGlobal; dia = dia.AddDays(1))
-                    {
-                        int activas = asigsConFechas.Count(a => a.Ini <= dia && dia <= a.Fin);
-                        if (activas > maxCarriles)
-                        {
-                            if (!tramoIni.HasValue)
-                            {
-                                tramoIni = dia;
-                                maxSobrecargaTramo = activas;
-                            }
-                            else if (activas > maxSobrecargaTramo)
-                            {
-                                maxSobrecargaTramo = activas;
-                            }
-                            tramoFin = dia;
-                        }
-                        else
-                        {
-                            if (tramoIni.HasValue)
-                            {
-                                hardCount++;
-                                individuo.Violaciones.Add(new AgViolacion(
-                                    AgReglaViolacion.R5_MaxAsignaturasSemana,
-                                    esDura: true,
-                                    mensaje: $"La cohorte '{g.Key}' tiene {maxSobrecargaTramo} asignaturas concurrentes entre {tramoIni.Value:yyyy-MM-dd} y {tramoFin.Value:yyyy-MM-dd} (máximo permitido: {maxCarriles} carriles)."));
-                                tramoIni = null;
-                                tramoFin = null;
-                                maxSobrecargaTramo = 0;
-                            }
-                        }
-                    }
-
-                    if (tramoIni.HasValue)
-                    {
-                        hardCount++;
-                        individuo.Violaciones.Add(new AgViolacion(
-                            AgReglaViolacion.R5_MaxAsignaturasSemana,
-                            esDura: true,
-                            mensaje: $"La cohorte '{g.Key}' tiene {maxSobrecargaTramo} asignaturas concurrentes entre {tramoIni.Value:yyyy-MM-dd} y {tramoFin.Value:yyyy-MM-dd} (máximo permitido: {maxCarriles} carriles)."));
-                    }
+                    hardCount++;
+                    individuo.Violaciones.Add(new AgViolacion(
+                        AgReglaViolacion.R5_MaxAsignaturasSemana,
+                        esDura: true,
+                        mensaje: $"La cohorte '{g.Key}' tiene {s.MaxConcurrentes} asignaturas concurrentes entre {s.TramoIni:yyyy-MM-dd} y {s.TramoFin:yyyy-MM-dd} (máximo permitido: {maxCarriles} carriles)."));
                 }
             }
 

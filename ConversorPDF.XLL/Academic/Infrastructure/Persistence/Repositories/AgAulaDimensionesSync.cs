@@ -68,7 +68,14 @@ WHERE aula_ref = @Ref
 
                     if (n > 0)
                     {
-                        ConversorPDF.XLL.Core.Sync.SyncContext.Scheduler?.MarkDirty();
+                        try
+                        {
+                            ConversorPDF.XLL.Core.Sync.SyncContext.Scheduler?.MarkDirty();
+                        }
+                        catch (Exception ex)
+                        {
+                            LoggerHelper.Warning($"[AgAulaDimensionesSync] MarkDirty falló tras UPDATE en '{aulaRef}': {ex.Message}");
+                        }
                     }
 
                     return n;
@@ -144,7 +151,14 @@ WHERE aula_ref = @Ref
 
                     if (n > 0)
                     {
-                        ConversorPDF.XLL.Core.Sync.SyncContext.Scheduler?.MarkDirty();
+                        try
+                        {
+                            ConversorPDF.XLL.Core.Sync.SyncContext.Scheduler?.MarkDirty();
+                        }
+                        catch (Exception ex)
+                        {
+                            LoggerHelper.Warning($"[AgAulaDimensionesSync] MarkDirty falló tras UPDATE en '{aulaRef}': {ex.Message}");
+                        }
                     }
 
                     return Result.Success(n);
@@ -154,6 +168,107 @@ WHERE aula_ref = @Ref
             {
                 LoggerHelper.Warning($"[AgAulaDimensionesSync] Error al sincronizar aula '{aulaRef}': {ex.Message}");
                 return Result.Failure<int>($"Error al sincronizar dimensiones para el aula '{aulaRef}': {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Sincroniza en base de datos de forma atómica (transacción única) un lote de aulas
+        /// que presentan diferencias respecto al perfil (Fase 2306 / Fase 2308).
+        /// </summary>
+        public async Task<Result<int>> SincronizarLoteAsync(
+            System.Collections.Generic.IEnumerable<(string AulaRef, string Jornada, int HorasDia, string DiasVentana, string Subunidad)> diffs,
+            CancellationToken ct)
+        {
+            if (diffs == null)
+            {
+                return Result.Success(0);
+            }
+
+            const string sqlUpdate = @"
+UPDATE ag_aula
+SET jornada      = COALESCE(NULLIF(@J, ''), jornada),
+    horas_dia    = CASE WHEN @H > 0 THEN @H ELSE horas_dia END,
+    dias_ventana = COALESCE(NULLIF(@D, ''), dias_ventana)
+WHERE aula_ref = @Ref
+  AND COALESCE(NULLIF(TRIM(subunidad), ''), @Sub) = @Sub
+  AND (COALESCE(jornada, '')      <> COALESCE(NULLIF(@J, ''), COALESCE(jornada, ''))
+    OR COALESCE(horas_dia, -1)    <> CASE WHEN @H > 0 THEN @H ELSE COALESCE(horas_dia, -1) END
+    OR COALESCE(dias_ventana, '') <> COALESCE(NULLIF(@D, ''), COALESCE(dias_ventana, '')));";
+
+            try
+            {
+                using (var conn = _connectionFactory())
+                {
+                    if (conn.State != ConnectionState.Open)
+                    {
+                        conn.Open();
+                    }
+
+                    using (var tx = conn.BeginTransaction())
+                    {
+                        const string sqlExiste = @"
+SELECT COUNT(1)
+FROM ag_aula
+WHERE aula_ref = @Ref
+  AND COALESCE(NULLIF(TRIM(subunidad), ''), @Sub) = @Sub;";
+
+                        int totalActualizadas = 0;
+                        foreach (var item in diffs)
+                        {
+                            ct.ThrowIfCancellationRequested();
+
+                            // Fase 2313: Verificación de existencia previa en lote
+                            int existe = await conn.ExecuteScalarAsync<int>(new CommandDefinition(
+                                sqlExiste,
+                                new { Ref = item.AulaRef, Sub = item.Subunidad ?? string.Empty },
+                                transaction: tx,
+                                cancellationToken: ct)).ConfigureAwait(false);
+
+                            if (existe == 0)
+                            {
+                                tx.Rollback();
+                                return Result.Failure<int>($"El aula '{item.AulaRef}' no existe en la base de datos.");
+                            }
+
+                            int n = await conn.ExecuteAsync(new CommandDefinition(
+                                sqlUpdate,
+                                new
+                                {
+                                    J = item.Jornada ?? string.Empty,
+                                    H = item.HorasDia,
+                                    D = item.DiasVentana ?? string.Empty,
+                                    Ref = item.AulaRef,
+                                    Sub = item.Subunidad ?? string.Empty
+                                },
+                                transaction: tx,
+                                cancellationToken: ct)).ConfigureAwait(false);
+
+                            totalActualizadas += n;
+                        }
+
+                        tx.Commit();
+
+                        // Fase 2314: MarkDirty post-commit tolerante a excepciones
+                        try
+                        {
+                            if (totalActualizadas > 0)
+                            {
+                                ConversorPDF.XLL.Core.Sync.SyncContext.Scheduler?.MarkDirty();
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            LoggerHelper.Warning($"[AgAulaDimensionesSync] MarkDirty falló tras commit: {ex.Message}");
+                        }
+
+                        return Result.Success(totalActualizadas);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LoggerHelper.Warning($"[AgAulaDimensionesSync] Error en SincronizarLoteAsync: {ex.Message}");
+                return Result.Failure<int>($"Error al sincronizar lote de dimensiones: {ex.Message}");
             }
         }
     }

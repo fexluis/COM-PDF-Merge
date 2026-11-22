@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 517 | 518 | 2026-11-21 |
-| `fase` | 2301 | 2302 | 2026-11-21 |
+| `ronda` | 522 | 523 | 2026-11-21 |
+| `fase` | 2316 | 2317 | 2026-11-21 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -224,6 +224,11 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-187 | 2026-11-21 | `(revisión e implementación Ronda 515 — Fases 2297–2298: ampliación de allowlists de catálogo existentes en huella y memoización de introspección de esquema con PRAGMA schema_version)` | `Wave —` → `Ronda 515` | `Fase 2297–2298` | closed | sin build/tests (restricción Paso 6) | pendiente |
 | R-188 | 2026-11-21 | `(revisión e implementación Ronda 516 — Fases 2299–2300: alineación de allowlists de catálogo con esquema real de producción y corrección de fixtures de test)` | `Wave —` → `Ronda 516` | `Fase 2299–2300` | closed | sin build/tests (restricción Paso 6) | pendiente |
 | R-189 | 2026-11-21 | `(revisión e implementación Ronda 517 — Fase 2301: cobertura explícita de idprograma en pruebas de huella ante mutación de catálogo)` | `Wave —` → `Ronda 517` | `Fase 2301` | closed | build/tests en build-release 1.6.4.39 | pendiente |
+| R-190 | 2026-11-21 | `(revisión e implementación Ronda 518 — Fases 2302–2306: selección autoritativa de ventana desde perfil ag_arbol_nodo, modelo canónico de concurrencia R5 cohorte-carril, evaluador/escalador R5-aware y sincronización persistente en preflight)` | `Wave —` → `Ronda 518` | `Fase 2302–2306` | closed | sin build/tests (restricción Paso 6 /ronda-review) | pendiente |
+| R-191 | 2026-11-21 | `(revisión e implementación Ronda 519 — Fases 2307–2310: R5 evaluado obligatorio en mejora, sincronización batch atómica transaccional, validación integral de dimensiones de perfil y restricción unívoca de cohorte en concurrencia)` | `Wave —` → `Ronda 519` | `Fase 2307–2310` | closed | sin build/tests (restricción Paso 6 /ronda-review) | pendiente |
+| R-192 | 2026-11-21 | `(revisión e implementación Ronda 520 — Fases 2311–2313: fixture de dimensiones válidas en resolver tests, guard unívoco de cohorte con normalización ordinal y verificación de existencia con pruebas transaccionales de lote)` | `Wave —` → `Ronda 520` | `Fase 2311–2313` | closed | sin build/tests (restricción Paso 6 /ronda-review) | pendiente |
+| R-193 | 2026-11-21 | `(revisión e implementación Ronda 521 — Fases 2314–2315: MarkDirty tolerante post-commit en lote y validación de consistencia temporal en intervalos de concurrencia R5)` | `Wave —` → `Ronda 521` | `Fase 2314–2315` | closed | sin build/tests (restricción Paso 6 /ronda-review) | pendiente |
+| R-194 | 2026-11-21 | `(revisión e implementación Ronda 522 — Fase 2316: consistencia post-commit de MarkDirty en métodos unitarios de sincronización)` | `Wave —` → `Ronda 522` | `Fase 2316` | closed | sin build/tests (restricción Paso 6 /ronda-review) | pendiente |
 
 
 

@@ -36,6 +36,12 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         public List<int> IdAsignaturasSaturadas { get; set; } = new List<int>();
         public IReadOnlyDictionary<int, int> SesionesPendientesPorAsignatura { get; set; } = new Dictionary<int, int>();
         public IReadOnlyDictionary<int, double> HorasPendientesPorAsignatura { get; set; } = new Dictionary<int, double>();
+        // Fase 2304 / Fase 2305: Señal canónica de concurrencia R5 cohorte-carril compartida
+        public bool R5Evaluado { get; set; }
+        public bool R5Factible { get; set; }
+        public int MaxConcurrentesR5 { get; set; }
+        public int CarrilesR5 { get; set; }
+        public bool R5Insatisfacible => R5Evaluado && !R5Factible;
     }
 }
 

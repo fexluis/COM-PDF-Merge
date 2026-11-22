@@ -78,10 +78,22 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 
         internal static bool PasoMejora(AgResultadoEvaluacionVentana antes, AgResultadoEvaluacionVentana despues)
         {
-            if (antes == null || despues == null || antes.CabeEnPlazo
-                || EsErrorEstructural(antes.Error) || EsErrorEstructural(despues.Error)
-                || despues.CapacidadTotal <= antes.CapacidadTotal
-                || despues.DemandaPendiente > antes.DemandaPendiente) { return false; }
+            if (antes == null || despues == null) { return false; }
+            if (EsErrorEstructural(antes.Error) || EsErrorEstructural(despues.Error)) { return false; }
+
+            // Fase 2304 / Fase 2305 / Fase 2307: Factibilidad canónica de concurrencia R5 cohorte-carril
+            if (despues.R5Evaluado && !despues.R5Factible) { return false; }
+            if (antes.R5Evaluado && antes.R5Factible && despues.R5Evaluado && !despues.R5Factible) { return false; }
+
+            bool mejoraR5 = antes.R5Evaluado && !antes.R5Factible
+                         && despues.R5Evaluado && despues.R5Factible;
+
+            // Si antes cabía en plazo y R5 no estaba insatisfecho, no se requiere escalar
+            if (antes.CabeEnPlazo && !mejoraR5) { return false; }
+
+            if (despues.DemandaPendiente > antes.DemandaPendiente) { return false; }
+            if (!mejoraR5 && despues.CapacidadTotal <= antes.CapacidadTotal) { return false; }
+
             bool conserva = antes.Plan == null || despues.Plan != null
                 && antes.Plan.Planes.Where(p => !antes.Plan.Infactibles.Contains(p.IdAsignatura))
                     .All(p => despues.Plan.Planes.Any(n => n.IdAsignatura == p.IdAsignatura && n.Sesiones.Count >= p.Sesiones.Count));
@@ -90,7 +102,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             // FASE 1864: Pérdida acotada y deliberada, no anulación accidental del guardián conserva
             bool perdidaAceptable = despues.DemandaPendiente < antes.DemandaPendiente
                                  && despues.DemandaPendiente <= antes.DemandaPendiente - 1;
-            return mejoraGlobal && (conserva || perdidaAceptable);
+            return (mejoraGlobal || mejoraR5) && (conserva || perdidaAceptable);
         }
 
         public static AgResultadoEvaluacionVentana Evaluar(string diasVentana, string jornada, double unidad,
@@ -182,6 +194,20 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             res.BusquedaAgotada = evaluacion.Value.BusquedaAgotada;
             res.HaySaturacion = !res.CabeEnPlazo;
             res.SaturacionCarriles = res.DemandaPendiente > Math.Max(0, res.DemandaTotal - res.CapacidadTotal);
+
+            // Fase 2304: Evaluación canónica de concurrencia R5 compartida
+            int maxCarriles = AgCarriles.Cantidad(ranuras);
+            string cohorte = AgAulaFactory.ExtraerCohorte(aula.AulaRef);
+            var intervalos = res.Sesiones
+                .GroupBy(s => s.IdAsignatura)
+                .Select(g => (Cohorte: cohorte, IdAsignatura: g.Key, Ini: g.Min(s => s.Fecha), Fin: g.Max(s => s.Fecha)))
+                .ToList();
+            var resR5 = AgConcurrenciaCohorte.Calcular(intervalos, maxCarriles);
+            res.R5Evaluado = resR5.Evaluado;
+            res.R5Factible = resR5.Factible;
+            res.MaxConcurrentesR5 = resR5.MaxConcurrentes;
+            res.CarrilesR5 = resR5.CarrilesDisponibles;
+
             var dias = new HashSet<int>(ranuras.Select(r => r.Dia));
             res.MateriasFueraVentana = patrones.Where(p => requeridas.ContainsKey(p.Key)
                 && AgDiasVentana.Dias(p.Value).Any(d => !dias.Contains(d))).Select(p => p.Key).ToList();

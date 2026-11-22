@@ -552,8 +552,8 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
 
                 if (autorizadasAula.Count > 0)
                 {
-                    // Si con reclasificación en la misma ventana aún quedan pendientes y hay escalón disponible, evaluar siguiente escalón
-                    if (!evalMismaVentana.CabeEnPlazo && !string.IsNullOrEmpty(paso))
+                    // Si con reclasificación en la misma ventana aún quedan pendientes o R5 es infactible y hay escalón disponible, evaluar siguiente escalón (Fase 2305)
+                    if ((!evalMismaVentana.CabeEnPlazo || evalMismaVentana.R5Insatisfacible) && !string.IsNullOrEmpty(paso))
                     {
                         var ranurasPaso = AgRanuras.PorVentana(paso, ctxSimulado.Bloques, aula.Jornada, unidad);
                         var opcionesPasoSim = AgOpcionesParticion.Resolver(paso, ranurasPaso, patronesSimulados, "escalar");
@@ -570,8 +570,8 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                 }
                 else
                 {
-                    // Sin autorizaciones: flujo nominal de escalera si hay saturación
-                    if (antes.HaySaturacion && !string.IsNullOrEmpty(paso))
+                    // Sin autorizaciones: flujo nominal de escalera si hay saturación o R5 insatisfacible (Fase 2305)
+                    if ((antes.HaySaturacion || antes.R5Insatisfacible) && !string.IsNullOrEmpty(paso))
                     {
                         var ranurasPaso = AgRanuras.PorVentana(paso, contexto.Bloques, aula.Jornada, unidad);
                         opcionPaso = AgOpcionesParticion.Resolver(paso, ranurasPaso, patronesAula, "escalar");
@@ -646,9 +646,9 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                     && particionDifiere
                     && (referenciaComparada == null || (despues.Plan?.Infactibles?.Count ?? 0) <= (referenciaComparada.Plan?.Infactibles?.Count ?? 0));
 
-                // FASE 1856 / FASE 2108 / FASE 2114: Trazabilidad enriquecida y fidedigna de omisión del escalador en nivel Info
-                // Si no hay saturación, no hay candidatos y no hay autorizaciones, omitir
-                if (!antes.HaySaturacion && candidatos.Count == 0 && autorizadasAula.Count == 0 && !hayMejoraParticion)
+                // FASE 1856 / FASE 2108 / FASE 2114 / FASE 2305: Trazabilidad enriquecida y fidedigna de omisión del escalador en nivel Info
+                // Si no hay saturación ni R5 insatisfacible, no hay candidatos y no hay autorizaciones, omitir
+                if (!antes.HaySaturacion && !antes.R5Insatisfacible && candidatos.Count == 0 && autorizadasAula.Count == 0 && !hayMejoraParticion)
                 {
                     LoggerHelper.Info(
                         $"[ESCALADO] ESCALADOR_OMITIR aula={aula.Id} ref={aula.AulaRef} dias={aula.DiasVentana} " +
@@ -675,6 +675,13 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                         $"pasoError='{(evalPaso != null ? evalPaso.Error : string.Empty)}' candidatos={candidatos.Count} motivo=sin_propuesta_viable");
                     contexto.Traza?.Dato("EscaladorOmitir", $"aula={aula.Id} ref={aula.AulaRef} motivo=sin_propuesta_viable");
                     continue;
+                }
+
+                // Fase 2305 / Fase 2307: Advertencia cuando no hay evidencia R5 factible del paso
+                if (antes.R5Insatisfacible && (!despues.R5Evaluado || !despues.R5Factible))
+                {
+                    contexto.Traza?.Dato("R5_SIN_ESCALON", $"aula={aula.Id} ref={aula.AulaRef} dias={aula.DiasVentana}");
+                    LoggerHelper.Warning($"[ESCALADO] R5_SIN_ESCALON aula={aula.Id} ref={aula.AulaRef} dias={aula.DiasVentana}: R5 infactible sin escalón de mejora.");
                 }
 
                 var automaticas = contexto.AulaAsignaturaPorAulaAsig.Values.Where(aa => aa.IdAula == aula.Id
@@ -707,7 +714,9 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                     IdAsignaturasBottleneck = automaticas,
                     ReclasificacionesPropuestas = candidatos.Select(c => c.Clone()).ToList(),
                     ReclasificacionesAutorizadas = autorizadasAula.Select(a => a.Clone()).ToList(),
-                    Mejora = despues.DemandaPendiente < antes.DemandaPendiente
+                    Mejora = (antes.R5Evaluado && !antes.R5Factible
+                              && despues.R5Evaluado && despues.R5Factible)
+                             || despues.DemandaPendiente < antes.DemandaPendiente
                              || despues.CapacidadTotal > antes.CapacidadTotal
                              || (hayAutorizaciones && despues.DemandaPendiente <= antes.DemandaPendiente),
                     ContextoOrigen = contexto,

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ConversorPDF.XLL.Academic.Application.Services.Genetica;
 using ConversorPDF.XLL.Academic.Domain.Enums;
 using ConversorPDF.XLL.Academic.Domain.Models;
 using ConversorPDF.XLL.Academic.Domain.Models.Genetica;
@@ -396,6 +397,30 @@ namespace ConversorPDF.Tests.Academic.Infrastructure.Persistence
 
             huella.Should().NotBeNullOrWhiteSpace();
             huella.Length.Should().Be(44);
+        }
+
+        [Fact]
+        public void Escalador_CuandoDemandaCabePeroR5No_ProponeSiguienteEscalon()
+        {
+            var antes = new AgResultadoEvaluacionVentana { CabeEnPlazo = true, R5Evaluado = true, R5Factible = false, DemandaPendiente = 0 };
+            var paso = new AgResultadoEvaluacionVentana { CabeEnPlazo = true, R5Evaluado = true, R5Factible = true, DemandaPendiente = 0 };
+            AgEvaluadorDemandaVentana.PasoMejora(antes, paso).Should().BeTrue();
+        }
+
+        [Fact]
+        public void Escalador_CuandoAmbosR5Infactibles_NoProponePaso()
+        {
+            var antes = new AgResultadoEvaluacionVentana { CabeEnPlazo = true, R5Evaluado = true, R5Factible = false, DemandaPendiente = 0 };
+            var paso = new AgResultadoEvaluacionVentana { CabeEnPlazo = true, R5Evaluado = true, R5Factible = false, DemandaPendiente = 0 };
+            AgEvaluadorDemandaVentana.PasoMejora(antes, paso).Should().BeFalse();
+        }
+
+        [Fact]
+        public void Escalador_CuandoPasoNoEvaluadoR5_NoProponePaso()
+        {
+            var antes = new AgResultadoEvaluacionVentana { CabeEnPlazo = true, R5Evaluado = true, R5Factible = false, DemandaPendiente = 0 };
+            var paso = new AgResultadoEvaluacionVentana { CabeEnPlazo = true, R5Evaluado = false, R5Factible = true, DemandaPendiente = 0 };
+            AgEvaluadorDemandaVentana.PasoMejora(antes, paso).Should().BeFalse();
         }
     }
 }

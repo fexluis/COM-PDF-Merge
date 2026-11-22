@@ -209,6 +209,96 @@ Las citas `implementation_plan.md:NNNN` anteriores al corte apuntan al archivo m
 |---|---|---|
 | 2301 | `AgEscaladorRanuraAulaPersistenciaTests.cs` | Implementado |
 
+---
+
+## Ronda 518: Selección autoritativa de ventana y escalado R5-aware (Fases 2302–2306)
+
+### Resumen de la Ronda
+- **Fase 2302:** Creación de suites de pruebas unitarias (`AgDimensionesPerfilAulaTests.cs`, `AgConcurrenciaCohorteTests.cs`, y adición en `AgEscaladorRanuraAulaTests.cs`) para verificar que las dimensiones del perfil prevalecen sobre ag_aula, el cálculo canónico de concurrencia R5 cohorte-carril y la propuesta de escalón cuando la demanda cabe pero R5 es infactible.
+- **Fase 2303:** Implementación de `AgDimensionesPerfilResolver.cs` y su integración en `AgFormGeneradorHorarios.cs` (en `ConstruirContextoAsync`), asegurando que las dimensiones seleccionadas en el perfil de `ag_arbol_nodo` sobrescriban autoritativamente las dimensiones de `ctx.Aulas` en memoria con trazabilidad de desalineaciones.
+- **Fase 2304:** Implementación del modelo canónico `AgConcurrenciaCohorte.cs` y DTO `AgResultadoConcurrencia.cs`. Extensión de `AgResultadoEvaluacionVentana.cs` con propiedades R5 (`R5Evaluado`, `R5Factible`, `MaxConcurrentesR5`, `CarrilesR5`, `R5Insatisfacible`). Integración de la evaluación R5 en `AgEvaluadorDemandaVentana.cs` y `PasoMejora`, y refactorización de la regla R5 en `AgValidadorReglas.cs` para compartir la detección de sobrecargas sin duplicación.
+- **Fase 2305:** Adaptación de `AgEscaladorRanuraAula.cs` para considerar `R5Insatisfacible` como condición de escalado, registrar advertencia y traza `R5_SIN_ESCALON` cuando ningún escalón resuelve la infactibilidad, y actualizar `Decision.Mejora` para contemplar transiciones hacia R5 factible.
+- **Fase 2306:** Incorporación de método `SincronizarLoteAsync` en `AgAulaDimensionesSync.cs` y llamada preflight en `AgFormGeneradorHorarios.cs` para reconciliar y persistir automáticamente las dimensiones desalineadas detectadas en base de datos.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2302 | `AgDimensionesPerfilAulaTests.cs`, `AgConcurrenciaCohorteTests.cs`, `AgEscaladorRanuraAulaTests.cs` | Implementado |
+| 2303 | `AgDimensionesPerfilResolver.cs`, `AgContextoSeleccionDto.cs`, `AgFormGeneradorHorarios.cs`, `ConversorPDF.XLL.csproj` | Implementado |
+| 2304 | `AgConcurrenciaCohorte.cs`, `AgResultadoConcurrencia.cs`, `AgResultadoEvaluacionVentana.cs`, `AgEvaluadorDemandaVentana.cs`, `AgValidadorReglas.cs` | Implementado |
+| 2305 | `AgEscaladorRanuraAula.cs` | Implementado |
+| 2306 | `AgAulaDimensionesSync.cs`, `AgFormGeneradorHorarios.cs` | Implementado |
+
+---
+
+## Ronda 519: R5 no evaluado tratado como factible, lote no atómico y dimensiones inválidas (Fases 2307–2310)
+
+### Resumen de la Ronda
+- **Fase 2307:** En `AgEvaluadorDemandaVentana.cs:88` y `AgEscaladorRanuraAula.cs:680, 716`, exigencia estricta de `despues.R5Evaluado && despues.R5Factible` (junto con `antes.R5Evaluado && !antes.R5Factible`) para considerar que un paso mejora R5, evitando que pasos sin evaluación R5 sean aceptados incorrectamente como mejora. Se añade prueba unitaria `Escalador_CuandoPasoNoEvaluadoR5_NoProponePaso`.
+- **Fase 2308:** En `AgAulaDimensionesSync.cs:163-228`, reescritura de `SincronizarLoteAsync` utilizando una única conexión y transacción atómica compartida (`conn.BeginTransaction()`), asegurando rollback completo ante fallas y disparo unificado de `SyncContext.Scheduler.MarkDirty()`.
+- **Fase 2309:** En `AgDimensionesPerfilResolver.cs:31-38, 65-72`, validación integral de dimensiones del perfil (`DiasVentana` no vacía, `Jornada` no vacía y `HorasDia` igual a 4 u 8) tanto en `Aplicar` como en `Detectar`, impidiendo sobreescritura de valores inválidos en aulas o sincronizaciones espurias. Se añade prueba unitaria `Resolver_PerfilInvalido_NoModificaAulaNiGeneraDiff`.
+- **Fase 2310:** En `AgConcurrenciaCohorte.cs:28-33`, verificación estricta de cardinalidad de cohorte en `Calcular`, impidiendo mezclar cohortes con distintos números de carriles en una misma evaluación global. Se añade prueba unitaria `Calcular_ConMultiplesCohortes_LanzaArgumentException`.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2307 | `AgEvaluadorDemandaVentana.cs`, `AgEscaladorRanuraAula.cs`, `AgEscaladorRanuraAulaTests.cs` | Implementado |
+| 2308 | `AgAulaDimensionesSync.cs` | Implementado |
+| 2309 | `AgDimensionesPerfilResolver.cs`, `AgDimensionesPerfilAulaTests.cs` | Implementado |
+| 2310 | `AgConcurrenciaCohorte.cs`, `AgConcurrenciaCohorteTests.cs` | Implementado |
+
+---
+
+## Ronda 520: Fixture de resolución inválido, guard de cohorte unívoco y cobertura batch (Fases 2311–2313)
+
+### Resumen de la Ronda
+- **Fase 2311:** En `AgDimensionesPerfilAulaTests.cs:14-36`, corrección del fixture de prueba `Resolver_PrevalecePerfilSobreAula_WhenDifiere` asignando `Jornada = "TARDE"` y `HorasDia = 4` explícitas, alineándolo con el contrato de validación de `perfilValido` introducido en Fase 2309.
+- **Fase 2312:** En `AgConcurrenciaCohorte.cs:28-40`, normalización unívoca de claves de cohorte (`x.Cohorte ?? string.Empty` con `StringComparer.Ordinal`) en la detección de cardinalidad de cohorte y en `GroupBy`, impidiendo mezclar cohortes vacías y no vacías en un mismo cómputo. Se añade prueba `Calcular_ConCohorteVaciaYNoVacia_LanzaArgumentException`.
+- **Fase 2313:** En `AgAulaDimensionesSync.cs:195-230`, incorporación de verificación previa de existencia (`sqlExiste`) dentro de la transacción por lote y rollback inmediato ante aulas inexistentes. Se agregan pruebas unitarias en `AgAulaDimensionesSyncTests.cs` para verificar commit atómico de lote, rollback ante aula inexistente y rollback total ante fallo de trigger.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2311 | `AgDimensionesPerfilAulaTests.cs` | Implementado |
+| 2312 | `AgConcurrenciaCohorte.cs`, `AgConcurrenciaCohorteTests.cs` | Implementado |
+| 2313 | `AgAulaDimensionesSync.cs`, `AgAulaDimensionesSyncTests.cs` | Implementado |
+
+---
+
+## Ronda 521: Tolerancia post-commit en MarkDirty y validación de inversión de fechas en concurrencia (Fases 2314–2315)
+
+### Resumen de la Ronda
+- **Fase 2314:** En `AgAulaDimensionesSync.cs:236-249`, protección post-commit con bloque `try-catch` alrededor de `SyncContext.Scheduler.MarkDirty()`, garantizando que si el scheduler falla o no está disponible tras persistir el lote, la operación retorne `Result.Success(totalActualizadas)` sin falsear un fallo en la base de datos.
+- **Fase 2315:** En `AgConcurrenciaCohorte.cs:38-48`, validación de consistencia temporal en intervalos (`Fin >= Ini`), retornando `Evaluado=false` y `Factible=false` ante intervalos invertidos para evitar declaraciones falsas de factibilidad. Se añade prueba `Calcular_ConIntervaloInvertido_NoDeclaraFactible`.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2314 | `AgAulaDimensionesSync.cs` | Implementado |
+| 2315 | `AgConcurrenciaCohorte.cs`, `AgConcurrenciaCohorteTests.cs` | Implementado |
+
+---
+
+## Ronda 522: Consistencia post-commit en métodos unitarios de sincronización (Fase 2316)
+
+### Resumen de la Ronda
+- **Fase 2316:** En `AgAulaDimensionesSync.cs:69-78, 152-161`, alineación de `SincronizarAsync` y `SincronizarConfirmadoAsync` con el patrón post-commit tolerante de Fase 2314, protegiendo `SyncContext.Scheduler.MarkDirty()` con `try-catch` para evitar fallos falsos o retornos de error tras confirmarse el `UPDATE` en base de datos.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2316 | `AgAulaDimensionesSync.cs` | Implementado |
+
+
+
+
+
+
 
 
 

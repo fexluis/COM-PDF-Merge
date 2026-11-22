@@ -1112,6 +1112,26 @@ namespace ConversorPDF.XLL.Academic.UI.Forms
                     traza.Advertencia("AulasSinCohortes", "Sin cohortes reconocibles: se conserva el alcance completo del período.");
                 }
 
+                // Fase 2306: Preflight y sincronización persistente de dimensiones perfil vs ag_aula
+                var diffsDetectadas = AgDimensionesPerfilResolver.Detectar(ctx.Aulas, combinaciones);
+                if (diffsDetectadas.Count > 0)
+                {
+                    LoggerHelper.Warning($"[DIMENSIONES] {diffsDetectadas.Count} aula(s) desalineadas; se usarán dimensiones del perfil.");
+                    var sync = await _aulaDimSync.SincronizarLoteAsync(diffsDetectadas, ct).ConfigureAwait(false);
+                    if (sync.IsFailure)
+                    {
+                        LoggerHelper.Warning($"[DIMENSIONES] SYNC_FALLO: {sync.Error}; se continúa con perfil en memoria.");
+                    }
+                }
+
+                // Fase 2303: El perfil prevalece autoritativamente sobre ag_aula en el contexto
+                ctx.Aulas = AgDimensionesPerfilResolver.Aplicar(ctx.Aulas, combinaciones, out var diffs)
+                    .ToList();
+                foreach (var d in diffs)
+                {
+                    LoggerHelper.Warning($"[DIMENSIONES] Perfil prevalece sobre ag_aula: aula={d.AulaRef} perfil={d.Perfil} bd={d.Bd}");
+                }
+
                 // Fase 452: Validar aulas del período objetivo
                 if (ctx.Aulas.Count == 0)
                 {
