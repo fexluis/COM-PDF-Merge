@@ -8,5 +8,6 @@ namespace ConversorPDF.XLL.Academic.Domain.Interfaces
     public interface IAgEvaluadorAptitud
     {
         void EvaluarAptitud(AgIndividuo individuo, AgContexto contexto);
+        void EvaluarAptitud(AgIndividuo individuo, AgContexto contexto, bool forzar, bool incluirDetalleJson = false);
     }
 }

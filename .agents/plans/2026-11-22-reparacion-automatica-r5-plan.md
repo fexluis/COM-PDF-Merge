@@ -73,6 +73,8 @@
 - **location**: ConversorPDF.XLL/Academic/Application/Services/Genetica/
 - **files_lock**:
   - `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgReparadorR5.cs`
+  - `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgSobrecargaR5.cs`
+  - `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgResultadoReparacionR5.cs`
   - `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgValidadorReglas.cs`
 - **descripción**: Extraer helper canónico de carriles y armar estructura de scoring y presupuesto de reparación.
 
@@ -101,6 +103,7 @@
 - **location**: ConversorPDF.XLL/Academic/Application/Services/Genetica/
 - **files_lock**:
   - `ConversorPDF.XLL/Academic/Application/Services/Genetica/AgGeneradorHorarios.cs`
+  - `ConversorPDF.XLL/Academic/Domain/Enums/AgModoReparacionR5.cs`
 - **descripción**: Integrar hook de llamada a `AgReparadorR5.Reparar` tras `RealinearOleadas` con control de rollback.
 
 ### T8: Telemetría
@@ -110,6 +113,7 @@
 - **location**: ConversorPDF.XLL/Academic/
 - **files_lock**:
   - `ConversorPDF.XLL/Academic/Domain/Models/Genetica/AgResultadoCorrida.cs`
+  - `ConversorPDF.XLL/Academic/UI/Forms/AgFormGeneradorHorarios.cs`
 - **descripción**: Exponer métricas de reparación R5 (intentos, hard pre/post, desperdicio pre/post) y serializar en parámetros JSON.
 
 ### T9: Pruebas unitarias
@@ -129,6 +133,10 @@
 - **location**: scripts/ / REGISTRY.md
 - **files_lock**:
   - `.agents/plans/REGISTRY.md`
+  - `ConversorPDF.XLL/ConversorPDF.XLL.csproj`
+  - `ConversorPDF.XLL/Academic/Domain/Interfaces/IAgEvaluadorAptitud.cs`
+  - `scripts/verify.ps1`
+  - `tests/baseline/test_baseline.txt`
   - `implementation_plan.md`
   - `walkthrough.md`
 - **descripción**: Certificación por scripts de auditoría, preflight y verificación de tests, y cierre documental de R-197.

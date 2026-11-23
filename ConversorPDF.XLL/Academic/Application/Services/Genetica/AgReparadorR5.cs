@@ -4,19 +4,20 @@ using System.Diagnostics;
 using System.Linq;
 using ConversorPDF.XLL.Academic.Domain.Enums;
 using ConversorPDF.XLL.Academic.Domain.Interfaces;
+using ConversorPDF.XLL.Academic.Domain.Models;
 using ConversorPDF.XLL.Academic.Domain.Models.Genetica;
 using ConversorPDF.XLL.Core.Helpers;
 
 namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 {
     /// <summary>
-    /// Motor heurístico de reparación automática de sobrecargas R5 mediante inventario de ranuras,
-    /// forward shifting y compresión determinista (Fase 2325 / Fase 2326 / Fase 2327).
+    /// Motor heurístico de reparación automática de sobrecargas R5 mediante inventario de ranuras libres,
+    /// forward shifting, compresión y re-ranuración determinista (Fases 2325–2327 / 2332–2340 / 2343–2351).
     /// </summary>
     internal sealed class AgReparadorR5
     {
-        public const int MaxIntentos = 8;
-        public const int MaxEvaluaciones = 12;
+        public const int MaxIntentos = 16;
+        public const int MaxEvaluaciones = 20;
         public const int MaxTiempoMs = 3000;
 
         /// <summary>
@@ -62,171 +63,257 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             }
 
             var sw = Stopwatch.StartNew();
+            double despPre = 0.0;
+            string primerCohorte = null;
 
-            var sobrecargas = Detectar(campeon, contexto);
-            if (sobrecargas.Count == 0)
+            try
             {
+                var sobrecargas = Detectar(campeon, contexto);
+                if (sobrecargas.Count == 0)
+                {
+                    return resultado;
+                }
+
+                primerCohorte = sobrecargas[0].Cohorte;
+                var invInicial = AgInventarioRanuras.Construir(campeon, contexto, primerCohorte);
+                despPre = CalcularDesperdicio(invInicial);
+                resultado.DesperdicioPre = despPre;
+                resultado.DesperdicioPost = despPre;
+
+                var puntajeMejor = new AgPuntajeReparacion(campeon, despPre, 0);
+                AgIndividuo mejorClon = null;
+                var actual = campeon; // Fase 2339: Iteración acumulativa
+                string cohorteReparada = null;
+
+                int evaluaciones = 0;
+                int intentosEvaluados = 0;
+                int intentosAceptados = 0;
+
+                while (intentosAceptados < MaxIntentos && evaluaciones < MaxEvaluaciones && sw.ElapsedMilliseconds < MaxTiempoMs)
+                {
+                    var sobrecargasActual = Detectar(actual, contexto);
+                    if (sobrecargasActual.Count == 0)
+                    {
+                        break;
+                    }
+
+                    bool mejoraEnIteracion = false;
+
+                    foreach (var sob in sobrecargasActual)
+                    {
+                        if (intentosAceptados >= MaxIntentos || evaluaciones >= MaxEvaluaciones || sw.ElapsedMilliseconds >= MaxTiempoMs)
+                        {
+                            break;
+                        }
+
+                        var inv = AgInventarioRanuras.Construir(actual, contexto, sob.Cohorte);
+                        // Fase 2360: Calcular desperdicio pre-reparación sobre la cohorte de la sobrecarga actual
+                        var invPre = inv;
+                        double despPreCohorte = CalcularDesperdicio(invPre);
+                        var puntajeBaseCohorte = new AgPuntajeReparacion(actual, despPreCohorte, 0);
+
+                        // Candidatos C1: Desplazamiento (Forward Shifting) sobre ranuras libres (Fase 2347)
+                        var candidatosC1 = GenerarDesplazamientos(actual, contexto, sob, inv);
+                        foreach (var cand in candidatosC1)
+                        {
+                            intentosEvaluados++;
+                            if (evaluaciones >= MaxEvaluaciones || sw.ElapsedMilliseconds >= MaxTiempoMs)
+                            {
+                                break;
+                            }
+
+                            // Fase 2348: Sellar primero, luego Validar
+                            AgCoherenciaGrupo.Sellar(cand, contexto);
+                            if (cand.Vacantes > campeon.Vacantes)
+                            {
+                                continue;
+                            }
+                            if (!Validar(cand, actual, contexto))
+                            {
+                                continue;
+                            }
+
+                            // Fase 2332: Forzar reevaluación reiniciando Estado
+                            cand.Estado = AgEstadoIndividuo.NoEvaluado;
+                            evaluadorAptitud.EvaluarAptitud(cand, contexto, forzar: true, incluirDetalleJson: true);
+                            evaluaciones++;
+
+                            var invCand = AgInventarioRanuras.Construir(cand, contexto, sob.Cohorte);
+                            double despCand = CalcularDesperdicio(invCand);
+                            var puntajeCand = new AgPuntajeReparacion(cand, despCand, 1);
+
+                            if (puntajeCand.Hard < puntajeBaseCohorte.Hard || (puntajeCand.Hard == puntajeBaseCohorte.Hard && puntajeCand.CompareTo(puntajeBaseCohorte) < 0))
+                            {
+                                if (puntajeCand.Hard < actual.HardViolations)
+                                {
+                                    int hardAntes = actual.HardViolations; // Fase 2351: Capturar antes de actualizar
+                                    puntajeMejor = puntajeCand;
+                                    mejorClon = cand;
+                                    actual = cand;
+                                    cohorteReparada = sob.Cohorte;
+                                    intentosAceptados++;
+                                    mejoraEnIteracion = true;
+                                    resultado.Detalle.Add($"[AG-REPARACION-R5] C1 cohorte={sob.Cohorte} hard {hardAntes}->{puntajeCand.Hard}, Desp {despPreCohorte:F3}->{despCand:F3}");
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (mejoraEnIteracion) break;
+                        if (modo == AgModoReparacionR5.SoloDesplazamiento) continue;
+
+                        // Candidatos C2: Compresión real sobre huecos libres (Fase 2349)
+                        var candidatosC2 = GenerarCompresiones(actual, contexto, sob, inv);
+                        foreach (var cand in candidatosC2)
+                        {
+                            intentosEvaluados++;
+                            if (evaluaciones >= MaxEvaluaciones || sw.ElapsedMilliseconds >= MaxTiempoMs)
+                            {
+                                break;
+                            }
+
+                            // Fase 2348: Sellar primero, luego Validar
+                            AgCoherenciaGrupo.Sellar(cand, contexto);
+                            if (cand.Vacantes > campeon.Vacantes)
+                            {
+                                continue;
+                            }
+                            if (!Validar(cand, actual, contexto))
+                            {
+                                continue;
+                            }
+
+                            cand.Estado = AgEstadoIndividuo.NoEvaluado;
+                            evaluadorAptitud.EvaluarAptitud(cand, contexto, forzar: true, incluirDetalleJson: true);
+                            evaluaciones++;
+
+                            var invCand = AgInventarioRanuras.Construir(cand, contexto, sob.Cohorte);
+                            double despCand = CalcularDesperdicio(invCand);
+                            var puntajeCand = new AgPuntajeReparacion(cand, despCand, 1);
+
+                            if (puntajeCand.Hard < puntajeBaseCohorte.Hard || (puntajeCand.Hard == puntajeBaseCohorte.Hard && puntajeCand.CompareTo(puntajeBaseCohorte) < 0))
+                            {
+                                if (puntajeCand.Hard < actual.HardViolations)
+                                {
+                                    int hardAntes = actual.HardViolations;
+                                    puntajeMejor = puntajeCand;
+                                    mejorClon = cand;
+                                    actual = cand;
+                                    cohorteReparada = sob.Cohorte;
+                                    intentosAceptados++;
+                                    mejoraEnIteracion = true;
+                                    resultado.Detalle.Add($"[AG-REPARACION-R5] C2 cohorte={sob.Cohorte} hard {hardAntes}->{puntajeCand.Hard}, Desp {despPreCohorte:F3}->{despCand:F3}");
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (mejoraEnIteracion) break;
+
+                        // Candidatos C3 / C4: Re-ranuración e intercambio
+                        var candidatosC3C4 = GenerarReRanuracionEIntercambio(actual, contexto, sob, inv);
+                        foreach (var cand in candidatosC3C4)
+                        {
+                            intentosEvaluados++;
+                            if (evaluaciones >= MaxEvaluaciones || sw.ElapsedMilliseconds >= MaxTiempoMs)
+                            {
+                                break;
+                            }
+
+                            // Fase 2348: Sellar primero, luego Validar
+                            AgCoherenciaGrupo.Sellar(cand, contexto);
+                            if (cand.Vacantes > campeon.Vacantes)
+                            {
+                                continue;
+                            }
+                            if (!Validar(cand, actual, contexto))
+                            {
+                                continue;
+                            }
+
+                            cand.Estado = AgEstadoIndividuo.NoEvaluado;
+                            evaluadorAptitud.EvaluarAptitud(cand, contexto, forzar: true, incluirDetalleJson: true);
+                            evaluaciones++;
+
+                            var invCand = AgInventarioRanuras.Construir(cand, contexto, sob.Cohorte);
+                            double despCand = CalcularDesperdicio(invCand);
+                            var puntajeCand = new AgPuntajeReparacion(cand, despCand, 1);
+
+                            if (puntajeCand.Hard < puntajeBaseCohorte.Hard || (puntajeCand.Hard == puntajeBaseCohorte.Hard && puntajeCand.CompareTo(puntajeBaseCohorte) < 0))
+                            {
+                                if (puntajeCand.Hard < actual.HardViolations)
+                                {
+                                    int hardAntes = actual.HardViolations;
+                                    puntajeMejor = puntajeCand;
+                                    mejorClon = cand;
+                                    actual = cand;
+                                    cohorteReparada = sob.Cohorte;
+                                    intentosAceptados++;
+                                    mejoraEnIteracion = true;
+                                    resultado.Detalle.Add($"[AG-REPARACION-R5] C3/C4 cohorte={sob.Cohorte} hard {hardAntes}->{puntajeCand.Hard}, Desp {despPreCohorte:F3}->{despCand:F3}");
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (mejoraEnIteracion) break;
+                    }
+
+                    if (!mejoraEnIteracion)
+                    {
+                        break; // No se encontraron más mejoras viables
+                    }
+                }
+
+                resultado.Intentos = intentosEvaluados;
+                resultado.Evaluaciones = evaluaciones;
+
+                if (mejorClon != null && puntajeMejor.Hard < campeon.HardViolations)
+                {
+                    resultado.HuboMejora = true;
+                    resultado.Individuo = mejorClon;
+                    resultado.HardPost = puntajeMejor.Hard;
+
+                    // Fase 2356 / 2360: Recalcular desperdicio pre y post sobre la misma cohorte reparada
+                    string cohorteFinal = cohorteReparada ?? primerCohorte;
+                    var invPreFinal = AgInventarioRanuras.Construir(campeon, contexto, cohorteFinal);
+                    var invPostFinal = AgInventarioRanuras.Construir(mejorClon, contexto, cohorteFinal);
+                    resultado.DesperdicioPre = CalcularDesperdicio(invPreFinal);
+                    resultado.DesperdicioPost = CalcularDesperdicio(invPostFinal);
+
+                    LoggerHelper.Info(
+                        $"[AG-REPARACION-R5] Hard {resultado.HardPre}->{resultado.HardPost} " +
+                        $"intentos={intentosEvaluados} aceptados={intentosAceptados} evals={evaluaciones} " +
+                        $"desperdicio {resultado.DesperdicioPre:F3}->{resultado.DesperdicioPost:F3} " +
+                        $"tiempo={sw.ElapsedMilliseconds}ms");
+                }
+                else
+                {
+                    resultado.HuboMejora = false;
+                    resultado.Individuo = campeon;
+                    resultado.HardPost = campeon.HardViolations;
+                    resultado.DesperdicioPost = despPre;
+                    resultado.Detalle.Add($"rollback: sin mejora ({campeon.HardViolations})");
+
+                    LoggerHelper.Info(
+                        $"[AG-REPARACION-R5] Rollback sin mejora: Hard {campeon.HardViolations} " +
+                        $"intentos={intentosEvaluados} evals={evaluaciones} tiempo={sw.ElapsedMilliseconds}ms");
+                }
+
                 return resultado;
             }
-
-            string primerCohorte = sobrecargas[0].Cohorte;
-            var invInicial = AgInventarioRanuras.Construir(campeon, contexto, primerCohorte);
-            double despPre = CalcularDesperdicio(invInicial);
-            resultado.DesperdicioPre = despPre;
-            resultado.DesperdicioPost = despPre;
-
-            var puntajeMejor = new AgPuntajeReparacion(campeon, despPre, 0);
-            AgIndividuo mejorClon = null;
-            int evaluaciones = 0;
-            int intentos = 0;
-
-            foreach (var sob in sobrecargas)
+            catch (Exception ex)
             {
-                if (intentos >= MaxIntentos || evaluaciones >= MaxEvaluaciones || sw.ElapsedMilliseconds >= MaxTiempoMs)
-                {
-                    break;
-                }
-
-                var inv = AgInventarioRanuras.Construir(campeon, contexto, sob.Cohorte);
-
-                // Candidatos C1: Desplazamiento (Forward Shifting)
-                var candidatosC1 = GenerarDesplazamientos(campeon, contexto, sob, inv);
-                foreach (var cand in candidatosC1)
-                {
-                    intentos++;
-                    if (intentos > MaxIntentos || evaluaciones >= MaxEvaluaciones || sw.ElapsedMilliseconds >= MaxTiempoMs)
-                    {
-                        break;
-                    }
-
-                    if (!Validar(cand, campeon, contexto))
-                    {
-                        continue;
-                    }
-
-                    AgCoherenciaGrupo.Sellar(cand, contexto);
-                    evaluadorAptitud.EvaluarAptitud(cand, contexto);
-                    evaluaciones++;
-
-                    var invCand = AgInventarioRanuras.Construir(cand, contexto, sob.Cohorte);
-                    double despCand = CalcularDesperdicio(invCand);
-                    var puntajeCand = new AgPuntajeReparacion(cand, despCand, 1);
-
-                    if (puntajeCand.Hard < puntajeMejor.Hard || (puntajeCand.Hard == puntajeMejor.Hard && puntajeCand.CompareTo(puntajeMejor) < 0))
-                    {
-                        if (puntajeCand.Hard < campeon.HardViolations)
-                        {
-                            puntajeMejor = puntajeCand;
-                            mejorClon = cand;
-                            resultado.Detalle.Add($"C1 aceptado: Hard {campeon.HardViolations}->{puntajeCand.Hard}, Desp {despPre:F3}->{despCand:F3}");
-                        }
-                    }
-                }
-
-                if (modo == AgModoReparacionR5.SoloDesplazamiento)
-                {
-                    continue;
-                }
-
-                // Candidatos C2: Compresión
-                var candidatosC2 = GenerarCompresiones(campeon, contexto, sob, inv);
-                foreach (var cand in candidatosC2)
-                {
-                    intentos++;
-                    if (intentos > MaxIntentos || evaluaciones >= MaxEvaluaciones || sw.ElapsedMilliseconds >= MaxTiempoMs)
-                    {
-                        break;
-                    }
-
-                    if (!Validar(cand, campeon, contexto))
-                    {
-                        continue;
-                    }
-
-                    AgCoherenciaGrupo.Sellar(cand, contexto);
-                    evaluadorAptitud.EvaluarAptitud(cand, contexto);
-                    evaluaciones++;
-
-                    var invCand = AgInventarioRanuras.Construir(cand, contexto, sob.Cohorte);
-                    double despCand = CalcularDesperdicio(invCand);
-                    var puntajeCand = new AgPuntajeReparacion(cand, despCand, 1);
-
-                    if (puntajeCand.Hard < puntajeMejor.Hard || (puntajeCand.Hard == puntajeMejor.Hard && puntajeCand.CompareTo(puntajeMejor) < 0))
-                    {
-                        if (puntajeCand.Hard < campeon.HardViolations)
-                        {
-                            puntajeMejor = puntajeCand;
-                            mejorClon = cand;
-                            resultado.Detalle.Add($"C2 aceptado: Hard {campeon.HardViolations}->{puntajeCand.Hard}, Desp {despPre:F3}->{despCand:F3}");
-                        }
-                    }
-                }
-
-                // Candidatos C3 / C4: Re-ranuración e intercambio
-                var candidatosC3C4 = GenerarReRanuracionEIntercambio(campeon, contexto, sob, inv);
-                foreach (var cand in candidatosC3C4)
-                {
-                    intentos++;
-                    if (intentos > MaxIntentos || evaluaciones >= MaxEvaluaciones || sw.ElapsedMilliseconds >= MaxTiempoMs)
-                    {
-                        break;
-                    }
-
-                    if (!Validar(cand, campeon, contexto))
-                    {
-                        continue;
-                    }
-
-                    AgCoherenciaGrupo.Sellar(cand, contexto);
-                    evaluadorAptitud.EvaluarAptitud(cand, contexto);
-                    evaluaciones++;
-
-                    var invCand = AgInventarioRanuras.Construir(cand, contexto, sob.Cohorte);
-                    double despCand = CalcularDesperdicio(invCand);
-                    var puntajeCand = new AgPuntajeReparacion(cand, despCand, 1);
-
-                    if (puntajeCand.Hard < puntajeMejor.Hard || (puntajeCand.Hard == puntajeMejor.Hard && puntajeCand.CompareTo(puntajeMejor) < 0))
-                    {
-                        if (puntajeCand.Hard < campeon.HardViolations)
-                        {
-                            puntajeMejor = puntajeCand;
-                            mejorClon = cand;
-                            resultado.Detalle.Add($"C3/C4 aceptado: Hard {campeon.HardViolations}->{puntajeCand.Hard}, Desp {despPre:F3}->{despCand:F3}");
-                        }
-                    }
-                }
-            }
-
-            resultado.Intentos = intentos;
-            resultado.Evaluaciones = evaluaciones;
-
-            if (mejorClon != null && puntajeMejor.Hard < campeon.HardViolations)
-            {
-                resultado.HuboMejora = true;
-                resultado.Individuo = mejorClon;
-                resultado.HardPost = puntajeMejor.Hard;
-                resultado.DesperdicioPost = puntajeMejor.Desperdicio;
-
-                LoggerHelper.Info(
-                    $"[AG-REPARACION-R5] Hard {resultado.HardPre}->{resultado.HardPost} " +
-                    $"intentos={intentos} evals={evaluaciones} " +
-                    $"desperdicio {resultado.DesperdicioPre:F3}->{resultado.DesperdicioPost:F3} " +
-                    $"tiempo={sw.ElapsedMilliseconds}ms");
-            }
-            else
-            {
+                // Fase 2339: Contención de excepciones de reparación
+                LoggerHelper.Warning($"[AG-REPARACION-R5] omitida: {ex.Message}");
                 resultado.HuboMejora = false;
                 resultado.Individuo = campeon;
                 resultado.HardPost = campeon.HardViolations;
                 resultado.DesperdicioPost = despPre;
-                resultado.Detalle.Add($"rollback: sin mejora ({campeon.HardViolations})");
-
-                LoggerHelper.Info(
-                    $"[AG-REPARACION-R5] Rollback sin mejora: Hard {campeon.HardViolations} " +
-                    $"intentos={intentos} evals={evaluaciones} tiempo={sw.ElapsedMilliseconds}ms");
+                resultado.Error = ex.Message;
+                resultado.Detalle.Add($"excepcion: {ex.Message}");
+                return resultado;
             }
-
-            return resultado;
         }
 
         /// <summary>
@@ -269,7 +356,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         }
 
         /// <summary>
-        /// Candidatos C1: Forward shifting para liberar el tramo sobrecargado.
+        /// Candidatos C1: Forward shifting para liberar el tramo sobrecargado usando ranuras libres (Fase 2347).
         /// </summary>
         internal static List<AgIndividuo> GenerarDesplazamientos(
             AgIndividuo campeon,
@@ -278,7 +365,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             AgInventarioRanuras inv)
         {
             var candidatos = new List<AgIndividuo>();
-            if (campeon?.Genes == null || sob == null) return candidatos;
+            if (campeon?.Genes == null || sob == null || inv == null) return candidatos;
 
             int C = sob.MaxConcurrentes;
             int M = sob.MaxCarriles;
@@ -301,18 +388,10 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 .ThenByDescending(x => x.Fin)
                 .ToList();
 
-            // Evaluar asignaturas candidatas a mover (no fijas, no LEGADO)
             foreach (var candAsig in solapadas)
             {
                 var primerGen = candAsig.Genes.FirstOrDefault();
                 if (primerGen == null || primerGen.EsFijo == 1) continue;
-
-                string origen = ObtenerOrigenPatron(primerGen, ctx);
-                if (string.Equals(origen, "LEGADO", StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(origen, "FIJO", StringComparison.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
 
                 var otras = solapadas
                     .Where(x => x.IdAsignatura != candAsig.IdAsignatura)
@@ -322,51 +401,92 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 
                 if (otras.Count < liberar) continue;
 
-                DateTime fechaBase = otras[liberar - 1].AddDays(1);
+                DateTime nuevoIniMin = otras[liberar - 1].AddDays(1);
 
-                // Clonar individuo para aplicar el desplazamiento
-                var clon = campeon.Clonar();
-                var genesAMover = clon.Genes.Where(g => g.IdAsignatura == candAsig.IdAsignatura).ToList();
-                if (genesAMover.Count == 0) continue;
+                // Fase 2347: Ranuras libres reales excluyendo las ocupadas por la propia víctima
+                var candAsigGenes = campeon.Genes
+                    .Where(g => g.EsVacante == 0
+                             && g.IdAsignatura == candAsig.IdAsignatura
+                             && string.Equals(AgCalendarioConflictos.Cohorte(g), sob.Cohorte, StringComparison.Ordinal))
+                    .ToList();
 
-                bool exito = true;
-                foreach (var g in genesAMover)
+                if (candAsigGenes.Count == 0) continue;
+
+                var fechasVictima = new HashSet<DateTime>(
+                    candAsigGenes.Where(g => g.FechasGen != null).SelectMany(g => g.FechasGen).Select(d => d.Date));
+                var ocupadasAjenas = new HashSet<DateTime>(
+                    inv.Ocupadas.Keys.Where(f => !fechasVictima.Contains(f.Date)));
+
+                // Fase 2354 / 2358: Priorizar ranuras libres reales incluyendo fechas propias de la víctima; fallback a liberables
+                var fechasValidasSet = new HashSet<DateTime>(
+                    (inv.FechasValidas ?? Enumerable.Empty<DateTime>()).Select(f => f.Date));
+                var libres = (inv.FechasValidas ?? Enumerable.Empty<DateTime>())
+                    .Where(f => !ocupadasAjenas.Contains(f.Date) || (inv.Liberables != null && inv.Liberables.Contains(f.Date)))
+                    .Distinct()
+                    .OrderBy(f => f)
+                    .ToList();
+                var libresConVictima = (inv.LibresReales ?? Enumerable.Empty<DateTime>())
+                    .Concat(fechasVictima)
+                    .Where(f => fechasValidasSet.Contains(f.Date))
+                    .Select(f => f.Date)
+                    .Distinct()
+                    .OrderBy(f => f)
+                    .ToList();
+                var opciones = libresConVictima.Count > 0 ? libresConVictima : libres;
+
+                int diaIso = (primerGen.DiaSemana >= 1 && primerGen.DiaSemana <= 7) ? primerGen.DiaSemana : 1;
+                var posiblesInicios = opciones
+                    .Where(f => ((f.DayOfWeek == DayOfWeek.Sunday) ? 7 : (int)f.DayOfWeek) == diaIso && f >= nuevoIniMin)
+                    .OrderBy(f => f)
+                    .Take(8)
+                    .ToList();
+
+                foreach (var inicio in posiblesInicios)
                 {
-                    // Buscar primera fecha válida >= fechaBase con el día del bloque/gen
-                    int diaIso = (g.DiaSemana >= 1 && g.DiaSemana <= 7) ? g.DiaSemana : 1;
-                    var fechaIniValida = inv.FechasValidas
-                        .FirstOrDefault(f => f >= fechaBase && ((f.DayOfWeek == DayOfWeek.Sunday) ? 7 : (int)f.DayOfWeek) == diaIso);
+                    var clon = campeon.Clonar();
+                    bool exito = true;
+                    DateTime cursor = inicio; // Fase 2355: Cursor temporal para asignaturas multi-gen
+                    var usadas = new HashSet<DateTime>(); // Fase 2359: Evitar solape multi-gen
 
-                    if (fechaIniValida == default(DateTime))
+                    foreach (var g in candAsigGenes.OrderBy(x => x.DiaSemana))
                     {
-                        exito = false;
-                        break;
+                        int idx = campeon.Genes.IndexOf(g);
+                        if (idx < 0 || idx >= clon.Genes.Count) { exito = false; break; }
+                        var gClon = clon.Genes[idx];
+
+                        int gDiaIso = (gClon.DiaSemana >= 1 && gClon.DiaSemana <= 7) ? gClon.DiaSemana : 1;
+                        double unidad = (ctx.UnidadHorasPorAulaId != null && ctx.UnidadHorasPorAulaId.TryGetValue(gClon.IdAula, out var u) && u > 0) ? u : 4.0;
+                        int targetSesiones = (int)Math.Max(1, Math.Round(gClon.HorasGen / unidad));
+
+                        var nuevasFechas = opciones
+                            .Where(f => f >= cursor
+                                     && !usadas.Contains(f.Date)
+                                     && ((f.DayOfWeek == DayOfWeek.Sunday) ? 7 : (int)f.DayOfWeek) == gDiaIso)
+                            .Take(targetSesiones)
+                            .ToList();
+
+                        if (nuevasFechas.Count < targetSesiones)
+                        {
+                            exito = false;
+                            break;
+                        }
+
+                        foreach (var f in nuevasFechas)
+                        {
+                            usadas.Add(f.Date);
+                        }
+
+                        gClon.FechaInicioEstimada = nuevasFechas.Min();
+                        gClon.FechaFinEstimada = nuevasFechas.Max();
+                        gClon.FechasGen = nuevasFechas;
+
+                        cursor = nuevasFechas.Min().AddDays(1);
                     }
 
-                    // Determinar número de sesiones requeridas
-                    double unidad = (ctx.UnidadHorasPorAulaId != null && ctx.UnidadHorasPorAulaId.TryGetValue(g.IdAula, out var u) && u > 0) ? u : 4.0;
-                    int targetSesiones = (int)Math.Max(1, Math.Round(g.HorasGen / unidad));
-
-                    // Proyectar fechas válidas
-                    var nuevasFechas = inv.FechasValidas
-                        .Where(f => f >= fechaIniValida && ((f.DayOfWeek == DayOfWeek.Sunday) ? 7 : (int)f.DayOfWeek) == diaIso)
-                        .Take(targetSesiones)
-                        .ToList();
-
-                    if (nuevasFechas.Count < targetSesiones)
+                    if (exito)
                     {
-                        exito = false;
-                        break;
+                        candidatos.Add(clon);
                     }
-
-                    g.FechaInicioEstimada = nuevasFechas.Min();
-                    g.FechaFinEstimada = nuevasFechas.Max();
-                    g.FechasGen = nuevasFechas;
-                }
-
-                if (exito)
-                {
-                    candidatos.Add(clon);
                 }
             }
 
@@ -374,7 +494,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         }
 
         /// <summary>
-        /// Candidatos C2: Compresión usando ranuras libres reales en el tramo.
+        /// Candidatos C2: Inserción real en huecos libres intermedios (Fase 2349).
         /// </summary>
         internal static List<AgIndividuo> GenerarCompresiones(
             AgIndividuo campeon,
@@ -384,14 +504,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         {
             var candidatos = new List<AgIndividuo>();
             if (campeon?.Genes == null || sob == null || inv == null) return candidatos;
-
-            // C2 requiere que existan ranuras libres reales en el tramo
-            int libresEnTramo = inv.LibresReales.Count(f => f >= sob.TramoIni && f <= sob.TramoFin);
-            if (libresEnTramo <= 0)
-            {
-                // Rechazado: sin ranuras libres reales en el tramo
-                return candidatos;
-            }
+            if (inv.HuecosIntermedios <= 0 || inv.LibresReales == null || inv.LibresReales.Count == 0) return candidatos;
 
             var solapadas = sob.GenesCohorte
                 .Where(g => g.FechaInicioEstimada.HasValue && g.FechaFinEstimada.HasValue
@@ -407,32 +520,55 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 if (primerGen == null || primerGen.EsFijo == 1) continue;
 
                 string origen = ObtenerOrigenPatron(primerGen, ctx);
-                if (!string.Equals(origen, "AUTOMATICO", StringComparison.OrdinalIgnoreCase))
-                {
-                    continue; // Solo AUTOMATICO
-                }
+                if (!string.Equals(origen, "AUTOMATICO", StringComparison.OrdinalIgnoreCase)) continue;
+
+                var genesAMover = campeon.Genes
+                    .Where(g => g.EsVacante == 0
+                             && g.IdAsignatura == asig.IdAsignatura
+                             && string.Equals(AgCalendarioConflictos.Cohorte(g), sob.Cohorte, StringComparison.Ordinal))
+                    .ToList();
+
+                if (genesAMover.Count == 0) continue;
 
                 var clon = campeon.Clonar();
-                var genesClon = clon.Genes.Where(g => g.IdAsignatura == asig.IdAsignatura).ToList();
                 bool exito = true;
 
-                foreach (var g in genesClon)
+                foreach (var g in genesAMover)
                 {
-                    if (g.FechasGen == null || g.FechasGen.Count <= 1) continue;
+                    int idx = campeon.Genes.IndexOf(g);
+                    if (idx < 0 || idx >= clon.Genes.Count) { exito = false; break; }
+                    var gClon = clon.Genes[idx];
 
-                    int diaIso = (g.DiaSemana >= 1 && g.DiaSemana <= 7) ? g.DiaSemana : 1;
-                    DateTime ini = g.FechaInicioEstimada ?? g.FechasGen.Min();
+                    if (gClon.FechasGen == null || gClon.FechasGen.Count <= 1) continue;
 
-                    var fechasConsecutivas = inv.FechasValidas
-                        .Where(f => f >= ini && ((f.DayOfWeek == DayOfWeek.Sunday) ? 7 : (int)f.DayOfWeek) == diaIso)
-                        .Take(g.FechasGen.Count)
+                    int diaIso = (gClon.DiaSemana >= 1 && gClon.DiaSemana <= 7) ? gClon.DiaSemana : 1;
+                    DateTime ini = gClon.FechaInicioEstimada ?? gClon.FechasGen.Min();
+                    DateTime fin = gClon.FechaFinEstimada ?? gClon.FechasGen.Max();
+
+                    // Buscar huecos libres intermedios reales en el mismo día Iso
+                    var huecosLibres = inv.LibresReales
+                        .Where(f => f > ini && f < fin && ((f.DayOfWeek == DayOfWeek.Sunday) ? 7 : (int)f.DayOfWeek) == diaIso)
+                        .OrderBy(f => f)
                         .ToList();
 
-                    if (fechasConsecutivas.Count == g.FechasGen.Count)
+                    if (huecosLibres.Count == 0)
                     {
-                        g.FechasGen = fechasConsecutivas;
-                        g.FechaInicioEstimada = fechasConsecutivas.Min();
-                        g.FechaFinEstimada = fechasConsecutivas.Max();
+                        exito = false;
+                        break;
+                    }
+
+                    // Compactar fechas insertando en huecos libres y acortando por la cola
+                    var combinadas = gClon.FechasGen.Concat(huecosLibres)
+                        .Distinct()
+                        .OrderBy(d => d)
+                        .Take(gClon.FechasGen.Count)
+                        .ToList();
+
+                    if (combinadas.Count == gClon.FechasGen.Count && combinadas.Max() < fin)
+                    {
+                        gClon.FechasGen = combinadas;
+                        gClon.FechaInicioEstimada = combinadas.Min();
+                        gClon.FechaFinEstimada = combinadas.Max();
                     }
                     else
                     {
@@ -451,7 +587,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         }
 
         /// <summary>
-        /// Candidatos C3 / C4: Re-ranuración e intercambio de días en patrones AUTOMATICO.
+        /// Candidatos C3 / C4: Re-ranuración e intercambio de días en patrones AUTOMATICO (Fases 2335–2336).
         /// </summary>
         internal static List<AgIndividuo> GenerarReRanuracionEIntercambio(
             AgIndividuo campeon,
@@ -463,11 +599,13 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             if (campeon?.Genes == null || sob == null || inv == null) return candidatos;
 
             var solapadas = sob.GenesCohorte
-                .Where(g => g.FechaInicioEstimada.HasValue && g.FechaFinEstimada.HasValue
+                .Where(g => g.EsVacante == 0
+                         && g.FechaInicioEstimada.HasValue && g.FechaFinEstimada.HasValue
                          && g.FechaInicioEstimada.Value.Date <= sob.TramoFin
                          && g.FechaFinEstimada.Value.Date >= sob.TramoIni)
                 .ToList();
 
+            // C3: Re-ranuración de día individual
             foreach (var g in solapadas)
             {
                 if (g.EsFijo == 1) continue;
@@ -478,36 +616,110 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     continue;
                 }
 
-                // Intentar alternar día dentro de DiasVentana
+                var aula = ctx.AulasPorId != null && ctx.AulasPorId.TryGetValue(g.IdAula, out var a) ? a : null;
+                var prog = ctx.ProgramasPorId != null && ctx.ProgramasPorId.TryGetValue(g.IdPrograma, out var p) ? p : null;
+                double unidad = AgUnidadesSemanales.HorasSesionAula(aula, AgNivelAcademicoCatalogo.Desde(prog?.Modalidad));
+                if (unidad <= 0) unidad = 4.0;
+
                 foreach (var nuevoDia in inv.DiasVentana)
                 {
                     if (nuevoDia == g.DiaSemana) continue;
 
-                    double dur = g.HorasGen;
-                    if (ctx.TryGetBloque(nuevoDia, dur, out var nuevoBloque))
+                    if (ctx.TryGetBloque(nuevoDia, unidad, out var nuevoBloque))
                     {
                         var clon = campeon.Clonar();
-                        var gClon = clon.Genes.FirstOrDefault(x => x.Id == g.Id);
-                        if (gClon != null)
+                        int idx = campeon.Genes.IndexOf(g);
+                        if (idx < 0 || idx >= clon.Genes.Count) continue;
+                        var gClon = clon.Genes[idx];
+
+                        gClon.DiaSemana = nuevoDia;
+                        gClon.IdBloqueHorario = nuevoBloque.Id;
+                        gClon.DiasPatron = nuevoDia.ToString();
+                        gClon.IndiceDiaPatron = 0;
+                        gClon.PatronSemanal = string.Empty;
+
+                        DateTime ini = gClon.FechaInicioEstimada ?? (ctx.Ventana != null ? ctx.Ventana.FechaInicio : DateTime.MinValue);
+                        int targetSesiones = (gClon.FechasGen != null && gClon.FechasGen.Count > 0) ? gClon.FechasGen.Count : 1;
+                        var nuevasFechas = inv.FechasValidas
+                            .Where(f => f >= ini && ((f.DayOfWeek == DayOfWeek.Sunday) ? 7 : (int)f.DayOfWeek) == nuevoDia)
+                            .Take(targetSesiones)
+                            .ToList();
+
+                        if (nuevasFechas.Count == targetSesiones)
                         {
-                            gClon.DiaSemana = nuevoDia;
-                            gClon.IdBloqueHorario = nuevoBloque.Id;
-
-                            DateTime ini = gClon.FechaInicioEstimada ?? ctx.Ventana.FechaInicio;
-                            int targetSesiones = (gClon.FechasGen != null && gClon.FechasGen.Count > 0) ? gClon.FechasGen.Count : 1;
-                            var nuevasFechas = inv.FechasValidas
-                                .Where(f => f >= ini && ((f.DayOfWeek == DayOfWeek.Sunday) ? 7 : (int)f.DayOfWeek) == nuevoDia)
-                                .Take(targetSesiones)
-                                .ToList();
-
-                            if (nuevasFechas.Count == targetSesiones)
-                            {
-                                gClon.FechasGen = nuevasFechas;
-                                gClon.FechaInicioEstimada = nuevasFechas.Min();
-                                gClon.FechaFinEstimada = nuevasFechas.Max();
-                                candidatos.Add(clon);
-                            }
+                            gClon.FechasGen = nuevasFechas;
+                            gClon.FechaInicioEstimada = nuevasFechas.Min();
+                            gClon.FechaFinEstimada = nuevasFechas.Max();
+                            candidatos.Add(clon);
                         }
+                    }
+                }
+            }
+
+            // C4: Intercambio de días entre dos asignaturas automáticas de la cohorte
+            for (int i = 0; i < solapadas.Count; i++)
+            {
+                var g1 = solapadas[i];
+                if (g1.EsFijo == 1) continue;
+                if (!string.Equals(ObtenerOrigenPatron(g1, ctx), "AUTOMATICO", StringComparison.OrdinalIgnoreCase)) continue;
+
+                for (int j = i + 1; j < solapadas.Count; j++)
+                {
+                    var g2 = solapadas[j];
+                    if (g2.EsFijo == 1 || g1.IdAsignatura == g2.IdAsignatura) continue;
+                    if (!string.Equals(ObtenerOrigenPatron(g2, ctx), "AUTOMATICO", StringComparison.OrdinalIgnoreCase)) continue;
+                    if (g1.DiaSemana == g2.DiaSemana) continue;
+
+                    var clon = campeon.Clonar();
+                    int idx1 = campeon.Genes.IndexOf(g1);
+                    int idx2 = campeon.Genes.IndexOf(g2);
+                    if (idx1 < 0 || idx1 >= clon.Genes.Count || idx2 < 0 || idx2 >= clon.Genes.Count) continue;
+
+                    var gClon1 = clon.Genes[idx1];
+                    var gClon2 = clon.Genes[idx2];
+
+                    int dia1 = gClon1.DiaSemana;
+                    int dia2 = gClon2.DiaSemana;
+                    int b1 = gClon1.IdBloqueHorario;
+                    int b2 = gClon2.IdBloqueHorario;
+
+                    gClon1.DiaSemana = dia2;
+                    gClon1.IdBloqueHorario = b2;
+                    gClon1.DiasPatron = dia2.ToString();
+                    gClon1.IndiceDiaPatron = 0;
+                    gClon1.PatronSemanal = string.Empty;
+
+                    gClon2.DiaSemana = dia1;
+                    gClon2.IdBloqueHorario = b1;
+                    gClon2.DiasPatron = dia1.ToString();
+                    gClon2.IndiceDiaPatron = 0;
+                    gClon2.PatronSemanal = string.Empty;
+
+                    // Reproyectar fechas
+                    DateTime ini1 = gClon1.FechaInicioEstimada ?? (ctx.Ventana != null ? ctx.Ventana.FechaInicio : DateTime.MinValue);
+                    DateTime ini2 = gClon2.FechaInicioEstimada ?? (ctx.Ventana != null ? ctx.Ventana.FechaInicio : DateTime.MinValue);
+
+                    int count1 = gClon1.FechasGen?.Count ?? 1;
+                    int count2 = gClon2.FechasGen?.Count ?? 1;
+
+                    var f1 = inv.FechasValidas
+                        .Where(f => f >= ini1 && ((f.DayOfWeek == DayOfWeek.Sunday) ? 7 : (int)f.DayOfWeek) == dia2)
+                        .Take(count1).ToList();
+                    var f2 = inv.FechasValidas
+                        .Where(f => f >= ini2 && ((f.DayOfWeek == DayOfWeek.Sunday) ? 7 : (int)f.DayOfWeek) == dia1)
+                        .Take(count2).ToList();
+
+                    if (f1.Count == count1 && f2.Count == count2)
+                    {
+                        gClon1.FechasGen = f1;
+                        gClon1.FechaInicioEstimada = f1.Min();
+                        gClon1.FechaFinEstimada = f1.Max();
+
+                        gClon2.FechasGen = f2;
+                        gClon2.FechaInicioEstimada = f2.Min();
+                        gClon2.FechaFinEstimada = f2.Max();
+
+                        candidatos.Add(clon);
                     }
                 }
             }
@@ -516,22 +728,24 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         }
 
         /// <summary>
-        /// Validación V1–V6 sobre un candidato generado.
+        /// Validación V1–V6 sobre un candidato generado (Fases 2333, 2335, 2338, 2343–2345).
         /// </summary>
         internal static bool Validar(AgIndividuo clon, AgIndividuo original, AgContexto ctx)
         {
             if (clon?.Genes == null || original?.Genes == null || ctx == null) return false;
+            if (ctx.Ventana == null) return false;
 
             // V3: Sin vacantes nuevas
             if (clon.Vacantes > original.Vacantes) return false;
 
-            foreach (var g in clon.Genes)
+            for (int i = 0; i < clon.Genes.Count; i++)
             {
+                var g = clon.Genes[i];
+                var gOrig = (i < original.Genes.Count) ? original.Genes[i] : null;
+
                 if (g.EsVacante == 1) continue;
 
-                var gOrig = original.Genes.FirstOrDefault(x => x.Id == g.Id);
-
-                // V4: No mover genes con EsFijo o LEGADO/FIJO
+                // V4: No mover genes con EsFijo == 1
                 if (gOrig != null && gOrig.EsFijo == 1)
                 {
                     if (g.FechaInicioEstimada != gOrig.FechaInicioEstimada || g.FechaFinEstimada != gOrig.FechaFinEstimada)
@@ -539,14 +753,18 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         return false;
                     }
                 }
+
+                // Fase 2333: Para LEGADO/FIJO comparar patrón (días/bloque), no fechas
                 string origen = ObtenerOrigenPatron(g, ctx);
-                if (string.Equals(origen, "LEGADO", StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(origen, "FIJO", StringComparison.OrdinalIgnoreCase))
+                bool esLegadoOFijo = string.Equals(origen, "LEGADO", StringComparison.OrdinalIgnoreCase) ||
+                                     string.Equals(origen, "FIJO", StringComparison.OrdinalIgnoreCase);
+
+                if (esLegadoOFijo && gOrig != null &&
+                    (g.DiaSemana != gOrig.DiaSemana ||
+                     g.IdBloqueHorario != gOrig.IdBloqueHorario ||
+                     !string.Equals(g.DiasPatron, gOrig.DiasPatron, StringComparison.Ordinal)))
                 {
-                    if (gOrig != null && (g.FechaInicioEstimada != gOrig.FechaInicioEstimada || g.FechaFinEstimada != gOrig.FechaFinEstimada))
-                    {
-                        return false;
-                    }
+                    return false;
                 }
 
                 // V1: Fechas válidas, día de ventana, no festivo
@@ -554,11 +772,21 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 {
                     foreach (var f in g.FechasGen)
                     {
-                        if (ctx.Ventana != null && !ctx.Ventana.Contiene(f)) return false;
+                        if (!ctx.Ventana.Contiene(f)) return false;
                         if (ctx.EsFestivo(f)) return false;
 
                         int diaIso = (f.DayOfWeek == DayOfWeek.Sunday) ? 7 : (int)f.DayOfWeek;
                         if (diaIso != g.DiaSemana) return false;
+
+                        // Fase 2344: Verificar si docente ocupado en calendario global con FranjaHoraria
+                        if (g.IdTercero > 0)
+                        {
+                            var bloque = ctx.Bloques != null ? ctx.Bloques.FirstOrDefault(b => b.Id == g.IdBloqueHorario) : null;
+                            if (bloque != null && ctx.TerceroOcupado(g.IdTercero, f, new FranjaHoraria(bloque.TimeSpanInicio, bloque.TimeSpanFin)))
+                            {
+                                return false;
+                            }
+                        }
                     }
 
                     // V2: Invariante de horas: Count * unidad == HorasGen
@@ -571,8 +799,10 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 }
             }
 
-            // V5: Conflicto docente y aula: verificar que no haya solapes de fechas y bloques entre asignaciones del mismo docente o aula
+            // V5: Conflicto docente y aula
             var genesActivos = clon.Genes.Where(g => g.EsVacante == 0 && g.FechasGen != null && g.FechasGen.Count > 0).ToList();
+
+            // Cruce docente
             var porDocente = genesActivos.Where(g => g.IdTercero > 0).GroupBy(g => g.IdTercero);
             foreach (var docGroup in porDocente)
             {
@@ -586,6 +816,73 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                             return false; // Colisión de docente
                         }
                     }
+                }
+            }
+
+            // Cruce de aula (R2): dos asignaturas en la misma aula el mismo día y bloque
+            var porAula = genesActivos.GroupBy(g => g.IdAula);
+            foreach (var aulaGroup in porAula)
+            {
+                var sesionesAula = new HashSet<(DateTime Fecha, int IdBloque)>();
+                foreach (var g in aulaGroup)
+                {
+                    foreach (var f in g.FechasGen)
+                    {
+                        if (!sesionesAula.Add((f.Date, g.IdBloqueHorario)))
+                        {
+                            return false; // Solape R2 de aula
+                        }
+                    }
+                }
+            }
+
+            // Fase 2345: Cruce contra SesionesConservadas comparando solape de FranjaHoraria
+            if (ctx.SesionesConservadas != null && ctx.SesionesConservadas.Count > 0)
+            {
+                foreach (var sc in ctx.SesionesConservadas)
+                {
+                    var f = sc.Fecha.Date;
+                    foreach (var g in genesActivos)
+                    {
+                        if (g.FechasGen != null && g.FechasGen.Any(df => df.Date == f))
+                        {
+                            var bloque = ctx.Bloques != null ? ctx.Bloques.FirstOrDefault(b => b.Id == g.IdBloqueHorario) : null;
+                            if (bloque != null)
+                            {
+                                var franjaGen = new FranjaHoraria(bloque.TimeSpanInicio, bloque.TimeSpanFin);
+                                var franjaSc = new FranjaHoraria(sc.Inicio, sc.Fin);
+                                if (franjaGen.SeSolapaCon(franjaSc))
+                                {
+                                    if (g.IdAula == sc.Clave.IdAula)
+                                    {
+                                        return false; // Choque con sesión conservada en aula
+                                    }
+                                    if (g.IdTercero > 0 && g.IdTercero == sc.IdTercero)
+                                    {
+                                        return false; // Choque con sesión conservada en docente
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Fase 2343: Regla R4 canónica: una sesión por franja y cohorte/día
+            var porCohorteFecha = genesActivos
+                .SelectMany(g => (g.FechasGen ?? new List<DateTime>()).Select(f => new
+                {
+                    Cohorte = AgCalendarioConflictos.Cohorte(g),
+                    Fecha = f.Date,
+                    g.IdBloqueHorario
+                }))
+                .GroupBy(x => (x.Cohorte, x.Fecha));
+
+            foreach (var cf in porCohorteFecha)
+            {
+                if (cf.Select(x => x.IdBloqueHorario).Distinct().Count() > 1)
+                {
+                    return false; // Violación R4
                 }
             }
 
@@ -631,12 +928,15 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             return "LEGADO";
         }
 
+        /// <summary>
+        /// Desperdicio normalizado sin doble conteo de huecos (Fase 2340).
+        /// </summary>
         private static double CalcularDesperdicio(AgInventarioRanuras inv)
         {
             if (inv == null || inv.FechasValidas == null || inv.FechasValidas.Count == 0) return 0.0;
             double n = inv.FechasValidas.Count;
-            double libresYHuecos = (inv.LibresReales != null ? inv.LibresReales.Count : 0) + inv.HuecosIntermedios;
-            return (libresYHuecos / n) + (inv.BalancePorDia / n);
+            double libres = inv.LibresReales != null ? inv.LibresReales.Count : 0;
+            return (libres / n) + (inv.BalancePorDia / n);
         }
 
         internal struct AgPuntajeReparacion : IComparable<AgPuntajeReparacion>
@@ -658,6 +958,32 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 Movimientos = movimientos;
             }
 
+            public int CompareTo(AgPuntajeReparacion other)
+            {
+                // 1. Hard violations
+                int c = Hard.CompareTo(other.Hard);
+                if (c != 0) return c;
+
+                // 2. Vacantes
+                c = Vacantes.CompareTo(other.Vacantes);
+                if (c != 0) return c;
+
+                // 3. Desperdicio de ranuras
+                c = Desperdicio.CompareTo(other.Desperdicio);
+                if (c != 0) return c;
+
+                // 4. Makespan
+                c = MakespanDias.CompareTo(other.MakespanDias);
+                if (c != 0) return c;
+
+                // 5. Soft violations
+                c = Soft.CompareTo(other.Soft);
+                if (c != 0) return c;
+
+                // 6. Número de movimientos
+                return Movimientos.CompareTo(other.Movimientos);
+            }
+
             private static int CalcularMakespan(AgIndividuo ind)
             {
                 if (ind?.Genes == null || ind.Genes.Count == 0) return 0;
@@ -665,25 +991,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     .Where(g => g.EsVacante == 0 && g.FechaInicioEstimada.HasValue && g.FechaFinEstimada.HasValue)
                     .Select(g => (Ini: g.FechaInicioEstimada.Value.Date, Fin: g.FechaFinEstimada.Value.Date))
                     .ToList();
+
                 if (fechas.Count == 0) return 0;
                 var min = fechas.Min(x => x.Ini);
                 var max = fechas.Max(x => x.Fin);
                 return (int)(max - min).TotalDays;
-            }
-
-            public int CompareTo(AgPuntajeReparacion other)
-            {
-                int c = Hard.CompareTo(other.Hard);
-                if (c != 0) return c;
-                c = Vacantes.CompareTo(other.Vacantes);
-                if (c != 0) return c;
-                c = Desperdicio.CompareTo(other.Desperdicio);
-                if (c != 0) return c;
-                c = MakespanDias.CompareTo(other.MakespanDias);
-                if (c != 0) return c;
-                c = Soft.CompareTo(other.Soft);
-                if (c != 0) return c;
-                return Movimientos.CompareTo(other.Movimientos);
             }
         }
     }

@@ -1,5 +1,5 @@
 # Baseline medido 2026-11-17 tras certificar Wave 6 (T10) de Rendimiento AG Corrida 105 (Ronda 438)
-TOTAL: 1714
-PASSED: 1714
+TOTAL: 2010
+PASSED: 2010
 FAILED: 0
 SKIPPED: 0

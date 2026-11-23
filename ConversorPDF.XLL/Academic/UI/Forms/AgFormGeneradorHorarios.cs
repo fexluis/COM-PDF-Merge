@@ -3264,6 +3264,33 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                     await _scheduleRepository.SaveBitacoraAsync(b, _ctsEjecucion.Token);
                 }
 
+                // Fase 2342: Persistir telemetría de reparación R5 antes del gate de factibilidad
+                if (_ultimoResultado != null)
+                {
+                    try
+                    {
+                        var serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+                        serializer.MaxJsonLength = int.MaxValue;
+                        var dict = (!string.IsNullOrWhiteSpace(corrida.ParametrosJson))
+                            ? (serializer.DeserializeObject(corrida.ParametrosJson) as Dictionary<string, object> ?? new Dictionary<string, object>())
+                            : new Dictionary<string, object>();
+
+                        dict["reparacionR5"] = new Dictionary<string, object>
+                        {
+                            { "intentos", _ultimoResultado.ReparacionR5Intentos },
+                            { "hardPre", _ultimoResultado.ReparacionR5HardPre },
+                            { "hardPost", _ultimoResultado.ReparacionR5HardPost },
+                            { "desperdicioPre", _ultimoResultado.ReparacionR5DesperdicioPre },
+                            { "desperdicioPost", _ultimoResultado.ReparacionR5DesperdicioPost }
+                        };
+                        corrida.ParametrosJson = serializer.Serialize(dict);
+                    }
+                    catch (Exception ex)
+                    {
+                        LoggerHelper.Warning($"[AG] Error al persistir telemetria reparacionR5 en ag_corrida: {ex.Message}");
+                    }
+                }
+
                 corrida.FechaFinCorrida = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                 corrida.Estado = _ultimoResultado.Estado;
                 corrida.GeneracionesEjecutadas = _ultimoResultado.GeneracionesEjecutadas;

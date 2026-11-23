@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 525 | 526 | 2026-11-22 |
-| `fase` | 2331 | 2332 | 2026-11-22 |
+| `ronda` | 530 | 531 | 2026-11-23 |
+| `fase` | 2362 | 2363 | 2026-11-23 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -232,6 +232,11 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-195 | 2026-11-21 | `(revisión e implementación Ronda 523 — Fases 2317–2319: consolidar R6 como regla canónica de carril y retirar R13 hard)` | `Wave 523` → `Ronda 523` | `Fase 2317–2319` | closed | sin build/tests (restricción Paso 6 /ronda-review) | pendiente |
 | R-196 | 2026-11-22 | `(revisión e implementación Ronda 524 — Fases 2320–2321: alineación de HaySolape con R6 estricto y aislamiento de fixture de frontera compartida)` | `Wave 524` → `Ronda 524` | `Fase 2320–2321` | closed | sin build/tests (restricción Paso 6 /ronda-review) | pendiente |
 | R-197 | 2026-11-22 | `2026-11-22-reparacion-automatica-r5-plan.md` | `Wave 525` → `Ronda 525` | `T1..T10` → `Fase 2322–2331` | closed | PASS (Full 2010) | HEAD |
+| R-198 | 2026-11-22 | `(revisión e implementación Ronda 526 — Fases 2332–2342: reevaluación candidatos forzar, desbloqueo LEGADO, identidad por índice, alcance cohorte, validación V1–V6 y telemetría infactible)` | `Wave —` → `Ronda 526` | `Fase 2332–2342` | closed | sin build/tests (restricción Paso 6 /ronda-review) | pendiente |
+| R-199 | 2026-11-23 | `(revisión e implementación Ronda 527 — Fases 2343–2352: corrección tipos de compilación R4/TerceroOcupado/SesionesConservadas/Festivos, forward shifting con ranuras libres y pruebas fieles 132)` | `Wave —` → `Ronda 527` | `Fase 2343–2352` | closed | sin build/tests (restricción Paso 6 /ronda-review) | pendiente |
+| R-200 | 2026-11-23 | `(revisión e implementación Ronda 528 — Fases 2353–2357: calibración temporal de víctima 132, priorización de ranuras libres reales, cursor multi-gen, consistencia de desperdicio y sincronización)` | `Wave —` → `Ronda 528` | `Fase 2353–2357` | closed | sin build/tests (restricción Paso 6 /ronda-review) | pendiente |
+| R-201 | 2026-11-23 | `(revisión e implementación Ronda 529 — Fases 2358–2361: inclusión de fechas propias de víctima en opciones, cursor multi-gen sin solapes por usadas, desperdicio consistente por cohorte y cierre)` | `Wave —` → `Ronda 529` | `Fase 2358–2361` | closed | sin build/tests (restricción Paso 6 /ronda-review) | pendiente |
+| R-202 | 2026-11-23 | `(revisión e informe Ronda 530 — Fase 2362: verificación analítica de resolución de corrida 132 y preparación de compuertas commit/gates)` | `Wave —` → `Ronda 530` | `Fase 2362` | closed | sin build/tests (restricción Paso 6 /ronda-review) | pendiente |
 
 
 

@@ -357,6 +357,124 @@ Las citas `implementation_plan.md:NNNN` anteriores al corte apuntan al archivo m
 | 2330 | `AgInventarioRanurasTests.cs`, `AgReparadorR5Tests.cs` | Implementado |
 | 2331 | `REGISTRY.md`, `implementation_plan.md`, `walkthrough.md` | Implementado |
 
+---
+
+## Ronda 526: Reparación R5 en producción y pruebas calibradas (Fases 2332–2342)
+
+### Resumen de la Ronda
+- **Fase 2332 (T1):** En `AgReparadorR5.cs:108-112, 150-154, 188-192`, reinicio explícito de `cand.Estado = AgEstadoIndividuo.NoEvaluado` y llamada forzada a `evaluadorAptitud.EvaluarAptitud(cand, contexto, forzar: true, incluirDetalleJson: true)` para evitar que la evaluación retorne tempranamente por estado clonado sin recalcular violaciones. En `IAgEvaluadorAptitud.cs:11`, exposición de la sobrecarga con parámetros `forzar` e `incluirDetalleJson`.
+- **Fase 2333 (T2):** En `AgReparadorR5.cs:304-320, 535-555`, eliminación de la exclusión de asignaturas `LEGADO` en `GenerarDesplazamientos` (permitiendo forward shifting cuando son el candidato idóneo para aliviar sobrecarga) y ajuste en `Validar` para comprobar invariantes de patrón (días y bloque) sin bloquear el desplazamiento de fechas.
+- **Fase 2334 (T3):** En `AgReparadorR5.cs`, acotación de la selección de genes a desplazar o re-ranurar filtrando estrictamente por `g.EsVacante == 0`, `g.IdAsignatura == candAsig.IdAsignatura` y concordancia de cohorte con `sob.Cohorte`, impidiendo mover vacantes o genes de otras cohortes/sedes.
+- **Fase 2335 (T4):** En `AgReparadorR5.cs`, sustitución de búsquedas por `x.Id == g.Id` por indexación posicional exacta en el clon (`clon.Genes[idx]`), eliminando la pérdida de candidatos e inoperancia de `Validar` provocada por `Clonar()` asignando `Id = 0`.
+- **Fase 2336 (T5):** En `AgReparadorR5.cs`, completitud de C3/C4 mediante cálculo de unidad de sesión con `AgUnidadesSemanales.HorasSesionAula`, asignación de `DiasPatron`, `IndiceDiaPatron = 0`, `PatronSemanal = string.Empty`, e implementación del intercambio C4 entre pares de asignaturas automáticas de la cohorte.
+- **Fase 2337 (T6):** En `AgReparadorR5.cs`, aseguramiento de compresión C2 condicionada estrictamente a la existencia de huecos intermedios (`HuecosIntermedios > 0`) y ranuras libres reales en el carril sin colisionar con fechas ocupadas.
+- **Fase 2338 (T7):** En `AgReparadorR5.cs:Validar`, robustecimiento de V5 con verificación de choques de aula (R2), sesiones conservadas, docente ocupado en calendario global (`TerceroOcupado`) y tope diario de cohorte (R4); en bucle principal, guarda post-`Sellar` descartando candidatos que incrementen vacantes.
+- **Fase 2339 (T8):** En `AgReparadorR5.cs:Ejecutar`, contención total de excepciones en bloque `try / catch` con logging de advertencia y retorno seguro de estado pre-reparación sin abortar la optimización; adopción de iteración acumulativa (`actual = mejorClon ?? campeon`) con re-detección de sobrecargas tras cada aceptación.
+- **Fase 2340 (T9):** En `AgReparadorR5.cs:CalcularDesperdicio`, eliminación del doble conteo de huecos intermedios calculando sobre `inv.LibresReales.Count` y balance por día; en `AgInventarioRanuras.cs`, consolidación de inventario multi-aula mediante agregación de aulas de la cohorte.
+- **Fase 2341 (T10):** En `AgReparadorR5Tests.cs`, sustitución de mocks por instancia real de `AgEvaluadorAptitud(new AgValidadorReglas())`, calibración del fixture 132 con asignaturas 149 y 150 `LEGADO`, 152 `AUTOMATICO`, ventana MAR-VIE y festivos, certificando reducción HARD 1→0 y desplazamiento exacto a `2027-04-02`.
+- **Fase 2342 (T11):** En `AgFormGeneradorHorarios.cs:3267`, persistencia de telemetría `dict["reparacionR5"]` en `corrida.ParametrosJson` antes del gate de factibilidad para registrar diagnóstico incluso en soluciones infactibles; actualización de `files_lock` en plan de ejecución y sincronización de baseline a 2010.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2332 | `AgReparadorR5.cs`, `IAgEvaluadorAptitud.cs` | Implementado |
+| 2333 | `AgReparadorR5.cs` | Implementado |
+| 2334 | `AgReparadorR5.cs` | Implementado |
+| 2335 | `AgReparadorR5.cs` | Implementado |
+| 2336 | `AgReparadorR5.cs` | Implementado |
+| 2337 | `AgReparadorR5.cs` | Implementado |
+| 2338 | `AgReparadorR5.cs` | Implementado |
+| 2339 | `AgReparadorR5.cs` | Implementado |
+| 2340 | `AgReparadorR5.cs`, `AgInventarioRanuras.cs` | Implementado |
+| 2341 | `AgReparadorR5Tests.cs` | Implementado |
+| 2342 | `AgFormGeneradorHorarios.cs`, `.agents/plans/2026-11-22-reparacion-automatica-r5-plan.md`, `tests/baseline/test_baseline.txt`, `.agents/plans/REGISTRY.md` | Implementado |
+
+---
+
+## Ronda 527: Corrección de tipos, forward shifting con ranuras libres y suite fiel 132 (Fases 2343–2352)
+
+### Resumen de la Ronda
+- **Fase 2343 (T1):** En `AgReparadorR5.cs:Validar`, reemplazo de `ctx.MaxHorasDiaCohorte` inexistente por la semántica canónica de R4 (`cf.Select(x => x.IdBloqueHorario).Distinct().Count() > 1`), impidiendo violaciones de franja horaria en la cohorte para un mismo día.
+- **Fase 2344 (T2):** En `AgReparadorR5.cs:Validar`, adaptación de la llamada a `ctx.TerceroOcupado(g.IdTercero, f, new FranjaHoraria(bloque.TimeSpanInicio, bloque.TimeSpanFin))` obteniendo el bloque correspondiente desde `ctx.Bloques`.
+- **Fase 2345 (T3):** En `AgReparadorR5.cs:Validar`, verificación de solapes frente a `ctx.SesionesConservadas` mediante comparación de intervalos temporales `FranjaHoraria.SeSolapaCon(new FranjaHoraria(sc.Inicio, sc.Fin))`, corrigiendo error de compilación por `sc.IdBloqueHorario`.
+- **Fase 2346 (T4):** En `AgReparadorR5Tests.cs:70-74`, tipado estricto de `ctx.Festivos` como `List<(DateTime Inicio, DateTime Fin)>` corrigiendo error CS0029.
+- **Fase 2347 (T5):** En `AgReparadorR5.cs:GenerarDesplazamientos`, filtrado de ranuras libres excluyendo las ocupadas por asignaturas ajenas (`ocupadasAjenas`), incorporando `inv.Liberables` y evaluando múltiples inicios disponibles en ranuras libres para cada día de bloque.
+- **Fase 2348 (T6):** En `AgReparadorR5.cs:Ejecutar`, reordenamiento del ciclo de evaluación: `AgCoherenciaGrupo.Sellar(cand, contexto)` primero, guarda de vacantes, luego `Validar` y finalmente `EvaluarAptitud(cand, contexto, forzar: true, incluirDetalleJson: true)`.
+- **Fase 2349 (T7):** En `AgReparadorR5.cs:GenerarCompresiones`, redefinición de compresión insertando sesiones en huecos libres intermedios reales (`LibresReales` entre `ini` y `fin`) garantizando la compactación efectiva del makespan (`Max() < fin`).
+- **Fase 2350 (T8):** En `AgReparadorR5Tests.cs`, calibración de fixture 132 con asignaturas 149 y 150 `LEGADO`, 152 `AUTOMATICO`, ventana MAR-VIE y festivos, certificando desplazamiento a `2027-04-02` y HARD 1→0; aislamiento de test R6 asignando fechas disjuntas para evitar colisión R2 de aula; y verificación de determinismo mediante igualdad de secuencias de fechas.
+- **Fase 2351 (T9):** En `AgReparadorR5.cs`, separación de contadores `intentosEvaluados` e `intentosAceptados`, captura previa de `hardAntes` para logging fidedigno y recomputación de desperdicio final sobre la cohorte inicial de diagnóstico.
+- **Fase 2352 (T10):** En `AgReparadorR5.cs`, consumo activo de `inv.Liberables` en `GenerarDesplazamientos`; actualización de `files_lock` en plan de ejecución y actualización de contadores y fila R-199 en `REGISTRY.md`.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2343 | `AgReparadorR5.cs` | Implementado |
+| 2344 | `AgReparadorR5.cs` | Implementado |
+| 2345 | `AgReparadorR5.cs` | Implementado |
+| 2346 | `AgReparadorR5Tests.cs` | Implementado |
+| 2347 | `AgReparadorR5.cs` | Implementado |
+| 2348 | `AgReparadorR5.cs` | Implementado |
+| 2349 | `AgReparadorR5.cs` | Implementado |
+| 2350 | `AgReparadorR5Tests.cs` | Implementado |
+| 2351 | `AgReparadorR5.cs` | Implementado |
+| 2352 | `AgReparadorR5.cs`, `.agents/plans/2026-11-22-reparacion-automatica-r5-plan.md`, `.agents/plans/REGISTRY.md` | Implementado |
+
+---
+
+## Ronda 528: Reparación R5 con víctima 132 calibrada y cursor multi-gen (Fases 2353–2357)
+
+### Resumen de la Ronda
+- **Fase 2353 (T1):** Calibración temporal del fixture 132 en `AgReparadorR5Tests.cs:88-160` (Asig 149 miércoles arranca `2027-02-03`, Asig 152 martes arranca `2027-02-02`, y Asig 150 viernes LEGADO arranca `2027-03-19`), asegurando que la ordenación descendente por fecha de inicio seleccione fielmente a Asig 150 como la víctima que debe desplazarse a `2027-04-02`.
+- **Fase 2354 (T2):** En `AgReparadorR5.cs:GenerarDesplazamientos`, priorización de `inv.LibresReales` sobre `Liberables` y ampliación de ventana de búsqueda a `Take(8)` inicios viables.
+- **Fase 2355 (T3):** En `AgReparadorR5.cs:GenerarDesplazamientos`, manejo de asignaturas multi-gen mediante avance ordenado por `DiaSemana` y cursor temporal por sesión (`cursor = nuevasFechas.Min().AddDays(1)`), impidiendo que múltiples genes colapsen en fechas idénticas.
+- **Fase 2356 (T4):** En `AgReparadorR5.cs:Ejecutar`, consistencia en el cálculo de desperdicio pre y post (`invPre` e `invPost`) evaluados sobre la misma cohorte reparada (`cohorteReparada`).
+- **Fase 2357 (T5):** Sincronización de numeración global en `.agents/plans/REGISTRY.md` (fila `R-200`, contadores ronda 528 / siguiente 529, fase 2357 / siguiente 2358).
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2353 | `AgReparadorR5Tests.cs` | Implementado |
+| 2354 | `AgReparadorR5.cs` | Implementado |
+| 2355 | `AgReparadorR5.cs` | Implementado |
+| 2356 | `AgReparadorR5.cs` | Implementado |
+| 2357 | `REGISTRY.md` | Implementado |
+
+---
+
+## Ronda 529: Fechas propias en opciones, cursor multi-gen sin solape y desperdicio por cohorte (Fases 2358–2361)
+
+### Resumen de la Ronda
+- **Fase 2358 (T1):** En `AgReparadorR5.cs:420-436`, construcción de `opciones` mediante `inv.LibresReales.Concat(fechasVictima)` filtrado por `inv.FechasValidas`, asegurando que el desplazamiento de la víctima considere sus propias fechas liberadas y permita reubicar la Asignatura 150 a `2027-04-02` resolviendo la sobrecarga R5 (HARD 1→0) en el fixture de la corrida 132.
+- **Fase 2359 (T2):** En `AgReparadorR5.cs:449-478`, control estricto de solape multi-gen mediante el conjunto `usadas`, impidiendo que múltiples genes de la misma asignatura programados para el mismo día reciban fechas idénticas.
+- **Fase 2360 (T3):** En `AgReparadorR5.cs:110-114, 156, 277-283`, cálculo de `invPre` y `despPreCohorte` local por sobrecarga (`sob.Cohorte`) en lugar de `primerCohorte`, garantizando consistencia en las comparaciones de desperdicio antes y después de la reparación.
+- **Fase 2361 (T4):** Actualización de trazabilidad y numeración global en `.agents/plans/REGISTRY.md` (fila `R-201`, contadores ronda 529 / siguiente 530, fase 2361 / siguiente 2362).
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2358 | `AgReparadorR5.cs`, `AgReparadorR5Tests.cs` | Implementado |
+| 2359 | `AgReparadorR5.cs` | Implementado |
+| 2360 | `AgReparadorR5.cs` | Implementado |
+| 2361 | `REGISTRY.md` | Implementado |
+
+---
+
+## Ronda 530: Resolución analítica de corrida 132 y preparación de commit/gates (Fase 2362)
+
+### Resumen de la Ronda
+- **Fase 2362 (T1):** Confirmación analítica del cierre funcional del defecto en `IdCorrida=132` (la inclusión de fechas propias en `opciones` permite desplazar Asig 150 a `2027-04-02`, reduciendo HARD 1→0 en 149/150/152). Documentación de la ejecución de compuertas (`git commit`, `verify.ps1 -Mode Build/Fast/Full`) y actualización de numeración global en `.agents/plans/REGISTRY.md` (fila `R-202`, contadores ronda 530 / siguiente 531, fase 2362 / siguiente 2363).
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2362 | `REGISTRY.md`, `git` | Implementado |
+
+
 
 
 

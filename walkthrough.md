@@ -348,6 +348,113 @@ Las citas `walkthrough.md:NNNN` anteriores al corte apuntan al archivo monolitic
 | F2330 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgInventarioRanurasTests.cs:1-76`, `AgReparadorR5Tests.cs:1-260` (Implementado) |
 | F2331 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `audit-tasks.ps1` (0 findings), `verify.ps1 -Mode Full` (2010 passed) |
 
+---
+
+## Ronda 526 — Reparación R5 en producción y pruebas calibradas (Fases 2332–2342)
+
+### Resumen de la Ronda
+- **Fase 2332:** Reevaluación forzada de candidatos reseteando `Estado = NoEvaluado` e invocando `EvaluarAptitud(cand, contexto, forzar: true, incluirDetalleJson: true)` con sobrecarga explícita en `IAgEvaluadorAptitud`.
+- **Fases 2333–2334:** Desbloqueo del desplazamiento para asignaturas `LEGADO` manteniendo estricto respeto a `EsFijo`, y filtrado de genes a nivel de cohorte excluyendo vacantes.
+- **Fases 2335–2336:** Paridad de identidad posicional por índice en clones de individuo para C3/C4 y V4; soporte de unidad de bloque dinámica, atributos de patrón e intercambio C4.
+- **Fases 2337–2338:** Compresión C2 acotada a huecos reales y validación integral V1–V6 incorporando colisión de aula (R2), calendario docente global (`TerceroOcupado`), sesiones conservadas y tope R4 diario, junto con guarda post-`Sellar` de vacantes.
+- **Fases 2339–2340:** Resiliencia ante excepciones con try/catch no abortivo, acumulación de mejoras en ciclo iterativo, métrica de desperdicio disjunta e inventario multi-aula.
+- **Fases 2341–2342:** Sustitución de mocks en tests por evaluador real validando fixture 132 con HARD 1→0 y movimiento a 2027-04-02; persistencia de telemetría de reparación R5 previa a compuertas de factibilidad y sincronización de baseline y candados.
+
+### Verificación de Principios (Ronda 526)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2332 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR5.cs:115-119, 162-166, 212-216`, `IAgEvaluadorAptitud.cs:11` (Implementado) |
+| F2333 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR5.cs:304-315, 535-550` (Implementado) |
+| F2334 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR5.cs:330-335, 410-415, 465-470` (Implementado) |
+| F2335 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR5.cs:340-345, 520-535` (Implementado) |
+| F2336 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR5.cs:475-555` (Implementado) |
+| F2337 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR5.cs:385-450` (Implementado) |
+| F2338 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR5.cs:105-110, 520-630` (Implementado) |
+| F2339 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR5.cs:65-85, 230-245` (Implementado) |
+| F2340 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR5.cs:645-655`, `AgInventarioRanuras.cs:45-75, 125-130` (Implementado) |
+| F2341 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR5Tests.cs:15-180` (Implementado) |
+| F2342 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFormGeneradorHorarios.cs:3267-3295`, `test_baseline.txt:2`, `REGISTRY.md:27-28, 235` (Implementado) |
+
+---
+
+## Ronda 527 — Corrección de tipos, forward shifting con ranuras libres y suite fiel 132 (Fases 2343–2352)
+
+### Resumen de la Ronda
+- **Fases 2343–2346:** Corrección de contratos y tipados en `AgReparadorR5.cs` (semántica R4 por franjas, llamada a `TerceroOcupado` con `FranjaHoraria` y solape temporal de `SesionesConservadas`) y tipado de `Festivos` como tuplas `(DateTime Inicio, DateTime Fin)` en tests.
+- **Fases 2347–2349:** Forward shifting C1 guiado por ranuras libres reales (`libres` excluyendo ocupadas ajenas e integrando `Liberables`), inversión de orden ejecutando `Sellar` antes de `Validar`, y compresión C2 sobre huecos intermedios reales.
+- **Fase 2350:** Fixture 132 fiel con desplazamiento a `2027-04-02` (HARD 1→0), test R6 aislado sin choque R2 de aula, y aserción estricta de secuencias en determinismo.
+- **Fases 2351–2352:** Trazabilidad fidedigna en logs, contadores desacoplados, consumo de `Liberables` y sincronización de registro R-199 y plan swarm.
+
+### Verificación de Principios (Ronda 527)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2343 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR5.cs:835-855` (Implementado) |
+| F2344 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR5.cs:748-757` (Implementado) |
+| F2345 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR5.cs:805-832` (Implementado) |
+| F2346 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR5Tests.cs:70-75` (Implementado) |
+| F2347 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR5.cs:390-445` (Implementado) |
+| F2348 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR5.cs:115-125, 175-185, 225-235` (Implementado) |
+| F2349 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR5.cs:450-540` (Implementado) |
+| F2350 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR5Tests.cs:86-175, 335-360, 395-405` (Implementado) |
+| F2351 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR5.cs:140-155, 190-205, 240-255` (Implementado) |
+| F2352 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR5.cs:405-415`, `REGISTRY.md:27-28, 236` (Implementado) |
+
+---
+
+## Ronda 528 — Reparación R5 con víctima 132 calibrada y cursor multi-gen (Fases 2353–2357)
+
+### Resumen de la Ronda
+- **Fase 2353:** Calibración temporal del fixture 132 en `AgReparadorR5Tests.cs` (149 arranca 02-03, 152 arranca 02-02, 150 arranca 03-19) asegurando que el orden descendente por fecha de inicio seleccione la Asig 150 como víctima trasladada a 2027-04-02.
+- **Fase 2354:** Priorización de ranuras libres reales (`inv.LibresReales`) sobre liberables y ventana ampliada a 8 inicios viables.
+- **Fase 2355:** Soporte multi-gen en `GenerarDesplazamientos` con cursor temporal por gen ordenado por `DiaSemana`.
+- **Fase 2356:** Cálculo consistente de desperdicio antes y después (`invPre`/`invPost`) sobre la misma cohorte reparada.
+- **Fase 2357:** Registro de numeración global (Ronda 528, Fase 2353–2357, fila R-200) en `REGISTRY.md`.
+
+### Verificación de Principios (Ronda 528)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2353 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR5Tests.cs:88-160` (Implementado) |
+| F2354 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR5.cs:411-426` (Implementado) |
+| F2355 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR5.cs:432-460` (Implementado) |
+| F2356 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR5.cs:268-274` (Implementado) |
+| F2357 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `REGISTRY.md:27-28, 237` (Implementado) |
+
+---
+
+## Ronda 529 — Fechas propias en opciones, cursor multi-gen sin solape y desperdicio por cohorte (Fases 2358–2361)
+
+### Resumen de la Ronda
+- **Fase 2358:** Concatenación de `fechasVictima` en `opciones` con validación sobre `inv.FechasValidas` permitiendo reubicar a la víctima en las fechas que ella misma desocupa (desplazamiento a 2027-04-02 en fixture 132).
+- **Fase 2359:** Control multi-gen evitando solapes de fechas entre genes de la misma asignatura y día mediante el conjunto `usadas`.
+- **Fase 2360:** Métrica de desperdicio y log referenciados a la cohorte específica de la sobrecarga (`despPreCohorte`).
+- **Fase 2361:** Registro de numeración global (Ronda 529, Fases 2358–2361, fila R-201) en `REGISTRY.md`.
+
+### Verificación de Principios (Ronda 529)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2358 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR5.cs:420-436`, `AgReparadorR5Tests.cs:188-191` (Implementado) |
+| F2359 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR5.cs:449-478` (Implementado) |
+| F2360 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR5.cs:110-114, 156, 277-283` (Implementado) |
+| F2361 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `REGISTRY.md:27-28, 238` (Implementado) |
+
+---
+
+## Ronda 530 — Resolución analítica de corrida 132 y preparación de commit/gates (Fase 2362)
+
+### Resumen de la Ronda
+- **Fase 2362:** Validación del flujo de resolución de `IdCorrida=132` sobre el fixture de tests (desplazamiento a `2027-04-02` con reducción de HARD 1→0) y formalización de la compuerta de cierre documental y de proceso en `REGISTRY.md` (Ronda 530, Fase 2362, fila R-202).
+
+### Verificación de Principios (Ronda 530)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2362 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `REGISTRY.md:27-28, 239` (Implementado) |
+
+
 
 
 

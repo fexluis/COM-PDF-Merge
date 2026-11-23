@@ -43,31 +43,48 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 ? ind.Genes.Where(g => g.EsVacante == 0 && string.Equals(AgCalendarioConflictos.Cohorte(g), cohorte ?? string.Empty, StringComparison.Ordinal)).ToList()
                 : new List<AgGen>();
 
-            int idAula = 0;
-            var primerGenConAula = genesCohorte.FirstOrDefault(g => g.IdAula > 0);
-            if (primerGenConAula != null)
-            {
-                idAula = primerGenConAula.IdAula;
-            }
-            else if (ctx.Aulas != null && ctx.Aulas.Count > 0)
+            var idsAulas = genesCohorte.Select(g => g.IdAula).Where(id => id > 0).Distinct().ToList();
+            if (idsAulas.Count == 0 && ctx.Aulas != null && ctx.Aulas.Count > 0)
             {
                 var primeraAula = ctx.Aulas.FirstOrDefault();
                 if (primeraAula != null)
                 {
-                    idAula = primeraAula.Id;
+                    idsAulas.Add(primeraAula.Id);
+                }
+            }
+            int idAula = idsAulas.FirstOrDefault();
+
+            // Determinar unión de días de ventana para las aulas de la cohorte (Fase 2340)
+            var diasVentanaSet = new HashSet<int>();
+            foreach (var aId in idsAulas)
+            {
+                var aObj = (ctx.AulasPorId != null && ctx.AulasPorId.TryGetValue(aId, out var a))
+                    ? a
+                    : (ctx.Aulas != null ? ctx.Aulas.FirstOrDefault(au => au.Id == aId) : null);
+                if (aObj != null && !string.IsNullOrWhiteSpace(aObj.DiasVentana))
+                {
+                    foreach (var d in AgDiasVentana.Dias(aObj.DiasVentana)) diasVentanaSet.Add(d);
                 }
             }
 
-            var aula = (ctx.AulasPorId != null && ctx.AulasPorId.TryGetValue(idAula, out var a))
-                ? a
-                : (ctx.Aulas != null ? ctx.Aulas.FirstOrDefault(au => au.Id == idAula) : null);
+            if (diasVentanaSet.Count == 0)
+            {
+                var aula = (ctx.AulasPorId != null && ctx.AulasPorId.TryGetValue(idAula, out var a))
+                    ? a
+                    : (ctx.Aulas != null ? ctx.Aulas.FirstOrDefault(au => au.Id == idAula) : null);
+                if (aula != null && !string.IsNullOrWhiteSpace(aula.DiasVentana))
+                {
+                    foreach (var d in AgDiasVentana.Dias(aula.DiasVentana)) diasVentanaSet.Add(d);
+                }
+                else
+                {
+                    foreach (var d in new[] { 1, 2, 3, 4, 5 }) diasVentanaSet.Add(d);
+                }
+            }
+            var diasVentana = diasVentanaSet.OrderBy(d => d).ToList();
 
             int m = AgValidadorReglas.MaxCarrilesCohorte(genesCohorte, ctx);
             if (m <= 0) m = 2;
-
-            var diasVentana = (aula != null && !string.IsNullOrWhiteSpace(aula.DiasVentana))
-                ? AgDiasVentana.Dias(aula.DiasVentana)
-                : new List<int> { 1, 2, 3, 4, 5 };
 
             var fechasValidas = new List<DateTime>();
             if (ctx.Ventana != null && ctx.Ventana.FechaInicio <= ctx.Ventana.FechaFin)
@@ -108,7 +125,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             {
                 foreach (var sc in ctx.SesionesConservadas)
                 {
-                    if (sc.Clave.IdAula == idAula)
+                    if (idsAulas.Contains(sc.Clave.IdAula))
                     {
                         var f = sc.Fecha.Date;
                         if (ocupadasDict.TryGetValue(f, out var count))
