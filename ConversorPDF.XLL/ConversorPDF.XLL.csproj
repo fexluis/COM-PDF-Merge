@@ -17,9 +17,9 @@
     <ExcelDnaCreate64BitAddIn>true</ExcelDnaCreate64BitAddIn>
     <!-- Excluir dependencias que no existen en .NET 4.8 y no deben empaquetarse -->
     <ExcelDnaExcludedDependencies>Microsoft.Bcl.HashCode.dll</ExcelDnaExcludedDependencies>
-    <Version>1.6.4.46</Version>
-    <AssemblyVersion>1.6.4.46</AssemblyVersion>
-    <FileVersion>1.6.4.46</FileVersion>
+    <Version>1.6.4.47</Version>
+    <AssemblyVersion>1.6.4.47</AssemblyVersion>
+    <FileVersion>1.6.4.47</FileVersion>
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
@@ -795,6 +795,8 @@
     <Compile Include="Academic\Application\Services\Genetica\AgResultadoReparacionR5.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgReparadorR6.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgResultadoReparacionR6.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgPlanificadorCarril.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgResultadoPlanCarril.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgSobrecargaR5.cs" />
     <Compile Include="Academic\Infrastructure\Persistence\Repositories\AgFiltroSeleccionRepository.cs" />
     <Compile Include="Academic\UI\Controls\AgNivel6Ventanas.cs" />
