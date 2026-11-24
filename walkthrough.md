@@ -501,3 +501,26 @@ Las citas `walkthrough.md:NNNN` anteriores al corte apuntan al archivo monolitic
 - `verify.ps1 -Mode Full`: 2016/2016 PASS, 0 regresiones.
 - `audit-tasks.ps1 T1–T4`: AUDIT_PASS. `T5`: 25 bloqueantes heredados en `AgFormGeneradorHorarios.cs` (preexistentes; 0 introducidos).
 
+
+---
+
+## Ronda 532 — Reparación R6 dedicada y orden Sellar→plan (Fases 2368–2370)
+
+### Resumen de la Ronda
+- **Fase 2368:** Se elimina el `Sellar` posterior a `RealinearOleadas`; era el que borraba `FechasGen` y anulaba el plan del carril.
+- **Fase 2369:** `AgReparadorR6` dedicado: mueve la asignatura corta del solape después del bloque largo dentro del carril, con el inventario real.
+- **Fase 2370:** Hook R6 antes de R5, telemetría `ReparacionR6*` y pruebas del carril largo + cortas.
+
+### Verificación de Principios (Ronda 532)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2368 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgGeneradorHorarios.cs:413-416` (Implementado) |
+| F2369 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR6.cs:1-295`, `AgResultadoReparacionR6.cs:1-20` (Implementado) |
+| F2370 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgGeneradorHorarios.cs:455-469`, `AgResultadoCorrida.cs:42-45`, `AgReparadorR6Tests.cs:1-144` (Implementado) |
+
+### Verificación
+- `verify.ps1 -Mode Fast` (R6+R5+Generador): 19/19 PASS.
+- `verify.ps1 -Mode Full`: 2018/2018 PASS, 0 regresiones.
+- `audit-tasks.ps1 T1–T3`: AUDIT_PASS.
+

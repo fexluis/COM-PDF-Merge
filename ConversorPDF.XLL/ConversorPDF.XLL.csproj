@@ -793,6 +793,8 @@
     <Compile Include="Academic\Application\Services\Genetica\AgInventarioCarril.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgReparadorR5.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgResultadoReparacionR5.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgReparadorR6.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgResultadoReparacionR6.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgSobrecargaR5.cs" />
     <Compile Include="Academic\Infrastructure\Persistence\Repositories\AgFiltroSeleccionRepository.cs" />
     <Compile Include="Academic\UI\Controls\AgNivel6Ventanas.cs" />

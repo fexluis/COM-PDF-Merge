@@ -39,6 +39,11 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
         public int ReparacionR5RippleIntentos { get; set; }
         public int ReparacionR5RippleSinCola { get; set; }
 
+        // Telemetría de reparación R6 (Fase 2370)
+        public int ReparacionR6Intentos { get; set; }
+        public int ReparacionR6HardPre { get; set; }
+        public int ReparacionR6HardPost { get; set; }
+
         private bool? _esFactible;
         public bool EsFactible
         {

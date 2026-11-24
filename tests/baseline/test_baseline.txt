@@ -1,5 +1,5 @@
-# Baseline medido 2026-11-23 tras certificar Ronda 531 (Fases 2363–2367)
-TOTAL: 2016
-PASSED: 2016
+# Baseline medido 2026-11-23 tras certificar Ronda 532 (Fases 2368–2370)
+TOTAL: 2018
+PASSED: 2018
 FAILED: 0
 SKIPPED: 0

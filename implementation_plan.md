@@ -525,3 +525,27 @@ Las citas `implementation_plan.md:NNNN` anteriores al corte apuntan al archivo m
 - `audit-tasks.ps1 T1–T4`: AUDIT_PASS (0 hallazgos). `T5`: 25 bloqueantes heredados en `AgFormGeneradorHorarios.cs` (preexistentes, fuera del diff; 0 introducidos) → deuda para ronda futura.
 - Baseline actualizado a 2016.
 
+
+---
+
+## Ronda 532: Reparación R6 dedicada y orden Sellar→plan (Fases 2368–2370)
+
+### Resumen de la Ronda
+- **Fase 2368 (T1):** En `AgGeneradorHorarios.cs` se retira el `AgCoherenciaGrupo.Sellar` posterior a `RealinearOleadas`; el sellado previo ya ocurrió y el `Sellar` post-plan borraba `FechasGen` (`AgCoherenciaGrupo.cs:171-176`), anulando el reordenamiento del carril.
+- **Fase 2369 (T2):** Nuevo `AgReparadorR6.cs` + `AgResultadoReparacionR6.cs`: detecta pares R6 por cohorte/carril, elige la asignatura corta no fija y reproyecta su bloque tras el fin del solapado usando `AgInventarioRanuras.Carriles`; acepta sólo si baja el HARD; no sella.
+- **Fase 2370 (T3):** Hook `AgReparadorR6` antes del hook R5, telemetría `ReparacionR6Intentos/HardPre/HardPost` en `AgResultadoCorrida` y tests `AgReparadorR6Tests` (carril largo + dos cortos; cortas fijas).
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2368 | `AgGeneradorHorarios.cs` | Implementado |
+| 2369 | `AgReparadorR6.cs`, `AgResultadoReparacionR6.cs`, `ConversorPDF.XLL.csproj` | Implementado |
+| 2370 | `AgGeneradorHorarios.cs`, `AgResultadoCorrida.cs`, `AgReparadorR6Tests.cs` | Implementado |
+
+### Verificación
+- `verify.ps1 -Mode Fast` (R6+R5+Generador): 19/19 PASS.
+- `verify.ps1 -Mode Full`: **2018/2018, 0 fallos, 0 regresiones**, veredicto PASS.
+- `audit-tasks.ps1 T1–T3`: AUDIT_PASS (0 hallazgos).
+- Baseline actualizado a 2018.
+

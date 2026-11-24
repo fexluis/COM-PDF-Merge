@@ -412,7 +412,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 
                         if (!rep.HuboCambios) break;
 
-                        AgCoherenciaGrupo.Sellar(mejorGlobal, contexto);
+                        // Fase 2368: no sellar después del plan; Sellar borra FechasGen (AgCoherenciaGrupo:171-176)
                         EvaluarCampeon();
 
                         double peso = PesoDuras(mejorGlobal, pesos);
@@ -448,6 +448,22 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         foreach (var d in detalleRep)
                         {
                             LoggerHelper.Debug($"[AG-REPARACION] {d}");
+                        }
+                    }
+                }
+
+                // Fase 2370: reparación R6 dedicada (cadena curricular por carril)
+                if (mejorGlobal.HardViolations > 0)
+                {
+                    var repR6 = AgReparadorR6.Ejecutar(mejorGlobal, contexto, _evaluadorAptitud);
+                    if (repR6 != null)
+                    {
+                        resultado.ReparacionR6Intentos = repR6.Intentos;
+                        resultado.ReparacionR6HardPre = repR6.HardPre;
+                        resultado.ReparacionR6HardPost = repR6.HardPost;
+                        if (repR6.HuboMejora && repR6.Individuo != null)
+                        {
+                            mejorGlobal = repR6.Individuo;
                         }
                     }
                 }
