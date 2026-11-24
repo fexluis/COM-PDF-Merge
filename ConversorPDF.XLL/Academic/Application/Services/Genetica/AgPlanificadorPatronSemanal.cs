@@ -42,8 +42,12 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     var ventana = aula != null && !string.IsNullOrWhiteSpace(aula.DiasVentana) ? AgCarriles.Ventana(aula.DiasVentana) : null;
                     if (ventana != null && ventana.Count > 0)
                     {
-                        // Fase 1058: si el patrón guardado tiene más de 2 días (legado V73), normalizar al carril del índice
-                        if (dias.Count > AgCarriles.DiasPorCarril)
+                        // Fase 1058 / Fase 2417: si el patrón guardado supera 2 días, normalizar SALVO que sea patrón residual de 3 días en 5 días
+                        bool esPatronResidualTresDias = ventana.Count == 5 && dias.Count == 3 &&
+                            ((dias.Contains(1) && dias.Contains(2) && dias.Contains(5)) ||
+                             (dias.Contains(1) && dias.Contains(4) && dias.Contains(5)));
+
+                        if (dias.Count > AgCarriles.DiasPorCarril && !esPatronResidualTresDias)
                         {
                             LoggerHelper.WarningLimitado(
                                 $"PatronMultidiaNormalizado|{aa?.IdAula}|{aa?.IdAsignatura}|{aa.DiasPatron}",
@@ -51,16 +55,45 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                             return AgCarriles.DelCarril(ventana, carril);
                         }
 
-                        // Fase 1074 / Fase 1156: aceptar si forma carril de 2 días consecutivos o 1 día proveniente de ranura (I2)
+                        // Fase 1074 / Fase 1156 / Fase 2403 / Fase 2407 / Fase 2410 / Fase 2414 / Fase 2415 / Fase 2417 / Fase 2422 / Fase 2424: en 5 días evitar singleton
+                        bool? esMarVie = DetectarEsMarVie(aa);
                         var dentro = dias.Where(d => ventana.Contains(d)).OrderBy(d => d).ToList();
-                        bool esCarril = (dentro.Count == AgCarriles.DiasPorCarril && dentro.Zip(dentro.Skip(1), (a, b) => b - a).All(gap => gap == 1))
-                                     || (dentro.Count == 1 && ventana.Contains(dentro[0]));
+                        if (ventana.Count == 5 && dentro.Count == 1)
+                        {
+                            if (!esMarVie.HasValue)
+                            {
+                                LoggerHelper.WarningLimitado(
+                                    $"ORIGEN_DIA_NO_RESIDUAL|{aa?.IdAula}|{aa?.IdAsignatura}|{aa?.DiasPatron}",
+                                    $"[Patron] Sin OrigenPatron para '{aa?.DiasPatron}'; se infiere MarVie.");
+                            }
+                            var banda = AgCarriles.BandaSinSingletonParaDia(ventana, dentro[0], esMarVie ?? true);
+                            if (banda != null) return banda;
+                        }
+
+                        if (ventana.Count == 5 && dentro.Count == 3)
+                        {
+                            // Patrón residual explícito: {1,2,5} o {1,4,5}
+                            if ((dentro.Contains(1) && dentro.Contains(2) && dentro.Contains(5)) ||
+                                (dentro.Contains(1) && dentro.Contains(4) && dentro.Contains(5)))
+                            {
+                                return dentro;
+                            }
+                        }
+
+                        bool esCarril = (dentro.Count == AgCarriles.DiasPorCarril && dentro.Zip(dentro.Skip(1), (a, b) => b - a).All(gap => gap == 1));
                         if (esCarril) return dentro;
 
                         LoggerHelper.WarningLimitado(
                             $"PatronNoEsCarril|{aa?.IdAula}|{aa?.IdAsignatura}|{aa.DiasPatron}",
                             $"[Patron] Aula {aa?.IdAula} asig {aa?.IdAsignatura}: patrón [{aa.DiasPatron}] no es carril disjunto de '{aula.DiasVentana}'; se usa carril {AgCarriles.Indice(carril, AgCarriles.Cantidad(ventana))}.");
-                        return AgCarriles.DelCarril(ventana, carril);
+                        var carrilFallback = AgCarriles.DelCarril(ventana, carril);
+                        if (ventana.Count == 5 && carrilFallback.Count == 1)
+                        {
+                            bool esMarVieEfectivo = esMarVie ?? true;
+                            var banda = AgCarriles.BandaSinSingletonParaDia(ventana, carrilFallback[0], esMarVieEfectivo);
+                            if (banda != null) return banda;
+                        }
+                        return carrilFallback;
                     }
                     return dias;
                 }
@@ -71,7 +104,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 var diasVentana = AgCarriles.Ventana(aula.DiasVentana);
                 if (diasVentana != null && diasVentana.Count > 0)
                 {
-                    // Fase 1020 / Fase 1058: carriles disjuntos delegados en AgCarriles
+                    // Fase 1020 / Fase 1058 / Fase 2403 / Fase 2407 / Fase 2410: carriles disjuntos delegados en AgCarriles sin singleton en 5 días
+                    bool? esMarVie = DetectarEsMarVie(aa);
                     int carriles = AgCarriles.Cantidad(diasVentana);
                     if (Math.Abs(carril) >= carriles)
                     {
@@ -85,7 +119,13 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                             $"VentanaImpar|{aula?.Id}|{aula?.DiasVentana}",
                             $"[Patron] Aula {aula?.Id}: ventana '{aula?.DiasVentana}' con {diasVentana.Count} días; {carriles} carril(es) por días; el último día se cubre por ranuras (modelo F1154).");
                     }
-                    return AgCarriles.DelCarril(diasVentana, carril);
+                    var delCarril = AgCarriles.DelCarril(diasVentana, carril);
+                    if (diasVentana.Count == 5 && delCarril.Count == 1 && esMarVie.HasValue)
+                    {
+                        var banda = AgCarriles.BandaSinSingletonParaDia(diasVentana, delCarril[0], esMarVie.Value);
+                        if (banda != null) return banda;
+                    }
+                    return delCarril;
                 }
             }
 
@@ -97,8 +137,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         }
 
         /// <summary>
-        /// Resuelve la lista ordenada de ranuras asignadas al carril especificado (Fase 1156 / Fase 1159).
-        /// Si existen bloques y ventana de aula, utiliza el modelo canónico AgRanuras.
+        /// Resuelve la lista ordenada de ranuras asignadas al carril especificado (Fase 1156 / Fase 1159 / Fase 2408 / Fase 2410).
+        /// Si existen bloques y ventana de aula, deriva primero los días efectivos vía DiasKDe para evitar divergencias.
         /// </summary>
         internal static IReadOnlyList<AgRanura> RanurasDe(
             AgAulaAsignatura aa,
@@ -107,21 +147,66 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             IReadOnlyCollection<AgBloqueHorario> bloques = null,
             double unidad = 4.0)
         {
+            var diasK = DiasKDe(aa, aula, carril);
+
             if (aula != null && !string.IsNullOrWhiteSpace(aula.DiasVentana))
             {
+                var diasVentana = AgCarriles.Ventana(aula.DiasVentana);
                 var ranurasVentana = AgRanuras.PorVentana(aula.DiasVentana, bloques, aula.Jornada, unidad);
-                if (ranurasVentana.Count > 0)
+                if (ranurasVentana != null && ranurasVentana.Count > 0)
                 {
-                    return AgCarriles.DelCarril(ranurasVentana, carril);
+                    bool? esMarVie = DetectarEsMarVie(aa);
+                    if (diasVentana.Count == 5 && diasK.Count == 1 && esMarVie.HasValue)
+                    {
+                        var banda = AgCarriles.BandaSinSingletonParaDia(diasVentana, diasK[0], esMarVie.Value);
+                        if (banda != null)
+                        {
+                            return AgBandasDias.RanurasDe(ranurasVentana, banda);
+                        }
+                    }
+
+                    return ranurasVentana
+                        .Where(r => diasK.Contains(r.Dia))
+                        .ToList();
                 }
             }
 
-            var dias = DiasKDe(aa, aula, carril);
-            return dias.Select(d => new AgRanura(
+            return diasK.Select(d => new AgRanura(
                     d,
                     AgRanuras.FranjasDe(d, aula?.Jornada, unidad).FirstOrDefault() ?? AgFranjaJornada.NOCHE,
                     unidad))
                 .ToList();
+        }
+
+        /// <summary>
+        /// Detecta si el origen declarado o implícito de un aula-asignatura es MarVie (true), LunJue (false), o desconocido (null) (Fase 2407, Fase 2410, Fase 2414, Fase 2415).
+        /// </summary>
+        private static bool? DetectarEsMarVie(AgAulaAsignatura aa)
+        {
+            if (aa == null)
+                return false; // automático sin origen: LunJue, determinista y sin singleton (Fase 2414)
+
+            if (string.Equals(aa.OrigenPatron, "MAR-VIE", StringComparison.OrdinalIgnoreCase)) return true;
+            if (string.Equals(aa.OrigenPatron, "LUN-JUE", StringComparison.OrdinalIgnoreCase)) return false;
+
+            if (string.IsNullOrWhiteSpace(aa.DiasPatron))
+                return false; // automático sin patrón declarado: LunJue (Fase 2414)
+
+            var origen = AgOpcionesParticion.DetectarOrigen(new[] { aa.DiasPatron });
+            if (origen == AgOpcionesParticion.Origen.MarVie) return true;
+            if (origen == AgOpcionesParticion.Origen.LunJue) return false;
+
+            var dias = AgCarriles.Ventana(aa.DiasPatron);
+            if (dias.Count == 1)
+            {
+                if (dias[0] == 5) return false;
+                if (dias[0] == 1) return true;
+
+                // Fase 2415: 2/3/4 sin OrigenPatron no se puede decidir heurísticamente
+                return null;
+            }
+
+            return false; // fallback determinista ante orígenes desconocidos generales, nunca null (Fase 2414)
         }
 
         /// <summary>
@@ -172,10 +257,24 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 
                 if (ventana != null && ventana.Count > 0)
                 {
-                    // Fase 1084 / Fase 1156: aceptar si forma carril de 2 días consecutivos o 1 día proveniente de ranura (I2)
+                    // Fase 1084 / Fase 1156 / Fase 2417: aceptar si forma carril de 2 días consecutivos o patrones de 3 días residuales
                     var dentro = pedidos.Where(d => ventana.Contains(d)).OrderBy(d => d).ToList();
-                    bool esCarril = (dentro.Count == AgCarriles.DiasPorCarril && dentro.Zip(dentro.Skip(1), (a, b) => b - a).All(gap => gap == 1))
-                                 || (dentro.Count == 1 && ventana.Contains(dentro[0]));
+                    if (ventana.Count == 5 && dentro.Count == 3)
+                    {
+                        if ((dentro.Contains(1) && dentro.Contains(2) && dentro.Contains(5)) ||
+                            (dentro.Contains(1) && dentro.Contains(4) && dentro.Contains(5)))
+                        {
+                            return dentro;
+                        }
+                    }
+
+                    if (ventana.Count == 5 && dentro.Count == 1)
+                    {
+                        var banda = AgCarriles.BandaSinSingletonParaDia(ventana, dentro[0]);
+                        if (banda != null) return banda;
+                    }
+
+                    bool esCarril = (dentro.Count == AgCarriles.DiasPorCarril && dentro.Zip(dentro.Skip(1), (a, b) => b - a).All(gap => gap == 1));
                     if (esCarril) return dentro;
 
                     LoggerHelper.WarningLimitado(

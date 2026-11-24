@@ -524,3 +524,315 @@ Las citas `walkthrough.md:NNNN` anteriores al corte apuntan al archivo monolitic
 - `verify.ps1 -Mode Full`: 2018/2018 PASS, 0 regresiones.
 - `audit-tasks.ps1 T1–T3`: AUDIT_PASS.
 
+---
+
+## Ronda 533 — Planificador determinista de carril y re-ranuración R6 (Fases 2371–2374)
+
+### Resumen de la Ronda
+- **Fase 2371:** Implementación de `AgPlanificadorCarril.cs` y `AgResultadoPlanCarril.cs`: cálculo determinista de semanas requeridas vs disponibles, agrupación de cupo por día real de sesión, mutación de clones por índices posicionales, anclaje estricto de genes con `EsFijo == 1` y filtro de colisiones externas `ocupadasFuera`.
+- **Fase 2372:** En `AgReparadorR6.cs`, evaluación jerárquica: 1) planificador por carril único con reinicio de detección vía `break`, 2) `GenerarReRanuracion` hacia aulas candidatas con cupo en la sede, 3) fallback de desplazamiento al final del bloque.
+- **Fase 2373:** Telemetría de carril enriquecida en `AgResultadoReparacionR6.cs` (`Motivo`, `SemanasRequeridas`, `SemanasDisponibles`) y log único consolidado por carril.
+- **Fase 2374:** Pruebas unitarias en `AgReparadorR6Tests.cs` cubriendo cadena #137, capacidad insuficiente, fechas ocupadas, anclaje de fijos y re-ranuración a aula alternativa.
+
+### Verificación de Principios (Ronda 533)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2371 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorCarril.cs:1-268`, `AgResultadoPlanCarril.cs:1-17`, `ConversorPDF.XLL.csproj:798-799` (Implementado) |
+| F2372 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR6.cs:55-155, 235-325` (Implementado) |
+| F2373 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgResultadoReparacionR6.cs:20-27`, `AgReparadorR6.cs:85-95` (Implementado) |
+| F2374 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR6Tests.cs:146-285`, `REGISTRY.md:27-28, 242` (Implementado) |
+
+---
+
+## Ronda 534 — Planificador multi-gen, orden curricular y re-ranuración restringida (Fases 2375–2379)
+
+### Resumen de la Ronda
+- **Fase 2375:** Asignación secuencial de multi-gen por `DiaSemana` en `AgPlanificadorCarril.cs`.
+- **Fase 2376:** Blindaje de re-ranuración en `AgReparadorR6.cs`: coincidencia de `IdPrograma`, validación estricta de bloque y exclusión de vínculos `LEGADO/FIJO`.
+- **Fase 2377:** Orden curricular prioritario y anclaje de asignaturas fijas con soporte de fechas en `FechasGen`.
+- **Fase 2378:** Telemetría depurada en `AgReparadorR6.cs`: reseteo de motivo stale, conteo de intentos de planificador y deltas de HARD verídicos.
+- **Fase 2379:** Formalización de plan swarm `2026-11-23-r6-planificador-carril-plan.md`, fila `R-206` en `REGISTRY.md`, test multi-día y aserciones por invariantes relacionales.
+
+### Verificación de Principios (Ronda 534)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2375 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorCarril.cs:255-320` (Implementado) |
+| F2376 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR6.cs:285-350` (Implementado) |
+| F2377 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorCarril.cs:70-85, 200-220` (Implementado) |
+| F2378 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR6.cs:50-95` (Implementado) |
+| F2379 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR6Tests.cs:175-320`, `REGISTRY.md:27-28, 243` (Implementado) |
+
+---
+
+## Ronda 535 — Validación de periodo, presupuesto O(1) y capacidad sobre libres (Fases 2380–2383)
+
+### Resumen de la Ronda
+- **Fase 2380:** Filtrado estricto por `IdPeriodo` e `IdPrograma` y verificación de `relDestino` en catálogo en `AgReparadorR6.cs`.
+- **Fase 2381:** Presupuesto de intentos en planificador y búsqueda O(1) de orden curricular protegiéndolo de permutaciones.
+- **Fase 2382:** Aserción estricta `SIN_FECHAS`, certificación de compuertas `verify Full` (2024 tests PASS) y actualización de baseline.
+- **Fase 2383:** Cálculo de capacidad y semanas disponibles sobre fechas libres reales tras deducir ocupación externa.
+
+### Verificación de Principios (Ronda 535)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2380 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR6.cs:285-330` (Implementado) |
+| F2381 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorCarril.cs:200-240`, `AgReparadorR6.cs:55-70` (Implementado) |
+| F2382 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR6Tests.cs:205-215`, `test_baseline.txt:1-5` (Implementado) |
+| F2383 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorCarril.cs:100-150` (Implementado) |
+
+### Verificación
+- `verify.ps1 -Mode Fast` (R6+R5): 19/19 PASS.
+- `verify.ps1 -Mode Full`: 2024/2024 PASS, 0 regresiones.
+- `audit-tasks.ps1 T1–T5`: AUDIT_PASS (0 hallazgos).
+
+---
+
+## Ronda 536 — Cierre de re-ranuración y robustez de asignación (Fases 2384–2386)
+
+### Resumen de la Ronda
+- **Fase 2384:** Filtrado de aulas candidatas por `Estado` (`Disponible` o `Aprobado`) y coherencia de `Subunidad` en `AgReparadorR6.cs`.
+- **Fase 2385:** Actualización completa de `ClaveGrupo` y reseteo de `PatronSemanal` e `IndiceDiaPatron` en el gen re-ranurado en `AgReparadorR6.cs`.
+- **Fase 2386:** Diagnóstico `MotivoReranuracion = "SIN_VINCULO"` y batería de 3 pruebas unitarias en `AgReparadorR6Tests.cs`. Registro y envelope sincronizados.
+
+### Verificación de Principios (Ronda 536)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2384 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR6.cs:305-316` (Implementado) |
+| F2385 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR6.cs:407-417` (Implementado) |
+| F2386 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgResultadoReparacionR6.cs:22-24`, `AgReparadorR6.cs:115-119`, `AgReparadorR6Tests.cs:425-500` (Implementado) |
+
+### Verificación
+- `verify.ps1 -Mode Fast` (R6+R5): 22/22 PASS.
+- `verify.ps1 -Mode Full`: 2027/2027 PASS, 0 regresiones.
+- `audit-tasks.ps1 T10–T12`: AUDIT_PASS (0 hallazgos).
+
+---
+
+## Ronda 537 — Cierre real de re-ranuración y diagnóstico de carril (Fases 2387–2389)
+
+### Resumen de la Ronda
+- **Fase 2387:** Extracción y preservación del sufijo de grupo efectivo en `ClaveGrupo` (`AgReparadorR6.cs`).
+- **Fase 2388:** Validación de compatibilidad de `DiasPatron` y `Subunidad` exigidos por `relDestino` en `AgReparadorR6.cs`.
+- **Fase 2389:** Retorno del diagnóstico verídico `SIN_FECHAS` en `AgPlanificadorCarril.cs` ante fallas en asignación secuencial y registro de Wave 537 en `REGISTRY.md`.
+
+### Verificación de Principios (Ronda 537)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2387 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR6.cs:412-421`, `AgReparadorR6Tests.cs:522-556` (Implementado) |
+| F2388 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR6.cs:340-345`, `AgReparadorR6Tests.cs:558-595` (Implementado) |
+| F2389 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorCarril.cs:192-212, 281-348`, `REGISTRY.md:27-28, 245` (Implementado) |
+
+---
+
+## Ronda 538 — Validación de subunidad contra aula destino (Fase 2390)
+
+### Resumen de la Ronda
+- **Fase 2390:** Corrección de la validación de `Subunidad` en el vínculo catálogo comparándolo contra `aulaAlt.Subunidad` en `AgReparadorR6.cs` y prueba unitaria en `AgReparadorR6Tests.cs`.
+
+### Verificación de Principios (Ronda 538)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2390 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR6.cs:344-345`, `AgReparadorR6Tests.cs:597-635` (Implementado) |
+
+---
+
+## Ronda 539 — Día residual 5/1, catálogo de 5 días y fidelidad de partición (Fases 2391–2396)
+
+### Resumen de la Ronda
+- **Fase 2391:** Respaldo de opciones de catálogo sin singletons (`{2,3|1,4,5}` y `{1,2,5|3,4}`) para ventanas de 5 días con patrones mixtos en `AgOpcionesParticion.cs` y fallback en `AgPlanificadorOleadas.cs`.
+- **Fase 2392:** Partición canónica sin singleton `AgCarriles.ParticionSinSingleton` restringida exclusivamente a 5 días y su sustitución canónica en `AgPlanificadorOleadas.cs`.
+- **Fase 2393:** Construcción del patrón y fidelidad evaluada sobre `ranurasEfectivas` en lugar de la banda completa en `AgPlanificadorOleadas.cs`.
+- **Fase 2394:** Normalización de patrones residuales (`ForzarPatronResidual`) en días 5 y 1, propagación a `DiasPatron` y traza diagnóstica `[AG-RESIDUAL]`.
+- **Fase 2395:** Métrica `BandasSingleton` en `AgEvaluacionParticion`, compuerta de selección que minimiza singletons y prefiere menos bandas (`ThenBy(ev => ev.Bandas)`).
+- **Fase 2396:** Batería de pruebas unitarias y de integración para 5 días, desempate y días residuales, adaptando `Caso76` a 2 bandas y certificando Wave 539 en `REGISTRY.md`.
+
+### Verificación de Principios (Ronda 539)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2391 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgOpcionesParticion.cs:48-75`, `AgPlanificadorOleadas.cs:360-366` (Implementado) |
+| F2392 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgCarriles.cs:41-67`, `AgPlanificadorOleadas.cs:353-359` (Implementado) |
+| F2393 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorOleadas.cs:565-625, 680-705` (Implementado) |
+| F2394 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorOleadas.cs:547-555, 706-728` (Implementado) |
+| F2395 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgParticionCarriles.cs:20-38, 130-145, 230-245, 275-305` (Implementado) |
+| F2396 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgParticionCarrilesTests.cs:220-310`, `AgParticionCarrilesIntegracionTests.cs:155-161`, `AgCarrilesTests.cs:105-160`, `AgOpcionesParticionTests.cs:275-315`, `AgPlanificadorOleadasTests.cs:980-1025` (Implementado) |
+
+---
+
+## Ronda 540 — Regresiones en Fases 2391–2396 (día residual, catálogo y tests) (Fases 2397–2402)
+
+### Resumen de la Ronda
+- **Fase 2397:** Eliminación de la llave de cierre redundante en `AgParticionCarrilesTests.cs:319`, restaurando la compilación limpia de la suite.
+- **Fase 2398:** Restricción de `sinSingleton` en `AgPlanificadorOleadas.cs` a orígenes explícitos `MarVie` o `LunJue`, preservando neutralidad ante `Origen.Ninguno`.
+- **Fase 2399:** Ampliación incondicional de `ForzarPatronResidual` en `AgPlanificadorOleadas.cs` para cualquier patrón asignado a bandas `{1,2,5}` o `{1,4,5}`, agregando test de regresión `{1,2} → {1,2,5}`.
+- **Fase 2400:** Actualización de la expectativa de bandas en `Caso76_Ausencia` a 2 bandas `{4,5}|{6,7}` en `AgParticionCarrilesIntegracionTests.cs`.
+- **Fase 2401:** Eliminación del descarte duro de particiones con singleton en la enumeración contigua de `AgParticionCarriles.cs`, delegando la preferencia al orden de desempate.
+- **Fase 2402:** Corrección del cálculo de capacidad en `AgPlanificadorCarril.cs:138-147` comparando sesiones requeridas contra `lane.FechasValidas.Count` en vez de número de semanas. Sincronización de Wave 540 y fila `R-211` en `REGISTRY.md`.
+
+### Verificación de Principios (Ronda 540)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2397 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgParticionCarrilesTests.cs:315-321` (Implementado) |
+| F2398 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorOleadas.cs:357-366` (Implementado) |
+| F2399 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorOleadas.cs:710-725`, `AgPlanificadorOleadasTests.cs:1020-1045` (Implementado) |
+| F2400 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgParticionCarrilesIntegracionTests.cs:181-188` (Implementado) |
+| F2401 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgParticionCarriles.cs:200-218` (Implementado) |
+| F2402 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorCarril.cs:138-147`, `REGISTRY.md:27-28, 248` (Implementado) |
+
+---
+
+## Ronda 541 — Siembra de patrones aún crea carriles de 1 día; R6 pierde índice de patrón (Fases 2403–2406)
+
+### Resumen de la Ronda
+- **Fase 2403:** Mapeo de días sueltos a bandas completas sin singleton en 5 días (`BandaSinSingletonParaDia`) en `AgCarriles.cs`, propagado a `AgPlanificadorPatronSemanal.cs` y resguardo en `AgFabricaIndividuos.cs`.
+- **Fase 2404:** Política explícita `PermitirSingleton = false` en `AgParticionCarriles.cs` con filtro preferente a 0 singletons y fallback seguro ante necesidad extrema.
+- **Fase 2405:** Preservación de `IndiceDiaPatron` en re-ranuración R6 según la posición de `DiaSemana` en `DiasPatron` en `AgReparadorR6.cs`.
+- **Fase 2406:** Corrección semántica de telemetría de carril incorporando `SesionesDisponibles` y derivando `SemanasDisponibles` en `AgResultadoPlanCarril.cs` y `AgPlanificadorCarril.cs`. Sincronización de Wave 541 y fila `R-212` en `REGISTRY.md`.
+
+### Verificación de Principios (Ronda 541)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2403 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgCarriles.cs:64-80`, `AgPlanificadorPatronSemanal.cs:54-95, 130-150`, `AgFabricaIndividuos.cs:434-442`, `AgCarrilesTests.cs:160-175`, `AgFabricaIndividuosTests.cs:636-665` (Implementado) |
+| F2404 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgParticionCarriles.cs:288-305` (Implementado) |
+| F2405 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR6.cs:415-427`, `AgReparadorR6Tests.cs:517-545` (Implementado) |
+| F2406 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgResultadoPlanCarril.cs:12-20`, `AgPlanificadorCarril.cs:138-147`, `REGISTRY.md:27-28, 249` (Implementado) |
+
+---
+
+## Ronda 542 — Mapeo singleton de 5 días no es neutral al origen; DiasKDe y RanurasDe divergen (Fases 2407–2409)
+
+### Resumen de la Ronda
+- **Fase 2407:** Parametrización origin-aware en `AgCarriles.BandaSinSingletonParaDia` distinguiendo MarVie (`{1,4,5}` y `{2,3}`) de LunJue (`{1,2,5}` y `{3,4}`), y validación de ventana canónica `{1,2,3,4,5}`. Suite en `AgCarrilesTests.cs`.
+- **Fase 2408:** Detección de origen y resolución simétrica y unificada de ranuras a partir de los días calculados en `AgPlanificadorPatronSemanal.cs`.
+- **Fase 2409:** Separación de conteo de fechas (`SesionesDisponibles`) y semanas calculadas (`SemanasDisponibles => ceil(SesionesDisponibles / 2.0)`) en `AgResultadoPlanCarril.cs` y `AgPlanificadorCarril.cs`. Sincronización de Wave 542 y fila `R-213` en `REGISTRY.md`.
+
+### Verificación de Principios (Ronda 542)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2407 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgCarriles.cs:75-98`, `AgCarrilesTests.cs:165-195` (Implementado) |
+| F2408 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorPatronSemanal.cs:54-95, 120-155` (Implementado) |
+| F2409 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgResultadoPlanCarril.cs:12-25`, `AgPlanificadorCarril.cs:128-220`, `REGISTRY.md:27-28, 250` (Implementado) |
+
+---
+
+## Ronda 543 — Origen residual ambiguo, SemanasDisponibles duplica sesiones y singleton escapa por catálogo (Fases 2410–2413)
+
+### Resumen de la Ronda
+- **Fase 2410:** Implementación de `DetectarEsMarVie` tri-estado (`bool?`) en `AgPlanificadorPatronSemanal.cs` con heurística para días 1, 4, 5 y advertencia `ORIGEN_RESIDUAL_DESCONOCIDO` ante indeterminación. Heurística default en `AgCarriles.cs:97-102`.
+- **Fase 2411:** Eliminación del setter de semanas en `AgResultadoPlanCarril.cs` desacoplando `SesionesDisponibles` de `SemanasEquivalentes`, y asignación coherente en `AgPlanificadorCarril.cs`.
+- **Fase 2412:** Filtrado anti-singleton de catálogo (`BandasSingleton == 0`) en `AgParticionCarriles.cs:135-155` bajo política `PermitirSingleton = false`.
+- **Fase 2413:** Suite de pruebas para patrones de 1 día y origen en `AgFabricaIndividuosTests.cs` y `AgCarrilesTests.cs`. Sincronización de Wave 543 y fila `R-214` en `REGISTRY.md`.
+
+### Verificación de Principios (Ronda 543)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2410 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorPatronSemanal.cs:54-190`, `AgCarriles.cs:97-102` (Implementado) |
+| F2411 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgResultadoPlanCarril.cs:11-23`, `AgPlanificadorCarril.cs:128-218` (Implementado) |
+| F2412 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgParticionCarriles.cs:135-155` (Implementado) |
+| F2413 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFabricaIndividuosTests.cs:660-705`, `AgCarrilesTests.cs:184-188`, `REGISTRY.md:27-28, 251` (Implementado) |
+
+---
+
+## Ronda 544 — La siembra automática sin AgAulaAsignatura sigue produciendo {5} (Fases 2414–2416)
+
+### Resumen de la Ronda
+- **Fase 2414:** Retorno determinista de LunJue (`false`) para siembra automática sin `aa` o sin patrón declarado en `AgPlanificadorPatronSemanal.cs`, garantizando que carriles residuales en 5 días mapeen a `{1,2,5}`.
+- **Fase 2415:** Exclusión de días 2, 3 y 4 de la inferencia heurística sin origen declarado en `DetectarEsMarVie` y `AgCarriles.BandaSinSingletonParaDia`, emitiendo `ORIGEN_DIA_NO_RESIDUAL_DESCONOCIDO`.
+- **Fase 2416:** Suite de pruebas en `AgFabricaIndividuosTests.cs` comprobando que asignaturas automáticas tengan `RanurasPatron` multi-día y que patrones no residuales de 1 día conserven su configuración sin alteración. Sincronización de Wave 544 y fila `R-215` en `REGISTRY.md`.
+
+### Verificación de Principios (Ronda 544)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2414 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorPatronSemanal.cs:170-196`, `AgFabricaIndividuosTests.cs:662-675` (Implementado) |
+| F2415 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorPatronSemanal.cs:54-75, 186-195`, `AgCarriles.cs:97-108` (Implementado) |
+| F2416 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFabricaIndividuosTests.cs:676-735`, `AgCarrilesTests.cs:184-190`, `REGISTRY.md:27-28, 252` (Implementado) |
+
+---
+
+## Ronda 545 — Patrones de 3 días se normalizan a 2; 2/3/4 sin origen siguen en singleton (Fases 2417–2418)
+
+### Resumen de la Ronda
+- **Fase 2417:** Aceptación de patrones residuales explícitos de 3 días (`{1,2,5}` y `{1,4,5}`) en `AgPlanificadorPatronSemanal.DiasKDe` evitando normalización truncada, y erradicación de singletons para 2, 3 y 4 sin origen vía fallback determinista no singleton en `AgCarriles.cs`.
+- **Fase 2418:** Actualización de la suite de pruebas en `AgFabricaIndividuosTests.cs` y `AgCarrilesTests.cs` verificando la resolución de 2 y 3 días para patrones no residuales y la conservación íntegra de patrones residuales de 3 días. Sincronización de Wave 545 y fila `R-216` en `REGISTRY.md`.
+
+### Verificación de Principios (Ronda 545)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2417 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorPatronSemanal.cs:40-145`, `AgCarriles.cs:97-105` (Implementado) |
+| F2418 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFabricaIndividuosTests.cs:696-745`, `AgCarrilesTests.cs:184-190`, `REGISTRY.md:27-28, 253` (Implementado) |
+
+---
+
+## Ronda 546 — Test de fábrica cuenta genes incorrectamente; semanas de carril siguen asumiendo 2 días (Fases 2419–2420)
+
+### Resumen de la Ronda
+- **Fase 2419:** Corrección en `AgFabricaIndividuosTests.cs` esperando 7 genes totales (uno por ranura para las 3 asignaturas con carriles `{1,2}`, `{3,4}` y `{1,2,5}`) y 3 asignaturas distintas sin singletons.
+- **Fase 2420:** `SesionesPorSemana` dinámico en `AgResultadoPlanCarril.cs` y `AgPlanificadorCarril.cs` con cálculo proporcional en `SemanasEquivalentes` y `SemanasRequeridasEquivalentes`. Prueba unitaria en `AgReparadorR6Tests.cs`. Sincronización de Wave 546 y fila `R-217` en `REGISTRY.md`.
+
+### Verificación de Principios (Ronda 546)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2419 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFabricaIndividuosTests.cs:670-696` (Implementado) |
+| F2420 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgResultadoPlanCarril.cs:11-30`, `AgPlanificadorCarril.cs:120-220`, `AgReparadorR6Tests.cs:663-685`, `REGISTRY.md:27-28, 254` (Implementado) |
+
+---
+
+## Ronda 547 — Separación de sesiones y semanas requeridas; trazabilidad de origen inferido (Fases 2421–2422)
+
+### Resumen de la Ronda
+- **Fase 2421:** `SesionesRequeridas` como propiedad mutable y `SemanasRequeridas` como propiedad calculada proporcional a `SesionesPorSemana` en `AgResultadoPlanCarril.cs` y `AgPlanificadorCarril.cs`.
+- **Fase 2422:** Emisión de advertencia diagnóstica `ORIGEN_DIA_INFERIDO` en `AgPlanificadorPatronSemanal.cs` para patrones de 1 día que adoptan la heurística de fallback MarVie. Sincronización de Wave 547 y fila `R-218` en `REGISTRY.md`.
+
+### Verificación de Principios (Ronda 547)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2421 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgResultadoPlanCarril.cs:11-30`, `AgPlanificadorCarril.cs:128-229`, `AgReparadorR6Tests.cs:662-687` (Implementado) |
+| F2422 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorPatronSemanal.cs:58-67`, `REGISTRY.md:27-28, 255` (Implementado) |
+
+---
+
+## Ronda 548 — Eliminación de setter ambiguo en SemanasRequeridas (Fase 2423)
+
+### Resumen de la Ronda
+- **Fase 2423:** Eliminación del setter mutable en `SemanasRequeridas` en `AgResultadoPlanCarril.cs`, forzando el uso exclusivo de `SesionesRequeridas` para asignaciones numéricas y preservando el getter de semanas calculadas. Sincronización de Wave 548 y fila `R-219` en `REGISTRY.md`.
+
+### Verificación de Principios (Ronda 548)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2423 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgResultadoPlanCarril.cs:14-23`, `REGISTRY.md:27-28, 256` (Implementado) |
+
+---
+
+## Ronda 549 — Registro diagnóstico de inferencia de origen para días no residuales (Fase 2424)
+
+### Resumen de la Ronda
+- **Fase 2424:** Emisión estandarizada de advertencia diagnóstica `ORIGEN_DIA_NO_RESIDUAL` en `AgPlanificadorPatronSemanal.cs` ante inferencia de MarVie en patrones `{2}`, `{3}`, `{4}` sin origen declarado. Sincronización de Wave 549 y fila `R-220` en `REGISTRY.md`.
+
+### Verificación de Principios (Ronda 549)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2424 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorPatronSemanal.cs:58-75`, `REGISTRY.md:27-28, 257` (Implementado) |
+
+
+
+
+
+
+
+

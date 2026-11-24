@@ -637,5 +637,146 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             ind.Should().NotBeNull();
             ind.Genes.Should().NotBeEmpty();
         }
+
+        [Fact]
+        public void CrearAleatorio_VentanaCincoDias_CarrilDos_NuncaProducePatronSingletonCinco()
+        {
+            // Fase 2403: En 5 días ("1,2,3,4,5"), la tercera asignatura (carril 2) nunca debe tener DiasPatron == "5"
+            var contexto = new AgContexto();
+            contexto.IdPrograma = 1;
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 2), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
+
+            var aula = new AgAula { Id = 1, DiasVentana = "1,2,3,4,5", HorasDia = 4, Estado = AgEstadoAula.Disponible };
+            contexto.Aulas.Add(aula);
+            contexto.Asignaturas.Add(new Asignatura { Id = 10, Nombre = "Asig 1", Horas = 64, HorasSemanales = 4, IdPrograma = 1 });
+            contexto.Asignaturas.Add(new Asignatura { Id = 20, Nombre = "Asig 2", Horas = 64, HorasSemanales = 4, IdPrograma = 1 });
+            contexto.Asignaturas.Add(new Asignatura { Id = 30, Nombre = "Asig 3", Horas = 64, HorasSemanales = 4, IdPrograma = 1 });
+            for (int d = 1; d <= 5; d++)
+            {
+                contexto.Bloques.Add(new AgBloqueHorario { Id = d, DiaSemanaNumero = d, DuracionHoras = 4, Activo = 1 });
+            }
+
+            var sut = new AgFabricaIndividuos(new Random(42));
+            var ind = sut.CrearAleatorio(contexto, 1, 0);
+
+            ind.Should().NotBeNull();
+            ind.Genes.Where(g => g.IdAsignatura == 30).All(g => g.DiasPatron != "5").Should().BeTrue();
+            ind.Genes.Select(g => g.DiasPatron).Distinct().Should().NotContain("5");
+            ind.Genes.Where(g => g.IdAsignatura == 30)
+                .Select(g => g.DiaSemana).Distinct().Count()
+                .Should().BeGreaterOrEqualTo(2);
+        }
+
+        [Fact]
+        public void Fabrica_AutomaticaSinAa_NoUsaRanuraSingleton()
+        {
+            // Fase 2416 / Fase 2419: contexto sin AulasAsignaturas genera asignaturas con al menos 2 días distintos
+            var contexto = new AgContexto();
+            contexto.IdPrograma = 1;
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 2), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
+
+            var aula = new AgAula { Id = 1, DiasVentana = "1,2,3,4,5", HorasDia = 4, Estado = AgEstadoAula.Disponible };
+            contexto.Aulas.Add(aula);
+            contexto.Asignaturas.Add(new Asignatura { Id = 10, Nombre = "Asig 1", Horas = 64, HorasSemanales = 4, IdPrograma = 1 });
+            contexto.Asignaturas.Add(new Asignatura { Id = 20, Nombre = "Asig 2", Horas = 64, HorasSemanales = 4, IdPrograma = 1 });
+            contexto.Asignaturas.Add(new Asignatura { Id = 30, Nombre = "Asig 3", Horas = 64, HorasSemanales = 4, IdPrograma = 1 });
+            for (int d = 1; d <= 5; d++)
+            {
+                contexto.Bloques.Add(new AgBloqueHorario { Id = d, DiaSemanaNumero = d, DuracionHoras = 4, Activo = 1 });
+            }
+
+            var sut = new AgFabricaIndividuos(new Random(42));
+            var ind = sut.CrearAleatorio(contexto, 1, 0);
+
+            ind.Should().NotBeNull();
+            ind.Genes.Select(g => g.IdAsignatura).Distinct().Should().HaveCount(3);
+            ind.Genes.GroupBy(g => g.IdAsignatura)
+                .All(grp => grp.Select(g => g.DiaSemana).Distinct().Count() >= 2)
+                .Should().BeTrue();
+            ind.Genes.Select(g => g.DiasPatron).Distinct().Should().NotContain("5");
+            ind.Genes.Should().HaveCount(7);
+        }
+
+        [Theory]
+        [InlineData("2", "2,3")]
+        [InlineData("3", "2,3")]
+        [InlineData("4", "1,4,5")]
+        public void Fabrica_PatronUnDiaNoResidualSinOrigen_UsaDosTresDias(string patron, string esperado)
+        {
+            // Fase 2418: patrones {2}, {3}, {4} sin origen declarado adoptan banda sin singleton de 2 o 3 días
+            var contexto = new AgContexto();
+            contexto.IdPrograma = 1;
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 2), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
+
+            var aula = new AgAula { Id = 1, DiasVentana = "1,2,3,4,5", HorasDia = 4, Estado = AgEstadoAula.Disponible };
+            contexto.Aulas.Add(aula);
+            contexto.Asignaturas.Add(new Asignatura { Id = 10, Nombre = "Asig 1", Horas = 64, HorasSemanales = 4, IdPrograma = 1 });
+            for (int d = 1; d <= 5; d++)
+            {
+                contexto.Bloques.Add(new AgBloqueHorario { Id = d, DiaSemanaNumero = d, DuracionHoras = 4, Activo = 1 });
+            }
+            contexto.AulaAsignaturas.Add(new AgAulaAsignatura
+            {
+                IdAula = 1,
+                IdAsignatura = 10,
+                DiasPatron = patron,
+                OrigenPatron = ""
+            });
+
+            var sut = new AgFabricaIndividuos(new Random(42));
+            var ind = sut.CrearAleatorio(contexto, 1, 0);
+
+            ind.Should().NotBeNull();
+            var gen = ind.Genes.FirstOrDefault(g => g.IdAsignatura == 10);
+            gen.Should().NotBeNull();
+            gen.DiasPatron.Should().Be(esperado);
+            ind.Genes.Where(g => g.IdAsignatura == 10)
+                .Select(g => g.DiaSemana).Distinct().Count()
+                .Should().BeGreaterOrEqualTo(2);
+        }
+
+        [Theory]
+        [InlineData("1,2,5")]
+        [InlineData("1,4,5")]
+        public void DiasKDe_PatronResidualTresDias_SeConserva(string patron)
+        {
+            // Fase 2417 / Fase 2418: patrones residuales de 3 días en ventana 1..5 se conservan íntegros
+            AgPlanificadorPatronSemanal.DiasKDe(patron, "1,2,3,4,5", aula: null)
+                .Should().Equal(patron.Split(',').Select(int.Parse));
+        }
+
+        [Theory]
+        [InlineData("5", "LUN-JUE", "1,2,5")]
+        [InlineData("1", "MAR-VIE", "1,4,5")]
+        public void Fabrica_PatronUnDia_UsaBandaSinSingleton(string patron, string origen, string esperado)
+        {
+            // Fase 2413: {1} y {5} explícitos con origen respetan su banda canónica sin singleton
+            var contexto = new AgContexto();
+            contexto.IdPrograma = 1;
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 2), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
+
+            var aula = new AgAula { Id = 1, DiasVentana = "1,2,3,4,5", HorasDia = 4, Estado = AgEstadoAula.Disponible };
+            contexto.Aulas.Add(aula);
+            contexto.Asignaturas.Add(new Asignatura { Id = 10, Nombre = "Asig 1", Horas = 64, HorasSemanales = 4, IdPrograma = 1 });
+            for (int d = 1; d <= 5; d++)
+            {
+                contexto.Bloques.Add(new AgBloqueHorario { Id = d, DiaSemanaNumero = d, DuracionHoras = 4, Activo = 1 });
+            }
+            contexto.AulaAsignaturas.Add(new AgAulaAsignatura
+            {
+                IdAula = 1,
+                IdAsignatura = 10,
+                DiasPatron = patron,
+                OrigenPatron = origen
+            });
+
+            var sut = new AgFabricaIndividuos(new Random(42));
+            var ind = sut.CrearAleatorio(contexto, 1, 0);
+
+            ind.Should().NotBeNull();
+            var gen = ind.Genes.FirstOrDefault(g => g.IdAsignatura == 10);
+            gen.Should().NotBeNull();
+            gen.DiasPatron.Should().Be(esperado);
+        }
     }
 }

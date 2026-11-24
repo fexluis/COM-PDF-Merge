@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ConversorPDF.XLL.Academic.Domain.Models.Genetica;
+using ConversorPDF.XLL.Core.Helpers;
 
 namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 {
@@ -17,6 +18,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         public int Bandas { get; }
         public int MaxRanurasPorBanda { get; }
         public string Clave { get; }
+        public int BandasSingleton { get; }
 
         public AgEvaluacionParticion(
             AgPlanOleadasResultado resultado,
@@ -25,7 +27,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             int makespan,
             int bandas,
             int maxRanurasPorBanda,
-            string clave)
+            string clave,
+            int bandasSingleton = -1)
         {
             Resultado = resultado;
             PatronesNoAlojables = patronesNoAlojables;
@@ -34,6 +37,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             Bandas = bandas;
             MaxRanurasPorBanda = maxRanurasPorBanda;
             Clave = clave ?? string.Empty;
+            BandasSingleton = bandasSingleton >= 0
+                ? bandasSingleton
+                : (string.IsNullOrWhiteSpace(Clave) ? 0 : Clave.Split('|')
+                    .Where(p => !string.IsNullOrWhiteSpace(p))
+                    .Count(p => p.Split('.').Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().Count() == 1));
         }
     }
 
@@ -103,6 +111,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 
             var referencia = evaluar(bandasCanonicas);
 
+            const bool PermitirSingleton = false; // Fase 2404: Prohibir bandas singleton en motor y catálogo si existe alternativa
+
             bool catalogoEvaluado = false;
             string textoOpcionIntentada = string.Empty;
             int evaluadasOpciones = 0;
@@ -126,18 +136,35 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     ? evaluadasCat[0].Texto
                     : (opciones.Count > 0 ? (opciones[0]?.CarrilesTexto ?? string.Empty) : string.Empty);
 
-                var elegidaOpcion = evaluadasCat
+                // Fase 2404 / Fase 2412: Prohibir bandas singleton también en opciones de catálogo si existe alternativa
+                var opcionesValidas = PermitirSingleton
+                    ? evaluadasCat
+                    : evaluadasCat.Where(x => x.Ev.BandasSingleton == 0).ToList();
+
+                var elegidaOpcion = opcionesValidas
                     .Where(x => x.Ev.PatronesNoAlojables <= referencia.PatronesNoAlojables)
-                    .Where(x => x.Ev.Resultado.Infactibles.Count < referencia.Resultado.Infactibles.Count
-                             || (x.Ev.Resultado.Infactibles.Count == referencia.Resultado.Infactibles.Count
-                                 && x.Ev.Makespan < referencia.Makespan))
+                    .Where(x => x.Ev.Resultado.Infactibles.Count <= referencia.Resultado.Infactibles.Count)
+                    .Where(x => x.Ev.BandasSingleton < referencia.BandasSingleton
+                             || (x.Ev.BandasSingleton == referencia.BandasSingleton
+                                 && (x.Ev.Resultado.Infactibles.Count < referencia.Resultado.Infactibles.Count
+                                     || (x.Ev.Resultado.Infactibles.Count == referencia.Resultado.Infactibles.Count
+                                         && x.Ev.Makespan <= referencia.Makespan
+                                         && x.Ev.Bandas < referencia.Bandas))))
                     .OrderBy(x => x.Ev.Resultado.Infactibles.Count)
+                    .ThenBy(x => x.Ev.BandasSingleton)
                     .ThenBy(x => x.Ev.Makespan)
-                    .ThenBy(x => x.Texto, StringComparer.Ordinal)
+                    .ThenBy(x => x.Ev.Bandas)
                     .FirstOrDefault();
 
                 if (elegidaOpcion.Ev != null)
                 {
+                    if (elegidaOpcion.Ev.BandasSingleton < referencia.BandasSingleton)
+                    {
+                        LoggerHelper.Debug(
+                            $"[Oleadas] bandasSingleton={referencia.BandasSingleton}→{elegidaOpcion.Ev.BandasSingleton}; " +
+                            $"motivo=CAMBIO_POR_SINGLETON; opcion='{elegidaOpcion.Texto}'");
+                    }
+
                     // FASE 2232: CandidatasEvaluadas en catálogo exitoso reporta evaluadasOpciones
                     return new AgSeleccionParticion(true, referencia, elegidaOpcion.Ev, evaluadasOpciones, 0,
                         "catalogo", elegidaOpcion.Texto, evaluadasOpciones, elegidaOpcion.Ev.Clave);
@@ -179,6 +206,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             var idsRef = referencia.Resultado.Planes.Select(p => p.IdAsignatura).ToHashSet();
             var alojablesRef = new HashSet<int>(referencia.PatronesAlojables);
 
+            // Fase 2401: No descartar por singleton; sólo penalizar en el orden de desempate
             foreach (var p in particiones)
             {
                 if (p.Count < kMin || p.Count > kActual)
@@ -243,10 +271,15 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     continue;
                 }
 
-                // (d) Reducción estricta de infactibles o acortamiento de makespan con igual número de infactibles (F1736)
+                // (d) Reducción estricta de infactibles, singleton o acortamiento de makespan/bandas (F1736, F2395)
                 bool menorInfactibles = ev.Resultado.Infactibles.Count < referencia.Resultado.Infactibles.Count;
                 bool mejorMakespan = ev.Resultado.Infactibles.Count == referencia.Resultado.Infactibles.Count && ev.Makespan < referencia.Makespan;
-                if (!menorInfactibles && !mejorMakespan)
+                bool mejorSingleton = ev.Resultado.Infactibles.Count <= referencia.Resultado.Infactibles.Count && ev.BandasSingleton < referencia.BandasSingleton;
+                bool menorBandas = ev.Resultado.Infactibles.Count == referencia.Resultado.Infactibles.Count
+                    && ev.BandasSingleton == referencia.BandasSingleton
+                    && ev.Makespan <= referencia.Makespan
+                    && ev.Bandas < referencia.Bandas;
+                if (!menorInfactibles && !mejorMakespan && !mejorSingleton && !menorBandas)
                 {
                     descartadas++;
                     continue;
@@ -261,11 +294,32 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     catalogoEvaluado ? "catalogo_fallback" : "enumeracion", textoOpcionIntentada, evaluadasOpciones, referencia.Clave);
             }
 
-            var elegida = candidatas
+            // Fase 2404: Política explícita de singleton en el motor: prohibir bandas singleton si existe alternativa
+            var elegibles = candidatas;
+            if (!PermitirSingleton)
+            {
+                var sinSingleton = candidatas
+                    .Where(ev => ev.BandasSingleton == 0)
+                    .ToList();
+
+                if (sinSingleton.Count > 0)
+                {
+                    elegibles = sinSingleton;
+                }
+                else
+                {
+                    LoggerHelper.WarningLimitado(
+                        $"SINGLETON_NECESARIO|{ventana?.Count}|{referencia?.Clave}",
+                        "[Oleadas] SINGLETON_NECESARIO: no hay partición sin bandas de 1 día; se conserva la mejor disponible.");
+                }
+            }
+
+            var elegida = elegibles
                 .OrderBy(ev => ev.Resultado.Infactibles.Count)
+                .ThenBy(ev => ev.BandasSingleton)
                 .ThenBy(ev => ev.PatronesNoAlojables)
                 .ThenBy(ev => ev.Makespan)
-                .ThenByDescending(ev => ev.Bandas)
+                .ThenBy(ev => ev.Bandas)
                 .ThenBy(ev => ev.MaxRanurasPorBanda)
                 .ThenBy(ev => ev.Clave, StringComparer.Ordinal)
                 .First();

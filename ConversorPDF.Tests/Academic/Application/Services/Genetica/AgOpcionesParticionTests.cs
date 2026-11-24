@@ -274,5 +274,47 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             var origen = AgOpcionesParticion.DetectarOrigen(efectivos);
             origen.Should().Be(AgOpcionesParticion.Origen.MarVie);
         }
+
+        [Fact]
+        public void ResolverFallbackSinSingleton_CincoDiasPatronesMixtos_DevuelveOpcionesSinSingleton()
+        {
+            // Fase 2391 / Fase 2396: Con patrones mixtos que dan Origen.Ninguno, el fallback genera 2 opciones sin singleton
+            var ranuras = new List<AgRanura>
+            {
+                new AgRanura(1, AgFranjaJornada.NOCHE, 4.0),
+                new AgRanura(2, AgFranjaJornada.NOCHE, 4.0),
+                new AgRanura(3, AgFranjaJornada.NOCHE, 4.0),
+                new AgRanura(4, AgFranjaJornada.NOCHE, 4.0),
+                new AgRanura(5, AgFranjaJornada.NOCHE, 4.0)
+            };
+            var patronesMixtos = new List<string> { "2,3", "1,2", "5" };
+
+            var opciones = AgOpcionesParticion.ResolverFallbackSinSingleton("1,2,3,4,5", ranuras, patronesMixtos);
+
+            opciones.Should().NotBeNull();
+            opciones.Should().HaveCount(2);
+            opciones.Select(o => o.CarrilesTexto).Should().BeEquivalentTo(new[] { "2,3|1,4,5", "1,2,5|3,4" });
+            opciones.All(o => o.Carriles.All(c => c.Select(r => r.Dia).Distinct().Count() >= 2)).Should().BeTrue();
+        }
+
+        [Fact]
+        public void Resolver_CuatroCincoSeisSiete_JueDom_Produce5_6M_4_6T_7()
+        {
+            // Fase 2396: 4,5,6,7 con JueDom (6M y 6T)
+            var ranuras = new List<AgRanura>
+            {
+                new AgRanura(4, AgFranjaJornada.TARDE, 4.0),
+                new AgRanura(5, AgFranjaJornada.TARDE, 4.0),
+                new AgRanura(6, AgFranjaJornada.MANANA, 4.0),
+                new AgRanura(6, AgFranjaJornada.TARDE, 4.0),
+                new AgRanura(7, AgFranjaJornada.MANANA, 4.0)
+            };
+            var patrones = new List<string> { "5,6M", "4,6T,7" };
+
+            var op = AgOpcionesParticion.Resolver("4,5,6,7", ranuras, patrones);
+
+            op.Should().NotBeNull();
+            op.CarrilesTexto.Should().Be("5,6M|4,6T,7");
+        }
     }
 }

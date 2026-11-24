@@ -153,11 +153,10 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             res.IsSuccess.Should().BeTrue();
             res.Value.Planes.Should().ContainSingle();
             res.Value.Infactibles.Should().ContainSingle();
-            // Por desempate determinista (Bandas descendente), se elige la partición de 3 bandas {{4},{5},{6,7}}
-            res.Value.Particion.Should().HaveCount(3);
-            res.Value.Particion[0].Should().Equal(4);
-            res.Value.Particion[1].Should().Equal(5);
-            res.Value.Particion[2].Should().Equal(6, 7);
+            // Fase 2395 / Fase 2396: Por desempate determinista sin singletons y menor número de bandas, se elige {{4,5},{6,7}} (2 bandas)
+            res.Value.Particion.Should().HaveCount(2);
+            res.Value.Particion[0].Should().Equal(4, 5);
+            res.Value.Particion[1].Should().Equal(6, 7);
         }
 
         [Fact]

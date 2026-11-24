@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 532 | 533 | 2026-11-23 |
-| `fase` | 2370 | 2371 | 2026-11-23 |
+| `ronda` | 549 | 550 | 2026-11-24 |
+| `fase` | 2424 | 2425 | 2026-11-24 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -239,6 +239,22 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-202 | 2026-11-23 | `(revisión e informe Ronda 530 — Fase 2362: verificación analítica de resolución de corrida 132 y preparación de compuertas commit/gates)` | `Wave —` → `Ronda 530` | `Fase 2362` | closed | sin build/tests (restricción Paso 6 /ronda-review) | pendiente |
 | R-203 | 2026-11-23 | `.agents/plans/2026-11-23-r6-r5-orden-validacion-incremental-plan.md` | `Wave 531` → `Ronda 531` | `T1..T5` → `Fase 2363–2367` | closed | PASS (Full 2016) | `2db3aae` |
 | R-204 | 2026-11-23 | `.agents/plans/2026-11-23-r6-reparacion-dedicada-plan.md` | `Wave 532` → `Ronda 532` | `T1..T3` → `Fase 2368–2370` | closed | PASS (Full 2018) | `b914be4` |
+| R-205 | 2026-11-24 | `(revisión e implementación Ronda 533 — Fases 2371–2374: planificador determinista de carril con capacidad e índices posicionales, re-ranuración R6 hacia aulas con cupo, telemetría y pruebas)` | `Wave 533` → `Ronda 533` | `T1..T4` → `Fase 2371–2374` | closed | sin build/tests (restricción Paso 6 /ronda-review) | `9e7bf38` |
+| R-206 | 2026-11-24 | `.agents/plans/2026-11-23-r6-planificador-carril-plan.md` | `Wave 534..535` → `Ronda 534–535` | `T1..T9` → `Fase 2375–2383` | closed | PASS (Full 2024) | uncommitted |
+| R-207 | 2026-11-24 | `.agents/plans/2026-11-23-r6-planificador-carril-plan.md` | `Wave 536` → `Ronda 536` | `T10..T12` → `Fase 2384–2386` | closed | PASS (Full 2027) | uncommitted |
+| R-208 | 2026-11-24 | `.agents/plans/2026-11-23-r6-planificador-carril-plan.md` | `Wave 537` → `Ronda 537` | `T13..T15` → `Fase 2387–2389` | closed | sin build/tests (restricción Paso 6 /ronda-review) | uncommitted |
+| R-209 | 2026-11-24 | `.agents/plans/2026-11-23-r6-planificador-carril-plan.md` | `Wave 538` → `Ronda 538` | `T16` → `Fase 2390` | closed | PASS (Full 2030) | `65f15f4` |
+| R-210 | 2026-11-24 | `(revisión e implementación Ronda 539 — Fases 2391–2396: día residual 5/1, catálogo de 5 días, fidelidad con ranuras efectivas y desempate por BandasSingleton)` | `Wave 539` → `Ronda 539` | `T1..T6` → `Fase 2391–2396` | closed | sin build/tests (restricción Paso 6 /ronda-review) | uncommitted |
+| R-211 | 2026-11-24 | `(revisión e implementación Ronda 540 — Fases 2397–2402: corrección sintaxis test, neutralidad canónica ante origen ninguno, forzado incondicional residual, expectativa caso76 ausencia, singleton como preferencia en enumeración y capacidad real carril)` | `Wave 540` → `Ronda 540` | `T1..T6` → `Fase 2397–2402` | closed | sin build/tests (restricción Paso 6 /ronda-review) | uncommitted |
+| R-212 | 2026-11-24 | `(revisión e implementación Ronda 541 — Fases 2403–2406: mapeo siembra sin singleton en 5 días, política explícita de singleton, preservación indice día patrón en R6 y telemetría de sesiones disponibles)` | `Wave 541` → `Ronda 541` | `T1..T4` → `Fase 2403–2406` | closed | sin build/tests (restricción Paso 6 /ronda-review) | uncommitted |
+| R-213 | 2026-11-24 | `(revisión e implementación Ronda 542 — Fases 2407–2409: mapeo origin-aware en BandaSinSingletonParaDia, unificación de resolución días/ranuras y separación de sesiones y semanas disponibles)` | `Wave 542` → `Ronda 542` | `T1..T3` → `Fase 2407–2409` | closed | sin build/tests (restricción Paso 6 /ronda-review) | uncommitted |
+| R-214 | 2026-11-24 | `(revisión e implementación Ronda 543 — Fases 2410–2413: origen residual explícito/heurístico en DetectarEsMarVie, SemanasEquivalentes sin duplicación en setter y filtro anti-singleton en catálogo)` | `Wave 543` → `Ronda 543` | `T1..T4` → `Fase 2410–2413` | closed | sin build/tests (restricción Paso 6 /ronda-review) | uncommitted |
+| R-215 | 2026-11-24 | `(revisión e implementación Ronda 544 — Fases 2414–2416: fallback determinista LunJue en siembra automática sin aa, origen estricto para 2/3/4 y cobertura de ranuras no singleton)` | `Wave 544` → `Ronda 544` | `T1..T3` → `Fase 2414–2416` | closed | sin build/tests (restricción Paso 6 /ronda-review) | uncommitted |
+| R-216 | 2026-11-24 | `(revisión e implementación Ronda 545 — Fases 2417–2418: soporte de 3 días residuales {1,2,5}/{1,4,5} en DiasKDe, erradicación de singleton para 2/3/4 y cobertura)` | `Wave 545` → `Ronda 545` | `T1..T2` → `Fase 2417–2418` | closed | sin build/tests (restricción Paso 6 /ronda-review) | uncommitted |
+| R-217 | 2026-11-24 | `(revisión e implementación Ronda 546 — Fases 2419–2420: corrección de aserción de conteo de genes en fábrica automática y cálculo de SemanasEquivalentes por SesionesPorSemana)` | `Wave 546` → `Ronda 546` | `T1..T2` → `Fase 2419–2420` | closed | sin build/tests (restricción Paso 6 /ronda-review) | uncommitted |
+| R-218 | 2026-11-24 | `(revisión e implementación Ronda 547 — Fases 2421–2422: separación SesionesRequeridas de SemanasRequeridas calculada y log diagnóstico ORIGEN_DIA_INFERIDO)` | `Wave 547` → `Ronda 547` | `T1..T2` → `Fase 2421–2422` | closed | sin build/tests (restricción Paso 6 /ronda-review) | uncommitted |
+| R-219 | 2026-11-24 | `(revisión e implementación Ronda 548 — Fase 2423: eliminación del setter ambiguo en SemanasRequeridas de AgResultadoPlanCarril)` | `Wave 548` → `Ronda 548` | `T1` → `Fase 2423` | closed | sin build/tests (restricción Paso 6 /ronda-review) | uncommitted |
+| R-220 | 2026-11-24 | `(revisión e implementación Ronda 549 — Fase 2424: registro diagnóstico ORIGEN_DIA_NO_RESIDUAL al inferir MarVie)` | `Wave 549` → `Ronda 549` | `T1` → `Fase 2424` | closed | build/tests en build-release 1.6.4.48 | uncommitted |
 
 
 

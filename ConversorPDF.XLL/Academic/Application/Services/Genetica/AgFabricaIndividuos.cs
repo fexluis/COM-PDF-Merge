@@ -229,9 +229,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 
                 string ObtenerDiasPatron(int idAsig)
                 {
-                    AgAulaAsignatura aaPatron = (aula != null && contexto.AulaAsignaturaPorAulaAsig != null)
+                    AgAulaAsignatura aaPatron = (aula != null && contexto.AulaAsignaturaPorAulaAsig != null && contexto.AulaAsignaturaPorAulaAsig.Count > 0)
                         ? (contexto.AulaAsignaturaPorAulaAsig.TryGetValue((aula.Id, idAsig), out var exact) ? exact : null)
-                        : (contexto.AulaAsignaturasPorId != null && contexto.AulaAsignaturasPorId.TryGetValue(idAsig, out var def) ? def : null);
+                        : (contexto.AulaAsignaturasPorId != null && contexto.AulaAsignaturasPorId.Count > 0 && contexto.AulaAsignaturasPorId.TryGetValue(idAsig, out var def)
+                            ? def
+                            : contexto.AulaAsignaturas?.FirstOrDefault(x => (aula == null || x.IdAula == aula.Id) && x.IdAsignatura == idAsig));
                     if (aaPatron != null && string.Equals(aaPatron.OrigenPatron, "AUTOMATICO", StringComparison.OrdinalIgnoreCase))
                     {
                         return string.Empty;
@@ -261,7 +263,29 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         foreach (var it in itemsPlan)
                         {
                             string dp = ObtenerDiasPatron(it.IdAsignatura);
-                            if (!string.IsNullOrWhiteSpace(dp)) patronesPlan[it.IdAsignatura] = dp;
+                            if (!string.IsNullOrWhiteSpace(dp))
+                            {
+                                var aaIt = (aula != null && contexto.AulaAsignaturaPorAulaAsig != null && contexto.AulaAsignaturaPorAulaAsig.Count > 0)
+                                    ? (contexto.AulaAsignaturaPorAulaAsig.TryGetValue((aula.Id, it.IdAsignatura), out var exact) ? exact : null)
+                                    : (contexto.AulaAsignaturasPorId != null && contexto.AulaAsignaturasPorId.Count > 0 && contexto.AulaAsignaturasPorId.TryGetValue(it.IdAsignatura, out var def) ? def
+                                       : contexto.AulaAsignaturas?.FirstOrDefault(x => (aula == null || x.IdAula == aula.Id) && x.IdAsignatura == it.IdAsignatura));
+
+                                if (aaIt != null && !string.Equals(aaIt.OrigenPatron, "LEGADO", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    var v = AgCarriles.Ventana(aula.DiasVentana);
+                                    var d = AgCarriles.Ventana(dp);
+                                    if (v != null && v.Count == 5 && d != null && d.Count == 1)
+                                    {
+                                        var diasK = AgPlanificadorPatronSemanal.DiasKDe(aaIt, aula, 0);
+                                        if (diasK != null && diasK.Count > 1)
+                                        {
+                                            dp = string.Join(",", diasK);
+                                        }
+                                    }
+                                }
+
+                                patronesPlan[it.IdAsignatura] = dp;
+                            }
                         }
 
                         planRes = _planificadorOleadas.Construir(
@@ -381,9 +405,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     DateTime fechaInicio = fInicioVentana;
                     DateTime fechaFin = fFinVentana;
 
-                    AgAulaAsignatura aa = (aula != null && contexto.AulaAsignaturaPorAulaAsig != null)
+                    AgAulaAsignatura aa = (aula != null && contexto.AulaAsignaturaPorAulaAsig != null && contexto.AulaAsignaturaPorAulaAsig.Count > 0)
                         ? (contexto.AulaAsignaturaPorAulaAsig.TryGetValue((aula.Id, asig.Id), out var aaExacta) ? aaExacta : null)
-                        : (contexto.AulaAsignaturasPorId != null && contexto.AulaAsignaturasPorId.TryGetValue(asig.Id, out var aaDef) ? aaDef : null);
+                        : (contexto.AulaAsignaturasPorId != null && contexto.AulaAsignaturasPorId.Count > 0 && contexto.AulaAsignaturasPorId.TryGetValue(asig.Id, out var aaDef)
+                            ? aaDef
+                            : contexto.AulaAsignaturas?.FirstOrDefault(x => (aula == null || x.IdAula == aula.Id) && x.IdAsignatura == asig.Id));
 
                     double totalHoras = ObtenerHorasObjetivo(asig);
 
@@ -431,11 +457,12 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                             && !string.IsNullOrWhiteSpace(aa.DiasPatron)
                             && !string.Equals(aa.OrigenPatron, "AUTOMATICO", StringComparison.OrdinalIgnoreCase);
                         bool esAutomatica = !tienePatronDeclarado && string.IsNullOrWhiteSpace(ObtenerDiasPatron(asig.Id));
-                        int cantCarriles = aula != null && !string.IsNullOrWhiteSpace(aula.DiasVentana)
-                            ? AgCarriles.Cantidad(AgCarriles.Ventana(aula.DiasVentana)) : 1;
+                        var diasVentana = aula != null && !string.IsNullOrWhiteSpace(aula.DiasVentana) ? AgCarriles.Ventana(aula.DiasVentana) : null;
+                        int cantCarriles = diasVentana != null ? AgCarriles.Cantidad(diasVentana) : 1;
 
                         if (ranurasPatron == null || ranurasPatron.Count == 0
-                            || (esAutomatica && cantCarriles > 1 && ranurasPatron.Count > AgCarriles.RanurasPorCarril))
+                            || (esAutomatica && cantCarriles > 1 && (ranurasPatron.Count > AgCarriles.RanurasPorCarril
+                                || (diasVentana != null && diasVentana.Count == 5 && ranurasPatron.Select(r => r.Dia).Distinct().Count() == 1))))
                         {
                             ranurasPatron = AgPlanificadorPatronSemanal.RanurasDe(aa, aula, idxAsig, contexto.Bloques, horasEfectivas);
                             sesionesPlanificadas = null;

@@ -40,6 +40,72 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
         }
 
         /// <summary>
+        /// Partición canónica sin singleton acotada exclusivamente a ventanas de 5 días (1..5) (Fase 2392).
+        /// Previene la fragmentación en {1,2}|{3,4}|{5} agrupando los días sin singleton ({2,3}|{1,4,5} o {1,2,5}|{3,4}).
+        /// Para ventanas de 3 o 7 días retorna null sin alterar su partición canónica.
+        /// </summary>
+        public static IReadOnlyList<IReadOnlyList<AgRanura>> ParticionSinSingleton(
+            IReadOnlyList<AgRanura> ranuras, bool esMarVie)
+        {
+            if (ranuras == null) return null;
+
+            var dias = ranuras.Select(r => r.Dia).Distinct().OrderBy(d => d).ToList();
+            if (dias.Count != 5 || dias[0] != 1 || dias[1] != 2 ||
+                dias[2] != 3 || dias[3] != 4 || dias[4] != 5)
+                return null;
+
+            var bandasDias = esMarVie
+                ? new List<IReadOnlyList<int>> {
+                    new List<int> { 2, 3 }, new List<int> { 1, 4, 5 } }
+                : new List<IReadOnlyList<int>> {
+                    new List<int> { 1, 2, 5 }, new List<int> { 3, 4 } };
+
+            return bandasDias
+                .Select(b => (IReadOnlyList<AgRanura>)AgBandasDias.RanurasDe(ranuras, b))
+                .ToList();
+        }
+
+        /// <summary>
+        /// Obtiene la banda sin singleton para un día específico dentro de una ventana de 5 días (1..5) (Fase 2403, Fase 2407).
+        /// Valida que la ventana sea exactamente {1, 2, 3, 4, 5}.
+        /// MarVie: {1, 4, 5} para 1, 4, 5; {2, 3} para 2, 3.
+        /// LunJue: {1, 2, 5} para 1, 2, 5; {3, 4} para 3, 4.
+        /// Para ventanas distintas de 5 días, no canónicas o días fuera de 1..5 retorna null.
+        /// </summary>
+        public static IReadOnlyList<int> BandaSinSingletonParaDia(
+            IReadOnlyList<int> ventana, int dia, bool esMarVie)
+        {
+            if (ventana == null || ventana.Count != 5)
+                return null;
+
+            if (ventana[0] != 1 || ventana[1] != 2 || ventana[2] != 3 ||
+                ventana[3] != 4 || ventana[4] != 5)
+                return null;
+
+            if (dia < 1 || dia > 5) return null;
+
+            if (esMarVie)
+            {
+                if (dia == 1 || dia == 4 || dia == 5) return new[] { 1, 4, 5 };
+                return new[] { 2, 3 };
+            }
+
+            if (dia == 1 || dia == 2 || dia == 5) return new[] { 1, 2, 5 };
+            return new[] { 3, 4 };
+        }
+
+        /// <summary>
+        /// Sobrecarga con heurística residual cuando no se especifica origen (Fase 2410, Fase 2415, Fase 2417):
+        /// Día 5 -> LunJue ({1, 2, 5}); Día 1 -> MarVie ({1, 4, 5}); Días 2 y 3 -> MarVie ({2, 3}); Día 4 -> MarVie ({1, 4, 5}).
+        /// </summary>
+        public static IReadOnlyList<int> BandaSinSingletonParaDia(
+            IReadOnlyList<int> ventana, int dia)
+        {
+            if (dia == 5) return BandaSinSingletonParaDia(ventana, 5, false);
+            return BandaSinSingletonParaDia(ventana, dia, true);
+        }
+
+        /// <summary>
         /// Rotación modular de carril: nunca negativo, acotado a [0, carriles - 1].
         /// </summary>
         public static int Indice(int idxAsignatura, int carriles)

@@ -217,10 +217,10 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             var patrones = new List<string> { "6,7" };
 
             // Dos particiones que alojan 6,7:
-            // P1: {4}{5}{6,7} (3 bandas)
-            // P2: {4,5}{6,7} (2 bandas)
+            // P1: {4}{5}{6,7} (3 bandas, 2 singletons)
+            // P2: {4,5}{6,7} (2 bandas, 0 singletons)
             // Si ambas dan 0 infactibles, 0 noAlojables, mismo makespan=9:
-            // Desempate: ThenByDescending(Bandas) -> gana P1 con 3 bandas!
+            // Fase 2395: Desempate: ThenBy(BandasSingleton) -> ThenBy(Bandas) -> gana P2 con 2 bandas y 0 singletons!
             var res = AgParticionCarriles.Seleccionar(
                 new List<int> { 4, 5, 6, 7 },
                 ranuras,
@@ -235,8 +235,86 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
                 });
 
             res.Cambiada.Should().BeTrue();
-            res.Elegida.Bandas.Should().Be(3);
+            res.Elegida.Bandas.Should().Be(2);
+            res.Elegida.BandasSingleton.Should().Be(0);
             res.CandidatasEvaluadas.Should().BeGreaterThan(0, "debe contar las evaluaciones reales");
+        }
+
+        [Fact]
+        public void Seleccionar_CincoDiasConSingleton_ShouldElegirOpcionSinSingleton()
+        {
+            // Fase 2396: 5 días con {1,2}|{3,4}|{5} canónicas -> elige 1,2,5|3,4 con BandasSingleton=0 y Bandas=2
+            var ranuras = new List<AgRanura>
+            {
+                new AgRanura(1, AgFranjaJornada.NOCHE, 4.0),
+                new AgRanura(2, AgFranjaJornada.NOCHE, 4.0),
+                new AgRanura(3, AgFranjaJornada.NOCHE, 4.0),
+                new AgRanura(4, AgFranjaJornada.NOCHE, 4.0),
+                new AgRanura(5, AgFranjaJornada.NOCHE, 4.0)
+            };
+            var canonicas = new List<IReadOnlyList<AgRanura>>
+            {
+                new List<AgRanura> { ranuras[0], ranuras[1] },
+                new List<AgRanura> { ranuras[2], ranuras[3] },
+                new List<AgRanura> { ranuras[4] }
+            };
+            var patrones = new List<string> { "1,2", "3,4" };
+            var opciones = AgOpcionesParticion.ResolverFallbackSinSingleton("1,2,3,4,5", ranuras, patrones);
+
+            var res = AgParticionCarriles.Seleccionar(
+                new List<int> { 1, 2, 3, 4, 5 },
+                ranuras,
+                patrones,
+                canonicas,
+                bandas =>
+                {
+                    int noAloj = AgParticionCarriles.ContarPatronesNoAlojables(bandas, patrones);
+                    var alojables = AgParticionCarriles.ObtenerIndicesAlojables(bandas, patrones);
+                    return CrearEvaluacionSintetica(bandas, noAloj, 0, new List<int> { 1, 2 }, new List<int>(), makespan: 10, patronesAlojables: alojables);
+                },
+                opciones: opciones);
+
+            res.Elegida.Bandas.Should().Be(2);
+            res.Elegida.BandasSingleton.Should().Be(0);
+        }
+
+        [Fact]
+        public void Seleccionar_CincoDiasMarVieConSingleton_ShouldElegirDosTres_UnoCuatroCinco()
+        {
+            // Fase 2396: 5 días MarVie {1}|{2,3}|{4,5} -> elige 2,3|1,4,5
+            var ranuras = new List<AgRanura>
+            {
+                new AgRanura(1, AgFranjaJornada.NOCHE, 4.0),
+                new AgRanura(2, AgFranjaJornada.NOCHE, 4.0),
+                new AgRanura(3, AgFranjaJornada.NOCHE, 4.0),
+                new AgRanura(4, AgFranjaJornada.NOCHE, 4.0),
+                new AgRanura(5, AgFranjaJornada.NOCHE, 4.0)
+            };
+            var canonicas = new List<IReadOnlyList<AgRanura>>
+            {
+                new List<AgRanura> { ranuras[0] },
+                new List<AgRanura> { ranuras[1], ranuras[2] },
+                new List<AgRanura> { ranuras[3], ranuras[4] }
+            };
+            var patrones = new List<string> { "2,3", "4,5" };
+            var opMarVie = AgOpcionesParticion.Resolver("LUN-VIE", ranuras, patrones);
+
+            var res = AgParticionCarriles.Seleccionar(
+                new List<int> { 1, 2, 3, 4, 5 },
+                ranuras,
+                patrones,
+                canonicas,
+                bandas =>
+                {
+                    int noAloj = AgParticionCarriles.ContarPatronesNoAlojables(bandas, patrones);
+                    var alojables = AgParticionCarriles.ObtenerIndicesAlojables(bandas, patrones);
+                    return CrearEvaluacionSintetica(bandas, noAloj, 0, new List<int> { 1, 2 }, new List<int>(), makespan: 10, patronesAlojables: alojables);
+                },
+                opciones: new[] { opMarVie });
+
+            res.Elegida.Bandas.Should().Be(2);
+            res.Elegida.BandasSingleton.Should().Be(0);
+            res.Elegida.Clave.Should().Be("2.3|1.4.5");
         }
 
         [Fact]

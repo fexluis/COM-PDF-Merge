@@ -46,6 +46,31 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
             return Construir(ventana, acc, lane, ranuras);
         }
 
+        /// <summary>
+        /// Respaldo de opciones de partición sin bandas singleton para ventanas de 5 días (1..5) cuando
+        /// DetectarOrigen devuelve Ninguno debido a patrones mixtos o de 1 día (Fase 2391).
+        /// Genera opciones binarias {2,3|1,4,5} y {1,2,5|3,4} donde ningún carril es singleton.
+        /// </summary>
+        internal static IReadOnlyList<AgOpcionParticion> ResolverFallbackSinSingleton(
+            string ventana, IReadOnlyList<AgRanura> ranuras, IReadOnlyList<string> patrones)
+        {
+            var dias = AgDiasVentana.Dias(ventana);
+            if (dias.Count != 5 || dias[0] != 1 || dias[4] != 5)
+                return null;
+
+            var textos = new[] { "2,3|1,4,5", "1,2,5|3,4" };
+            var opciones = new List<AgOpcionParticion>();
+            foreach (var texto in textos)
+            {
+                var op = Construir(ventana, "quedarse", texto, ranuras);
+                if (op == null) continue;
+                bool sinSingleton = op.Carriles.All(c =>
+                    c.Select(r => r.Dia).Distinct().Count() >= 2);
+                if (sinSingleton) opciones.Add(op);
+            }
+            return opciones.Count > 0 ? opciones : null;
+        }
+
         internal static Origen DetectarOrigen(IReadOnlyList<string> patrones)
         {
             if (patrones == null || patrones.Count == 0) return Origen.Ninguno;
