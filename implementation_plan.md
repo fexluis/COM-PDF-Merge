@@ -497,3 +497,31 @@ Las citas `implementation_plan.md:NNNN` anteriores al corte apuntan al archivo m
 
 
 
+
+---
+
+## Ronda 531: Orden R6→R5, validación incremental y ripple por carril (Fases 2363–2367)
+
+### Resumen de la Ronda
+- **Fase 2363 (T1):** En `AgGeneradorHorarios.cs`, reparación de carriles multipasada (máx. 3) con aceptación por **peso de reglas** (`PesoDuras`, `MejoraReparacion`) y hash de estado; se acepta el intercambio R6(850)→R5(800) y se elimina el rollback por conteo.
+- **Fase 2364 (T2):** En `AgReparadorR5.cs`, `ClavesDuras` (pares R2/R4/R6) y `Validar(..., preexistentes)` que rechaza sólo violaciones **nuevas**; guardas de vacantes contra `actual`.
+- **Fase 2365 (T3):** En `AgDiagnosticoInfactibilidad.cs`, emisión de mensajes R5/R6 (cohorte, tramo, carril) en `Describir` y `ResumenCorto`, truncados.
+- **Fase 2366 (T4):** Nuevo `AgInventarioCarril.cs` y `AgInventarioRanuras.Carriles` (fechas válidas/ocupadas/libres por `aula|patrón`), con `Iso` y `FechasDeGen`.
+- **Fase 2367 (T5):** `GenerarDesplazamientosRipple` (cadena del carril), telemetría `RippleIntentos/RippleSinCola`, props en `AgResultadoCorrida`, persistencia JSON en ambos bloques y 6 tests nuevos (fixture #135, R6 preexistente, sin cola, carriles, pesos).
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2363 | `AgGeneradorHorarios.cs` | Implementado |
+| 2364 | `AgReparadorR5.cs` | Implementado |
+| 2365 | `AgDiagnosticoInfactibilidad.cs` | Implementado |
+| 2366 | `AgInventarioCarril.cs`, `AgInventarioRanuras.cs`, `ConversorPDF.XLL.csproj` | Implementado |
+| 2367 | `AgReparadorR5.cs`, `AgResultadoReparacionR5.cs`, `AgResultadoCorrida.cs`, `AgFormGeneradorHorarios.cs`, tests | Implementado |
+
+### Verificación
+- `verify.ps1 -Mode Fast` (AgReparadorR5|AgInventarioRanuras|AgGeneradorHorarios): 21/21 PASS.
+- `verify.ps1 -Mode Full`: **2016/2016, 0 fallos, 0 regresiones**, veredicto PASS.
+- `audit-tasks.ps1 T1–T4`: AUDIT_PASS (0 hallazgos). `T5`: 25 bloqueantes heredados en `AgFormGeneradorHorarios.cs` (preexistentes, fuera del diff; 0 introducidos) → deuda para ronda futura.
+- Baseline actualizado a 2016.
+

@@ -475,3 +475,29 @@ Las citas `walkthrough.md:NNNN` anteriores al corte apuntan al archivo monolitic
 
 
 
+
+---
+
+## Ronda 531 — Orden R6→R5, validación incremental y ripple por carril (Fases 2363–2367)
+
+### Resumen de la Ronda
+- **Fases 2363–2364:** Reparación de carriles multipasada con aceptación por peso (R6=850 &gt; R5=800) y `ClavesDuras`/`Validar` que sólo rechaza duras nuevas; guardas de vacantes contra `actual`.
+- **Fase 2365:** Diagnóstico de duras no-R1/R7 con cohorte/tramo/carril en `Describir` y `ResumenCorto`.
+- **Fase 2366:** Inventario por carril `AgInventarioCarril` y `AgInventarioRanuras.Carriles`.
+- **Fase 2367:** Operador A (`GenerarDesplazamientosRipple`) sobre la cadena del carril, telemetría `rippleIntentos/rippleSinCola` y pruebas del fixture #135.
+
+### Verificación de Principios (Ronda 531)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2363 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgGeneradorHorarios.cs:41-89, 393-452` (Implementado) |
+| F2364 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR5.cs:781-785, 905-1002` (Implementado) |
+| F2365 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgDiagnosticoInfactibilidad.cs:166-175, 328-369` (Implementado) |
+| F2366 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgInventarioCarril.cs:1-30`, `AgInventarioRanuras.cs:24-44, 239-285` (Implementado) |
+| F2367 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR5.cs:263-307, 641-774`, `AgReparadorR5Tests.cs:454-651` (Implementado) |
+
+### Verificación
+- `verify.ps1 -Mode Fast` (filtro Genética): 21/21 PASS.
+- `verify.ps1 -Mode Full`: 2016/2016 PASS, 0 regresiones.
+- `audit-tasks.ps1 T1–T4`: AUDIT_PASS. `T5`: 25 bloqueantes heredados en `AgFormGeneradorHorarios.cs` (preexistentes; 0 introducidos).
+

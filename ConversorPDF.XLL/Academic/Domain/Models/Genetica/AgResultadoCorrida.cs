@@ -36,6 +36,8 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
         public int ReparacionR5HardPost { get; set; }
         public double ReparacionR5DesperdicioPre { get; set; }
         public double ReparacionR5DesperdicioPost { get; set; }
+        public int ReparacionR5RippleIntentos { get; set; }
+        public int ReparacionR5RippleSinCola { get; set; }
 
         private bool? _esFactible;
         public bool EsFactible

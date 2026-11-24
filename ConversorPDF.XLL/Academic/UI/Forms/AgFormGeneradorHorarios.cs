@@ -3281,7 +3281,9 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                             { "hardPre", _ultimoResultado.ReparacionR5HardPre },
                             { "hardPost", _ultimoResultado.ReparacionR5HardPost },
                             { "desperdicioPre", _ultimoResultado.ReparacionR5DesperdicioPre },
-                            { "desperdicioPost", _ultimoResultado.ReparacionR5DesperdicioPost }
+                            { "desperdicioPost", _ultimoResultado.ReparacionR5DesperdicioPost },
+                            { "rippleIntentos", _ultimoResultado.ReparacionR5RippleIntentos },
+                            { "rippleSinCola", _ultimoResultado.ReparacionR5RippleSinCola }
                         };
                         corrida.ParametrosJson = serializer.Serialize(dict);
                     }
@@ -3468,7 +3470,9 @@ WHERE id_aula IN @ids AND id_asignatura > 0;";
                                 { "hardPre", _ultimoResultado.ReparacionR5HardPre },
                                 { "hardPost", _ultimoResultado.ReparacionR5HardPost },
                                 { "desperdicioPre", _ultimoResultado.ReparacionR5DesperdicioPre },
-                                { "desperdicioPost", _ultimoResultado.ReparacionR5DesperdicioPost }
+                                { "desperdicioPost", _ultimoResultado.ReparacionR5DesperdicioPost },
+                                { "rippleIntentos", _ultimoResultado.ReparacionR5RippleIntentos },
+                                { "rippleSinCola", _ultimoResultado.ReparacionR5RippleSinCola }
                             };
                         }
                         if (aulaCorrida != null)

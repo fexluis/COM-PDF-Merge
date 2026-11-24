@@ -195,5 +195,28 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
         }
 
         #endregion
+        [Fact]
+        public void MejoraReparacion_AceptaIntercambioR6PorR5()
+        {
+            AgGeneradorHorarios.MejoraReparacion(850, 1, 800, 0).Should().BeTrue();
+            AgGeneradorHorarios.MejoraReparacion(800, 0, 850, 1).Should().BeFalse();
+            AgGeneradorHorarios.MejoraReparacion(800, 1, 800, 0).Should().BeTrue();
+            AgGeneradorHorarios.MejoraReparacion(800, 0, 800, 0).Should().BeFalse();
+        }
+
+        [Fact]
+        public void PesoDuras_SumaPesosDeReglasDuras()
+        {
+            var ind = new AgIndividuo { Violaciones = new List<AgViolacion>() };
+            ind.Violaciones.Add(new AgViolacion(AgReglaViolacion.R6_SecuenciaAsignaturas, true, "r6"));
+            ind.Violaciones.Add(new AgViolacion(AgReglaViolacion.R5_MaxAsignaturasSemana, true, "r5"));
+            ind.Violaciones.Add(new AgViolacion(AgReglaViolacion.S1_HuecosHorarios, false, "soft"));
+
+            var pesos = AgPesosFitness.PorDefecto();
+            AgGeneradorHorarios.PesoDuras(ind, pesos).Should().Be(1650.0);
+            AgGeneradorHorarios.ConteoDuras(ind, AgReglaViolacion.R6_SecuenciaAsignaturas).Should().Be(1);
+        }
+
+
     }
 }

@@ -16,6 +16,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         public double DesperdicioPre { get; set; }
         public double DesperdicioPost { get; set; }
         public bool HuboMejora { get; set; }
+        public int RippleIntentos { get; set; }
+        public int RippleSinCola { get; set; }
         public List<string> Detalle { get; set; } = new List<string>();
         public string Error { get; set; } = string.Empty;
     }

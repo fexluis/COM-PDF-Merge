@@ -21,9 +21,27 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         public int HuecosIntermedios { get; set; }
         public double BalancePorDia { get; set; }
 
+        /// <summary>Inventario por carril (aula + patrón) de la cohorte (Fase 2366).</summary>
+        public IReadOnlyList<AgInventarioCarril> Carriles { get; set; } = new List<AgInventarioCarril>();
+
         public double Ocupacion => (FechasValidas != null && FechasValidas.Count > 0 && Ocupadas != null)
             ? (double)Ocupadas.Count / FechasValidas.Count
             : 0.0;
+
+        /// <summary>Día ISO (domingo = 7) (Fase 2366).</summary>
+        internal static int Iso(DateTime d)
+        {
+            return d.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)d.DayOfWeek;
+        }
+
+        /// <summary>Fechas de sesión de un gen, o proyección semanal si no las tiene (Fase 2366).</summary>
+        internal static IEnumerable<DateTime> FechasDeGen(AgGen g)
+        {
+            if (g == null) return Array.Empty<DateTime>();
+            if (g.FechasGen != null && g.FechasGen.Count > 0) return g.FechasGen.Select(d => d.Date);
+            if (!g.FechaInicioEstimada.HasValue || !g.FechaFinEstimada.HasValue) return Array.Empty<DateTime>();
+            return GenerarFechasRango(g.FechaInicioEstimada.Value, g.FechaFinEstimada.Value, g.DiaSemana, null);
+        }
 
         public static AgInventarioRanuras Construir(AgIndividuo ind, AgContexto ctx, string cohorte)
         {
@@ -218,6 +236,41 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 balance = sumDesviacion;
             }
 
+            // Fase 2366: inventario por carril (aula + patrón) con fechas válidas/ocupadas/libres.
+            var carriles = new List<AgInventarioCarril>();
+            foreach (var grp in genesCohorte.GroupBy(g => AgCarriles.ClaveCarril(g), StringComparer.Ordinal))
+            {
+                var muestra = grp.FirstOrDefault();
+                if (muestra == null) continue;
+                var diasCarril = AgDiasVentana.Dias(muestra.DiasPatron);
+                if (diasCarril.Count == 0)
+                {
+                    diasCarril = grp.Select(g => g.DiaSemana).Where(d => d >= 1 && d <= 7).Distinct().OrderBy(d => d).ToList();
+                }
+                if (diasCarril.Count == 0) continue;
+
+                var aulaCarril = (ctx.AulasPorId != null && ctx.AulasPorId.TryGetValue(muestra.IdAula, out var aCarril))
+                    ? aCarril
+                    : (ctx.Aulas != null ? ctx.Aulas.FirstOrDefault(au => au.Id == muestra.IdAula) : null);
+                var diasAula = aulaCarril != null ? AgDiasVentana.Dias(aulaCarril.DiasVentana) : new List<int>();
+
+                var ocupadasCarril = new HashSet<DateTime>(grp.SelectMany(FechasDeGen));
+                var validasCarril = fechasValidas
+                    .Where(f => diasCarril.Contains(Iso(f)) && (diasAula.Count == 0 || diasAula.Contains(Iso(f))))
+                    .ToList();
+
+                carriles.Add(new AgInventarioCarril
+                {
+                    Clave = grp.Key,
+                    IdAula = muestra.IdAula,
+                    DiasPatron = muestra.DiasPatron ?? string.Empty,
+                    Dias = diasCarril,
+                    FechasValidas = validasCarril,
+                    FechasOcupadas = ocupadasCarril.OrderBy(d => d).ToList(),
+                    FechasLibres = validasCarril.Where(f => !ocupadasCarril.Contains(f)).ToList()
+                });
+            }
+
             return new AgInventarioRanuras
             {
                 IdAula = idAula,
@@ -229,7 +282,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 Ocupadas = ocupadasDict,
                 ColaMuerta = cola,
                 HuecosIntermedios = huecos,
-                BalancePorDia = balance
+                BalancePorDia = balance,
+                Carriles = carriles
             };
         }
 

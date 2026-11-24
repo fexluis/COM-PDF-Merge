@@ -163,6 +163,17 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 individuo.HardViolations, reglasDurasStr, paresList.Count, r1Count, r7Count, r7EntreGenes, r7Externa,
                 docentesUnicos.Count, asignaturasUnicas.Count, aulasUnicas.Count));
 
+            // Fase 2365: mensajes de duras no-R1/R7 (R5/R6/R4/R8...) para trazabilidad de cohorte/carril/tramo
+            foreach (var v in duras
+                .Where(x => x.Regla != AgReglaViolacion.R1_SuperposicionDocente
+                         && x.Regla != AgReglaViolacion.R7_TerceroOtroGrupoFechaHora)
+                .OrderBy(x => x.Regla)
+                .ThenBy(x => x.Mensaje, StringComparer.Ordinal)
+                .Take(5))
+            {
+                lineas.Add($"[AG-CAUSAS-DETALLE] {v.Regla}: {Recorta(v.Mensaje, 400)}");
+            }
+
             if (detalleIlegible > 0)
             {
                 lineas.Add($"[AG-CAUSAS-DETALLE] DetalleIlegible={detalleIlegible} violaciones sin intervalo parseable.");
@@ -314,6 +325,12 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             return lineas;
         }
 
+        private static string Recorta(string texto, int max)
+        {
+            if (string.IsNullOrEmpty(texto) || texto.Length <= max) return texto ?? string.Empty;
+            return texto.Substring(0, max) + "…";
+        }
+
         internal static string ResumenCorto(AgIndividuo individuo, AgContexto contexto, AgMotivoParada motivoParada, int hardViolations)
         {
             try
@@ -341,6 +358,15 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     $"Optimización finalizada sin factibilidad (HARD={hardViolations}, Parada={motivoParada}).",
                     $"Reglas duras: [{reglasDurasStr}]"
                 };
+
+                foreach (var v in (individuo?.Violaciones ?? new List<AgViolacion>())
+                    .Where(x => x.EsDura
+                             && x.Regla != AgReglaViolacion.R1_SuperposicionDocente
+                             && x.Regla != AgReglaViolacion.R7_TerceroOtroGrupoFechaHora)
+                    .Take(3))
+                {
+                    partes.Add($"{v.Regla}: {Recorta(v.Mensaje, 220)}");
+                }
 
                 if (!string.IsNullOrEmpty(l0)) partes.Add(l0.Replace("[AG-CAUSAS-DETALLE] ", string.Empty));
                 if (!string.IsNullOrEmpty(lDoc)) partes.Add(lDoc.Replace("[AG-CAUSAS-DETALLE] ", string.Empty));

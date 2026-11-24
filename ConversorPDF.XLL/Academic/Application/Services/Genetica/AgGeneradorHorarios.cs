@@ -38,6 +38,56 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         internal static bool ReparacionR5Activa = true;
         internal static AgModoReparacionR5 ReparacionR5Modo = AgModoReparacionR5.Completo;
 
+        /// <summary>
+        /// Peso agregado de las violaciones duras según la tabla de pesos (Fase 2363).
+        /// Permite comparar reparaciones que intercambian reglas (R6=850 &gt; R5=800).
+        /// </summary>
+        internal static double PesoDuras(AgIndividuo ind, AgPesosFitness pesos)
+        {
+            if (ind?.Violaciones == null) return 0.0;
+            double total = 0.0;
+            foreach (var v in ind.Violaciones)
+            {
+                if (v.EsDura) total += pesos != null ? pesos.PorRegla(v.Regla) : 800.0;
+            }
+            return total;
+        }
+
+        /// <summary>Conteo de violaciones duras de una regla (Fase 2363).</summary>
+        internal static int ConteoDuras(AgIndividuo ind, AgReglaViolacion regla)
+        {
+            if (ind?.Violaciones == null) return 0;
+            int n = 0;
+            foreach (var v in ind.Violaciones)
+            {
+                if (v.EsDura && v.Regla == regla) n++;
+            }
+            return n;
+        }
+
+        /// <summary>
+        /// Criterio de aceptación de una reparación: menor peso, o mismo peso con menos R6 (Fase 2363).
+        /// </summary>
+        internal static bool MejoraReparacion(double pesoPre, int r6Pre, double pesoPost, int r6Post)
+        {
+            if (pesoPost < pesoPre - 0.001) return true;
+            return Math.Abs(pesoPost - pesoPre) < 0.001 && r6Post < r6Pre;
+        }
+
+        private static string ConstruirEstadoFechas(AgIndividuo ind)
+        {
+            if (ind?.Genes == null) return string.Empty;
+            var sb = new System.Text.StringBuilder(ind.Genes.Count * 20);
+            for (int i = 0; i < ind.Genes.Count; i++)
+            {
+                var g = ind.Genes[i];
+                sb.Append(i).Append(':')
+                  .Append(g.FechaInicioEstimada.HasValue ? g.FechaInicioEstimada.Value.ToString("yyyyMMdd") : "-").Append(':')
+                  .Append(g.FechaFinEstimada.HasValue ? g.FechaFinEstimada.Value.ToString("yyyyMMdd") : "-").Append(';');
+            }
+            return sb.ToString();
+        }
+
         public AgGeneradorHorarios(
             IAgValidadorVentana validadorVentana,
             IAgEvaluadorAptitud evaluadorAptitud)
@@ -340,29 +390,62 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 
                 if (RealineacionOleadasActiva)
                 {
-                    var original = mejorGlobal.Clonar();
-                    var rep = AgPlanificadorOleadas.RealinearOleadas(mejorGlobal, contexto);
-                    if (rep.HuboCambios)
+                    // Fase 2363: multipasada con aceptación por peso (R6=850 > R5=800) y hash de estado
+                    var pesos = contexto.Pesos ?? AgPesosFitness.PorDefecto();
+                    var aceptado = mejorGlobal.Clonar();
+                    double pesoOk = PesoDuras(aceptado, pesos);
+                    int r6Ok = ConteoDuras(aceptado, AgReglaViolacion.R6_SecuenciaAsignaturas);
+                    int carrilesRep = 0, carrilesEval = 0, asigsDesp = 0, fallos = 0;
+                    string errorRep = string.Empty;
+                    var detalleRep = new List<string>();
+                    var visitados = new HashSet<string>(StringComparer.Ordinal);
+
+                    for (int pasada = 0; pasada < 3; pasada++)
                     {
+                        var rep = AgPlanificadorOleadas.RealinearOleadas(mejorGlobal, contexto);
+                        carrilesEval = rep.CarrilesEvaluados;
+                        if (rep.CarrilesReparados > carrilesRep) carrilesRep = rep.CarrilesReparados;
+                        asigsDesp += rep.AsignaturasDesplazadas;
+                        fallos += rep.Fallos;
+                        if (!string.IsNullOrEmpty(rep.Error)) errorRep = rep.Error;
+                        if (rep.Detalle != null && rep.Detalle.Count > 0) detalleRep.AddRange(rep.Detalle);
+
+                        if (!rep.HuboCambios) break;
+
                         AgCoherenciaGrupo.Sellar(mejorGlobal, contexto);
                         EvaluarCampeon();
-                        int hardPost = mejorGlobal.HardViolations;
-                        if (hardPost >= hardPre)
+
+                        double peso = PesoDuras(mejorGlobal, pesos);
+                        int r6 = ConteoDuras(mejorGlobal, AgReglaViolacion.R6_SecuenciaAsignaturas);
+                        if (!MejoraReparacion(pesoOk, r6Ok, peso, r6))
                         {
-                            mejorGlobal = original; // rollback total
-                            rep.Detalle.Add($"rollback: {hardPre}->{hardPost}");
+                            mejorGlobal = aceptado;
+                            detalleRep.Add($"rollback: peso {pesoOk:F0}->{peso:F0} r6 {r6Ok}->{r6}");
+                            break;
                         }
+
+                        string estado = ConstruirEstadoFechas(mejorGlobal);
+                        if (!visitados.Add(estado))
+                        {
+                            mejorGlobal = aceptado;
+                            detalleRep.Add("rollback: ciclo detectado");
+                            break;
+                        }
+
+                        aceptado = mejorGlobal.Clonar();
+                        pesoOk = peso;
+                        r6Ok = r6;
                     }
 
                     LoggerHelper.Info(
-                        $"[AG-REPARACION] Hard {hardPre}->{mejorGlobal.HardViolations} " +
-                        $"carriles={rep.CarrilesReparados}/{rep.CarrilesEvaluados} asigs={rep.AsignaturasDesplazadas} " +
-                        $"fallos={rep.Fallos} vacantes {vacPre}->{mejorGlobal.Vacantes} " +
-                        $"{(rep.Error.Length > 0 ? "error=" + rep.Error : string.Empty)}");
+                        $"[AG-REPARACION] Hard {hardPre}->{mejorGlobal.HardViolations} peso={pesoOk:F0} r6={r6Ok} " +
+                        $"carriles={carrilesRep}/{carrilesEval} asigs={asigsDesp} fallos={fallos} " +
+                        $"vacantes {vacPre}->{mejorGlobal.Vacantes} " +
+                        $"{(errorRep.Length > 0 ? "error=" + errorRep : string.Empty)}");
 
-                    if (rep.Detalle.Count > 0 && LoggerHelper.ModoVerboso)
+                    if (detalleRep.Count > 0 && LoggerHelper.ModoVerboso)
                     {
-                        foreach (var d in rep.Detalle)
+                        foreach (var d in detalleRep)
                         {
                             LoggerHelper.Debug($"[AG-REPARACION] {d}");
                         }
@@ -380,6 +463,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         resultado.ReparacionR5HardPost = repR5.HardPost;
                         resultado.ReparacionR5DesperdicioPre = repR5.DesperdicioPre;
                         resultado.ReparacionR5DesperdicioPost = repR5.DesperdicioPost;
+                        resultado.ReparacionR5RippleIntentos = repR5.RippleIntentos;
+                        resultado.ReparacionR5RippleSinCola = repR5.RippleSinCola;
 
                         if (repR5.HuboMejora && repR5.Individuo != null)
                         {

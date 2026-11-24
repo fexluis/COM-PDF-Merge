@@ -99,6 +99,9 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 
                     bool mejoraEnIteracion = false;
 
+                    // Fase 2364: duras preexistentes (R2/R4/R6) que no deben bloquear al candidato
+                    var preexistentes = ClavesDuras(actual);
+
                     foreach (var sob in sobrecargasActual)
                     {
                         if (intentosAceptados >= MaxIntentos || evaluaciones >= MaxEvaluaciones || sw.ElapsedMilliseconds >= MaxTiempoMs)
@@ -124,11 +127,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 
                             // Fase 2348: Sellar primero, luego Validar
                             AgCoherenciaGrupo.Sellar(cand, contexto);
-                            if (cand.Vacantes > campeon.Vacantes)
+                            if (cand.Vacantes > actual.Vacantes)
                             {
                                 continue;
                             }
-                            if (!Validar(cand, actual, contexto))
+                            if (!Validar(cand, actual, contexto, preexistentes))
                             {
                                 continue;
                             }
@@ -174,11 +177,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 
                             // Fase 2348: Sellar primero, luego Validar
                             AgCoherenciaGrupo.Sellar(cand, contexto);
-                            if (cand.Vacantes > campeon.Vacantes)
+                            if (cand.Vacantes > actual.Vacantes)
                             {
                                 continue;
                             }
-                            if (!Validar(cand, actual, contexto))
+                            if (!Validar(cand, actual, contexto, preexistentes))
                             {
                                 continue;
                             }
@@ -222,11 +225,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 
                             // Fase 2348: Sellar primero, luego Validar
                             AgCoherenciaGrupo.Sellar(cand, contexto);
-                            if (cand.Vacantes > campeon.Vacantes)
+                            if (cand.Vacantes > actual.Vacantes)
                             {
                                 continue;
                             }
-                            if (!Validar(cand, actual, contexto))
+                            if (!Validar(cand, actual, contexto, preexistentes))
                             {
                                 continue;
                             }
@@ -257,6 +260,51 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         }
 
                         if (mejoraEnIteracion) break;
+
+                        // Fase 2367: Operador A (ripple) sobre la cadena del carril
+                        var candidatosRipple = GenerarDesplazamientosRipple(actual, contexto, sob, inv);
+                        resultado.RippleIntentos += candidatosRipple.Count;
+                        if (candidatosRipple.Count == 0) resultado.RippleSinCola++;
+
+                        foreach (var cand in candidatosRipple)
+                        {
+                            intentosEvaluados++;
+                            if (evaluaciones >= MaxEvaluaciones || sw.ElapsedMilliseconds >= MaxTiempoMs)
+                            {
+                                break;
+                            }
+
+                            AgCoherenciaGrupo.Sellar(cand, contexto);
+                            if (cand.Vacantes > actual.Vacantes)
+                            {
+                                continue;
+                            }
+                            if (!Validar(cand, actual, contexto, preexistentes))
+                            {
+                                continue;
+                            }
+
+                            cand.Estado = AgEstadoIndividuo.NoEvaluado;
+                            evaluadorAptitud.EvaluarAptitud(cand, contexto, forzar: true, incluirDetalleJson: true);
+                            evaluaciones++;
+
+                            var invCand = AgInventarioRanuras.Construir(cand, contexto, sob.Cohorte);
+                            double despCand = CalcularDesperdicio(invCand);
+                            var puntajeCand = new AgPuntajeReparacion(cand, despCand, 1);
+
+                            if (puntajeCand.Hard < actual.HardViolations)
+                            {
+                                int hardAntes = actual.HardViolations;
+                                puntajeMejor = puntajeCand;
+                                mejorClon = cand;
+                                actual = cand;
+                                cohorteReparada = sob.Cohorte;
+                                intentosAceptados++;
+                                mejoraEnIteracion = true;
+                                resultado.Detalle.Add($"[AG-REPARACION-R5] A ripple cohorte={sob.Cohorte} hard {hardAntes}->{puntajeCand.Hard}, Desp {despPreCohorte:F3}->{despCand:F3}");
+                                break;
+                            }
+                        }
                     }
 
                     if (!mejoraEnIteracion)
@@ -587,6 +635,145 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         }
 
         /// <summary>
+        /// Operador A (Fase 2367): ripple de la cadena del carril. Libera las fechas de la víctima y de las
+        /// asignaturas posteriores del mismo carril y las reproyecta secuencialmente sobre ranuras reales.
+        /// </summary>
+        internal static List<AgIndividuo> GenerarDesplazamientosRipple(
+            AgIndividuo actual,
+            AgContexto ctx,
+            AgSobrecargaR5 sob,
+            AgInventarioRanuras inv)
+        {
+            var candidatos = new List<AgIndividuo>();
+            if (actual?.Genes == null || ctx == null || sob == null || inv?.Carriles == null) return candidatos;
+
+            int liberar = Math.Max(1, sob.MaxConcurrentes - sob.MaxCarriles);
+
+            var solapadas = sob.GenesCohorte
+                .Where(g => g.EsVacante == 0 && g.FechaInicioEstimada.HasValue && g.FechaFinEstimada.HasValue
+                         && g.FechaInicioEstimada.Value.Date <= sob.TramoFin
+                         && g.FechaFinEstimada.Value.Date >= sob.TramoIni)
+                .GroupBy(g => g.IdAsignatura)
+                .Select(x => new
+                {
+                    IdAsignatura = x.Key,
+                    Ini = x.Min(g => g.FechaInicioEstimada.Value.Date),
+                    Fin = x.Max(g => g.FechaFinEstimada.Value.Date)
+                })
+                .OrderByDescending(x => x.Ini)
+                .ToList();
+
+            foreach (var victima in solapadas)
+            {
+                var genesVictima = actual.Genes
+                    .Where(g => g.EsVacante == 0 && g.IdAsignatura == victima.IdAsignatura
+                             && string.Equals(AgCalendarioConflictos.Cohorte(g), sob.Cohorte, StringComparison.Ordinal))
+                    .ToList();
+                if (genesVictima.Count == 0 || genesVictima.Any(g => g.EsFijo == 1)) continue;
+
+                var otras = solapadas.Where(x => x.IdAsignatura != victima.IdAsignatura)
+                                     .Select(x => x.Fin).OrderBy(d => d).ToList();
+                if (otras.Count < liberar) continue;
+                DateTime nuevoIniMin = otras[liberar - 1].AddDays(1);
+
+                string claveCarril = AgCarriles.ClaveCarril(genesVictima[0]);
+                var carril = inv.Carriles.FirstOrDefault(c => string.Equals(c.Clave, claveCarril, StringComparison.Ordinal));
+                if (carril == null || carril.FechasValidas.Count == 0) continue;
+
+                var cadena = actual.Genes
+                    .Where(g => g.EsVacante == 0
+                             && string.Equals(AgCarriles.ClaveCarril(g), claveCarril, StringComparison.Ordinal)
+                             && g.FechaInicioEstimada.HasValue && g.FechaFinEstimada.HasValue
+                             && g.FechaInicioEstimada.Value >= victima.Ini)
+                    .OrderBy(g => g.FechaInicioEstimada).ThenBy(g => g.DiaSemana)
+                    .ToList();
+                if (cadena.Count == 0 || cadena.Any(g => g.EsFijo == 1)) continue;
+
+                var idxCadena = new HashSet<int>();
+                foreach (var g in cadena)
+                {
+                    int idx = actual.Genes.IndexOf(g);
+                    if (idx >= 0) idxCadena.Add(idx);
+                }
+                if (idxCadena.Count == 0) continue;
+
+                int idAulaVictima = genesVictima[0].IdAula;
+                var ocupadasFuera = new HashSet<DateTime>();
+                for (int i = 0; i < actual.Genes.Count; i++)
+                {
+                    if (idxCadena.Contains(i)) continue;
+                    var g = actual.Genes[i];
+                    if (g.EsVacante != 0) continue;
+                    bool mismaAula = g.IdAula == idAulaVictima;
+                    bool mismaCohorte = string.Equals(AgCalendarioConflictos.Cohorte(g), sob.Cohorte, StringComparison.Ordinal);
+                    if (!mismaAula && !mismaCohorte) continue;
+
+                    foreach (var f in AgInventarioRanuras.FechasDeGen(g)) ocupadasFuera.Add(f.Date);
+                }
+
+                var libres = carril.FechasValidas.Where(f => !ocupadasFuera.Contains(f)).ToList();
+                if (libres.Count == 0) continue;
+
+                DateTime inicioMin = nuevoIniMin;
+                for (int i = 0; i < actual.Genes.Count; i++)
+                {
+                    if (idxCadena.Contains(i)) continue;
+                    var g = actual.Genes[i];
+                    if (g.EsVacante != 0) continue;
+                    if (!string.Equals(AgCarriles.ClaveCarril(g), claveCarril, StringComparison.Ordinal)) continue;
+                    if (!g.FechaInicioEstimada.HasValue || !g.FechaFinEstimada.HasValue) continue;
+                    if (g.FechaInicioEstimada.Value >= victima.Ini) continue;
+                    var fin = g.FechaFinEstimada.Value.Date.AddDays(1);
+                    if (fin > inicioMin) inicioMin = fin;
+                }
+
+                int diaVictima = genesVictima[0].DiaSemana >= 1 && genesVictima[0].DiaSemana <= 7
+                    ? genesVictima[0].DiaSemana : 1;
+                var inicios = libres
+                    .Where(f => AgInventarioRanuras.Iso(f) == diaVictima && f >= inicioMin)
+                    .OrderBy(f => f)
+                    .Take(8)
+                    .ToList();
+
+                foreach (var inicio in inicios)
+                {
+                    var clon = actual.Clonar();
+                    var usadas = new HashSet<DateTime>();
+                    DateTime cursor = inicio;
+                    bool exito = true;
+
+                    foreach (var idx in idxCadena.OrderBy(i => actual.Genes[i].FechaInicioEstimada).ThenBy(i => actual.Genes[i].DiaSemana))
+                    {
+                        var gClon = clon.Genes[idx];
+                        double unidad = (ctx.UnidadHorasPorAulaId != null
+                                         && ctx.UnidadHorasPorAulaId.TryGetValue(gClon.IdAula, out var u) && u > 0) ? u : 4.0;
+                        int n = (int)Math.Max(1, Math.Round(gClon.HorasGen / unidad));
+
+                        var fechas = libres
+                            .Where(f => f >= cursor && AgInventarioRanuras.Iso(f) == gClon.DiaSemana && !usadas.Contains(f))
+                            .Take(n)
+                            .ToList();
+                        if (fechas.Count < n)
+                        {
+                            exito = false;
+                            break;
+                        }
+
+                        foreach (var f in fechas) usadas.Add(f);
+                        gClon.FechasGen = fechas;
+                        gClon.FechaInicioEstimada = fechas.Min();
+                        gClon.FechaFinEstimada = fechas.Max();
+                        cursor = fechas[fechas.Count - 1].AddDays(1);
+                    }
+
+                    if (exito) candidatos.Add(clon);
+                }
+            }
+
+            return candidatos;
+        }
+
+        /// <summary>
         /// Candidatos C3 / C4: Re-ranuración e intercambio de días en patrones AUTOMATICO (Fases 2335–2336).
         /// </summary>
         internal static List<AgIndividuo> GenerarReRanuracionEIntercambio(
@@ -730,10 +917,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         /// <summary>
         /// Validación V1–V6 sobre un candidato generado (Fases 2333, 2335, 2338, 2343–2345).
         /// </summary>
-        internal static bool Validar(AgIndividuo clon, AgIndividuo original, AgContexto ctx)
+        internal static bool Validar(AgIndividuo clon, AgIndividuo original, AgContexto ctx, ISet<string> preexistentes = null)
         {
             if (clon?.Genes == null || original?.Genes == null || ctx == null) return false;
             if (ctx.Ventana == null) return false;
+            preexistentes = preexistentes ?? ClavesDuras(original);
 
             // V3: Sin vacantes nuevas
             if (clon.Vacantes > original.Vacantes) return false;
@@ -819,22 +1007,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 }
             }
 
-            // Cruce de aula (R2): dos asignaturas en la misma aula el mismo día y bloque
-            var porAula = genesActivos.GroupBy(g => g.IdAula);
-            foreach (var aulaGroup in porAula)
-            {
-                var sesionesAula = new HashSet<(DateTime Fecha, int IdBloque)>();
-                foreach (var g in aulaGroup)
-                {
-                    foreach (var f in g.FechasGen)
-                    {
-                        if (!sesionesAula.Add((f.Date, g.IdBloqueHorario)))
-                        {
-                            return false; // Solape R2 de aula
-                        }
-                    }
-                }
-            }
+            // Cruce de aula (R2) y R4/R6: se validan por claves al final (Fase 2364)
 
             // Fase 2345: Cruce contra SesionesConservadas comparando solape de FranjaHoraria
             if (ctx.SesionesConservadas != null && ctx.SesionesConservadas.Count > 0)
@@ -868,49 +1041,104 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 }
             }
 
-            // Fase 2343: Regla R4 canónica: una sesión por franja y cohorte/día
-            var porCohorteFecha = genesActivos
-                .SelectMany(g => (g.FechasGen ?? new List<DateTime>()).Select(f => new
-                {
-                    Cohorte = AgCalendarioConflictos.Cohorte(g),
-                    Fecha = f.Date,
-                    g.IdBloqueHorario
-                }))
-                .GroupBy(x => (x.Cohorte, x.Fecha));
-
-            foreach (var cf in porCohorteFecha)
+            // Fase 2364: R2/R4/R6 se evalúan por claves; sólo se rechazan las NUEVAS.
+            var clavesClon = ClavesDuras(clon);
+            foreach (var clave in clavesClon)
             {
-                if (cf.Select(x => x.IdBloqueHorario).Distinct().Count() > 1)
+                if (!preexistentes.Contains(clave))
                 {
-                    return false; // Violación R4
+                    return false;
                 }
             }
 
-            // V6: Regla R6 por ClaveCarril: sin solapes estrictos dentro del mismo carril
-            var porCarril = genesActivos.GroupBy(g => AgCarriles.ClaveCarril(g));
-            foreach (var cGroup in porCarril)
-            {
-                var asignaturas = cGroup
-                    .Where(g => g.FechaInicioEstimada.HasValue && g.FechaFinEstimada.HasValue)
-                    .GroupBy(g => g.IdAsignatura)
-                    .Select(a => (Ini: a.Min(x => x.FechaInicioEstimada.Value.Date), Fin: a.Max(x => x.FechaFinEstimada.Value.Date)))
-                    .ToList();
+            return true;
+        }
 
-                for (int i = 0; i < asignaturas.Count; i++)
+        /// <summary>
+        /// Claves canónicas de conflictos duros R2/R4/R6 de un individuo (Fase 2364).
+        /// Permiten distinguir una violación preexistente de una introducida por un candidato.
+        /// </summary>
+        internal static HashSet<string> ClavesDuras(AgIndividuo ind)
+        {
+            var set = new HashSet<string>(StringComparer.Ordinal);
+            if (ind?.Genes == null) return set;
+
+            var activos = ind.Genes.Where(g => g.EsVacante == 0).ToList();
+
+            // R2: dos asignaturas en la misma aula, fecha y bloque
+            foreach (var grp in activos
+                .SelectMany(g => (g.FechasGen ?? new List<DateTime>()).Select(f => new { g, F = f.Date }))
+                .GroupBy(x => (x.g.IdAula, x.F, x.g.IdBloqueHorario)))
+            {
+                var asigs = grp.Select(x => x.g.IdAsignatura).Distinct().OrderBy(x => x).ToList();
+                for (int i = 0; i < asigs.Count; i++)
                 {
-                    for (int j = i + 1; j < asignaturas.Count; j++)
+                    for (int j = i + 1; j < asigs.Count; j++)
                     {
-                        var a1 = asignaturas[i];
-                        var a2 = asignaturas[j];
-                        if (a1.Ini < a2.Fin && a2.Ini < a1.Fin)
+                        set.Add("R2|" + grp.Key.Item1 + "|" + grp.Key.Item2.ToString("yyyyMMdd") + "|" +
+                                grp.Key.Item3 + "|" + asigs[i] + "|" + asigs[j]);
+                    }
+                }
+            }
+
+            // R4: una cohorte con más de un bloque el mismo día
+            foreach (var co in activos.GroupBy(g => AgCalendarioConflictos.Cohorte(g)))
+            {
+                var porFecha = co
+                    .SelectMany(g => (g.FechasGen ?? new List<DateTime>()).Select(f => new { g, F = f.Date }))
+                    .GroupBy(x => x.F);
+
+                foreach (var cf in porFecha)
+                {
+                    var asigs = cf.Select(x => x.g.IdAsignatura).Distinct().OrderBy(x => x).ToList();
+                    for (int i = 0; i < asigs.Count; i++)
+                    {
+                        bool propioMultiBloque = cf
+                            .Where(x => x.g.IdAsignatura == asigs[i])
+                            .Select(x => x.g.IdBloqueHorario)
+                            .Distinct()
+                            .Count() > 1;
+                        if (propioMultiBloque)
                         {
-                            return false; // Solape R6 en mismo carril
+                            set.Add("R4|" + co.Key + "|" + cf.Key.ToString("yyyyMMdd") + "|" + asigs[i] + "|" + asigs[i]);
+                        }
+
+                        for (int j = i + 1; j < asigs.Count; j++)
+                        {
+                            var bloques = cf.Select(x => x.g.IdBloqueHorario).Distinct().ToList();
+                            if (bloques.Count > 1)
+                            {
+                                set.Add("R4|" + co.Key + "|" + cf.Key.ToString("yyyyMMdd") + "|" + asigs[i] + "|" + asigs[j]);
+                            }
                         }
                     }
                 }
             }
 
-            return true;
+            // R6: solape estricto de secuencia curricular por cohorte y carril
+            foreach (var cc in activos.GroupBy(g => (Cohorte: AgCalendarioConflictos.Cohorte(g), Carril: AgCarriles.ClaveCarril(g))))
+            {
+                var asigs = cc.GroupBy(g => g.IdAsignatura)
+                    .Select(a => (Id: a.Key,
+                                  Ini: a.Min(x => x.FechaInicioEstimada ?? DateTime.MaxValue),
+                                  Fin: a.Max(x => x.FechaFinEstimada ?? DateTime.MinValue)))
+                    .ToList();
+
+                for (int i = 0; i < asigs.Count; i++)
+                {
+                    for (int j = i + 1; j < asigs.Count; j++)
+                    {
+                        if (asigs[i].Ini < asigs[j].Fin && asigs[j].Ini < asigs[i].Fin)
+                        {
+                            int a = Math.Min(asigs[i].Id, asigs[j].Id);
+                            int b = Math.Max(asigs[i].Id, asigs[j].Id);
+                            set.Add("R6|" + cc.Key.Cohorte + "|" + cc.Key.Carril + "|" + a + "|" + b);
+                        }
+                    }
+                }
+            }
+
+            return set;
         }
 
         private static string ObtenerOrigenPatron(AgGen g, AgContexto ctx)

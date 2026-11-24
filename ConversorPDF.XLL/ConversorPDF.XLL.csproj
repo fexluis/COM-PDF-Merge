@@ -790,6 +790,7 @@
     <Compile Include="Academic\Application\Services\Genetica\AgResultadoConcurrencia.cs" />
     <Compile Include="Academic\Domain\Enums\AgModoReparacionR5.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgInventarioRanuras.cs" />
+    <Compile Include="Academic\Application\Services\Genetica\AgInventarioCarril.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgReparadorR5.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgResultadoReparacionR5.cs" />
     <Compile Include="Academic\Application\Services\Genetica\AgSobrecargaR5.cs" />

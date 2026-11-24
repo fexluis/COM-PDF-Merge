@@ -148,5 +148,42 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
 
             inv.Liberables.Should().ContainSingle().Which.Should().Be(fIni.AddDays(2));
         }
+        [Fact]
+        public void Construir_ExponeCarrilesConFechasDelPatron()
+        {
+            var fIni = new DateTime(2027, 2, 1);
+            var fFin = new DateTime(2027, 2, 26);
+            var ctx = new AgContexto
+            {
+                Ventana = new VentanaSemestre { FechaInicio = fIni, FechaFin = fFin, PeriodoNombre = "2027-1" },
+                Aulas = new List<AgAula> { new AgAula { Id = 1, DiasVentana = "JUE", Jornada = "MANANA", HorasDia = 4 } },
+                Bloques = new List<AgBloqueHorario>
+                {
+                    new AgBloqueHorario { Id = 4, DiaSemanaNumero = 4, DuracionHoras = 4.0, Activo = 1, Franja = "MANANA" }
+                }
+            };
+            ctx.ConstruirIndices();
+
+            var ind = new AgIndividuo();
+            ind.Genes.Add(new AgGen
+            {
+                Id = 1, IdAsignatura = 100, IdAula = 1, DiaSemana = 4, DiasPatron = "JUE", Semestre = "I", Grupo = "A",
+                HorasGen = 8.0, TotalHorasAsignatura = 8.0,
+                FechasGen = new List<DateTime> { new DateTime(2027, 2, 4), new DateTime(2027, 2, 11) },
+                FechaInicioEstimada = new DateTime(2027, 2, 4), FechaFinEstimada = new DateTime(2027, 2, 11)
+            });
+
+            var inv = AgInventarioRanuras.Construir(ind, ctx, AgCalendarioConflictos.Cohorte(ind.Genes[0]));
+
+            inv.Carriles.Should().ContainSingle();
+            var carril = inv.Carriles[0];
+            carril.Clave.Should().Be("1|JUE");
+            carril.FechasValidas.Should().Contain(new DateTime(2027, 2, 4));
+            carril.FechasOcupadas.Should().Contain(new DateTime(2027, 2, 4));
+            carril.FechasLibres.Should().NotContain(new DateTime(2027, 2, 4));
+            carril.FechasValidas.Count.Should().BeGreaterThan(carril.FechasLibres.Count);
+        }
+
+
     }
 }

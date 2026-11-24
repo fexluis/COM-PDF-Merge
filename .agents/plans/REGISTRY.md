@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 530 | 531 | 2026-11-23 |
-| `fase` | 2362 | 2363 | 2026-11-23 |
+| `ronda` | 531 | 532 | 2026-11-23 |
+| `fase` | 2367 | 2368 | 2026-11-23 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -237,6 +237,8 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-200 | 2026-11-23 | `(revisión e implementación Ronda 528 — Fases 2353–2357: calibración temporal de víctima 132, priorización de ranuras libres reales, cursor multi-gen, consistencia de desperdicio y sincronización)` | `Wave —` → `Ronda 528` | `Fase 2353–2357` | closed | sin build/tests (restricción Paso 6 /ronda-review) | pendiente |
 | R-201 | 2026-11-23 | `(revisión e implementación Ronda 529 — Fases 2358–2361: inclusión de fechas propias de víctima en opciones, cursor multi-gen sin solapes por usadas, desperdicio consistente por cohorte y cierre)` | `Wave —` → `Ronda 529` | `Fase 2358–2361` | closed | sin build/tests (restricción Paso 6 /ronda-review) | pendiente |
 | R-202 | 2026-11-23 | `(revisión e informe Ronda 530 — Fase 2362: verificación analítica de resolución de corrida 132 y preparación de compuertas commit/gates)` | `Wave —` → `Ronda 530` | `Fase 2362` | closed | sin build/tests (restricción Paso 6 /ronda-review) | pendiente |
+| R-203 | 2026-11-23 | `.agents/plans/2026-11-23-r6-r5-orden-validacion-incremental-plan.md` | `Wave 531` → `Ronda 531` | `T1..T5` → `Fase 2363–2367` | closed | PASS (Full 2016) | `2db3aae` |
+
 
 
 
