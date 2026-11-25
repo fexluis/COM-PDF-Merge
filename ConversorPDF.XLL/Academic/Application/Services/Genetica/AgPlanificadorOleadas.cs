@@ -354,6 +354,48 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 .Select(c => (IReadOnlyList<AgRanura>)AgCarriles.DelCarril(ranuras, c))
                 .ToList();
 
+            // FASE 2425: Integración de catálogo determinista y canónicas sin singleton en ruta real
+            var origen = AgOpcionesParticion.DetectarOrigen(ctx.Patrones);
+            if (origen == AgOpcionesParticion.Origen.MarVie ||
+                origen == AgOpcionesParticion.Origen.LunJue)
+            {
+                var sinSingleton = AgCarriles.ParticionSinSingleton(
+                    ranuras, origen == AgOpcionesParticion.Origen.MarVie);
+
+                if (sinSingleton != null)
+                {
+                    canonicas = sinSingleton.ToList();
+                }
+            }
+
+            bool hayOpcionAplicable = opciones != null &&
+                opciones.Any(o => AgParticionCarriles.EsOpcionAplicable(ranuras, o));
+
+            if (!hayOpcionAplicable)
+            {
+                // FASE 2428: Validar aplicabilidad de la opción directa antes de asignarla para no bloquear el fallback
+                var opcionDirecta = AgOpcionesParticion.Resolver(
+                    diasVentana, ranuras, ctx.Patrones);
+
+                bool opcionDirectaAplicable =
+                    opcionDirecta != null &&
+                    AgParticionCarriles.EsOpcionAplicable(ranuras, opcionDirecta);
+
+                if (opcionDirectaAplicable)
+                {
+                    opciones = new[] { opcionDirecta };
+                }
+                else
+                {
+                    opciones = AgOpcionesParticion.ResolverFallbackSinSingleton(
+                        diasVentana, ranuras, ctx.Patrones);
+
+                    LoggerHelper.Debug(
+                        $"[Oleadas] catalogoFallback=true; opcionDirectaAplicable={opcionDirectaAplicable}; " +
+                        $"opcionesFallback={opciones?.Count ?? 0}; ventana='{diasVentana}'");
+                }
+            }
+
             var seleccion = AgParticionCarriles.Seleccionar(
                 ventana,
                 ranuras,

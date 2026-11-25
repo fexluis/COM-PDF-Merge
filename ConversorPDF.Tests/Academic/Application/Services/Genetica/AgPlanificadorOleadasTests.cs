@@ -979,5 +979,138 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
         }
 
         #endregion
+
+        #region Pruebas de Integración de Catálogo y Fallback Sin Singleton (Fase 2426 / Fase 2429)
+
+        [Fact]
+        public void Construir_CincoDiasLunVie_UsaCatalogoSinSingleton()
+        {
+            // Arrange
+            var fInicio = new DateTime(2027, 2, 1);
+            var fFin = new DateTime(2027, 6, 30);
+            var asignaturas = new List<(int IdAsignatura, double Horas, int OrdenCurricular)>
+            {
+                (1, 16.0, 1),
+                (2, 16.0, 2),
+                (3, 16.0, 3)
+            };
+            var patrones = new Dictionary<int, string>
+            {
+                { 1, "2,3" },
+                { 2, "4,5" },
+                { 3, "1" }
+            };
+
+            // Act
+            var res = _sut.Construir(asignaturas, "LUN-VIE", fInicio, fFin, 4.0, diasPatronPorAsignatura: patrones);
+
+            // Assert
+            res.IsSuccess.Should().BeTrue();
+            res.Value.Particion.Should().HaveCount(2);
+            res.Value.Particion.All(b => b.Count >= 2).Should().BeTrue();
+            res.Value.Particion.SelectMany(b => b).Distinct().Count().Should().Be(5);
+        }
+
+        [Fact]
+        public void Construir_CuatroDiasJueDom_UsaCatalogo()
+        {
+            // Arrange
+            var fInicio = new DateTime(2027, 2, 4); // Jueves
+            var fFin = new DateTime(2027, 6, 30);
+            var asignaturas = new List<(int IdAsignatura, double Horas, int OrdenCurricular)>
+            {
+                (1, 16.0, 1),
+                (2, 16.0, 2)
+            };
+            var patrones = new Dictionary<int, string>
+            {
+                { 1, "5,6M" },
+                { 2, "4,6T,7" }
+            };
+
+            // Act
+            var res = _sut.Construir(asignaturas, "4,5,6,7", fInicio, fFin, 4.0, diasPatronPorAsignatura: patrones);
+
+            // Assert
+            res.IsSuccess.Should().BeTrue();
+            res.Value.Particion.Should().HaveCount(2);
+            res.Value.Particion.All(b => b.Count >= 2).Should().BeTrue();
+            res.Value.Particion[0].Distinct().Should().Equal(5, 6);
+            res.Value.Particion[1].Distinct().Should().Equal(4, 6, 7);
+        }
+
+        [Fact]
+        public void Construir_CincoDiasMixto_UsaUnaBandaSinSingleton()
+        {
+            // Arrange
+            var fInicio = new DateTime(2027, 2, 1);
+            var fFin = new DateTime(2027, 6, 30);
+            var asignaturas = new List<(int IdAsignatura, double Horas, int OrdenCurricular)>
+            {
+                (1, 16.0, 1),
+                (2, 16.0, 2),
+                (3, 16.0, 3)
+            };
+            var patrones = new Dictionary<int, string>
+            {
+                { 1, "2,3" },
+                { 2, "1,4" },
+                { 3, "5" }
+            };
+
+            // Act
+            var res = _sut.Construir(asignaturas, "LUN-VIE", fInicio, fFin, 4.0, diasPatronPorAsignatura: patrones);
+
+            // Assert
+            res.IsSuccess.Should().BeTrue();
+            var clave = string.Join("|",
+                res.Value.Particion.Select(b =>
+                    string.Join(".", b.Distinct().OrderBy(d => d))));
+
+            new[] { "2.3|1.4.5", "1.2.5|3.4" }.Should().Contain(clave);
+        }
+
+        [Fact]
+        public void Construir_OpcionInvalida_ActivaFallback()
+        {
+            // Arrange
+            var fInicio = new DateTime(2027, 2, 1);
+            var fFin = new DateTime(2027, 6, 30);
+            var asignaturas = new List<(int IdAsignatura, double Horas, int OrdenCurricular)>
+            {
+                (1, 16.0, 1),
+                (2, 16.0, 2),
+                (3, 16.0, 3)
+            };
+            var patrones = new Dictionary<int, string>
+            {
+                { 1, "2,3" },
+                { 2, "1,4" },
+                { 3, "5" }
+            };
+
+            var opcionInvalida = new AgOpcionParticion(
+                "LUN-VIE", "quedarse", "invalida",
+                new List<IReadOnlyList<AgRanura>>
+                {
+                    new List<AgRanura> { new AgRanura(1, "NOCHE", 4.0) }
+                });
+
+            // Act
+            var res = _sut.Construir(asignaturas, "LUN-VIE", fInicio, fFin, 4.0,
+                diasPatronPorAsignatura: patrones, opciones: new[] { opcionInvalida });
+
+            // Assert
+            res.IsSuccess.Should().BeTrue();
+            res.Value.Particion.Should().HaveCount(2);
+            res.Value.Particion.All(b => b.Count >= 2).Should().BeTrue();
+            var clave = string.Join("|",
+                res.Value.Particion.Select(b =>
+                    string.Join(".", b.Distinct().OrderBy(d => d))));
+
+            new[] { "2.3|1.4.5", "1.2.5|3.4" }.Should().Contain(clave);
+        }
+
+        #endregion
     }
 }

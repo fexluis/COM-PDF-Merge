@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 549 | 550 | 2026-11-24 |
-| `fase` | 2424 | 2425 | 2026-11-24 |
+| `ronda` | 554 | 555 | 2026-11-25 |
+| `fase` | 2432 | 2433 | 2026-11-25 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -254,7 +254,12 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-217 | 2026-11-24 | `(revisión e implementación Ronda 546 — Fases 2419–2420: corrección de aserción de conteo de genes en fábrica automática y cálculo de SemanasEquivalentes por SesionesPorSemana)` | `Wave 546` → `Ronda 546` | `T1..T2` → `Fase 2419–2420` | closed | sin build/tests (restricción Paso 6 /ronda-review) | uncommitted |
 | R-218 | 2026-11-24 | `(revisión e implementación Ronda 547 — Fases 2421–2422: separación SesionesRequeridas de SemanasRequeridas calculada y log diagnóstico ORIGEN_DIA_INFERIDO)` | `Wave 547` → `Ronda 547` | `T1..T2` → `Fase 2421–2422` | closed | sin build/tests (restricción Paso 6 /ronda-review) | uncommitted |
 | R-219 | 2026-11-24 | `(revisión e implementación Ronda 548 — Fase 2423: eliminación del setter ambiguo en SemanasRequeridas de AgResultadoPlanCarril)` | `Wave 548` → `Ronda 548` | `T1` → `Fase 2423` | closed | sin build/tests (restricción Paso 6 /ronda-review) | uncommitted |
-| R-220 | 2026-11-24 | `(revisión e implementación Ronda 549 — Fase 2424: registro diagnóstico ORIGEN_DIA_NO_RESIDUAL al inferir MarVie)` | `Wave 549` → `Ronda 549` | `T1` → `Fase 2424` | closed | build/tests en build-release 1.6.4.48 | uncommitted |
+| R-220 | 2026-11-24 | `(revisión e implementación Ronda 549 — Fase 2424: registro diagnóstico ORIGEN_DIA_NO_RESIDUAL al inferir MarVie)` | `Wave 549` → `Ronda 549` | `T1` → `Fase 2424` | closed | build/tests en build-release 1.6.4.48 | `0aadf28` |
+| R-221 | 2026-11-24 | `(revisión e implementación Ronda 550 — Fases 2425–2427: integración de catálogo en AgPlanificadorOleadas, sin singleton y cobertura de ruta real)` | `Wave 550` → `Ronda 550` | `T1..T3` → `Fase 2425–2427` | closed | sin build/tests (restricción Paso 6 /ronda-review) | uncommitted |
+| R-222 | 2026-11-25 | `(revisión e implementación Ronda 551 — Fases 2428–2429: validación de aplicabilidad en opción directa antes de asignar y aserciones de catálogo real)` | `Wave 551` → `Ronda 551` | `T1..T2` → `Fase 2428–2429` | closed | sin build/tests (restricción Paso 6 /ronda-review) | uncommitted |
+| R-223 | 2026-11-25 | `(revisión e implementación Ronda 552 — Fase 2430: desempate de catálogo admitiendo bandas equivalentes sin empeoramiento)` | `Wave 552` → `Ronda 552` | `T1` → `Fase 2430` | closed | sin build/tests (restricción Paso 6 /ronda-review) | uncommitted |
+| R-224 | 2026-11-25 | `(revisión e implementación Ronda 553 — Fase 2431: comparación global catálogo vs enumeración y desempate por catálogo)` | `Wave 553` → `Ronda 553` | `T1` → `Fase 2431` | closed | sin build/tests (restricción Paso 6 /ronda-review) | uncommitted |
+| R-225 | 2026-11-25 | `(revisión e implementación Ronda 554 — Fase 2432: verificación de métrica conjunta CandidatasEvaluadas y desempates en comparación catálogo vs enumeración)` | `Wave 554` → `Ronda 554` | `T1` → `Fase 2432` | closed | sin build/tests (restricción Paso 6 /ronda-review) | uncommitted |
 
 
 

@@ -856,6 +856,82 @@ Las citas `implementation_plan.md:NNNN` anteriores al corte apuntan al archivo m
 |---|---|---|
 | 2424 | `AgPlanificadorPatronSemanal.cs`, `REGISTRY.md` | Implementado |
 
+---
+
+## Ronda 550: Integración de catálogo y canónicas sin singleton en AgPlanificadorOleadas (Fases 2425–2427)
+
+### Resumen de la Ronda
+- **Fase 2425 (T1):** En `AgPlanificadorOleadas.cs:352-378`, integración efectiva del catálogo determinista y partición sin singleton en la ruta real de `ConstruirReferencia`: detección de origen (`MarVie`/`LunJue`) para inicializar `canonicas` mediante `AgCarriles.ParticionSinSingleton(ranuras, esMarVie)` y resolución de opciones aplicables (`AgParticionCarriles.EsOpcionAplicable`) con respaldo directo (`AgOpcionesParticion.Resolver`) o fallback determinista sin singleton (`ResolverFallbackSinSingleton`), erradicando la degradación a enumeración con bandas singleton en ventanas de 5 días.
+- **Fase 2426 (T2):** En `AgPlanificadorOleadasTests.cs:985-1045`, cobertura unitaria de la ruta real para ventanas de 5 días (`LUN-VIE` produciendo 2 bandas sin singleton `{2,3|1,4,5}` o `{1,2,5|3,4}`) y ventanas de 4 días (`4,5,6,7` aplicando catálogo `5,6M|4,6T,7`).
+- **Fase 2427 (T3):** Formalización de verificación e integración y sincronización de numeración en `REGISTRY.md` (Wave 550, Fases 2425–2427, fila `R-221`).
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2425 | `AgPlanificadorOleadas.cs` | Implementado |
+| 2426 | `AgPlanificadorOleadasTests.cs` | Implementado |
+| 2427 | `REGISTRY.md` | Implementado |
+
+---
+
+## Ronda 551: Validación de aplicabilidad en opción directa y aserciones de catálogo real (Fases 2428–2429)
+
+### Resumen de la Ronda
+- **Fase 2428 (T1):** En `AgPlanificadorOleadas.cs:374-395`, verificación explícita de aplicabilidad (`AgParticionCarriles.EsOpcionAplicable(ranuras, opcionDirecta)`) sobre la opción devuelta por `AgOpcionesParticion.Resolver` antes de asignarla a `opciones`. Si la opción directa no conserva exactamente las ranuras del contexto, no bloquea el fallback e invoca `AgOpcionesParticion.ResolverFallbackSinSingleton` emitiendo registro diagnóstico estructurado (`catalogoFallback=true`).
+- **Fase 2429 (T2):** En `AgPlanificadorOleadasTests.cs:985-1080`, aserciones exhaustivas de ruta real sobre la partición: verificación de días exactos en `4,5,6,7` (`{5,6}` y `{4,6,7}` correspondientes a `5,6M|4,6T,7`), pertenencia canónica a particiones válidas sin singleton en 5 días (`2.3|1.4.5` o `1.2.5|3.4`) y activación efectiva del fallback ante opciones provistas inválidas o incompatibles. Sincronización de Wave 551 y fila `R-222` en `REGISTRY.md`.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2428 | `AgPlanificadorOleadas.cs` | Implementado |
+| 2429 | `AgPlanificadorOleadasTests.cs`, `REGISTRY.md` | Implementado |
+
+---
+
+## Ronda 552: Desempate de catálogo admitiendo bandas equivalentes sin empeoramiento (Fase 2430)
+
+### Resumen de la Ronda
+- **Fase 2430 (T1):** En `AgParticionCarriles.cs:144-157`, ajuste en la condición de aceptación del catálogo: sustitución de la restricción estricta de menor número de bandas (`x.Ev.Bandas < referencia.Bandas`) por menor o igual (`x.Ev.Bandas <= referencia.Bandas`), permitiendo que opciones de catálogo diseñadas para patrones específicos (como `5,6M|4,6T,7` en ventanas `4,5,6,7` / `JUE-DOM`) sustituyan la canónica cuando igualan en número de bandas (2 vs 2) y no empeoran infactibles ni makespan. Sincronización de Wave 552 y fila `R-223` en `REGISTRY.md`.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2430 | `AgParticionCarriles.cs`, `REGISTRY.md` | Implementado |
+
+---
+
+## Ronda 553: Comparación global catálogo vs enumeración y desempate por catálogo (Fase 2431)
+
+### Resumen de la Ronda
+- **Fase 2431 (T1):** En `AgParticionCarriles.cs:120-170, 286-370`, supresión del cortocircuito de retorno inmediato tras evaluar catálogo; ejecución completa de la enumeración contigua y resolución por comparación simétrica (`Comparar(mejorCatalogo, mejorEnumeracion)`). Si la enumeración es estrictamente superior, gana la enumeración bajo la etiqueta `catalogo_fallback`; si el catálogo es estrictamente superior o existe empate exacto (`<= 0`), gana el catálogo bajo la etiqueta `catalogo`. Se añade batería de pruebas en `AgParticionCarrilesOpcionesTests.cs` cubriendo empates y mejoras contiguas. Sincronización de Wave 553 y fila `R-224` en `REGISTRY.md`.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2431 | `AgParticionCarriles.cs`, `AgParticionCarrilesOpcionesTests.cs`, `REGISTRY.md` | Implementado |
+
+---
+
+## Ronda 554: Cobertura de empate, métrica conjunta de candidatas y catalogo_fallback (Fase 2432)
+
+### Resumen de la Ronda
+- **Fase 2432 (T1):** En `AgParticionCarriles.cs:338-356`, unificación de `CandidatasEvaluadas` en `AgSeleccionParticion` para reflejar la suma acumulada de evaluaciones de ambas rutas (`evaluadasOpciones + evaluadas`) en cualquier escenario de selección. En `AgParticionCarrilesOpcionesTests.cs:570-715`, incorporación de pruebas unitarias (`Seleccionar_EmpateConMismoSingleton_MantieneCatalogo` y `Seleccionar_EnumeracionMejorPorSingleton_GanaEnumeracion`) que garantizan la preservación del catálogo en empates exactos, la elección de la enumeración cuando elimina singletons residuales (`catalogo_fallback`), y la fidelidad de la métrica conjunta de candidatas evaluadas. Sincronización de Wave 554 y fila `R-225` en `REGISTRY.md`.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2432 | `AgParticionCarriles.cs`, `AgParticionCarrilesOpcionesTests.cs`, `REGISTRY.md` | Implementado |
+
+
+
+
+
+
 
 
 

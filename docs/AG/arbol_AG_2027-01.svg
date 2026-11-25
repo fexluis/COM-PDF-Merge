@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080" font-family="Segoe UI, Arial, sans-serif">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>
+<rect width="1920" height="1080" fill="#ffffff"/>
+<text x="48" y="58" font-size="30" font-weight="700" fill="#0f172a">Árbol del AG — Perfil 2027-01</text>
+<text x="48" y="88" font-size="15" fill="#64748b">35 cohortes · 11 sedes · Sede → Semestre (grupo A/B) · Fuente: Corrida #140 (24/11/2026)</text>
+<rect x="1448" y="42" width="16" height="16" rx="4" fill="#eff6ff" stroke="#1d4ed8" stroke-width="2"/>
+<text x="1472" y="56" font-size="14" fill="#0f172a">APT-53 (pensum 53)</text>
+<rect x="1630" y="42" width="16" height="16" rx="4" fill="#fffbeb" stroke="#b45309" stroke-width="2"/>
+<text x="1654" y="56" font-size="14" fill="#0f172a">APT-52 (pensum 52)</text>
+<line x1="48" y1="112" x2="1872" y2="112" stroke="#e2e8f0" stroke-width="1"/>
+<rect x="48" y="169" width="252" height="54" rx="12" fill="#0f172a"/>
+<text x="68" y="194" font-size="17" font-weight="700" fill="#ffffff">CALI</text>
+<text x="68" y="211" font-size="11.5" fill="#94a3b8">17 cohortes</text>
+<path d="M302 196 H316 V 163 H 333.1" fill="none" stroke="#cbd5e1" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M302 196 H316 V 163 H 505.3" fill="none" stroke="#cbd5e1" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M302 196 H316 V 163 H 677.6" fill="none" stroke="#cbd5e1" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M302 196 H316 V 163 H 849.8" fill="none" stroke="#cbd5e1" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M302 196 H316 V 163 H 1022" fill="none" stroke="#cbd5e1" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M302 196 H316 V 163 H 1194.2" fill="none" stroke="#cbd5e1" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M302 196 H316 V 163 H 1366.4" fill="none" stroke="#cbd5e1" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M302 196 H316 V 163 H 1538.7" fill="none" stroke="#cbd5e1" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M302 196 H316 V 163 H 1710.9" fill="none" stroke="#cbd5e1" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M302 196 H316 V 229 H 419.2" fill="none" stroke="#cbd5e1" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M302 196 H316 V 229 H 591.4" fill="none" stroke="#cbd5e1" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M302 196 H316 V 229 H 763.7" fill="none" stroke="#cbd5e1" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M302 196 H316 V 229 H 935.9" fill="none" stroke="#cbd5e1" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M302 196 H316 V 229 H 1108.1" fill="none" stroke="#cbd5e1" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M302 196 H316 V 229 H 1280.3" fill="none" stroke="#cbd5e1" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M302 196 H316 V 229 H 1452.6" fill="none" stroke="#cbd5e1" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M302 196 H316 V 229 H 1624.8" fill="none" stroke="#cbd5e1" stroke-width="1.4" marker-end="url(#a)"/>
+<rect x="341.1" y="140" width="150" height="46" rx="9" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.8"/>
+<text x="416.1" y="158" font-size="10" fill="#64748b" text-anchor="middle">Semestre</text>
+<text x="416.1" y="177" font-size="17" font-weight="700" fill="#0f172a" text-anchor="middle">I-A</text>
+<rect x="513.3" y="140" width="150" height="46" rx="9" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.8"/>
+<text x="588.3" y="158" font-size="10" fill="#64748b" text-anchor="middle">Semestre</text>
+<text x="588.3" y="177" font-size="17" font-weight="700" fill="#0f172a" text-anchor="middle">I-B</text>
+<rect x="685.6" y="140" width="150" height="46" rx="9" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.8"/>
+<text x="760.6" y="158" font-size="10" fill="#64748b" text-anchor="middle">Semestre</text>
+<text x="760.6" y="177" font-size="17" font-weight="700" fill="#0f172a" text-anchor="middle">II-A</text>
+<rect x="857.8" y="140" width="150" height="46" rx="9" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.8"/>
+<text x="932.8" y="158" font-size="10" fill="#64748b" text-anchor="middle">Semestre</text>
+<text x="932.8" y="177" font-size="17" font-weight="700" fill="#0f172a" text-anchor="middle">II-B</text>
+<rect x="1030" y="140" width="150" height="46" rx="9" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.8"/>
+<text x="1105" y="158" font-size="10" fill="#64748b" text-anchor="middle">Semestre</text>
+<text x="1105" y="177" font-size="17" font-weight="700" fill="#0f172a" text-anchor="middle">III-A</text>
+<rect x="1202.2" y="140" width="150" height="46" rx="9" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.8"/>
+<text x="1277.2" y="158" font-size="10" fill="#64748b" text-anchor="middle">Semestre</text>
+<text x="1277.2" y="177" font-size="17" font-weight="700" fill="#0f172a" text-anchor="middle">III-B</text>
+<rect x="1374.4" y="140" width="150" height="46" rx="9" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.8"/>
+<text x="1449.4" y="158" font-size="10" fill="#64748b" text-anchor="middle">Semestre</text>
+<text x="1449.4" y="177" font-size="17" font-weight="700" fill="#0f172a" text-anchor="middle">IV-A</text>
+<rect x="1546.7" y="140" width="150" height="46" rx="9" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.8"/>
+<text x="1621.7" y="158" font-size="10" fill="#64748b" text-anchor="middle">Semestre</text>
+<text x="1621.7" y="177" font-size="17" font-weight="700" fill="#0f172a" text-anchor="middle">IV-B</text>
+<rect x="1718.9" y="140" width="150" height="46" rx="9" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.8"/>
+<text x="1793.9" y="158" font-size="10" fill="#64748b" text-anchor="middle">Semestre</text>
+<text x="1793.9" y="177" font-size="17" font-weight="700" fill="#0f172a" text-anchor="middle">V-A</text>
+<rect x="427.2" y="206" width="150" height="46" rx="9" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.8"/>
+<text x="502.2" y="224" font-size="10" fill="#64748b" text-anchor="middle">Semestre</text>
+<text x="502.2" y="243" font-size="17" font-weight="700" fill="#0f172a" text-anchor="middle">V-B</text>
+<rect x="599.4" y="206" width="150" height="46" rx="9" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.8"/>
+<text x="674.4" y="224" font-size="10" fill="#64748b" text-anchor="middle">Semestre</text>
+<text x="674.4" y="243" font-size="17" font-weight="700" fill="#0f172a" text-anchor="middle">VI-A</text>
+<rect x="771.7" y="206" width="150" height="46" rx="9" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.8"/>
+<text x="846.7" y="224" font-size="10" fill="#64748b" text-anchor="middle">Semestre</text>
+<text x="846.7" y="243" font-size="17" font-weight="700" fill="#0f172a" text-anchor="middle">VI-B</text>
+<rect x="943.9" y="206" width="150" height="46" rx="9" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.8"/>
+<text x="1018.9" y="224" font-size="10" fill="#64748b" text-anchor="middle">Semestre</text>
+<text x="1018.9" y="243" font-size="17" font-weight="700" fill="#0f172a" text-anchor="middle">VII-A</text>
+<rect x="1116.1" y="206" width="150" height="46" rx="9" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.8"/>
+<text x="1191.1" y="224" font-size="10" fill="#64748b" text-anchor="middle">Semestre</text>
+<text x="1191.1" y="243" font-size="17" font-weight="700" fill="#0f172a" text-anchor="middle">VII-B</text>
+<rect x="1288.3" y="206" width="150" height="46" rx="9" fill="#fffbeb" stroke="#b45309" stroke-width="1.8"/>
+<text x="1363.3" y="224" font-size="10" fill="#64748b" text-anchor="middle">Semestre</text>
+<text x="1363.3" y="243" font-size="17" font-weight="700" fill="#0f172a" text-anchor="middle">VIII-A</text>
+<rect x="1460.6" y="206" width="150" height="46" rx="9" fill="#fffbeb" stroke="#b45309" stroke-width="1.8"/>
+<text x="1535.6" y="224" font-size="10" fill="#64748b" text-anchor="middle">Semestre</text>
+<text x="1535.6" y="243" font-size="17" font-weight="700" fill="#0f172a" text-anchor="middle">IX-A</text>
+<rect x="1632.8" y="206" width="150" height="46" rx="9" fill="#fffbeb" stroke="#b45309" stroke-width="1.8"/>
+<text x="1707.8" y="224" font-size="10" fill="#64748b" text-anchor="middle">Semestre</text>
+<text x="1707.8" y="243" font-size="17" font-weight="700" fill="#0f172a" text-anchor="middle">X-A</text>
+<rect x="48" y="274" width="252" height="54" rx="12" fill="#0f172a"/>
+<text x="68" y="299" font-size="17" font-weight="700" fill="#ffffff">CARTAGO</text>
+<text x="68" y="316" font-size="11.5" fill="#94a3b8">3 cohortes</text>
+<path d="M302 301 H316 V 301 H 505.3" fill="none" stroke="#cbd5e1" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M302 301 H316 V 301 H 1022.0" fill="none" stroke="#cbd5e1" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M302 301 H316 V 301 H 1538.7" fill="none" stroke="#cbd5e1" stroke-width="1.4" marker-end="url(#a)"/>
+<rect x="513.3" y="278" width="150" height="46" rx="9" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.8"/>
+<text x="588.3" y="296" font-size="10" fill="#64748b" text-anchor="middle">Semestre</text>
+<text x="588.3" y="315" font-size="17" font-weight="700" fill="#0f172a" text-anchor="middle">IV-A</text>
+<rect x="1030.0" y="278" width="150" height="46" rx="9" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.8"/>
+<text x="1105.0" y="296" font-size="10" fill="#64748b" text-anchor="middle">Semestre</text>
+<text x="1105.0" y="315" font-size="17" font-weight="700" fill="#0f172a" text-anchor="middle">VII-A</text>
+<rect x="1546.7" y="278" width="150" height="46" rx="9" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.8"/>
+<text x="1621.7" y="296" font-size="10" fill="#64748b" text-anchor="middle">Semestre</text>
+<text x="1621.7" y="315" font-size="17" font-weight="700" fill="#0f172a" text-anchor="middle">X-A</text>
+<rect x="48" y="352" width="252" height="54" rx="12" fill="#0f172a"/>
+<text x="68" y="377" font-size="17" font-weight="700" fill="#ffffff">TULUÁ</text>
+<text x="68" y="394" font-size="11.5" fill="#94a3b8">3 cohortes</text>
+<path d="M302 379 H316 V 379 H 505.3" fill="none" stroke="#cbd5e1" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M302 379 H316 V 379 H 1022.0" fill="none" stroke="#cbd5e1" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M302 379 H316 V 379 H 1538.7" fill="none" stroke="#cbd5e1" stroke-width="1.4" marker-end="url(#a)"/>
+<rect x="513.3" y="356" width="150" height="46" rx="9" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.8"/>
+<text x="588.3" y="374" font-size="10" fill="#64748b" text-anchor="middle">Semestre</text>
+<text x="588.3" y="393" font-size="17" font-weight="700" fill="#0f172a" text-anchor="middle">I-A</text>
+<rect x="1030.0" y="356" width="150" height="46" rx="9" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.8"/>
+<text x="1105.0" y="374" font-size="10" fill="#64748b" text-anchor="middle">Semestre</text>
+<text x="1105.0" y="393" font-size="17" font-weight="700" fill="#0f172a" text-anchor="middle">VI-A</text>
+<rect x="1546.7" y="356" width="150" height="46" rx="9" fill="#fffbeb" stroke="#b45309" stroke-width="1.8"/>
+<text x="1621.7" y="374" font-size="10" fill="#64748b" text-anchor="middle">Semestre</text>
+<text x="1621.7" y="393" font-size="17" font-weight="700" fill="#0f172a" text-anchor="middle">X-A</text>
+<rect x="48" y="430" width="252" height="54" rx="12" fill="#0f172a"/>
+<text x="68" y="455" font-size="17" font-weight="700" fill="#ffffff">FLORIDA</text>
+<text x="68" y="472" font-size="11.5" fill="#94a3b8">2 cohortes</text>
+<path d="M302 457 H316 V 457 H 634.5" fill="none" stroke="#cbd5e1" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M302 457 H316 V 457 H 1409.5" fill="none" stroke="#cbd5e1" stroke-width="1.4" marker-end="url(#a)"/>
+<rect x="642.5" y="434" width="150" height="46" rx="9" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.8"/>
+<text x="717.5" y="452" font-size="10" fill="#64748b" text-anchor="middle">Semestre</text>
+<text x="717.5" y="471" font-size="17" font-weight="700" fill="#0f172a" text-anchor="middle">III-A</text>
+<rect x="1417.5" y="434" width="150" height="46" rx="9" fill="#fffbeb" stroke="#b45309" stroke-width="1.8"/>
+<text x="1492.5" y="452" font-size="10" fill="#64748b" text-anchor="middle">Semestre</text>
+<text x="1492.5" y="471" font-size="17" font-weight="700" fill="#0f172a" text-anchor="middle">IX-A</text>
+<rect x="48" y="508" width="252" height="54" rx="12" fill="#0f172a"/>
+<text x="68" y="533" font-size="17" font-weight="700" fill="#ffffff">BUENAVENTURA</text>
+<text x="68" y="550" font-size="11.5" fill="#94a3b8">2 cohortes</text>
+<path d="M302 535 H316 V 535 H 634.5" fill="none" stroke="#cbd5e1" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M302 535 H316 V 535 H 1409.5" fill="none" stroke="#cbd5e1" stroke-width="1.4" marker-end="url(#a)"/>
+<rect x="642.5" y="512" width="150" height="46" rx="9" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.8"/>
+<text x="717.5" y="530" font-size="10" fill="#64748b" text-anchor="middle">Semestre</text>
+<text x="717.5" y="549" font-size="17" font-weight="700" fill="#0f172a" text-anchor="middle">V-A</text>
+<rect x="1417.5" y="512" width="150" height="46" rx="9" fill="#fffbeb" stroke="#b45309" stroke-width="1.8"/>
+<text x="1492.5" y="530" font-size="10" fill="#64748b" text-anchor="middle">Semestre</text>
+<text x="1492.5" y="549" font-size="17" font-weight="700" fill="#0f172a" text-anchor="middle">IX-A</text>
+<rect x="48" y="586" width="252" height="54" rx="12" fill="#0f172a"/>
+<text x="68" y="611" font-size="17" font-weight="700" fill="#ffffff">PRADERA</text>
+<text x="68" y="628" font-size="11.5" fill="#94a3b8">2 cohortes</text>
+<path d="M302 613 H316 V 613 H 634.5" fill="none" stroke="#cbd5e1" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M302 613 H316 V 613 H 1409.5" fill="none" stroke="#cbd5e1" stroke-width="1.4" marker-end="url(#a)"/>
+<rect x="642.5" y="590" width="150" height="46" rx="9" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.8"/>
+<text x="717.5" y="608" font-size="10" fill="#64748b" text-anchor="middle">Semestre</text>
+<text x="717.5" y="627" font-size="17" font-weight="700" fill="#0f172a" text-anchor="middle">IV-A</text>
+<rect x="1417.5" y="590" width="150" height="46" rx="9" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.8"/>
+<text x="1492.5" y="608" font-size="10" fill="#64748b" text-anchor="middle">Semestre</text>
+<text x="1492.5" y="627" font-size="17" font-weight="700" fill="#0f172a" text-anchor="middle">VI-A</text>
+<rect x="48" y="664" width="252" height="54" rx="12" fill="#0f172a"/>
+<text x="68" y="689" font-size="15" font-weight="700" fill="#ffffff">GUADALAJARA DE BUGA</text>
+<text x="68" y="706" font-size="11.5" fill="#94a3b8">2 cohortes</text>
+<path d="M302 691 H316 V 691 H 634.5" fill="none" stroke="#cbd5e1" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M302 691 H316 V 691 H 1409.5" fill="none" stroke="#cbd5e1" stroke-width="1.4" marker-end="url(#a)"/>
+<rect x="642.5" y="668" width="150" height="46" rx="9" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.8"/>
+<text x="717.5" y="686" font-size="10" fill="#64748b" text-anchor="middle">Semestre</text>
+<text x="717.5" y="705" font-size="17" font-weight="700" fill="#0f172a" text-anchor="middle">V-A</text>
+<rect x="1417.5" y="668" width="150" height="46" rx="9" fill="#fffbeb" stroke="#b45309" stroke-width="1.8"/>
+<text x="1492.5" y="686" font-size="10" fill="#64748b" text-anchor="middle">Semestre</text>
+<text x="1492.5" y="705" font-size="17" font-weight="700" fill="#0f172a" text-anchor="middle">X-A</text>
+<rect x="48" y="742" width="252" height="54" rx="12" fill="#0f172a"/>
+<text x="68" y="767" font-size="17" font-weight="700" fill="#ffffff">CAICEDONIA</text>
+<text x="68" y="784" font-size="11.5" fill="#94a3b8">1 cohorte</text>
+<path d="M302 769 H316 V 769 H 1022.0" fill="none" stroke="#cbd5e1" stroke-width="1.4" marker-end="url(#a)"/>
+<rect x="1030.0" y="746" width="150" height="46" rx="9" fill="#fffbeb" stroke="#b45309" stroke-width="1.8"/>
+<text x="1105.0" y="764" font-size="10" fill="#64748b" text-anchor="middle">Semestre</text>
+<text x="1105.0" y="783" font-size="17" font-weight="700" fill="#0f172a" text-anchor="middle">VIII-A</text>
+<rect x="48" y="820" width="252" height="54" rx="12" fill="#0f172a"/>
+<text x="68" y="845" font-size="17" font-weight="700" fill="#ffffff">EL ÁGUILA</text>
+<text x="68" y="862" font-size="11.5" fill="#94a3b8">1 cohorte</text>
+<path d="M302 847 H316 V 847 H 1022.0" fill="none" stroke="#cbd5e1" stroke-width="1.4" marker-end="url(#a)"/>
+<rect x="1030.0" y="824" width="150" height="46" rx="9" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.8"/>
+<text x="1105.0" y="842" font-size="10" fill="#64748b" text-anchor="middle">Semestre</text>
+<text x="1105.0" y="861" font-size="17" font-weight="700" fill="#0f172a" text-anchor="middle">III-A</text>
+<rect x="48" y="898" width="252" height="54" rx="12" fill="#0f172a"/>
+<text x="68" y="923" font-size="17" font-weight="700" fill="#ffffff">LA UNIÓN</text>
+<text x="68" y="940" font-size="11.5" fill="#94a3b8">1 cohorte</text>
+<path d="M302 925 H316 V 925 H 1022.0" fill="none" stroke="#cbd5e1" stroke-width="1.4" marker-end="url(#a)"/>
+<rect x="1030.0" y="902" width="150" height="46" rx="9" fill="#fffbeb" stroke="#b45309" stroke-width="1.8"/>
+<text x="1105.0" y="920" font-size="10" fill="#64748b" text-anchor="middle">Semestre</text>
+<text x="1105.0" y="939" font-size="17" font-weight="700" fill="#0f172a" text-anchor="middle">IX-A</text>
+<rect x="48" y="976" width="252" height="54" rx="12" fill="#0f172a"/>
+<text x="68" y="1001" font-size="17" font-weight="700" fill="#ffffff">SEVILLA</text>
+<text x="68" y="1018" font-size="11.5" fill="#94a3b8">1 cohorte</text>
+<path d="M302 1003 H316 V 1003 H 1022.0" fill="none" stroke="#cbd5e1" stroke-width="1.4" marker-end="url(#a)"/>
+<rect x="1030.0" y="980" width="150" height="46" rx="9" fill="#fffbeb" stroke="#b45309" stroke-width="1.8"/>
+<text x="1105.0" y="998" font-size="10" fill="#64748b" text-anchor="middle">Semestre</text>
+<text x="1105.0" y="1017" font-size="17" font-weight="700" fill="#0f172a" text-anchor="middle">IX-A</text>
+<text x="48" y="1066" font-size="12" fill="#94a3b8">Modalidad: Presencial (CALI I-A/I-B, TULUÁ I-A) · Mixta (resto) · Plataforma (FLORIDA IX-A, CAICEDONIA VIII-A, GUADALAJARA DE BUGA V-A y X-A) · Subsedes: FLORIDA/PLATAFORMA, CAICEDONIA/PLATAFORMA, GUADALAJARA DE BUGA/SEVILLA y /FLORIDA-PRADERA</text>
+</svg>

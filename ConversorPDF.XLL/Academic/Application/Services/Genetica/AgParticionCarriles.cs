@@ -41,7 +41,13 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 ? bandasSingleton
                 : (string.IsNullOrWhiteSpace(Clave) ? 0 : Clave.Split('|')
                     .Where(p => !string.IsNullOrWhiteSpace(p))
-                    .Count(p => p.Split('.').Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().Count() == 1));
+                    .Count(p => {
+                        var tokens = p.Split('.', ',')
+                            .Where(x => !string.IsNullOrWhiteSpace(x) && x.Any(char.IsDigit))
+                            .Distinct()
+                            .ToList();
+                        return tokens.Count == 1;
+                    }));
         }
     }
 
@@ -117,7 +123,10 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             string textoOpcionIntentada = string.Empty;
             int evaluadasOpciones = 0;
 
-            // Fase 2180 / Fase 2187 / Fase 2188 / Fase 2223 / Fase 2224 / Fase 2225: Evaluación focalizada de catálogo con gate de mejora y fallback
+            AgEvaluacionParticion mejorCatalogo = null;
+            string textoMejorCatalogo = string.Empty;
+
+            // Fase 2180 / Fase 2187 / Fase 2188 / Fase 2223 / Fase 2224 / Fase 2225 / Fase 2431: Evaluación de catálogo con comparación diferida
             if (opciones != null && opciones.Count > 0)
             {
                 var evaluadasCat = new List<(AgEvaluacionParticion Ev, string Texto)>();
@@ -144,12 +153,13 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 var elegidaOpcion = opcionesValidas
                     .Where(x => x.Ev.PatronesNoAlojables <= referencia.PatronesNoAlojables)
                     .Where(x => x.Ev.Resultado.Infactibles.Count <= referencia.Resultado.Infactibles.Count)
-                    .Where(x => x.Ev.BandasSingleton < referencia.BandasSingleton
-                             || (x.Ev.BandasSingleton == referencia.BandasSingleton
-                                 && (x.Ev.Resultado.Infactibles.Count < referencia.Resultado.Infactibles.Count
-                                     || (x.Ev.Resultado.Infactibles.Count == referencia.Resultado.Infactibles.Count
-                                         && x.Ev.Makespan <= referencia.Makespan
-                                         && x.Ev.Bandas < referencia.Bandas))))
+                    .Where(x => x.Ev.Resultado.Infactibles.Count < referencia.Resultado.Infactibles.Count
+                             || (referencia.Resultado.Infactibles.Count == 0
+                                 && (x.Ev.PatronesNoAlojables < referencia.PatronesNoAlojables
+                                     || x.Ev.BandasSingleton < referencia.BandasSingleton
+                                     || (x.Ev.BandasSingleton == referencia.BandasSingleton
+                                         && (x.Ev.Makespan < referencia.Makespan
+                                             || (x.Ev.Makespan == referencia.Makespan && x.Ev.Bandas < referencia.Bandas))))))
                     .OrderBy(x => x.Ev.Resultado.Infactibles.Count)
                     .ThenBy(x => x.Ev.BandasSingleton)
                     .ThenBy(x => x.Ev.Makespan)
@@ -158,19 +168,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 
                 if (elegidaOpcion.Ev != null)
                 {
-                    if (elegidaOpcion.Ev.BandasSingleton < referencia.BandasSingleton)
-                    {
-                        LoggerHelper.Debug(
-                            $"[Oleadas] bandasSingleton={referencia.BandasSingleton}→{elegidaOpcion.Ev.BandasSingleton}; " +
-                            $"motivo=CAMBIO_POR_SINGLETON; opcion='{elegidaOpcion.Texto}'");
-                    }
-
-                    // FASE 2232: CandidatasEvaluadas en catálogo exitoso reporta evaluadasOpciones
-                    return new AgSeleccionParticion(true, referencia, elegidaOpcion.Ev, evaluadasOpciones, 0,
-                        "catalogo", elegidaOpcion.Texto, evaluadasOpciones, elegidaOpcion.Ev.Clave);
+                    mejorCatalogo = elegidaOpcion.Ev;
+                    textoMejorCatalogo = elegidaOpcion.Texto;
                 }
 
-                // FASE 2223: sin mejora en catálogo, continuar a la enumeración contigua de Particiones() (no retornar aquí)
+                // FASE 2431: sin cortocircuito aquí; se continúa a la enumeración contigua para comparar catálogo vs enumeración
             }
 
             bool hayPatronValido = false;
@@ -271,11 +273,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     continue;
                 }
 
-                // (d) Reducción estricta de infactibles, singleton o acortamiento de makespan/bandas (F1736, F2395)
+                // (d) Reducción estricta de infactibles, acortamiento de makespan o reducción de singleton/bandas en factible (F1583, F1736, F2395)
                 bool menorInfactibles = ev.Resultado.Infactibles.Count < referencia.Resultado.Infactibles.Count;
                 bool mejorMakespan = ev.Resultado.Infactibles.Count == referencia.Resultado.Infactibles.Count && ev.Makespan < referencia.Makespan;
-                bool mejorSingleton = ev.Resultado.Infactibles.Count <= referencia.Resultado.Infactibles.Count && ev.BandasSingleton < referencia.BandasSingleton;
-                bool menorBandas = ev.Resultado.Infactibles.Count == referencia.Resultado.Infactibles.Count
+                bool mejorSingleton = ev.Resultado.Infactibles.Count == 0 && ev.BandasSingleton < referencia.BandasSingleton;
+                bool menorBandas = ev.Resultado.Infactibles.Count == 0
                     && ev.BandasSingleton == referencia.BandasSingleton
                     && ev.Makespan <= referencia.Makespan
                     && ev.Bandas < referencia.Bandas;
@@ -288,44 +290,104 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 candidatas.Add(ev);
             }
 
-            if (candidatas.Count == 0)
+            AgEvaluacionParticion mejorEnumeracion = null;
+            if (candidatas.Count > 0)
+            {
+                // Fase 2404: Política explícita de singleton en el motor: prohibir bandas singleton si existe alternativa
+                var elegibles = candidatas;
+                if (!PermitirSingleton)
+                {
+                    var sinSingleton = candidatas
+                        .Where(ev => ev.BandasSingleton == 0)
+                        .ToList();
+
+                    if (sinSingleton.Count > 0)
+                    {
+                        elegibles = sinSingleton;
+                    }
+                    else
+                    {
+                        LoggerHelper.WarningLimitado(
+                            $"SINGLETON_NECESARIO|{ventana?.Count}|{referencia?.Clave}",
+                            "[Oleadas] SINGLETON_NECESARIO: no hay partición sin bandas de 1 día; se conserva la mejor disponible.");
+                    }
+                }
+
+                mejorEnumeracion = elegibles
+                    .OrderBy(ev => ev.Resultado.Infactibles.Count)
+                    .ThenBy(ev => ev.BandasSingleton)
+                    .ThenBy(ev => ev.PatronesNoAlojables)
+                    .ThenBy(ev => ev.Makespan)
+                    .ThenBy(ev => ev.Bandas)
+                    .ThenBy(ev => ev.MaxRanurasPorBanda)
+                    .ThenBy(ev => ev.Clave, StringComparer.Ordinal)
+                    .First();
+            }
+
+            // FASE 2431: Comparar catálogo y enumeración antes de decidir. En empate exacto (<= 0) gana catálogo.
+            if (mejorCatalogo == null && mejorEnumeracion == null)
             {
                 return new AgSeleccionParticion(false, referencia, referencia, evaluadas, descartadas,
                     catalogoEvaluado ? "catalogo_fallback" : "enumeracion", textoOpcionIntentada, evaluadasOpciones, referencia.Clave);
             }
 
-            // Fase 2404: Política explícita de singleton en el motor: prohibir bandas singleton si existe alternativa
-            var elegibles = candidatas;
-            if (!PermitirSingleton)
-            {
-                var sinSingleton = candidatas
-                    .Where(ev => ev.BandasSingleton == 0)
-                    .ToList();
+            bool ganaCatalogo = mejorCatalogo != null &&
+                (mejorEnumeracion == null || Comparar(mejorCatalogo, mejorEnumeracion) <= 0);
 
-                if (sinSingleton.Count > 0)
+            if (ganaCatalogo)
+            {
+                if (mejorCatalogo.BandasSingleton < referencia.BandasSingleton)
                 {
-                    elegibles = sinSingleton;
+                    LoggerHelper.Debug(
+                        $"[Oleadas] bandasSingleton={referencia.BandasSingleton}→{mejorCatalogo.BandasSingleton}; " +
+                        $"motivo=CAMBIO_POR_SINGLETON; opcion='{textoMejorCatalogo}'");
                 }
-                else
-                {
-                    LoggerHelper.WarningLimitado(
-                        $"SINGLETON_NECESARIO|{ventana?.Count}|{referencia?.Clave}",
-                        "[Oleadas] SINGLETON_NECESARIO: no hay partición sin bandas de 1 día; se conserva la mejor disponible.");
-                }
+
+                // FASE 2432: CandidatasEvaluadas refleja ambas rutas evaluadas (opciones + contiguas)
+                return new AgSeleccionParticion(
+                    true, referencia, mejorCatalogo,
+                    evaluadasOpciones + evaluadas,
+                    descartadas,
+                    "catalogo",
+                    textoMejorCatalogo,
+                    evaluadasOpciones,
+                    mejorCatalogo.Clave);
             }
 
-            var elegida = elegibles
-                .OrderBy(ev => ev.Resultado.Infactibles.Count)
-                .ThenBy(ev => ev.BandasSingleton)
-                .ThenBy(ev => ev.PatronesNoAlojables)
-                .ThenBy(ev => ev.Makespan)
-                .ThenBy(ev => ev.Bandas)
-                .ThenBy(ev => ev.MaxRanurasPorBanda)
-                .ThenBy(ev => ev.Clave, StringComparer.Ordinal)
-                .First();
+            return new AgSeleccionParticion(
+                true, referencia, mejorEnumeracion,
+                evaluadasOpciones + evaluadas,
+                descartadas,
+                catalogoEvaluado ? "catalogo_fallback" : "enumeracion",
+                textoOpcionIntentada,
+                evaluadasOpciones,
+                mejorEnumeracion.Clave);
+        }
 
-            return new AgSeleccionParticion(true, referencia, elegida, evaluadas, descartadas,
-                catalogoEvaluado ? "catalogo_fallback" : "enumeracion", textoOpcionIntentada, evaluadasOpciones, elegida.Clave);
+        private static int Comparar(
+            AgEvaluacionParticion a,
+            AgEvaluacionParticion b)
+        {
+            if (ReferenceEquals(a, b)) return 0;
+            if (a == null) return 1;
+            if (b == null) return -1;
+
+            int c = a.Resultado.Infactibles.Count.CompareTo(b.Resultado.Infactibles.Count);
+            if (c != 0) return c;
+
+            c = a.BandasSingleton.CompareTo(b.BandasSingleton);
+            if (c != 0) return c;
+
+            c = a.PatronesNoAlojables.CompareTo(b.PatronesNoAlojables);
+            if (c != 0) return c;
+
+            c = a.Makespan.CompareTo(b.Makespan);
+            if (c != 0) return c;
+
+            c = a.Bandas.CompareTo(b.Bandas);
+            if (c != 0) return c;
+
+            return a.MaxRanurasPorBanda.CompareTo(b.MaxRanurasPorBanda);
         }
 
         public static int ContarPatronesNoAlojables(
@@ -384,6 +446,18 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 }
             }
             return false;
+        }
+
+        /// <summary>
+        /// Determina si una opción de catálogo cubre exactamente las ranuras del contexto (Fase 2425).
+        /// Evita que una lista no vacía pero inaplicable bloquee el fallback de catálogo.
+        /// </summary>
+        internal static bool EsOpcionAplicable(
+            IReadOnlyList<AgRanura> ranuras, AgOpcionParticion opcion)
+        {
+            if (ranuras == null || ranuras.Count == 0) return false;
+            if (opcion == null || opcion.Carriles == null || opcion.Carriles.Count == 0) return false;
+            return ConservaRanuras(ranuras, opcion.Carriles);
         }
 
         private static bool ConservaRanuras(

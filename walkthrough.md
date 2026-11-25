@@ -829,6 +829,82 @@ Las citas `walkthrough.md:NNNN` anteriores al corte apuntan al archivo monolitic
 |---|---|---|---|---|---|
 | F2424 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorPatronSemanal.cs:58-75`, `REGISTRY.md:27-28, 257` (Implementado) |
 
+---
+
+## Ronda 550 — Integración de catálogo y canónicas sin singleton en AgPlanificadorOleadas (Fases 2425–2427)
+
+### Resumen de la Ronda
+- **Fase 2425:** Integración en `AgPlanificadorOleadas.cs` de `AgCarriles.ParticionSinSingleton` sobre `canonicas` según `DetectarOrigen`, junto con la validación de aplicabilidad (`AgParticionCarriles.EsOpcionAplicable`) y resolución de opciones directas o de fallback sin singleton (`ResolverFallbackSinSingleton`).
+- **Fase 2426:** Implementación de pruebas unitarias en `AgPlanificadorOleadasTests.cs` validando que `Construir` en `LUN-VIE` resuelve a 2 bandas sin singleton y que en `4,5,6,7` aplica catálogo de fin de semana.
+- **Fase 2427:** Registro y trazabilidad de Wave 550 (Fases 2425–2427) en `REGISTRY.md` fila `R-221`.
+
+### Verificación de Principios (Ronda 550)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2425 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorOleadas.cs:352-378` (Implementado) |
+| F2426 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorOleadasTests.cs:985-1045` (Implementado) |
+| F2427 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `REGISTRY.md:27-28, 258` (Implementado) |
+
+---
+
+## Ronda 551 — Validación de aplicabilidad en opción directa y aserciones de catálogo real (Fases 2428–2429)
+
+### Resumen de la Ronda
+- **Fase 2428:** Validación previa de aplicabilidad mediante `AgParticionCarriles.EsOpcionAplicable` sobre `opcionDirecta` en `AgPlanificadorOleadas.cs` antes de asignarla a `opciones`, permitiendo la ejecución limpia de `ResolverFallbackSinSingleton` y emisión de telemetría diagnóstica ante opciones directas inaplicables.
+- **Fase 2429:** Refuerzo de pruebas en `AgPlanificadorOleadasTests.cs` con aserción exacta de días para catálogo de 4 días `{5,6}` y `{4,6,7}`, validación de partición de 5 días mixtos (`2.3|1.4.5` o `1.2.5|3.4`) y verificación de fallback activo ante opciones inválidas. Sincronización de Wave 551 y fila `R-222` en `REGISTRY.md`.
+
+### Verificación de Principios (Ronda 551)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2428 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorOleadas.cs:374-395` (Implementado) |
+| F2429 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorOleadasTests.cs:985-1080`, `REGISTRY.md:25-28, 259` (Implementado) |
+
+---
+
+## Ronda 552 — Desempate de catálogo admitiendo bandas equivalentes sin empeoramiento (Fase 2430)
+
+### Resumen de la Ronda
+- **Fase 2430:** Modificación en `AgParticionCarriles.cs` de la guarda de selección de catálogo para aceptar opciones con igual número de bandas (`Bandas <= referencia.Bandas`), permitiendo que `5,6M|4,6T,7` gane frente a la canónica de 2 bandas en `JUE-DOM` (`4,5,6,7`) sin empeorar métricas. Sincronización de Wave 552 y fila `R-223` en `REGISTRY.md`.
+
+### Verificación de Principios (Ronda 552)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2430 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgParticionCarriles.cs:144-157`, `REGISTRY.md:25-28, 260` (Implementado) |
+
+---
+
+## Ronda 553 — Comparación global catálogo vs enumeración y desempate por catálogo (Fase 2431)
+
+### Resumen de la Ronda
+- **Fase 2431:** Supresión del cortocircuito en catálogo en `AgParticionCarriles.cs`, ejecutando la enumeración contigua y resolviendo mediante `Comparar` simétrico. En empate exacto se selecciona el catálogo; si la enumeración es superior, se selecciona ésta con `catalogo_fallback`. Se añaden pruebas de empate y mejora contigua en `AgParticionCarrilesOpcionesTests.cs`. Sincronización de Wave 553 y fila `R-224` en `REGISTRY.md`.
+
+### Verificación de Principios (Ronda 553)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2431 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgParticionCarriles.cs:120-170, 286-370`, `AgParticionCarrilesOpcionesTests.cs:570-665`, `REGISTRY.md:25-28, 261` (Implementado) |
+
+---
+
+## Ronda 554 — Cobertura de empate, métrica conjunta de candidatas y catalogo_fallback (Fase 2432)
+
+### Resumen de la Ronda
+- **Fase 2432:** Unificación del cálculo de `CandidatasEvaluadas` en `AgParticionCarriles.cs` como la suma total de opciones y particiones evaluadas (`evaluadasOpciones + evaluadas`), y adición de pruebas en `AgParticionCarrilesOpcionesTests.cs` validando empate exacto con catálogo, victoria de enumeración por desempate de singleton y consistencia métrica. Sincronización de Wave 554 y fila `R-225` en `REGISTRY.md`.
+
+### Verificación de Principios (Ronda 554)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2432 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgParticionCarriles.cs:338-356`, `AgParticionCarrilesOpcionesTests.cs:570-715`, `REGISTRY.md:25-28, 262` (Implementado) |
+
+
+
+
+
+
 
 
 

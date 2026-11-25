@@ -52,7 +52,8 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
                 evaluar,
                 opciones: opciones);
 
-            seleccion.CandidatasEvaluadas.Should().BeLessOrEqualTo(2);
+            seleccion.OpcionesEvaluadas.Should().BeLessOrEqualTo(2);
+            seleccion.CandidatasEvaluadas.Should().BeGreaterThan(0);
             seleccion.Cambiada.Should().BeTrue();
             seleccion.Elegida.Clave.Should().Be("2,3|4,5");
         }
@@ -564,8 +565,219 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
 
             seleccion.Cambiada.Should().BeTrue();
             seleccion.Origen.Should().Be("catalogo");
-            seleccion.CandidatasEvaluadas.Should().Be(1);
+            seleccion.CandidatasEvaluadas.Should().BeGreaterThan(0);
             seleccion.OpcionesEvaluadas.Should().Be(1);
         }
+
+        [Fact]
+        public void Seleccionar_EmpateExactoEntreCatalogoYEnumeracion_GanaCatalogo()
+        {
+            // FASE 2431: En empate exacto de métricas entre catálogo y enumeración contigua, gana catálogo
+            var ranuras = new List<AgRanura>
+            {
+                new AgRanura(2, AgFranjaJornada.NOCHE, 4.0),
+                new AgRanura(3, AgFranjaJornada.NOCHE, 4.0),
+                new AgRanura(4, AgFranjaJornada.NOCHE, 4.0),
+                new AgRanura(5, AgFranjaJornada.NOCHE, 4.0)
+            };
+            var canonicas = new List<IReadOnlyList<AgRanura>>
+            {
+                new List<AgRanura> { ranuras[0], ranuras[1] },
+                new List<AgRanura> { ranuras[2], ranuras[3] }
+            };
+            var patrones = new List<string> { "2,3", "4,5" };
+            var opcion = AgOpcionesParticion.Resolver("MAR-VIE", ranuras, patrones);
+            var opciones = new List<AgOpcionParticion> { opcion };
+
+            int llamadas = 0;
+            Func<IReadOnlyList<IReadOnlyList<AgRanura>>, AgEvaluacionParticion> evaluar = bandas =>
+            {
+                llamadas++;
+                if (llamadas == 1) // Referencia canónica con 1 infactible
+                {
+                    var resRef = new AgPlanOleadasResultado(new List<AgPlanOleada>(), new List<int> { 99 });
+                    return new AgEvaluacionParticion(resRef, 1, new List<int>(), 14, bandas.Count, 2, "ref");
+                }
+                // Catálogo y enumeración devuelven el mismo resultado
+                var resMejora = new AgPlanOleadasResultado(new List<AgPlanOleada>(), new List<int>());
+                return new AgEvaluacionParticion(resMejora, 0, new List<int> { 0, 1 }, 10, bandas.Count, 2, "2,3|4,5");
+            };
+
+            var seleccion = AgParticionCarriles.Seleccionar(
+                new List<int> { 2, 3, 4, 5 },
+                ranuras,
+                patrones,
+                canonicas,
+                evaluar,
+                opciones: opciones);
+
+            seleccion.Cambiada.Should().BeTrue();
+            seleccion.Origen.Should().Be("catalogo");
+            seleccion.Elegida.Clave.Should().Be("2,3|4,5");
+        }
+
+        [Fact]
+        public void Seleccionar_EnumeracionSuperaACatalogo_GanaEnumeracionConCatalogoFallback()
+        {
+            // FASE 2431: Si la enumeración contigua es estrictamente mejor que el catálogo, gana enumeración con catalogo_fallback
+            var ranuras = new List<AgRanura>
+            {
+                new AgRanura(1, AgFranjaJornada.NOCHE, 4.0),
+                new AgRanura(2, AgFranjaJornada.NOCHE, 4.0),
+                new AgRanura(3, AgFranjaJornada.NOCHE, 4.0),
+                new AgRanura(4, AgFranjaJornada.NOCHE, 4.0)
+            };
+            var canonicas = new List<IReadOnlyList<AgRanura>>
+            {
+                new List<AgRanura> { ranuras[0], ranuras[1] },
+                new List<AgRanura> { ranuras[2], ranuras[3] }
+            };
+            var patrones = new List<string> { "1,2", "3,4" };
+            var opcion = new AgOpcionParticion("quedarse", "1,2|3,4", canonicas);
+            var opciones = new List<AgOpcionParticion> { opcion };
+
+            int llamadas = 0;
+            Func<IReadOnlyList<IReadOnlyList<AgRanura>>, AgEvaluacionParticion> evaluar = bandas =>
+            {
+                llamadas++;
+                if (llamadas == 1) // Referencia canónica con 2 infactibles
+                {
+                    var resRef = new AgPlanOleadasResultado(new List<AgPlanOleada>(), new List<int> { 1, 2 });
+                    return new AgEvaluacionParticion(resRef, 1, new List<int>(), 14, bandas.Count, 2, "ref");
+                }
+                if (llamadas == 2) // Catálogo: 1 infactible (mejora parcial)
+                {
+                    var resCat = new AgPlanOleadasResultado(new List<AgPlanOleada>(), new List<int> { 1 });
+                    return new AgEvaluacionParticion(resCat, 1, new List<int> { 0 }, 12, bandas.Count, 2, "cat");
+                }
+                // Enumeración: 0 infactibles (supera al catálogo)
+                var resEnum = new AgPlanOleadasResultado(new List<AgPlanOleada>(), new List<int>());
+                return new AgEvaluacionParticion(resEnum, 0, new List<int> { 0, 1 }, 10, bandas.Count, 2, "particion_optima");
+            };
+
+            var seleccion = AgParticionCarriles.Seleccionar(
+                new List<int> { 1, 2, 3, 4 },
+                ranuras,
+                patrones,
+                canonicas,
+                evaluar,
+                opciones: opciones);
+
+            seleccion.Cambiada.Should().BeTrue();
+            seleccion.Origen.Should().Be("catalogo_fallback");
+            seleccion.Elegida.Clave.Should().Be("particion_optima");
+        }
+
+        #region Pruebas de Desempate y Cobertura de Rutas de Comparación (Fase 2432)
+
+        [Fact]
+        public void Seleccionar_EmpateConMismoSingleton_MantieneCatalogo()
+        {
+            // FASE 2432: Catálogo y enumeración empatan en 0 infactibles, 0 singleton, mismo makespan y bandas; gana catálogo
+            var ranuras = new List<AgRanura>
+            {
+                new AgRanura(2, AgFranjaJornada.NOCHE, 4.0),
+                new AgRanura(3, AgFranjaJornada.NOCHE, 4.0),
+                new AgRanura(4, AgFranjaJornada.NOCHE, 4.0),
+                new AgRanura(5, AgFranjaJornada.NOCHE, 4.0)
+            };
+            var canonicas = new List<IReadOnlyList<AgRanura>>
+            {
+                new List<AgRanura> { ranuras[0], ranuras[1] },
+                new List<AgRanura> { ranuras[2], ranuras[3] }
+            };
+            var patrones = new List<string> { "2,3", "4,5" };
+            var opcion = AgOpcionesParticion.Resolver("MAR-VIE", ranuras, patrones);
+            var opciones = new List<AgOpcionParticion> { opcion };
+
+            int evaluadasEnum = 0;
+            int llamadas = 0;
+            Func<IReadOnlyList<IReadOnlyList<AgRanura>>, AgEvaluacionParticion> evaluar = bandas =>
+            {
+                llamadas++;
+                if (llamadas == 1) // Referencia canónica con 1 infactible
+                {
+                    var resRef = new AgPlanOleadasResultado(new List<AgPlanOleada>(), new List<int> { 99 });
+                    return new AgEvaluacionParticion(resRef, 1, new List<int>(), 14, bandas.Count, 0, "ref");
+                }
+                if (llamadas > 2)
+                {
+                    evaluadasEnum++;
+                }
+                var resMejora = new AgPlanOleadasResultado(new List<AgPlanOleada>(), new List<int>());
+                return new AgEvaluacionParticion(resMejora, 0, new List<int> { 0, 1 }, 10, bandas.Count, 0, "2,3|4,5");
+            };
+
+            var seleccion = AgParticionCarriles.Seleccionar(
+                new List<int> { 2, 3, 4, 5 },
+                ranuras,
+                patrones,
+                canonicas,
+                evaluar,
+                opciones: opciones);
+
+            seleccion.Cambiada.Should().BeTrue();
+            seleccion.Origen.Should().Be("catalogo");
+            seleccion.OpcionesEvaluadas.Should().Be(1);
+            seleccion.CandidatasEvaluadas.Should().Be(seleccion.OpcionesEvaluadas + evaluadasEnum);
+        }
+
+        [Fact]
+        public void Seleccionar_EnumeracionMejorPorSingleton_GanaEnumeracion()
+        {
+            // FASE 2432: Catálogo tiene 1 singleton; enumeración tiene 0 singleton; gana enumeración con catalogo_fallback
+            var ranuras = new List<AgRanura>
+            {
+                new AgRanura(1, AgFranjaJornada.NOCHE, 4.0),
+                new AgRanura(2, AgFranjaJornada.NOCHE, 4.0),
+                new AgRanura(3, AgFranjaJornada.NOCHE, 4.0),
+                new AgRanura(4, AgFranjaJornada.NOCHE, 4.0)
+            };
+            var canonicas = new List<IReadOnlyList<AgRanura>>
+            {
+                new List<AgRanura> { ranuras[0], ranuras[1] },
+                new List<AgRanura> { ranuras[2], ranuras[3] }
+            };
+            var patrones = new List<string> { "1,2", "3,4" };
+            var opcionInerte = new AgOpcionParticion("quedarse", "1,2|3,4", canonicas);
+            var opciones = new List<AgOpcionParticion> { opcionInerte };
+
+            int evaluadasEnum = 0;
+            int llamadas = 0;
+            Func<IReadOnlyList<IReadOnlyList<AgRanura>>, AgEvaluacionParticion> evaluar = bandas =>
+            {
+                llamadas++;
+                if (llamadas == 1) // Referencia con 2 infactibles y 1 singleton
+                {
+                    var resRef = new AgPlanOleadasResultado(new List<AgPlanOleada>(), new List<int> { 1, 2 });
+                    return new AgEvaluacionParticion(resRef, 2, new List<int>(), 14, bandas.Count, 1, "ref");
+                }
+                if (llamadas == 2) // Catálogo: 1 singleton, 1 infactible
+                {
+                    var resCat = new AgPlanOleadasResultado(new List<AgPlanOleada>(), new List<int> { 1 });
+                    return new AgEvaluacionParticion(resCat, 1, new List<int> { 0 }, 12, bandas.Count, 1, "cat");
+                }
+                // Enumeración: 0 singleton y 0 infactibles
+                evaluadasEnum++;
+                var resEnum = new AgPlanOleadasResultado(new List<AgPlanOleada>(), new List<int>());
+                return new AgEvaluacionParticion(resEnum, 0, new List<int> { 0, 1 }, 10, bandas.Count, 0, "1.2|3.4");
+            };
+
+            var seleccion = AgParticionCarriles.Seleccionar(
+                new List<int> { 1, 2, 3, 4 },
+                ranuras,
+                patrones,
+                canonicas,
+                evaluar,
+                opciones: opciones);
+
+            seleccion.Cambiada.Should().BeTrue();
+            seleccion.Origen.Should().Be("catalogo_fallback");
+            seleccion.Elegida.BandasSingleton.Should().Be(0);
+            seleccion.OpcionesEvaluadas.Should().Be(1);
+            seleccion.CandidatasEvaluadas.Should().Be(seleccion.OpcionesEvaluadas + evaluadasEnum);
+        }
+
+        #endregion
     }
 }
