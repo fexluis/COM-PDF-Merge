@@ -120,9 +120,10 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                             $"[Patron] Aula {aula?.Id}: ventana '{aula?.DiasVentana}' con {diasVentana.Count} días; {carriles} carril(es) por días; el último día se cubre por ranuras (modelo F1154).");
                     }
                     var delCarril = AgCarriles.DelCarril(diasVentana, carril);
-                    if (diasVentana.Count == 5 && delCarril.Count == 1 && esMarVie.HasValue)
+                    // Fase 2436: En 5 días erradicar singleton residual mapeando al carril sin singleton correspondiente
+                    if (diasVentana.Count == 5 && delCarril.Count == 1)
                     {
-                        var banda = AgCarriles.BandaSinSingletonParaDia(diasVentana, delCarril[0], esMarVie.Value);
+                        var banda = AgCarriles.BandaSinSingletonParaDia(diasVentana, delCarril[0], esMarVie ?? true);
                         if (banda != null) return banda;
                     }
                     return delCarril;
@@ -179,9 +180,9 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         }
 
         /// <summary>
-        /// Detecta si el origen declarado o implícito de un aula-asignatura es MarVie (true), LunJue (false), o desconocido (null) (Fase 2407, Fase 2410, Fase 2414, Fase 2415).
+        /// Detecta si el origen declarado o implícito de un aula-asignatura es MarVie (true), LunJue (false), o desconocido (null) (Fase 2407, Fase 2410, Fase 2414, Fase 2415, Fase 2439).
         /// </summary>
-        private static bool? DetectarEsMarVie(AgAulaAsignatura aa)
+        internal static bool? DetectarEsMarVie(AgAulaAsignatura aa)
         {
             if (aa == null)
                 return false; // automático sin origen: LunJue, determinista y sin singleton (Fase 2414)

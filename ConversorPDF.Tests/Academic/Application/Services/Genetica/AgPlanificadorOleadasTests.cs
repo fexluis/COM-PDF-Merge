@@ -1111,6 +1111,88 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             new[] { "2.3|1.4.5", "1.2.5|3.4" }.Should().Contain(clave);
         }
 
+        [Fact]
+        public void Construir_VieDomSinCatalogo_EscalaAJueDomYAplicaCatalogoExacto()
+        {
+            // FASE 2435 / FASE 2437: En VIE-DOM (5,6,7) sin catálogo, escala automáticamente a JUE-DOM (4,5,6,7) y aplica 5,6M|4,6T,7
+            var fInicio = new DateTime(2027, 2, 1);
+            var fFin = new DateTime(2027, 6, 30);
+            var asignaturas = new List<(int IdAsignatura, double Horas, int OrdenCurricular)>
+            {
+                (1, 16.0, 1),
+                (2, 16.0, 2)
+            };
+            var patrones = new Dictionary<int, string>
+            {
+                { 1, "5,6M" },
+                { 2, "4,6T,7" }
+            };
+
+            var res = _sut.Construir(asignaturas, "VIE-DOM", fInicio, fFin, 4.0, diasPatronPorAsignatura: patrones);
+
+            res.IsSuccess.Should().BeTrue();
+            res.Value.Particion.Should().HaveCount(2);
+            var clave = string.Join("|",
+                res.Value.Particion.Select(b =>
+                    string.Join(".", b.Distinct().OrderBy(d => d))));
+            clave.Should().Be("5.6|4.6.7");
+        }
+
+        [Fact]
+        public void Construir_CincoDias_BandaResidualFijaTresDiasEnDiasPatron()
+        {
+            // FASE 2436 / FASE 2437: Toda asignatura en banda residual {1,2,5} o {1,4,5} fija DiasPatron con los 3 días
+            var fInicio = new DateTime(2027, 2, 1);
+            var fFin = new DateTime(2027, 6, 30);
+            var asignaturas = new List<(int IdAsignatura, double Horas, int OrdenCurricular)>
+            {
+                (1, 16.0, 1),
+                (2, 16.0, 2)
+            };
+            var patrones = new Dictionary<int, string>
+            {
+                { 1, "2,3" },
+                { 2, "5" } // Residual en MarVie -> {1,4,5}
+            };
+
+            var res = _sut.Construir(asignaturas, "LUN-VIE", fInicio, fFin, 4.0, diasPatronPorAsignatura: patrones);
+
+            res.IsSuccess.Should().BeTrue();
+            var planAsig2 = res.Value.Planes.First(p => p.IdAsignatura == 2);
+            planAsig2.DiasPatron.Should().HaveCount(3);
+            planAsig2.DiasPatron.Should().BeEquivalentTo(new[] { 1, 4, 5 });
+        }
+
+        [Fact]
+        public void Construir_JueDomSinCatalogo_EscalaAMieDomYAplicaCatalogo()
+        {
+            // FASE 2441: JUE-DOM que no aloja en su catálogo (por requerir día 3) escala a MIE-DOM (3,4,5,6,7) y aplica catálogo sin enumeración
+            var fInicio = new DateTime(2027, 2, 1);
+            var fFin = new DateTime(2027, 6, 30);
+            var asignaturas = new List<(int IdAsignatura, double Horas, int OrdenCurricular)>
+            {
+                (1, 16.0, 1),
+                (2, 16.0, 2)
+            };
+            var patrones = new Dictionary<int, string>
+            {
+                { 1, "5,6M" },
+                { 2, "3,4,7" } // Requiere día 3, no cabe en JUE-DOM (4,5,6,7)
+            };
+
+            var res = _sut.Construir(asignaturas, "JUE-DOM", fInicio, fFin, 4.0, diasPatronPorAsignatura: patrones);
+
+            res.IsSuccess.Should().BeTrue();
+            res.Value.Particion.Should().HaveCount(2);
+            res.Value.Particion.All(b => b.Count >= 2).Should().BeTrue();
+
+            var clave = string.Join("|",
+                res.Value.Particion.Select(b =>
+                    string.Join(".", b.Distinct().OrderBy(d => d))));
+
+            clave.Should().Be("5.6|3.4.6.7");
+        }
+
         #endregion
     }
 }

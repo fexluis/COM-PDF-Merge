@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 554 | 555 | 2026-11-25 |
-| `fase` | 2432 | 2433 | 2026-11-25 |
+| `ronda` | 558 | 559 | 2026-11-27 |
+| `fase` | 2442 | 2443 | 2026-11-27 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -260,6 +260,10 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-223 | 2026-11-25 | `(revisión e implementación Ronda 552 — Fase 2430: desempate de catálogo admitiendo bandas equivalentes sin empeoramiento)` | `Wave 552` → `Ronda 552` | `T1` → `Fase 2430` | closed | sin build/tests (restricción Paso 6 /ronda-review) | uncommitted |
 | R-224 | 2026-11-25 | `(revisión e implementación Ronda 553 — Fase 2431: comparación global catálogo vs enumeración y desempate por catálogo)` | `Wave 553` → `Ronda 553` | `T1` → `Fase 2431` | closed | sin build/tests (restricción Paso 6 /ronda-review) | uncommitted |
 | R-225 | 2026-11-25 | `(revisión e implementación Ronda 554 — Fase 2432: verificación de métrica conjunta CandidatasEvaluadas y desempates en comparación catálogo vs enumeración)` | `Wave 554` → `Ronda 554` | `T1` → `Fase 2432` | closed | sin build/tests (restricción Paso 6 /ronda-review) | uncommitted |
+| R-226 | 2026-11-27 | `(revisión e implementación Ronda 555 — Fases 2433–2437: política catálogo-only, cobertura determinista sin enumeración, escalado obligatorio de ventana y patrón de 3 días en banda residual)` | `Wave 555` → `Ronda 555` | `T1..T5` → `Fase 2433–2437` | closed | sin build/tests (restricción Paso 6 /ronda-review) | uncommitted |
+| R-227 | 2026-11-27 | `(revisión e implementación Ronda 556 — Fases 2438–2440: permitirEnumeracion compatible por defecto con override catálogo-only en oleadas, visibilidad internal de DetectarEsMarVie y sincronización ranurasPatron en expansión de banda)` | `Wave 556` → `Ronda 556` | `T1..T3` → `Fase 2438–2440` | closed | sin build/tests (restricción Paso 6 /ronda-review) | uncommitted |
+| R-228 | 2026-11-27 | `(revisión e implementación Ronda 557 — Fase 2441: catálogo determinista para MIE-DOM 3,4,5,6,7 sin singleton y completitud de escalera VIE-DOM → JUE-DOM → MIE-DOM)` | `Wave 557` → `Ronda 557` | `T1` → `Fase 2441` | closed | sin build/tests (restricción Paso 6 /ronda-review) | uncommitted |
+| R-229 | 2026-11-27 | `(revisión e implementación Ronda 558 — Fase 2442: aserción exacta de partición MIE-DOM y cobertura de variante sin 6T)` | `Wave 558` → `Ronda 558` | `T1` → `Fase 2442` | closed | build/tests en build-release 1.6.4.50 | pendiente |
 
 
 

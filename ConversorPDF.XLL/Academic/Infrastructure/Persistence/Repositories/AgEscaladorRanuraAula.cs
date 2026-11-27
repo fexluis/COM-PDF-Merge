@@ -600,7 +600,9 @@ namespace ConversorPDF.XLL.Academic.Infrastructure.Persistence.Repositories
                 string particionPreferente = opcionUsada?.CarrilesTexto ?? string.Empty;
                 var patronesConserva = autorizadasAula.Count > 0 ? patronesSimulados : patronesAula;
                 // FASE 2219: Evaluar conservación y no-alojables sobre patrones efectivos
-                bool conservaPatron = opcionUsada != null
+                bool hayPatronesDefinidos = patronesConserva != null && patronesConserva.Any(p => !string.IsNullOrWhiteSpace(p));
+                bool conservaPatron = hayPatronesDefinidos
+                    && opcionUsada != null
                     && PatronesAlojablesEnOpcion(opcionUsada, patronesConserva)
                     && AgParticionCarriles.ContarPatronesNoAlojables(opcionUsada.Carriles, patronesConserva) == 0;
 

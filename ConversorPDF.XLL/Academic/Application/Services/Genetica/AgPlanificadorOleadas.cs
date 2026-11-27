@@ -88,8 +88,68 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             {
                 return Result.Failure<AgPlanOleadasResultado>("I1_CONF_RANURA: ventana sin ranuras activas.");
             }
-            var referencia = ConstruirReferencia(asignaturas, diasVentana, fechaInicio, fechaFin,
-                unidadSesion, esFestivo, bloques, jornada, patrones, opciones, diagnostico);
+            var ventanaActual = diasVentana;
+            var ranurasActuales = ranuras;
+            Result<AgPlanOleadasResultado> referencia;
+
+            if (permitirParcial)
+            {
+                referencia = ConstruirReferencia(asignaturas, diasVentana, fechaInicio, fechaFin,
+                    unidadSesion, esFestivo, bloques, jornada, patrones, opciones, diagnostico);
+            }
+            else
+            {
+                // FASE 2435 (Opción 2A): Si no hay catálogo en la ventana actual, ampliar por la escalera de ventanas
+                int pasoEscalera = 0;
+                while (true)
+                {
+                    referencia = ConstruirReferencia(asignaturas, ventanaActual, fechaInicio, fechaFin,
+                        unidadSesion, esFestivo, bloques, jornada, patrones, opciones, diagnostico);
+
+                    if (!referencia.IsFailure || !referencia.Error.StartsWith("I5_SIN_CATALOGO_AMPLIAR", StringComparison.Ordinal))
+                    {
+                        break;
+                    }
+
+                    if (pasoEscalera >= AgEscaleraVentanas.MaxPasos)
+                    {
+                        return Result.Failure<AgPlanOleadasResultado>(
+                            "I5_SIN_CATALOGO_AGOTADO: no hay catálogo tras agotar la escalera de ventanas.");
+                    }
+
+                    string siguienteVentana = AgEscaleraVentanas.Siguiente(ventanaActual);
+                    if (string.IsNullOrWhiteSpace(siguienteVentana) || string.Equals(siguienteVentana, ventanaActual, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return Result.Failure<AgPlanOleadasResultado>(
+                            "I5_SIN_CATALOGO_AGOTADO: no hay siguiente escalón de ventana disponible.");
+                    }
+
+                    var ranurasSiguiente = AgRanuras.PorVentana(siguienteVentana, bloques, jornada, unidadSesion);
+                    if ((ranurasSiguiente == null || ranurasSiguiente.Count == 0) && bloques != null && bloques.Count > 0)
+                    {
+                        ranurasSiguiente = AgRanuras.PorVentana(siguienteVentana, null, jornada, unidadSesion);
+                    }
+
+                    if (ranurasSiguiente == null || ranurasSiguiente.Count == 0)
+                    {
+                        return Result.Failure<AgPlanOleadasResultado>(
+                            "I5_CONF_RANURA: ventana ampliada sin ranuras activas.");
+                    }
+
+                    LoggerHelper.WarningLimitado(
+                        $"OleadasEscaladoSinCatalogo|{diagnostico}|{ventanaActual}→{siguienteVentana}",
+                        $"[Oleadas] Sin catálogo en '{ventanaActual}'; ampliando a '{siguienteVentana}' (paso {pasoEscalera + 1}/{AgEscaleraVentanas.MaxPasos}).");
+
+                    ventanaActual = siguienteVentana;
+                    ranurasActuales = ranurasSiguiente;
+                    opciones = null; // FASE 2441: Al escalar de ventana, regenerar las opciones para la nueva ventana
+                    pasoEscalera++;
+                }
+
+                diasVentana = ventanaActual;
+                ranuras = ranurasActuales;
+            }
+
             if (referencia.IsFailure && !referencia.Error.StartsWith("I5_", StringComparison.Ordinal))
             {
                 LoggerHelper.Debug($"[AG-RANURAS-TMP] ELEGIR {diagnostico} plan=error_referencia motivo={referencia.Error} candidatoEjecutado=false");
@@ -403,7 +463,16 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 canonicas,
                 bandas => EvaluarParticion(ctx, diasVentana, bandas),
                 ev => EsParticionFiel(ctx, ev),
-                opciones);
+                opciones,
+                permitirEnumeracion: false,
+                diasVentana: diasVentana);
+
+            // FASE 2433: Si no hay catálogo aplicable bajo política catálogo-only, solicitar ampliación de ventana
+            if (string.Equals(seleccion.Origen, "sin_catalogo", StringComparison.OrdinalIgnoreCase))
+            {
+                return Result.Failure<AgPlanOleadasResultado>(
+                    "I5_SIN_CATALOGO_AMPLIAR: no hay catálogo para la ventana actual.");
+            }
 
             // FASE 2220 / FASE 2222 / FASE 2226 / FASE 2228 / FASE 2229: Trazabilidad de partición con origen, opción y contadores separados.
             // Regla de emisión: origen=catalogo siempre (incluso si cambiada=false); origen=enumeracion/catalogo_fallback solo si cambiada=true.
@@ -516,7 +585,13 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     if (diasPatron.Any(d => !diasCarril[c].Contains(d)))
                         continue;
 
-                    if (carga[c] + ctx.Demanda[i] > capacidadCarril[c])
+                    int capCarril = capacidadCarril[c];
+                    if (ctx.OcurrenciasPorDia != null && ctx.OcurrenciasPorDia.Count == 5 && diasPatron.Count == 1 && ctx.OcurrenciasPorDia.TryGetValue(diasPatron[0], out var ocDia))
+                    {
+                        capCarril = Math.Min(capCarril, ocDia);
+                    }
+
+                    if (carga[c] + ctx.Demanda[i] > capCarril)
                         continue;
 
                     if (diasCarril[c].Count < mejorTam)
@@ -585,7 +660,9 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 }
 
                 var diasFijos = AgCarriles.Ventana(ctx.Patrones[i]);
-                var ranurasEfectivas = ranurasCarril[c].Where(r => diasFijos.Count == 0 || diasFijos.Contains(r.Dia)).ToList();
+                var ranurasEfectivas = ranurasCarril[c]
+                    .Where(r => diasFijos.Count == 0 || diasFijos.Contains(r.Dia))
+                    .ToList();
                 int SRequeridas = ctx.Demanda[i];
                 int kBase = Math.Max(1, (int)Math.Ceiling(SRequeridas / (double)slotsCarril[c]));
 
@@ -647,11 +724,15 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     sesiones = AgPlanificadorRanuras.Materializar(asig.IdAsignatura, ranurasEfectivas, SRequeridas, ini, fin, ctx.EsFestivo);
                 }
 
+                var diasPlan = (ctx.OcurrenciasPorDia != null && ctx.OcurrenciasPorDia.Count == 5 && diasCarril[c].Count == 3)
+                    ? diasCarril[c]
+                    : ranurasEfectivas.Select(r => r.Dia).Distinct().ToList();
+
                 planes.Add(new AgPlanOleada(
                     asig.IdAsignatura,
                     c,
                     oleada[c],
-                    ranurasEfectivas.Select(r => r.Dia).Distinct().ToList(),
+                    diasPlan,
                     ini,
                     fin,
                     k,
@@ -710,8 +791,39 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 if (dias.Count == 0 || !porId.TryGetValue(ctx.Ordenadas[i].IdAsignatura, out var plan))
                     continue;
 
-                if (!new HashSet<int>(dias).SetEquals(plan.RanurasPatron.Select(r => r.Dia)))
-                    return false;
+                var diasPlan = plan.DiasPatron != null && plan.DiasPatron.Count > 0
+                    ? plan.DiasPatron
+                    : (plan.RanurasPatron != null
+                        ? plan.RanurasPatron.Select(r => r.Dia).Distinct().ToList()
+                        : new List<int>());
+
+                // F1586 / F2441: Fidelidad de franjas de sábado si el patrón lo especificó (6M vs 6T)
+                string patronStr = ctx.Patrones[i];
+                if (!string.IsNullOrWhiteSpace(patronStr) && plan.RanurasPatron != null)
+                {
+                    if (patronStr.IndexOf("6M", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        if (plan.RanurasPatron.Any(r => r.Dia == 6 && !string.Equals(r.Franja, AgFranjaJornada.MANANA, StringComparison.OrdinalIgnoreCase)))
+                            return false;
+                    }
+                    else if (patronStr.IndexOf("6T", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        if (plan.RanurasPatron.Any(r => r.Dia == 6 && !string.Equals(r.Franja, AgFranjaJornada.TARDE, StringComparison.OrdinalIgnoreCase)))
+                            return false;
+                    }
+                }
+
+                bool esResidualCincoDias = ctx.OcurrenciasPorDia != null && ctx.OcurrenciasPorDia.Count == 5 && diasPlan.Count == 3;
+                if (esResidualCincoDias)
+                {
+                    if (!dias.All(d => diasPlan.Contains(d)))
+                        return false;
+                }
+                else
+                {
+                    if (!new HashSet<int>(dias).SetEquals(diasPlan))
+                        return false;
+                }
             }
             return true;
         }

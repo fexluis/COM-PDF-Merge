@@ -15,10 +15,15 @@ namespace ConversorPDF.XLL.Academic.Domain.Models.Genetica
 
         /// <summary>
         /// Días ISO de la ventana semanal; vacío si no hay ventana declarada.
+        /// Tolera tokens de franja (6M/6T) normalizándolos a día 6 (Fase 2441).
         /// </summary>
         public static IReadOnlyList<int> Ventana(string diasVentana)
         {
-            return AgDiasVentana.Dias(diasVentana);
+            if (string.IsNullOrWhiteSpace(diasVentana)) return new List<int>();
+            string norm = diasVentana
+                .Replace("6M", "6").Replace("6m", "6")
+                .Replace("6T", "6").Replace("6t", "6");
+            return AgDiasVentana.Dias(norm);
         }
 
         /// <summary>

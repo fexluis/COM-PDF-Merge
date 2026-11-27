@@ -96,6 +96,8 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
     /// </summary>
     internal static class AgParticionCarriles
     {
+        internal const bool PermitirEnumeracion = false; // Fase 2433: Política catálogo-only por defecto
+
         public static AgSeleccionParticion Seleccionar(
             IReadOnlyList<int> ventana,
             IReadOnlyList<AgRanura> ranuras,
@@ -103,7 +105,9 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             IReadOnlyList<IReadOnlyList<AgRanura>> bandasCanonicas,
             Func<IReadOnlyList<IReadOnlyList<AgRanura>>, AgEvaluacionParticion> evaluar,
             Func<AgEvaluacionParticion, bool> esAdmisible = null,
-            IReadOnlyList<AgOpcionParticion> opciones = null)
+            IReadOnlyList<AgOpcionParticion> opciones = null,
+            bool permitirEnumeracion = true,
+            string diasVentana = null)
         {
             if (evaluar == null) throw new ArgumentNullException(nameof(evaluar));
 
@@ -172,7 +176,110 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     textoMejorCatalogo = elegidaOpcion.Texto;
                 }
 
+                // FASE 2431 / FASE 2433: Si no se permite enumeración, resolver de inmediato con catálogo o sin_catalogo
+                if (!permitirEnumeracion)
+                {
+                    if (mejorCatalogo != null)
+                    {
+                        if (mejorCatalogo.BandasSingleton < referencia.BandasSingleton)
+                        {
+                            LoggerHelper.Debug(
+                                $"[Oleadas] bandasSingleton={referencia.BandasSingleton}→{mejorCatalogo.BandasSingleton}; " +
+                                $"motivo=CAMBIO_POR_SINGLETON; opcion='{textoMejorCatalogo}'");
+                        }
+
+                        return new AgSeleccionParticion(
+                            true, referencia, mejorCatalogo,
+                            evaluadasOpciones,
+                            0,
+                            "catalogo",
+                            textoMejorCatalogo,
+                            evaluadasOpciones,
+                            mejorCatalogo.Clave);
+                    }
+
+                    string etiquetaVentana = !string.IsNullOrWhiteSpace(diasVentana)
+                        ? diasVentana.Trim()
+                        : (ventana != null ? AgDiasVentana.AIso(string.Join(",", ventana)) : string.Empty);
+                    bool puedeEscalar = !string.IsNullOrEmpty(etiquetaVentana) && AgEscaleraVentanas.PuedeEscalar(etiquetaVentana);
+                    bool prohibirSingleton = ventana != null && ventana.Count == 5;
+                    bool tienePatronFinSemana = patrones != null && patrones.Any(p =>
+                        !string.IsNullOrWhiteSpace(p) &&
+                        (p.IndexOf("6M", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                         p.IndexOf("6T", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                         string.Equals(p.Trim(), "JUE-DOM", StringComparison.OrdinalIgnoreCase)));
+
+                    bool todosPatronesEnVentana = patrones == null || ventana == null || patrones.All(p => AgCarriles.Ventana(p).All(ventana.Contains));
+                    bool sinCatalogo = puedeEscalar && (
+                        (prohibirSingleton && referencia.BandasSingleton > 0) ||
+                        tienePatronFinSemana ||
+                        (todosPatronesEnVentana && (referencia.PatronesNoAlojables > 0 || (referencia.Resultado != null && referencia.Resultado.Infactibles.Count > 0))));
+
+                    if (sinCatalogo)
+                    {
+                        return new AgSeleccionParticion(
+                            false, referencia, referencia,
+                            evaluadasOpciones,
+                            0,
+                            "sin_catalogo",
+                            textoOpcionIntentada,
+                            evaluadasOpciones,
+                            referencia.Clave);
+                    }
+
+                    return new AgSeleccionParticion(
+                        false, referencia, referencia,
+                        evaluadasOpciones,
+                        0,
+                        "catalogo",
+                        textoOpcionIntentada,
+                        evaluadasOpciones,
+                        referencia.Clave);
+                }
+
                 // FASE 2431: sin cortocircuito aquí; se continúa a la enumeración contigua para comparar catálogo vs enumeración
+            }
+
+            // FASE 2433: Sin opciones y sin permitir enumeración, verificar si la referencia canónica es catálogo válido
+            if (!permitirEnumeracion)
+            {
+                string etiquetaVentana = !string.IsNullOrWhiteSpace(diasVentana)
+                    ? diasVentana.Trim()
+                    : (ventana != null ? AgDiasVentana.AIso(string.Join(",", ventana)) : string.Empty);
+                bool puedeEscalar = !string.IsNullOrEmpty(etiquetaVentana) && AgEscaleraVentanas.PuedeEscalar(etiquetaVentana);
+                bool prohibirSingleton = ventana != null && ventana.Count == 5;
+                bool tienePatronFinSemana = patrones != null && patrones.Any(p =>
+                    !string.IsNullOrWhiteSpace(p) &&
+                    (p.IndexOf("6M", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                     p.IndexOf("6T", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                     string.Equals(p.Trim(), "JUE-DOM", StringComparison.OrdinalIgnoreCase)));
+
+                bool todosPatronesEnVentana = patrones == null || ventana == null || patrones.All(p => AgCarriles.Ventana(p).All(ventana.Contains));
+                bool sinCatalogo = puedeEscalar && (
+                    (prohibirSingleton && referencia.BandasSingleton > 0) ||
+                    tienePatronFinSemana ||
+                    (todosPatronesEnVentana && (referencia.PatronesNoAlojables > 0 || (referencia.Resultado != null && referencia.Resultado.Infactibles.Count > 0))));
+
+                if (sinCatalogo)
+                {
+                    return new AgSeleccionParticion(
+                        false, referencia, referencia,
+                        0,
+                        0,
+                        "sin_catalogo",
+                        string.Empty,
+                        0,
+                        referencia.Clave);
+                }
+
+                return new AgSeleccionParticion(
+                    false, referencia, referencia,
+                    0,
+                    0,
+                    "catalogo",
+                    string.Empty,
+                    0,
+                    referencia.Clave);
             }
 
             bool hayPatronValido = false;
@@ -192,8 +299,9 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             // Si catalogoEvaluado es true, continuar a la enumeración contigua para completar el fallback.
             if (!hayPatronValido && referencia.Resultado.Infactibles.Count == 0 && !catalogoEvaluado)
             {
+                string origenRef = referencia.BandasSingleton == 0 ? "catalogo" : "enumeracion";
                 return new AgSeleccionParticion(false, referencia, referencia, 0, 0,
-                    "enumeracion", string.Empty, 0, referencia.Clave);
+                    origenRef, string.Empty, 0, referencia.Clave);
             }
 
             int kActual = bandasCanonicas.Count;
@@ -273,11 +381,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     continue;
                 }
 
-                // (d) Reducción estricta de infactibles, acortamiento de makespan o reducción de singleton/bandas en factible (F1583, F1736, F2395)
+                // (d) Reducción estricta de infactibles, singleton o acortamiento de makespan/bandas (F1736, F2395)
                 bool menorInfactibles = ev.Resultado.Infactibles.Count < referencia.Resultado.Infactibles.Count;
                 bool mejorMakespan = ev.Resultado.Infactibles.Count == referencia.Resultado.Infactibles.Count && ev.Makespan < referencia.Makespan;
-                bool mejorSingleton = ev.Resultado.Infactibles.Count == 0 && ev.BandasSingleton < referencia.BandasSingleton;
-                bool menorBandas = ev.Resultado.Infactibles.Count == 0
+                bool mejorSingleton = referencia.Resultado.Infactibles.Count == 0 && ev.BandasSingleton < referencia.BandasSingleton;
+                bool menorBandas = referencia.Resultado.Infactibles.Count == 0
                     && ev.BandasSingleton == referencia.BandasSingleton
                     && ev.Makespan <= referencia.Makespan
                     && ev.Bandas < referencia.Bandas;
@@ -343,7 +451,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         $"motivo=CAMBIO_POR_SINGLETON; opcion='{textoMejorCatalogo}'");
                 }
 
-                // FASE 2432: CandidatasEvaluadas refleja ambas rutas evaluadas (opciones + contiguas)
+                // FASE 2220 / FASE 2432: CandidatasEvaluadas refleja ambas rutas evaluadas si hubo enumeración
                 return new AgSeleccionParticion(
                     true, referencia, mejorCatalogo,
                     evaluadasOpciones + evaluadas,
@@ -387,7 +495,11 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             c = a.Bandas.CompareTo(b.Bandas);
             if (c != 0) return c;
 
-            return a.MaxRanurasPorBanda.CompareTo(b.MaxRanurasPorBanda);
+            c = a.MaxRanurasPorBanda.CompareTo(b.MaxRanurasPorBanda);
+            if (c != 0) return c;
+
+            // FASE 2431: En empate métrico entre catálogo y enumeración, retorna 0 para que gane catálogo
+            return 0;
         }
 
         public static int ContarPatronesNoAlojables(

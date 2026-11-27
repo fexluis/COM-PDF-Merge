@@ -778,5 +778,39 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             gen.Should().NotBeNull();
             gen.DiasPatron.Should().Be(esperado);
         }
+
+        [Fact]
+        public void Fabrica_PlanOleadaConUnDia_ExpandeDiasKyRanurasPatronATresDias()
+        {
+            // Fase 2440: Si el plan de oleadas vino con 1 día en ventana de 5 días, se expande a 3 días y ranurasPatron se sincroniza
+            var contexto = new AgContexto();
+            contexto.IdPrograma = 1;
+            contexto.Programas.Add(new Programa { Id = 1, Modalidad = "PREGRADO PRESENCIAL" });
+            contexto.Ventana = VentanaSemestre.Crear(1, "2026-1", new DateTime(2026, 2, 2), new DateTime(2026, 6, 30), AgOrigenVentana.Presencial).Value;
+
+            var aula = new AgAula { Id = 1, DiasVentana = "1,2,3,4,5", HorasDia = 4, Estado = AgEstadoAula.Disponible };
+            contexto.Aulas.Add(aula);
+            contexto.Asignaturas.Add(new Asignatura { Id = 10, Nombre = "Asig 1", Horas = 32, HorasSemanales = 4, IdPrograma = 1 });
+            for (int d = 1; d <= 5; d++)
+            {
+                contexto.Bloques.Add(new AgBloqueHorario { Id = d, DiaSemanaNumero = d, DuracionHoras = 4, Activo = 1 });
+            }
+            contexto.AulaAsignaturas.Add(new AgAulaAsignatura
+            {
+                IdAula = 1,
+                IdAsignatura = 10,
+                DiasPatron = "5",
+                OrigenPatron = "LUN-JUE"
+            });
+
+            var sut = new AgFabricaIndividuos(new Random(42));
+            var ind = sut.CrearAleatorio(contexto, 1, 0);
+
+            ind.Should().NotBeNull();
+            var genes = ind.Genes.Where(g => g.IdAsignatura == 10).ToList();
+            genes.Should().NotBeEmpty();
+            genes.All(g => g.DiasPatron == "1,2,5").Should().BeTrue();
+            genes.Select(g => g.DiaSemana).Distinct().Should().BeSubsetOf(new[] { 1, 2, 5 });
+        }
     }
 }

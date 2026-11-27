@@ -418,6 +418,10 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         : (!string.IsNullOrWhiteSpace(contexto.GrupoActual) ? contexto.GrupoActual : "A");
                     string claveGrupo = $"{asig.Id}|{idAula}|{grupoEfectivo}";
 
+                    var progAula = aula != null ? contexto.Programas?.FirstOrDefault(p => p.Id == aula.IdPrograma) : null;
+                    var nivelAula = AgNivelAcademicoCatalogo.Desde(progAula?.Modalidad);
+                    int horasEfectivas = (int)AgUnidadesSemanales.HorasSesionAula(aula, nivelAula);
+
                     List<int> diasK;
                     IReadOnlyList<AgRanura> ranurasPatron = null;
                     IReadOnlyList<AgSesionPlanificada> sesionesPlanificadas = null;
@@ -426,17 +430,35 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         fechaInicio = planOleada.FechaInicio;
                         fechaFin = planOleada.FechaFin;
                         diasK = planOleada.DiasPatron.ToList();
-                        ranurasPatron = planOleada.RanurasPatron;
+                        // Fase 2436 / Fase 2440: En 5 días no permitir singleton en diasK para materias automáticas; expandir a banda completa sin singleton y sincronizar ranurasPatron
+                        if (string.IsNullOrWhiteSpace(aa?.DiasPatron) && diasK.Count == 1 && aula != null && !string.IsNullOrWhiteSpace(aula.DiasVentana))
+                        {
+                            var vAula = AgCarriles.Ventana(aula.DiasVentana);
+                            if (vAula.Count == 5)
+                            {
+                                bool? esMarVie = aa != null ? AgPlanificadorPatronSemanal.DetectarEsMarVie(aa) : true;
+                                var bandaCompleta = AgCarriles.BandaSinSingletonParaDia(vAula, diasK[0], esMarVie ?? true);
+                                if (bandaCompleta != null)
+                                {
+                                    diasK = bandaCompleta.ToList();
+
+                                    ranurasPatron = AgRanuras.PorVentana(
+                                        aula.DiasVentana, contexto.Bloques, aula.Jornada, horasEfectivas)
+                                        .Where(r => bandaCompleta.Contains(r.Dia))
+                                        .ToList();
+                                }
+                            }
+                        }
+                        if (ranurasPatron == null || ranurasPatron.Count == 0)
+                        {
+                            ranurasPatron = planOleada.RanurasPatron;
+                        }
                         sesionesPlanificadas = planOleada.Sesiones;
                     }
                     else
                     {
                         diasK = AgPlanificadorPatronSemanal.DiasKDe(aa, aula, idxAsig).ToList();
                     }
-
-                    var progAula = aula != null ? contexto.Programas?.FirstOrDefault(p => p.Id == aula.IdPrograma) : null;
-                    var nivelAula = AgNivelAcademicoCatalogo.Desde(progAula?.Modalidad);
-                    int horasEfectivas = (int)AgUnidadesSemanales.HorasSesionAula(aula, nivelAula);
 
                     // Fase 1157: Resolver ranuras directamente si no vinieron en el plan
                     // Corrida 92 / Revisión: Conservar SIEMPRE sesiones fechadas válidas provenientes del planificador.

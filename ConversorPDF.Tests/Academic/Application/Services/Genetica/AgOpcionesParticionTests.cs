@@ -316,5 +316,55 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             op.Should().NotBeNull();
             op.CarrilesTexto.Should().Be("5,6M|4,6T,7");
         }
+
+        [Fact]
+        public void Resolver_TresCuatroCincoSeisSiete_MieDom_ProduceOpcionSinSingleton()
+        {
+            // Fase 2441 / Fase 2442: 3,4,5,6,7 con MIE-DOM (6M y 6T)
+            var ranuras = new List<AgRanura>
+            {
+                new AgRanura(3, AgFranjaJornada.NOCHE, 4.0),
+                new AgRanura(4, AgFranjaJornada.TARDE, 4.0),
+                new AgRanura(5, AgFranjaJornada.TARDE, 4.0),
+                new AgRanura(6, AgFranjaJornada.MANANA, 4.0),
+                new AgRanura(6, AgFranjaJornada.TARDE, 4.0),
+                new AgRanura(7, AgFranjaJornada.MANANA, 4.0)
+            };
+            var patrones = new List<string> { "5,6M", "3,4,7" };
+
+            var op = AgOpcionesParticion.Resolver("3,4,5,6,7", ranuras, patrones);
+
+            op.Should().NotBeNull();
+            op.CarrilesTexto.Should().Be("5,6M|3,4,6T,7");
+            op.Carriles.Should().HaveCount(2);
+            op.Carriles.All(c => c.Count >= 2).Should().BeTrue();
+            op.Carriles[0].Select(r => r.Dia).Should().BeEquivalentTo(new[] { 5, 6 });
+            op.Carriles[0].Any(r => r.Dia == 6 && r.Franja == AgFranjaJornada.MANANA).Should().BeTrue();
+            op.Carriles[1].Select(r => r.Dia).Should().BeEquivalentTo(new[] { 3, 4, 6, 7 });
+            op.Carriles[1].Any(r => r.Dia == 6 && r.Franja == AgFranjaJornada.TARDE).Should().BeTrue();
+        }
+
+        [Fact]
+        public void Resolver_TresCuatroCincoSeisSiete_MieDom_Sin6T_Produce5_6M_3_4_7()
+        {
+            // Fase 2442: 3,4,5,6,7 con MIE-DOM sin 6T resuelve 5,6M|3,4,7
+            var ranuras = new List<AgRanura>
+            {
+                new AgRanura(3, AgFranjaJornada.NOCHE, 4.0),
+                new AgRanura(4, AgFranjaJornada.TARDE, 4.0),
+                new AgRanura(5, AgFranjaJornada.TARDE, 4.0),
+                new AgRanura(6, AgFranjaJornada.MANANA, 4.0),
+                new AgRanura(7, AgFranjaJornada.MANANA, 4.0)
+            };
+            var patrones = new List<string> { "5,6M", "3,4,7" };
+
+            var op = AgOpcionesParticion.Resolver("3,4,5,6,7", ranuras, patrones);
+
+            op.Should().NotBeNull();
+            op.CarrilesTexto.Should().Be("5,6M|3,4,7");
+            op.Carriles.Should().HaveCount(2);
+            op.Carriles[0].Select(r => r.Dia).Should().BeEquivalentTo(new[] { 5, 6 });
+            op.Carriles[1].Select(r => r.Dia).Should().BeEquivalentTo(new[] { 3, 4, 7 });
+        }
     }
 }

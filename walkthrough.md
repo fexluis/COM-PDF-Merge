@@ -900,6 +900,71 @@ Las citas `walkthrough.md:NNNN` anteriores al corte apuntan al archivo monolitic
 |---|---|---|---|---|---|
 | F2432 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgParticionCarriles.cs:338-356`, `AgParticionCarrilesOpcionesTests.cs:570-715`, `REGISTRY.md:25-28, 262` (Implementado) |
 
+---
+
+## Ronda 555 — Política catálogo-only, cobertura sin enumeración, escalado obligatorio y fijación de patrón de 3 días (Fases 2433–2437)
+
+### Resumen de la Ronda
+- **Fase 2433:** Configuración de `PermitirEnumeracion = false` en `AgParticionCarriles.cs` y supresión de enumeración contigua en `Seleccionar`. Retorno determinista de `sin_catalogo` cuando el catálogo no satisface condiciones y emisión de `I5_SIN_CATALOGO_AMPLIAR` en `AgPlanificadorOleadas.cs`.
+- **Fase 2434:** Cobertura determinista en `AgOpcionesParticion.cs` para `4,5,6,7` (`5,6M|4,6T,7`), detección de patrones de 1 día como señales de origen y ordenamiento por frecuencia en fallback mixto sin singleton en 5 días (`2,3|1,4,5` vs `1,2,5|3,4`).
+- **Fase 2435:** Implementación del bucle de escalado obligatorio en `AgPlanificadorOleadas.ConstruirInterno` sobre `AgEscaleraVentanas.Siguiente` hasta `MaxPasos` ante `I5_SIN_CATALOGO_AMPLIAR` (Opción 2A).
+- **Fase 2436:** Erradicación de singletons de 1 día en 5 días en `AgPlanificadorPatronSemanal.cs`, `AgPlanificadorOleadas.cs` y `AgFabricaIndividuos.cs`: fijación de 3 días completos en bandas `{1,2,5}` y `{1,4,5}` (Opción 1A).
+- **Fase 2437:** Pruebas unitarias de política catálogo-only, catálogo de fin de semana, escalado de `VIE-DOM` y patrones de 3 días en `AgParticionCarrilesOpcionesTests.cs` y `AgPlanificadorOleadasTests.cs`. Registro en `REGISTRY.md` (Wave 555, fila `R-226`).
+
+### Verificación de Principios (Ronda 555)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2433 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgParticionCarriles.cs:97-185`, `AgPlanificadorOleadas.cs:450-465` (Implementado) |
+| F2434 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgOpcionesParticion.cs:35-155` (Implementado) |
+| F2435 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorOleadas.cs:91-140` (Implementado) |
+| F2436 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorPatronSemanal.cs:122-130`, `AgPlanificadorOleadas.cs:645-655`, `AgFabricaIndividuos.cs:424-440` (Implementado) |
+| F2437 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgParticionCarrilesOpcionesTests.cs:660, 770, 785-910`, `AgPlanificadorOleadasTests.cs:1115-1165`, `REGISTRY.md:27-28, 263` (Implementado) |
+
+---
+
+## Ronda 556 — Compatibilidad de enumeración por defecto, visibilidad de detector y sincronización de ranuras expandidas (Fases 2438–2440)
+
+### Resumen de la Ronda
+- **Fase 2438:** Restitución de `permitirEnumeracion = true` como valor por defecto en `AgParticionCarriles.Seleccionar` para preservar compatibilidad en tests existentes, y pase de `permitirEnumeracion: false` en `AgPlanificadorOleadas.cs` para mantener la política catálogo-only en producción.
+- **Fase 2439:** Modificación de visibilidad a `internal static bool? DetectarEsMarVie(AgAulaAsignatura aa)` en `AgPlanificadorPatronSemanal.cs`, corrigiendo error CS0122 en `AgFabricaIndividuos.cs`.
+- **Fase 2440:** Sincronización de `ranurasPatron` al expandir `diasK` a banda completa en `AgFabricaIndividuos.cs` evitando que genes de 3 días queden con ranuras de 1 día, y test unitario en `AgFabricaIndividuosTests.cs`. Registro en `REGISTRY.md` (Wave 556, fila `R-227`).
+
+### Verificación de Principios (Ronda 556)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2438 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgParticionCarriles.cs:103`, `AgPlanificadorOleadas.cs:457` (Implementado) |
+| F2439 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorPatronSemanal.cs:185` (Implementado) |
+| F2440 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgFabricaIndividuos.cs:421-448`, `AgFabricaIndividuosTests.cs:780-815`, `REGISTRY.md:27-28, 264` (Implementado) |
+
+---
+
+## Ronda 557 — Cobertura de catálogo para MIE-DOM y completitud de escalera (Fase 2441)
+
+### Resumen de la Ronda
+- **Fase 2441:** Adición de opción de catálogo determinista sin singleton en `AgOpcionesParticion.cs` para ventana `MIE-DOM` (`3,4,5,6,7`), cubriendo ranuras de sábado (6M/6T) sin dejar ranuras sobrantes ni caer en `I5_SIN_CATALOGO_AGOTADO`. Cobertura de tests en `AgOpcionesParticionTests.cs` y `AgPlanificadorOleadasTests.cs`. Registro en `REGISTRY.md` (Wave 557, fila `R-228`).
+
+### Verificación de Principios (Ronda 557)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2441 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgOpcionesParticion.cs:40-52, 195-205`, `AgOpcionesParticionTests.cs:320-345`, `AgPlanificadorOleadasTests.cs:1165-1190`, `REGISTRY.md:27-28, 265` (Implementado) |
+
+---
+
+## Ronda 558 — Aserción exacta de partición MIE-DOM y cobertura de variante sin 6T (Fase 2442)
+
+### Resumen de la Ronda
+- **Fase 2442:** Fortalecimiento de aserciones en `AgPlanificadorOleadasTests.cs` validando la clave de partición exacta `5.6|3.4.6.7` y las franjas canónicas 6M y 6T. Incorporación de prueba para `3,4,5,6,7` sin franja tarde (resolviendo `5,6M|3,4,7`) en `AgOpcionesParticionTests.cs`. Registro en `REGISTRY.md` (Wave 558, fila `R-229`).
+
+### Verificación de Principios (Ronda 558)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2442 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorOleadasTests.cs:1185-1196`, `AgOpcionesParticionTests.cs:335-370`, `REGISTRY.md:27-28, 266` (Implementado) |
+
+
 
 
 

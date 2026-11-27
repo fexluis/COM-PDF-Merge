@@ -927,6 +927,71 @@ Las citas `implementation_plan.md:NNNN` anteriores al corte apuntan al archivo m
 |---|---|---|
 | 2432 | `AgParticionCarriles.cs`, `AgParticionCarrilesOpcionesTests.cs`, `REGISTRY.md` | Implementado |
 
+---
+
+## Ronda 555: Política catálogo-only, cobertura sin enumeración, escalado obligatorio y fijación de patrón de 3 días (Fases 2433–2437)
+
+### Resumen de la Ronda
+- **Fase 2433 (T1):** En `AgParticionCarriles.cs:97-185`, introducción de `internal const bool PermitirEnumeracion = false` y parámetro `permitirEnumeracion = PermitirEnumeracion` en `Seleccionar`. Cuando es `false`, se omite la llamada a `Particiones()` y la evaluación de contiguas; si no hay opción aceptable de catálogo, retorna `Origen = "sin_catalogo"` y `Elegida = referencia`. En `AgPlanificadorOleadas.cs:450-465`, captura de `sin_catalogo` retornando `Result.Failure("I5_SIN_CATALOGO_AMPLIAR: no hay catálogo para la ventana actual.")`. Erradicación de `origen=enumeracion` y `catalogo_fallback`.
+- **Fase 2434 (T2):** En `AgOpcionesParticion.cs:35-155`, cobertura determinista de catálogo para ventanas `4,5,6,7` (`JUE-DOM` retornando `5,6M|4,6T,7`) y resolución de fallbacks mixtos en 5 días (`2,3|1,4,5` y `1,2,5|3,4`) ponderados por conteo de señales de patrones `{1}`, `{2,3}`, `{4,5}` (MarVie) vs `{1,2}`, `{3,4}`, `{5}` (LunJue). `AgCarriles.ParticionSinSingleton` preservada exclusivamente para ventanas de 5 días.
+- **Fase 2435 (T3):** En `AgPlanificadorOleadas.cs:91-140`, orquestación de ampliación obligatoria de ranuras ante fallo `I5_SIN_CATALOGO_AMPLIAR` (Opción 2A): bucle de reintento sobre `AgEscaleraVentanas.Siguiente(ventanaActual)` y reconstrucción de ranuras mediante `AgRanuras.PorVentana` hasta `MaxPasos`, evitando el fallback silencioso a enumeración.
+- **Fase 2436 (T4):** En `AgPlanificadorPatronSemanal.cs:122-130`, `AgPlanificadorOleadas.cs:645-655` y `AgFabricaIndividuos.cs:424-440`, eliminación de singletons de 1 día en ventanas de 5 días: asignaturas en banda `{1,2,5}` o `{1,4,5}` fijan patrón completo de 3 días en `DiasPatron` y ranuras efectivas (Opción 1A). `AgCoherenciaGrupo.cs` preserva las horas y fechas sin revertir los días del patrón.
+- **Fase 2437 (T5):** En `AgParticionCarrilesOpcionesTests.cs` y `AgPlanificadorOleadasTests.cs`, batería de pruebas unitarias validando política catálogo-only (`sin_catalogo` ante ausencia de catálogo, selección limpia sin enumeración), resolución exacta de `5,6M|4,6T,7` en `JUE-DOM`, escalado automático de `VIE-DOM` a `JUE-DOM` y fijación de 3 días en bandas residuales de 5 días. Sincronización de Wave 555 y fila `R-226` en `REGISTRY.md`.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2433 | `AgParticionCarriles.cs`, `AgPlanificadorOleadas.cs` | Implementado |
+| 2434 | `AgOpcionesParticion.cs`, `AgCarriles.cs` | Implementado |
+| 2435 | `AgPlanificadorOleadas.cs` | Implementado |
+| 2436 | `AgPlanificadorPatronSemanal.cs`, `AgPlanificadorOleadas.cs`, `AgFabricaIndividuos.cs` | Implementado |
+| 2437 | `AgParticionCarrilesOpcionesTests.cs`, `AgPlanificadorOleadasTests.cs`, `REGISTRY.md` | Implementado |
+
+---
+
+## Ronda 556: Compatibilidad de enumeración por defecto, visibilidad de detector y sincronización de ranuras expandidas (Fases 2438–2440)
+
+### Resumen de la Ronda
+- **Fase 2438 (T1):** En `AgParticionCarriles.cs:103`, restitución del valor por defecto compatible `bool permitirEnumeracion = true` en la signatura de `Seleccionar` para salvaguardar todos los tests históricos de `AgParticionCarrilesTests` y suites de regresión. En `AgPlanificadorOleadas.cs:450-458`, pase explícito de `permitirEnumeracion: false` en el punto de producción para activar de forma quirúrgica la política catálogo-only sin afectar consumidores legados.
+- **Fase 2439 (T2):** En `AgPlanificadorPatronSemanal.cs:185`, ajuste de visibilidad de `DetectarEsMarVie` de `private static` a `internal static`, resolviendo el error de compilación CS0122 ocasionado por su invocación en `AgFabricaIndividuos.cs`.
+- **Fase 2440 (T3):** En `AgFabricaIndividuos.cs:421-448`, levantamiento del cómputo de `horasEfectivas` previo a la resolución de planes de oleada y derivación de `ranurasPatron` mediante `AgRanuras.PorVentana` filtradas por `bandaCompleta` al expandir singletons de 1 día a 3 días. Guarda condicional para no sobreescribir `ranurasPatron` con las ranuras singleton heredadas de `planOleada.RanurasPatron`. Se añade prueba unitaria en `AgFabricaIndividuosTests.cs`. Sincronización de Wave 556 y fila `R-227` en `REGISTRY.md`.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2438 | `AgParticionCarriles.cs`, `AgPlanificadorOleadas.cs` | Implementado |
+| 2439 | `AgPlanificadorPatronSemanal.cs` | Implementado |
+| 2440 | `AgFabricaIndividuos.cs`, `AgFabricaIndividuosTests.cs`, `REGISTRY.md` | Implementado |
+
+---
+
+## Ronda 557: Cobertura de catálogo para MIE-DOM y completitud de escalera (Fase 2441)
+
+### Resumen de la Ronda
+- **Fase 2441 (T1):** En `AgOpcionesParticion.cs:40-52, 195-205`, incorporación de resolución determinista de catálogo para ventanas `3,4,5,6,7` (`MIE-DOM` retornando `5,6M|3,4,6T,7` ante franja 6T o `5,6M|3,4,7` / `5,6|3,4,7` según ranuras provistas), garantizando particiones binarias sin singletons que completan el segundo escalón de la escalera `VIE-DOM → JUE-DOM → MIE-DOM`. Pruebas unitarias de resolución y escalado en `AgOpcionesParticionTests.cs` y `AgPlanificadorOleadasTests.cs`. Sincronización de Wave 557 y fila `R-228` en `REGISTRY.md`.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2441 | `AgOpcionesParticion.cs`, `AgOpcionesParticionTests.cs`, `AgPlanificadorOleadasTests.cs`, `REGISTRY.md` | Implementado |
+
+---
+
+## Ronda 558: Aserción exacta de partición MIE-DOM y cobertura de variante sin 6T (Fase 2442)
+
+### Resumen de la Ronda
+- **Fase 2442 (T1):** En `AgPlanificadorOleadasTests.cs:1185-1196`, refuerzo de la aserción de partición resultante al escalar a `MIE-DOM` verificando la clave exacta `"5.6|3.4.6.7"` y la presencia de franja MANANA en carril 0 y TARDE en carril 1 para el sábado (6). En `AgOpcionesParticionTests.cs:335-370`, verificación exacta de carriles y franjas para `5,6M|3,4,6T,7` y adición de caso de prueba unitaria para variante sin sábado tarde `5,6M|3,4,7`. Sincronización de Wave 558 y fila `R-229` en `REGISTRY.md`.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2442 | `AgPlanificadorOleadasTests.cs`, `AgOpcionesParticionTests.cs`, `REGISTRY.md` | Implementado |
+
+
 
 
 
