@@ -474,10 +474,12 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     "I5_SIN_CATALOGO_AMPLIAR: no hay catálogo para la ventana actual.");
             }
 
-            // FASE 2220 / FASE 2222 / FASE 2226 / FASE 2228 / FASE 2229: Trazabilidad de partición con origen, opción y contadores separados.
-            // Regla de emisión: origen=catalogo siempre (incluso si cambiada=false); origen=enumeracion/catalogo_fallback solo si cambiada=true.
+            // FASE 2220 / FASE 2222 / FASE 2226 / FASE 2228 / FASE 2229 / FASE 2443: Trazabilidad de partición con origen, opción y contadores separados.
+            // Regla de emisión: origen=catalogo u origen=canonico siempre (incluso si cambiada=false); origen=enumeracion/catalogo_fallback solo si cambiada=true.
             // Control de duplicados mediante WarningLimitado por clave (diagnostico|origen|cambiada).
-            bool registrarLog = string.Equals(seleccion.Origen, "catalogo", StringComparison.OrdinalIgnoreCase) || seleccion.Cambiada;
+            bool registrarLog = string.Equals(seleccion.Origen, "catalogo", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(seleccion.Origen, "canonico", StringComparison.OrdinalIgnoreCase) ||
+                seleccion.Cambiada;
             if (registrarLog)
             {
                 var r = seleccion.Referencia;
@@ -763,8 +765,13 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             var alojables = AgParticionCarriles.ObtenerIndicesAlojables(bandas, ctx.Patrones);
             int makespan = cursor.Length > 0 ? cursor.Max() : 0;
             int maxRanuras = bandas.Count > 0 ? bandas.Max(b => b.Count) : 0;
+            // FASE 2444: Log de bandas con franja (6M / 6T) para evitar falsos duplicados en diagnóstico ({5,6M}|{6T,7})
             string clave = string.Join("|", bandas.Select(b =>
-                string.Join(".", b.Select(r => r.Dia).Distinct().OrderBy(d => d))));
+                string.Join(".", b.Select(r =>
+                    r.Dia == 6 && !string.IsNullOrEmpty(r.Franja)
+                        ? (string.Equals(r.Franja, AgFranjaJornada.MANANA, StringComparison.OrdinalIgnoreCase) ? "6M" : "6T")
+                        : r.Dia.ToString())
+                    .Distinct())));
 
             return new AgEvaluacionParticion(
                 resResultado,

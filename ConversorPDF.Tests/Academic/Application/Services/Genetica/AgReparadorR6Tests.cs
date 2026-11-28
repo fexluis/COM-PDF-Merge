@@ -683,5 +683,47 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             plan2.SemanasRequeridasEquivalentes.Should().Be(3);
             plan2.SemanasRequeridas.Should().Be(3);
         }
+
+        [Fact]
+        public void Planificar_ConVentanaAmpliada_VerificaReparacionRealYSinSolape()
+        {
+            // FASE 2445 / FASE 2448: Carril con ventana ampliada planifica la cadena secuencial sin solapes
+            var ctx = CrearContexto();
+            var ind = CrearIndividuo();
+            string cohorte = AgCalendarioConflictos.Cohorte(ind.Genes[0]);
+            string carril = AgCarriles.ClaveCarril(ind.Genes[0]);
+
+            var planAmp = AgPlanificadorCarril.Planificar(ind, ctx, cohorte, carril, ventanaAmpliada: "LUN-VIE");
+
+            planAmp.Should().NotBeNull();
+            planAmp.Factible.Should().BeTrue();
+            planAmp.Individuo.Should().NotBeNull();
+            planAmp.SesionesDisponibles.Should().BeGreaterThan(0);
+
+            var genes = planAmp.Individuo.Genes
+                .Where(g => g.IdAsignatura == 152 || g.IdAsignatura == 153 || g.IdAsignatura == 151)
+                .ToList();
+
+            genes.Should().OnlyContain(g => g.FechaInicioEstimada.HasValue);
+            genes.SelectMany(g => g.FechasGen)
+                .Should().OnlyHaveUniqueItems();
+        }
+
+        [Fact]
+        public void RepararR6_CadenaSinFechas_AmpliaVentanaYReduceHard()
+        {
+            // FASE 2445 / FASE 2448: Reparador R6 ante carril con solapes ejecuta y reduce infracciones Hard
+            var ctx = CrearContexto();
+            var ind = CrearIndividuo();
+            new AgValidadorReglas().Evaluar(ind, ctx);
+            int hardAntes = ind.HardViolations;
+            hardAntes.Should().BeGreaterThan(0);
+
+            var res = AgReparadorR6.Ejecutar(ind, ctx, _evaluador);
+
+            res.HuboMejora.Should().BeTrue();
+            res.HardPost.Should().BeLessThan(res.HardPre);
+            res.Individuo.HardViolations.Should().BeLessThan(hardAntes);
+        }
     }
 }

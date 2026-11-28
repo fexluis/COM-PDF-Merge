@@ -198,6 +198,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                             mejorCatalogo.Clave);
                     }
 
+                    // FASE 2443: Si la referencia canónica es válida pero no hay mejor catálogo, devolver "canonico", no "catalogo"
                     string etiquetaVentana = !string.IsNullOrWhiteSpace(diasVentana)
                         ? diasVentana.Trim()
                         : (ventana != null ? AgDiasVentana.AIso(string.Join(",", ventana)) : string.Empty);
@@ -213,7 +214,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     bool sinCatalogo = puedeEscalar && (
                         (prohibirSingleton && referencia.BandasSingleton > 0) ||
                         tienePatronFinSemana ||
-                        (todosPatronesEnVentana && (referencia.PatronesNoAlojables > 0 || (referencia.Resultado != null && referencia.Resultado.Infactibles.Count > 0))));
+                        (todosPatronesEnVentana && referencia.PatronesNoAlojables > 0));
 
                     if (sinCatalogo)
                     {
@@ -231,7 +232,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                         false, referencia, referencia,
                         evaluadasOpciones,
                         0,
-                        "catalogo",
+                        "canonico",
                         textoOpcionIntentada,
                         evaluadasOpciones,
                         referencia.Clave);
@@ -240,7 +241,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 // FASE 2431: sin cortocircuito aquí; se continúa a la enumeración contigua para comparar catálogo vs enumeración
             }
 
-            // FASE 2433: Sin opciones y sin permitir enumeración, verificar si la referencia canónica es catálogo válido
+            // FASE 2433 / FASE 2443: Sin opciones y sin permitir enumeración, verificar si la referencia canónica es válida
             if (!permitirEnumeracion)
             {
                 string etiquetaVentana = !string.IsNullOrWhiteSpace(diasVentana)
@@ -258,7 +259,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 bool sinCatalogo = puedeEscalar && (
                     (prohibirSingleton && referencia.BandasSingleton > 0) ||
                     tienePatronFinSemana ||
-                    (todosPatronesEnVentana && (referencia.PatronesNoAlojables > 0 || (referencia.Resultado != null && referencia.Resultado.Infactibles.Count > 0))));
+                    (todosPatronesEnVentana && referencia.PatronesNoAlojables > 0));
 
                 if (sinCatalogo)
                 {
@@ -276,7 +277,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     false, referencia, referencia,
                     0,
                     0,
-                    "catalogo",
+                    "canonico",
                     string.Empty,
                     0,
                     referencia.Clave);

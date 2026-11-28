@@ -72,6 +72,20 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
 
                         intentos++;
                         var plan = AgPlanificadorCarril.Planificar(actual, contexto, carrilObj.Cohorte, carrilObj.Carril);
+
+                        // FASE 2445: Si devuelve SIN_FECHAS o CAPACIDAD, reintentar con ventana ampliada para el carril
+                        if (!plan.Factible && (plan.Motivo == "SIN_FECHAS" || plan.Motivo == "CAPACIDAD"))
+                        {
+                            string ventanaCarril = carrilObj.Carril.Contains("|") ? carrilObj.Carril.Split('|')[1] : carrilObj.Carril;
+                            string siguienteVentana = AgEscaleraVentanas.Siguiente(ventanaCarril);
+                            if (!string.IsNullOrEmpty(siguienteVentana) && !string.Equals(siguienteVentana, ventanaCarril, StringComparison.OrdinalIgnoreCase))
+                            {
+                                LoggerHelper.Info(
+                                    $"[AG-REPARACION-R6] carril={carrilObj.Carril} req={plan.SesionesRequeridas} disp={plan.SesionesDisponibles} → ampliarVentana={siguienteVentana}");
+                                plan = AgPlanificadorCarril.Planificar(actual, contexto, carrilObj.Cohorte, carrilObj.Carril, siguienteVentana);
+                            }
+                        }
+
                         if (plan.Factible && plan.Individuo != null)
                         {
                             var cand = plan.Individuo;

@@ -24,8 +24,8 @@ Este archivo es la **fuente única de la numeración global** de revisiones (`.c
 
 | Contador | Último asignado | Siguiente | Actualizado |
 |---|---|---|---|
-| `ronda` | 558 | 559 | 2026-11-27 |
-| `fase` | 2442 | 2443 | 2026-11-27 |
+| `ronda` | 561 | 562 | 2026-11-27 |
+| `fase` | 2448 | 2449 | 2026-11-27 |
 
 Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ronda {n}` → máx. 258; `Fase {n}` → máx. 1419). Los artefactos anteriores a esa fecha no son auditables retroactivamente: no se reasignan.
 
@@ -263,7 +263,10 @@ Sembrado el 2026-10-29 leyendo `implementation_plan.md` y `walkthrough.md` (`Ron
 | R-226 | 2026-11-27 | `(revisión e implementación Ronda 555 — Fases 2433–2437: política catálogo-only, cobertura determinista sin enumeración, escalado obligatorio de ventana y patrón de 3 días en banda residual)` | `Wave 555` → `Ronda 555` | `T1..T5` → `Fase 2433–2437` | closed | sin build/tests (restricción Paso 6 /ronda-review) | uncommitted |
 | R-227 | 2026-11-27 | `(revisión e implementación Ronda 556 — Fases 2438–2440: permitirEnumeracion compatible por defecto con override catálogo-only en oleadas, visibilidad internal de DetectarEsMarVie y sincronización ranurasPatron en expansión de banda)` | `Wave 556` → `Ronda 556` | `T1..T3` → `Fase 2438–2440` | closed | sin build/tests (restricción Paso 6 /ronda-review) | uncommitted |
 | R-228 | 2026-11-27 | `(revisión e implementación Ronda 557 — Fase 2441: catálogo determinista para MIE-DOM 3,4,5,6,7 sin singleton y completitud de escalera VIE-DOM → JUE-DOM → MIE-DOM)` | `Wave 557` → `Ronda 557` | `T1` → `Fase 2441` | closed | sin build/tests (restricción Paso 6 /ronda-review) | uncommitted |
-| R-229 | 2026-11-27 | `(revisión e implementación Ronda 558 — Fase 2442: aserción exacta de partición MIE-DOM y cobertura de variante sin 6T)` | `Wave 558` → `Ronda 558` | `T1` → `Fase 2442` | closed | build/tests en build-release 1.6.4.50 | pendiente |
+| R-229 | 2026-11-27 | `(revisión e implementación Ronda 558 — Fase 2442: aserción exacta de partición MIE-DOM y cobertura de variante sin 6T)` | `Wave 558` → `Ronda 558` | `T1` → `Fase 2442` | closed | build/tests en build-release 1.6.4.50 | `2df3ea5` |
+| R-230 | 2026-11-27 | `(revisión e implementación Ronda 559 — Fases 2443–2445: distinción canónico vs catálogo, log con franjas 6M/6T y ampliación de ventana en reparación R6)` | `Wave 559` → `Ronda 559` | `T1..T3` → `Fase 2443–2445` | closed | sin build/tests (restricción Paso 6 /ronda-review) | uncommitted |
+| R-231 | 2026-11-27 | `(revisión e implementación Ronda 560 — Fases 2446–2447: corrección de argumento diasVentana en llamada a Seleccionar y tests de canonico y ventana ampliada en R6)` | `Wave 560` → `Ronda 560` | `T1..T2` → `Fase 2446–2447` | closed | sin build/tests (restricción Paso 6 /ronda-review) | uncommitted |
+| R-232 | 2026-11-27 | `(revisión e implementación Ronda 561 — Fase 2448: robustecimiento de pruebas de reparación R6 y ventana ampliada)` | `Wave 561` → `Ronda 561` | `T1` → `Fase 2448` | closed | build/tests en build-release 1.6.4.51 | pendiente |
 
 
 

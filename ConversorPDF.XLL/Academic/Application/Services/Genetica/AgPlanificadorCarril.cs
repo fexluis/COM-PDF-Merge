@@ -24,7 +24,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
         }
 
         internal static AgResultadoPlanCarril Planificar(
-            AgIndividuo ind, AgContexto ctx, string cohorte, string carril)
+            AgIndividuo ind, AgContexto ctx, string cohorte, string carril, string ventanaAmpliada = null)
         {
             if (ind?.Genes == null || ctx == null)
             {
@@ -48,6 +48,29 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
             if (lane == null || lane.FechasValidas == null || lane.FechasValidas.Count == 0)
             {
                 return new AgResultadoPlanCarril { Motivo = "SIN_CARRIL" };
+            }
+
+            // FASE 2445: Si se suministra ventanaAmpliada ante fallo previo por capacidad o fechas, usar fechas válidas de la ventana ampliada
+            var fechasValidas = lane.FechasValidas;
+            if (!string.IsNullOrEmpty(ventanaAmpliada) && ctx.Ventana != null && ctx.Ventana.FechaInicio <= ctx.Ventana.FechaFin)
+            {
+                var diasAmp = AgDiasVentana.Dias(ventanaAmpliada);
+                if (diasAmp.Count > 0)
+                {
+                    var validasAmp = new List<DateTime>();
+                    for (var d = ctx.Ventana.FechaInicio.Date; d <= ctx.Ventana.FechaFin.Date; d = d.AddDays(1))
+                    {
+                        int diaIso = AgInventarioRanuras.Iso(d);
+                        if (diasAmp.Contains(diaIso) && !ctx.EsFestivo(d))
+                        {
+                            validasAmp.Add(d);
+                        }
+                    }
+                    if (validasAmp.Count > 0)
+                    {
+                        fechasValidas = validasAmp;
+                    }
+                }
             }
 
             int idAulaV = genesCarril[0].Gen.IdAula;
@@ -124,7 +147,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 .Count();
             int sesionesPorSemana = Math.Max(1, diasCarril > 0 ? diasCarril : 2);
 
-            var libres = lane.FechasValidas.Where(f => !ocupadasFuera.Contains(f.Date)).OrderBy(f => f).ToList();
+            var libres = fechasValidas.Where(f => !ocupadasFuera.Contains(f.Date)).OrderBy(f => f).ToList();
             if (libres.Count == 0)
             {
                 return new AgResultadoPlanCarril
@@ -143,7 +166,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                 .Max();
 
             // Fase 2402, Fase 2406: Capacidad real del carril comparando sesiones requeridas totales contra fechas válidas del carril
-            int capacidadTotal = lane.FechasValidas.Count;
+            int capacidadTotal = fechasValidas.Count;
             if (reqTotal > capacidadTotal)
             {
                 return new AgResultadoPlanCarril
@@ -165,7 +188,7 @@ namespace ConversorPDF.XLL.Academic.Application.Services.Genetica
                     int dispLibres = libres.Count(f => AgInventarioRanuras.Iso(f) == dia);
                     if (nReq > dispLibres)
                     {
-                        int dispTotal = lane.FechasValidas.Count(f => AgInventarioRanuras.Iso(f) == dia);
+                        int dispTotal = fechasValidas.Count(f => AgInventarioRanuras.Iso(f) == dia);
                         string mot = (nReq > dispTotal) ? "CAPACIDAD" : "SIN_FECHAS";
                         return new AgResultadoPlanCarril
                         {

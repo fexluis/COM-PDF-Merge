@@ -991,6 +991,51 @@ Las citas `implementation_plan.md:NNNN` anteriores al corte apuntan al archivo m
 |---|---|---|
 | 2442 | `AgPlanificadorOleadasTests.cs`, `AgOpcionesParticionTests.cs`, `REGISTRY.md` | Implementado |
 
+---
+
+## Ronda 559: Distinción de canónico vs catálogo, log con franjas y ampliación de ventana en R6 (Fases 2443–2445)
+
+### Resumen de la Ronda
+- **Fase 2443 (T1):** En `AgParticionCarriles.cs:195-235`, distinción estricta entre partición de catálogo y referencia canónica bajo política catálogo-only (`!permitirEnumeracion`): cuando no existe opción de catálogo aprobada pero la referencia es válida (sin singletons, sin patrones no alojables y sin infactibles), retorna `Origen = "canonico"` en lugar de etiquetarla indebidamente como `catalogo` con cero opciones evaluadas. En `AgPlanificadorOleadas.cs:480`, inclusión de `canonico` en el registro de log diagnóstico.
+- **Fase 2444 (T2):** En `AgPlanificadorOleadas.cs:766-773`, generación de la clave de partición preservando tokens de franja para el sábado (`6M` y `6T`), evitando el falso diagnóstico visual de día 6 duplicado (`bandas={5,6M}|{6T,7}`).
+- **Fase 2445 (T3):** En `AgPlanificadorCarril.cs:26-55, 145-195` y `AgReparadorR6.cs:73-88`, soporte de reintento con ventana ampliada (`AgEscaleraVentanas.Siguiente`) cuando la planificación de carril falla con `SIN_FECHAS` o `CAPACIDAD`, calculando fechas válidas extendidas dentro de la ventana académica del contexto y emitiendo traza diagnóstica estructurada para eliminar violaciones residuales R6.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2443 | `AgParticionCarriles.cs`, `AgPlanificadorOleadas.cs` | Implementado |
+| 2444 | `AgPlanificadorOleadas.cs` | Implementado |
+| 2445 | `AgPlanificadorCarril.cs`, `AgReparadorR6.cs`, `REGISTRY.md` | Implementado |
+
+---
+
+## Ronda 560: Corrección de argumento diasVentana en llamada a Seleccionar y cobertura de canonico y ventana ampliada en R6 (Fases 2446–2447)
+
+### Resumen de la Ronda
+- **Fase 2446 (T1):** En `AgPlanificadorOleadas.cs:459-467`, supresión del argumento nombrado obsoleto `diasVentana: diasVentana` en la invocación a `AgParticionCarriles.Seleccionar`, alineando la llamada con la firma actual del método y resolviendo el error de compilación CS1739.
+- **Fase 2447 (T2):** En `AgParticionCarrilesOpcionesTests.cs:920-960`, adición de prueba unitaria `Seleccionar_VieDomCanonico_ReportaCanonicoNoCatalogo` asegurando que una partición de fin de semana válida sin opciones evaluadas retorne deterministamente `Origen = "canonico"` y no `catalogo`. En `AgReparadorR6Tests.cs:685-705`, incorporación de test `Planificar_ConVentanaAmpliada_CuandoSinFechasEnVentanaOriginal_LograPlanificar` verificando que la provisión de `ventanaAmpliada` desbloquea la planificación ante carencia de fechas en la ventana original. Sincronización de Wave 560 y fila `R-231` en `REGISTRY.md`.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2446 | `AgPlanificadorOleadas.cs` | Implementado |
+| 2447 | `AgParticionCarrilesOpcionesTests.cs`, `AgReparadorR6Tests.cs`, `REGISTRY.md` | Implementado |
+
+---
+
+## Ronda 561: Fortalecimiento de pruebas de reparación R6 y ventana ampliada (Fase 2448)
+
+### Resumen de la Ronda
+- **Fase 2448 (T1):** En `AgReparadorR6Tests.cs:685-730`, reemplazo de la aserción tautológica previa por pruebas estrictas de no-regresión: `Planificar_ConVentanaAmpliada_VerificaReparacionRealYSinSolape` valida `Factible = true`, `SesionesDisponibles > 0` e invariante de no-solapamiento de fechas efectivas en la cadena de asignaturas (152, 153, 151), y `RepararR6_CadenaSinFechas_AmpliaVentanaYReduceHard` verifica que la ejecución integral de `AgReparadorR6.Ejecutar` reduce efectivamente las infracciones duras (`HardPost < HardPre`). Sincronización de Wave 561 y fila `R-232` en `REGISTRY.md`.
+
+### Soporte realizado por fase
+
+| Fase | Archivos | Estado |
+|---|---|---|
+| 2448 | `AgReparadorR6Tests.cs`, `REGISTRY.md` | Implementado |
+
 
 
 

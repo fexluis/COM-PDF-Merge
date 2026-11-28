@@ -918,6 +918,45 @@ namespace ConversorPDF.Tests.Academic.Application.Services.Genetica
             opcionesLunJue[0].CarrilesTexto.Should().Be("1,2,5|3,4");
         }
 
+        [Fact]
+        public void Seleccionar_VieDomCanonico_ReportaCanonicoNoCatalogo()
+        {
+            // FASE 2443 / FASE 2447: Referencia sin opciones bajo política catálogo-only con bandas válidas {5,6M}|{6T,7} reporta "canonico", no "catalogo"
+            var ranuras = new List<AgRanura>
+            {
+                new AgRanura(5, AgFranjaJornada.TARDE, 4.0),
+                new AgRanura(6, AgFranjaJornada.MANANA, 4.0),
+                new AgRanura(6, AgFranjaJornada.TARDE, 4.0),
+                new AgRanura(7, AgFranjaJornada.MANANA, 4.0)
+            };
+            var canonicas = new List<IReadOnlyList<AgRanura>>
+            {
+                new List<AgRanura> { ranuras[0], ranuras[1] },
+                new List<AgRanura> { ranuras[2], ranuras[3] }
+            };
+            var patrones = new List<string>();
+
+            Func<IReadOnlyList<IReadOnlyList<AgRanura>>, AgEvaluacionParticion> evaluar = bandas =>
+            {
+                var resRef = new AgPlanOleadasResultado(new List<AgPlanOleada>(), new List<int>());
+                return new AgEvaluacionParticion(resRef, 0, new List<int>(), 0, bandas.Count, 0, "5,6M|6T,7");
+            };
+
+            var seleccion = AgParticionCarriles.Seleccionar(
+                new List<int> { 5, 6, 7 },
+                ranuras,
+                patrones,
+                canonicas,
+                evaluar,
+                opciones: null,
+                permitirEnumeracion: false);
+
+            seleccion.Cambiada.Should().BeFalse();
+            seleccion.Origen.Should().Be("canonico");
+            seleccion.Origen.Should().NotBe("catalogo");
+            seleccion.OpcionesEvaluadas.Should().Be(0);
+        }
+
         #endregion
     }
 }

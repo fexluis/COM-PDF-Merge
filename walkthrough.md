@@ -964,6 +964,51 @@ Las citas `walkthrough.md:NNNN` anteriores al corte apuntan al archivo monolitic
 |---|---|---|---|---|---|
 | F2442 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorOleadasTests.cs:1185-1196`, `AgOpcionesParticionTests.cs:335-370`, `REGISTRY.md:27-28, 266` (Implementado) |
 
+---
+
+## Ronda 559 — Distinción de canónico vs catálogo, log con franjas y ampliación de ventana en R6 (Fases 2443–2445)
+
+### Resumen de la Ronda
+- **Fase 2443:** En `AgParticionCarriles.cs:195-235`, desacoplamiento del rótulo `catalogo` para referencias canónicas sin opciones evaluadas bajo catálogo-only, asignando deterministamente `Origen = "canonico"` cuando la partición es válida y `sin_catalogo` cuando requiere ampliación. Inclusión de `canonico` en el filtro de emisión de logs en `AgPlanificadorOleadas.cs:480`.
+- **Fase 2444:** En `AgPlanificadorOleadas.cs:766-773`, incorporación de sufijos de franja (`6M` y `6T`) en la construcción de la clave de partición evaluada, desambiguando el log hacia `{5,6M}|{6T,7}` y eliminando la falsa apariencia de día 6 duplicado.
+- **Fase 2445:** En `AgPlanificadorCarril.cs:26-55, 145-195` y `AgReparadorR6.cs:73-88`, reintento de secuenciación con ventana ampliada mediante `AgEscaleraVentanas.Siguiente` ante fallos `SIN_FECHAS` o `CAPACIDAD`, generando fechas válidas adicionales en el aula para resolver colisiones R6 residuales sin omitir el staging. Registro en `REGISTRY.md` (Wave 559, fila `R-230`).
+
+### Verificación de Principios (Ronda 559)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2443 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgParticionCarriles.cs:195-235`, `AgPlanificadorOleadas.cs:480` (Implementado) |
+| F2444 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorOleadas.cs:766-773` (Implementado) |
+| F2445 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorCarril.cs:26-55, 150-195`, `AgReparadorR6.cs:73-88`, `REGISTRY.md:27-28, 267` (Implementado) |
+
+---
+
+## Ronda 560 — Corrección de argumento diasVentana en llamada a Seleccionar y cobertura de canonico y ventana ampliada en R6 (Fases 2446–2447)
+
+### Resumen de la Ronda
+- **Fase 2446:** Eliminación del argumento nombrado `diasVentana: diasVentana` en `AgPlanificadorOleadas.cs:460-468` para adherirse a la firma vigente de `AgParticionCarriles.Seleccionar` evitando el error de compilación CS1739.
+- **Fase 2447:** En `AgParticionCarrilesOpcionesTests.cs:920-960`, implementación de prueba unitaria validando que la partición canónica `{5,6M}|{6T,7}` se reporte con `Origen = "canonico"` y 0 opciones evaluadas. En `AgReparadorR6Tests.cs:685-705`, verificación de la factibilidad de planificación al expandir la ventana en carriles con déficit temporal de fechas. Registro en `REGISTRY.md` (Wave 560, fila `R-231`).
+
+### Verificación de Principios (Ronda 560)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2446 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgPlanificadorOleadas.cs:459-467` (Implementado) |
+| F2447 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgParticionCarrilesOpcionesTests.cs:920-960`, `AgReparadorR6Tests.cs:685-705`, `REGISTRY.md:27-28, 268` (Implementado) |
+
+---
+
+## Ronda 561 — Fortalecimiento de pruebas de reparación R6 y ventana ampliada (Fase 2448)
+
+### Resumen de la Ronda
+- **Fase 2448:** En `AgReparadorR6Tests.cs:685-730`, sustitución de aserción tautológica por aserciones de reparación real: verificación de `Factible = true`, unicidad estricta de fechas asignadas entre asignaturas solapadas al usar ventana ampliada, y validación de descenso de infracciones duras (`HardPost < HardPre`) en `AgReparadorR6.Ejecutar`. Registro en `REGISTRY.md` (Wave 561, fila `R-232`).
+
+### Verificación de Principios (Ronda 561)
+
+| Fase | Comentarios acordes | Sin abstracción extra | Sin cambios adyacentes | Solución directa | Evidencia en Disco |
+|---|---|---|---|---|---|
+| F2448 | [X] Sí | [X] Sí | [X] Sí | [X] Sí | `AgReparadorR6Tests.cs:685-730`, `REGISTRY.md:27-28, 269` (Implementado) |
+
 
 
 
